@@ -1,0 +1,22 @@
+# Flow operator ~> passes the left value into the next operation.
+craft double(value) {
+    yield value * 2
+}
+
+craft is_large(value) {
+    yield value >= 6
+}
+
+craft add(total, value) {
+    yield total + value
+}
+
+make values := [1, 2, 3, 4, 5]
+make result := values ~> map(double) ~> keep(is_large) ~> fold(0, add)
+emit "flow result = " ++ text(result)
+
+vary counter := 0
+each item in range(1, 4) {
+    change counter := counter + item
+}
+emit "loop result = " ++ text(counter)
