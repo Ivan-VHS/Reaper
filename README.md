@@ -1,1 +1,63 @@
 # Reaper
+
+**Reaper is an independent, flow-first programming language.** Its surface is designed to stay readable, make mutation explicit, and let values move through composable transformations.
+
+Reaper 0.1 turns the accompanying design manifesto into an executable first milestone: it includes a lexer, parser, tree-walking interpreter, command-line runner, examples, documentation, and tests.
+
+## First program
+
+~~~reaper
+craft double(value) {
+    yield value * 2
+}
+
+make numbers := [1, 2, 3, 4]
+make answer := numbers ~> map(double) ~> sum()
+emit "answer = " ++ text(answer)
+~~~
+
+The central operator ~> passes the value on its left as the first argument to the operation on its right. make creates an immutable binding. Use vary for a mutable binding and change to reassign it.
+
+## Run Reaper
+
+Requires Python 3.10 or newer. The interpreter has no third-party runtime dependencies.
+
+~~~sh
+python -m reaper examples/hello.rpr
+python -m reaper examples/flow.rpr
+python -m reaper --check examples/flow.rpr
+~~~
+
+To install the reaper command:
+
+~~~sh
+python -m pip install -e .
+reaper examples/hello.rpr
+~~~
+
+## Included in 0.1
+
+- Position-aware lexer with Unicode identifiers, comments, and escaped text literals.
+- Recursive-descent statement parser and Pratt expression parser.
+- Immutable make bindings; explicit vary and change mutation.
+- Functions, lexical closures, recursion, and yield.
+- Lists, indexing, arithmetic, comparisons, booleans, and strict text concatenation.
+- when / otherwise, each, and loop while.
+- Flow composition with ~>, map, keep, fold, sum, and related built-ins.
+- Explicit console effects through emit, say, and ask.
+- Source-aware diagnostics, instruction budget, and bounded function-call depth.
+- Standard-library unit tests and GitHub Actions CI for Python 3.10–3.12.
+
+## Documentation
+
+- LANGUAGE.md — language design and syntax.
+- examples/ — runnable programs.
+- tests/ — conformance and runtime tests.
+
+## Roadmap
+
+Reaper starts with a small, executable core. Static type checking, explicit effect types, safe foreign-function boundaries, bytecode/native backends, structured concurrency, semantic graph tooling, package management, and self-hosting are future milestones. GPU and distributed execution will only be claimed after actual backends and conformance tests exist.
+
+## License
+
+Reaper is distributed under the Apache License 2.0. See LICENSE.
