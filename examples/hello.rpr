@@ -1,0 +1,9 @@
+# The first Reaper program.
+make greeting := "Hello from Reaper"
+emit greeting
+
+craft square(value) {
+    yield value * value
+}
+
+emit "square(9) = " ++ text(square(9))
