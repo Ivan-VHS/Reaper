@@ -74,12 +74,14 @@ class Interpreter:
         output: Callable[[str], None] = print,
         max_steps: int = 1_000_000,
         max_call_depth: int = 256,
+        max_collection_items: int = 100_000,
     ) -> None:
-        if max_steps < 1 or max_call_depth < 1:
+        if max_steps < 1 or max_call_depth < 1 or max_collection_items < 1:
             raise ValueError("execution limits must be positive")
         self.output = output
         self.max_steps = max_steps
         self.max_call_depth = max_call_depth
+        self.max_collection_items = max_collection_items
         self.steps = 0
         self.call_depth = 0
         self.filename = "<memory>"
@@ -101,6 +103,18 @@ class Interpreter:
                 f"{self.filename}:{token.line}:{token.column}: execution stopped after "
                 f"{self.max_steps} steps; increase --steps only for programs you trust"
             )
+
+    def _check_collection_size(self, values: Any, token: Token) -> Any:
+        try:
+            size = len(values)
+        except (OverflowError, TypeError) as error:
+            raise self._error(token, "collection size cannot be represented") from error
+        if size > self.max_collection_items:
+            raise self._error(
+                token,
+                f"collection item limit ({self.max_collection_items}) exceeded",
+            )
+        return values
 
     def _execute_block(self, block: Node, environment: Environment, create_scope: bool = True) -> Any:
         scope = Environment(environment) if create_scope else environment
@@ -134,6 +148,7 @@ class Interpreter:
             values = self._evaluate(children[0], environment)
             if not isinstance(values, (list, tuple, str, range)):
                 raise self._error(node.token, "'each' needs a list, text, or range")
+            self._check_collection_size(values, node.token)
             result = None
             for value in values:
                 self._tick(node.token)
@@ -163,6 +178,11 @@ class Interpreter:
         if node.kind == "name":
             return environment.get(node.value)
         if node.kind == "list":
+            if len(children) > self.max_collection_items:
+                raise self._error(
+                    node.token,
+                    f"collection item limit ({self.max_collection_items}) exceeded",
+                )
             return [self._evaluate(item, environment) for item in children]
         if node.kind == "index":
             collection = self._evaluate(children[0], environment)
@@ -212,6 +232,11 @@ class Interpreter:
             return not self._equal(left, right)
         if operator == "++":
             if isinstance(left, str) and isinstance(right, str):
+                if len(left) + len(right) > self.max_collection_items:
+                    raise self._error(
+                        token,
+                        f"text length limit ({self.max_collection_items}) exceeded",
+                    )
                 return left + right
             raise self._error(token, "'++' joins text values; convert other values with text()")
         if operator in {"<", "<=", ">", ">="}:
@@ -292,18 +317,43 @@ class Interpreter:
         def sequence(value: Any) -> Any:
             if not isinstance(value, (list, tuple, str, range)):
                 raise TypeError("expected a list, text, or range")
+            try:
+                size = len(value)
+            except OverflowError as error:
+                raise ValueError("collection length exceeds interpreter limits") from error
+            if size > self.max_collection_items:
+                raise ValueError(
+                    f"collection item limit ({self.max_collection_items}) exceeded"
+                )
             return value
+
+        def push(values: Any, item: Any) -> list[Any]:
+            values = sequence(values)
+            if len(values) >= self.max_collection_items:
+                raise ValueError(
+                    f"collection item limit ({self.max_collection_items}) exceeded"
+                )
+            return [*values, item]
+
+        def bounded_range(*arguments: int) -> range:
+            return sequence(self._range(*arguments))
+
+        def bounded_size(value: Any) -> int:
+            if not isinstance(value, (str, list, tuple, dict, range)):
+                raise TypeError("expected text, list, map, or range")
+            sequence(value)
+            return len(value)
 
         def callback(value: Any) -> None:
             if not isinstance(value, (UserFunction, Builtin)):
                 raise TypeError("expected a Reaper function")
 
-        register("size", lambda value: len(value) if isinstance(value, (str, list, tuple, dict, range)) else _raise_type("expected text, list, map, or range"), 1, 1)
+        register("size", bounded_size, 1, 1)
         register("text", self._display, 1, 1)
         register("number", self._to_number, 1, 1)
         register("kind", self._kind, 1, 1)
-        register("range", self._range, 1, 3)
-        register("push", lambda values, item: [*sequence(values), item], 2, 2)
+        register("range", bounded_range, 1, 3)
+        register("push", push, 2, 2)
         register("first", lambda values: _first(sequence(values)), 1, 1)
         register("rest", lambda values: sequence(values)[1:], 1, 1)
         register("sum", lambda values: _sum(sequence(values)), 1, 1)
@@ -437,5 +487,10 @@ def run(
     filename: str = "<memory>",
     output: Callable[[str], None] = print,
     max_steps: int = 1_000_000,
+    max_collection_items: int = 100_000,
 ) -> Any:
-    return Interpreter(output=output, max_steps=max_steps).run(source, filename)
+    return Interpreter(
+        output=output,
+        max_steps=max_steps,
+        max_collection_items=max_collection_items,
+    ).run(source, filename)
