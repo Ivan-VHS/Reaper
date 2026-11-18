@@ -6,7 +6,7 @@ Reaper is an independent, text-first, expression-oriented language with an expli
 
 1. **Calm surface, visible effects.** Console I/O is explicit through emit, say, and ask. Ordinary expressions do not access files, networks, or clocks.
 2. **Immutability by default.** make binds an immutable name. vary explicitly permits reassignment; change is the reassignment statement.
-3. **Flow as composition.** value ~> transform(args) passes value as the first argument to the next call. Flow chains associate left to right.
+3. **Flow as composition.** value ~> transform(args) passes the value on the left as the first argument to the next call. Flow chains associate left to right.
 4. **Structural composition.** Functions are values and can be passed to map, keep, and fold. No class hierarchy is needed.
 5. **Bounded execution.** A configurable step budget and call-depth limit stop runaway programs.
 6. **No silent coercion.** Arithmetic is numeric. ++ joins text only. Convert explicitly with text() or number().
@@ -119,16 +119,35 @@ python -m reaper examples/flow.rpr
 python -m reaper --check examples/flow.rpr
 python -m reaper --steps 2000000 examples/flow.rpr
 python -m reaper --items 50000 --text-length 500000 examples/flow.rpr
+python -m reaper --architecture
 ~~~
 
-The default limits are 1,000,000 execution steps, 256 nested function calls, 100,000 collection items and 1,000,000 characters produced by text concatenation. The CLI exposes `--steps`, `--items` and `--text-length`; the Python API exposes the same collection and text limits through `Interpreter` and `run()`.
+The default limits are 1,000,000 execution steps, 256 nested function calls, 100,000 collection items and 1,000,000 characters produced by text concatenation. The CLI exposes --steps, --items and --text-length; the Python API exposes the same collection and text limits through Interpreter and run().
 
 A quota violation stops execution with a Reaper runtime diagnostic. These limits are resource guardrails, not a security sandbox; do not run untrusted programs under the assumption that the interpreter isolates them from the host process.
 
 Python 3.10+ is required. The interpreter uses only the Python standard library.
 
+## Experimental Reapers runtime API
+
+The optional Python host module reaper.reaper_systems prototypes nine Reapers-inspired systems without changing the .rpr grammar:
+
+| Lore-derived system | Python API | Implemented contract |
+|---|---|---|
+| Citadel Relays | RelayNetwork | Typed local routes; payloads are passed by reference inside one process. |
+| Epochal Harvesting | EpochArena | Explicit allocation grouping, promotion and release of arena references. |
+| Indoctrination Effects | effect_scope, require_effect, requires_effects | Context-local effect bindings; missing capabilities are denied. |
+| Harbinger Tiering | HotspotProfiler | Measured call sites and explicitly registered optimized callables. |
+| Synthesis | IRNode, IRModule | Canonical versioned IR with stable content digest. |
+| Dragon's Teeth FFI | ForeignFunction, FFIPermissions | Typed callable boundary gated by an explicit FFI grant. |
+| Dark Space | SnapshotCodec | Bounded JSON snapshot with digest and optional HMAC. |
+| Sovereign Units | SovereignUnit | Sequential actor with bounded mailbox and hibernation snapshots. |
+| Vanguard Sentinel | VanguardSentinel | Health probes and bounded local recovery hooks. |
+
+These APIs are experimental host-side prototypes, not native .rpr language features. They do not provide hard-real-time memory reclamation, network-level zero-copy, a machine-code JIT, automatic safe C/C++ translation, microsecond wake-up, distributed consensus or cloud orchestration. Full contracts and usage examples are in [docs/REAPERS_ARCHITECTURE.md](docs/REAPERS_ARCHITECTURE.md).
+
 ## Implementation boundary
 
-Implemented in 0.1: lexer, parser, tree-walk interpreter, lexical closures, lists, functions, flow composition, console I/O, source diagnostics, an execution-step budget, call-depth limits, collection-item limits and text-concatenation limits.
+Implemented in 0.1: lexer, parser, tree-walk interpreter, lexical closures, lists, functions, flow composition, console I/O, source diagnostics, an execution-step budget, call-depth limits, collection-item limits and text-concatenation limits. The nine architecture systems are implemented as opt-in Python host APIs with prototype boundaries listed above.
 
-Not implemented yet: static type checking, algebraic effect handlers, semantic-graph storage, native compilation, GPU execution, distributed scheduling, formal verification, package registry, or self-hosting compiler. These are roadmap goals, not current guarantees.
+Not implemented yet: static type checking, language-level algebraic effect handlers, parser-to-IR lowering, native compilation, GPU execution, distributed scheduling, automatic FFI generation, formal verification, package registry, or self-hosting compiler. These are roadmap goals, not current guarantees.

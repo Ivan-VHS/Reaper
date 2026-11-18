@@ -10,6 +10,7 @@ from .errors import ReaperError
 from .runtime import Interpreter
 from .parser import parse
 from .systems import format_tracks
+from .reaper_systems import architecture_summary
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -21,6 +22,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--version", action="version", version="Reaper 0.1.0")
     parser.add_argument("--check", action="store_true", help="tokenize and parse without running the program")
     parser.add_argument("--systems", action="store_true", help="list the 20 engineering system contracts")
+    parser.add_argument("--architecture", action="store_true", help="list the nine experimental Reapers runtime systems")
     return parser
 
 
@@ -29,6 +31,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.systems:
         print(format_tracks())
+        return 0
+    if args.architecture:
+        print(architecture_summary())
         return 0
     if not args.source:
         parser.print_help()
