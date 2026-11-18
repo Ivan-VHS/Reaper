@@ -118,12 +118,17 @@ python -m reaper examples/hello.rpr
 python -m reaper examples/flow.rpr
 python -m reaper --check examples/flow.rpr
 python -m reaper --steps 2000000 examples/flow.rpr
+python -m reaper --items 50000 --text-length 500000 examples/flow.rpr
 ~~~
+
+The default limits are 1,000,000 execution steps, 256 nested function calls, 100,000 collection items and 1,000,000 characters produced by text concatenation. The CLI exposes `--steps`, `--items` and `--text-length`; the Python API exposes the same collection and text limits through `Interpreter` and `run()`.
+
+A quota violation stops execution with a Reaper runtime diagnostic. These limits are resource guardrails, not a security sandbox; do not run untrusted programs under the assumption that the interpreter isolates them from the host process.
 
 Python 3.10+ is required. The interpreter uses only the Python standard library.
 
 ## Implementation boundary
 
-Implemented in 0.1: lexer, parser, tree-walk interpreter, lexical closures, lists, functions, flow composition, console I/O, source diagnostics, and an execution-step budget.
+Implemented in 0.1: lexer, parser, tree-walk interpreter, lexical closures, lists, functions, flow composition, console I/O, source diagnostics, an execution-step budget, call-depth limits, collection-item limits and text-concatenation limits.
 
 Not implemented yet: static type checking, algebraic effect handlers, semantic-graph storage, native compilation, GPU execution, distributed scheduling, formal verification, package registry, or self-hosting compiler. These are roadmap goals, not current guarantees.
