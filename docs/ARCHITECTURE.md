@@ -2,7 +2,7 @@
 
 ## Product boundary
 
-Reaper is an independent, flow-first programming language. Its 0.1 implementation is a Python 3.10+ tree-walking interpreter with a lexer, parser, runtime, CLI, examples and standard-library tests. It is not a compiler, operating system, package registry, plugin host or autonomous agent.
+Reaper is an independent, flow-first programming language. Its 0.1 implementation includes a Python 3.10+ tree-walking interpreter and an additive static compiler front end that emits portable source-mapped IR. It is not a native-code compiler, operating system, package registry, plugin host or autonomous agent.
 
 The goal is one coherent language product with separable implementation layers. Reaper must remain independently installable and executable; integration with another project is optional and must use a stable adapter rather than make that project a runtime dependency.
 
@@ -35,3 +35,10 @@ The interpreter exposes independent limits for executed steps, function-call dep
 - Keep I/O effects explicit; never silently grant filesystem, network or process access.
 - Keep Python as the implementation host for the current milestone; native compilation and self-hosting are future work.
 - Keep optional tooling outside the interpreter's required runtime dependency set.
+
+
+## Nine-system architecture
+
+The compiler and runtime foundations are composed into nine independently testable host subsystems: typed local routing (`reaper.citadel`), epoch-managed regions (`reaper.resources`), revocable capabilities (`reaper.security`), measured profiling and IR optimization (`reaper.profiling`, `reaper.compiler`), portable semantic IR (`reaper.compiler`), capability-gated C ABI integration (`reaper.interop`), checksummed application-state snapshots (`reaper.checkpoint`), bounded cooperative actors (`reaper.concurrency`) and explicit health supervision (`reaper.vanguard`).
+
+Full contracts, examples, limitations and acceptance gates are maintained in [REAPER_SYSTEMS.md](REAPER_SYSTEMS.md). These APIs do not add implicit network access, background recovery or new .rpr syntax.
