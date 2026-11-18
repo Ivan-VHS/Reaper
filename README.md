@@ -26,6 +26,7 @@ Requires Python 3.10 or newer. The interpreter has no third-party runtime depend
 python -m reaper examples/hello.rpr
 python -m reaper examples/flow.rpr
 python -m reaper --check examples/flow.rpr
+python -m reaper --items 50000 --text-length 500000 examples/flow.rpr
 ~~~
 
 To install the reaper command:
@@ -45,14 +46,18 @@ reaper examples/hello.rpr
 - when / otherwise, each, and loop while.
 - Flow composition with ~>, map, keep, fold, sum, and related built-ins.
 - Explicit console effects through emit, say, and ask.
-- Source-aware diagnostics, instruction budget, and bounded function-call depth.
+- Source-aware diagnostics, instruction budget, bounded function-call depth, collection-item limits and text-concatenation limits.
 - Standard-library unit tests and GitHub Actions CI for Python 3.10–3.12.
 
 ## Documentation
 
-- LANGUAGE.md — language design and syntax.
+- LANGUAGE.md — language design, syntax and runtime limits.
+- docs/ARCHITECTURE.md — implementation layers and product boundaries.
+- docs/ARCHITECTURE_66.md — 66 enforceable autonomy, modularity and safety requirements.
 - examples/ — runnable programs.
-- tests/ — conformance and runtime tests.
+- tests/ — conformance, boundary and runtime tests.
+
+Run the standard-library test suite with `python -m unittest discover -s tests -v`.
 
 ## Roadmap
 
