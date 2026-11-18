@@ -127,7 +127,7 @@ class RuntimeTests(unittest.TestCase):
     def test_collection_limit_rejects_large_range_before_iteration(self) -> None:
         interpreter = Interpreter(output=lambda _line: None, max_collection_items=2)
         with self.assertRaisesRegex(ReaperRuntimeError, "collection item limit"):
-            interpreter.run("each n in range(0, 3) {\\n    emit n\\n}")
+            interpreter.run("each n in range(0, 3) {\n    emit n\n}")
 
     def test_push_cannot_exceed_collection_limit(self) -> None:
         interpreter = Interpreter(output=lambda _line: None, max_collection_items=2)
