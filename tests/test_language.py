@@ -119,6 +119,32 @@ class RuntimeTests(unittest.TestCase):
         with self.assertRaisesRegex(ReaperRuntimeError, "joins text"):
             self.capture('emit "count=" ++ 5')
 
+    def test_collection_limit_rejects_large_list_literal(self) -> None:
+        interpreter = Interpreter(output=lambda _line: None, max_collection_items=2)
+        with self.assertRaisesRegex(ReaperRuntimeError, "collection item limit"):
+            interpreter.run("emit [1, 2, 3]")
+
+    def test_collection_limit_rejects_large_range_before_iteration(self) -> None:
+        interpreter = Interpreter(output=lambda _line: None, max_collection_items=2)
+        with self.assertRaisesRegex(ReaperRuntimeError, "collection item limit"):
+            interpreter.run("each n in range(0, 3) {\\n    emit n\\n}")
+
+    def test_push_cannot_exceed_collection_limit(self) -> None:
+        interpreter = Interpreter(output=lambda _line: None, max_collection_items=2)
+        with self.assertRaisesRegex(ReaperRuntimeError, "collection item limit"):
+            interpreter.run("emit [1, 2] ~> push(3)")
+
+    def test_text_concatenation_limit(self) -> None:
+        interpreter = Interpreter(output=lambda _line: None, max_text_length=4)
+        with self.assertRaisesRegex(ReaperRuntimeError, "text length limit"):
+            interpreter.run('emit "abc" ++ "de"')
+
+    def test_resource_limits_must_be_positive(self) -> None:
+        with self.assertRaisesRegex(ValueError, "must be positive"):
+            Interpreter(max_collection_items=0)
+        with self.assertRaisesRegex(ValueError, "must be positive"):
+            Interpreter(max_text_length=0)
+
     def test_assert_builtin(self) -> None:
         self.assertEqual(
             self.capture('assert(2 + 2 == 4)\nemit "ok"'),
