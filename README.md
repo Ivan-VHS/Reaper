@@ -54,6 +54,7 @@ reaper examples/hello.rpr
 - LANGUAGE.md — language design, syntax and runtime limits.
 - docs/ARCHITECTURE.md — implementation layers and product boundaries.
 - docs/ARCHITECTURE_66.md — 66 enforceable autonomy, modularity and safety requirements.
+- docs/CONSTITUTION_666_PROFILE.md — project-specific application of all six sections and 666 constitutional rules, with conformance states and staged implementation.
 - examples/ — runnable programs.
 - tests/ — conformance, boundary and runtime tests.
 
