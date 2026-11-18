@@ -14,7 +14,7 @@
 
 **Reaper 是一门独立的表达式导向编程语言，强调可读语法与显式数据流。** 核心运算符 `~>` 将一个值传递给下一步操作，让转换链像流程一样从左向右阅读，而不是隐藏在层层嵌套的调用中。
 
-**0.1.0** 是首个可执行里程碑：包含词法分析器、语法分析器、运行时、命令行工具、示例和测试的 Python 3.10+ 树遍历解释器。运行时仅使用 Python 标准库。
+**0.1.0** 包含 Python 3.10+ 树遍历解释器，以及可生成带源码位置的可移植 IR 的静态编译前端。编译器和实验性宿主 API 均仅使用 Python 标准库。
 
 **语言：** [English](README.md) · [Русский](README.ru.md) · [Українська](README.uk.md) · 简体中文
 
@@ -68,7 +68,7 @@ python -m reaper examples/hello.rpr
 python -m reaper examples/flow.rpr
 python -m reaper --check examples/flow.rpr
 reaperc examples/flow.rpr --optimize
-python examples/reaper_architecture.py
+python -m examples.reaper_architecture
 ```
 
 以可编辑模式安装命令行入口：
