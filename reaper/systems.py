@@ -65,4 +65,4 @@ def format_tracks() -> str:
         lines.append(f"{track.id:02d} | {track.name} | {track.focus}")
         lines.append(f"    Contract: {track.runtime_contract}")
         lines.append(f"    Accept:   {track.acceptance}")
-    return "\\n".join(lines)
+    return "\n".join(lines)
