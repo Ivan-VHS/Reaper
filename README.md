@@ -54,7 +54,9 @@ reaper examples/hello.rpr
 - LANGUAGE.md — language design, syntax and runtime limits.
 - docs/ARCHITECTURE.md — implementation layers and product boundaries.
 - docs/ARCHITECTURE_66.md — 66 enforceable autonomy, modularity and safety requirements.
-- docs/AETHER_ANAS_ROADMAP.md — staged integration plan for the AETHER-ANAS architecture; proposed facilities are explicitly distinguished from implemented Reaper features.
+- docs/AETHER_ANAS_ROADMAP.md — staged AETHER-ANAS integration plan with explicit implementation status and acceptance gates.
+- docs/CONSTITUTION_666_PROFILE.md — project-specific application of all six sections and 666 constitutional rules, with conformance states and staged implementation.
+- docs/CHINESE_PROVERBS_100_ENGINEERING_CROSSWALK.md — source-derived 100-item engineering ledger with defensive security interpretation and evidence gates.
 - examples/ — runnable programs.
 - tests/ — conformance, boundary and runtime tests.
 
@@ -63,6 +65,7 @@ Run the standard-library test suite with `python -m unittest discover -s tests -
 ## Roadmap
 
 Reaper starts with a small, executable core. Static type checking, explicit effect types, safe foreign-function boundaries, bytecode/native backends, structured concurrency, semantic graph tooling, package management, and self-hosting are future milestones. GPU and distributed execution will only be claimed after actual backends and conformance tests exist. See the [AETHER-ANAS integration roadmap](docs/AETHER_ANAS_ROADMAP.md) for the staged design and acceptance gates.
+Reaper starts with a small, executable core. Static type checking, explicit effect types, safe foreign-function boundaries, bytecode/native backends, structured concurrency, semantic graph tooling, package management, and self-hosting are future milestones. GPU and distributed execution will only be claimed after actual backends and conformance tests exist.
 
 ## License
 

@@ -9,6 +9,7 @@ from pathlib import Path
 from .errors import ReaperError
 from .runtime import Interpreter
 from .parser import parse
+from .systems import format_tracks
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -19,12 +20,16 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--text-length", type=int, default=1_000_000, help="maximum text length in characters (default: 1000000)")
     parser.add_argument("--version", action="version", version="Reaper 0.1.0")
     parser.add_argument("--check", action="store_true", help="tokenize and parse without running the program")
+    parser.add_argument("--systems", action="store_true", help="list the 20 engineering system contracts")
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+    if args.systems:
+        print(format_tracks())
+        return 0
     if not args.source:
         parser.print_help()
         return 2
