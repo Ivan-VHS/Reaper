@@ -11,7 +11,7 @@ class ChineseProverbsProfileTests(unittest.TestCase):
         self.assertEqual(ids, list(range(1, 101)))
     def test_profile_preserves_safety_and_evidence_boundaries(self):
         text = DOC.read_text(encoding="utf-8").lower()
-        for phrase in ("review required", "not a technical proof", "least privilege",
+        for phrase in ("review required", "not as a technical proof", "least privilege",
                        "isolated defensive test environments", "exact ci run and commit sha",
                        "do not claim sandboxing"):
             with self.subTest(phrase=phrase):
