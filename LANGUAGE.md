@@ -1,12 +1,12 @@
 # Reaper Language — Draft 0.1
 
-Reaper is an independent, text-first, expression-oriented language with an explicit data-flow operator. Version 0.1 is an interpreter, not a native-code compiler. It defines a deliberately small core that can grow behind stable, testable semantics.
+Reaper is an independent, text-first, expression-oriented language with an explicit data-flow operator. Version 0.1 is an interpreter with an additive compiler front end; it is not yet a native-code compiler.
 
 ## Design rules
 
 1. **Calm surface, visible effects.** Console I/O is explicit through emit, say, and ask. Ordinary expressions do not access files, networks, or clocks.
 2. **Immutability by default.** make binds an immutable name. vary explicitly permits reassignment; change is the reassignment statement.
-3. **Flow as composition.** value ~> transform(args) passes value as the first argument to the next call. Flow chains associate left to right.
+3. **Flow as composition.** value ~> transform(args) passes the value on the left as the first argument to the next call. Flow chains associate left to right.
 4. **Structural composition.** Functions are values and can be passed to map, keep, and fold. No class hierarchy is needed.
 5. **Bounded execution.** A configurable step budget and call-depth limit stop runaway programs.
 6. **No silent coercion.** Arithmetic is numeric. ++ joins text only. Convert explicitly with text() or number().
@@ -121,14 +121,37 @@ python -m reaper --steps 2000000 examples/flow.rpr
 python -m reaper --items 50000 --text-length 500000 examples/flow.rpr
 ~~~
 
-The default limits are 1,000,000 execution steps, 256 nested function calls, 100,000 collection items and 1,000,000 characters produced by text concatenation. The CLI exposes `--steps`, `--items` and `--text-length`; the Python API exposes the same collection and text limits through `Interpreter` and `run()`.
+The default limits are 1,000,000 execution steps, 256 nested function calls, 100,000 collection items and 1,000,000 characters produced by text concatenation. The CLI exposes --steps, --items and --text-length; the Python API exposes the same collection and text limits through Interpreter and run().
 
 A quota violation stops execution with a Reaper runtime diagnostic. These limits are resource guardrails, not a security sandbox; do not run untrusted programs under the assumption that the interpreter isolates them from the host process.
 
 Python 3.10+ is required. The interpreter uses only the Python standard library.
 
+## Compiler and runtime foundations
+
+Install the package in editable mode, then use the additional compiler front end:
+
+~~~sh
+python -m pip install -e .
+reaperc examples/flow.rpr
+reaperc examples/flow.rpr --optimize
+~~~
+
+The reaperc command parses the same .rpr source, runs a conservative static checker, lowers the syntax tree to source-mapped Quarry IR, verifies IR structure and emits canonical JSON with source and IR SHA-256 digests. The --optimize option enables side-effect-free literal constant folding. Invalid types stop compilation by default; --allow-type-errors emits IR with diagnostics for analysis. This is a portable IR front end, not a native-code, bytecode or JIT backend.
+
+Python host APIs provide the first runtime foundations:
+
+- reaper.resources: bounded logical regions, move-invalidated handles, scoped borrows and epoch-delayed reclamation. Python still owns the actual objects; this is not a deterministic native allocator.
+- reaper.concurrency: typed bounded channels, asynchronous actors, backpressure and scoped actor shutdown with restart supervision.
+- reaper.security: process-local HMAC capability tokens, revocation and context-scoped permission checks. This is an API boundary, not an operating-system sandbox.
+- reaper.checkpoint: checksummed atomic JSON snapshots and copy-on-write transactions for application state. It does not serialize a live Python stack or transparently resume an executing actor.
+- reaper.profiling: call counts, timing records and hot-function detection. It does not generate machine code or perform JIT compilation.
+- reaper.interop: a limited scalar C prototype reader, capability-gated ctypes loading, foreign-handle lifetime and an adapter registry. The only included adapter is Python; JavaScript, JVM, .NET and WebAssembly bridges are not shipped.
+
+See docs/PLATFORM_ARCHITECTURE.md for the independent subsystem vocabulary, staged roadmap, implementation evidence and remaining acceptance gates.
+
 ## Implementation boundary
 
-Implemented in 0.1: lexer, parser, tree-walk interpreter, lexical closures, lists, functions, flow composition, console I/O, source diagnostics, an execution-step budget, call-depth limits, collection-item limits and text-concatenation limits.
+Implemented: lexer, parser, AST interpreter, lexical closures, lists, functions, flow composition, console I/O, source diagnostics and execution quotas; plus the additive typed IR front end, conservative static checks, constant folding, explicit logical regions, actor/channel runtime, capability API, application-state snapshots, profiler and limited C ABI/adapter primitives.
 
-Not implemented yet: static type checking, algebraic effect handlers, semantic-graph storage, native compilation, GPU execution, distributed scheduling, formal verification, package registry, or self-hosting compiler. These are roadmap goals, not current guarantees.
+Not implemented: native AOT/JIT/SIMD, a self-hosting compiler, full hygienic macros, process-level checkpoint migration, distributed scheduling, a full C preprocessor, JS/JVM/.NET/WASM bridges, a debugger, a package manager or an independent security audit. No roadmap item is considered complete merely because a name or interface exists.
