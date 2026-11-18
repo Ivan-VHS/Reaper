@@ -64,6 +64,7 @@ Run the standard-library test suite with `python -m unittest discover -s tests -
 
 ## Roadmap
 
+Reaper starts with a small, executable core. Static type checking, explicit effect types, safe foreign-function boundaries, bytecode/native backends, structured concurrency, semantic graph tooling, package management, and self-hosting are future milestones. GPU and distributed execution will only be claimed after actual backends and conformance tests exist. See the [AETHER-ANAS integration roadmap](docs/AETHER_ANAS_ROADMAP.md) for the staged design and acceptance gates.
 Reaper starts with a small, executable core. Static type checking, explicit effect types, safe foreign-function boundaries, bytecode/native backends, structured concurrency, semantic graph tooling, package management, and self-hosting are future milestones. GPU and distributed execution will only be claimed after actual backends and conformance tests exist.
 
 ## License
