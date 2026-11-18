@@ -14,7 +14,7 @@
 
 **Reaper is an independent, expression-oriented programming language built around readable syntax and explicit data flow.** Its central operator, `~>`, passes a value into the next operation, making transformations read like a sequence instead of a nested expression.
 
-Version **0.1.0** is an executable first milestone: a Python 3.10+ tree-walking interpreter with a lexer, parser, runtime, command-line runner, examples and tests. It uses only the Python standard library.
+Version **0.1.0** includes a Python 3.10+ tree-walking interpreter and an additive static compiler front end that emits source-mapped portable IR. The compiler and host-runtime foundations use only the Python standard library.
 
 **Read this in:** [English](README.md) · [Русский](README.ru.md) · [Українська](README.uk.md) · [简体中文](README.zh-CN.md)
 
@@ -43,7 +43,9 @@ The flow operator passes the left-hand value as the first argument to the operat
 | **Data flow** | `~>` composition with `map`, `keep`, `fold` and related built-ins |
 | **Diagnostics** | Source-aware lexer, parser and runtime errors |
 | **Execution limits** | Step budget, call-depth, collection-item and text-length limits |
-| **Developer workflow** | CLI, check-only mode, examples and standard-library tests |
+| **Static compiler** | Conservative type diagnostics, source-mapped IR, deterministic digests and constant folding |
+| **Host runtime** | Bounded regions, actors/channels, revocable capabilities, snapshots, profiling and limited C ABI interop |
+| **Developer workflow** | CLI, check-only mode, `reaperc`, examples and standard-library tests |
 
 ## Try the checked-in examples
 
@@ -65,6 +67,8 @@ cd Reaper
 python -m reaper examples/hello.rpr
 python -m reaper examples/flow.rpr
 python -m reaper --check examples/flow.rpr
+reaperc examples/flow.rpr --optimize
+python examples/reaper_architecture.py
 ```
 
 Install the command-line entry point in editable mode:
@@ -84,6 +88,10 @@ python -m unittest discover -s tests -v
 
 <p align="center"><img src="assets/reaper-architecture.svg" alt="Reaper source-to-runtime pipeline and explicit effects boundary" width="100%"></p>
 
+<p align="center"><img src="assets/reaper-nine-systems.svg" alt="Reaper — nine runtime systems and trust boundaries" width="100%"></p>
+
+Reaper adds an experimental, opt-in host architecture across nine areas: local routing, epoch-managed memory, scoped capabilities, profiling, semantic IR, C ABI interop, state snapshots, cooperative actors and health supervision. These are bounded APIs, not claims of network zero-copy, hard-real-time GC, native JIT or live-process hibernation.
+
 Source text is tokenized, parsed into an AST and evaluated by a bounded tree-walking interpreter. Console interaction is explicit through language operations such as `emit`, `say` and `ask`. Ordinary expressions do not silently gain filesystem, network, clock, process, shell or hardware access.
 
 ## A small core with visible rules
@@ -102,13 +110,14 @@ Source text is tokenized, parsed into an AST and evaluated by a bounded tree-wal
 
 - [Language reference](LANGUAGE.md) — syntax, expressions, built-ins and runtime limits.
 - [Architecture](docs/ARCHITECTURE.md) — implementation layers and product boundaries.
+- [Nine-system architecture](docs/REAPER_SYSTEMS.md) — nine runtime systems, evidence, limits and acceptance gates.
 - [Architecture requirements](docs/ARCHITECTURE_66.md) — enforceable modularity and safety requirements.
 - [AETHER-ANAS roadmap](docs/AETHER_ANAS_ROADMAP.md) — staged integration plan and acceptance gates.
 - [20-system engineering programme](docs/20_SYSTEM_ENHANCEMENTS.md) — engineering contracts and acceptance focus.
 - [Constitution profile](docs/CONSTITUTION_666_PROFILE.md) — project-specific rules and conformance states.
 - [Runnable examples](examples/) and [tests](tests/).
 
-The 20 engineering tracks are **contracts and planned work**, not twenty completed runtime subsystems. Static type checking, effect types, native compilation, GPU execution, distributed scheduling, package management, formal verification and self-hosting remain future milestones. They will be claimed as implemented only after real backends and conformance tests exist.
+The 20 engineering tracks are **contracts and planned work**, not twenty completed runtime subsystems. The static checker and portable IR frontend are implemented; native compilation/JIT, language-level effect types, GPU execution, distributed scheduling, package management, formal verification and self-hosting remain future milestones. The nine host systems and their boundaries are documented in `docs/REAPER_SYSTEMS.md`.
 
 ## CI and current boundary
 
