@@ -26,6 +26,7 @@ Requires Python 3.10 or newer. The interpreter has no third-party runtime depend
 python -m reaper examples/hello.rpr
 python -m reaper examples/flow.rpr
 python -m reaper --check examples/flow.rpr
+python -m reaper --target-info
 python -m reaper --items 50000 --text-length 500000 examples/flow.rpr
 ~~~
 
@@ -56,6 +57,7 @@ reaper examples/hello.rpr
 - docs/ARCHITECTURE_66.md — 66 enforceable autonomy, modularity and safety requirements.
 - docs/AETHER_ANAS_ROADMAP.md — staged AETHER-ANAS integration plan with explicit implementation status and acceptance gates.
 - docs/CONSTITUTION_666_PROFILE.md — project-specific application of all six sections and 666 constitutional rules, with conformance states and staged implementation.
+- docs/ELBRUS_E2K.md — E2K host identification and the staged AETHER-ANAS backend boundary.
 - docs/CHINESE_PROVERBS_100_ENGINEERING_CROSSWALK.md — source-derived 100-item engineering ledger with defensive security interpretation and evidence gates.
 - examples/ — runnable programs.
 - tests/ — conformance, boundary and runtime tests.
