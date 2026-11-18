@@ -75,13 +75,20 @@ class Interpreter:
         max_steps: int = 1_000_000,
         max_call_depth: int = 256,
         max_collection_items: int = 100_000,
+        max_text_length: int = 1_000_000,
     ) -> None:
-        if max_steps < 1 or max_call_depth < 1 or max_collection_items < 1:
+        if (
+            max_steps < 1
+            or max_call_depth < 1
+            or max_collection_items < 1
+            or max_text_length < 1
+        ):
             raise ValueError("execution limits must be positive")
         self.output = output
         self.max_steps = max_steps
         self.max_call_depth = max_call_depth
         self.max_collection_items = max_collection_items
+        self.max_text_length = max_text_length
         self.steps = 0
         self.call_depth = 0
         self.filename = "<memory>"
@@ -232,10 +239,10 @@ class Interpreter:
             return not self._equal(left, right)
         if operator == "++":
             if isinstance(left, str) and isinstance(right, str):
-                if len(left) + len(right) > self.max_collection_items:
+                if len(left) + len(right) > self.max_text_length:
                     raise self._error(
                         token,
-                        f"text length limit ({self.max_collection_items}) exceeded",
+                        f"text length limit ({self.max_text_length}) exceeded",
                     )
                 return left + right
             raise self._error(token, "'++' joins text values; convert other values with text()")
@@ -341,8 +348,15 @@ class Interpreter:
         def bounded_size(value: Any) -> int:
             if not isinstance(value, (str, list, tuple, dict, range)):
                 raise TypeError("expected text, list, map, or range")
-            sequence(value)
-            return len(value)
+            try:
+                size = len(value)
+            except OverflowError as error:
+                raise ValueError("collection length exceeds interpreter limits") from error
+            if size > self.max_collection_items:
+                raise ValueError(
+                    f"collection item limit ({self.max_collection_items}) exceeded"
+                )
+            return size
 
         def callback(value: Any) -> None:
             if not isinstance(value, (UserFunction, Builtin)):
@@ -488,9 +502,11 @@ def run(
     output: Callable[[str], None] = print,
     max_steps: int = 1_000_000,
     max_collection_items: int = 100_000,
+    max_text_length: int = 1_000_000,
 ) -> Any:
     return Interpreter(
         output=output,
         max_steps=max_steps,
         max_collection_items=max_collection_items,
+        max_text_length=max_text_length,
     ).run(source, filename)
