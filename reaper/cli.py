@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
+from dataclasses import asdict
 from pathlib import Path
 
 from .errors import ReaperError
 from .runtime import Interpreter
 from .parser import parse
+from .targets import detect_target
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -19,12 +22,18 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--text-length", type=int, default=1_000_000, help="maximum text length in characters (default: 1000000)")
     parser.add_argument("--version", action="version", version="Reaper 0.1.0")
     parser.add_argument("--check", action="store_true", help="tokenize and parse without running the program")
+    parser.add_argument("--target-info", action="store_true", help="show host target metadata and backend availability")
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+    if args.target_info:
+        if args.source:
+            parser.error("--target-info cannot be combined with a source path")
+        print(json.dumps(asdict(detect_target()), ensure_ascii=False, sort_keys=True))
+        return 0
     if not args.source:
         parser.print_help()
         return 2

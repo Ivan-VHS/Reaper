@@ -35,3 +35,9 @@ The interpreter exposes independent limits for executed steps, function-call dep
 - Keep I/O effects explicit; never silently grant filesystem, network or process access.
 - Keep Python as the implementation host for the current milestone; native compilation and self-hosting are future work.
 - Keep optional tooling outside the interpreter's required runtime dependency set.
+
+## MCST Elbrus E2K target profile
+
+The --target-info CLI option reports host architecture metadata from Python's platform module. An E2K host is labelled VLIW/E2K, but the active execution backend remains the Python tree-walk interpreter. This report is host discovery, not cross-compilation target selection, compiler identification, native code generation or a hardware capability probe.
+
+See [ELBRUS_E2K.md](ELBRUS_E2K.md) for the AETHER-ANAS mapping, MCST references and staged native-backend acceptance gates.
