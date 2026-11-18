@@ -43,7 +43,9 @@ emit "answer = " ++ text(answer)
 | **数据流** | `~>` 组合，以及 `map`、`keep`、`fold` 等内置操作 |
 | **诊断** | 保留源代码位置的词法、语法和运行时错误 |
 | **执行限制** | 步骤预算、调用深度、集合元素数量和文本长度限制 |
-| **开发工具** | CLI、仅检查模式、示例和标准库测试 |
+| **静态编译前端** | 保守类型诊断、源码映射 IR、确定性摘要和常量折叠 |
+| **宿主运行时基础** | 有界内存区域、actor/通道、可撤销能力、快照、性能分析和有限 C ABI 互操作 |
+| **开发工具** | CLI、仅检查模式、`reaperc`、示例和标准库测试 |
 
 ## 运行仓库内的示例
 
@@ -65,6 +67,8 @@ cd Reaper
 python -m reaper examples/hello.rpr
 python -m reaper examples/flow.rpr
 python -m reaper --check examples/flow.rpr
+reaperc examples/flow.rpr --optimize
+python examples/reaper_architecture.py
 ```
 
 以可编辑模式安装命令行入口：
@@ -84,6 +88,10 @@ python -m unittest discover -s tests -v
 
 <p align="center"><img src="assets/reaper-architecture.svg" alt="Reaper 从源代码到运行时的处理流程及显式副作用边界" width="100%"></p>
 
+<p align="center"><img src="assets/reaper-nine-systems.svg" alt="Reaper — nine runtime systems and trust boundaries" width="100%"></p>
+
+Reaper 增加了九个可选的宿主架构方向：本地路由、纪元内存、作用域能力、性能分析、语义 IR、C ABI 互操作、状态快照、协作式 actor 和健康监控。这些是有边界的 API，并不意味着网络零拷贝、硬实时 GC、原生 JIT 或活动进程冻结已经实现。
+
 源代码经过词法分析生成 token，再由语法分析器生成 AST，最后交给受限的树遍历解释器执行。控制台交互必须通过 `emit`、`say` 和 `ask` 等语言操作显式表达。普通表达式不会隐式获得文件系统、网络、时钟、进程、shell 或硬件访问能力。
 
 ## 小巧核心，规则清晰
@@ -102,13 +110,14 @@ python -m unittest discover -s tests -v
 
 - [语言参考](LANGUAGE.md) — 语法、表达式、内置操作和运行时限制。
 - [架构](docs/ARCHITECTURE.md) — 实现层次与项目边界。
+- [九大系统架构](docs/REAPER_SYSTEMS.md) — 九个运行时子系统、实现证据、边界与验收标准。
 - [架构要求](docs/ARCHITECTURE_66.md) — 可验证的模块化和安全要求。
 - [AETHER-ANAS 路线图](docs/AETHER_ANAS_ROADMAP.md) — 分阶段集成计划与验收门槛。
 - [20 项系统工程计划](docs/20_SYSTEM_ENHANCEMENTS.md) — 工程契约与验收重点。
 - [宪章配置](docs/CONSTITUTION_666_PROFILE.md) — 项目规则与符合性状态。
 - [可运行示例](examples/) 和 [测试](tests/)。
 
-20 项工程方向是**工程契约与规划工作**，并不代表 20 个运行时子系统已经全部实现。静态类型检查、显式效果类型、原生编译、GPU 执行、分布式调度、包管理、形式化验证和自举编译器均属于未来里程碑。只有在真实后端和一致性测试完成后，才会将其标记为已实现。
+20 项工程方向是**工程契约与规划工作**，并不代表 20 个运行时子系统已经全部实现。静态检查器和可移植 IR 前端已经实现；原生编译/JIT、语言级效果类型、GPU、分布式调度、包管理、形式化验证和自举编译器仍是未来里程碑。九个宿主子系统及其限制见 `docs/REAPER_SYSTEMS.md`。
 
 ## CI 与当前边界
 
