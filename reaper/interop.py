@@ -41,7 +41,7 @@ _PROTOTYPE = re.compile(
 
 
 def _normalize_c_type(raw: str) -> str:
-    value = re.sub(r"\b(const|volatile|restrict)\b", "", raw)
+    value = re.sub(r"\b(volatile|restrict)\b", "", raw)
     value = re.sub(r"\s+", " ", value).strip()
     value = value.replace(" *", "*").replace("* ", "*")
     if value not in _C_TYPES:

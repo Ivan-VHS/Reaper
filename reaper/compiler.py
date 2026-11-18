@@ -87,7 +87,7 @@ class OptimizationStats:
 class StaticTypeError(ValueError):
     def __init__(self, diagnostics: tuple[TypeDiagnostic, ...]) -> None:
         self.diagnostics = diagnostics
-        summary = "; ".join(f"{item.line}:{item.column}: {item.message}" for item in diagnostics)
+        summary = "; ".join(f"{item.line}:{item.column}: [{item.code}] {item.message}" for item in diagnostics)
         super().__init__(summary or "static type check failed")
 
 
