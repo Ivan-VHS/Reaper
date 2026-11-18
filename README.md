@@ -55,6 +55,8 @@ reaper examples/hello.rpr
 - docs/ARCHITECTURE.md — implementation layers and product boundaries.
 - docs/ARCHITECTURE_66.md — 66 enforceable autonomy, modularity and safety requirements.
 - docs/CONSTITUTION_666_PROFILE.md — project-specific application of all six sections and 666 constitutional rules, with conformance states and staged implementation.
+- docs/ANATIDAE_CONSTITUTION.md — the Constitution of the Ducks, ten renunciations, twelve commandments, all 66 engineering laws, and the twelve supplemental models (Russian).
+- docs/AETHER_ANAS_ROADMAP.md — staged architecture, validation gates and implementation milestones.
 - examples/ — runnable programs.
 - tests/ — conformance, boundary and runtime tests.
 
@@ -63,6 +65,8 @@ Run the standard-library test suite with `python -m unittest discover -s tests -
 ## Roadmap
 
 Reaper starts with a small, executable core. Static type checking, explicit effect types, safe foreign-function boundaries, bytecode/native backends, structured concurrency, semantic graph tooling, package management, and self-hosting are future milestones. GPU and distributed execution will only be claimed after actual backends and conformance tests exist.
+
+The [Constitution of the Ducks and Absolute Novelty Manifesto](docs/ANATIDAE_CONSTITUTION.md) defines the target principles and their current conformance status. The [AETHER-ANAS roadmap](docs/AETHER_ANAS_ROADMAP.md) records the staged implementation path. Neither document turns planned features into current runtime guarantees.
 
 ## License
 
