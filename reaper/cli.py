@@ -18,7 +18,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--items", type=int, default=100_000, help="maximum items in any collection (default: 100000)")
     parser.add_argument("--text-length", type=int, default=1_000_000, help="maximum text length in characters (default: 1000000)")
     parser.add_argument("--version", action="version", version="Reaper 0.1.0")
-    parser.add_argument("--check", action="store_true", help="tokenize and parse without running the program")
+    parser.add_argument("--check", action="store_true", help="tokenize and parse without running the program")\n    parser.add_argument("--systems", action="store_true", help="list the 20 engineering system contracts")
     return parser
 
 
