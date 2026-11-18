@@ -49,7 +49,7 @@ if not report.healthy:
 The executable end-to-end example is [`examples/reaper_architecture.py`](../examples/reaper_architecture.py). Run it with:
 
 ~~~sh
-python examples/reaper_architecture.py
+python -m examples.reaper_architecture
 python -m unittest discover -s tests -v
 ~~~
 
