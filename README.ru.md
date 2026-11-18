@@ -68,7 +68,7 @@ python -m reaper examples/hello.rpr
 python -m reaper examples/flow.rpr
 python -m reaper --check examples/flow.rpr
 reaperc examples/flow.rpr --optimize
-python examples/reaper_architecture.py
+python -m examples.reaper_architecture
 ```
 
 Установка CLI в режиме разработки:
