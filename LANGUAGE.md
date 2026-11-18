@@ -146,9 +146,11 @@ Python host APIs provide the first runtime foundations:
 - reaper.security: process-local HMAC capability tokens, revocation and context-scoped permission checks. This is an API boundary, not an operating-system sandbox.
 - reaper.checkpoint: checksummed atomic JSON snapshots and copy-on-write transactions for application state. It does not serialize a live Python stack or transparently resume an executing actor.
 - reaper.profiling: call counts, timing records and hot-function detection. It does not generate machine code or perform JIT compilation.
+- reaper.citadel: a bounded, thread-safe in-process router with optional payload-type checks. It does not transport messages over a network.
+- reaper.vanguard: explicit health probes, ActorSystem status inspection and bounded local recovery callbacks. It does not run a background watchdog or orchestrate cloud instances.
 - reaper.interop: a limited scalar C prototype reader, capability-gated ctypes loading, foreign-handle lifetime and an adapter registry. The only included adapter is Python; JavaScript, JVM, .NET and WebAssembly bridges are not shipped.
 
-See docs/PLATFORM_ARCHITECTURE.md for the independent subsystem vocabulary, staged roadmap, implementation evidence and remaining acceptance gates.
+See docs/PLATFORM_ARCHITECTURE.md for subsystem implementation evidence and [docs/REAPER_SYSTEMS.md](docs/REAPER_SYSTEMS.md) for the nine-system mapping, limitations and acceptance gates.
 
 ## Implementation boundary
 
