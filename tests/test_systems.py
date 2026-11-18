@@ -27,7 +27,8 @@ class SystemRegistryTests(unittest.TestCase):
         report = format_tracks()
         self.assertIn("Chrome Ironclad", report)
         self.assertIn("Reactor Afterglow", report)
-        self.assertEqual(report.count("Contract:"), 20)\n        self.assertEqual(report.count("Accept:"), 20)
+        self.assertEqual(report.count("Contract:"), 20)
+        self.assertEqual(report.count("Accept:"), 20)
 
 
 if __name__ == "__main__":
