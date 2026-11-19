@@ -18,12 +18,12 @@ def sha256(data):
     return hashlib.sha256(data).hexdigest()
 
 def safe_path(value):
-    if not isinstance(value, str) or not value or "\\x00" in value:
+    if not isinstance(value, str) or not value or "\x00" in value:
         raise ValueError(f"unsafe patch path: {value!r}")
     # Git patches are slash-separated, but the same paths may be applied on
     # Windows. Reject Windows separators, drives, UNC paths and NTFS streams
     # before any filesystem or git operation can interpret them differently.
-    if "\\\\" in value or ":" in value:
+    if "\\" in value or ":" in value:
         raise ValueError(f"unsafe cross-platform patch path: {value!r}")
     path = PurePosixPath(value)
     windows_path = PureWindowsPath(value)
