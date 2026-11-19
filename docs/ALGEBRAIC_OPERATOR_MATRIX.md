@@ -19,7 +19,7 @@ themselves.
 |---|---|---|
 | 1. Addition / multiplication | `+`, `sum(values)`, `multiply(a, b)` | Additive aggregation and scalar multiplication |
 | 2. Subtraction / replication | `-`, `opposite(value)`, `replicate(value, count)` | Additive inverse and bounded copying |
-| 3. Multiplication / growth | `multiply(a, b)`, `scale(vector, factor)` | Scalar product and vector scaling |
+| 3. Multiplication / growth | `multiply(a, b)`, `vector_scale(vector, factor)` | Scalar product and vector scaling |
 | 4. Division / ratio | `/`, `divide(a, b)` | Checked division with zero rejection |
 | 5. Powers | `**`, `power(base, exponent)` | Real-valued exponentiation |
 | 6. Roots / branching | `root(value, degree)`, `proliferate(choices)` | Real roots and bounded Cartesian expansion |
@@ -83,10 +83,10 @@ craft square(value) {
 }
 
 make samples := [1, 2, 3, 4]
-emit samples ~> differentiate()
-emit samples ~> integrate(0.5)
+emit differentiate(samples)
+emit integrate(samples, 0.5)
 emit normalize([10, 20, 30])
-emit 4 ~> branch([plus_one, square])
+emit branch(4, [plus_one, square])
 emit proliferate([[1, 2], ["left", "right"]])
 ```
 
