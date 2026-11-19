@@ -62,6 +62,16 @@ These operations do not grant filesystem, network, clock, process, shell,
 hardware, audio-device, or plugin access. Such host effects remain explicit,
 capability-gated future work.
 
+## Native C17 boundary
+
+The native C17 Canonical IR now recognizes checked `i64` addition, subtraction,
+multiplication, division, and unary negation. Its verifier checks operand order
+and types; constant folding rejects signed overflow and division by zero.
+This is native IR support, not a complete native execution engine. Vector,
+matrix, collection, numerical-calculus, and combinatorial helpers currently
+run in the Python reference interpreter until equivalent C17 runtime and
+conformance work is completed.
+
 ## Example
 
 ```reaper
