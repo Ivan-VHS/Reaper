@@ -4,10 +4,40 @@
   "description": "Syntax highlighting and editor configuration for MOST source files.",
   "version": "0.1.0",
   "publisher": "reaper-project",
-  "engines": {"vscode": "^1.80.0"},
-  "categories": ["Programming Languages"],
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
   "contributes": {
-    "languages": [{"id":"most","aliases":["MOST","most"],"extensions":[".most",".rpr"],"configuration":"./language-configuration.json"}],
-    "grammars": [{"language":"most","scopeName":"source.most","path":"./syntaxes/most.tmLanguage.json"}]
+    "languages": [
+      {
+        "id": "most",
+        "aliases": [
+          "MOST",
+          "most"
+        ],
+        "extensions": [
+          ".most",
+          ".rpr"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "most",
+        "scopeName": "source.most",
+        "path": "./syntaxes/most.tmLanguage.json"
+      }
+    ],
+    "themes": [
+      {
+        "label": "MOST White Red Blue",
+        "uiTheme": "vs",
+        "path": "./themes/most-white-red-blue-color-theme.json"
+      }
+    ]
   }
 }
