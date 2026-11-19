@@ -100,11 +100,11 @@ Source text is tokenized, parsed into an AST and evaluated by a bounded tree-wal
 
 ## MOST language track
 
-The native C17 line now includes the first MOST lexical vocabulary and operator family. The full 66-rule language contract, implementation ledger and delivery gates are documented in [docs/MOST_LANGUAGE_SPEC.md](docs/MOST_LANGUAGE_SPEC.md). This is a lexical foundation only: parser, type checker, ownership analysis, typed IR, native code generation and WASM are not yet implemented.
+The native C17 line now includes the MOST lexical vocabulary, expression parser/AST, a small verified Canonical IR, checked constant folding and a deliberately limited integer-expression AST-to-IR lowering slice. The full 66-rule language contract is in [docs/MOST_LANGUAGE_SPEC.md](docs/MOST_LANGUAGE_SPEC.md); the integrated cross-thread architecture is in [docs/REAPER_UNIFIED_ARCHITECTURE.md](docs/REAPER_UNIFIED_ARCHITECTURE.md). Full declarations/blocks, type checking, MOST intent resolution, ownership analysis, native code generation and WASM are not yet implemented.
 
 ## Native C migration
 
-A parallel C17 implementation is being developed in [docs/C_MIGRATION.md](docs/C_MIGRATION.md). The native build currently contains the source-aware lexer, token ownership API, CMake/Make build, native CLI bring-up mode, and C unit tests. The Python interpreter remains the compatibility reference until parser/runtime parity is demonstrated; the C executable is not yet a full language interpreter.
+A parallel C17 implementation is being developed in [docs/C_MIGRATION.md](docs/C_MIGRATION.md). The native build currently contains the source-aware lexer, expression parser and owned AST, verified integer IR, checked constant folding, limited AST-to-IR lowering, native CLI bring-up mode, and C unit tests. The Python interpreter remains the compatibility reference until complete parser/runtime/CLI parity is demonstrated; the C executable is not yet a full language interpreter.
 
 Build the native core:
 
@@ -118,6 +118,7 @@ ctest --test-dir build --output-on-failure
 ## Documentation and engineering programme
 
 - [Language reference](LANGUAGE.md) — syntax, expressions, built-ins and runtime limits.
+- [Unified REAPER/MOST architecture](docs/REAPER_UNIFIED_ARCHITECTURE.md) — consolidated decisions from the earlier design threads and current delivery gates.
 - [Architecture](docs/ARCHITECTURE.md) — implementation layers and product boundaries.
 - [Architecture requirements](docs/ARCHITECTURE_66.md) — enforceable modularity and safety requirements.
 - [AETHER-ANAS roadmap](docs/AETHER_ANAS_ROADMAP.md) — staged integration plan and acceptance gates.
