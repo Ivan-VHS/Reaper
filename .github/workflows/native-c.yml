@@ -1,0 +1,25 @@
+name: Reaper Native C
+on:
+  push:
+    branches: [ "rewrite/**" ]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native-c:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install C toolchain
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake
+      - name: Configure C17 build
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+      - name: Build native core
+        run: cmake --build build --parallel
+      - name: Run native unit tests
+        run: ctest --test-dir build --output-on-failure
+      - name: Smoke-test native CLI
+        run: |
+          ./build/reaper-c --version
+          ./build/reaper-c --tokens examples/hello.rpr
