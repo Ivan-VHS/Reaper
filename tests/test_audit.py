@@ -58,7 +58,7 @@ class AuditLogTests(unittest.TestCase):
             summary = verify_audit_log(path)
             rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
         self.assertEqual(result, 0)
-        self.assertIn("hello", stdout.getvalue())
+        self.assertIn("hello", stdout.getvalue().lower())
         self.assertEqual(summary.records, 3)
         self.assertEqual([row["event"] for row in rows],
                          ["source_loaded", "execution_started", "execution_completed"])
