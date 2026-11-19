@@ -15,12 +15,15 @@ The goal is one coherent language product with separable implementation layers. 
 5. **Diagnostics** — user-facing errors retain file, line and column where a source token exists.
 6. **Examples and conformance tests** — executable language examples and regression coverage for lexical, syntactic and runtime semantics.
 7. **Packaging** — a standard Python package with a CLI entry point and no third-party runtime dependencies.
+8. **Host runtime primitives** — opt-in Python APIs for epochs, task-local effects, typed local relays, hot-path profiling, deterministic actors, snapshots and health-policy observation. These are not implicitly exposed to `.rpr` programs.
 
 ## Data and control flow
 
 Source text → lexer tokens → parser AST → bounded tree-walk runtime → explicit console output.
 
-The language has no implicit file, network, clock, process, shell or hardware access. Console input/output is explicit through language operations. New effects require a separately designed capability interface, documented permissions and tests; they are not added as hidden built-ins.
+The language has no implicit file, network, clock, process, shell or hardware access. Console input/output is explicit through language operations. Host-side runtime primitives are separately imported Python APIs and do not grant source programs new permissions. New language effects require a separately designed capability interface, documented permissions and tests; they are not added as hidden built-ins.
+
+The cyclic-runtime design and its implementation boundaries are specified in [REAPERS_ARCHITECTURE.md](REAPERS_ARCHITECTURE.md). Current Python primitives are deliberately local and bounded; native allocation, language-level effect inference, JIT, FFI, process freezing and distributed orchestration remain future work.
 
 ## Resource model
 
