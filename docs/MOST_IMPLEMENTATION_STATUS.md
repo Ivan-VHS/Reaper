@@ -18,7 +18,7 @@
 | Declaration/block grammar | planned | function/module/record declarations, blocks and recovery |
 | Name resolution and static type checker | planned | symbol tables, inference, ADT/exhaustiveness tests |
 | MOST intent resolver | planned | scoped dictionaries, explicit ambiguity diagnostics and source-to-intent mapping |
-| Typed AST-to-IR lowering | planned | same canonical IR for REAPER and MOST frontends |
+| Integer AST-to-IR lowering slice | implemented | `src/lower.c`, `include/reaper/lower.h`, `tests/test_lower.c`; integer literals and binary `+` lower to verified IR; unsupported AST kinds fail explicitly |
 | Ownership, borrow and region analysis | specified | CFG-based move/borrow checking and negative tests |
 | Effect/capability checking | specified | explicit effect rows and denied-capability tests |
 | Native code generation | planned | target ABI and executable conformance fixtures |
@@ -39,7 +39,7 @@ The current parser accepts exactly one expression and produces a flat, owned AST
 - source line/column on every node;
 - rejects malformed expressions and trailing tokens.
 
-This is an expression-parser milestone, not a complete source parser. Declarations, functions, blocks, patterns, type syntax, name resolution and lowering are not implemented.
+This is an expression-parser milestone, not a complete source parser. Declarations, functions, blocks, patterns, type syntax and name resolution are not implemented. A deliberately limited integer-expression AST-to-IR lowering slice now exists; it is not general typed lowering.
 
 ## Canonical IR contract
 
@@ -49,7 +49,7 @@ The current IR slice is backend-neutral and structurally verified:
 - source locations are retained;
 - opcode, result type, operand arity, reference bounds and operand types are checked.
 
-The current executable opcode set is deliberately small (integer constant, signed 64-bit addition and return). Overflow semantics must be made explicit before arithmetic lowering is expanded. The expression parser does not yet lower into this IR.
+The current executable opcode set is deliberately small (integer constant, signed 64-bit addition and return). The new lowering slice supports integer literals and binary `+`, appends a return, preserves source positions and verifies the result. Identifiers, unary operations, decimals, strings, booleans, comparisons, calls and flow expressions are rejected by this lowerer until their types and semantics are implemented. The checked constant folder rejects compile-time signed-i64 overflow; runtime ADD_I64 overflow behavior and native execution remain future gates.
 
 ## Architectural invariants
 
@@ -64,7 +64,7 @@ The current executable opcode set is deliberately small (integer constant, signe
 
 - **M1 continuation:** declarations, blocks, source-span propagation, parser recovery and parser fuzz tests.
 - **M2:** MOST Intent AST, scoped domain dictionaries, explicit ambiguity reporting and equivalent lowering tests.
-- **M3:** name resolution, typed AST, type/effect checking and typed AST-to-IR lowering.
+- **M3:** name resolution, typed AST, type/effect checking and expansion of lowering to the full typed expression set.
 - **M4:** ownership/region analysis, contracts and resource-effect verification.
 - **M5:** native code generation and target ABI conformance.
 - **M6:** runtime, standard library, WASM and host capabilities.
