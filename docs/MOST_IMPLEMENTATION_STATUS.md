@@ -19,6 +19,8 @@
 | Native code generation | planned | target ABI and executable conformance fixtures |
 | WASM/Web Core | specified | WASI/browser host tests and capability boundary |
 | 147-feature registry | specified | seven numbered groups; feature-by-feature acceptance gates |
+| 813-feature architecture map | specified | `docs/REAPER_813_FEATURE_ARCHITECTURE.md`; seven new ranges 148–813 mapped to compiler, type system, runtime, stdlib, security, tooling and host layers |
+| MOST bilingual bridge | planned | M2 after parser/AST; canonical symbols, scoped domain dictionaries, ambiguity diagnostics and equivalent IR tests |
 
 ## IR contract in this increment
 
@@ -30,6 +32,16 @@ The first IR slice is deliberately small and backend-neutral:
 - no parser, optimizer, ownership proof or machine-code generator is claimed.
 
 Supported operations are integer constant, signed 64-bit addition (semantic overflow policy still needs to be fixed before lowering), and return. The next semantic increment must define checked/wrapping/saturating arithmetic explicitly and add a typed AST-to-IR lowering path.
+
+## Expanded 813-feature roadmap
+
+The original 147-feature registry remains intact. The continuation (148–813) is mapped in `docs/REAPER_813_FEATURE_ARCHITECTURE.md` into stable ranges: 148–220 bilingual frontend/MOST bridge; 221–310 types and mathematics; 311–410 concurrency and memory; 411–510 data and schemas; 511–610 security and resilience; 611–710 developer tooling; 711–813 integrations and host interaction. These are proposals with explicit implementation gates, not implemented APIs.
+
+The architecture separates the Russian MOST layer from REAPER's canonical semantics: both source forms must lower to the same typed AST/IR. Morphology and synonyms may resolve names only; they may not alter types or execution semantics. Ambiguous Russian input must fail with a diagnostic rather than be guessed.
+
+## Next acceptance-gated phase
+
+**M1: Parser + AST + Pratt expressions + source spans.** M2 (MOST name/domain resolver and bilingual lowering) depends on a stable parser and source mapping. Do not implement morphology heuristics in the lexer or create a second runtime for MOST.
 
 ## Build and test
 
