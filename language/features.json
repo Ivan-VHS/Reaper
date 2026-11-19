@@ -1,0 +1,14 @@
+{
+  "schema": "most.feature-registry/v1",
+  "language": "MOST",
+  "edition": "0.1",
+  "features": [
+    {"id":"MOST-SYN-001","name":"module declarations","area":"syntax","status":"specified","depends_on":[],"acceptance":["parser-positive","parser-negative","source-span"]},
+    {"id":"MOST-SYN-002","name":"function declarations","area":"syntax","status":"planned","depends_on":["MOST-SYN-001"],"acceptance":["parser-positive","parser-negative","ast-shape"]},
+    {"id":"MOST-TYP-001","name":"fixed-width integer types","area":"types","status":"specified","depends_on":["MOST-SYN-002"],"acceptance":["type-positive","type-negative","ir-verifier"]},
+    {"id":"MOST-TYP-002","name":"option and result types","area":"types","status":"planned","depends_on":["MOST-TYP-001"],"acceptance":["type-positive","type-negative","layout-tests"]},
+    {"id":"MOST-EFF-001","name":"explicit effect declarations","area":"effects","status":"specified","depends_on":["MOST-TYP-001"],"acceptance":["effect-allow","effect-deny","capability-boundary"]},
+    {"id":"MOST-MEM-001","name":"lexical regions","area":"memory","status":"specified","depends_on":["MOST-TYP-001"],"acceptance":["region-lifetime","escape-negative","allocator-tests"]},
+    {"id":"MOST-STD-001","name":"deterministic core library","area":"stdlib","status":"planned","depends_on":["MOST-TYP-001"],"acceptance":["api-contract","unit-tests","cross-target-vectors"]}
+  ]
+}
