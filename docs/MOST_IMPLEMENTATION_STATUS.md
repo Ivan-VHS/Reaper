@@ -12,7 +12,7 @@
 | MOST lexical vocabulary | implemented on parent branch | keyword/operator lexer tests; grammar is not implied |
 | Semantic IR data model | implemented in this branch | `include/reaper/ir.h` |
 | IR structural verifier | implemented in this branch | `src/ir.c`, `tests/test_ir.c` |
-| Parser and AST | planned | declarations, Pratt expressions, source spans |
+| Expression parser and AST core | implemented (initial slice) | `include/reaper/parser.h`, `src/parser.c`, `tests/test_parser.c`; Pratt expressions, calls, flow operators and source line/column; declarations and full module grammar remain planned |
 | Name resolution and static type checker | planned | symbol tables, inference, ADT/exhaustiveness tests |
 | Ownership, borrow and region analysis | specified | CFG-based move/borrow checking and negative tests |
 | Effect/capability checking | specified | explicit effect rows and denied-capability tests |
@@ -41,7 +41,7 @@ The architecture separates the Russian MOST layer from REAPER's canonical semant
 
 ## Next acceptance-gated phase
 
-**M1: Parser + AST + Pratt expressions + source spans.** M2 (MOST name/domain resolver and bilingual lowering) depends on a stable parser and source mapping. Do not implement morphology heuristics in the lexer or create a second runtime for MOST.
+**M1 is in progress.** The first expression-parser slice now provides a Pratt parser for literals, identifiers, unary/binary operators, calls and `~>`/`|>` flow expressions, with source line/column metadata and malformed-expression tests. Remaining M1 work: module/declaration/block grammar, complete source spans (byte offsets and end positions), structured diagnostics, and parser/formatter agreement. M2 (MOST name/domain resolver and bilingual lowering) depends on those stable contracts. Do not implement morphology heuristics in the lexer or create a second runtime for MOST.
 
 ## Build and test
 
