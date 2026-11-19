@@ -36,13 +36,7 @@ class CompositionTests(unittest.TestCase):
         craft add(total, value) { yield total + value }
 
         make original := range(1, 5)
-        make answer := original
-            ~> map(double)
-            ~> keep(at_least_four)
-            ~> push(10)
-            ~> sorted()
-            ~> rest()
-            ~> fold(0, add)
+        make answer := original ~> map(double) ~> keep(at_least_four) ~> push(10) ~> sorted() ~> rest() ~> fold(0, add)
         emit answer
         emit original ~> sum()
         """
