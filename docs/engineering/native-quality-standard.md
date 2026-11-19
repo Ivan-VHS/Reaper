@@ -27,7 +27,7 @@ Reaper is a flow-first language and toolchain. The language, interpreter/compile
 
 - CI may validate, build, test, package, and publish review artifacts.
 - Automation may create/update isolated branches and open pull requests.
-- No force-pushes, branch-protection bypasses, or unattended merges to `main`.
+- No force-pushes, branch-protection bypasses, self-approval, or unattended merges to `main`.
 - Generated code and self-improvement proposals must be deterministic, bounded, diff-limited, tested, and reviewable.
 - Self-hosting or autonomous evolution must never execute untrusted generated code in privileged CI contexts.
 - Workflow permissions are least-privilege; secrets are not exposed to forked pull requests.
@@ -39,10 +39,30 @@ Reaper is a flow-first language and toolchain. The language, interpreter/compile
 - Provide editor, diagnostics, AST/IR inspection, project navigation, test execution, and debugger integration incrementally.
 - Autostart, background agents, and update checks are opt-in, visible, and reversible.
 
+## HMGA v3: deterministic, bounded evolution
+
+The iteration hierarchy expresses orchestration depth; it is not permission to run unbounded recursive generation or to multiply every function into every other function. Each pass declares finite CPU/time, memory, diff-size, test, and retry budgets.
+
+1. **Inventory:** record the exact `main` SHA, open PR heads/bases, active branches, feature IDs, CI evidence, and supported compiler/runtime targets.
+2. **Dependency graph:** model parser, semantic IR, optimizer, runtime, standard library, and IDE dependencies as a directed acyclic graph. Stacked PRs are promoted in dependency order; a child PR is not treated as independently mergeable.
+3. **Capability registry:** assign stable IDs and versioned contracts to language features, built-ins, compiler passes, runtime services, and IDE integrations. Record signatures, types, effects, errors, compatibility, and acceptance tests.
+4. **Cross-application matrix:** test each declared compatible edge through shared contracts and canonical IR. Do not fabricate combinations between semantically unrelated capabilities; mark them explicitly not applicable.
+5. **Bounded retries:** retry only transient runner or infrastructure failures within a configured attempt budget. Reproducible parser, type, optimizer, or test failures must be diagnosed and fixed.
+6. **Evidence record:** retain exact source/base SHAs, toolchain versions, conformance results, compatibility notes, security review, and rollback path for every proposal.
+
+## Deterministic promotion to main
+
+- Implement each coherent capability layer on an isolated branch and publish a PR against `main` (or a documented prerequisite PR when genuinely stacked).
+- Validate the proposed merge result on the exact head/base pair. The promotion job must re-read both SHAs after validation and stop if either changed.
+- Require the Python compatibility suite, native C17 build/tests, relevant conformance/fuzz checks, and an approval from someone other than the PR author.
+- When `main` advances, refresh the branch through normal GitHub operations and rerun all relevant checks; never merge a stale result just because an earlier run passed.
+- GitHub native auto-merge may be enabled only after independent approval and validation. Repository branch protection remains authoritative.
+- No direct writes to `main`, force-pushes, approval fabrication, test bypasses, or execution of untrusted generated patches. Missing, pending, failed, or inconclusive evidence blocks promotion.
+
 ## Improvement loop
 
 Inspect current semantics → define a versioned contract → implement a minimal composable change → add conformance and regression tests → run cross-version/cross-backend CI → review security and UX → document migration → submit a pull request. Apply each shared improvement to every relevant function only when semantics match; do not create exponential duplicate APIs.
 
 ## Acceptance criteria
 
-A change is ready when semantics are specified, tests cover normal and failure behavior, supported implementations agree, resource limits hold, diagnostics are actionable, and rollback is straightforward.
+A change is ready when semantics are specified, tests cover normal and failure behavior, supported implementations agree, resource limits hold, diagnostics are actionable, exact-SHA evidence is attached, independent review is complete, and rollback is straightforward.
