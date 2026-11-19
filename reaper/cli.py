@@ -68,6 +68,8 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--text-length must be a positive integer")
     path = Path(args.source)
     try:
+        if args.audit_log and Path(args.audit_log).resolve() == path.resolve():
+            raise AuditLogError("--audit-log must not overwrite the source file")
         source = path.read_text(encoding="utf-8")
         audit = AuditLog(args.audit_log) if args.audit_log else None
         source_sha256 = hashlib.sha256(source.encode("utf-8")).hexdigest()
