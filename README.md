@@ -106,7 +106,7 @@ The native C17 line now includes the MOST lexical vocabulary, expression parser/
 
 A parallel C17 implementation is being developed in [docs/C_MIGRATION.md](docs/C_MIGRATION.md). The native build currently contains the source-aware lexer, expression parser and owned AST, verified integer IR, checked constant folding, limited AST-to-IR lowering, native CLI bring-up mode, and C unit tests. The Python interpreter remains the compatibility reference until complete parser/runtime/CLI parity is demonstrated; the C executable is not yet a full language interpreter.
 
-Build the native core:
+Inspect the native evolution gates with `./build/reaper-c --evolution-status`. The controller reports evidence requirements and deliberately does not self-approve or merge changes.\n\nBuild the native core:
 
 ```sh
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
