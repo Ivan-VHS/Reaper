@@ -14,7 +14,8 @@ class EvolutionEngineTests(unittest.TestCase):
         package.mkdir()
         (package / "__init__.py").write_text("", encoding="utf-8")
         (package / "sample.py").write_text(source, encoding="utf-8")
-        (directory / "tests").mkdir()\n        (directory / "tests" / "__init__.py").write_text("", encoding="utf-8")
+        (directory / "tests").mkdir()
+        (directory / "tests" / "__init__.py").write_text("", encoding="utf-8")
         return directory
 
     def test_syntax_check_and_report_are_machine_readable(self) -> None:
