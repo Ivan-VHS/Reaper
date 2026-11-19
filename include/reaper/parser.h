@@ -46,8 +46,8 @@ typedef struct {
     size_t column;
 } ReaperParseError;
 
-/* Parse one expression from a token stream. The caller owns both inputs and
- * must keep tokens alive until reaper_ast_free has completed. */
+/* Parse one expression from a token stream. AST text is copied and owned by
+ * the AST; the token stream may be released after this function returns. */
 int reaper_parse_expression(const ReaperTokenArray *tokens,
                             ReaperAst *out,
                             ReaperParseError *error);
