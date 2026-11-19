@@ -104,7 +104,7 @@ class AlgebraicOperatorTests(unittest.TestCase):
 
     def test_branch_rejects_non_functions(self) -> None:
         with self.assertRaisesRegex(ReaperRuntimeError, "Reaper function"):
-            self.capture("emit 4 ~> branch([1, 2])")
+            self.capture("emit branch(4, [1, 2])")
 
 
 if __name__ == "__main__":
