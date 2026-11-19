@@ -56,13 +56,14 @@ class AuditLogTests(unittest.TestCase):
             with contextlib.redirect_stdout(stdout):
                 result = main(["examples/hello.rpr", "--audit-log", str(path)])
             summary = verify_audit_log(path)
-            rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+            audit_contents = path.read_text(encoding="utf-8")
+            rows = [json.loads(line) for line in audit_contents.splitlines()]
         self.assertEqual(result, 0)
         self.assertIn("hello", stdout.getvalue().lower())
         self.assertEqual(summary.records, 3)
         self.assertEqual([row["event"] for row in rows],
                          ["source_loaded", "execution_started", "execution_completed"])
-        self.assertNotIn("hello", path.read_text(encoding="utf-8"))
+        self.assertNotIn("hello", audit_contents)
 
     def test_cli_verification_command(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
