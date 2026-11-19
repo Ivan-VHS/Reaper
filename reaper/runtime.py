@@ -271,8 +271,10 @@ class Interpreter:
                     "%": lambda: left % right,
                     "**": lambda: left ** right,
                 }[operator]()
-            except (OverflowError, ValueError) as error:
+            except (ArithmeticError, ValueError, TypeError) as error:
                 raise self._error(token, f"numeric operation failed: {error}") from error
+            if not isinstance(result, (int, float)) or isinstance(result, bool):
+                raise self._error(token, "numeric operations must produce real numbers")
             if isinstance(result, float) and not math.isfinite(result):
                 raise self._error(token, "numeric result is not finite")
             return result
