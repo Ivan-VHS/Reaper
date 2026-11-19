@@ -33,7 +33,7 @@ class PatchPipelineTests(unittest.TestCase):
     def test_path_traversal_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "unsafe patch path"): patcher.safe_path("../outside.txt")
     def test_symlink_target_is_rejected(self):
-        outside = self.root.parent / (self.root.name + "-outside")
+        outside = self.root / "outside"
         outside.mkdir(exist_ok=True)
         link = self.root / "linked"
         link.symlink_to(outside, target_is_directory=True)
