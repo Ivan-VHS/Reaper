@@ -111,6 +111,50 @@ jobs:
           ./build/reaper-c --evolution-status
           ./build/reaper-c --tokens examples/hello.rpr
 
+  wait-for-ci:
+    needs: [review-gate, validate-python, validate-native]
+    if: needs.review-gate.outputs.approved == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      checks: read
+    steps:
+      - name: Require all current repository checks to pass
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD_SHA: ${{ needs.review-gate.outputs.head_sha }}
+          EXPECTED_CHECKS: '["Python 3.10","Python 3.11","Python 3.12","native-c","audit"]'
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 40); do
+            head="$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" --jq '.head.sha')"
+            test "$head" = "$PR_HEAD_SHA" || { echo "PR head changed; stopping stale validation."; exit 1; }
+            payload="$(gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/commits/$PR_HEAD_SHA/check-runs?per_page=100")"
+            summary="$(jq -c --arg run "$GITHUB_RUN_ID" --argjson expected "$EXPECTED_CHECKS" '
+              [ .[].check_runs[]?
+                | select(((.details_url // "") | contains("/actions/runs/" + $run + "/")) | not)
+              ]
+              | sort_by(.name, .started_at)
+              | group_by(.name) | map(last) as $checks
+              | {
+                  pending: [$checks[] | select(.status != "completed")] | length,
+                  failed: [$checks[] | select(.status == "completed" and (.conclusion != "success" and .conclusion != "neutral" and .conclusion != "skipped"))] | length,
+                  missing: [$expected[] as $name | select([$checks[] | select(.name == $name and .status == "completed" and (.conclusion == "success" or .conclusion == "neutral" or .conclusion == "skipped"))] | length == 0)] | length
+                }
+            ' <<< "$payload")"
+            pending="$(jq -r '.pending' <<< "$summary")"
+            failed="$(jq -r '.failed' <<< "$summary")"
+            missing="$(jq -r '.missing' <<< "$summary")"
+            echo "Checks: pending=$pending failed=$failed missing=$missing"
+            if [ "$failed" -gt 0 ]; then echo "A repository check failed."; exit 1; fi
+            if [ "$pending" -eq 0 ] && [ "$missing" -eq 0 ]; then echo "All current checks passed."; exit 0; fi
+            sleep 30
+          done
+          echo "Timed out waiting for repository checks."
+          exit 1
+
   enable-auto-merge:
     needs: [review-gate, validate-python, validate-native]
     if: needs.review-gate.outputs.approved == 'true'
