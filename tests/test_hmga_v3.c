@@ -4,7 +4,7 @@
 
 #define CHECK(condition) do { \
     if (!(condition)) { \
-        (void)fprintf(stderr, "CHECK failed at %s:%d: %s\\n", __FILE__, __LINE__, #condition); \
+        (void)fprintf(stderr, "CHECK failed at %s:%d: %s\n", __FILE__, __LINE__, #condition); \
         return 1; \
     } \
 } while (0)
@@ -20,10 +20,10 @@ int main(void) {
     CHECK(catalogue != NULL);
     CHECK(axiom_count == HMGA_V3_AXIOM_COUNT);
     for (index = 0u; index < axiom_count; ++index) {
-        CHECK(catalogue[index].imperative != NULL && catalogue[index].imperative[0] != '\\0');
-        CHECK(catalogue[index].quality != NULL && catalogue[index].quality[0] != '\\0');
+        CHECK(catalogue[index].imperative != NULL && catalogue[index].imperative[0] != '\0');
+        CHECK(catalogue[index].quality != NULL && catalogue[index].quality[0] != '\0');
         CHECK(catalogue[index].engineering_vector != NULL &&
-              catalogue[index].engineering_vector[0] != '\\0');
+              catalogue[index].engineering_vector[0] != '\0');
     }
 
     CHECK(hmga_v3_get_operator_count() == HMGA_V3_OPERATOR_COUNT);
