@@ -127,8 +127,20 @@ A quota violation stops execution with a Reaper runtime diagnostic. These limits
 
 Python 3.10+ is required. The interpreter uses only the Python standard library.
 
+## Optional compiler front end
+
+The `reaperc` developer command is an additive compiler-front-end prototype. It parses the existing `.rpr` language, performs conservative static checks, emits source-mapped deterministic Quarry IR, verifies the IR structure, and can fold safe literal expressions:
+
+~~~sh
+python -m pip install -e .
+reaperc examples/flow.rpr
+reaperc examples/flow.rpr --optimize
+~~~
+
+This front end is separate from the reference tree-walk interpreter. Quarry IR is a portable interchange representation; native machine-code generation, bytecode execution, GPU lowering, and a production optimizer are not implemented. Static analysis remains conservative where the language has no declared type annotations.
+
 ## Implementation boundary
 
-Implemented in 0.1: lexer, parser, tree-walk interpreter, lexical closures, lists, functions, flow composition, console I/O, source diagnostics, an execution-step budget, call-depth limits, collection-item limits and text-concatenation limits.
+Implemented in 0.1: lexer, parser, tree-walk interpreter, lexical closures, lists, functions, flow composition, console I/O, source diagnostics, bounded execution and resource limits. An additive developer compiler front end also emits and verifies deterministic source-mapped Quarry IR.
 
-Not implemented yet: static type checking, algebraic effect handlers, semantic-graph storage, native compilation, GPU execution, distributed scheduling, formal verification, package registry, or self-hosting compiler. These are roadmap goals, not current guarantees.
+Not implemented yet: a complete sound static type system, language-level algebraic effect handlers, persistent semantic-graph storage, native machine-code generation, GPU execution, distributed scheduling, formal verification, package registry, or self-hosting compiler. These remain roadmap goals, not current guarantees.

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+<defs><linearGradient id="top" x1="0" x2="1"><stop stop-color="#173a70"/><stop offset="1" stop-color="#285f9d"/></linearGradient><filter id="shadow"><feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#173252" flood-opacity=".13"/></filter></defs>
+<rect width="1600" height="1000" fill="#f2f6fb"/><rect x="34" y="28" width="1532" height="944" rx="28" fill="#fff" filter="url(#shadow)"/>
+<path d="M62 28h1476a28 28 0 0 1 28 28v120H34V56a28 28 0 0 1 28-28" fill="url(#top)"/>
+<text x="78" y="84" fill="#fff" font-family="Segoe UI,Arial" font-size="28" font-weight="700">REAPER / LANGUAGE TOOLCHAIN</text><text x="80" y="121" fill="#d9e8fb" font-family="Segoe UI,Arial" font-size="16">Interpreter · portable compiler front end · bounded host runtime foundations</text>
+<rect x="34" y="176" width="1532" height="5" fill="#bd3343"/>
+<g font-family="Segoe UI,Arial">
+<rect x="76" y="215" width="1448" height="440" rx="17" fill="#10263f"/>
+<rect x="76" y="215" width="1448" height="56" rx="17" fill="#1a3554"/><circle cx="108" cy="243" r="8" fill="#bd5260"/><circle cx="136" cy="243" r="8" fill="#d8a24a"/><circle cx="164" cy="243" r="8" fill="#56a982"/>
+<text x="204" y="249" font-size="15" fill="#d4e4f6" font-weight="600">DEVELOPER TERMINAL / ILLUSTRATIVE OUTPUT</text>
+<text x="112" y="317" font-size="20" fill="#8fc3ff">$ reaperc examples/flow.rpr --optimize</text>
+<text x="112" y="363" font-size="17" fill="#e6f0fb">{"format": "quarry-ir", "format_version": 1,</text>
+<text x="112" y="398" font-size="17" fill="#e6f0fb"> "source_digest": "sha256:…",</text>
+<text x="112" y="433" font-size="17" fill="#e6f0fb"> "ir_digest": "sha256:…",</text>
+<text x="112" y="468" font-size="17" fill="#e6f0fb"> "diagnostics": [],</text>
+<text x="112" y="503" font-size="17" fill="#e6f0fb"> "optimization": {"folded_expressions": 1}}</text>
+<text x="112" y="564" font-size="17" fill="#a3c4e5">IR is portable, source-mapped and verified — no machine code is emitted.</text>
+<text x="112" y="611" font-size="16" fill="#e6edf7">Reaper 0.1 · Python 3.10+ · no third-party runtime dependencies</text>
+<text x="78" y="715" font-size="20" fill="#1d3a5d" font-weight="700">TOOLCHAIN FLOW</text>
+<g stroke="#7e9cbb" stroke-width="3" fill="none"><path d="M320 792h42m-10-10 10 10-10 10"/><path d="M684 792h42m-10-10 10 10-10 10"/><path d="M1048 792h42m-10-10 10 10-10 10"/></g>
+<g><rect x="78" y="751" width="242" height="83" rx="13" fill="#eff5fc" stroke="#cbdced"/><text x="199" y="785" text-anchor="middle" font-size="19" fill="#1e4778" font-weight="700">.rpr SOURCE</text><text x="199" y="810" text-anchor="middle" font-size="13" fill="#617a95">Lexer + parser</text>
+<rect x="362" y="751" width="322" height="83" rx="13" fill="#eaf2fc" stroke="#c5d8ee"/><text x="523" y="785" text-anchor="middle" font-size="19" fill="#1e4778" font-weight="700">COMPILER FRONT END</text><text x="523" y="810" text-anchor="middle" font-size="13" fill="#617a95">Static checks · safe folding</text>
+<rect x="726" y="751" width="322" height="83" rx="13" fill="#eaf2fc" stroke="#c5d8ee"/><text x="887" y="785" text-anchor="middle" font-size="19" fill="#1e4778" font-weight="700">QUARRY IR</text><text x="887" y="810" text-anchor="middle" font-size="13" fill="#617a95">Deterministic · source-mapped</text>
+<rect x="1090" y="751" width="432" height="83" rx="13" fill="#fff4f4" stroke="#edcfd3"/><text x="1306" y="785" text-anchor="middle" font-size="19" fill="#9f3441" font-weight="700">IR VERIFIER</text><text x="1306" y="810" text-anchor="middle" font-size="13" fill="#8b6870">Native backend: not implemented</text></g>
+<rect x="78" y="866" width="1444" height="62" rx="12" fill="#f2f6fc"/><text x="108" y="904" font-size="15" fill="#526984">Host APIs: resources · channels/actors · capabilities · snapshots · routing · profiling · interop · health policy</text>
+<text x="1515" y="957" text-anchor="end" font-size="12" fill="#7b8da4">ILLUSTRATIVE PREVIEW · NOT A LIVE TERMINAL CAPTURE · OUTPUT VALUES ARE MOCK DATA</text>
+</g></svg>

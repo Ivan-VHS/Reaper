@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
+  <title id="title">Reaper — nine runtime architecture systems</title>
+  <desc id="desc">Nine connected modules: Citadel routing, epoch memory, scoped capabilities, profiling, semantic IR, foreign-function interface, snapshots, actors and health supervision.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#101827"/><stop offset="1" stop-color="#172b39"/></linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#35d4c5"/><stop offset="1" stop-color="#65a9ff"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="9" stdDeviation="12" flood-color="#000000" flood-opacity=".22"/></filter>
+    <style>
+      .h{font:700 42px 'Segoe UI',Arial,sans-serif;fill:#f2f7fb}.sub{font:400 19px 'Segoe UI',Arial,sans-serif;fill:#a9bdca}
+      .card{fill:#1d3040;stroke:#355267;stroke-width:1.5;filter:url(#shadow)}
+      .num{font:700 15px 'Segoe UI',Arial,sans-serif;fill:#071a24}
+      .name{font:700 21px 'Segoe UI',Arial,sans-serif;fill:#f3f8fb}
+      .body{font:400 15px 'Segoe UI',Arial,sans-serif;fill:#b7c9d5}
+      .tag{font:600 12px 'Segoe UI',Arial,sans-serif;fill:#56ddd1;letter-spacing:1.2px}
+      .link{stroke:#4a8190;stroke-width:2;stroke-dasharray:7 8;fill:none;opacity:.65}
+    </style>
+  </defs>
+  <rect width="1600" height="1000" rx="28" fill="url(#bg)"/>
+  <path d="M84 155H1516" stroke="url(#accent)" stroke-width="3" opacity=".85"/>
+  <text x="88" y="91" class="h">REAPER SYSTEMS</text>
+  <text x="90" y="127" class="sub">Nine coordinated runtime foundations · explicit capabilities · bounded execution</text>
+  <g class="link">
+    <path d="M800 220V248M800 460V487M800 700V728"/>
+    <path d="M300 354H1300M300 594H1300M300 833H1300"/>
+    <path d="M300 354V380M800 354V380M1300 354V380"/>
+    <path d="M300 594V620M800 594V620M1300 594V620"/>
+    <path d="M300 833V860M800 833V860M1300 833V860"/>
+  </g>
+  <g transform="translate(88 190)">
+    <rect width="430" height="210" rx="18" class="card"/><circle cx="38" cy="38" r="17" fill="#59d9cd"/><text x="38" y="43" text-anchor="middle" class="num">01</text>
+    <text x="72" y="45" class="name">CITADEL ROUTES</text><text x="28" y="85" class="tag">TYPED LOCAL RELAYS</text>
+    <text x="28" y="122" class="body">Named endpoints, payload contracts,</text><text x="28" y="147" class="body">bounded route tables and dispatch metrics.</text><text x="28" y="184" class="body">No remote transport is implied.</text>
+  </g>
+  <g transform="translate(585 190)">
+    <rect width="430" height="210" rx="18" class="card"/><circle cx="38" cy="38" r="17" fill="#8ed7a8"/><text x="38" y="43" text-anchor="middle" class="num">02</text>
+    <text x="72" y="45" class="name">EPOCH BASIN</text><text x="28" y="85" class="tag">REGIONS &amp; BORROWS</text>
+    <text x="28" y="122" class="body">Move-aware handles, scoped borrows,</text><text x="28" y="147" class="body">retirement and epoch-delayed release.</text><text x="28" y="184" class="body">Logical lifetime, not native O(1) GC.</text>
+  </g>
+  <g transform="translate(1082 190)">
+    <rect width="430" height="210" rx="18" class="card"/><circle cx="38" cy="38" r="17" fill="#f2c46c"/><text x="38" y="43" text-anchor="middle" class="num">03</text>
+    <text x="72" y="45" class="name">KEYGUARD EFFECTS</text><text x="28" y="85" class="tag">SCOPED CAPABILITIES</text>
+    <text x="28" y="122" class="body">Revocable process-local tokens and</text><text x="28" y="147" class="body">context-scoped permission checks.</text><text x="28" y="184" class="body">Explicit grants; no hidden privileges.</text>
+  </g>
+  <g transform="translate(88 430)">
+    <rect width="430" height="210" rx="18" class="card"/><circle cx="38" cy="38" r="17" fill="#82b8ff"/><text x="38" y="43" text-anchor="middle" class="num">04</text>
+    <text x="72" y="45" class="name">PULSE METRICS</text><text x="28" y="85" class="tag">PROFILE BEFORE TUNING</text>
+    <text x="28" y="122" class="body">Call counts, timing samples and hot-site</text><text x="28" y="147" class="body">ranking with a portable IR optimizer.</text><text x="28" y="184" class="body">No machine-code JIT yet.</text>
+  </g>
+  <g transform="translate(585 430)">
+    <rect width="430" height="210" rx="18" class="card"/><circle cx="38" cy="38" r="17" fill="#c3a2ff"/><text x="38" y="43" text-anchor="middle" class="num">05</text>
+    <text x="72" y="45" class="name">QUARRY SYNTHESIS</text><text x="28" y="85" class="tag">TYPES · AST · PORTABLE IR</text>
+    <text x="28" y="122" class="body">Static diagnostics, source-mapped nodes,</text><text x="28" y="147" class="body">canonical JSON and deterministic digests.</text><text x="28" y="184" class="body">No native execution backend yet.</text>
+  </g>
+  <g transform="translate(1082 430)">
+    <rect width="430" height="210" rx="18" class="card"/><circle cx="38" cy="38" r="17" fill="#ee9f89"/><text x="38" y="43" text-anchor="middle" class="num">06</text>
+    <text x="72" y="45" class="name">PORTICO FFI</text><text x="28" y="85" class="tag">NARROW C ABI GATEWAY</text>
+    <text x="28" y="122" class="body">Scalar declarations, explicit native-load</text><text x="28" y="147" class="body">capability and foreign-handle lifetimes.</text><text x="28" y="184" class="body">Not a general C++ binding generator.</text>
+  </g>
+  <g transform="translate(88 670)">
+    <rect width="430" height="210" rx="18" class="card"/><circle cx="38" cy="38" r="17" fill="#f3a6d5"/><text x="38" y="43" text-anchor="middle" class="num">07</text>
+    <text x="72" y="45" class="name">WAYSTONE SNAPSHOTS</text><text x="28" y="85" class="tag">DURABLE APPLICATION STATE</text>
+    <text x="28" y="122" class="body">Checksummed JSON, atomic replacement</text><text x="28" y="147" class="body">and copy-on-write transactions.</text><text x="28" y="184" class="body">Not a live process checkpoint.</text>
+  </g>
+  <g transform="translate(585 670)">
+    <rect width="430" height="210" rx="18" class="card"/><circle cx="38" cy="38" r="17" fill="#91d6f0"/><text x="38" y="43" text-anchor="middle" class="num">08</text>
+    <text x="72" y="45" class="name">CAIRN ACTORS</text><text x="28" y="85" class="tag">BOUNDED COOPERATIVE WORKERS</text>
+    <text x="28" y="122" class="body">Typed mailboxes, backpressure, restart</text><text x="28" y="147" class="body">supervision and structured shutdown.</text><text x="28" y="184" class="body">Single-process asyncio actors.</text>
+  </g>
+  <g transform="translate(1082 670)">
+    <rect width="430" height="210" rx="18" class="card"/><circle cx="38" cy="38" r="17" fill="#d8d98a"/><text x="38" y="43" text-anchor="middle" class="num">09</text>
+    <text x="72" y="45" class="name">VANGUARD SENTINEL</text><text x="28" y="85" class="tag">HEALTH &amp; RECOVERY BUDGETS</text>
+    <text x="28" y="122" class="body">Explicit probes, actor status and bounded</text><text x="28" y="147" class="body">local recovery callbacks.</text><text x="28" y="184" class="body">No cloud orchestration or auto-cloning.</text>
+  </g>
+  <text x="88" y="950" class="sub">One language · independent subsystems · explicit trust boundaries · measurable contracts</text>
+</svg>

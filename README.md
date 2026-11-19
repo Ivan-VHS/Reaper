@@ -1,139 +1,90 @@
 # Reaper — a flow-first programming language
 
 <p align="center">
-  <img alt="Reaper 0.1.0" src="https://img.shields.io/badge/Reaper-0.1.0-16A6A1?style=flat-square">
-  <img alt="Python 3.10+" src="https://img.shields.io/badge/runtime-Python%203.10%2B-3776AB?style=flat-square">
-  <img alt="No third-party runtime dependencies" src="https://img.shields.io/badge/runtime%20dependencies-none-16A34A?style=flat-square">
+  <a href="https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml"><img alt="Python and native CI" src="https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml/badge.svg"></a>
+  <img alt="Reaper 0.1" src="https://img.shields.io/badge/Reaper-0.1.0-2563EB?style=flat-square">
+  <img alt="Python 3.10+" src="https://img.shields.io/badge/runtime-Python%203.10%2B-DC2626?style=flat-square">
   <img alt="Apache 2.0" src="https://img.shields.io/badge/license-Apache--2.0-111827?style=flat-square">
-  <a href="https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml/badge.svg"></a>
 </p>
 
-<p align="center"><strong>WRITE CLEARLY. COMPOSE FLOWS. MAKE EFFECTS EXPLICIT.</strong></p>
+<p align="center"><img src="assets/reaper-hero.svg" alt="Reaper flow-first language" width="100%"></p>
 
-<p align="center"><img src="assets/reaper-hero.svg" alt="Reaper — a clear, flow-first programming language" width="100%"></p>
-
-**Reaper is an independent, expression-oriented programming language built around readable syntax and explicit data flow.** Its central operator, `~>`, passes a value into the next operation, making transformations read like a sequence instead of a nested expression.
-
-Version **0.1.0** is an executable first milestone: a Python 3.10+ tree-walking interpreter with a lexer, parser, runtime, command-line runner, examples and tests. It uses only the Python standard library.
+Reaper is an independent, flow-first language with a readable syntax and a bounded interpreter. The current engineering tree also contains a portable compiler front end, opt-in host-runtime APIs and an experimental native C17 workstream. The interpreter remains the semantic reference.
 
 **Read this in:** [English](README.md) · [Русский](README.ru.md) · [Українська](README.uk.md) · [简体中文](README.zh-CN.md)
 
-## A language you can read at a glance
+## Visual tour
 
-```reaper
-craft double(value) {
-    yield value * 2
-}
+<p align="center"><img src="assets/reaper-toolchain-preview.svg" alt="Source-aligned preview of the Reaper compiler front end and Quarry IR path" width="100%"></p>
+<p align="center"><img src="assets/reaper-nine-systems.svg" alt="Reaper bounded host-runtime systems architecture" width="100%"></p>
 
-make numbers := [1, 2, 3, 4]
-make answer := numbers ~> map(double) ~> sum()
-emit "answer = " ++ text(answer)
-```
+<sub>These are source-aligned SVG previews and an architecture diagram, not screenshots captured from a live terminal session. Terminal text and example values in the preview are illustrative.</sub>
 
-The flow operator passes the left-hand value as the first argument to the operation on its right. `make` creates an immutable binding; `vary` declares a mutable one; `change` performs reassignment.
+## Language and runtime
 
-## What is in 0.1
-
-| Language feature | Current implementation |
-|---|---|
-| **Readable source** | Unicode identifiers, comments and escaped text literals |
-| **Functions** | `craft`, lexical closures, recursion and `yield` |
-| **Explicit state** | Immutable `make`; mutable `vary` with explicit `change` |
-| **Control flow** | `when / otherwise`, `each` and `loop while` |
-| **Data flow** | `~>` composition with `map`, `keep`, `fold` and related built-ins |
-| **Diagnostics** | Source-aware lexer, parser and runtime errors |
-| **Execution limits** | Step budget, call-depth, collection-item and text-length limits |
-| **Developer workflow** | CLI, check-only mode, examples and standard-library tests |
+- **Flow-first syntax:** the established ~> operator composes transformations while preserving Reaper's existing grammar.
+- **Interpreter:** lexer, parser, AST and bounded tree-walking execution remain the compatibility baseline.
+- **Compiler front end:** conservative static diagnostics, deterministic source-mapped Quarry IR, structural verification and safe literal folding. The front end does not emit native machine code.
+- **Host runtime APIs:** bounded resource regions, asynchronous channels and actors, scoped capabilities, checksummed application-state snapshots, in-process routing, profiling, capability-gated C ABI interop and health-policy observation.
+- **Host target reporting:** the --target-info command reports host metadata, including E2K identification. It does not imply an MCST native backend.
+- **Native C17 track:** portable compiler/runtime foundations and tests are maintained separately from the Python interpreter; full language parity is not claimed.
 
 ## Try the checked-in examples
 
-<p align="center"><img src="assets/reaper-terminal-preview.svg" alt="Illustrative terminal preview showing the checked-in Reaper hello example and parser check" width="100%"></p>
+Requirements: Python 3.10 or newer. The runtime uses the Python standard library.
 
-<sub>Illustrative terminal preview. The displayed lines are the expected output of the checked-in example and CLI check mode; this image is not a capture from a live terminal session.</sub>
+    git clone https://github.com/Ivan-VHS/Reaper.git
+    cd Reaper
+    python -m reaper --check examples/flow.rpr
+    python -m reaper examples/flow.rpr
+    python -m reaper --target-info
+    python -m reaper.compiler_cli examples/flow.rpr --optimize
 
-### Requirements
+## Build and verify
 
-- Python 3.10 or newer
-- No third-party runtime dependencies
+Run the Python suite:
 
-### Run from the repository
+    python -m compileall -q reaper tests
+    python -m unittest discover -s tests -v
 
-```bash
-git clone https://github.com/Ivan-VHS/Reaper.git
-cd Reaper
+Build and test the native C17 targets:
 
-python -m reaper examples/hello.rpr
-python -m reaper examples/flow.rpr
-python -m reaper --check examples/flow.rpr
-```
+    cmake -S . -B build -DBUILD_TESTING=ON
+    cmake --build build --parallel
+    ctest --test-dir build --output-on-failure
 
-Install the command-line entry point in editable mode:
+GitHub Actions validates Python 3.10, 3.11 and 3.12, runs the interpreter examples, exercises the compiler CLI and runtime architecture example, and tests the native C17 targets. A separate HMGA audit workflow checks the repository contract.
 
-```bash
-python -m pip install -e .
-reaper examples/hello.rpr
-```
+## Consolidated engineering updates
 
-Run the complete test suite:
+The integration branch curates compatible work from the open development history:
 
-```bash
-python -m unittest discover -s tests -v
-```
+- **Compiler front end:** source-mapped Quarry IR, deterministic digests, conservative static checks, structural validation and safe constant folding.
+- **Runtime foundations:** bounded resources, asynchronous channels/actors, scoped host capabilities, durable application-state snapshots, local routing, profiling, limited C ABI interop and health policy.
+- **E2K profile:** host identification and explicit capability reporting only; native MCST code generation is not implemented.
+- **MOST architecture:** staged system design mapped to the existing language and C17 migration without changing Reaper syntax.
+- **HMGA v2/v3:** read-only repository audit and a deterministic 20-axiom / 400-operator native C17 catalogue with a finite 64-round planning limit.
+- **Engineering gates:** signature-aware composition tests, cross-version Python checks, native C17 tests and a documented review/merge process.
 
-## How Reaper runs a program
+Historical prototypes with overlapping actor, effect, resource, relay and health APIs were reviewed and deduplicated instead of being installed side-by-side. The current module-per-contract implementation remains the canonical host-runtime path. See the [integration audit](docs/INTEGRATION_AUDIT_2026-11-19.md) for the source-by-source record.
 
-<p align="center"><img src="assets/reaper-architecture.svg" alt="Reaper source-to-runtime pipeline and explicit effects boundary" width="100%"></p>
+## Architecture and documentation
 
-Source text is tokenized, parsed into an AST and evaluated by a bounded tree-walking interpreter. Console interaction is explicit through language operations such as `emit`, `say` and `ask`. Ordinary expressions do not silently gain filesystem, network, clock, process, shell or hardware access.
+- [Language reference](LANGUAGE.md)
+- [Platform architecture](docs/PLATFORM_ARCHITECTURE.md)
+- [Nine-system runtime reference](docs/REAPER_SYSTEMS.md)
+- [Cyclic runtime architecture](docs/REAPERS_ARCHITECTURE.md)
+- [MOST systems architecture](docs/MOST_SYSTEMS_ARCHITECTURE.md)
+- [Engineering standard](docs/ENGINEERING_STANDARD.md)
+- [HMGA v2.0 contract](docs/HMGA_V2.0.md)
+- [HMGA v3.0 operator matrix](docs/HMGA_V3.md)
+- [E2K host profile](docs/ELBRUS_E2K.md)
+- [Integration audit](docs/INTEGRATION_AUDIT_2026-11-19.md)
 
-## A small core with visible rules
+## Current boundaries
 
-- **Immutability by default:** use `make` for fixed bindings; opt into mutation with `vary` and `change`.
-- **Left-to-right composition:** `values ~> map(double) ~> keep(is_large)` makes the data path visible.
-- **Explicit conversion:** arithmetic is numeric; `++` concatenates text. Convert with `text()` or `number()` rather than relying on silent coercion.
-- **Bounded execution:** the default limits are 1,000,000 execution steps, 256 nested function calls, 100,000 collection items and 1,000,000 characters produced by text concatenation.
-- **Useful errors:** diagnostics retain source locations where a source token is available.
-- **Portable implementation:** the current interpreter runs on Python 3.10+ and uses the standard library only.
-
-> [!NOTE]
-> These limits are resource guardrails, not a security sandbox. Do not run untrusted programs under the assumption that the interpreter isolates them from the host process.
-
-## MOST language track
-
-The native C17 line now includes the MOST lexical vocabulary, expression parser/AST, a small verified Canonical IR, checked constant folding and a deliberately limited integer-expression AST-to-IR lowering slice. The full 66-rule language contract is in [docs/MOST_LANGUAGE_SPEC.md](docs/MOST_LANGUAGE_SPEC.md); the integrated cross-thread architecture is in [docs/REAPER_UNIFIED_ARCHITECTURE.md](docs/REAPER_UNIFIED_ARCHITECTURE.md). Full declarations/blocks, type checking, MOST intent resolution, ownership analysis, native code generation and WASM are not yet implemented.
-
-## Native C migration
-
-A parallel C17 implementation is being developed in [docs/C_MIGRATION.md](docs/C_MIGRATION.md). The native build currently contains the source-aware lexer, expression parser and owned AST, verified integer IR, checked constant folding, limited AST-to-IR lowering, native CLI bring-up mode, and C unit tests. The Python interpreter remains the compatibility reference until complete parser/runtime/CLI parity is demonstrated; the C executable is not yet a full language interpreter.
-
-Inspect the native evolution gates with `./build/reaper-c --evolution-status`. The controller reports evidence requirements and deliberately does not self-approve or merge changes.\n\nBuild the native core:
-
-```sh
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build --parallel
-ctest --test-dir build --output-on-failure
-./build/reaper-c --tokens examples/hello.rpr
-```
-
-## Documentation and engineering programme
-
-- [Language reference](LANGUAGE.md) — syntax, expressions, built-ins and runtime limits.
-- [Unified REAPER/MOST architecture](docs/REAPER_UNIFIED_ARCHITECTURE.md) — consolidated decisions from the earlier design threads and current delivery gates.
-- [Architecture](docs/ARCHITECTURE.md) — implementation layers and product boundaries.
-- [Architecture requirements](docs/ARCHITECTURE_66.md) — enforceable modularity and safety requirements.
-- [AETHER-ANAS roadmap](docs/AETHER_ANAS_ROADMAP.md) — staged integration plan and acceptance gates.
-- [20-system engineering programme](docs/20_SYSTEM_ENHANCEMENTS.md) — engineering contracts and acceptance focus.
-- [Constitution profile](docs/CONSTITUTION_666_PROFILE.md) — project-specific rules and conformance states.
-- [Runnable examples](examples/) and [tests](tests/).
-
-The 20 engineering tracks are **contracts and planned work**, not twenty completed runtime subsystems. Static type checking, effect types, native compilation, GPU execution, distributed scheduling, package management, formal verification and self-hosting remain future milestones. They will be claimed as implemented only after real backends and conformance tests exist.
-
-## CI and current boundary
-
-GitHub Actions tests Python **3.10, 3.11 and 3.12**. The workflow compiles the package and tests, runs the unit suite, checks an example without executing it, and runs the flow example.
-
-Reaper 0.1 is an interpreter — **not** a native-code compiler, operating system, package registry, plugin host or autonomous agent. Resource quotas are not an isolation boundary.
+Reaper 0.1 remains an interpreter-first language. The compiler front end emits portable IR, not machine code. Host APIs are opt-in Python integrations and do not silently become language built-ins or an operating-system sandbox. Native code generation, JIT, distributed actors, network transport, cloud orchestration and full MCST E2K support are not claimed.
 
 ## License
 
-Reaper is distributed under the [Apache License 2.0](LICENSE).
+Released under the [Apache License 2.0](LICENSE).
