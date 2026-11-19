@@ -85,3 +85,8 @@ GitHub Actions tests Python 3.10, 3.11 and 3.12, runs the unit suite, checks an 
 [Apache License 2.0](LICENSE).
 
 > 千里之行，始于足下。 — A journey of a thousand miles begins with a single step.
+
+
+## Execution audit trail
+
+The optional audit mode writes a local hash-chained journal of source fingerprints and run lifecycle events without copying program output. Enable it with --audit-log PATH and verify it with --verify-audit-log PATH. The chain detects record edits but is not a digital signature or remote attestation; see docs/EXECUTION_AUDIT.md.
