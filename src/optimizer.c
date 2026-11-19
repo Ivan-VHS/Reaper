@@ -83,6 +83,10 @@ int reaper_ir_optimize_fixed_point(
     ReaperIrError *error
 ) {
     if (output_length != NULL) *output_length = 0;
+    if (error != NULL) {
+        error->node_index = 0U;
+        error->message[0] = '\0';
+    }
     if (report != NULL) {
         report->iterations = 0U;
         report->folded_nodes = 0U;
@@ -133,6 +137,10 @@ int reaper_ir_optimize_fixed_point(
         size_t changed = 0U;
         for (size_t i = 0U; i < input->length; ++i) {
             if (!same_node(&current[i], &next[i])) ++changed;
+        }
+        if (changed > SIZE_MAX - report->folded_nodes) {
+            (void)fail(error, iteration, "optimizer change counter overflow");
+            goto cleanup;
         }
         report->iterations = iteration + 1U;
         report->folded_nodes += changed;
