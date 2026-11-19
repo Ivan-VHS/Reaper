@@ -18,7 +18,7 @@ static int ident_start(unsigned char c){return isalpha(c)||c=='_'||c>=0x80;}
 static int ident_more(unsigned char c){return isalnum(c)||c=='_'||c>=0x80;}
 static int one_op(char c){return strchr("+-*/%<>(){}[],=:;.!?@|~&^",c)!=NULL;}
 static int is_pair_operator(const char *p){
- static const char *const ops[]={":=","==","!=","<=",">=","//","**","++","~>","|>","??","+%","+|","->","=>","::","&&","||","<<",">>","&=","|="};
+ static const char *const ops[]={":=","==","!=","<=",">=","//","**","++","|>","??","+%","+|","->","=>","::","&&","||","<<",">>","&=","|="};
  for(size_t i=0;i<sizeof ops/sizeof ops[0];++i)if(p[0]==ops[i][0]&&p[1]==ops[i][1])return 1;
  return 0;
 }
