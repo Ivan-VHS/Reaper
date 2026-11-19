@@ -63,3 +63,92 @@ int reaper_ir_fold_constants(
     *output_length = input->length;
     return 1;
 }
+
+static int same_node(const ReaperIrNode *a, const ReaperIrNode *b) {
+    return a->opcode == b->opcode && a->type == b->type &&
+        a->lhs == b->lhs && a->rhs == b->rhs &&
+        a->immediate == b->immediate &&
+        a->source_line == b->source_line &&
+        a->source_column == b->source_column;
+}
+
+int reaper_ir_optimize_fixed_point(
+    const ReaperIrModule *input,
+    ReaperIrNode *output,
+    size_t output_capacity,
+    size_t *output_length,
+    size_t max_iterations,
+    ReaperOptimizationReport *report,
+    ReaperIrError *error
+) {
+    if (output_length != NULL) *output_length = 0;
+    if (report != NULL) {
+        report->iterations = 0U;
+        report->folded_nodes = 0U;
+        report->converged = 0;
+    }
+    if (input == NULL || output_length == NULL || report == NULL ||
+        (input->length != 0U && (input->nodes == NULL || output == NULL))) {
+        return fail(error, 0U, "input, output, length and report are required");
+    }
+    if (max_iterations == 0U || max_iterations > REAPER_OPTIMIZER_MAX_ITERATIONS) {
+        return fail(error, 0U, "optimizer iteration budget must be between 1 and 64");
+    }
+    if (output_capacity < input->length) {
+        return fail(error, 0U, "output capacity is smaller than input module");
+    }
+    if (!reaper_ir_verify(input, error)) return 0;
+    if (input->length == 0U) {
+        report->iterations = 1U;
+        report->converged = 1;
+        return 1;
+    }
+
+    ReaperIrNode *current = malloc(input->length * sizeof *current);
+    ReaperIrNode *next = malloc(input->length * sizeof *next);
+    if (current == NULL || next == NULL) {
+        free(current);
+        free(next);
+        return fail(error, 0U, "unable to allocate bounded optimizer workspace");
+    }
+    memcpy(current, input->nodes, input->length * sizeof *current);
+
+    int success = 0;
+    for (size_t iteration = 0U; iteration < max_iterations; ++iteration) {
+        ReaperIrModule current_module = { current, input->length };
+        size_t next_length = 0U;
+        if (!reaper_ir_fold_constants(&current_module, next,
+                input->length, &next_length, error)) {
+            goto cleanup;
+        }
+        if (next_length != input->length) {
+            (void)fail(error, iteration, "optimizer pass changed canonical IR length");
+            goto cleanup;
+        }
+
+        size_t changed = 0U;
+        for (size_t i = 0U; i < input->length; ++i) {
+            if (!same_node(&current[i], &next[i])) ++changed;
+        }
+        report->iterations = iteration + 1U;
+        report->folded_nodes += changed;
+        memcpy(current, next, input->length * sizeof *current);
+
+        if (changed == 0U) {
+            memcpy(output, current, input->length * sizeof *output);
+            *output_length = input->length;
+            report->converged = 1;
+            success = 1;
+            break;
+        }
+    }
+    if (!success) {
+        (void)fail(error, report->iterations,
+            "optimizer did not reach a fixed point within the iteration budget");
+    }
+
+cleanup:
+    free(current);
+    free(next);
+    return success;
+}
