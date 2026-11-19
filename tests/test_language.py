@@ -111,6 +111,14 @@ class RuntimeTests(unittest.TestCase):
         with self.assertRaisesRegex(ReaperRuntimeError, "division by zero"):
             self.capture("emit 4 / 0")
 
+    def test_zero_to_negative_power_is_a_language_error(self) -> None:
+        with self.assertRaisesRegex(ReaperRuntimeError, "numeric operation failed"):
+            self.capture("emit 0 ** -1")
+
+    def test_complex_power_result_is_rejected(self) -> None:
+        with self.assertRaisesRegex(ReaperRuntimeError, "real numbers"):
+            self.capture("emit (-1) ** 0.5")
+
     def test_execution_budget_stops_infinite_loop(self) -> None:
         with self.assertRaises(ExecutionLimitError):
             self.capture("loop while true {\n    emit 1\n}", max_steps=20)
