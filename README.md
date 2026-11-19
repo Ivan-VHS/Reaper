@@ -19,7 +19,7 @@ emit "answer = " ++ text(answer)
 
 - **Python reference runtime:** Python 3.10+, tree-walking interpreter, lexer, parser, runtime, CLI and standard-library tests.
 - **Language core:** Unicode identifiers, comments, strings, functions and closures, recursion, immutable `make`, mutable `vary` with explicit `change`, conditionals, iteration and flow composition.
-- **Built-ins and diagnostics:** collection operations, explicit conversions, source-aware lexer/parser/runtime errors and configurable execution limits.
+- **Built-ins and diagnostics:** collection operations, checked Euclidean division, balanced and proportional splitting, explicit conversions, source-aware errors and configurable execution limits.
 - **Native C17 track:** lexer, expression parser and owned AST, verified integer Canonical IR, checked constant folding, a limited AST-to-IR lowering slice, CLI bring-up and C tests.
 - **MOST language track:** documented language vocabulary and staged implementation contract.
 
@@ -73,6 +73,7 @@ Default runtime quotas include 1,000,000 execution steps, 256 nested calls, 100,
 
 - [Language reference](LANGUAGE.md)
 - [Unified REAPER/MOST architecture](docs/REAPER_UNIFIED_ARCHITECTURE.md)
+- [Division and partitioning engine](docs/DIVISION_ENGINE.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [MOST language specification](docs/MOST_LANGUAGE_SPEC.md)
 - [C migration plan](docs/C_MIGRATION.md)

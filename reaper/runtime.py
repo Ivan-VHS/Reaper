@@ -364,6 +364,91 @@ class Interpreter:
             if not isinstance(value, (UserFunction, Builtin)):
                 raise TypeError("expected a Reaper function")
 
+
+        def integer(value: Any, label: str) -> int:
+            if isinstance(value, bool) or not isinstance(value, int):
+                raise TypeError(f"{label} must be a whole number")
+            return value
+
+        def euclidean_divmod(dividend: Any, divisor: Any) -> list[int]:
+            dividend = integer(dividend, "dividend")
+            divisor = integer(divisor, "divisor")
+            if divisor == 0:
+                raise ValueError("division by zero")
+            quotient, remainder = divmod(dividend, abs(divisor))
+            if divisor < 0:
+                quotient = -quotient
+            return [quotient, remainder]
+
+        def partition(values: Any, count: Any) -> list[Any]:
+            values = sequence(values)
+            count = integer(count, "partition count")
+            if count < 1:
+                raise ValueError("partition count must be positive")
+            if count > self.max_collection_items:
+                raise ValueError(
+                    f"collection item limit ({self.max_collection_items}) exceeded"
+                )
+            total = len(values)
+            base, extra = divmod(total, count)
+            result: list[Any] = []
+            offset = 0
+            for index in range(count):
+                width = base + (1 if index < extra else 0)
+                piece = values[offset:offset + width]
+                result.append(piece if isinstance(values, str) else list(piece))
+                offset += width
+            return result
+
+        def distribute(total: Any, count: Any) -> list[int]:
+            total = integer(total, "total")
+            count = integer(count, "distribution count")
+            if count < 1:
+                raise ValueError("distribution count must be positive")
+            if count > self.max_collection_items:
+                raise ValueError(
+                    f"collection item limit ({self.max_collection_items}) exceeded"
+                )
+            quotient, remainder = euclidean_divmod(total, count)
+            return [
+                quotient + (1 if index < remainder else 0)
+                for index in range(count)
+            ]
+
+        def proportional_split(total: Any, weights: Any) -> list[int]:
+            total = integer(total, "total")
+            if total < 0:
+                raise ValueError("proportional total cannot be negative")
+            weights = sequence(weights)
+            if isinstance(weights, str) or not weights:
+                raise TypeError("weights must be a non-empty list of whole numbers")
+            normalized = [integer(weight, "weight") for weight in weights]
+            if any(weight < 0 for weight in normalized):
+                raise ValueError("weights cannot be negative")
+            weight_sum = sum(normalized)
+            if weight_sum == 0:
+                raise ValueError("at least one weight must be positive")
+            products = [total * weight for weight in normalized]
+            allocations = [product // weight_sum for product in products]
+            remainders = [product % weight_sum for product in products]
+            undistributed = total - sum(allocations)
+            priority = sorted(
+                range(len(normalized)),
+                key=lambda index: (-remainders[index], index),
+            )
+            for index in priority[:undistributed]:
+                allocations[index] += 1
+            return allocations
+
+        register("divmod_euclidean", euclidean_divmod, 2, 2)
+        register("euclidean_divmod", euclidean_divmod, 2, 2)
+        register("quotient", lambda dividend, divisor: euclidean_divmod(dividend, divisor)[0], 2, 2)
+        register("remainder", lambda dividend, divisor: euclidean_divmod(dividend, divisor)[1], 2, 2)
+        register("is_divisible", lambda dividend, divisor: euclidean_divmod(dividend, divisor)[1] == 0, 2, 2)
+        register("partition", partition, 2, 2)
+        register("split", partition, 2, 2)
+        register("distribute", distribute, 2, 2)
+        register("proportional_split", proportional_split, 2, 2)
         register("size", bounded_size, 1, 1)
         register("text", self._display, 1, 1)
         register("number", self._to_number, 1, 1)

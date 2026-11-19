@@ -9,6 +9,7 @@
     {"id":"MOST-TYP-002","name":"option and result types","area":"types","status":"planned","depends_on":["MOST-TYP-001"],"acceptance":["type-positive","type-negative","layout-tests"]},
     {"id":"MOST-EFF-001","name":"explicit effect declarations","area":"effects","status":"specified","depends_on":["MOST-TYP-001"],"acceptance":["effect-allow","effect-deny","capability-boundary"]},
     {"id":"MOST-MEM-001","name":"lexical regions","area":"memory","status":"specified","depends_on":["MOST-TYP-001"],"acceptance":["region-lifetime","escape-negative","allocator-tests"]},
-    {"id":"MOST-STD-001","name":"deterministic core library","area":"stdlib","status":"planned","depends_on":["MOST-TYP-001"],"acceptance":["api-contract","unit-tests","cross-target-vectors"]}
+    {"id":"MOST-STD-001","name":"deterministic core library","area":"stdlib","status":"planned","depends_on":["MOST-TYP-001"],"acceptance":["api-contract","unit-tests","cross-target-vectors"]},
+    {"id":"MOST-STD-002","name":"checked Euclidean division and balanced partitioning","area":"stdlib","status":"specified","depends_on":["MOST-STD-001"],"acceptance":["sign-matrix","zero-divisor-negative","overflow-negative","partition-conservation","proportional-conservation"]}
   ]
 }
