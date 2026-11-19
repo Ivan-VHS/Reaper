@@ -393,7 +393,7 @@ class Interpreter:
         register("exponential", algebra.exponential, 1, 2)
         register("replicate", lambda value, count: algebra.replicate(value, count, self.max_collection_items), 2, 2)
         register("reverse", lambda values: algebra.reverse(sequence(values)), 1, 1)
-        register("scale", lambda values, factor: algebra.scale(sequence(values), factor), 2, 2)
+        register("vector_scale", lambda values, factor: algebra.scale(sequence(values), factor), 2, 2)
         register("dot", lambda left, right: algebra.dot(sequence(left), sequence(right)), 2, 2)
         register("distance", lambda left, right: algebra.distance(sequence(left), sequence(right)), 2, 2)
         register("differentiate", lambda values, step=1: algebra.differentiate(sequence(values), step), 1, 2)
