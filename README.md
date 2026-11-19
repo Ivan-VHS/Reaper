@@ -1,9 +1,9 @@
 # Reaper — a flow-first programming language
 
 <p align="center">
-  <img alt="Reaper 0.1.0" src="https://img.shields.io/badge/Reaper-0.1.0-16A6A1?style=flat-square">
-  <img alt="Python 3.10+" src="https://img.shields.io/badge/runtime-Python%203.10%2B-3776AB?style=flat-square">
-  <img alt="No third-party runtime dependencies" src="https://img.shields.io/badge/runtime%20dependencies-none-16A34A?style=flat-square">
+  <img alt="Reaper 0.1.0" src="https://img.shields.io/badge/Reaper-0.1.0-1D4ED8?style=flat-square">
+  <img alt="Python 3.10+" src="https://img.shields.io/badge/runtime-Python%203.10%2B-DC2626?style=flat-square">
+  <img alt="No third-party runtime dependencies" src="https://img.shields.io/badge/runtime%20dependencies-none-1E40AF?style=flat-square">
   <img alt="Apache 2.0" src="https://img.shields.io/badge/license-Apache--2.0-111827?style=flat-square">
   <a href="https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml/badge.svg"></a>
 </p>
@@ -100,6 +100,7 @@ Source text is tokenized, parsed into an AST and evaluated by a bounded tree-wal
 
 ## Documentation and engineering programme
 
+- [Engineering standard](docs/ENGINEERING_STANDARD.md) — composition, testing, automation and UI contracts.
 - [Language reference](LANGUAGE.md) — syntax, expressions, built-ins and runtime limits.
 - [Architecture](docs/ARCHITECTURE.md) — implementation layers and product boundaries.
 - [Architecture requirements](docs/ARCHITECTURE_66.md) — enforceable modularity and safety requirements.
