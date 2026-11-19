@@ -131,4 +131,8 @@ Python 3.10+ is required. The interpreter uses only the Python standard library.
 
 Implemented in 0.1: lexer, parser, tree-walk interpreter, lexical closures, lists, functions, flow composition, console I/O, source diagnostics, an execution-step budget, call-depth limits, collection-item limits and text-concatenation limits.
 
-Not implemented yet: static type checking, algebraic effect handlers, semantic-graph storage, native compilation, GPU execution, distributed scheduling, formal verification, package registry, or self-hosting compiler. These are roadmap goals, not current guarantees.
+Not implemented yet: language-level static type checking, algebraic effect handlers, a unified semantic graph, bytecode/native compilation, GPU execution, distributed scheduling, FFI, formal verification, package registry, or self-hosting compiler. These are roadmap goals, not current guarantees.
+
+## Host runtime architecture APIs
+
+The Python package also exposes opt-in host-side primitives described in [the Reaper Cyclic Runtime Architecture](docs/REAPERS_ARCHITECTURE.md): bounded epoch reference groups (`reaper.epoch`), task-local effect contexts (`reaper.effects`), typed in-process relays (`reaper.relays`), advisory hot-path counters (`reaper.profiling`), JSON-state actors and integrity-checked snapshots (`reaper.actors`), and a health-policy observer (`reaper.sentinel`). These are Python integration APIs, not new `.rpr` syntax and not capabilities implicitly available to Reaper programs. The epoch arena is reference tracking rather than a native allocator; snapshots do not freeze processes; the profiler does not JIT-compile code; and the sentinel does not actuate restarts or scaling.
