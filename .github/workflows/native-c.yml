@@ -1,7 +1,7 @@
 name: Reaper Native C
 on:
   push:
-    branches: [ "rewrite/**", "feat/**" ]
+    branches: [ "main", "rewrite/**", "feat/**" ]
   pull_request:
   workflow_dispatch:
 permissions:
