@@ -5,7 +5,7 @@ This PR is a curated integration against the current `main` snapshot. Historical
 ## Baseline and policy
 
 - Base branch: `main`
-- Base commit: `3e9baec1fd61d7777aa74c512831b96dd2b40523`
+- Base commit: `9ec6a48213edadf23de96d00c641488a392a95dc` (the exact `main` base SHA recorded on PR #34)
 - Keep the current mainline language/runtime and native C17 migration.
 - Integrate compatible, tested slices; record prototype limits; never force-push or write directly to `main`.
 
