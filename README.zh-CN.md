@@ -1,144 +1,90 @@
 # Reaper — 面向数据流组合的编程语言
 
 <p align="center">
-  <img alt="Reaper 0.1.0" src="https://img.shields.io/badge/Reaper-0.1.0-16A6A1?style=flat-square">
-  <img alt="Python 3.10+" src="https://img.shields.io/badge/runtime-Python%203.10%2B-3776AB?style=flat-square">
-  <img alt="无第三方运行时依赖" src="https://img.shields.io/badge/runtime%20dependencies-none-16A34A?style=flat-square">
+  <a href="https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml"><img alt="Python 与 native CI" src="https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml/badge.svg"></a>
+  <img alt="Reaper 0.1" src="https://img.shields.io/badge/Reaper-0.1.0-2563EB?style=flat-square">
+  <img alt="Python 3.10+" src="https://img.shields.io/badge/runtime-Python%203.10%2B-DC2626?style=flat-square">
   <img alt="Apache 2.0" src="https://img.shields.io/badge/license-Apache--2.0-111827?style=flat-square">
-  <a href="https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml/badge.svg"></a>
 </p>
 
-<p align="center"><strong>清晰表达 · 组合数据流 · 显式声明副作用</strong></p>
+<p align="center"><img src="assets/reaper-hero.svg" alt="Reaper 数据流组合编程语言" width="100%"></p>
 
-<p align="center"><img src="assets/reaper-hero.svg" alt="Reaper — 独立的数据流优先编程语言" width="100%"></p>
-
-**Reaper 是一门独立的表达式导向编程语言，强调可读语法与显式数据流。** 核心运算符 `~>` 将一个值传递给下一步操作，让转换链像流程一样从左向右阅读，而不是隐藏在层层嵌套的调用中。
-
-**0.1.0** 是首个可执行里程碑：包含词法分析器、语法分析器、运行时、命令行工具、示例和测试的 Python 3.10+ 树遍历解释器。运行时仅使用 Python 标准库。
+Reaper 是一门独立的、以数据流组合为核心的编程语言，具有易读语法和有界解释器。工程代码树还包含可移植编译器前端、可选宿主运行时 API 和实验性的 native C17 工作流。解释器仍然是语义参考实现。
 
 **语言：** [English](README.md) · [Русский](README.ru.md) · [Українська](README.uk.md) · 简体中文
 
-## 一眼读懂 Reaper
+## 视觉预览
 
-```reaper
-craft double(value) {
-    yield value * 2
-}
+<p align="center"><img src="assets/reaper-toolchain-preview.svg" alt="根据源码制作的 Reaper 编译器前端与 Quarry IR 路径预览" width="100%"></p>
+<p align="center"><img src="assets/reaper-nine-systems.svg" alt="Reaper 有界宿主运行时系统架构" width="100%"></p>
 
-make numbers := [1, 2, 3, 4]
-make answer := numbers ~> map(double) ~> sum()
-emit "answer = " ++ text(answer)
-```
+<sub>这些图片是依据源码制作的 SVG 预览和架构图，并非真实终端会话的屏幕截图。预览中的终端文本和示例数值仅用于说明。</sub>
 
-流运算符将左侧的值作为右侧操作的第一个参数。`make` 创建不可变绑定；`vary` 声明可变绑定；`change` 执行重新赋值。
+## 语言与运行时
 
-## 0.1 已实现的功能
+- **数据流语法：** 保留现有 ~> 操作符组合转换，不改变 Reaper 语法。
+- **解释器：** lexer、parser、AST 和有界树遍历执行仍是兼容性基准。
+- **编译器前端：** 保守静态诊断、带源码位置映射的确定性 Quarry IR、结构验证和安全字面量折叠。前端不会生成 native 机器码。
+- **宿主运行时 API：** 有界资源区域、异步 channel/actor、作用域 capability、带校验和的应用状态快照、本地路由、性能分析、受 capability 控制的 C ABI 互操作及健康策略观察。
+- **宿主平台报告：** --target-info 报告宿主元数据，包括 E2K 识别；这不代表已实现 MCST native 后端。
+- **Native C17 工作流：** 可移植编译器/运行时基础及测试与 Python 解释器分开维护；不宣称完整语言功能一致性。
 
-| 语言能力 | 当前实现 |
-|---|---|
-| **清晰的源代码** | Unicode 标识符、注释和转义文本字面量 |
-| **函数** | `craft`、词法闭包、递归和 `yield` |
-| **显式状态** | 不可变的 `make`；通过 `vary` 与显式 `change` 管理可变状态 |
-| **控制流** | `when / otherwise`、`each` 和 `loop while` |
-| **数据流** | `~>` 组合，以及 `map`、`keep`、`fold` 等内置操作 |
-| **诊断** | 保留源代码位置的词法、语法和运行时错误 |
-| **执行限制** | 步骤预算、调用深度、集合元素数量和文本长度限制 |
-| **开发工具** | CLI、仅检查模式、示例和标准库测试 |
+## 运行仓库示例
 
-## 运行仓库内的示例
+要求 Python 3.10 或更高版本。运行时仅依赖 Python 标准库。
 
-<p align="center"><img src="assets/reaper-terminal-preview.svg" alt="Reaper hello 示例与语法检查的终端示意预览" width="100%"></p>
+    git clone https://github.com/Ivan-VHS/Reaper.git
+    cd Reaper
+    python -m reaper --check examples/flow.rpr
+    python -m reaper examples/flow.rpr
+    python -m reaper --target-info
+    python -m reaper.compiler_cli examples/flow.rpr --optimize
 
-<sub>终端示意预览。图中内容对应仓库示例和 CLI 检查模式的预期输出；这不是从实际终端截取的屏幕截图。</sub>
+## 构建与验证
 
-### 环境要求
+运行 Python 测试：
 
-- Python 3.10 或更新版本
-- 无需第三方运行时依赖
+    python -m compileall -q reaper tests
+    python -m unittest discover -s tests -v
 
-### 从仓库运行
+构建并测试 native C17 目标：
 
-```bash
-git clone https://github.com/Ivan-VHS/Reaper.git
-cd Reaper
+    cmake -S . -B build -DBUILD_TESTING=ON
+    cmake --build build --parallel
+    ctest --test-dir build --output-on-failure
 
-python -m reaper examples/hello.rpr
-python -m reaper examples/flow.rpr
-python -m reaper --check examples/flow.rpr
-```
+GitHub Actions 验证 Python 3.10、3.11 和 3.12，运行解释器示例，检查编译器 CLI 和运行时架构示例，并测试 native C17 目标。独立 HMGA 审计工作流检查仓库工程契约。
 
-以可编辑模式安装命令行入口：
+## 集成的工程更新
 
-```bash
-python -m pip install -e .
-reaper examples/hello.rpr
-```
+集成分支从现有开发历史中精选兼容改动：
 
-运行完整测试套件：
+- **编译器前端：** 源码映射 Quarry IR、确定性摘要、保守静态检查、结构验证和安全常量折叠。
+- **运行时基础：** 有界资源、异步 channel/actor、宿主 capability 作用域、持久化应用状态快照、本地路由、性能分析、受限 C ABI 互操作和健康策略。
+- **E2K 配置：** 仅报告宿主识别和能力；尚未实现 MCST native 代码生成。
+- **MOST 架构：** 将分阶段系统设计映射到现有语言和 C17 迁移，不改变 Reaper 语法。
+- **HMGA v2/v3：** 只读仓库审计，以及 native C17 确定性目录：20 条公理、400 个操作符，最多 64 轮规划。
+- **工程门禁：** 按签名验证组合、多个 Python 版本检查、native C17 测试和有据可查的 review/merge 流程。
 
-```bash
-python -m unittest discover -s tests -v
-```
+历史上 actor、effect、resource、relay 和 health API 的重叠原型经过审查并去重，没有并排安装成竞争实现。当前按模块划分的 host-runtime 实现仍是规范路径。详细记录见[集成审计](docs/INTEGRATION_AUDIT_2026-11-19.md)。
 
-## Reaper 如何执行程序
+## 架构与文档
 
-<p align="center"><img src="assets/reaper-architecture.svg" alt="Reaper 从源代码到运行时的处理流程及显式副作用边界" width="100%"></p>
-
-源代码经过词法分析生成 token，再由语法分析器生成 AST，最后交给受限的树遍历解释器执行。控制台交互必须通过 `emit`、`say` 和 `ask` 等语言操作显式表达。普通表达式不会隐式获得文件系统、网络、时钟、进程、shell 或硬件访问能力。
-
-## 小巧核心，规则清晰
-
-- **默认不可变：** 使用 `make` 创建固定绑定；通过 `vary` 和 `change` 明确选择可变状态。
-- **从左到右组合：** `values ~> map(double) ~> keep(is_large)` 直接展示数据路径。
-- **显式转换：** 算术针对数值；`++` 只连接文本。使用 `text()` 或 `number()` 明确转换，避免隐式类型转换。
-- **受限执行：** 默认上限为 1,000,000 个执行步骤、256 层嵌套函数调用、100,000 个集合元素，以及 1,000,000 个文本拼接字符。
-- **可定位的错误：** 在源 token 可用时，诊断会保留源代码位置。
-- **可移植实现：** 当前解释器支持 Python 3.10+，仅依赖标准库。
-
-> [!NOTE]
-> 这些限制用于约束资源消耗，并不是安全沙箱。不要假设解释器能够将不可信程序与宿主进程隔离。
-
-## 文档与工程计划
-
-- [编译器前端与平台架构](docs/PLATFORM_ARCHITECTURE.md)
-- [有界运行时子系统](docs/REAPER_SYSTEMS.md)
-- [HMGA v2.0](docs/HMGA_V2.0.md) · [HMGA v3.0](docs/HMGA_V3.md)
-- [MCST Elbrus E2K 宿主配置](docs/ELBRUS_E2K.md)
+- [语言参考](LANGUAGE.md)
+- [平台架构](docs/PLATFORM_ARCHITECTURE.md)
+- [九个运行时系统](docs/REAPER_SYSTEMS.md)
+- [循环运行时架构](docs/REAPERS_ARCHITECTURE.md)
 - [MOST 系统架构](docs/MOST_SYSTEMS_ARCHITECTURE.md)
 - [工程标准](docs/ENGINEERING_STANDARD.md)
+- [HMGA v2.0 契约](docs/HMGA_V2.0.md)
+- [HMGA v3.0 操作矩阵](docs/HMGA_V3.md)
+- [E2K 宿主配置](docs/ELBRUS_E2K.md)
+- [集成审计](docs/INTEGRATION_AUDIT_2026-11-19.md)
 
+## 当前边界
 
-- [语言参考](LANGUAGE.md) — 语法、表达式、内置操作和运行时限制。
-- [架构](docs/ARCHITECTURE.md) — 实现层次与项目边界。
-- [架构要求](docs/ARCHITECTURE_66.md) — 可验证的模块化和安全要求。
-- [AETHER-ANAS 路线图](docs/AETHER_ANAS_ROADMAP.md) — 分阶段集成计划与验收门槛。
-- [20 项系统工程计划](docs/20_SYSTEM_ENHANCEMENTS.md) — 工程契约与验收重点。
-- [宪章配置](docs/CONSTITUTION_666_PROFILE.md) — 项目规则与符合性状态。
-- [可运行示例](examples/) 和 [测试](tests/)。
-
-20 项工程方向是**工程契约与规划工作**，并不代表 20 个运行时子系统已经全部实现。静态类型检查、显式效果类型、原生编译、GPU 执行、分布式调度、包管理、形式化验证和自举编译器均属于未来里程碑。只有在真实后端和一致性测试完成后，才会将其标记为已实现。
-
-## CI 与当前边界
-
-GitHub Actions 在 Python **3.10、3.11 和 3.12** 上运行验证。工作流会编译包和测试、执行单元测试、在不运行程序的情况下检查示例，并运行数据流示例。
-
-Reaper 0.1 是解释器，**不是**原生代码编译器、操作系统、包注册中心、插件宿主或自主代理。资源配额不等于隔离机制。
-
-## 编译器与运行时预览
-
-<p align="center"><img src="assets/reaper-toolchain-preview.svg" alt="Reaper 编译器前端和宿主运行时示意预览" width="100%"></p>
-<p align="center"><img src="assets/reaper-nine-systems.svg" alt="Reaper 有界宿主运行时子系统示意图" width="100%"></p>
-
-<sub>这些是依据源代码制作的矢量示意图，并非正在运行的终端或应用程序截图。终端面板中的数值仅用于演示。</sub>
-
-### 新的开发工具
-
-可选的 `reaperc` 命令会检查现有 `.rpr` 语法，执行保守的静态分析，生成带源代码位置映射的确定性 Quarry IR，验证 IR 结构，并可折叠安全的字面量表达式。这是可移植的编译器前端，**不是**原生机器码编译器。
-
-软件包还提供有界、显式启用的 Python 宿主 API：逻辑资源区域、异步通道与 actor、能力令牌作用域、带校验和的应用状态快照、本地路由、性能分析、能力控制的 C ABI 适配器以及健康策略观察。这些 API 不会自动暴露给 `.rpr` 程序，也不声称具备分布式执行、原生内存回收或操作系统级沙箱能力。
-
-可通过 `python -m reaper --target-info` 获取宿主平台元数据。E2K 检测只报告宿主标识；MCST E2K 原生代码生成尚未实现。
+Reaper 0.1 仍以解释器为核心。编译器前端生成可移植 IR，而非机器码。宿主 API 通过 Python 显式启用，不会自动成为语言内置功能或操作系统沙箱。当前不宣称 native 代码生成、JIT、分布式 actor、网络传输、云编排或完整的 MCST E2K 支持。
 
 ## 许可证
 
-Reaper 根据 [Apache 许可证 2.0](LICENSE) 发布。
+项目采用 [Apache License 2.0](LICENSE)。
