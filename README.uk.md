@@ -63,6 +63,16 @@ ctest --test-dir build --output-on-failure
 
 Нативний executable наразі надає реалізовані bring-up та аналізувальні сценарії; він не замінює інтерпретатор Python.
 
+## Нативний desktop-застосунок
+
+**Reaper Studio** — desktop-середовище Windows x64 на базі наявного Python reference runtime: редагування файлів `.rpr`, відкриття та збереження коду, перевірка синтаксису, запуск програм і перегляд виводу/помилок. Розробка ядра C17 триває окремо; повної паритетності C runtime ще немає.
+
+- [Релізи Windows x64](https://github.com/Ivan-VHS/Reaper/releases)
+- [Збирання застосунку та CI-артефакти](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml)
+- [Останні збирання](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml?query=branch%3Amain)
+
+Успішна збірка публікує `Reaper-Studio-windows-x64.zip`; тег `v*` створює GitHub Release. Запуск із вихідного коду (Python 3.10+): `python reaper_desktop.py`.
+
 ## Дизайн і межі безпеки
 
 Програма проходить токенізацію, парсинг в AST і виконується обмеженим інтерпретатором. Консольні ефекти явні: `emit`, `say`, `ask`. Звичайні вирази не отримують прихованого доступу до файлової системи, мережі, годинника, процесів, shell чи обладнання.

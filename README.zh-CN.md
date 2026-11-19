@@ -63,6 +63,16 @@ ctest --test-dir build --output-on-failure
 
 当前原生可执行文件提供已实现的 bring-up 与分析功能，并非 Python 解释器的完整替代品。
 
+## 原生桌面应用
+
+**Reaper Studio** 是基于现有 Python 参考运行时的 Windows x64 桌面工作台：编辑 `.rpr` 文件、打开和保存源代码、语法检查、运行程序并查看输出与错误。C17 核心仍在独立开发中；目前不宣称 C 运行时已完全兼容。
+
+- [Windows x64 Releases](https://github.com/Ivan-VHS/Reaper/releases)
+- [桌面构建工作流与 CI 工件](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml)
+- [最新构建运行](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml?query=branch%3Amain)
+
+成功运行会上传 `Reaper-Studio-windows-x64.zip`；`v*` 标签会发布 GitHub Release。Windows + Python 3.10+ 源码启动命令：`python reaper_desktop.py`。
+
 ## 设计与安全边界
 
 程序经过词法分析、AST 解析，并由受限解释器执行。控制台副作用通过 `emit`、`say` 和 `ask` 等操作显式表达。普通表达式不会自动获得文件系统、网络、时钟、进程、shell 或硬件访问权限。
