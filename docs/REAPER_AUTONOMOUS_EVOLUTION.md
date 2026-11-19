@@ -37,7 +37,7 @@ minimum gates, not mathematical proof of correctness.
 
 A candidate with all technical evidence but no maintainer approval is marked
 `review-required`. Only a maintainer-approved candidate can become
-`ready-for-maintainer`; this status still does not merge code. Merge remains
+`approved-for-manual-merge`; this status still does not merge code. Merge remains
 a repository governance action after CI and review.
 
 ## Evolution loop
