@@ -331,6 +331,8 @@ def proliferate(choices: Any, max_items: int) -> list[list[Any]]:
     for choice in choices:
         if not isinstance(choice, (list, tuple, range, str)):
             raise TypeError("each choice must be a sequence")
+        if len(choice) > max_items:
+            raise ValueError(f"collection item limit ({max_items}) exceeded")
         values = list(choice)
         total *= len(values)
         if total > max_items:
