@@ -2,65 +2,44 @@
 
 ## Patch proposal pipeline
 
-tools/reaper_patch.py creates a reviewable proposal directory containing a
-unified patch and JSON manifest. The manifest pins the patch digest, base
-content hashes, changed paths, test plan and rollback policy.
-
-    python3 tools/reaper_patch.py --repo . propose --base main --head feature-branch --out .reaper/proposals/example
-    python3 tools/reaper_patch.py --repo . verify .reaper/proposals/example
-    # After human review only:
-    python3 tools/reaper_patch.py --repo . apply .reaper/proposals/example
-    python3 tools/reaper_patch.py --repo . rollback .reaper/proposals/example
-
-The tool never executes commands from a proposal manifest. It uses fixed Git
-operations, rejects path traversal and .git targets, checks patch integrity,
-checks base-file hashes, and runs git apply --check before applying or
-reversing. It does not commit, push, merge or silently execute the test plan.
-Tests are invoked separately by CI or a reviewer.
+tools/reaper_patch.py creates reviewable patch proposals with a manifest,
+base-file hashes, test plan and rollback metadata. It rejects unsafe paths,
+checks integrity and requires explicit human review before apply or rollback.
 
 ## MOST language evolution
 
-language/features.json is the initial machine-readable capability registry.
-Stable IDs, explicit statuses, dependency edges and acceptance gates prevent
-duplicate proposals and cycles. The validator rejects unknown dependencies,
-duplicate IDs, invalid statuses and cyclic graphs.
+language/features.json is the machine-readable capability registry. Stable
+IDs, explicit statuses, dependency edges and acceptance gates prevent
+duplicate proposals and dependency cycles. Planned and specified entries are
+not represented as implemented compiler features.
 
-Statuses: planned (proposal only), specified (contract exists), implemented
-(executable implementation and tests exist), verified (feature-specific gates
-passed), deprecated (retained for compatibility, not recommended).
+## REAPER IDE and AST inspection
 
-Current entries do not claim that syntax, types, effects, regions or standard
-library APIs are implemented in the compiler.
+The native CLI now supports --ast-json for one expression. It emits
+deterministic JSON with node IDs, kinds, text, child references and source
+locations. The serializer validates the complete AST before output, escapes
+JSON control characters and rejects invalid child references. This is a
+compiler-owned inspection interface for editor tooling, not a replacement
+parser or language server.
 
-## REAPER IDE
+The VS Code starter provides file association, indentation, comments and
+syntax highlighting. A semantic language server is the next boundary and
+must consume compiler-owned AST/typed-IR data rather than reimplement rules.
 
-editors/vscode supplies file association, brackets, indentation, comments,
-strings and syntax highlighting. It is not a full IDE. A language server is
-the next boundary: versioned JSON-RPC for diagnostics, completion, hover,
-definition, references, rename, document symbols and semantic tokens. It must
-consume compiler-owned AST/typed-IR data rather than reimplement semantics.
-
-Debugger and profiler integration must wait for executable generation, source
-maps, stable runtime inspection and a target process protocol.
+Debugger and profiler integration must wait for executable generation,
+source maps, stable runtime inspection and a target process protocol.
 
 ## Bootstrap and self-hosting
 
 scripts/bootstrap_check.py verifies repeatable native compiler version and
-lexer-smoke output. This is a bootstrap reproducibility preflight only. The
-current compiler cannot compile its own implementation; REAPER is not
-self-hosting yet.
+lexer-smoke output. This is a reproducibility preflight only. The compiler
+cannot yet compile its own implementation; self-hosting is not claimed.
 
-A genuine self-hosting acceptance sequence:
-1. C17 stage-0 compiler builds the MOST stage-1 compiler.
-2. Stage-1 compiles the same MOST compiler sources into stage-2.
-3. Stage-1 and stage-2 outputs pass deterministic artifact comparison.
-4. Both stages pass parser, semantic, IR, backend and runtime suites.
-5. A clean environment repeats bootstrap without generated workspace files.
+A genuine self-hosting gate requires stage-0 to build stage-1, stage-1 to
+build stage-2, deterministic artifact comparison, full semantic/backend tests
+and a clean-environment bootstrap.
 
 ## Validation
 
-    python3 -m unittest discover -s tests -p 'test_patch_pipeline.py'
-    python3 -m unittest discover -s tests -p 'test_feature_registry.py'
-    python3 tools/validate_features.py language/features.json
-    python3 scripts/bootstrap_check.py --compiler build/reaper-c
-    cmake -S . -B build && cmake --build build --parallel && ctest --test-dir build --output-on-failure
+    cmake -S . -B build && cmake --build build --parallel
+    ctest --test-dir build --output-on-failure

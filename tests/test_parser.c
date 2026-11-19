@@ -9,4 +9,11 @@ static void bridge_test(void){ReaperAst a;ReaperParseError e;assert(parse("зн�
 static void literal_test(void){ReaperAst a;ReaperParseError e;assert(parse("true",&a,&e));assert(a.items[a.root].kind==REAPER_AST_BOOLEAN);reaper_ast_free(&a);assert(parse("\"мост\"",&a,&e));assert(a.items[a.root].kind==REAPER_AST_STRING);reaper_ast_free(&a);}
 static void trailing_test(void){ReaperAst a;ReaperParseError e;assert(!parse("1 2",&a,&e));assert(strstr(e.message,"unexpected token"));}
 static void paren_test(void){ReaperAst a;ReaperParseError e;assert(!parse("(1 + 2",&a,&e));assert(strstr(e.message,"expected ')'"));}
-int main(void){precedence_test();power_test();bridge_test();literal_test();trailing_test();paren_test();puts("native parser tests: 6 groups passed");return 0;}
+static void json_test(void){
+ ReaperAst a;ReaperParseError e;assert(parse("value + \"a\\\"b\"",&a,&e));
+ FILE *f=tmpfile();assert(f);assert(reaper_ast_write_json(&a,f));assert(fflush(f)==0);assert(fseek(f,0,SEEK_SET)==0);
+ char b[1024];size_t n=fread(b,1,sizeof b-1,f);b[n]='\0';
+ assert(strstr(b,"\"kind\":\"binary\""));assert(strstr(b,"\"text\":\"a\\\"b\""));
+ fclose(f);reaper_ast_free(&a);
+}
+int main(void){precedence_test();power_test();bridge_test();literal_test();trailing_test();paren_test();json_test();puts("native parser tests: 7 groups passed");return 0;}
