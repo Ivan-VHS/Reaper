@@ -76,7 +76,7 @@ Default runtime quotas include 1,000,000 execution steps, 256 nested calls, 100,
 - [Architecture](docs/ARCHITECTURE.md)
 - [MOST language specification](docs/MOST_LANGUAGE_SPEC.md)
 - [C migration plan](docs/C_MIGRATION.md)
-- [Examples](examples/) · [Tests](tests/)
+- [Examples](examples/) · [Tests](tests/) · [20-triad algebraic operator matrix](docs/ALGEBRAIC_OPERATOR_MATRIX.md)
 
 ## CI and license
 
