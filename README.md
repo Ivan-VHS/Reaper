@@ -86,6 +86,7 @@ Default runtime quotas include 1,000,000 execution steps, 256 nested calls, 100,
 - [Language reference](LANGUAGE.md)
 - [Unified REAPER/MOST architecture](docs/REAPER_UNIFIED_ARCHITECTURE.md)
 - [Architecture](docs/ARCHITECTURE.md)
+- [Concatenation and composition architecture](docs/CONCATENATION_ARCHITECTURE.md)
 - [MOST language specification](docs/MOST_LANGUAGE_SPEC.md)
 - [C migration plan](docs/C_MIGRATION.md)
 - [Examples](examples/) · [Tests](tests/)
