@@ -84,7 +84,7 @@ Do not merge every historical PR into every other branch. Resolve dependencies a
 
 ## 6. Governed evolution cycle
 
-1. **Observe:** inventory relevant C11 modules, platform support, tests, CI and current implementation evidence.
+1. **Observe:** inventory relevant C17 modules, platform support, tests, CI and current implementation evidence.
 2. **Diagnose:** state one measurable defect, missing capability, or maintainability gap.
 3. **Plan:** select applicable matrix operators and list incompatible or not-applicable pairs.
 4. **Implement:** make one scoped, reviewable change on a dedicated branch.
