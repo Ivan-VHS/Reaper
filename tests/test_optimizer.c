@@ -43,6 +43,56 @@ static void folds_dependency_chain(void) {
     assert(out[4].opcode == REAPER_IR_OP_CONST_I64 && out[4].immediate == 12);
 }
 
+static void folds_checked_arithmetic_chain(void) {
+    const ReaperIrNode nodes[] = {
+        { REAPER_IR_OP_CONST_I64, REAPER_IR_TYPE_I64, N, N, 20, 1, 1 },
+        { REAPER_IR_OP_CONST_I64, REAPER_IR_TYPE_I64, N, N, 3, 1, 2 },
+        { REAPER_IR_OP_SUB_I64, REAPER_IR_TYPE_I64, 0, 1, 0, 1, 3 },
+        { REAPER_IR_OP_MUL_I64, REAPER_IR_TYPE_I64, 2, 1, 0, 1, 4 },
+        { REAPER_IR_OP_DIV_I64, REAPER_IR_TYPE_I64, 3, 1, 0, 1, 5 },
+        { REAPER_IR_OP_NEG_I64, REAPER_IR_TYPE_I64, 4, N, 0, 1, 6 },
+        { REAPER_IR_OP_RETURN, REAPER_IR_TYPE_UNIT, 5, N, 0, 1, 7 }
+    };
+    ReaperIrNode out[7];
+    size_t length = 0;
+    ReaperIrError error;
+    ReaperIrModule input = { nodes, 7 };
+    assert(reaper_ir_fold_constants(&input, out, 7, &length, &error));
+    assert(length == 7);
+    assert(out[2].opcode == REAPER_IR_OP_CONST_I64 && out[2].immediate == 17);
+    assert(out[3].opcode == REAPER_IR_OP_CONST_I64 && out[3].immediate == 51);
+    assert(out[4].opcode == REAPER_IR_OP_CONST_I64 && out[4].immediate == 17);
+    assert(out[5].opcode == REAPER_IR_OP_CONST_I64 && out[5].immediate == -17);
+}
+
+static void rejects_multiplication_overflow(void) {
+    const ReaperIrNode nodes[] = {
+        { REAPER_IR_OP_CONST_I64, REAPER_IR_TYPE_I64, N, N, INT64_MAX, 1, 1 },
+        { REAPER_IR_OP_CONST_I64, REAPER_IR_TYPE_I64, N, N, 2, 1, 2 },
+        { REAPER_IR_OP_MUL_I64, REAPER_IR_TYPE_I64, 0, 1, 0, 1, 3 }
+    };
+    ReaperIrNode out[3];
+    size_t length = 0;
+    ReaperIrError error;
+    ReaperIrModule input = { nodes, 3 };
+    assert(!reaper_ir_fold_constants(&input, out, 3, &length, &error));
+    assert(length == 0 && error.node_index == 2);
+}
+
+static void rejects_constant_division_by_zero(void) {
+    const ReaperIrNode nodes[] = {
+        { REAPER_IR_OP_CONST_I64, REAPER_IR_TYPE_I64, N, N, 7, 1, 1 },
+        { REAPER_IR_OP_CONST_I64, REAPER_IR_TYPE_I64, N, N, 0, 1, 2 },
+        { REAPER_IR_OP_DIV_I64, REAPER_IR_TYPE_I64, 0, 1, 0, 1, 3 }
+    };
+    ReaperIrNode out[3];
+    size_t length = 0;
+    ReaperIrError error;
+    ReaperIrModule input = { nodes, 3 };
+    assert(!reaper_ir_fold_constants(&input, out, 3, &length, &error));
+    assert(length == 0 && error.node_index == 2);
+}
+
 static void rejects_signed_overflow(void) {
     const ReaperIrNode nodes[] = {
         { REAPER_IR_OP_CONST_I64, REAPER_IR_TYPE_I64, N, N, INT64_MAX, 1, 1 },
@@ -144,12 +194,15 @@ static void fixed_point_pipeline_rejects_unbounded_budget(void) {
 int main(void) {
     folds_constant_add();
     folds_dependency_chain();
+    folds_checked_arithmetic_chain();
+    rejects_multiplication_overflow();
+    rejects_constant_division_by_zero();
     rejects_signed_overflow();
     rejects_small_output();
     supports_in_place_operation();
     fixed_point_pipeline_converges_and_is_idempotent();
     fixed_point_pipeline_rejects_exhausted_budget();
     fixed_point_pipeline_rejects_unbounded_budget();
-    puts("native optimizer tests: 8 groups passed");
+    puts("native optimizer tests: 11 groups passed");
     return 0;
 }
