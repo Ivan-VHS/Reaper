@@ -34,7 +34,7 @@ class AlgebraicOperatorTests(unittest.TestCase):
     def test_vector_and_matrix_operations(self) -> None:
         self.assertEqual(
             self.capture("""
-            emit scale([1, 2, 3], 3)
+            emit vector_scale([1, 2, 3], 3)
             emit dot([1, 2, 3], [4, 5, 6])
             emit distance([0, 0], [3, 4])
             emit transpose([[1, 2], [3, 4]])
@@ -86,8 +86,9 @@ class AlgebraicOperatorTests(unittest.TestCase):
             self.capture("emit proliferate([[1, 2], [3, 4]])", max_collection_items=3)
         with self.assertRaisesRegex(ReaperRuntimeError, "matrix operation limit"):
             self.capture(
-                "emit matrix_multiply([[1, 2], [3, 4]], [[1, 2], [3, 4]])",
-                max_steps=2,
+                "emit matrix_multiply([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]], "
+                "[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])",
+                max_steps=50,
             )
 
     def test_branch_runs_functions_without_host_effects(self) -> None:
@@ -95,8 +96,8 @@ class AlgebraicOperatorTests(unittest.TestCase):
             self.capture("""
             craft plus_one(value) { yield value + 1 }
             craft square(value) { yield value * value }
-            emit 4 ~> branch([plus_one, square])
-            emit [1, 2, 3] ~> transform(plus_one)
+            emit branch(4, [plus_one, square])
+            emit transform([1, 2, 3], plus_one)
             """),
             ["[5, 16]", "[2, 3, 4]"],
         )
