@@ -12,6 +12,7 @@
 | MOST lexical vocabulary | implemented | keyword/operator lexer tests; grammar is not implied |
 | Semantic IR data model | implemented | `include/reaper/ir.h` |
 | IR structural verifier | implemented | `src/ir.c`, `tests/test_ir.c` |
+| Checked i64 constant-folding pass | implemented | `src/optimizer.c`, `include/reaper/optimizer.h`, `tests/test_optimizer.c`; rejects signed overflow and verifies input/output IR |
 | Pratt expression parser | implemented | `src/parser.c`, `include/reaper/ast.h` |
 | Flat owned AST with source locations | implemented | `ReaperAstNode`; parser acceptance tests |
 | Declaration/block grammar | planned | function/module/record declarations, blocks and recovery |
