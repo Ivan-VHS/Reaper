@@ -26,5 +26,8 @@ classifiers = [
 [project.scripts]
 reaper = "reaper.cli:main"
 
+[project.gui-scripts]
+reaper-studio = "reaper.desktop:main"
+
 [tool.setuptools]
 packages = ["reaper"]
