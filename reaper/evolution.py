@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 import json
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -90,6 +91,11 @@ class EvolutionEngine:
             )
         output = (result.stdout + "\n" + result.stderr).strip()
         tail = "\n".join(output.splitlines()[-12:])
+        if re.search(r"\bRan\s+0\s+tests?\b", output, flags=re.IGNORECASE):
+            return CheckResult(
+                "unit-tests", False, perf_counter() - started,
+                "test suite discovered zero tests; add at least one test case",
+            )
         return CheckResult(
             "unit-tests", result.returncode == 0, perf_counter() - started,
             tail or f"test process exited with code {result.returncode}",
