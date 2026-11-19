@@ -131,6 +131,12 @@ class SovereignUnitTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             SovereignUnit("bad", object(), self.add)
 
+    def test_snapshot_rejects_non_object_payload(self) -> None:
+        actor = SovereignUnit("malformed", {"value": 1}, self.add)
+        actor.hibernate()
+        with self.assertRaises(ActorError):
+            actor.wake(b'{"payload":[],"sha256":"not-a-digest"}')
+
 
 class ProfilingAndSentinelTests(unittest.TestCase):
     def test_hot_paths_are_ranked_after_threshold(self) -> None:
