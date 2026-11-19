@@ -156,7 +156,7 @@ jobs:
           exit 1
 
   enable-auto-merge:
-    needs: [review-gate, validate-python, validate-native]
+    needs: [review-gate, validate-python, validate-native, wait-for-ci]
     if: needs.review-gate.outputs.approved == 'true'
     runs-on: ubuntu-latest
     permissions:
