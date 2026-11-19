@@ -25,9 +25,9 @@ emit "answer = " ++ text(answer)
 
 The C implementation is not yet a full language interpreter. Full declarations/blocks, type checking, intent resolution, ownership analysis, native code generation and WASM are not complete. Python remains the compatibility reference until runtime and CLI parity is demonstrated.
 
-## Screenshots
+## Desktop workbench
 
-This is currently a language/runtime project, not a graphical application. No verified screenshot from a live terminal session is checked into the repository; illustrative terminal artwork has been removed rather than presented as a real capture. Use the runnable examples below to inspect actual output.
+Reaper Studio provides a native Windows desktop editor and execution window for the Python reference runtime. It is a practical source workbench, not a claim that the developing C17 runtime has reached feature parity.
 
 ## Run the Python interpreter
 
@@ -62,6 +62,18 @@ ctest --test-dir build --output-on-failure
 ```
 
 The native executable currently exposes the implemented bring-up and analysis paths; it is not a drop-in replacement for the Python interpreter.
+
+
+## Native desktop application
+
+**Reaper Studio** adds a Windows x64 desktop workbench on top of the existing Python reference runtime: edit `.rpr` files, open/save source, parse-check a program, run it, and inspect output/errors. The C17 implementation remains a separate developing core; the desktop app does not claim full C-runtime parity.
+
+- [Windows x64 Releases](https://github.com/Ivan-VHS/Reaper/releases)
+- [Desktop build workflow and CI artifacts](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml)
+- [Latest workflow runs](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml?query=branch%3Amain)
+
+A successful workflow run uploads `Reaper-Studio-windows-x64.zip`; a `v*` tag publishes the same archive as a GitHub Release. Run from source with Python 3.10+ using `python reaper_desktop.py`.
+
 
 ## Design and safety boundaries
 
