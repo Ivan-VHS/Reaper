@@ -32,6 +32,19 @@ class PatchPipelineTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "base content changed"): patcher.verify(self.root, self.proposal)
     def test_path_traversal_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "unsafe patch path"): patcher.safe_path("../outside.txt")
+
+    def test_windows_path_forms_are_rejected(self):
+        for path in (
+            r"..\\outside.txt",
+            r"C:\\outside.txt",
+            "C:relative.txt",
+            r"\\\\server\\share\\outside.txt",
+            "src/file.txt:alternate-stream",
+            ".GIT/config",
+        ):
+            with self.subTest(path=path):
+                with self.assertRaises(ValueError):
+                    patcher.safe_path(path)
     def test_symlink_target_is_rejected(self):
         outside = self.root / "outside"
         outside.mkdir(exist_ok=True)
