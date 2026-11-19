@@ -44,7 +44,7 @@ ReaperEvolutionDecision reaper_evolution_evaluate(
         decision.blockers |= REAPER_EVOLUTION_NEEDS_HUMAN_APPROVAL;
 
     if (decision.blockers == 0U)
-        decision.state = REAPER_EVOLUTION_READY_FOR_MAINTAINER;
+        decision.state = REAPER_EVOLUTION_APPROVED_FOR_MANUAL_MERGE;
     else if (decision.blockers == REAPER_EVOLUTION_NEEDS_HUMAN_APPROVAL)
         decision.state = REAPER_EVOLUTION_REVIEW_REQUIRED;
     else
@@ -56,7 +56,7 @@ const char *reaper_evolution_state_name(ReaperEvolutionState state) {
     switch (state) {
     case REAPER_EVOLUTION_BLOCKED: return "blocked";
     case REAPER_EVOLUTION_REVIEW_REQUIRED: return "review-required";
-    case REAPER_EVOLUTION_READY_FOR_MAINTAINER: return "ready-for-maintainer";
+    case REAPER_EVOLUTION_APPROVED_FOR_MANUAL_MERGE: return "approved-for-manual-merge";
     default: return "invalid";
     }
 }
