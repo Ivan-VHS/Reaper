@@ -7,8 +7,8 @@ craft square(value) {
 }
 
 make samples := [1, 2, 3, 4]
-emit samples ~> differentiate()
-emit samples ~> integrate(0.5)
+emit differentiate(samples)
+emit integrate(samples, 0.5)
 emit normalize([10, 20, 30])
-emit 4 ~> branch([plus_one, square])
+emit branch(4, [plus_one, square])
 emit proliferate([[1, 2], ["left", "right"]])
