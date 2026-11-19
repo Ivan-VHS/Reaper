@@ -102,6 +102,7 @@ Source text is tokenized, parsed into an AST and evaluated by a bounded tree-wal
 
 - [Language reference](LANGUAGE.md) — syntax, expressions, built-ins and runtime limits.
 - [Architecture](docs/ARCHITECTURE.md) — implementation layers and product boundaries.
+- [Reaper Cyclic Runtime Architecture](docs/REAPERS_ARCHITECTURE.md) — executable runtime primitives, subsystem contracts and staged roadmap.
 - [Architecture requirements](docs/ARCHITECTURE_66.md) — enforceable modularity and safety requirements.
 - [AETHER-ANAS roadmap](docs/AETHER_ANAS_ROADMAP.md) — staged integration plan and acceptance gates.
 - [20-system engineering programme](docs/20_SYSTEM_ENHANCEMENTS.md) — engineering contracts and acceptance focus.
