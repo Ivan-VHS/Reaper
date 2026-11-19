@@ -69,6 +69,10 @@ Programs are tokenized, parsed into an AST and evaluated by a bounded interprete
 
 Default runtime quotas include 1,000,000 execution steps, 256 nested calls, 100,000 collection items and 1,000,000 characters from text concatenation. These are resource guardrails, **not a security sandbox**. Do not treat execution of untrusted programs as isolated from the host.
 
+## Execution audit trail
+
+The optional audit mode writes a local hash-chained journal of source fingerprints and run lifecycle events without copying program output. Enable it with --audit-log PATH and verify it with --verify-audit-log PATH. The chain detects record edits but is not a digital signature or remote attestation; see docs/EXECUTION_AUDIT.md.
+
 ## Documentation
 
 - [Language reference](LANGUAGE.md)
