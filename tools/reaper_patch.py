@@ -2,7 +2,7 @@
 """Create, verify, apply and reverse review-gated REAPER patch proposals."""
 from __future__ import annotations
 import argparse, hashlib, json, re, subprocess, sys
-from pathlib import Path, PurePosixPath
+from pathlib import Path, PurePosixPath, PureWindowsPath
 
 SCHEMA = "reaper.patch-proposal/v1"
 DIFF_PATH = re.compile(r"^diff --git a/(.+) b/(.+)$")
@@ -18,10 +18,19 @@ def sha256(data):
     return hashlib.sha256(data).hexdigest()
 
 def safe_path(value):
-    path = PurePosixPath(value)
-    if path.is_absolute() or not value or any(part in ("", ".", "..") for part in path.parts):
+    if not isinstance(value, str) or not value or "\\x00" in value:
         raise ValueError(f"unsafe patch path: {value!r}")
-    if path.parts[0] == ".git":
+    # Git patches are slash-separated, but the same paths may be applied on
+    # Windows. Reject Windows separators, drives, UNC paths and NTFS streams
+    # before any filesystem or git operation can interpret them differently.
+    if "\\\\" in value or ":" in value:
+        raise ValueError(f"unsafe cross-platform patch path: {value!r}")
+    path = PurePosixPath(value)
+    windows_path = PureWindowsPath(value)
+    if (path.is_absolute() or windows_path.is_absolute() or windows_path.drive or
+            any(part in ("", ".", "..") for part in path.parts)):
+        raise ValueError(f"unsafe patch path: {value!r}")
+    if path.parts[0].casefold() == ".git":
         raise ValueError("patches may not modify .git")
     return value
 
