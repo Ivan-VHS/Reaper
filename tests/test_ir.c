@@ -18,6 +18,25 @@ static void test_valid_module(void) {
     assert(strcmp(reaper_ir_opcode_name(REAPER_IR_OP_ADD_I64), "add.i64") == 0);
 }
 
+static void test_arithmetic_opcodes_accept_i64(void) {
+    const ReaperIrNode nodes[] = {
+        { REAPER_IR_OP_CONST_I64, REAPER_IR_TYPE_I64, REAPER_IR_NO_VALUE, REAPER_IR_NO_VALUE, 7, 1, 1 },
+        { REAPER_IR_OP_CONST_I64, REAPER_IR_TYPE_I64, REAPER_IR_NO_VALUE, REAPER_IR_NO_VALUE, 2, 1, 2 },
+        { REAPER_IR_OP_SUB_I64, REAPER_IR_TYPE_I64, 0, 1, 0, 1, 3 },
+        { REAPER_IR_OP_MUL_I64, REAPER_IR_TYPE_I64, 2, 1, 0, 1, 4 },
+        { REAPER_IR_OP_DIV_I64, REAPER_IR_TYPE_I64, 3, 1, 0, 1, 5 },
+        { REAPER_IR_OP_NEG_I64, REAPER_IR_TYPE_I64, 4, REAPER_IR_NO_VALUE, 0, 1, 6 },
+        { REAPER_IR_OP_RETURN, REAPER_IR_TYPE_UNIT, 5, REAPER_IR_NO_VALUE, 0, 1, 7 }
+    };
+    const ReaperIrModule module = { nodes, sizeof nodes / sizeof nodes[0] };
+    ReaperIrError error;
+    assert(reaper_ir_verify(&module, &error));
+    assert(strcmp(reaper_ir_opcode_name(REAPER_IR_OP_SUB_I64), "sub.i64") == 0);
+    assert(strcmp(reaper_ir_opcode_name(REAPER_IR_OP_MUL_I64), "mul.i64") == 0);
+    assert(strcmp(reaper_ir_opcode_name(REAPER_IR_OP_DIV_I64), "div.i64") == 0);
+    assert(strcmp(reaper_ir_opcode_name(REAPER_IR_OP_NEG_I64), "neg.i64") == 0);
+}
+
 static void test_forward_reference_rejected(void) {
     const ReaperIrNode nodes[] = {
         { REAPER_IR_OP_ADD_I64, REAPER_IR_TYPE_I64, 1, 1, 0, 1, 1 },
@@ -50,9 +69,10 @@ static void test_null_module_rejected(void) {
 
 int main(void) {
     test_valid_module();
+    test_arithmetic_opcodes_accept_i64();
     test_forward_reference_rejected();
     test_type_mismatch_rejected();
     test_null_module_rejected();
-    puts("native IR tests: 4 groups passed");
+    puts("native IR tests: 5 groups passed");
     return 0;
 }
