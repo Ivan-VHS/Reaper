@@ -2,7 +2,7 @@
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
-**Reaper is an expression-oriented language built around readable syntax and explicit data flow.** Its `~>` operator passes a value into the next operation. The repository currently contains a Python reference interpreter and a developing native C17 implementation.
+**Reaper is an expression-oriented language built around readable syntax and explicit data flow.** Its `|>` operator passes a value into the next operation. The repository currently contains a Python reference interpreter and a developing native C17 implementation.
 
 ## Example
 
@@ -11,7 +11,7 @@ craft double(value) {
     yield value * 2
 }
 make numbers := [1, 2, 3, 4]
-make answer := numbers ~> map(double) ~> sum()
+make answer := numbers |> map(double) |> sum()
 emit "answer = " ++ text(answer)
 ```
 
@@ -69,10 +69,6 @@ Programs are tokenized, parsed into an AST and evaluated by a bounded interprete
 
 Default runtime quotas include 1,000,000 execution steps, 256 nested calls, 100,000 collection items and 1,000,000 characters from text concatenation. These are resource guardrails, **not a security sandbox**. Do not treat execution of untrusted programs as isolated from the host.
 
-## Execution audit trail
-
-The optional audit mode writes a local hash-chained journal of source fingerprints and run lifecycle events without copying program output. Enable it with --audit-log PATH and verify it with --verify-audit-log PATH. The chain detects record edits but is not a digital signature or remote attestation; see docs/EXECUTION_AUDIT.md.
-
 ## Documentation
 
 - [Language reference](LANGUAGE.md)
@@ -89,3 +85,8 @@ GitHub Actions tests Python 3.10, 3.11 and 3.12, runs the unit suite, checks an 
 [Apache License 2.0](LICENSE).
 
 > 千里之行，始于足下。 — A journey of a thousand miles begins with a single step.
+
+
+## Execution audit trail
+
+The optional audit mode writes a local hash-chained journal of source fingerprints and run lifecycle events without copying program output. Enable it with --audit-log PATH and verify it with --verify-audit-log PATH. The chain detects record edits but is not a digital signature or remote attestation; see docs/EXECUTION_AUDIT.md.

@@ -2,7 +2,7 @@
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
-**Reaper — expression-oriented мова з читабельним синтаксисом і явним потоком даних.** Оператор `~>` передає значення наступній операції. Репозиторій містить еталонний інтерпретатор Python і розроблювану нативну реалізацію C17.
+**Reaper — expression-oriented мова з читабельним синтаксисом і явним потоком даних.** Оператор `|>` передає значення наступній операції. Репозиторій містить еталонний інтерпретатор Python і розроблювану нативну реалізацію C17.
 
 ## Приклад
 
@@ -11,7 +11,7 @@ craft double(value) {
     yield value * 2
 }
 make numbers := [1, 2, 3, 4]
-make answer := numbers ~> map(double) ~> sum()
+make answer := numbers |> map(double) |> sum()
 emit "answer = " ++ text(answer)
 ```
 
