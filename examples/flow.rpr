@@ -1,4 +1,4 @@
-# Flow operator ~> passes the left value into the next operation.
+# Flow operator |> passes the left value into the next operation.
 craft double(value) {
     yield value * 2
 }
@@ -12,7 +12,7 @@ craft add(total, value) {
 }
 
 make values := [1, 2, 3, 4, 5]
-make result := values ~> map(double) ~> keep(is_large) ~> fold(0, add)
+make result := values |> map(double) |> keep(is_large) |> fold(0, add)
 emit "flow result = " ++ text(result)
 
 vary counter := 0
