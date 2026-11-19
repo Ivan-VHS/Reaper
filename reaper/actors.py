@@ -116,8 +116,12 @@ class SovereignUnit:
             raise TypeError("snapshot must be bytes")
         try:
             envelope = json.loads(snapshot.decode("utf-8"))
+            if not isinstance(envelope, dict):
+                raise TypeError("snapshot envelope must be an object")
             payload = envelope["payload"]
             supplied_digest = envelope["sha256"]
+            if not isinstance(payload, dict):
+                raise TypeError("snapshot payload must be an object")
         except (UnicodeError, json.JSONDecodeError, KeyError, TypeError) as error:
             raise ActorError("snapshot is malformed") from error
         expected_digest = hashlib.sha256(_canonical_json(payload)).hexdigest()
