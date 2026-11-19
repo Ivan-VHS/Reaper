@@ -124,6 +124,7 @@ ctest --test-dir build --output-on-failure
 - [AETHER-ANAS roadmap](docs/AETHER_ANAS_ROADMAP.md) — staged integration plan and acceptance gates.
 - [20-system engineering programme](docs/20_SYSTEM_ENHANCEMENTS.md) — engineering contracts and acceptance focus.
 - [Constitution profile](docs/CONSTITUTION_666_PROFILE.md) — project-specific rules and conformance states.
+- [HMGA v3.0 bounded operator matrix](docs/HMGA_V3.md) — finite 20×20 operator catalogue and governed evolution contract.
 - [Runnable examples](examples/) and [tests](tests/).
 
 The 20 engineering tracks are **contracts and planned work**, not twenty completed runtime subsystems. Static type checking, effect types, native compilation, GPU execution, distributed scheduling, package management, formal verification and self-hosting remain future milestones. They will be claimed as implemented only after real backends and conformance tests exist.
