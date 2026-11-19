@@ -111,6 +111,36 @@ Calls use name(arguments); list indexing uses collection[index]. Arithmetic does
 
 Flow passes the left-hand value as the first argument: values ~> map(double) is equivalent to map(values, double).
 
+## Algebraic and structural operations
+
+Reaper includes a pure, domain-neutral operator library for numeric work,
+vectors, matrices, sampled data, and collections. It is not limited to audio.
+
+| Operation | Meaning |
+|---|---|
+| opposite(value), multiply(a, b), divide(a, b), power(a, b) | Checked scalar arithmetic |
+| root(value[, degree]), logarithm(value[, base]), exponential(value[, base]) | Real-domain power and logarithmic transforms |
+| replicate(value, count), reverse(values) | Bounded repetition and reversal |
+| scale(vector, factor), dot(a, b), distance(a, b) | Vector scaling, dot product, and Euclidean distance |
+| differentiate(samples[, step]) | Adjacent forward finite differences |
+| integrate(samples[, step]) | Cumulative trapezoidal integration, beginning at zero |
+| accumulate(values[, initial]), differences(values) | Prefix sums and adjacent differences |
+| quantize(value[, step]) | Round to a positive interval using ties-to-even |
+| normalize(values[, mode]) | Min-max scaling or Euclidean unit normalization |
+| factorize(integer) | Bounded prime factorization of a positive integer |
+| flatten(values), transpose(matrix), matrix_multiply(a, b) | Nested-list and matrix operations |
+| unique(values) | Stable scalar deduplication with strict type identity |
+| cartesian(a, b), proliferate(choices) | Bounded combinatorial expansion |
+| branch(value, functions) | Apply each listed Reaper function to one input |
+| transform(values, function) | Map a function over a sequence |
+
+Collection expansion and matrix work are checked against interpreter limits.
+Invalid numeric domains, incompatible vector sizes, ragged matrices, and
+division by zero raise Reaper runtime diagnostics. These helpers are pure and
+do not grant filesystem, network, process, shell, clock, device, or audio-host
+access. See [the 20-triad operator matrix](docs/ALGEBRAIC_OPERATOR_MATRIX.md)
+for the complete mapping and executable example.
+
 ## Execution
 
 ~~~sh
