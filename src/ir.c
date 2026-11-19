@@ -37,12 +37,12 @@ int reaper_ir_verify(const ReaperIrModule *module, ReaperIrError *error) {
         case REAPER_IR_OP_MUL_I64:
         case REAPER_IR_OP_DIV_I64:
             if (node->type != REAPER_IR_TYPE_I64)
-                return reject(error, i, "ADD_I64 must produce i64");
+                return reject(error, i, "binary arithmetic operation must produce i64");
             if (!valid_ref(node->lhs, i) || !valid_ref(node->rhs, i))
-                return reject(error, i, "ADD_I64 operands must reference earlier nodes");
+                return reject(error, i, "binary arithmetic operands must reference earlier nodes");
             if (module->nodes[node->lhs].type != REAPER_IR_TYPE_I64 ||
                 module->nodes[node->rhs].type != REAPER_IR_TYPE_I64)
-                return reject(error, i, "ADD_I64 operands must both be i64");
+                return reject(error, i, "binary arithmetic operands must both be i64");
             break;
         case REAPER_IR_OP_NEG_I64:
             if (node->type != REAPER_IR_TYPE_I64)
