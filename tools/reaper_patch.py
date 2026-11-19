@@ -25,6 +25,13 @@ def safe_path(value):
         raise ValueError("patches may not modify .git")
     return value
 
+def ensure_no_symlink(root, value):
+    current = root
+    for part in PurePosixPath(safe_path(value)).parts:
+        current = current / part
+        if current.is_symlink():
+            raise ValueError(f"symlink path component is not allowed: {value}")
+
 def changed_paths(patch):
     found = []
     for line in patch.splitlines():
@@ -69,7 +76,7 @@ def load_proposal(root, proposal):
     if paths != [item["path"] for item in manifest.get("files", [])]:
         raise ValueError("manifest file list does not match patch")
     for item in manifest["files"]:
-        safe_path(item["path"])
+        ensure_no_symlink(root, item["path"])
         try: current = (root / item["path"]).read_bytes()
         except FileNotFoundError: current = b""
         if sha256(current) != item["base_sha256"]:
@@ -94,6 +101,8 @@ def rollback(root, proposal):
         raise ValueError("invalid proposal or patch digest mismatch")
     if changed_paths(patch) != [item["path"] for item in manifest.get("files", [])]:
         raise ValueError("manifest file list does not match patch")
+    for item in manifest["files"]:
+        ensure_no_symlink(root, item["path"])
     run_git(root, "apply", "--check", "--reverse", input_text=patch)
     run_git(root, "apply", "--reverse", input_text=patch)
     print("rollback applied")
