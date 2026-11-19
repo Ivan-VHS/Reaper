@@ -99,7 +99,10 @@ int reaper_ir_optimize_fixed_point(
         return fail(error, 0U, "output capacity is smaller than input module");
     }
     if (!reaper_ir_verify(input, error)) return 0;
-    if (input->length > SIZE_MAX / sizeof(ReaperIrNode)) {\n        return fail(error, 0U, "IR module size exceeds optimizer workspace limits");\n    }\n    if (input->length == 0U) {
+    if (input->length > SIZE_MAX / sizeof(ReaperIrNode)) {
+        return fail(error, 0U, "IR module size exceeds optimizer workspace limits");
+    }
+    if (input->length == 0U) {
         report->iterations = 1U;
         report->converged = 1;
         return 1;
