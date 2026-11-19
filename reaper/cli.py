@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -11,6 +12,7 @@ from .evolution import EvolutionEngine
 from .runtime import Interpreter
 from .parser import parse
 from .systems import format_tracks
+from .impact import format_catalog as format_impact_catalog, find_profile as find_impact_profile
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -22,6 +24,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--version", action="version", version="Reaper 0.1.0")
     parser.add_argument("--check", action="store_true", help="tokenize and parse without running the program")
     parser.add_argument("--systems", action="store_true", help="list the 20 engineering system contracts")
+    parser.add_argument("--impact-catalog", action="store_true", help="list the 20 semantic impact profiles")
+    parser.add_argument("--impact-profile", metavar="ID_OR_TERM", help="show one semantic impact profile")
     parser.add_argument("--evolve", action="store_true", help="run bounded syntax, test and improvement-proposal cycles")
     parser.add_argument("--iterations", type=int, default=1, help="number of evolution quality cycles (1-20)")
     return parser
@@ -32,6 +36,16 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.systems:
         print(format_tracks())
+        return 0
+    if args.impact_catalog:
+        print(format_impact_catalog())
+        return 0
+    if args.impact_profile:
+        try:
+            query = int(args.impact_profile) if args.impact_profile.isdigit() else args.impact_profile
+            print(json.dumps(find_impact_profile(query), ensure_ascii=False, indent=2))
+        except ValueError as error:
+            parser.error(str(error))
         return 0
     if args.evolve:
         root = Path(args.source) if args.source else Path.cwd()
