@@ -134,6 +134,10 @@ GitHub Actions tests Python **3.10, 3.11 and 3.12**. The workflow compiles the p
 
 Reaper 0.1 is an interpreter — **not** a native-code compiler, operating system, package registry, plugin host or autonomous agent. Resource quotas are not an isolation boundary.
 
+## Low-level language and backend catalog
+
+See the [66-entry low-level language and systems-tooling encyclopedia](docs/LOW_LEVEL_LANGUAGES.ru.md) for verified integration patterns and the Reaper-specific C17/IR roadmap. This is an architecture reference: it does not claim that native code generation, external FFI modules, GPU execution or the WASM backend are already implemented.
+
 ## License
 
 Reaper is distributed under the [Apache License 2.0](LICENSE).
