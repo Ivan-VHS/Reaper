@@ -63,7 +63,8 @@ class AuditLogTests(unittest.TestCase):
         self.assertEqual(summary.records, 3)
         self.assertEqual([row["event"] for row in rows],
                          ["source_loaded", "execution_started", "execution_completed"])
-        self.assertNotIn("hello", audit_contents)
+        self.assertNotIn("Hello from Reaper", audit_contents)
+        self.assertNotIn("square(9)", audit_contents)
 
     def test_cli_verification_command(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
