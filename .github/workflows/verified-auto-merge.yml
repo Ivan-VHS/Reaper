@@ -131,11 +131,19 @@ jobs:
           head="$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" --jq '.head.sha')"
           test "$head" = "$PR_HEAD_SHA" || { echo "PR head changed; refusing stale merge."; exit 1; }
           reviews="$(gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/reviews")"
-          approved="$(jq --arg author "$PR_AUTHOR" --arg head "$PR_HEAD_SHA" '
+          decision="$(jq -c --arg author "$PR_AUTHOR" --arg head "$PR_HEAD_SHA" '
             [.[][] | select(.user.login != $author)]
             | sort_by(.user.login, .submitted_at)
-            | group_by(.user.login) | map(last)
-            | any(.[]; .state == "APPROVED" and .commit_id == $head)
+            | group_by(.user.login) | map(last) as $latest
+            | {
+                approvals: [$latest[] | select(.state == "APPROVED" and .commit_id == $head)] | length,
+                changes: [$latest[] | select(.state == "CHANGES_REQUESTED" and .commit_id == $head)] | length
+              }
           ' <<< "$reviews")"
-          test "$approved" = "true" || { echo "Independent approval no longer applies."; exit 1; }
+          approvals="$(jq -r '.approvals' <<< "$decision")"
+          changes="$(jq -r '.changes' <<< "$decision")"
+          if [ "$approvals" -lt 1 ] || [ "$changes" -gt 0 ]; then
+            echo "Independent approval is missing or a change request is active."
+            exit 1
+          fi
           gh pr merge "$PR_URL" --auto --squash --delete-branch
