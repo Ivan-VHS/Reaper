@@ -245,7 +245,15 @@ class Interpreter:
                         f"text length limit ({self.max_text_length}) exceeded",
                     )
                 return left + right
-            raise self._error(token, "'++' joins text values; convert other values with text()")
+            if isinstance(left, (list, tuple, range)) and isinstance(right, (list, tuple, range)):
+                total = len(left) + len(right)
+                if total > self.max_collection_items:
+                    raise self._error(
+                        token,
+                        f"collection item limit ({self.max_collection_items}) exceeded",
+                    )
+                return [*left, *right]
+            raise self._error(token, "'++' joins two text values or two sequences of items")
         if operator in {"<", "<=", ">", ">="}:
             compatible = (
                 self._is_number(left) and self._is_number(right)
@@ -344,6 +352,41 @@ class Interpreter:
                 )
             return [*values, item]
 
+        def concat(*values: Any) -> Any:
+            if not values:
+                return ""
+            if all(isinstance(value, str) for value in values):
+                total = sum(len(value) for value in values)
+                if total > self.max_text_length:
+                    raise ValueError(f"text length limit ({self.max_text_length}) exceeded")
+                return "".join(values)
+            if all(isinstance(value, (list, tuple, range)) for value in values):
+                checked = [sequence(value) for value in values]
+                total = sum(len(value) for value in checked)
+                if total > self.max_collection_items:
+                    raise ValueError(f"collection item limit ({self.max_collection_items}) exceeded")
+                return [item for value in checked for item in value]
+            raise TypeError("concat() expects only text values or only sequences")
+
+        def join(separator: str, values: Any) -> str:
+            if not isinstance(separator, str):
+                raise TypeError("join() separator must be text")
+            values = sequence(values)
+            if not isinstance(values, (list, tuple, range)) or any(not isinstance(item, str) for item in values):
+                raise TypeError("join() expects a sequence containing only text values")
+            result = separator.join(values)
+            if len(result) > self.max_text_length:
+                raise ValueError(f"text length limit ({self.max_text_length}) exceeded")
+            return result
+
+        def extend(values: Any, additions: Any) -> list[Any]:
+            values = sequence(values)
+            additions = sequence(additions)
+            total = len(values) + len(additions)
+            if total > self.max_collection_items:
+                raise ValueError(f"collection item limit ({self.max_collection_items}) exceeded")
+            return [*values, *additions]
+
         def bounded_range(*arguments: int) -> range:
             return sequence(self._range(*arguments))
 
@@ -370,6 +413,9 @@ class Interpreter:
         register("kind", self._kind, 1, 1)
         register("range", bounded_range, 1, 3)
         register("push", push, 2, 2)
+        register("concat", concat, 0, None)
+        register("join", join, 2, 2)
+        register("extend", extend, 2, 2)
         register("first", lambda values: _first(sequence(values)), 1, 1)
         register("rest", lambda values: sequence(values)[1:], 1, 1)
         register("sum", lambda values: _sum(sequence(values)), 1, 1)
