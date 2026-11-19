@@ -6,6 +6,8 @@ import math
 from dataclasses import dataclass
 from typing import Any, Callable
 
+from . import algebra
+
 from .errors import ExecutionLimitError, ReaperRuntimeError
 from .lexer import Token
 from .parser import Node, parse
@@ -381,22 +383,81 @@ class Interpreter:
         register("ask", lambda prompt: input(self._display(prompt)), 1, 1)
         register("assert", self._assert, 1, 2)
 
+        # Pure, domain-neutral algebraic and structural operations.
+        register("opposite", algebra.opposite, 1, 1)
+        register("multiply", algebra.multiply, 2, 2)
+        register("divide", algebra.divide, 2, 2)
+        register("power", algebra.power, 2, 2)
+        register("root", algebra.root, 1, 2)
+        register("logarithm", algebra.logarithm, 1, 2)
+        register("exponential", algebra.exponential, 1, 2)
+        register("replicate", lambda value, count: algebra.replicate(value, count, self.max_collection_items), 2, 2)
+        register("reverse", lambda values: algebra.reverse(sequence(values)), 1, 1)
+        register("vector_scale", lambda values, factor: algebra.scale(sequence(values), factor), 2, 2)
+        register("dot", lambda left, right: algebra.dot(sequence(left), sequence(right)), 2, 2)
+        register("distance", lambda left, right: algebra.distance(sequence(left), sequence(right)), 2, 2)
+        register("differentiate", lambda values, step=1: algebra.differentiate(sequence(values), step), 1, 2)
+        register("integrate", lambda values, step=1: algebra.integrate(sequence(values), step), 1, 2)
+        register("accumulate", lambda values, initial=0: algebra.accumulate(sequence(values), initial), 1, 2)
+        register("differences", lambda values: algebra.differences(sequence(values)), 1, 1)
+        register("quantize", algebra.quantize, 1, 2)
+        register("normalize", lambda values, mode="minmax": algebra.normalize(sequence(values), mode), 1, 2)
+        register("factorize", lambda value: algebra.factorize(value, self.max_steps), 1, 1)
+        register("flatten", lambda values: algebra.flatten(values, self.max_collection_items), 1, 1)
+        register("transpose", lambda matrix: algebra.transpose(matrix, self.max_collection_items), 1, 1)
+        register("matrix_multiply", lambda left, right: algebra.matrix_multiply(
+            left, right, self.max_collection_items, self.max_steps
+        ), 2, 2)
+        register("unique", lambda values: algebra.unique(sequence(values), self.max_collection_items), 1, 1)
+        register("cartesian", lambda left, right: algebra.cartesian(
+            sequence(left), sequence(right), self.max_collection_items
+        ), 2, 2)
+        register("proliferate", lambda choices: algebra.proliferate(
+            choices, self.max_collection_items
+        ), 1, 1)
+        register("branch", self._branch, 2, 2)
+        register("transform", lambda values, fn: self._map(sequence(values), callback, fn), 2, 2)
+
+    def _branch(self, value: Any, functions: Any) -> list[Any]:
+        if not isinstance(functions, (list, tuple)):
+            raise TypeError("branch() expects a list of Reaper functions")
+        if len(functions) > self.max_collection_items:
+            raise ValueError(f"collection item limit ({self.max_collection_items}) exceeded")
+        token = Token("BUILTIN", "branch", 1, 1)
+        results: list[Any] = []
+        for function in functions:
+            self._tick(token)
+            if not isinstance(function, (UserFunction, Builtin)):
+                raise TypeError("branch() expects only Reaper functions")
+            results.append(self._call(function, [value], token))
+        return results
+
     def _map(self, values: Any, validator: Callable[[Any], None], function: Any) -> list[Any]:
         validator(function)
-        return [self._call(function, [item], Token("BUILTIN", "map", 1, 1)) for item in values]
+        token = Token("BUILTIN", "map", 1, 1)
+        result: list[Any] = []
+        for item in values:
+            self._tick(token)
+            result.append(self._call(function, [item], token))
+        return result
 
     def _keep(self, values: Any, validator: Callable[[Any], None], function: Any) -> list[Any]:
         validator(function)
-        return [
-            item for item in values
-            if self._truthy(self._call(function, [item], Token("BUILTIN", "keep", 1, 1)))
-        ]
+        token = Token("BUILTIN", "keep", 1, 1)
+        result: list[Any] = []
+        for item in values:
+            self._tick(token)
+            if self._truthy(self._call(function, [item], token)):
+                result.append(item)
+        return result
 
     def _fold(self, values: Any, initial: Any, validator: Callable[[Any], None], function: Any) -> Any:
         validator(function)
+        token = Token("BUILTIN", "fold", 1, 1)
         result = initial
         for item in values:
-            result = self._call(function, [result, item], Token("BUILTIN", "fold", 1, 1))
+            self._tick(token)
+            result = self._call(function, [result, item], token)
         return result
 
     @staticmethod

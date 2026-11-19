@@ -19,6 +19,22 @@ static int add_overflows_i64(int64_t a, int64_t b) {
     return 0;
 }
 
+static int sub_overflows_i64(int64_t a, int64_t b) {
+    if (b < 0) return a > INT64_MAX + b;
+    if (b > 0) return a < INT64_MIN + b;
+    return 0;
+}
+
+static int mul_overflows_i64(int64_t a, int64_t b) {
+    if (a == 0 || b == 0) return 0;
+    if (a > 0) {
+        if (b > 0) return a > INT64_MAX / b;
+        return b < INT64_MIN / a;
+    }
+    if (b > 0) return a < INT64_MIN / b;
+    return a < INT64_MAX / b;
+}
+
 int reaper_ir_fold_constants(
     const ReaperIrModule *input,
     ReaperIrNode *output,
@@ -42,18 +58,51 @@ int reaper_ir_fold_constants(
 
     for (size_t i = 0; i < input->length; ++i) {
         ReaperIrNode node = input->nodes[i];
-        if (node.opcode == REAPER_IR_OP_ADD_I64) {
-            const ReaperIrNode *lhs = &output[node.lhs];
-            const ReaperIrNode *rhs = &output[node.rhs];
-            if (lhs->opcode == REAPER_IR_OP_CONST_I64 &&
-                rhs->opcode == REAPER_IR_OP_CONST_I64) {
-                if (add_overflows_i64(lhs->immediate, rhs->immediate)) {
-                    return fail(error, i, "constant addition overflows signed i64");
+        if (node.opcode == REAPER_IR_OP_NEG_I64) {
+            const ReaperIrNode *operand = &output[node.lhs];
+            if (operand->opcode == REAPER_IR_OP_CONST_I64) {
+                if (operand->immediate == INT64_MIN) {
+                    return fail(error, i, "constant negation overflows signed i64");
                 }
                 node.opcode = REAPER_IR_OP_CONST_I64;
                 node.lhs = REAPER_IR_NO_VALUE;
                 node.rhs = REAPER_IR_NO_VALUE;
-                node.immediate = lhs->immediate + rhs->immediate;
+                node.immediate = -operand->immediate;
+            }
+        } else if (node.opcode == REAPER_IR_OP_ADD_I64 ||
+                   node.opcode == REAPER_IR_OP_SUB_I64 ||
+                   node.opcode == REAPER_IR_OP_MUL_I64 ||
+                   node.opcode == REAPER_IR_OP_DIV_I64) {
+            const ReaperIrNode *lhs = &output[node.lhs];
+            const ReaperIrNode *rhs = &output[node.rhs];
+            if (lhs->opcode == REAPER_IR_OP_CONST_I64 &&
+                rhs->opcode == REAPER_IR_OP_CONST_I64) {
+                int64_t a = lhs->immediate;
+                int64_t b = rhs->immediate;
+                int64_t result = 0;
+                if (node.opcode == REAPER_IR_OP_ADD_I64) {
+                    if (add_overflows_i64(a, b))
+                        return fail(error, i, "constant addition overflows signed i64");
+                    result = a + b;
+                } else if (node.opcode == REAPER_IR_OP_SUB_I64) {
+                    if (sub_overflows_i64(a, b))
+                        return fail(error, i, "constant subtraction overflows signed i64");
+                    result = a - b;
+                } else if (node.opcode == REAPER_IR_OP_MUL_I64) {
+                    if (mul_overflows_i64(a, b))
+                        return fail(error, i, "constant multiplication overflows signed i64");
+                    result = a * b;
+                } else {
+                    if (b == 0)
+                        return fail(error, i, "constant division by zero");
+                    if (a == INT64_MIN && b == -1)
+                        return fail(error, i, "constant division overflows signed i64");
+                    result = a / b;
+                }
+                node.opcode = REAPER_IR_OP_CONST_I64;
+                node.lhs = REAPER_IR_NO_VALUE;
+                node.rhs = REAPER_IR_NO_VALUE;
+                node.immediate = result;
             }
         }
         output[i] = node;

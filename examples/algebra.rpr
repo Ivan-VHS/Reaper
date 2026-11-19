@@ -1,0 +1,14 @@
+craft plus_one(value) {
+    yield value + 1
+}
+
+craft square(value) {
+    yield value * value
+}
+
+make samples := [1, 2, 3, 4]
+emit differentiate(samples)
+emit integrate(samples, 0.5)
+emit normalize([10, 20, 30])
+emit branch(4, [plus_one, square])
+emit proliferate([[1, 2], ["left", "right"]])

@@ -19,7 +19,7 @@ emit "answer = " ++ text(answer)
 
 - **Python reference runtime:** Python 3.10+, tree-walking interpreter, lexer, parser, runtime, CLI and standard-library tests.
 - **Language core:** Unicode identifiers, comments, strings, functions and closures, recursion, immutable `make`, mutable `vary` with explicit `change`, conditionals, iteration and flow composition.
-- **Built-ins and diagnostics:** collection operations, explicit conversions, source-aware lexer/parser/runtime errors and configurable execution limits.
+- **Built-ins and diagnostics:** collection transforms, checked algebraic operations, vector/matrix helpers, sampled-data calculus, source-aware diagnostics and bounded combinatorial expansion.
 - **Native C17 track:** lexer, expression parser and owned AST, verified integer Canonical IR, checked constant folding, a limited AST-to-IR lowering slice, CLI bring-up and C tests.
 - **MOST language track:** documented language vocabulary and staged implementation contract.
 
@@ -76,7 +76,7 @@ Default runtime quotas include 1,000,000 execution steps, 256 nested calls, 100,
 - [Architecture](docs/ARCHITECTURE.md)
 - [MOST language specification](docs/MOST_LANGUAGE_SPEC.md)
 - [C migration plan](docs/C_MIGRATION.md)
-- [Examples](examples/) · [Tests](tests/)
+- [Examples](examples/) · [Tests](tests/) · [20-triad algebraic operator matrix](docs/ALGEBRAIC_OPERATOR_MATRIX.md) · [20-triad algebraic operator matrix](docs/ALGEBRAIC_OPERATOR_MATRIX.md)
 
 ## CI and license
 
