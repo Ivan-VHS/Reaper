@@ -35,10 +35,10 @@ class PatchPipelineTests(unittest.TestCase):
 
     def test_windows_path_forms_are_rejected(self):
         for path in (
-            r"..\\outside.txt",
-            r"C:\\outside.txt",
+            r"..\outside.txt",
+            r"C:\outside.txt",
             "C:relative.txt",
-            r"\\\\server\\share\\outside.txt",
+            r"\\server\share\outside.txt",
             "src/file.txt:alternate-stream",
             ".GIT/config",
         ):
