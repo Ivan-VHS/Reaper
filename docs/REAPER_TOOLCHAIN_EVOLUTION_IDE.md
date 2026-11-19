@@ -43,3 +43,15 @@ and a clean-environment bootstrap.
 
     cmake -S . -B build && cmake --build build --parallel
     ctest --test-dir build --output-on-failure
+
+
+## Verified pull-request automation
+
+.github/workflows/reaper-verified-pr.yml is a manual, review-gated PR creation
+workflow. It accepts only an existing feat/*, fix/* or docs/* candidate branch,
+requires the candidate to contain the current main commit, and rejects empty
+changes or an already-open PR for that head. It then runs the Python tests,
+language-example checks, native C17 build and native test suite before opening
+a **draft** pull request. The workflow has read-only contents permission and
+pull-request creation permission only; it never pushes code, enables auto-merge
+or merges a pull request.
