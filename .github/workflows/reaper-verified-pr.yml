@@ -1,0 +1,114 @@
+name: Reaper Verified Pull Request
+
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_branch:
+        description: "Existing feat/*, fix/* or docs/* branch to validate and propose"
+        required: true
+        type: string
+      title:
+        description: "Pull request title"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: reaper-verified-pr-${{ inputs.candidate_branch }}
+  cancel-in-progress: false
+
+jobs:
+  validate-and-open:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out main as validation baseline
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Validate candidate branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CANDIDATE_BRANCH: ${{ inputs.candidate_branch }}
+        run: |
+          set -euo pipefail
+          if [[ ! "${CANDIDATE_BRANCH}" =~ ^(feat|fix|docs)/[A-Za-z0-9._/-]+$ ]]; then
+            echo "Only feat/*, fix/* and docs/* branches are accepted."
+            exit 1
+          fi
+          if [[ "${CANDIDATE_BRANCH}" == *".."* || "${CANDIDATE_BRANCH}" == *"//"* || "${CANDIDATE_BRANCH}" == */ ]]; then
+            echo "Malformed candidate branch name."
+            exit 1
+          fi
+          git check-ref-format --branch "${CANDIDATE_BRANCH}" >/dev/null
+          git fetch --no-tags origin "refs/heads/${CANDIDATE_BRANCH}:refs/remotes/origin/${CANDIDATE_BRANCH}"
+          git fetch --no-tags origin main
+          candidate_ref="refs/remotes/origin/${CANDIDATE_BRANCH}"
+          if ! git merge-base --is-ancestor origin/main "${candidate_ref}"; then
+            echo "Candidate branch must include the current main commit. Rebase or merge main, then retry."
+            exit 1
+          fi
+          if git diff --quiet origin/main..."${candidate_ref}" --; then
+            echo "Candidate branch has no changes relative to main."
+            exit 1
+          fi
+          existing_pr="$(gh pr list --repo "${GITHUB_REPOSITORY}" --state open --base main --head "${GITHUB_REPOSITORY_OWNER}:${CANDIDATE_BRANCH}" --json number --jq '.[0].number // empty')"
+          if [[ -n "${existing_pr}" ]]; then
+            echo "An open pull request already exists: #${existing_pr}"
+            exit 1
+          fi
+          git checkout --detach "${candidate_ref}"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile Python tooling
+        run: python -m compileall -q reaper tests tools
+
+      - name: Run Python unit and tooling tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Validate and run language example
+        run: |
+          python -m reaper --check examples/flow.rpr
+          python -m reaper examples/flow.rpr
+
+      - name: Configure native C17 build
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
+
+      - name: Build native C17 toolchain
+        run: cmake --build build --parallel 2
+
+      - name: Run native C17 tests
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Open draft pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CANDIDATE_BRANCH: ${{ inputs.candidate_branch }}
+          PR_TITLE: ${{ inputs.title }}
+        run: |
+          set -euo pipefail
+          body_file="${RUNNER_TEMP}/reaper-pr-body.md"
+          cat > "${body_file}" <<'BODY'
+          ## Automated verification
+
+          This draft was opened by the Reaper Verified Pull Request workflow after the
+          Python tests, language example checks, native C17 build and native test suite passed.
+
+          - Target: `main`
+          - Review: required before merge
+          - Merge: never performed by this workflow
+          - Permissions: read-only repository contents; pull-request creation only
+          BODY
+          gh pr create --repo "${GITHUB_REPOSITORY}" --draft --base main \
+            --head "${GITHUB_REPOSITORY_OWNER}:${CANDIDATE_BRANCH}" \
+            --title "${PR_TITLE}" --body-file "${body_file}"
