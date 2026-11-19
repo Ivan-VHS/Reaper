@@ -23,7 +23,7 @@ static void complete_evidence_is_eligible_only_after_approval(void) {
     ReaperEvolutionEvidence evidence = complete_evidence();
     ReaperEvolutionPolicy policy = reaper_evolution_default_policy();
     ReaperEvolutionDecision decision = reaper_evolution_evaluate(&evidence, &policy);
-    assert(decision.state == REAPER_EVOLUTION_READY_FOR_MAINTAINER);
+    assert(decision.state == REAPER_EVOLUTION_APPROVED_FOR_MANUAL_MERGE);
     assert(decision.blockers == 0U);
     evidence.maintainer_approved = 0;
     decision = reaper_evolution_evaluate(&evidence, &policy);
