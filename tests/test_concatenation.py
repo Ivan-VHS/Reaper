@@ -5,6 +5,7 @@ from reaper.runtime import Interpreter
 
 
 class ConcatenationTests(unittest.TestCase):
+    # These checks exercise both public built-ins and the infix concatenation operator.
     def evaluate(self, source: str, **limits):
         interpreter = Interpreter(output=lambda _text: None, **limits)
         interpreter.run(source)
