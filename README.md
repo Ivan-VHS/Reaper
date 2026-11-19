@@ -117,6 +117,14 @@ ctest --test-dir build --output-on-failure
 
 ## Documentation and engineering programme
 
+- [Compiler front end and platform architecture](docs/PLATFORM_ARCHITECTURE.md)
+- [Bounded runtime systems](docs/REAPER_SYSTEMS.md)
+- [HMGA v2.0](docs/HMGA_V2.0.md) · [HMGA v3.0](docs/HMGA_V3.md)
+- [MCST Elbrus E2K host profile](docs/ELBRUS_E2K.md)
+- [MOST systems architecture](docs/MOST_SYSTEMS_ARCHITECTURE.md)
+- [Engineering standard](docs/ENGINEERING_STANDARD.md)
+
+
 - [Language reference](LANGUAGE.md) — syntax, expressions, built-ins and runtime limits.
 - [Unified REAPER/MOST architecture](docs/REAPER_UNIFIED_ARCHITECTURE.md) — consolidated decisions from the earlier design threads and current delivery gates.
 - [Architecture](docs/ARCHITECTURE.md) — implementation layers and product boundaries.
@@ -133,6 +141,21 @@ The 20 engineering tracks are **contracts and planned work**, not twenty complet
 GitHub Actions tests Python **3.10, 3.11 and 3.12**. The workflow compiles the package and tests, runs the unit suite, checks an example without executing it, and runs the flow example.
 
 Reaper 0.1 is an interpreter — **not** a native-code compiler, operating system, package registry, plugin host or autonomous agent. Resource quotas are not an isolation boundary.
+
+## Compiler and runtime preview
+
+<p align="center"><img src="assets/reaper-toolchain-preview.svg" alt="Illustrative Reaper compiler front-end and host runtime preview" width="100%"></p>
+<p align="center"><img src="assets/reaper-nine-systems.svg" alt="Reaper bounded host runtime systems diagram" width="100%"></p>
+
+<sub>These are source-aligned vector illustrations, not screenshots captured from a running terminal or desktop application. The values shown in the terminal panel are illustrative.</sub>
+
+### New developer tooling
+
+The optional `reaperc` command checks the existing `.rpr` syntax, performs conservative static analysis, emits source-mapped deterministic Quarry IR, verifies the IR structure and can fold safe literal expressions. It is a portable compiler front end, **not** a native-code compiler.
+
+The host package also adds bounded, opt-in Python APIs for logical resource regions, asynchronous channels and actors, capability-scoped effects, checksummed application-state snapshots, local routing, profiling, a capability-gated C ABI adapter and health-policy observation. These APIs are not implicitly exposed to `.rpr` programs and do not claim distributed execution, native memory reclamation or OS-level sandboxing.
+
+Host target metadata is available through `python -m reaper --target-info`. E2K detection reports host identity only; native MCST E2K code generation remains unimplemented.
 
 ## License
 

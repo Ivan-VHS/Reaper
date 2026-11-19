@@ -100,6 +100,14 @@ python -m unittest discover -s tests -v
 
 ## 文档与工程计划
 
+- [编译器前端与平台架构](docs/PLATFORM_ARCHITECTURE.md)
+- [有界运行时子系统](docs/REAPER_SYSTEMS.md)
+- [HMGA v2.0](docs/HMGA_V2.0.md) · [HMGA v3.0](docs/HMGA_V3.md)
+- [MCST Elbrus E2K 宿主配置](docs/ELBRUS_E2K.md)
+- [MOST 系统架构](docs/MOST_SYSTEMS_ARCHITECTURE.md)
+- [工程标准](docs/ENGINEERING_STANDARD.md)
+
+
 - [语言参考](LANGUAGE.md) — 语法、表达式、内置操作和运行时限制。
 - [架构](docs/ARCHITECTURE.md) — 实现层次与项目边界。
 - [架构要求](docs/ARCHITECTURE_66.md) — 可验证的模块化和安全要求。
@@ -115,6 +123,21 @@ python -m unittest discover -s tests -v
 GitHub Actions 在 Python **3.10、3.11 和 3.12** 上运行验证。工作流会编译包和测试、执行单元测试、在不运行程序的情况下检查示例，并运行数据流示例。
 
 Reaper 0.1 是解释器，**不是**原生代码编译器、操作系统、包注册中心、插件宿主或自主代理。资源配额不等于隔离机制。
+
+## 编译器与运行时预览
+
+<p align="center"><img src="assets/reaper-toolchain-preview.svg" alt="Reaper 编译器前端和宿主运行时示意预览" width="100%"></p>
+<p align="center"><img src="assets/reaper-nine-systems.svg" alt="Reaper 有界宿主运行时子系统示意图" width="100%"></p>
+
+<sub>这些是依据源代码制作的矢量示意图，并非正在运行的终端或应用程序截图。终端面板中的数值仅用于演示。</sub>
+
+### 新的开发工具
+
+可选的 `reaperc` 命令会检查现有 `.rpr` 语法，执行保守的静态分析，生成带源代码位置映射的确定性 Quarry IR，验证 IR 结构，并可折叠安全的字面量表达式。这是可移植的编译器前端，**不是**原生机器码编译器。
+
+软件包还提供有界、显式启用的 Python 宿主 API：逻辑资源区域、异步通道与 actor、能力令牌作用域、带校验和的应用状态快照、本地路由、性能分析、能力控制的 C ABI 适配器以及健康策略观察。这些 API 不会自动暴露给 `.rpr` 程序，也不声称具备分布式执行、原生内存回收或操作系统级沙箱能力。
+
+可通过 `python -m reaper --target-info` 获取宿主平台元数据。E2K 检测只报告宿主标识；MCST E2K 原生代码生成尚未实现。
 
 ## 许可证
 

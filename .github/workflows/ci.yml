@@ -30,3 +30,7 @@ jobs:
         run: python -m reaper --check examples/flow.rpr
       - name: Run example
         run: python -m reaper examples/flow.rpr
+      - name: Run runtime architecture example
+        run: python -m examples.reaper_architecture
+      - name: Check compiler front end
+        run: python -m reaper.compiler_cli examples/flow.rpr --optimize > /tmp/reaper-ir.json
