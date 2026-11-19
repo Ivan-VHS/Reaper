@@ -7,7 +7,10 @@ import json
 import sys
 from pathlib import Path
 
-from validate_features import validate
+try:
+    from .validate_features import validate
+except ImportError:  # direct script execution
+    from validate_features import validate
 
 DONE = {"implemented", "verified"}
 
