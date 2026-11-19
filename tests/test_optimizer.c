@@ -140,12 +140,16 @@ static void fixed_point_pipeline_rejects_unbounded_budget(void) {
         REAPER_OPTIMIZER_MAX_ITERATIONS + 1U, &report, &error));
 }
 
-\nint main(void) {
+
+int main(void) {
     folds_constant_add();
     folds_dependency_chain();
     rejects_signed_overflow();
     rejects_small_output();
-    supports_in_place_operation();\n    fixed_point_pipeline_converges_and_is_idempotent();\n    fixed_point_pipeline_rejects_exhausted_budget();\n    fixed_point_pipeline_rejects_unbounded_budget();
+    supports_in_place_operation();
+    fixed_point_pipeline_converges_and_is_idempotent();
+    fixed_point_pipeline_rejects_exhausted_budget();
+    fixed_point_pipeline_rejects_unbounded_budget();
     puts("native optimizer tests: 8 groups passed");
     return 0;
 }
