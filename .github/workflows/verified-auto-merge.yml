@@ -1,0 +1,121 @@
+name: Verified PR Auto-Merge
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main]
+  pull_request_review:
+    types: [submitted, dismissed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verified-auto-merge-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  validate-python:
+    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.draft == false && github.event.pull_request.base.ref == 'main')
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    permissions:
+      contents: read
+    timeout-minutes: 15
+    steps:
+      - name: Checkout pull request merge result
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.ref || format('refs/pull/{0}/merge', github.event.pull_request.number) }}
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Compile package and tests
+        run: python -m compileall -q reaper tests
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
+      - name: Validate example
+        run: python -m reaper --check examples/flow.rpr
+      - name: Run example
+        run: python -m reaper examples/flow.rpr
+
+  validate-native:
+    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.draft == false && github.event.pull_request.base.ref == 'main')
+    name: Native C17
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 20
+    steps:
+      - name: Checkout pull request merge result
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.ref || format('refs/pull/{0}/merge', github.event.pull_request.number) }}
+          persist-credentials: false
+      - name: Install C and Python toolchains
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake python3
+      - name: Configure C17 build
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+      - name: Build native core
+        run: cmake --build build --parallel
+      - name: Run native and toolchain tests
+        run: ctest --test-dir build --output-on-failure
+      - name: Smoke-test native CLI
+        run: |
+          ./build/reaper-c --version
+          ./build/reaper-c --evolution-status
+          ./build/reaper-c --tokens examples/hello.rpr
+
+  auto-merge:
+    name: Auto-merge approved PR
+    needs: [validate-python, validate-native]
+    if: github.event_name != 'workflow_dispatch' && github.event.pull_request.draft == false && github.event.pull_request.base.ref == 'main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    timeout-minutes: 5
+    steps:
+      - name: Require stable base/head and independent approval
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          set -euo pipefail
+          current_pr="$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}")"
+          current_head="$(printf '%s' "${current_pr}" | jq -r '.head.sha')"
+          current_base="$(printf '%s' "${current_pr}" | jq -r '.base.sha')"
+          current_base_ref="$(printf '%s' "${current_pr}" | jq -r '.base.ref')"
+          if [ "${current_head}" != "${PR_HEAD_SHA}" ] || [ "${current_base}" != "${PR_BASE_SHA}" ] || [ "${current_base_ref}" != "main" ] || [ "${PR_BASE_REF}" != "main" ]; then
+            echo "Auto-merge blocked: PR head/base changed or the target is not main."
+            exit 1
+          fi
+          reviews="$(gh api --paginate --slurp "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/reviews")"
+          approvals="$(printf '%s' "${reviews}" | jq --arg author "${PR_AUTHOR}" --arg head "${PR_HEAD_SHA}" '
+            [.[][] | select(.user.login != $author)]
+            | sort_by(.user.login, .submitted_at)
+            | group_by(.user.login)
+            | map(last)
+            | map(select(.state == "APPROVED" and .commit_id == $head))
+            | length
+          ')"
+          if ! [[ "${approvals}" =~ ^[0-9]+$ ]] || [ "${approvals}" -lt 1 ]; then
+            echo "Auto-merge blocked: approval from someone other than the PR author is required for this exact head."
+            exit 1
+          fi
+      - name: Enable GitHub native auto-merge
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge "${PR_URL}" --auto --squash --delete-branch
