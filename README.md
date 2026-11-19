@@ -98,6 +98,10 @@ Source text is tokenized, parsed into an AST and evaluated by a bounded tree-wal
 > [!NOTE]
 > These limits are resource guardrails, not a security sandbox. Do not run untrusted programs under the assumption that the interpreter isolates them from the host process.
 
+## MOST language track
+
+The native C17 line now includes the first MOST lexical vocabulary and operator family. The full 66-rule language contract, implementation ledger and delivery gates are documented in [docs/MOST_LANGUAGE_SPEC.md](docs/MOST_LANGUAGE_SPEC.md). This is a lexical foundation only: parser, type checker, ownership analysis, typed IR, native code generation and WASM are not yet implemented.
+
 ## Native C migration
 
 A parallel C17 implementation is being developed in [docs/C_MIGRATION.md](docs/C_MIGRATION.md). The native build currently contains the source-aware lexer, token ownership API, CMake/Make build, native CLI bring-up mode, and C unit tests. The Python interpreter remains the compatibility reference until parser/runtime parity is demonstrated; the C executable is not yet a full language interpreter.
