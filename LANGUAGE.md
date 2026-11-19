@@ -121,7 +121,7 @@ vectors, matrices, sampled data, and collections. It is not limited to audio.
 | opposite(value), multiply(a, b), divide(a, b), power(a, b) | Checked scalar arithmetic |
 | root(value[, degree]), logarithm(value[, base]), exponential(value[, base]) | Real-domain power and logarithmic transforms |
 | replicate(value, count), reverse(values) | Bounded repetition and reversal |
-| scale(vector, factor), dot(a, b), distance(a, b) | Vector scaling, dot product, and Euclidean distance |
+| vector_scale(vector, factor), dot(a, b), distance(a, b) | Vector scaling, dot product, and Euclidean distance |
 | differentiate(samples[, step]) | Adjacent forward finite differences |
 | integrate(samples[, step]) | Cumulative trapezoidal integration, beginning at zero |
 | accumulate(values[, initial]), differences(values) | Prefix sums and adjacent differences |
