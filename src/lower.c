@@ -111,7 +111,7 @@ int reaper_lower_ast_to_ir(
         error->node_index = 0;
         error->message[0] = '\0';
     }
-    if (ast == NULL || ast->items == NULL || ast->length == 0 ||
+    if (ast == NULL || ast->items == NULL || ast->length == 0 || ast->length == SIZE_MAX ||
         ast->root >= ast->length || output == NULL || output_length == NULL) {
         return lower_fail(error, 0, "valid AST, output storage, and output length are required");
     }
