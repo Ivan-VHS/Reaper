@@ -253,7 +253,7 @@ class Interpreter:
                         f"collection item limit ({self.max_collection_items}) exceeded",
                     )
                 return [*left, *right]
-            raise self._error(token, "'++' joins two text values or two sequences of items")
+            raise self._error(token, "'++' joins text values or sequences of items")
         if operator in {"<", "<=", ">", ">="}:
             compatible = (
                 self._is_number(left) and self._is_number(right)
