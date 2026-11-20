@@ -51,6 +51,7 @@ class ArithmeticOperationsTests(unittest.TestCase):
             lambda: multiply(True, 2),
             lambda: factor(0),
             lambda: exponentiate(0, -1),
+            lambda: compute(1, 0, "divide"),
             lambda: combine([1], [1, 2]),
             lambda: couple([1], [1, 2]),
             lambda: convolve([], [1]),
