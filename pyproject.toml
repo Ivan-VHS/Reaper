@@ -27,6 +27,7 @@ classifiers = [
 reaper = "reaper.cli:main"
 reaper-polyglot = "reaper.polyglot:main"
 reaper-polyglot-code = "reaper.polyglot_code:main"
+reaper-embedded = "reaper.embedded:main"
 
 [project.gui-scripts]
 reaper-studio = "reaper.desktop:main"
