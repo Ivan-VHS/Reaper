@@ -1,6 +1,6 @@
 {
-  "schema": "most.feature-registry/v1",
-  "language": "MOST",
+  "schema": "reaper.feature-registry/v1",
+  "language": "REAPER",
   "edition": "0.1",
   "features": [
     {
@@ -127,7 +127,7 @@
     },
     {
       "id": "MOST-RU-GRM-001",
-      "name": "Russian declarations and block grammar",
+      "name": "Shared REAPER declaration and block grammar for Russian aliases",
       "area": "syntax",
       "status": "planned",
       "depends_on": [
@@ -141,12 +141,10 @@
     },
     {
       "id": "MOST-RU-MOR-001",
-      "name": "Explicit Russian inflection tables",
+      "name": "Separate Russian morphology resolver (excluded; exact aliases only)",
       "area": "resolver",
-      "status": "specified",
-      "depends_on": [
-        "MOST-RU-UTF8-001"
-      ],
+      "status": "deprecated",
+      "depends_on": [],
       "acceptance": [
         "paradigm-positive",
         "unknown-form-negative",
@@ -155,13 +153,10 @@
     },
     {
       "id": "MOST-RU-RES-001",
-      "name": "Scoped Russian synonym and intent resolver",
+      "name": "Separate MOST intent resolver (excluded; use REAPER name resolution)",
       "area": "resolver",
-      "status": "specified",
-      "depends_on": [
-        "MOST-RU-MOR-001",
-        "MOST-SYN-001"
-      ],
+      "status": "deprecated",
+      "depends_on": [],
       "acceptance": [
         "unique-resolution",
         "ambiguous-resolution-negative",
@@ -170,12 +165,10 @@
     },
     {
       "id": "MOST-RU-DIA-001",
-      "name": "Versioned domain dialect profiles",
+      "name": "Separate MOST dialect grammar (excluded; use REAPER modules and namespaces)",
       "area": "modules",
-      "status": "specified",
-      "depends_on": [
-        "MOST-RU-RES-001"
-      ],
+      "status": "deprecated",
+      "depends_on": [],
       "acceptance": [
         "scope-isolation",
         "import-compatibility",
@@ -184,7 +177,7 @@
     },
     {
       "id": "MOST-RU-PRO-001",
-      "name": "Optional speech input adapter",
+      "name": "Optional speech input remains an external REAPER IDE/host adapter",
       "area": "host",
       "status": "planned",
       "depends_on": [
@@ -198,11 +191,11 @@
     },
     {
       "id": "MOST-RU-META-001",
-      "name": "Language metadata and symbol introspection",
+      "name": "Shared REAPER token/source mapping for Russian aliases",
       "area": "tooling",
       "status": "planned",
       "depends_on": [
-        "MOST-RU-RES-001"
+        "MOST-RU-LEX-001"
       ],
       "acceptance": [
         "deterministic-symbol-table",
@@ -224,5 +217,6 @@
         "runtime-regression"
       ]
     }
-  ]
+  ],
+  "profile": "МОСТ — exact Russian keyword aliases; no separate parser, semantics, runtime or backend"
 }
