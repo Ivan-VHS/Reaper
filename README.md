@@ -122,6 +122,19 @@ Programs are tokenized, parsed into an AST and evaluated by a bounded interprete
 
 Default runtime quotas include 1,000,000 execution steps, 256 nested calls, 100,000 collection items and 1,000,000 characters from text concatenation. These are resource guardrails, **not a security sandbox**. Do not treat execution of untrusted programs as isolated from the host.
 
+## Polyglot code absorption and language evolution
+
+OmniCore adds a bounded, local-first ingestion path for external codebases. It recognizes source files, grammar artifacts, build manifests and JSONL runtime traces; normalizes supported syntax into a UAST; extracts evidence for language features; and produces deterministic, reviewable `lang-evo-*` proposals with provenance. Python uses its standard AST, optional installed Tree-sitter grammars may be used, and other languages currently use a conservative structural fallback.
+
+```sh
+reaper absorb ./external-project
+reaper absorb ./external-project --mode co-design
+reaper absorb ./external-project --json --include-uast --output ./omnicore-report.json
+reaper absorb ./external-project --proposal-dir ./.reaper/evolution/proposals --memory ./.reaper/evolution/memory.json
+```
+
+M1 is analysis/proposal-only in every mode: it does not execute foreign code, run toolchains, access the network, rewrite sources or publish changes to the language core. Full parsers, static type/CFG/ownership/effect analysis, isolated runtime replay, differential verification, code generation and native C17 ingestion remain later acceptance-gated milestones. See [OmniCore Language Evolution Engine](docs/OMNICORE_LANGUAGE_EVOLUTION.md).
+
 ## Documentation
 
 - [Language reference](LANGUAGE.md)
