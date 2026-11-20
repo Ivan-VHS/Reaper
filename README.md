@@ -225,3 +225,10 @@ GitHub Actions tests Python 3.10, 3.11 and 3.12, runs the unit suite (including 
 ## Execution audit trail
 
 The optional audit mode writes a local hash-chained journal of source fingerprints and run lifecycle events without copying program output. Enable it with --audit-log PATH and verify it with --verify-audit-log PATH. The chain detects record edits but is not a digital signature or remote attestation; see docs/EXECUTION_AUDIT.md.
+
+
+## Russian-language profile
+
+The Python reference runtime now accepts Russian aliases for the existing Reaper core. The native C17 lexer recognizes the corresponding Russian keyword vocabulary; this does not imply full native parser or runtime parity.
+
+See [the Russian-language profile](docs/RUSSIAN_LANGUAGE_PROFILE.md) for examples, all aliases, the 20 design pillars, implementation boundaries, and third-party rights policy.
