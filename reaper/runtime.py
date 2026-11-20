@@ -458,7 +458,7 @@ class Interpreter:
         register("product", lambda values: arithmetic.product(sequence(values)), 1, 1)
         register("compute", arithmetic.compute, 2, 3)
         register("calculate", arithmetic.compute, 2, 3)
-        register("scale", lambda values, factor: arithmetic.scale(sequence(values), factor), 2, 2)
+        register("scale_values", lambda values, factor: arithmetic.scale(sequence(values), factor), 2, 2)
         register("amplify", arithmetic.amplify, 2, 2)
         register("compound", lambda left, right: arithmetic.compound(sequence(left), sequence(right)), 2, 2)
         register("expand", lambda values, count: arithmetic.expand(sequence(values), count), 2, 2)
