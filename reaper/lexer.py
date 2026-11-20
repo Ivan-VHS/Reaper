@@ -14,31 +14,64 @@ KEYWORDS = {
     "nothing", "and", "or", "not", "import", "export", "as",
 }
 
-
-# Russian spellings for the executable compatibility subset. These map to
-# existing parser token kinds; they do not introduce a second runtime.
+# Exact Russian spellings map to canonical REAPER keyword spellings.
+# "runtime" aliases are accepted by the 0.1 reference grammar; additional words
+# are reserved lexically for the evolving native grammar and do not imply parsing.
 KEYWORD_ALIASES = {
-    "пусть": "MAKE",
-    "переменная": "VARY",
-    "изменить": "CHANGE",
-    "функция": "CRAFT",
-    "вернуть": "YIELD",
-    "вывести": "EMIT",
-    "если": "WHEN",
-    "иначе": "OTHERWISE",
-    "для": "EACH",
-    "в": "IN",
-    "цикл": "LOOP",
-    "пока": "WHILE",
-    "истина": "TRUE",
-    "ложь": "FALSE",
-    "ничего": "NOTHING",
-    "и": "AND",
-    "или": "OR",
-    "не": "NOT",
-    "импорт": "IMPORT",
-    "экспорт": "EXPORT",
-    "как": "AS",
+    "пусть": "make",
+    "переменная": "vary",
+    "изменить": "change",
+    "функция": "craft",
+    "вернуть": "yield",
+    "вывести": "emit",
+    "если": "when",
+    "иначе": "otherwise",
+    "для": "each",
+    "в": "in",
+    "цикл": "loop",
+    "пока": "while",
+    "истина": "true",
+    "ложь": "false",
+    "ничего": "nothing",
+    "и": "and",
+    "или": "or",
+    "не": "not",
+    "импорт": "import",
+    "экспорт": "export",
+    "как": "as",
+    "модуль": "module",
+    "публичный": "pub",
+    "процедура": "fn",
+    "структура": "struct",
+    "перечисление": "enum",
+    "типаж": "trait",
+    "реализация": "impl",
+    "тип": "type",
+    "константа": "const",
+    "связать": "let",
+    "изменяемый": "mut",
+    "возврат": "return",
+    "условие": "if",
+    "альтернатива": "else",
+    "выбор": "match",
+    "область": "region",
+    "сырой": "raw",
+    "арена": "arena",
+    "сигнал": "signal",
+    "асинхронно": "async",
+    "ожидать": "await",
+    "тест": "test",
+    "вычислить_при_сборке": "comptime",
+    "требует": "requires",
+    "гарантирует": "ensures",
+    "небезопасно": "unsafe",
+    "внешний": "extern",
+    "где": "where",
+    "уничтожить": "drop",
+    "для_каждого": "for",
+    "прервать": "break",
+    "продолжить": "continue",
+    "отложить": "defer",
 }
 
 
@@ -151,7 +184,10 @@ class Lexer:
         while self._peek().isalnum() or self._peek() == "_":
             self._advance()
         value = self.source[start:self.index]
-        kind = KEYWORD_ALIASES.get(value, value.upper() if value in KEYWORDS else "IDENT")
+        canonical = KEYWORD_ALIASES.get(value)
+        kind = canonical.upper() if canonical is not None else (
+            value.upper() if value in KEYWORDS else "IDENT"
+        )
         self.tokens.append(Token(kind, value, start_line, start_column))
 
     def _operator_or_punctuation(self) -> None:
