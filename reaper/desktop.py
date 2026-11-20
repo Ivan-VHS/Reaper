@@ -18,7 +18,7 @@ from reaper.errors import ReaperError
 from reaper.parser import parse
 from reaper.runtime import Interpreter
 from reaper.debugger import DebuggerStopped, RuntimeDebugger
-from reaper.ui_theme import apply_theme, set_dpi_awareness, toggle_theme
+from reaper.ui_theme import apply_theme, apply_ui_theme, set_dpi_awareness, toggle_theme
 
 STARTER = '''craft double(value) {
     yield value * 2
@@ -36,6 +36,7 @@ class ReaperStudio(tk.Tk):
         self.geometry("1120x760")
         self.minsize(780, 560)
         self._theme_name = apply_theme(self, "reaper-studio")
+        self._theme_mode = tk.StringVar(value=self._theme_name)
         self.current_file: Path | None = None
         self.breakpoints: set[int] = set()
         self.debugger: RuntimeDebugger | None = None
@@ -102,10 +103,10 @@ class ReaperStudio(tk.Tk):
         self.bind_all("<F5>", lambda _event: self.run_source())
         self.bind_all("<Shift-F5>", lambda _event: self.check_source())
         self.bind_all("<F9>", lambda _event: self.toggle_breakpoint())
-        self.apply_visual_theme()
 
     def toggle_ui_theme(self) -> None:
         self._theme_name = toggle_theme(self, "reaper-studio")
+        self._theme_mode.set(self._theme_name)
         self.theme_button.configure(text="Light theme" if self._theme_name == "dark" else "Dark theme")
 
     def _build_menu(self) -> None:
@@ -138,7 +139,13 @@ class ReaperStudio(tk.Tk):
 
     def apply_visual_theme(self) -> None:
         """Apply System, Light or Dark colors without changing editor behavior."""
-        apply_ui_theme(self, self._theme_mode.get())
+        mode = self._theme_mode.get()
+        if mode == "system":
+            colors = apply_ui_theme(self, "system")
+            self._theme_name = colors["mode"]
+        else:
+            self._theme_name = apply_theme(self, "reaper-studio", mode)
+        self.theme_button.configure(text="Light theme" if self._theme_name == "dark" else "Dark theme")
 
     def embedded_new_project(self) -> None:
         directory = filedialog.askdirectory(parent=self, title="Create Embedded C project")
