@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .errors import LexError
+from .glyphs import match_glyph
 
 
 KEYWORDS = {
@@ -46,6 +47,11 @@ class Lexer:
                 self._advance()
             elif char == "#":
                 self._skip_comment()
+            elif (glyph := match_glyph(self.source, self.index)) is not None:
+                start_line, start_column = self.line, self.column
+                for _ in glyph:
+                    self._advance()
+                self.tokens.append(Token("GLYPH", glyph, start_line, start_column))
             elif char == '"':
                 self._string()
             elif char.isdigit():
