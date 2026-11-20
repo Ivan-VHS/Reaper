@@ -15,6 +15,10 @@ make answer := numbers :: map(double) :: sum()
 emit "answer = " ++ text(answer)
 ```
 
+## 666 个符号词元目录
+
+Reaper 包含一个规范的 666 项符号词汇表：每个词素由允许字母表 `: ; [ { ] } + = _ - *` 中的三个字符组成，不含数字且保持唯一。Python 与原生 C 词法分析器会识别这些保留码；可用 `reaper --catalog`、`reaper --catalog-group memory` 或 `reaper --catalog-token ':::'` 查看。保留词汇尚不代表对应操作已可执行。参见[令牌目录](docs/TOKEN_CATALOG.md)。
+
 ## 当前实现
 
 - **Python 参考运行时：** Python 3.10+、树遍历解释器、词法分析器、解析器、运行时、CLI 和标准库测试。

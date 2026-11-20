@@ -135,6 +135,8 @@ class Parser:
                 self._consume("]", "expected ']' after index")
                 left = Node("index", token, children=[left, index])
                 continue
+            if self._check("CATALOG_OPERATOR"):
+                raise self._error(self._peek(), "catalogue operator is reserved; executable semantics are not registered")
             operator = self._peek().kind
             precedence = _PRECEDENCE.get(operator, 0)
             if precedence < minimum:
@@ -160,6 +162,8 @@ class Parser:
         return Node("call", token, children=[callee, *arguments])
 
     def _prefix(self) -> Node:
+        if self._check("CATALOG_OPERATOR"):
+            raise self._error(self._peek(), "catalogue operator is reserved; executable semantics are not registered")
         if self._match("NUMBER"):
             token = self._previous()
             return Node("literal", token, value=float(token.value) if "." in token.value else int(token.value))
