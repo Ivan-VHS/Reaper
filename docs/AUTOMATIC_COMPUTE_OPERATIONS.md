@@ -8,7 +8,7 @@ They are available directly in `.rpr` programs.
 |---|---|
 | Multiply / Product | `multiply(a, b)`, `product(values)` |
 | Compute / Calculate | `compute(a, b, operation)`, `calculate(a, b, operation)` |
-| Scale / Amplify | `scale(values, factor)`, `amplify(value, factor)` |
+| Scale / Amplify | `scale_values(values, factor)`, `amplify(value, factor)` |
 | Compound | `compound(left, right)` (element-wise product) |
 | Expand | `expand(values, repetitions)` |
 | Accumulate / Iterate | `accumulate(values)`, `iterate(seed, steps, function)` |
