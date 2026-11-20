@@ -97,16 +97,16 @@ class RuntimeTests(unittest.TestCase):
         craft double(x) { yield x * 2 }
         craft large(x) { yield x >= 6 }
         craft add(a, b) { yield a + b }
-        emit [1, 2, 3, 4] |> map(double) |> keep(large) |> fold(0, add)
+        emit [1, 2, 3, 4] :: map(double) :: keep(large) :: fold(0, add)
         """
         self.assertEqual(self.capture(source), ["14"])
 
-    def test_legacy_flow_operator_is_rejected(self) -> None:
+    def test_old_flow_operator_is_rejected(self) -> None:
         with self.assertRaises(LexError):
-            tokenize("emit [1, 2] ~> size()")
+            tokenize("emit [1, 2] |> size()")
 
     def test_pipeline_accepts_single_argument_call(self) -> None:
-        self.assertEqual(self.capture("emit [1, 2, 3] |> size()"), ["3"])
+        self.assertEqual(self.capture("emit [1, 2, 3] :: size()"), ["3"])
 
     def test_indexing(self) -> None:
         self.assertEqual(self.capture("make xs := [10, 20]\nemit xs[1]"), ["20"])
@@ -144,7 +144,7 @@ class RuntimeTests(unittest.TestCase):
     def test_push_cannot_exceed_collection_limit(self) -> None:
         interpreter = Interpreter(output=lambda _line: None, max_collection_items=2)
         with self.assertRaisesRegex(ReaperRuntimeError, "collection item limit"):
-            interpreter.run("emit [1, 2] |> push(3)")
+            interpreter.run("emit [1, 2] :: push(3)")
 
     def test_text_concatenation_limit(self) -> None:
         interpreter = Interpreter(output=lambda _line: None, max_text_length=4)

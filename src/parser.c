@@ -14,7 +14,7 @@ static uint32_t add_node(Parser *p,ReaperAstKind kind,const char *text,uint32_t 
  uint32_t id=(uint32_t)p->ast->length++;p->ast->items[id]=(ReaperAstNode){kind,left,right,copy,line,column};return id;
 }
 static int precedence(const char *s){
- if(!strcmp(s,"|>"))return 1;
+ if(!strcmp(s,"::"))return 1;
  if(!strcmp(s,"??"))return 2;
  if(!strcmp(s,"or")||!strcmp(s,"||"))return 3;
  if(!strcmp(s,"and")||!strcmp(s,"&&"))return 4;

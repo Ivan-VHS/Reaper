@@ -2,7 +2,7 @@
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
-**Reaper is an expression-oriented language built around readable syntax and explicit data flow.** Its `|>` operator passes a value into the next operation. The repository contains a Python reference interpreter, a developing native C17 implementation and the first Reaper-written self-hosting frontend component.
+**Reaper is an expression-oriented language built around readable syntax and explicit data flow.** Its `::` operator passes a value into the next operation. The repository contains a Python reference interpreter, a developing native C17 implementation and the first Reaper-written self-hosting frontend component.
 
 ## Example
 
@@ -11,7 +11,7 @@ craft double(value) {
     yield value * 2
 }
 make numbers := [1, 2, 3, 4]
-make answer := numbers |> map(double) |> sum()
+make answer := numbers :: map(double) :: sum()
 emit "answer = " ++ text(answer)
 ```
 

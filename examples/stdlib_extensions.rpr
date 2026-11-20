@@ -13,15 +13,15 @@ craft add(total, value) {
 }
 
 make values := [7, 2, 5, 4, 3, 6]
-make even_total := values |> filter(is_even) |> reduce(0, add)
+make even_total := values :: filter(is_even) :: reduce(0, add)
 emit "even total = " ++ text(even_total)
 
 emit "descending = " ++ text(sorted(values, "desc"))
 emit "stable parity sort = " ++ text(sort_by(values, parity, "asc"))
 emit "chunks = " ++ text(chunk(values, 2))
 
-make words := "  Reaper | Studio | Runtime  " |> trim() |> split("|") |> map(trim) |> map(upper)
-emit words |> join(" / ")
+make words := "  Reaper | Studio | Runtime  " :: trim() :: split("|") :: map(trim) :: map(upper)
+emit words :: join(" / ")
 
 emit "L1 norm = " ++ text(vector_norm([3, 4], "l1"))
 emit "unit vector = " ++ text(vector_normalize([3, 4]))

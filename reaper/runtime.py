@@ -221,7 +221,7 @@ class Interpreter:
                 return self._evaluate(children[1], environment) if self._truthy(left) else left
             if operator == "OR":
                 return left if self._truthy(left) else self._evaluate(children[1], environment)
-            if operator == "|>":
+            if operator == "::":
                 right = children[1]
                 if right.kind == "call":
                     callee = self._evaluate(right.children[0], environment)

@@ -23,7 +23,7 @@ class ExtendedRuntimeTests(unittest.TestCase):
         craft even(value) { yield value % 2 == 0 }
         craft parity(value) { yield value % 2 }
         craft add(total, value) { yield total + value }
-        emit [1, 2, 3, 4] |> filter(even) |> reduce(0, add)
+        emit [1, 2, 3, 4] :: filter(even) :: reduce(0, add)
         emit sort_by([3, 2, 1, 4], parity, "asc")
         emit sorted([1, 3, 2], "desc")
         """
@@ -46,8 +46,8 @@ class ExtendedRuntimeTests(unittest.TestCase):
 
     def test_string_pipeline_and_utf8(self) -> None:
         source = """
-        make words := "  Привет | Reaper  " |> trim() |> split("|") |> map(trim) |> map(upper)
-        emit words |> join(" / ")
+        make words := "  Привет | Reaper  " :: trim() :: split("|") :: map(trim) :: map(upper)
+        emit words :: join(" / ")
         emit replace("абракадабра", "бра", "БРА")
         emit contains("ёжик", "ёж")
         emit starts_with("Reaper Studio", "Reaper")
@@ -61,7 +61,7 @@ class ExtendedRuntimeTests(unittest.TestCase):
     def test_collection_and_text_limits_apply_to_new_operations(self) -> None:
         interpreter = Interpreter(output=lambda _line: None, max_collection_items=2)
         with self.assertRaisesRegex(Exception, "collection item limit"):
-            interpreter.run('emit "a,b,c" |> split(",")')
+            interpreter.run('emit "a,b,c" :: split(",")')
         interpreter = Interpreter(output=lambda _line: None, max_text_length=4)
         with self.assertRaisesRegex(Exception, "text length limit"):
             interpreter.run('emit join(["abc", "def"], ",")')

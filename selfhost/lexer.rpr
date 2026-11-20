@@ -151,7 +151,7 @@ craft tokenize(source) {
 
     craft scan_operator(start_line, start_column) {
         make pair := current(0) ++ current(1)
-        when pair == ":=" or pair == "==" or pair == "!=" or pair == "<=" or pair == ">=" or pair == "//" or pair == "**" or pair == "++" or pair == "|>" {
+        when pair == ":=" or pair == "==" or pair == "!=" or pair == "<=" or pair == ">=" or pair == "//" or pair == "**" or pair == "++" or pair == "::" {
             make ignored_first := advance()
             make ignored_second := advance()
             yield [pair, pair, start_line, start_column]
@@ -239,5 +239,16 @@ assert(invalid == [
     ["EMIT", "emit", 1, 1],
     ["ERROR", "unexpected character @", 1, 6]
 ], "invalid-character diagnostic mismatch")
+
+
+
+make pipeline := tokenize("emit value :: transform")
+assert(pipeline == [
+    ["EMIT", "emit", 1, 1],
+    ["IDENT", "value", 1, 6],
+    ["::", "::", 1, 12],
+    ["IDENT", "transform", 1, 15],
+    ["EOF", "", 1, 24]
+], "pipeline operator tokenization mismatch")
 
 emit "SELFHOST_LEXER_OK"

@@ -4,7 +4,7 @@ This note records the executable additions made to the Python reference runtime 
 
 ## Language and collection standard library
 
-The existing `craft`, lexical closure, and `|>` semantics remain unchanged. The reference runtime now provides:
+The existing `craft`, lexical closure, and `::` semantics remain unchanged. The reference runtime now provides:
 
 - `filter(values, predicate)` as the readable alias of `keep`, and `reduce(values, initial, function)` as the alias of `fold`.
 - Stable `sorted(values[, key_function][, "asc"|"desc"])` and `sort_by(values, key_function[, "asc"|"desc"])`.

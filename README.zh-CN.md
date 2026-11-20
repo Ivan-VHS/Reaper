@@ -2,7 +2,7 @@
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
-**Reaper 是一种表达式导向语言，强调清晰语法和显式数据流。** 运算符 `|>` 将左侧值传递给后续操作。仓库目前包含 Python 参考解释器，以及正在开发的原生 C17 实现。
+**Reaper 是一种表达式导向语言，强调清晰语法和显式数据流。** 运算符 `::` 将左侧值传递给后续操作。仓库目前包含 Python 参考解释器，以及正在开发的原生 C17 实现。
 
 ## 示例
 
@@ -11,7 +11,7 @@ craft double(value) {
     yield value * 2
 }
 make numbers := [1, 2, 3, 4]
-make answer := numbers |> map(double) |> sum()
+make answer := numbers :: map(double) :: sum()
 emit "answer = " ++ text(answer)
 ```
 

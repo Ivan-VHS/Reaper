@@ -12,7 +12,7 @@ Reaper is flow-first: data and transformations are combined explicitly, in a dec
 - `concat_text(*parts, separator=..., max_length=...)` — validates types and total output length before joining text.
 - `merge_mappings(*mappings, on_conflict=..., max_keys=...)` — combines mappings with explicit `error`, `first` or `last` conflict semantics.
 - `compose(f, g)(x)` — conventional right-to-left composition, equivalent to `f(g(x))`.
-- `pipe(value, f, g)` — left-to-right data flow, matching Reaper's `|>` direction.
+- `pipe(value, f, g)` — left-to-right data flow, matching Reaper's `::` direction.
 
 All operations are opt-in Python library functions exported from `reaper`; they do not silently add language syntax or host effects.
 
