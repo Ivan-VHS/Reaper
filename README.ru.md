@@ -126,4 +126,10 @@ GitHub Actions тестирует Python 3.10, 3.11 и 3.12, запускает 
 
 ## Execution audit trail
 
-The optional audit mode writes a local hash-chained journal of source fingerprints and run lifecycle events without copying program output. Enable it with --audit-log PATH and verify it with --verify-audit-log PATH. The chain detects record edits but is not a digital signature or remote attestation; see docs/EXECUTION_AUDIT.md.
+The optional audit mode writes a local hash-chained journal of source fingerprints and run lifecycle events without copying program output. Enable it with --audit-log PATH and verify it with --verify-audit-log PATH. The chain detects record edits but is not a digital signature or remote attestation; see docs/EXECUTION_AUDIT.md. 
+
+## Обновление нативного оптимизатора C17
+
+Проверяемый Canonical IR теперь включает операции целочисленных ADD, SUB, MUL и DIV для типа i64. Оптимизатор сворачивает их, только когда оба операнда являются проверенными константами. Переполнение сложения, вычитания и умножения, деление на ноль и случай INT64_MIN / -1 отклоняются с диагностикой вместо неопределённого поведения.
+
+Итерационный проход остаётся ограниченным бюджетом от 1 до 64 итераций, проверяет IR до и после преобразования и сообщает число итераций и изменённых узлов. Это возможность уровня нативного IR; она не означает полной поддержки всех операций в C-фронтенде или runtime.
