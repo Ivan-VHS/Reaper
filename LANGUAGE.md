@@ -127,12 +127,20 @@ A quota violation stops execution with a Reaper runtime diagnostic. These limits
 
 Python 3.10+ is required. The interpreter uses only the Python standard library.
 
+## Self-hosting status
+
+The bootstrap has started, but Reaper is not yet a self-hosting compiler.
+
+- **Stage 0 (partial):** `selfhost/lexer.rpr` implements an initial lexer in Reaper source and runs on the Python reference interpreter. The current slice covers ASCII identifiers; Unicode identifier parity is still required.
+- **Not yet implemented:** a Reaper-written parser/AST builder, semantic analysis, Canonical IR construction, optimizer, native code generator and reproducible stage-0/stage-1 compiler rebuild.
+
+The Python interpreter remains the compatibility oracle. The bootstrap stages and acceptance gates are defined in [SELF_HOSTING_BOOTSTRAP](docs/SELF_HOSTING_BOOTSTRAP.md).
+
 ## Implementation boundary
 
 Implemented in 0.1: lexer, parser, tree-walk interpreter, lexical closures, lists, functions, flow composition, console I/O, source diagnostics, an execution-step budget, call-depth limits, collection-item limits and text-concatenation limits.
 
-Not implemented yet: static type checking, algebraic effect handlers, semantic-graph storage, native compilation, GPU execution, distributed scheduling, formal verification, package registry, or self-hosting compiler. These are roadmap goals, not current guarantees.
-
+Not implemented yet: static type checking, algebraic effect handlers, semantic-graph storage, native compilation, GPU execution, distributed scheduling, formal verification, package registry, or a complete self-hosting compiler. These are roadmap goals, not current guarantees.
 
 ## Orthogonal metric built-ins
 

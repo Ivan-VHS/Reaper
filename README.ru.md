@@ -2,7 +2,7 @@
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
-**Reaper — expression-oriented язык с читаемым синтаксисом и явным потоком данных.** Оператор `|>` передаёт значение следующей операции. В репозитории находятся эталонный интерпретатор Python и разрабатываемая нативная реализация C17.
+**Reaper — expression-oriented язык с читаемым синтаксисом и явным потоком данных.** Оператор `|>` передаёт значение следующей операции. В репозитории находятся эталонный интерпретатор Python, разрабатываемая нативная реализация C17 и первый компонент self-hosting, написанный на самом Reaper.
 
 ## Пример
 
@@ -19,8 +19,9 @@ emit "answer = " ++ text(answer)
 
 - **Эталонная среда Python:** Python 3.10+, tree-walking интерпретатор, lexer, parser, runtime, CLI и тесты на стандартной библиотеке.
 - **Ядро языка:** Unicode-идентификаторы, комментарии, строки, функции и closures, рекурсия, неизменяемый `make`, изменяемый `vary` с явным `change`, условия, циклы и композиция потоков.
-- **Встроенные операции и диагностика:** операции над коллекциями, явные преобразования, ошибки lexer/parser/runtime с привязкой к исходнику и лимиты исполнения.
+- **Встроенные операции и диагностика:** операции над коллекциями, явные преобразования, ортогональная метрическая математика (n-мерное расстояние, скалярные произведения, квадратичные формы, энергия Парсеваля и неевклидовы модели), диагностика с привязкой к исходнику и лимиты исполнения.
 - **Нативное направление C17:** lexer, expression parser и AST с управлением памятью, проверенный integer Canonical IR, контролируемое свёртывание констант, ограниченный AST-to-IR lowering, начальный CLI и C-тесты.
+- **Self-hosting, этап 0:** `selfhost/lexer.rpr` реализует начальный токенизатор на самом Reaper. Python bootstrap запускает его в CI и проверяет токены, координаты, escape-последовательности и ошибки символов. Пока поддерживаются только ASCII-идентификаторы; этот слой ещё не заменяет эталонный lexer и не является self-hosting-компилятором. См. [план bootstrap](docs/SELF_HOSTING_BOOTSTRAP.md).
 - **MOST:** документированный словарь языка и поэтапный контракт реализации.
 
 Реализация C пока не является полноценным интерпретатором. Полные declarations/blocks, проверка типов, разрешение intent, анализ ownership, генерация native code и WASM ещё не реализованы. Python остаётся эталоном совместимости до подтверждения паритета runtime и CLI.
@@ -83,6 +84,7 @@ ctest --test-dir build --output-on-failure
 
 - [Справочник языка](LANGUAGE.md)
 - [Объединённая архитектура REAPER/MOST](docs/REAPER_UNIFIED_ARCHITECTURE.md)
+- [План self-hosting bootstrap](docs/SELF_HOSTING_BOOTSTRAP.md)
 - [Архитектура](docs/ARCHITECTURE.md)
 - [Спецификация MOST](docs/MOST_LANGUAGE_SPEC.md)
 - [План миграции на C](docs/C_MIGRATION.md)
@@ -90,8 +92,13 @@ ctest --test-dir build --output-on-failure
 
 ## CI и лицензия
 
-GitHub Actions тестирует Python 3.10, 3.11 и 3.12, запускает unit-тесты, проверяет пример и выполняет flow-пример. У нативного ядра C есть отдельное покрытие CMake/CTest.
+GitHub Actions тестирует Python 3.10, 3.11 и 3.12, запускает unit-тесты (включая Reaper-written bootstrap lexer), проверяет пример и выполняет flow-пример. У нативного ядра C есть отдельное покрытие CMake/CTest.
 
 [Apache License 2.0](LICENSE).
 
 > 千里之行，始于足下。 — Путь в тысячу ли начинается с первого шага.
+
+
+## Execution audit trail
+
+The optional audit mode writes a local hash-chained journal of source fingerprints and run lifecycle events without copying program output. Enable it with --audit-log PATH and verify it with --verify-audit-log PATH. The chain detects record edits but is not a digital signature or remote attestation; see docs/EXECUTION_AUDIT.md.
