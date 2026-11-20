@@ -127,6 +127,6 @@ class MemoryManager:
                     pending.append(parent)
             elif hasattr(value, "value") and value.__class__.__name__ == "Binding":
                 pending.append(value.value)
-            elif value.__class__.__name__ == "UserFunction":
+            elif value.__class__.__name__ in {"UserFunction", "BytecodeFunction"}:
                 pending.append(value.closure)
         return marked
