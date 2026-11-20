@@ -66,7 +66,7 @@ _FIRST = (
 ("_::++", "sandbox_close", "Close a sandbox and extract its result"),
 (";;:-:", "read_lock", "Prevent writes while a buffer is being read"),
 ("::;-:", "reverse_view", "Create a reverse-order view"),
-(";::-", "table_allocate", "Allocate a fixed-row table buffer"),
+(";::-:", "table_allocate", "Allocate a fixed-row table buffer"),
 (";+:--", "table_reserve", "Reserve room for additional table records"),
 (":+;-:", "active_reset", "Reset the active-element counter"),
 (":+:--", "cache_alignment", "Set cache-line alignment metadata"),
