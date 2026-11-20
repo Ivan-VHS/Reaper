@@ -24,40 +24,37 @@ The native C17 implementation is the destination implementation. The Python 0.1 
 
 ## 2. MOST / Мост relationship
 
-MOST is the Russian-language semantic frontend and systems/web language track associated with REAPER. It is not a second runtime, memory model or independent backend.
+МОСТ is not a second language frontend. It is a Russian spelling profile over REAPER: an exact lexical alias table maps approved Russian keywords to existing REAPER keywords. There is one grammar, parser, AST, name resolver, type/effect system, ownership model, Canonical IR, runtime, standard library, ABI and set of backends.
 
-- REAPER frontend: canonical REAPER syntax and AST.
-- MOST frontend: Russian-first source vocabulary, target Russian grammar, intent AST, explicit inflection/synonym dictionaries and ambiguity diagnostics. The 66-rule design mapping is maintained in docs/MOST_RUSSIAN_66_RULES.md.
-- Shared semantic core: name resolution, types, effects, ownership and contracts.
-- Shared Canonical IR: both frontends lower to equivalent typed IR.
-- Backends: native targets and WASM consume the same verified IR.
+- REAPER owns every language and execution rule.
+- МОСТ contributes only exact Russian spellings for existing REAPER keywords and Russian documentation/diagnostic text.
+- Ordinary Russian function, variable and module names remain ordinary REAPER identifiers.
+- No separate morphology engine, synonym resolver, intent AST, grammar fork, standard library or runtime is allowed.
+- Both spellings enter the same REAPER parser and produce the same AST/IR because they represent the same tokens.
 
-Synonyms and morphology may resolve a source name, but may never change type, overload choice, effects or execution semantics. Ambiguous intent is a compile error with source mapping. No probabilistic service may silently choose program meaning.
+No automatic stemming, free-form synonym lookup or probabilistic intent selection occurs during compilation. A Russian spelling may not add a capability or change overload choice, types, effects or execution.
 
 ## 3. Canonical compilation pipeline
 
-```text
-REAPER source ─┐
-               ├─> lexer ─> parser/AST ─> name + intent resolution
-MOST source ───┘                              │
-                                             v
-                         typed AST / semantic analysis
-                                             │
-                         ownership + region + effect checks
-                                             │
-                                             v
-                                Canonical Semantic IR
-                                             │
-                           verifier ─> optimizer passes
-                                  ┌──────────┴──────────┐
-                                  v                     v
-                            Native backend          WASM backend
-                                  │                     │
-                                  v                     v
-                             C ABI / OS          WASI / Browser host
-```
+~~~text
+REAPER source ────────────────┐
+                              ├─> REAPER lexer/parser/AST
+МОСТ source → exact alias map ┘             │
+                                            v
+                           REAPER name/type/effect checks
+                                            │
+                             REAPER ownership/regions
+                                            │
+                                            v
+                                  REAPER Canonical IR
+                                            │
+                             verifier → optimizer passes
+                                      ┌─────┴─────┐
+                                      v           v
+                                Native backend  WASM backend
+~~~
 
-Frontend-specific syntax must not leak into the IR. IR is deterministic, source-mapped, backend-neutral and structurally verifiable. Optimizers may only preserve observable semantics.
+The alias map is a lexical compatibility table, not a semantic frontend. After token canonicalization, no МОСТ-specific syntax or metadata reaches the IR. IR remains deterministic, source-mapped, backend-neutral and structurally verifiable. Optimizers preserve observable REAPER semantics.
 
 ## 4. Language and safety invariants
 
@@ -133,7 +130,7 @@ Use the statuses Implemented, Partial, Specified, Planned, Verified and Not appl
 |---|---|---|
 | N0 | C17 build, lexer, diagnostics, CLI | Native build and lexer tests |
 | N1 | Parser, owned AST, complete declarations/blocks | Grammar, recovery, fuzz and source-span tests |
-| N2 | Typed AST, symbols, MOST intent resolver | Type/ambiguity and equivalent-frontend tests |
+| N2 | Typed AST, symbols and REAPER name resolution | Type, symbol and ambiguity tests |
 | N3 | Full Canonical IR lowering and verifier | Typed lowering and malformed-IR rejection |
 | N4 | Optimizer pipeline | Semantic equivalence, overflow and determinism tests |
 | N5 | Ownership, borrow, regions, drop and effects | Negative safety tests and CFG analysis |
@@ -170,7 +167,8 @@ CI must run native C17 builds and tests on supported compilers. Python different
 
 ## 11. Related source documents
 
-- `docs/MOST_LANGUAGE_SPEC.md`: foundational language semantics and 66-rule contract.
+- `docs/MOST_LANGUAGE_SPEC.md`: Russian keyword alias profile over REAPER.
+- `docs/MOST_RUSSIAN_66_RULES.md`: 66 readability principles for the Russian REAPER surface.
 - `docs/MOST_147_FEATURE_REGISTRY.md`: first extended feature registry.
 - `docs/REAPER_813_FEATURE_ARCHITECTURE.md`: expanded subsystem roadmap.
 - `docs/MOST_IMPLEMENTATION_STATUS.md`: executable implementation ledger.
