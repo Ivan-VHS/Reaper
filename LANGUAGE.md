@@ -130,7 +130,7 @@ Calls use name(arguments); list indexing uses collection[index]. Arithmetic does
 | heap_stats() / heap_collect() | Inspect the tracked heap ledger / collect unreachable tracked containers |
 | region_begin() / region_end(token) | Open and close nested LIFO allocation regions |
 | ffi_open(path) / ffi_bind(library, symbol, return_type[, argument_types]) / ffi_close(handle) | Opt-in native C ABI calls |
-| pytyliki_open(path) / pytyliki_cpu_profile(bridge) / pytyliki_benchmark(bridge, iterations) | Typed Pytyliki C ABI adapter |
+| pytyliki_open(path) / pytyliki_bridge_norm(values, bridge) / pytyliki_bridge_dot(left, right, bridge) / pytyliki_bridge_distance(left, right, bridge) / pytyliki_bridge_orthogonal(left, right, tolerance, bridge) | Typed, opt-in Pytyliki C ABI v1 metric handle |
 
 Flow passes the left-hand value as the first argument: values :: map(double) is equivalent to map(values, double).
 
