@@ -28,6 +28,8 @@ reaper = "reaper.cli:main"
 reaper-polyglot = "reaper.polyglot:main"
 reaper-polyglot-code = "reaper.polyglot_code:main"
 reaper-embedded = "reaper.embedded:main"
+reaper-interop = "reaper.interop:main"
+reaper-copyright-scan = "reaper.copyright:main"
 
 [project.gui-scripts]
 reaper-studio = "reaper.desktop:main"
@@ -36,4 +38,4 @@ reaper-studio = "reaper.desktop:main"
 packages = ["reaper"]
 
 [tool.setuptools.package-data]
-reaper = ["systems_architectures.json", "systems_languages.json", "token_catalog.json"]
+reaper = ["systems_architectures.json", "systems_languages.json", "token_catalog.json", "interop_matrix.json"]
