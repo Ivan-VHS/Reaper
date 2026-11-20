@@ -47,7 +47,7 @@ Language proposal
 
 ### Required invariants
 
-- Preserve Reaper's existing syntax and `~>` semantics unless a versioned change
+- Preserve Reaper's existing syntax and `::` semantics unless a versioned change
   explicitly authorizes otherwise.
 - MOST remains an intent/semantic frontend; it must lower to the same canonical
   typed IR rather than create a competing runtime.
