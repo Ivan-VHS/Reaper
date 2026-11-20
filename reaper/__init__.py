@@ -21,11 +21,13 @@ from .resources import ResourceManager, ResourceHandle
 from .ffi import CAbiLibrary, NativeFunction, PytylikiBridge, FfiError
 from .debugger import RuntimeDebugger, DebugSnapshot, DebuggerStopped
 from .token_catalog import TOKEN_CATALOG_SIZE, token_catalog, token_info, token_is_reserved
+from .thesis import ThesisLedger, ThesisLedgerError
 from .embedded import EmbeddedError, McuProfile, RegisterBank, build_project as build_embedded_project, init_project as init_embedded_project
 
 __version__ = "0.1.0"
 __all__ = [
     "DivisionResult", "ExecutionLimitError", "EvolutionEngine", "EvolutionReport",
+    "ThesisLedger", "ThesisLedgerError",
     "accumulate", "aggregate", "amplify", "cartesianize", "combine", "compute",
     "compound", "convolve", "couple", "cross_multiply", "expand", "exponentiate",
     "factor", "fuse", "multiply", "pair", "product", "scale",

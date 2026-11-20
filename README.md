@@ -29,6 +29,7 @@ emit "answer = " ++ text(answer)
 - **Native C17:** lexer, expression parser, owned AST, checked integer IR operations and limited lowering. Not yet a complete interpreter; Python remains the compatibility reference.
 - **МОСТ:** exact Russian keyword aliases over REAPER 0.1 and its shared parser/runtime; no separate semantics or runtime.
 - **QCS 1.0:** independent hardware-domain frontend with source locations, frame parser, Pratt expressions and JSON AST. It does not replace `.rpr` or execute hardware operations. Run: `reaper-qcs check examples/qcs_irq.qcs`.
+- **THESIS assertion graph:** versioned claims, source-linked evidence relations, exact time/scope comparability, review states and append-only revisions. It never auto-verifies a claim ([design](docs/THESIS_ASSERTION_GRAPH.md)).
 - **MOST Function Registry 666:** 666 traceable API contracts (147 existing specifications + 519 proposals), with source inventory and validator. This is a specification catalogue, not 666 implemented functions.
 - **Systems and interop:** Embedded C, MCU profiles and memory budgets; opt-in Pytyliki C ABI v1; 66 language/toolchain entries, 14 architecture profiles and the validated MOST 20×20 matrix.
 
@@ -65,6 +66,8 @@ ctest --test-dir build --output-on-failure
 Python remains the executable compatibility reference until native parity is demonstrated. The managed heap is accounting over Python's allocator, not a physical allocator or RSS cap. Native FFI runs trusted ABI-compatible code in-process. Toolchain discovery checks `PATH`; it does not install compilers. MOST aliases resolve to canonical REAPER symbols; QCS parsing does not prove hardware contracts.
 
 ## Documentation
+
+[THESIS assertion provenance graph](docs/THESIS_ASSERTION_GRAPH.md)
 
 [Governance and consent controls](docs/HUMAN_FIRST_GOVERNANCE.md) · [Anatidae UI/UX](docs/UI_UX_SYSTEM.md) · [12-principle motion](docs/DISNEY_MOTION_SYSTEM.md) · [Language](LANGUAGE.md) · [QCS frontend](docs/QCS_FRONTEND.md) · [MOST 666 registry](docs/MOST_FUNCTIONS_666.md) · [МОСТ specification](docs/MOST_LANGUAGE_SPEC.md) · [Runtime](docs/RUNTIME_PLATFORM.md) · [Engineering standard](docs/UNIFIED_ENGINEERING_STANDARD.md)
 

@@ -29,6 +29,7 @@ emit "answer = " ++ text(answer)
 - **原生 C17：** lexer、表达式解析器、自有 AST、受检整数 IR 操作和有限 lowering。尚不是完整解释器；Python 仍是兼容性参考。
 - **МОСТ：** REAPER 0.1 的精确俄语关键字别名，复用相同 parser/runtime，不另建语义或运行时。
 - **QCS 1.0：** 独立硬件语法 frontend，提供源码位置、frame parser、Pratt 表达式和 JSON AST；不替代 `.rpr`，也不执行硬件操作。命令：`reaper-qcs check examples/qcs_irq.qcs`。
+- **THESIS 断言图：** 版本化断言、来源关联证据、时间与范围可比性检查、人工审核状态及追加式修订记录；不会自动判定断言为真（[设计说明](docs/THESIS_ASSERTION_GRAPH.md)）。
 - **MOST 666 注册表：** 666 项 API 合约（147 项既有规格 + 519 项提案），含 source inventory 和验证器。这是规格目录，并非 666 个已实现函数。
 - **系统与互操作：** Embedded C、MCU 配置和内存预算；可选 Pytyliki C ABI v1；66 个语言/toolchain 条目、14 个架构配置和已验证的 MOST 20×20 矩阵。
 
@@ -65,6 +66,8 @@ ctest --test-dir build --output-on-failure
 证明原生语义对等之前，Python 仍是参考实现。托管堆只是 Python 分配器的记账层，不是物理分配器或 RSS 限制。原生 FFI 会在进程内运行可信 ABI 兼容代码。工具链发现只检查 `PATH`，不会安装编译器。МОСТ 名称解析到规范 REAPER 符号；QCS 解析不证明硬件契约。
 
 ## 文档
+
+[THESIS 断言溯源图](docs/THESIS_ASSERTION_GRAPH.md)
 
 [Anatidae UI/UX](docs/UI_UX_SYSTEM.md) · [12 项动画原则](docs/DISNEY_MOTION_SYSTEM.md) · [语言](LANGUAGE.md) · [QCS frontend](docs/QCS_FRONTEND.md) · [MOST 666 注册表](docs/MOST_FUNCTIONS_666.md) · [МОСТ 规范](docs/MOST_LANGUAGE_SPEC.md) · [运行时](docs/RUNTIME_PLATFORM.md) · [工程标准](docs/UNIFIED_ENGINEERING_STANDARD.md)
 
