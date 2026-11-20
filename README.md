@@ -28,6 +28,10 @@ reaper --systems-json
 
 Toolchain checks are PATH-only: they do not run or install compilers. The matrix is included in Python package data and its tests are registered with CTest.
 
+## Systems architecture matrix
+
+Reaper complements its 66-position language and toolchain matrix with **14 CPU, MCU and virtual-ISA architecture profiles**. Use `python -m reaper --systems-architectures`, `--architecture-profile reaper`, `--available-architectures` or `--architectures-json`. Toolchain checks only look up executable names on PATH; they do not compile or run external code. See [the architecture matrix](docs/SYSTEMS_ARCHITECTURE_MATRIX.md).
+
 ## Implemented today
 
 - **Python reference runtime:** Python 3.10+, tree-walking interpreter, lexer, parser, runtime, CLI and standard-library tests.
@@ -103,6 +107,8 @@ Default runtime quotas include 1,000,000 execution steps, 256 nested calls, 100,
 - [Architecture](docs/ARCHITECTURE.md)
 - [Concatenation and composition architecture](docs/CONCATENATION_ARCHITECTURE.md)
 - [Orthogonal metric engine](docs/ORTHOGONAL_METRIC_ENGINE.md)
+- [Systems architecture matrix](docs/SYSTEMS_ARCHITECTURE_MATRIX.md)
+- [Systems-language matrix](reaper/systems_languages.json)
 - [MOST language specification](docs/MOST_LANGUAGE_SPEC.md)
 - [C migration plan](docs/C_MIGRATION.md)
 - [Examples](examples/) · [Tests](tests/)
