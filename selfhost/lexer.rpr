@@ -1,0 +1,243 @@
+# Stage-0 frontend code: this tokenizer is written in Reaper itself.
+# The first bootstrap slice intentionally covers ASCII identifiers. Unicode
+# identifier parity is tracked in docs/SELF_HOSTING_BOOTSTRAP.md.
+
+craft is_ascii_letter(char) {
+    yield (char >= "a" and char <= "z") or (char >= "A" and char <= "Z")
+}
+
+craft is_ascii_digit(char) {
+    yield char >= "0" and char <= "9"
+}
+
+craft is_identifier_continue(char) {
+    yield is_ascii_letter(char) or is_ascii_digit(char) or char == "_"
+}
+
+craft keyword_kind(word) {
+    when word == "make" { yield "MAKE" } otherwise {
+        when word == "vary" { yield "VARY" } otherwise {
+            when word == "change" { yield "CHANGE" } otherwise {
+                when word == "craft" { yield "CRAFT" } otherwise {
+                    when word == "yield" { yield "YIELD" } otherwise {
+                        when word == "emit" { yield "EMIT" } otherwise {
+                            when word == "when" { yield "WHEN" } otherwise {
+                                when word == "otherwise" { yield "OTHERWISE" } otherwise {
+                                    when word == "each" { yield "EACH" } otherwise {
+                                        when word == "in" { yield "IN" } otherwise {
+                                            when word == "loop" { yield "LOOP" } otherwise {
+                                                when word == "while" { yield "WHILE" } otherwise {
+                                                    when word == "true" { yield "TRUE" } otherwise {
+                                                        when word == "false" { yield "FALSE" } otherwise {
+                                                            when word == "nothing" { yield "NOTHING" } otherwise {
+                                                                when word == "and" { yield "AND" } otherwise {
+                                                                    when word == "or" { yield "OR" } otherwise {
+                                                                        when word == "not" { yield "NOT" } otherwise {
+                                                                            yield "IDENT"
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+craft tokenize(source) {
+    vary index := 0
+    vary line := 1
+    vary column := 1
+    vary tokens := []
+    vary failed := false
+    make source_length := size(source)
+
+    craft current(offset) {
+        when index + offset < source_length {
+            yield source[index + offset]
+        }
+        yield ""
+    }
+
+    craft advance() {
+        make char := current(0)
+        change index := index + 1
+        when char == "\n" {
+            change line := line + 1
+            change column := 1
+        } otherwise {
+            change column := column + 1
+        }
+        yield char
+    }
+
+    craft skip_comment() {
+        make ignored_hash := advance()
+        loop while index < source_length and current(0) != "\n" {
+            make ignored_char := advance()
+        }
+    }
+
+    craft scan_string(start_line, start_column) {
+        make ignored_open := advance()
+        vary value := ""
+
+        loop while index < source_length and current(0) != "\"" {
+            make char := advance()
+            when char == "\n" {
+                yield ["ERROR", "string literal cannot span lines", start_line, start_column]
+            } otherwise {
+                when char == "\\" {
+                    when index >= source_length {
+                        yield ["ERROR", "unterminated string escape", start_line, start_column]
+                    } otherwise {
+                        make escaped := advance()
+                        when escaped == "n" { change value := value ++ "\n" } otherwise {
+                            when escaped == "r" { change value := value ++ "\r" } otherwise {
+                                when escaped == "t" { change value := value ++ "\t" } otherwise {
+                                    when escaped == "\"" { change value := value ++ "\"" } otherwise {
+                                        when escaped == "\\" { change value := value ++ "\\" } otherwise {
+                                            yield ["ERROR", "unknown escape sequence \\" ++ escaped, start_line, start_column]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } otherwise {
+                    change value := value ++ char
+                }
+            }
+        }
+
+        when index >= source_length {
+            yield ["ERROR", "unterminated string literal", start_line, start_column]
+        }
+        make ignored_close := advance()
+        yield ["STRING", value, start_line, start_column]
+    }
+
+    craft scan_number(start_line, start_column) {
+        vary value := ""
+        loop while index < source_length and is_ascii_digit(current(0)) {
+            change value := value ++ advance()
+        }
+        when current(0) == "." and is_ascii_digit(current(1)) {
+            change value := value ++ advance()
+            loop while index < source_length and is_ascii_digit(current(0)) {
+                change value := value ++ advance()
+            }
+        }
+        yield ["NUMBER", value, start_line, start_column]
+    }
+
+    craft scan_identifier(start_line, start_column) {
+        vary value := ""
+        loop while index < source_length and is_identifier_continue(current(0)) {
+            change value := value ++ advance()
+        }
+        yield [keyword_kind(value), value, start_line, start_column]
+    }
+
+    craft scan_operator(start_line, start_column) {
+        make pair := current(0) ++ current(1)
+        when pair == ":=" or pair == "==" or pair == "!=" or pair == "<=" or pair == ">=" or pair == "//" or pair == "**" or pair == "++" or pair == "|>" {
+            make ignored_first := advance()
+            make ignored_second := advance()
+            yield [pair, pair, start_line, start_column]
+        } otherwise {
+            make char := current(0)
+            when char == "+" or char == "-" or char == "*" or char == "/" or char == "%" or char == "<" or char == ">" or char == "(" or char == ")" or char == "{" or char == "}" or char == "[" or char == "]" or char == "," or char == "=" {
+                make ignored := advance()
+                yield [char, char, start_line, start_column]
+            } otherwise {
+                make ignored := advance()
+                yield ["ERROR", "unexpected character " ++ char, start_line, start_column]
+            }
+        }
+    }
+
+    loop while index < source_length and not failed {
+        make char := current(0)
+        when char == " " or char == "\t" or char == "\r" {
+            make ignored := advance()
+        } otherwise {
+            when char == "\n" {
+                change tokens := push(tokens, ["NEWLINE", "\n", line, column])
+                make ignored := advance()
+            } otherwise {
+                when char == "#" {
+                    skip_comment()
+                } otherwise {
+                    make start_line := line
+                    make start_column := column
+                    vary item := ["", "", start_line, start_column]
+
+                    when char == "\"" {
+                        change item := scan_string(start_line, start_column)
+                    } otherwise {
+                        when is_ascii_digit(char) {
+                            change item := scan_number(start_line, start_column)
+                        } otherwise {
+                            when is_ascii_letter(char) or char == "_" {
+                                change item := scan_identifier(start_line, start_column)
+                            } otherwise {
+                                change item := scan_operator(start_line, start_column)
+                            }
+                        }
+                    }
+
+                    change tokens := push(tokens, item)
+                    when item[0] == "ERROR" {
+                        change failed := true
+                    }
+                }
+            }
+        }
+    }
+
+    when not failed {
+        change tokens := push(tokens, ["EOF", "", line, column])
+    }
+    yield tokens
+}
+
+# These assertions execute the Reaper-written tokenizer during Python bootstrap CI.
+make sample := "make x := 12.5\nemit \"ok\" # ignored\n"
+make expected := [
+    ["MAKE", "make", 1, 1],
+    ["IDENT", "x", 1, 6],
+    [":=", ":=", 1, 8],
+    ["NUMBER", "12.5", 1, 11],
+    ["NEWLINE", "\n", 1, 15],
+    ["EMIT", "emit", 2, 1],
+    ["STRING", "ok", 2, 6],
+    ["NEWLINE", "\n", 2, 20],
+    ["EOF", "", 3, 1]
+]
+assert(tokenize(sample) == expected, "stage-0 token and source-position mismatch")
+
+make escaped := tokenize("emit \"line\\nnext\"")
+assert(escaped == [
+    ["EMIT", "emit", 1, 1],
+    ["STRING", "line\nnext", 1, 6],
+    ["EOF", "", 1, 18]
+], "string escape decoding mismatch")
+
+make invalid := tokenize("emit @")
+assert(invalid == [
+    ["EMIT", "emit", 1, 1],
+    ["ERROR", "unexpected character @", 1, 6]
+], "invalid-character diagnostic mismatch")
+
+emit "SELFHOST_LEXER_OK"
