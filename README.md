@@ -45,7 +45,7 @@ Reaper complements its 66-position language and toolchain matrix with **14 CPU, 
 - **CLI:** --lint, persistent line-oriented --repl, structured --json, --profile, selectable `--engine vm`, `--module-graph`, and opt-in `--allow-native-ffi`.
 - **`.rpr` modules:** explicit import/export, isolated module scopes, cached exports, dependency graphs and cycle diagnostics.
 - **Managed runtime resources:** tracked heap ledger, mark/sweep roots, LIFO regions, bounded text-file handles and deterministic cleanup.
-- **C ABI / Pytyliki:** opt-in typed C ABI bridge and adapter for the public Pytyliki `pl_*` API.
+- **C ABI / Pytyliki:** opt-in typed bridge for the public `pl_*` API and Pytyliki ABI v1. Reaper can query native MCU profiles and reuse Pytyliki’s overflow-checked FLASH/SRAM budget through `pytyliki_embedded_profiles` and `pytyliki_embedded_budget`.
 - **Canonical IR / VM:** selectable Python bytecode VM over Canonical IR; tree-walk remains the default compatibility engine.
 - **Reaper Studio debugger:** statement breakpoints (F9), step/continue/stop, variable inspector and call stack.
 - **Native C17 track:** lexer, expression parser and owned AST, verified integer Canonical IR, checked constant folding for signed i64 addition, subtraction, multiplication and division (overflow and division by zero rejected), a limited AST-to-IR lowering slice, CLI bring-up and C tests.

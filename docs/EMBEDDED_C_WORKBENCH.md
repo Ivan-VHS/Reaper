@@ -90,3 +90,29 @@ python -m unittest discover -s tests -p 'test_embedded.py' -v
 The tests cover profile validation, linker generation, project creation,
 memory accounting, GCC diagnostic parsing, GNU map/size parsing, SVD metadata,
 simulated register permissions and incremental telemetry framing.
+
+
+## Shared Pytyliki native profile and budget API
+
+The workbench can consume the same MCU profiles and FLASH/SRAM budget
+calculation exposed by Pytyliki's public C ABI v1. Reaper's language provides
+two opt-in functions:
+
+```reaper
+make profiles := pytyliki_embedded_profiles("/absolute/path/libpytyliki_ffi.so")
+make budget := pytyliki_embedded_budget("cortex-m4-reference", 8192, 1024, 128, 512, 64, 2048, "/absolute/path/libpytyliki_ffi.so")
+emit profiles[0]["id"]
+emit budget["flash_fits"]
+```
+
+Run the Reaper program with `--allow-native-ffi`. The library path must be
+absolute and explicit. Loading a native library executes trusted native code
+inside the Reaper process; this is not a sandbox. The bridge validates ABI v1,
+copies fixed-size profile fields into Reaper-owned values, validates each
+uint64 section size and returns the native overflow-checked budget result.
+It does not expose raw MMIO access or flash transport.
+
+The functions are `pytyliki_embedded_profiles(path)` and
+`pytyliki_embedded_budget(profile_id, text, rodata, data, bss, noinit, stack, path)`.
+The six section sizes are positional non-negative integer byte counts in this
+order: text, rodata, data, bss, noinit and reserved stack.
