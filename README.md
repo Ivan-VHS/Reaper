@@ -45,7 +45,7 @@ Reaper complements its 66-position language and toolchain matrix with **14 CPU, 
 - **CLI:** --lint, persistent line-oriented --repl, structured --json, --profile, selectable `--engine vm`, `--module-graph`, and opt-in `--allow-native-ffi`.
 - **`.rpr` modules:** explicit import/export, isolated module scopes, cached exports, dependency graphs and cycle diagnostics.
 - **Managed runtime resources:** tracked heap ledger, mark/sweep roots, LIFO regions, bounded text-file handles and deterministic cleanup.
-- **C ABI / Pytyliki:** opt-in typed C ABI bridge and adapter for the public Pytyliki `pl_*` API.
+- **C ABI / Pytyliki:** opt-in typed C ABI bridge and adapter for the public Pytyliki `pl_*` API, including the additive Embedded C target and source-review API.\n- **Embedded C:** seven target profiles, PATH-only compiler discovery, bounded source review and argv-style build plans that do not execute compiler or firmware code. See [Embedded C integration](docs/EMBEDDED_C.md).
 - **Canonical IR / VM:** selectable Python bytecode VM over Canonical IR; tree-walk remains the default compatibility engine.
 - **Reaper Studio debugger:** statement breakpoints (F9), step/continue/stop, variable inspector and call stack.
 - **Native C17 track:** lexer, expression parser and owned AST, verified integer Canonical IR, checked constant folding for signed i64 addition, subtraction, multiplication and division (overflow and division by zero rejected), a limited AST-to-IR lowering slice, CLI bring-up and C tests.
@@ -62,7 +62,7 @@ Contracts and examples: [RUNTIME_PLATFORM.md](docs/RUNTIME_PLATFORM.md).
 python -m reaper --engine vm examples/flow.rpr
 python -m reaper --module-graph examples/modules/main.rpr
 python -m reaper --heap-bytes 67108864 --open-resources 64 examples/flow.rpr
-python -m reaper --allow-native-ffi path/to/ffi_program.rpr
+python -m reaper --allow-native-ffi path/to/ffi_program.rpr\nreaper --embedded-targets
 ```
 
 The managed heap is an accounting and reachability layer over Python's allocator (`sys.getsizeof`), not a separate physical allocator or process-RSS cap. The bytecode VM currently runs in the Python reference runtime; the native C17 core is not claimed to have VM parity. Native FFI runs in-process, requires trusted ABI-compatible libraries, and ctypes cannot guarantee portable physical library unloading.
@@ -177,7 +177,7 @@ See the [self-hosting stage contract](docs/SELF_HOSTING_BOOTSTRAP.md), the [Reap
 ## Documentation
 
 - [Language reference](LANGUAGE.md)
-- [Runtime platform: modules, heap, FFI, VM and debugger](docs/RUNTIME_PLATFORM.md)
+- [Runtime platform: modules, heap, FFI, Embedded C, VM and debugger](docs/RUNTIME_PLATFORM.md)\n- [Embedded C targets and Pytyliki ABI](docs/EMBEDDED_C.md)
 - [Runtime and CLI implementation update (20 Nov 2026)](docs/IMPLEMENTATION_UPDATE_2026-11-20.md)
 - [Unified REAPER/MOST architecture](docs/REAPER_UNIFIED_ARCHITECTURE.md)
 - [Self-hosting bootstrap plan](docs/SELF_HOSTING_BOOTSTRAP.md)
