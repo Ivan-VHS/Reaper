@@ -17,6 +17,7 @@
 | Alias manifest parity validator | implemented | tools/validate_most_keywords.py; tests/test_most_russian_profile.py |
 | Semantic IR data model | implemented | `include/reaper/ir.h` |
 | IR structural verifier | implemented | `src/ir.c`, `tests/test_ir.c` |
+| Deterministic native i64 IR executor | implemented | `reaper_ir_execute_i64` in `src/ir.c`; checked arithmetic, caller-owned scratch and failure tests in `tests/test_ir.c` |
 | Bounded fixed-point optimizer driver | implemented | `reaper_ir_optimize_fixed_point`; verified pass loop, 64-iteration ceiling, convergence report and idempotence tests |\n| Native C17 evolution evidence gate | implemented | `src/evolution.c`, `include/reaper/evolution.h`, `tests/test_evolution.c`; fail-closed acceptance gates and human approval requirement |\n| Checked i64 constant-folding pass | implemented | `src/optimizer.c`, `include/reaper/optimizer.h`, `tests/test_optimizer.c`; rejects signed overflow and verifies input/output IR |
 | Pratt expression parser | implemented | `src/parser.c`, `include/reaper/ast.h` |
 | Flat owned AST with source locations | implemented | `ReaperAstNode`; parser acceptance tests |
@@ -98,3 +99,6 @@ The current registry contains 666 API/feature contracts, not 666 implemented run
 ## Russian-native profile v0.2.0
 
 The profile defines 20 engineering dimensions spanning Russian-first source syntax, deterministic lexical mapping, UTF-8 source positions, canonical IR boundaries, explicit system capabilities, modularity, author rights and third-party license compliance. The structured source is `language/most_russian_native_profile.json`. Run `python tools/validate_most_keywords.py` to validate alias parity and profile cardinality. The profile does not promote the 33 lexical reservations into supported grammar.
+
+
+See [`NATIVE_IR_EXECUTION.md`](NATIVE_IR_EXECUTION.md) for the executable subset, error behavior and current limits.
