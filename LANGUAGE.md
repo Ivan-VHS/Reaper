@@ -34,6 +34,18 @@ make result := [1, 2, 3, 4, 5]
 emit "result = " ++ text(result)
 ~~~
 
+## 666-token symbolic catalogue
+
+Reaper includes a canonical 666-entry symbolic vocabulary over `: ; [ { ] } + = _ - *`. Each reserved lexeme is a unique three-symbol code with no digits. The six groups cover memory, streams, types, arithmetic, metrics and diagnostics. The Python and native C lexers recognize these codes; use `reaper --catalog` or the `token_catalog()`, `token_info()` and `token_is_reserved()` built-ins to inspect them. Vocabulary registration does not imply operation semantics are implemented: reserved operators are rejected by the parser until their contracts are implemented. See [TOKEN_CATALOG](docs/TOKEN_CATALOG.md).
+
+## Modules
+
+Modules are UTF-8 .rpr files resolved relative to the importing file. An import with as binds a module map; an import without an alias binds its explicitly exported names. Access a member with map indexing, for example module["function"](...). Export declarations can mark an existing name or declare a make, vary, or craft binding. Import cycles are rejected and the CLI can inspect the transitive graph without executing code:
+
+~~~sh
+python -m reaper --module-graph examples/modules/main.rpr
+~~~
+
 ## Source format
 
 - Source files use the .rpr extension.
@@ -68,13 +80,6 @@ loop while condition {
 }
 
 emit expression
-
-import "relative/module.rpr" as module
-export name
-export make public_value := expression
-export craft public_function(value) {
-    yield value
-}
 ~~~
 
 A function returns nothing when it reaches its end without yield. yield outside a craft function is an error.
@@ -96,14 +101,6 @@ Operators, from low to high precedence:
 9. Unary - and not.
 
 Calls use name(arguments); list indexing uses collection[index]. Arithmetic does not implicitly coerce booleans or text. Comparison is defined for two numbers or two text values.
-
-## Modules
-
-Modules are UTF-8 .rpr files resolved relative to the importing file. An import with as binds a module map; an import without an alias binds its explicitly exported names. Access a member with map indexing, for example module["function"](...). Export declarations can mark an existing name or declare a make, vary, or craft binding. Import cycles are rejected and the CLI can inspect the transitive graph without executing code:
-
-~~~sh
-python -m reaper --module-graph examples/modules/main.rpr
-~~~
 
 ## Standard operations
 
