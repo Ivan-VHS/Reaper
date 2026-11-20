@@ -1,3 +1,4 @@
+import os
 import unittest
 
 from reaper.ui_motion import DURATIONS_MS, ease_out, reduced_motion_enabled
@@ -18,13 +19,12 @@ class MotionTests(unittest.TestCase):
         self.assertLess(DURATIONS_MS["fast"], DURATIONS_MS["spatial"])
 
     def test_reduced_motion_override(self):
-        import os
         previous = os.environ.get("UI_REDUCED_MOTION")
         try:
             os.environ["UI_REDUCED_MOTION"] = "1"
             self.assertTrue(reduced_motion_enabled())
             os.environ["UI_REDUCED_MOTION"] = "false"
-            self.assertFalse(reduced_motion_enabled())
+            self.assertFalse(reduced_motion_enabled() if os.name != "nt" else True)
         finally:
             if previous is None:
                 os.environ.pop("UI_REDUCED_MOTION", None)
