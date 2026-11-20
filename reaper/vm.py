@@ -98,6 +98,7 @@ class VirtualMachine:
             ip += 1
             name = _OPCODE_NAMES[instruction.opcode]
             token = instruction.token
+            self.interpreter._current_environment = environment
             self.interpreter._tick(token)
 
             if self.interpreter.debugger is not None and name in {
