@@ -92,7 +92,7 @@ ctest --test-dir build --output-on-failure
 
 ## CI и лицензия
 
-GitHub Actions тестирует Python 3.10, 3.11 и 3.12, запускает unit-тесты (включая Reaper-written bootstrap lexer), проверяет пример и выполняет flow-пример. У нативного ядра C есть отдельное покрытие CMake/CTest.
+GitHub Actions тестирует Python 3.10, 3.11 и 3.12, запускает unit-тесты (включая Reaper-written bootstrap lexer и частичный Pratt parser), проверяет пример и выполняет flow-пример. У нативного ядра C есть отдельное покрытие CMake/CTest.
 
 [Apache License 2.0](LICENSE).
 
