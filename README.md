@@ -15,6 +15,10 @@ make answer := numbers :: map(double) :: sum()
 emit "answer = " ++ text(answer)
 ```
 
+## 666-token symbolic catalogue
+
+Reaper includes a canonical 666-entry vocabulary of unique three-symbol lexemes, with no digits, over `: ; [ { ] } + = _ - *`. The Python and native C lexers recognize the reserved codes; inspect them with `reaper --catalog`, `--catalog-group memory` or `--catalog-token ':::'`. Reserved catalogue entries are not yet executable operations. See [the token catalogue](docs/TOKEN_CATALOG.md).
+
 ## 66-language systems capability matrix
 
 Reaper exposes a capability catalogue covering memory ownership, linear resources, regions, compile-time programming, C ABI/FFI, concurrency, formal verification, embedded targets, SIMD and GPU/shader toolchains. The duplicate Clay and Nimrod/early-Nim source entries remain explicit aliases. Compiler discovery is separate from native backend implementation.
@@ -28,18 +32,40 @@ reaper --systems-json
 
 Toolchain checks are PATH-only: they do not run or install compilers. The matrix is included in Python package data and its tests are registered with CTest.
 
+## Systems architecture matrix
+
+Reaper complements its 66-position language and toolchain matrix with **14 CPU, MCU and virtual-ISA architecture profiles**. Use `python -m reaper --systems-architectures`, `--architecture-profile reaper`, `--available-architectures` or `--architectures-json`. Toolchain checks only look up executable names on PATH; they do not compile or run external code. See [the architecture matrix](docs/SYSTEMS_ARCHITECTURE_MATRIX.md).
+
 ## Implemented today
 
 - **Python reference runtime:** Python 3.10+, tree-walking interpreter, lexer, parser, runtime, CLI and standard-library tests.
 - **Language core:** Unicode identifiers, comments, strings, functions and closures, recursion, immutable `make`, mutable `vary` with explicit `change`, conditionals, iteration and flow composition.
 - **Built-ins and diagnostics:** higher-order collection operations (map/filter/fold/reduce), stable key sorting, chunking/slicing/flattening/de-duplication, UTF-8 string utilities, source-aware errors and bounded execution.
 - **Metric standard library:** L1/L2/L-infinity norms, normalization, Euclidean/Manhattan/Chebyshev distances, cosine similarity, angles, projections and centroids, alongside quadratic forms and non-Euclidean models.
-- **CLI:** --lint, persistent line-oriented --repl, structured --json output and --profile execution metrics.
+- **CLI:** --lint, persistent line-oriented --repl, structured --json, --profile, selectable `--engine vm`, `--module-graph`, and opt-in `--allow-native-ffi`.
+- **`.rpr` modules:** explicit import/export, isolated module scopes, cached exports, dependency graphs and cycle diagnostics.
+- **Managed runtime resources:** tracked heap ledger, mark/sweep roots, LIFO regions, bounded text-file handles and deterministic cleanup.
+- **C ABI / Pytyliki:** opt-in typed C ABI bridge and adapter for the public Pytyliki `pl_*` API.
+- **Canonical IR / VM:** selectable Python bytecode VM over Canonical IR; tree-walk remains the default compatibility engine.
+- **Reaper Studio debugger:** statement breakpoints (F9), step/continue/stop, variable inspector and call stack.
 - **Native C17 track:** lexer, expression parser and owned AST, verified integer Canonical IR, checked constant folding, a limited AST-to-IR lowering slice, CLI bring-up and C tests.
-- **Self-hosting bootstrap — Stage 0:** `selfhost/lexer.rpr` implements the initial tokenizer in Reaper source. The Python bootstrap runs it in CI and checks token values, source positions, string escapes and invalid-character reporting. This first slice currently handles ASCII identifiers only; it does not replace the reference lexer or constitute a self-hosting compiler yet. See [the bootstrap plan](docs/SELF_HOSTING_BOOTSTRAP.md).
+- **Self-hosting bootstrap — Stage 0 + partial Stage 1:** `selfhost/lexer.rpr` implements tokenization and `selfhost/parser.rpr` implements a Reaper-written Pratt expression parser with the real `::` flow operator, precedence, right-associative exponentiation, list literals, calls and indexing. Bootstrap assertions and Python/CTest tests cover both programs. The lexer still has an ASCII-identifier gap; the parser does not yet cover declarations, blocks or statement grammar and does not replace the reference frontend. See [the bootstrap plan](docs/SELF_HOSTING_BOOTSTRAP.md).
 - **MOST language track:** documented language vocabulary and staged implementation contract.
 
 The C implementation is not yet a full language interpreter. Full declarations/blocks, type checking, intent resolution, ownership analysis, native code generation and WASM are not complete. Python remains the compatibility reference until runtime and CLI parity is demonstrated.
+
+## Runtime platform
+
+Contracts and examples: [RUNTIME_PLATFORM.md](docs/RUNTIME_PLATFORM.md).
+
+```sh
+python -m reaper --engine vm examples/flow.rpr
+python -m reaper --module-graph examples/modules/main.rpr
+python -m reaper --heap-bytes 67108864 --open-resources 64 examples/flow.rpr
+python -m reaper --allow-native-ffi path/to/ffi_program.rpr
+```
+
+The managed heap is an accounting and reachability layer over Python's allocator (`sys.getsizeof`), not a separate physical allocator or process-RSS cap. The bytecode VM currently runs in the Python reference runtime; the native C17 core is not claimed to have VM parity. Native FFI runs in-process, requires trusted ABI-compatible libraries, and ctypes cannot guarantee portable physical library unloading.
 
 ## Desktop workbench
 
@@ -93,6 +119,21 @@ The native executable currently exposes the implemented bring-up and analysis pa
 A successful workflow run uploads `Reaper-Studio-windows-x64.zip`; a `v*` tag publishes the same archive as a GitHub Release. Run from source with Python 3.10+ using `python reaper_desktop.py`.
 
 
+## Polyglot immersion
+
+Reaper now includes a local-first language-learning subsystem in its Python reference package: multi-language profiles, an offline content library, contextual phrase cards, spaced repetition, adaptive daily plans, comprehensibility estimates, practice logs and JSON export.
+
+```sh
+reaper polyglot init English --native Russian --level A0 --minutes 45
+reaper polyglot content add lesson.srt --kind dialogue --level A1
+reaper polyglot phrase add "Could you say that again?" --translation "Не могли бы вы повторить?" --context "Polite clarification"
+reaper polyglot plan
+reaper polyglot review
+reaper polyglot report
+```
+
+Data is stored locally in SQLite. The 70–90% content band is a transparent estimate based on reviewed phrase cards, not an automatic comprehension test. Media playback, ASR/TTS, automatic translation and AI pronunciation scoring are not yet implemented. See [Polyglot immersion guide](docs/POLYGLOT_IMMERSION.md).
+
 ## Design and safety boundaries
 
 Programs are tokenized, parsed into an AST and evaluated by a bounded interpreter. Console effects are explicit through operations such as `emit`, `say` and `ask`. Ordinary expressions do not silently gain filesystem, network, clock, process, shell or hardware access.
@@ -102,12 +143,15 @@ Default runtime quotas include 1,000,000 execution steps, 256 nested calls, 100,
 ## Documentation
 
 - [Language reference](LANGUAGE.md)
+- [Runtime platform: modules, heap, FFI, VM and debugger](docs/RUNTIME_PLATFORM.md)
 - [Runtime and CLI implementation update (20 Nov 2026)](docs/IMPLEMENTATION_UPDATE_2026-11-20.md)
 - [Unified REAPER/MOST architecture](docs/REAPER_UNIFIED_ARCHITECTURE.md)
 - [Self-hosting bootstrap plan](docs/SELF_HOSTING_BOOTSTRAP.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Concatenation and composition architecture](docs/CONCATENATION_ARCHITECTURE.md)
 - [Orthogonal metric engine](docs/ORTHOGONAL_METRIC_ENGINE.md)
+- [Systems architecture matrix](docs/SYSTEMS_ARCHITECTURE_MATRIX.md)
+- [Systems-language matrix](reaper/systems_languages.json)
 - [MOST language specification](docs/MOST_LANGUAGE_SPEC.md)
 - [C migration plan](docs/C_MIGRATION.md)
 - [Examples](examples/) · [Tests](tests/)

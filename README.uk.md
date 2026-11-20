@@ -15,6 +15,10 @@ make answer := numbers :: map(double) :: sum()
 emit "answer = " ++ text(answer)
 ```
 
+## Каталог із 666 символічних токенів
+
+Reaper містить канонічний словник із 666 унікальних трисимвольних лексем без цифр на алфавіті `: ; [ { ] } + = _ - *`. Python- і C-лексери розпізнають зарезервовані коди; переглянути їх можна командами `reaper --catalog`, `reaper --catalog-group memory` та `reaper --catalog-token ':::'`. Зарезервовані записи поки не є виконуваними операціями. Див. [каталог токенів](docs/TOKEN_CATALOG.md).
+
 ## Що реалізовано
 
 - **Еталонне середовище Python:** Python 3.10+, tree-walking інтерпретатор, lexer, parser, runtime, CLI та тести на стандартній бібліотеці.
@@ -73,6 +77,21 @@ ctest --test-dir build --output-on-failure
 
 Успішна збірка публікує `Reaper-Studio-windows-x64.zip`; тег `v*` створює GitHub Release. Запуск із вихідного коду (Python 3.10+): `python reaper_desktop.py`.
 
+## Поліглот-система занурення
+
+У Python reference package Reaper додано локальну підсистему вивчення мов: кілька мовних профілів, офлайн-бібліотеку текстів і субтитрів, контекстні картки фраз, інтервальне повторення, адаптивний щоденний план, оцінку зрозумілості матеріалів, журнал занять та експорт JSON.
+
+```sh
+reaper polyglot init English --native Ukrainian --level A0 --minutes 45
+reaper polyglot content add lesson.srt --kind dialogue --level A1
+reaper polyglot phrase add "Could you say that again?" --translation "Не могли б ви повторити?" --context "Ввічливе прохання повторити фразу"
+reaper polyglot plan
+reaper polyglot review
+reaper polyglot report
+```
+
+Дані зберігаються локально в SQLite. Діапазон 70–90% є приблизною часткою токенів із повторених карток, а не автоматичним тестом розуміння. Відтворення медіа, ASR/TTS, автоматичний переклад та AI-оцінювання вимови ще не реалізовані. Див. [посібник із поліглот-системи](docs/POLYGLOT_IMMERSION.md).
+
 ## Дизайн і межі безпеки
 
 Програма проходить токенізацію, парсинг в AST і виконується обмеженим інтерпретатором. Консольні ефекти явні: `emit`, `say`, `ask`. Звичайні вирази не отримують прихованого доступу до файлової системи, мережі, годинника, процесів, shell чи обладнання.
@@ -82,6 +101,7 @@ ctest --test-dir build --output-on-failure
 ## Документація
 
 - [Довідник мови](LANGUAGE.md)
+- [Поліглот-система занурення](docs/POLYGLOT_IMMERSION.md)
 - [Об’єднана архітектура REAPER/MOST](docs/REAPER_UNIFIED_ARCHITECTURE.md)
 - [Архітектура](docs/ARCHITECTURE.md)
 - [Специфікація MOST](docs/MOST_LANGUAGE_SPEC.md)
