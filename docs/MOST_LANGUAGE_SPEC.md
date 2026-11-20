@@ -119,7 +119,7 @@ when total == 12 {
 | Python-лексер: точные русские aliases базового подмножества | implemented |
 | Python parser/runtime: выполнение русского примера | implemented by shared REAPER grammar/runtime |
 | C17 lexer: распознавание русского словаря | implemented lexical recognition |
-| C17 lexer: выдача канонического написания токена REAPER | implementation task |
+| C17 lexer: выдача канонического написания токена REAPER | implemented; native tests pending CI |
 | Полный C17 parser и runtime REAPER | отдельные этапы развития REAPER |
 | Отдельный parser/AST/runtime МОСТ | not applicable — не разрабатывается |
 | Морфологический или синонимический resolver МОСТ | not applicable — не разрабатывается |
