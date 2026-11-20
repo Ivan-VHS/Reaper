@@ -448,6 +448,21 @@ class Interpreter:
             if not isinstance(value, (UserFunction, Builtin, NativeFunction)) and not getattr(value, "__reaper_bytecode__", False):
                 raise TypeError("expected a Reaper function")
 
+        def iterate(seed: Any, steps: Any, function: Any) -> list[Any]:
+            callback(function)
+            if isinstance(steps, bool) or not isinstance(steps, int) or steps < 0:
+                raise ValueError("iterate steps must be a non-negative whole number")
+            if steps + 1 > self.max_collection_items:
+                raise ValueError(f"collection item limit ({self.max_collection_items}) exceeded")
+            token = Token("BUILTIN", "iterate", 1, 1)
+            history = [seed]
+            value = seed
+            for _ in range(steps):
+                self._tick(token)
+                value = self._call(function, [value], token)
+                history.append(value)
+            return history
+
         register("size", bounded_size, 1, 1)
         register("text", self._display, 1, 1)
         register("number", self._to_number, 1, 1)
