@@ -181,3 +181,12 @@ CI must run native C17 builds and tests on supported compilers. Python different
 - `docs/CONSTITUTION_666_PROFILE.md` and `docs/ANATIDAE_CONSTITUTION.md`: conformance and design constitution.
 
 This document is the integration map. Detailed specifications remain in their owning documents; contradictory status statements must be reconciled in the implementation ledger before a feature is called complete.
+
+
+## 12. MOST Function Registry 666
+
+Машинный каталог — `language/functions_666.json`, нормативное описание и source crosswalk — `docs/MOST_FUNCTIONS_666.md`. Реестр содержит 147 прежних контрактов и 519 расширений по frontend bridge, types/contracts/math, execution/memory/concurrency, data/codecs, security/resilience и toolchain/testing.
+
+Он не заменяет 66 базовых принципов, 813-feature architecture map, lexical token catalogue или 666-rule Constitution profile. Это слой API/feature traceability. Наличие записи не означает implementation. Python reference runtime, native C17 foundation, Pytyliki C11 и OPlague Python tooling имеют разные execution boundaries.
+
+Семантический контракт прежний: REAPER владеет canonical types and execution; MOST разрешает русские декларации к той же typed AST/IR. Любой внешний API проходит typed binding, capability/effect gate, versioned ABI/schema contract и conformance tests до включения в MOST.
