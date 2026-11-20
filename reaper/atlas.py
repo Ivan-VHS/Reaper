@@ -155,14 +155,15 @@ def search_atlas(query: str, kind: str = "all") -> tuple[LanguageProfile | Archi
         sources = ARCHITECTURES
     else:
         sources = (*LANGUAGES, *ARCHITECTURES)
-    return tuple(
-        item for item in sources
-        if needle in " ".join(str(value) for value in item.__dict__.values()).casefold()
-        if hasattr(item, "__dict__")
-    ) if sources and hasattr(sources[0], "__dict__") else tuple(
-        item for item in sources
-        if needle in " ".join(str(getattr(item, field)) for field in item.__dataclass_fields__).casefold()
-    )
+    matches: list[LanguageProfile | ArchitectureProfile] = []
+    for item in sources:
+        if isinstance(item, LanguageProfile):
+            values = (item.name, item.family, item.memory_model, item.compilation_model, item.assurance, item.design_signal)
+        else:
+            values = (item.name, item.family, item.class_name, item.data_model, item.execution_model, item.backend_questions)
+        if needle in " ".join(values).casefold():
+            matches.append(item)
+    return tuple(matches)
 
 
 def format_atlas(kind: str = "all", query: str | None = None) -> str:
@@ -176,8 +177,11 @@ def format_atlas(kind: str = "all", query: str | None = None) -> str:
     else:
         matches = LANGUAGES if kind == "languages" else ARCHITECTURES if kind == "architectures" else (*LANGUAGES, *ARCHITECTURES)
         heading = (
-            f"Reaper systems atlas: {len(LANGUAGES)} language profiles + "
-            f"{len(ARCHITECTURES)} architecture profiles"
+            f"Reaper systems atlas: {len(LANGUAGES)} language profiles"
+            if kind == "languages"
+            else f"Reaper systems atlas: {len(ARCHITECTURES)} architecture profiles"
+            if kind == "architectures"
+            else f"Reaper systems atlas: {len(LANGUAGES)} language profiles + {len(ARCHITECTURES)} architecture profiles"
         )
     lines = [heading, "Reference data only; entries do not imply an installed compiler or implemented Reaper backend."]
     for item in matches:
