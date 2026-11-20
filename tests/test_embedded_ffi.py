@@ -33,7 +33,7 @@ class EmbeddedPytylikiRuntimeTests(unittest.TestCase):
             patch("reaper.runtime.pytyliki_native.pytyliki_embedded_budget", return_value=budget),
         ):
             Interpreter(output=output.append, allow_native_ffi=True).run(source)
-        self.assertEqual(output, ["3", "cortex-m4-reference", "1408", "True"])
+        self.assertEqual(output, ["3", "cortex-m4-reference", "1408", "true"])
 
     def test_embedded_native_builtins_require_explicit_native_ffi_opt_in(self) -> None:
         source = 'emit size(pytyliki_embedded_profiles("/absolute/path/libpytyliki_ffi.so"))'
