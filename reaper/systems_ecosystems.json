@@ -749,9 +749,7 @@
       "category": "specialized",
       "family": "Wouter van Oortmerssen",
       "model": "esoteric-language",
-      "commands": [
-        "false"
-      ],
+      "commands": [],
       "tags": [
         "esoteric",
         "stack-machine",
