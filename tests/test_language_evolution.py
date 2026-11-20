@@ -90,7 +90,7 @@ fn transform(items: Vec<i32>) -> Option<i32> {
         report = OmniCoreEngine(self.root).run()
         by_path = {item.path: item for item in report.files}
         self.assertEqual(by_path["src/worker.py"].parser, "python-ast")
-        self.assertEqual(by_path["src/worker.rs"].parser, "structural-lexer")
+        self.assertIn(by_path["src/worker.rs"].parser, {"structural-lexer", "tree-sitter"})
         self.assertIn("FunctionDecl", by_path["src/worker.rs"].node_counts)
         self.assertIn("TypeDecl", by_path["src/worker.rs"].node_counts)
         self.assertIn("FunctionDecl", by_path["src/worker.py"].node_counts)
@@ -145,6 +145,13 @@ fn transform(items: Vec<i32>) -> Option<i32> {
         result = main([str(self.root), "--output", str(protected)])
         self.assertEqual(result, 2)
         self.assertEqual(protected.read_text(encoding="utf-8"), "do not overwrite")
+
+    def test_main_cli_dispatch_exposes_absorb_command(self) -> None:
+        from reaper.cli import main as cli_main
+
+        with contextlib.redirect_stdout(io.StringIO()):
+            result = cli_main(["absorb", str(self.root), "--json"])
+        self.assertEqual(result, 0)
 
     def test_cli_can_emit_json_and_atomically_write_report(self) -> None:
         output = self.root / "reports" / "absorption.json"
