@@ -276,10 +276,11 @@ def _structural(source: str) -> tuple[tuple[UASTNode, ...], list[dict[str, Any]]
     stack: list[tuple[str, int]] = []
     pairs = {")": "(", "]": "[", "}": "{"}
     token_re = re.compile(r"//[^\n]*|/\*.*?\*/|\#[^\n]*|--[^\n]*|\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'|[(){}\[\]]", re.S)
-    cursor = 0
+    cursor, current_line = 0, 1
     for match in token_re.finditer(source):
-        line = source.count("\n", cursor, match.start()) + 1
-        cursor = match.end()
+        current_line += source.count("\n", cursor, match.start())
+        cursor = match.start()
+        line = current_line
         value = match.group()
         if value.startswith(("//", "/*", "#", "--", chr(34), "'")):
             continue
@@ -295,7 +296,7 @@ def _structural(source: str) -> tuple[tuple[UASTNode, ...], list[dict[str, Any]]
             else:
                 stack.pop()
     opaque.extend({"line": line, "reason": "unclosed delimiter", "token": value} for value, line in stack[:100])
-    for line_no, line in enumerate(source.splitlines(), 1):
+    for line_no, line in enumerate(StringIO(source), 1):
         if len(nodes) >= MAX_NODES:
             break
         if not line.strip():
