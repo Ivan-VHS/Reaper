@@ -7,14 +7,15 @@ from .decomposition import (
 )
 from .errors import ExecutionLimitError, LexError, ParseError, ReaperError, ReaperRuntimeError
 from .evolution import EvolutionEngine, EvolutionReport
+from .atlas import ARCHITECTURES, LANGUAGES, format_atlas, search_atlas
 from .runtime import Interpreter, run
 
 __version__ = "0.1.0"
 __all__ = [
-    "DivisionResult", "ExecutionLimitError", "EvolutionEngine", "EvolutionReport",
+    "ARCHITECTURES", "LANGUAGES", "DivisionResult", "ExecutionLimitError", "EvolutionEngine", "EvolutionReport",
     "compose", "concat", "concat_text", "merge_mappings", "pipe",
     "Interpreter", "LexError", "ParseError", "ReaperError", "ReaperRuntimeError",
     "decompose_sequence", "distribute_weighted", "divide_fraction",
-    "euclidean_divmod", "factor_pairs", "recombine", "run", "split_evenly",
+    "euclidean_divmod", "factor_pairs", "format_atlas", "recombine", "run", "search_atlas", "split_evenly",
     "__version__",
 ]
