@@ -17,6 +17,23 @@ class LexerTests(unittest.TestCase):
             ["MAKE", "IDENT", ":=", "TRUE", "NEWLINE", "VARY", "IDENT", ":=", "NUMBER", "NEWLINE", "WHEN", "NOT", "FALSE", "AND", "IDENT"],
         )
 
+    def test_extended_russian_keywords_are_reserved_and_exact(self) -> None:
+        words = [alias for alias, _canonical in [["модуль","module"],["публичный","pub"],["процедура","fn"],["структура","struct"],["перечисление","enum"],["типаж","trait"],["реализация","impl"],["тип","type"],["константа","const"],["связать","let"],["изменяемый","mut"],["возврат","return"],["условие","if"],["альтернатива","else"],["выбор","match"],["область","region"],["сырой","raw"],["арена","arena"],["сигнал","signal"],["асинхронно","async"],["ожидать","await"],["тест","test"],["вычислить_при_сборке","comptime"],["требует","requires"],["гарантирует","ensures"],["небезопасно","unsafe"],["внешний","extern"],["где","where"],["уничтожить","drop"],["для_каждого","for"],["прервать","break"],["продолжить","continue"],["отложить","defer"]]]
+        expected = [canonical.upper() for _alias, canonical in [["модуль","module"],["публичный","pub"],["процедура","fn"],["структура","struct"],["перечисление","enum"],["типаж","trait"],["реализация","impl"],["тип","type"],["константа","const"],["связать","let"],["изменяемый","mut"],["возврат","return"],["условие","if"],["альтернатива","else"],["выбор","match"],["область","region"],["сырой","raw"],["арена","arena"],["сигнал","signal"],["асинхронно","async"],["ожидать","await"],["тест","test"],["вычислить_при_сборке","comptime"],["требует","requires"],["гарантирует","ensures"],["небезопасно","unsafe"],["внешний","extern"],["где","where"],["уничтожить","drop"],["для_каждого","for"],["прервать","break"],["продолжить","continue"],["отложить","defer"]]]
+        tokens = tokenize(" ".join(words))
+        self.assertEqual([token.kind for token in tokens[:-1]], expected)
+        self.assertEqual([token.value for token in tokens[:-1]], words)
+
+        # No stemming or automatic case/inflection guessing is performed.
+        unknown = tokenize("структуры модулем")
+        self.assertEqual([token.kind for token in unknown], ["IDENT", "IDENT", "EOF"])
+
+    def test_reserved_native_vocabulary_has_no_false_runtime_claim(self) -> None:
+        # These words are lexed as reserved tokens, but declaration grammar is
+        # still acceptance-gated in the native compiler track.
+        tokens = tokenize("модуль структура асинхронно вычислить_при_сборке")
+        self.assertEqual([token.kind for token in tokens[:-1]], ["MODULE", "STRUCT", "ASYNC", "COMPTIME"])
+
     def test_keywords_and_unicode_identifiers(self) -> None:
         tokens = tokenize("make утка := true # comment\nemit утка")
         self.assertEqual(
