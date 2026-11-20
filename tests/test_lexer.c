@@ -111,8 +111,11 @@ static void test_most_extended_aliases(void){
   assert(has(&t,cases[i].alias,REAPER_TOK_KEYWORD));
   assert(has_canonical(&t,cases[i].canonical));
  }
- assert(has(&t,"структуры",REAPER_TOK_IDENTIFIER)==0);
  reaper_tokens_free(&t);
+ ReaperTokenArray unknown={0};
+ assert(reaper_lex("структуры", &unknown, &e));
+ assert(has(&unknown,"структуры",REAPER_TOK_IDENTIFIER));
+ reaper_tokens_free(&unknown);
 }
 static void test_utf8_columns_count_codepoints(void){
  const char *source="вывести утка + 1";
