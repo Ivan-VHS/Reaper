@@ -18,6 +18,7 @@ from reaper.errors import ReaperError
 from reaper.parser import parse
 from reaper.runtime import Interpreter
 from reaper.debugger import DebuggerStopped, RuntimeDebugger
+from reaper.ui_motion import MotionController
 from reaper.ui_theme import apply_theme, apply_ui_theme, set_dpi_awareness, toggle_theme
 
 STARTER = '''craft double(value) {
@@ -98,6 +99,8 @@ class ReaperStudio(tk.Tk):
 
         self.status = tk.StringVar(value="Ready — check the source before running it")
         ttk.Label(self, textvariable=self.status, relief="sunken", anchor="w", padding=(8, 4)).pack(fill="x")
+        self._motion = MotionController(self)
+        self._motion.fade_in()
         self.bind_all("<Control-o>", lambda _event: self.open_file())
         self.bind_all("<Control-s>", lambda _event: self.save_file())
         self.bind_all("<F5>", lambda _event: self.run_source())

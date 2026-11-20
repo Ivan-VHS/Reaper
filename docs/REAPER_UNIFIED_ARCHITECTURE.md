@@ -179,3 +179,10 @@ CI must run native C17 builds and tests on supported compilers. Python different
 - `docs/CONSTITUTION_666_PROFILE.md` and `docs/ANATIDAE_CONSTITUTION.md`: conformance and design constitution.
 
 This document is the integration map. Detailed specifications remain in their owning documents; contradictory status statements must be reconciled in the implementation ledger before a feature is called complete.
+
+
+## MOST Function Registry 666
+
+`language/functions_666.json` is the canonical 666-entry API/feature traceability catalogue (147 existing specifications + 519 proposals). It is distinct from the 66 foundational rules, the 666 lexical-token catalogue, and the 666-rule Constitution profile. Registry membership does not create a callable or imply an implementation.
+
+REAPER remains the semantic core and MOST remains a Russian-language frontend resolving names to canonical REAPER symbols and the shared typed IR. Aliases do not change types, effects, capabilities, ownership, or runtime behavior. Ambiguity remains a diagnostic. See [MOST_FUNCTIONS_666.md](MOST_FUNCTIONS_666.md).

@@ -84,3 +84,19 @@ The managed heap is accounting over Python's allocator, not a physical allocator
 ## License
 
 [Apache License 2.0](LICENSE)
+
+## Quantum Contour Syntax (QCS)
+
+The independent QCS 1.0 frontend provides source-located lexing, frame/declaration parsing, Pratt expressions, a JSON-serializable AST and a 65-domain registry. It does not replace the `.rpr` grammar or execute hardware operations.
+
+```sh
+reaper-qcs check examples/qcs_irq.qcs
+reaper-qcs tokens examples/qcs_irq.qcs
+reaper-qcs ast examples/qcs_irq.qcs
+```
+
+See [QCS frontend specification](docs/QCS_FRONTEND.md). The native C11 companion validator is maintained in Pytyliki.
+
+## MOST Function Registry 666
+
+The machine-readable registry contains 666 traceable API/feature contracts: 147 existing specifications and 519 proposals. It is a specification catalogue, not 666 implemented runtime functions. See [MOST_FUNCTIONS_666.md](docs/MOST_FUNCTIONS_666.md); validate it with `python tools/validate_most_functions.py`.
