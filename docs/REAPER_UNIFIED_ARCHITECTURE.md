@@ -17,7 +17,7 @@ The original surface constructs remain part of the compatibility contract:
 - `change`: explicit reassignment.
 - `craft` / `yield`: function declaration and result production.
 - `when` / `otherwise`, `each`, `loop while`: control flow.
-- `~>`: left-to-right flow composition.
+- `::`: left-to-right flow composition.
 - Explicit conversions and explicit host effects.
 
 The native C17 implementation is the destination implementation. The Python 0.1 interpreter is a temporary compatibility oracle only; it must not be required to build, test, install or run the final native release. Remove it only after differential parity over the complete language and CLI contract.
@@ -121,6 +121,7 @@ The existing registries are preserved and reconciled, not discarded:
 - 813-feature architecture map: broader subsystem and platform roadmap.
 - 666-rule Constitution: conformance and engineering evaluation profile.
 - 20-system registry: operational engineering contracts.
+- 48-point engineering roadmap: crosswalk for syntax, types, errors, memory, runtime, modules, tooling, safety and evolution; this is a requirements map, not a claim of 48 implemented capabilities.
 - Additional cognitive/text/data proposals: optional tooling or services, never implicit compiler semantics.
 
 Number ranges are planning identifiers, not promises of completed functions. Before implementation, each feature must have a stable ID, canonical name, owner, dependencies, public contract, types, errors, effects/capabilities, target support, tests, resource budget and status. Duplicate proposals are merged under one canonical ID while preserving aliases and provenance. New keywords are added only when a library API or compiler attribute cannot express the capability cleanly.
@@ -178,6 +179,7 @@ CI must run native C17 builds and tests on supported compilers. Python different
 - `docs/REAPER_PARSER_M1.md`: parser milestone contract.
 - `docs/AETHER_ANAS_ROADMAP.md`: semantic and runtime evolution.
 - `docs/20_SYSTEM_ENHANCEMENTS.md`: twenty engineering contracts.
+- `docs/ENGINEERING_48_ROADMAP.md`: 48-point crosswalk, status map and acceptance gates.
 - `docs/CONSTITUTION_666_PROFILE.md` and `docs/ANATIDAE_CONSTITUTION.md`: conformance and design constitution.
 
 This document is the integration map. Detailed specifications remain in their owning documents; contradictory status statements must be reconciled in the implementation ledger before a feature is called complete.
