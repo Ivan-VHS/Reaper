@@ -17,7 +17,7 @@
 
 This increment does not parse declarations, functions, blocks, types, patterns, imports or contracts. It does not resolve names, infer types, lower expressions to IR, execute expressions or generate native code. String and number payloads remain lexical text; numeric range and escape semantics are validated by later semantic stages.
 
-The parser consumes the existing REAPER token stream. MOST morphology and domain resolution remain a later frontend stage; the parser does not guess synonyms or rewrite identifiers.
+The parser consumes only the REAPER token stream. МОСТ is an exact keyword-alias table: Russian keywords are canonicalized to existing REAPER tokens before parsing. There is no MOST morphology stage, domain resolver or second parser. Ordinary Russian identifiers are passed through unchanged.
 
 ## Build
 
@@ -27,4 +27,4 @@ The parser consumes the existing REAPER token stream. MOST morphology and domain
 
 ## Next gate
 
-M1 continuation: declaration/block grammar, recoverable diagnostics and complete source spans. M2: MOST Intent AST and scoped dictionary resolver. Both source frontends must eventually lower to the same typed canonical IR.
+M1 continuation: complete REAPER declaration/block grammar, recoverable diagnostics and complete source spans. The exact Russian keyword aliases must enter the same parser. No MOST Intent AST or scoped dictionary resolver is planned.
