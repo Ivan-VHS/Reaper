@@ -5,6 +5,7 @@ import unittest
 from reaper import ExecutionLimitError, Interpreter, LexError, ParseError, ReaperRuntimeError
 from reaper.lexer import tokenize
 from reaper.parser import parse
+from reaper.operator_registry import OPERATOR_COUNT, operator_catalog, glyph_for_id, operator_by_glyph
 
 
 class LexerTests(unittest.TestCase):
@@ -22,11 +23,45 @@ class LexerTests(unittest.TestCase):
         with self.assertRaises(LexError):
             tokenize('emit "unfinished')
 
+    def test_operator_glyph_run_uses_maximal_munch(self) -> None:
+        tokens = tokenize("value ::= 1 :: map(double) +::")
+        self.assertEqual(
+            [token.value for token in tokens if token.value],
+            ["value", "::=", "1", "::", "map", "(", "double", ")", "+::"],
+        )
+
+    def test_unknown_glyph_runs_fail_early(self) -> None:
+        with self.assertRaisesRegex(LexError, "unregistered"):
+            tokenize("value +++++")
+        with self.assertRaisesRegex(LexError, "five characters"):
+            tokenize("value ::::::")
+
 
 class ParserTests(unittest.TestCase):
     def test_malformed_declaration_has_location(self) -> None:
         with self.assertRaisesRegex(ParseError, r"<memory>:1:"):
             parse("make x = 2")
+
+
+class OperatorRegistryTests(unittest.TestCase):
+    def test_catalog_has_666_unique_round_trippable_ids(self) -> None:
+        catalog = operator_catalog()
+        self.assertEqual(len(catalog), OPERATOR_COUNT)
+        self.assertEqual(len({item.glyph for item in catalog}), OPERATOR_COUNT)
+        self.assertEqual([item.id for item in catalog], list(range(1, OPERATOR_COUNT + 1)))
+        for operator_id in (1, 3, 48, 49, 120, 121, 240, 241, 360, 361, 480, 481, 580, 581, 666):
+            self.assertEqual(operator_by_glyph(glyph_for_id(operator_id)).id, operator_id)
+        self.assertEqual(glyph_for_id(49), ":::::")
+        self.assertEqual(operator_by_glyph(":::::").status, "reserved")
+
+    def test_catalog_has_exact_family_ranges(self) -> None:
+        catalog = operator_catalog()
+        self.assertEqual(sum(item.family == "memory" for item in catalog), 120)
+        self.assertEqual(sum(item.family == "flow" for item in catalog), 120)
+        self.assertEqual(sum(item.family == "binding" for item in catalog), 120)
+        self.assertEqual(sum(item.family == "arithmetic" for item in catalog), 120)
+        self.assertEqual(sum(item.family == "metric" for item in catalog), 100)
+        self.assertEqual(sum(item.family == "system" for item in catalog), 86)
 
 
 class RuntimeTests(unittest.TestCase):
@@ -107,6 +142,34 @@ class RuntimeTests(unittest.TestCase):
 
     def test_pipeline_accepts_single_argument_call(self) -> None:
         self.assertEqual(self.capture("emit [1, 2, 3] :: size()"), ["3"])
+
+    def test_strict_definition_and_semicolon_separator(self) -> None:
+        self.assertEqual(self.capture("make value ::= 7; emit value"), ["7"])
+
+    def test_prefix_increment_mutates_only_vary_bindings(self) -> None:
+        self.assertEqual(self.capture("vary count ::= 4\nemit :++count\nemit count"), ["5", "5"])
+        with self.assertRaisesRegex(ReaperRuntimeError, "cannot be changed"):
+            self.capture("make fixed ::= 4\nemit :++fixed")
+
+    def test_list_concatenation_is_bounded(self) -> None:
+        self.assertEqual(self.capture("emit [1, 2] ++: [3]"), ["[1, 2, 3]"])
+        interpreter = Interpreter(output=lambda _line: None, max_collection_items=2)
+        with self.assertRaisesRegex(ReaperRuntimeError, "collection item limit"):
+            interpreter.run("emit [1] ++: [2, 3]")
+
+    def test_contract_equal_uses_strict_structural_equality(self) -> None:
+        self.assertEqual(
+            self.capture("emit [true] =:: [1]\nemit [1, 2] =:: [1, 2]"),
+            ["false", "true"],
+        )
+
+    def test_old_flow_spelling_is_rejected(self) -> None:
+        with self.assertRaises(LexError):
+            tokenize("emit [1, 2] |> size()")
+
+    def test_registered_reserved_operator_reports_its_id(self) -> None:
+        with self.assertRaisesRegex(ParseError, "RPR_OP_011"):
+            parse("1 ::: 2")
 
     def test_indexing(self) -> None:
         self.assertEqual(self.capture("make xs := [10, 20]\nemit xs[1]"), ["20"])

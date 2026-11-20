@@ -16,6 +16,7 @@ from .runtime import Interpreter
 from .parser import parse
 from .systems import format_tracks
 from .systems_languages import main as systems_languages_main
+from .operator_registry import operator_catalog
 from .systems_architectures import main as systems_architectures_main
 
 
@@ -32,6 +33,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--repl", action="store_true", help="start the interactive Reaper prompt")
     parser.add_argument("--json", action="store_true", help="emit the run result and diagnostics as JSON")
     parser.add_argument("--profile", action="store_true", help="report elapsed time and interpreter step count")
+    parser.add_argument("--operators", action="store_true", help="list all 666 registered operator IDs")
+    parser.add_argument("--operators-json", action="store_true", help="emit the 666-operator catalogue as JSON")
     parser.add_argument("--systems", action="store_true", help="list the 20 engineering system contracts")
     parser.add_argument("--systems-languages", action="store_true", help="list the 66 systems-language capability profiles")
     parser.add_argument("--language-profile", choices=("pytyliki", "reaper", "oplague"), help="rank systems languages for a project profile")
@@ -47,12 +50,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
-    arguments = sys.argv[1:] if argv is None else argv
-    if arguments and arguments[0] == "polyglot":
-        from .polyglot import main as polyglot_main
-        return polyglot_main(arguments[1:])
     parser = build_parser()
-    args = parser.parse_args(arguments)
+    args = parser.parse_args(argv)
     if args.repl:
         if args.source or args.check or args.evolve:
             parser.error("--repl cannot be combined with a source, --check or --evolve")
@@ -68,6 +67,15 @@ def main(argv: list[str] | None = None) -> int:
             print(f"reaper: audit verification failed: {error}", file=sys.stderr)
             return 1
         print(f"Audit log valid: {summary.records} record(s); head={summary.last_hash}")
+        return 0
+    if args.operators or args.operators_json:
+        entries = operator_catalog()
+        if args.operators_json:
+            print(json.dumps([entry.to_dict() for entry in entries], ensure_ascii=False, indent=2))
+        else:
+            print("ID    GLYPH   FAMILY       STATUS       NAME")
+            for entry in entries:
+                print(f"{entry.id:03d}   {entry.glyph:<5}   {entry.family:<12} {entry.status:<12} {entry.name}")
         return 0
     if args.systems:
         print(format_tracks())

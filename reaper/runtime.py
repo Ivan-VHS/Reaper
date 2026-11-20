@@ -204,6 +204,18 @@ class Interpreter:
             except (IndexError, KeyError, TypeError) as error:
                 raise self._error(node.token, f"cannot read this index: {error}") from error
         if node.kind == "unary":
+            if node.value == ":++":
+                target = children[0]
+                if target.kind != "name":
+                    raise self._error(node.token, "':++' expects a mutable variable name")
+                current = environment.get(target.value)
+                if not self._is_number(current):
+                    raise self._error(node.token, "':++' expects a numeric variable")
+                incremented = current + 1
+                if isinstance(incremented, float) and not math.isfinite(incremented):
+                    raise self._error(node.token, "':++' produced a non-finite number")
+                environment.change(target.value, incremented)
+                return incremented
             value = self._evaluate(children[0], environment)
             if node.value == "NOT":
                 return not self._truthy(value)
@@ -234,7 +246,7 @@ class Interpreter:
         raise self._error(node.token, f"unknown expression kind '{node.kind}'")
 
     def _binary(self, operator: str, left: Any, right: Any, token: Token) -> Any:
-        if operator == "==":
+        if operator in {"==", "=::"}:
             return self._equal(left, right)
         if operator == "!=":
             return not self._equal(left, right)
@@ -247,6 +259,15 @@ class Interpreter:
                     )
                 return left + right
             raise self._error(token, "'++' joins text values; convert other values with text()")
+        if operator == "++:":
+            if not isinstance(left, list) or not isinstance(right, list):
+                raise self._error(token, "'++:' concatenates two lists")
+            if len(left) + len(right) > self.max_collection_items:
+                raise self._error(
+                    token,
+                    f"collection item limit ({self.max_collection_items}) exceeded",
+                )
+            return [*left, *right]
         if operator in {"<", "<=", ">", ">="}:
             compatible = (
                 self._is_number(left) and self._is_number(right)
@@ -433,17 +454,6 @@ class Interpreter:
             sequence(values)
         ), 1, 1)
         register("reciprocal_altitude", metric_space.reciprocal_altitude, 2, 2)
-        from .federation import read_json, write_json, oplage_metrics, compare_oplage_snapshots
-        from .native import pytyliki_norm, pytyliki_dot, pytyliki_distance, pytyliki_orthogonal
-        register("read_json", read_json, 1, 1)
-        register("write_json", write_json, 2, 2)
-        register("oplage_metrics", oplage_metrics, 1, 1)
-        register("oplage_compare", compare_oplage_snapshots, 2, 3)
-        register("pytyliki_norm", pytyliki_norm, 2, 2)
-        register("pytyliki_dot", pytyliki_dot, 3, 3)
-        register("pytyliki_distance", pytyliki_distance, 3, 3)
-        register("pytyliki_orthogonal", pytyliki_orthogonal, 4, 4)
-
 
     @staticmethod
     def _require_text(value: Any) -> str:

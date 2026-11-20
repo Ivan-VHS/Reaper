@@ -18,8 +18,9 @@ static int precedence(const char *s){
  if(!strcmp(s,"??"))return 2;
  if(!strcmp(s,"or")||!strcmp(s,"||"))return 3;
  if(!strcmp(s,"and")||!strcmp(s,"&&"))return 4;
- if(!strcmp(s,"==")||!strcmp(s,"!="))return 5;
+ if(!strcmp(s,"==")||!strcmp(s,"=::")||!strcmp(s,"=:=")||!strcmp(s,"!="))return 5;
  if(!strcmp(s,"<")||!strcmp(s,">")||!strcmp(s,"<=")||!strcmp(s,">="))return 6;
+ if(!strcmp(s,"++:"))return 7;
  if(!strcmp(s,"+")||!strcmp(s,"-")||!strcmp(s,"+%")||!strcmp(s,"+|"))return 7;
  if(!strcmp(s,"*")||!strcmp(s,"/")||!strcmp(s,"%"))return 8;
  if(!strcmp(s,"**"))return 9;
@@ -28,7 +29,7 @@ static int precedence(const char *s){
 static uint32_t parse_bp(Parser *p,int min_bp);
 static uint32_t parse_primary(Parser *p){
  const ReaperToken *t=peek(p);if(!t)return REAPER_AST_NO_NODE;
- if(token_is(p,"-")||token_is(p,"+")||token_is(p,"!")||token_is(p,"not")){
+ if(token_is(p,"-")||token_is(p,"+")||token_is(p,"!")||token_is(p,"not")||token_is(p,":++")){
   char op[16];size_t n=strlen(t->text);if(n>=sizeof op)return REAPER_AST_NO_NODE;memcpy(op,t->text,n+1);size_t line=t->line,col=t->column;++p->pos;
   uint32_t rhs=parse_bp(p,10);if(rhs==REAPER_AST_NO_NODE)return rhs;
   uint32_t id=add_node(p,REAPER_AST_UNARY,op,rhs,REAPER_AST_NO_NODE,line,col);if(id==REAPER_AST_NO_NODE)set_error(p,"out of memory building AST");return id;
