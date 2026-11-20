@@ -18,6 +18,7 @@ from reaper.errors import ReaperError
 from reaper.parser import parse
 from reaper.runtime import Interpreter
 from reaper.debugger import DebuggerStopped, RuntimeDebugger
+from reaper.ui_motion import MotionController
 
 STARTER = '''craft double(value) {
     yield value * 2
@@ -94,6 +95,8 @@ class ReaperStudio(tk.Tk):
         self.bind_all("<F5>", lambda _event: self.run_source())
         self.bind_all("<Shift-F5>", lambda _event: self.check_source())
         self.bind_all("<F9>", lambda _event: self.toggle_breakpoint())
+        self._motion = MotionController(self)
+        self._motion.fade_in()
 
     def _build_menu(self) -> None:
         menu = tk.Menu(self)
