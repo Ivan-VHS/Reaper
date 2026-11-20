@@ -10,7 +10,7 @@ from .errors import ExecutionLimitError, ReaperRuntimeError
 from .lexer import Token
 from .parser import Node, parse
 from .impact import catalog as impact_catalog, find_profile as impact_profile, rank_profiles as impact_rank, search_profiles as impact_search
-from . import arithmetic, metric_space
+from . import arithmetic, embedded, metric_space, native as pytyliki_native
 from pathlib import Path
 
 from .debugger import RuntimeDebugger
@@ -567,6 +567,28 @@ class Interpreter:
         register("pytyliki_benchmark", lambda bridge, count: self._require_pytyliki(bridge).benchmark(count), 2, 2)
         register("pytyliki_analyze_file", lambda bridge, path: self._require_pytyliki(bridge).analyze_file(path), 2, 2)
         register("pytyliki_write_json", lambda bridge, path: self._require_pytyliki(bridge).write_json(path), 2, 2)
+        register("embedded_targets", embedded.embedded_targets, 0, 0)
+        register("embedded_profile", embedded.embedded_profile, 1, 1)
+        register("embedded_toolchain", embedded.embedded_toolchain, 1, 1)
+        register("embedded_inspect", embedded.embedded_inspect, 1, 1)
+        register("embedded_build_plan", embedded.embedded_build_plan, 2, 3)
+
+        def pytyliki_embedded_targets(path: Any) -> list[dict[str, Any]]:
+            if not self.allow_native_ffi:
+                raise ValueError("native FFI is disabled; run with --allow-native-ffi")
+            if not isinstance(path, str):
+                raise TypeError("pytyliki_embedded_targets expects an explicit library path")
+            return pytyliki_native.pytyliki_embedded_targets(path)
+
+        def pytyliki_embedded_inspect(source: Any, path: Any) -> dict[str, Any]:
+            if not self.allow_native_ffi:
+                raise ValueError("native FFI is disabled; run with --allow-native-ffi")
+            if not isinstance(source, str) or not isinstance(path, str):
+                raise TypeError("pytyliki_embedded_inspect expects source text and an explicit library path")
+            return pytyliki_native.pytyliki_embedded_inspect(source, path)
+
+        register("pytyliki_embedded_targets", pytyliki_embedded_targets, 1, 1)
+        register("pytyliki_embedded_inspect", pytyliki_embedded_inspect, 2, 2)
 
         register("impact_catalog", impact_catalog, 0, 0)
         register("impact_profile", impact_profile, 1, 1)
