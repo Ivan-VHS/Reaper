@@ -19,7 +19,6 @@ from reaper.parser import parse
 from reaper.runtime import Interpreter
 from reaper.debugger import DebuggerStopped, RuntimeDebugger
 from reaper.ui_theme import apply_theme, set_dpi_awareness, toggle_theme
-from reaper.ui_theme import apply_ui_theme
 
 STARTER = '''craft double(value) {
     yield value * 2
@@ -42,26 +41,29 @@ class ReaperStudio(tk.Tk):
         self.debugger: RuntimeDebugger | None = None
         self._debug_wait = False
         self._debug_signal = tk.BooleanVar(value=False)
-        self._theme_mode = tk.StringVar(value="system")
 
         self._build_menu()
         toolbar = ttk.Frame(self, padding=(10, 8))
         toolbar.pack(fill="x")
-        ttk.Button(toolbar, text="Open", command=self.open_file).pack(side="left")
-        ttk.Button(toolbar, text="Save", command=self.save_file).pack(side="left", padx=4)
-        ttk.Separator(toolbar, orient="vertical").pack(side="left", fill="y", padx=8)
-        ttk.Button(toolbar, text="Check", command=self.check_source).pack(side="left")
-        ttk.Button(toolbar, text="Run", command=self.run_source, style="Primary.TButton").pack(side="left", padx=4)
-        ttk.Button(toolbar, text="Debug", command=self.debug_source).pack(side="left")
-        ttk.Button(toolbar, text="Breakpoint", command=self.toggle_breakpoint).pack(side="left", padx=4)
-        ttk.Button(toolbar, text="Continue", command=self.continue_debug).pack(side="left")
-        ttk.Button(toolbar, text="Step", command=self.step_debug).pack(side="left", padx=4)
-        ttk.Button(toolbar, text="Stop", command=self.stop_debug, style="Danger.TButton").pack(side="left")
-        ttk.Button(toolbar, text="Clear output", command=self.clear_output).pack(side="left", padx=4)
+        file_actions = ttk.Frame(toolbar)
+        file_actions.pack(fill="x")
+        run_actions = ttk.Frame(toolbar)
+        run_actions.pack(fill="x", pady=(6, 0))
+        ttk.Button(file_actions, text="Open", command=self.open_file).pack(side="left")
+        ttk.Button(file_actions, text="Save", command=self.save_file).pack(side="left", padx=4)
         self.file_label = tk.StringVar(value="Untitled.reaper")
-        ttk.Label(toolbar, textvariable=self.file_label, style="Muted.TLabel").pack(side="right")
-        self.theme_button = ttk.Button(toolbar, text="Dark theme", command=self.toggle_ui_theme)
+        ttk.Label(file_actions, textvariable=self.file_label, style="Muted.TLabel").pack(side="right")
+        self.theme_button = ttk.Button(file_actions, text="Dark theme", command=self.toggle_ui_theme)
         self.theme_button.pack(side="right", padx=(8, 10))
+        ttk.Separator(run_actions, orient="vertical").pack(side="left", fill="y", padx=8)
+        ttk.Button(run_actions, text="Check", command=self.check_source).pack(side="left")
+        ttk.Button(run_actions, text="Run", command=self.run_source, style="Primary.TButton").pack(side="left", padx=4)
+        ttk.Button(run_actions, text="Debug", command=self.debug_source).pack(side="left")
+        ttk.Button(run_actions, text="Breakpoint", command=self.toggle_breakpoint).pack(side="left", padx=4)
+        ttk.Button(run_actions, text="Continue", command=self.continue_debug).pack(side="left")
+        ttk.Button(run_actions, text="Step", command=self.step_debug).pack(side="left", padx=4)
+        ttk.Button(run_actions, text="Stop", command=self.stop_debug, style="Danger.TButton").pack(side="left")
+        ttk.Button(run_actions, text="Clear output", command=self.clear_output).pack(side="left", padx=4)
 
         panes = ttk.Panedwindow(self, orient="vertical")
         panes.pack(fill="both", expand=True, padx=10, pady=(0, 8))
