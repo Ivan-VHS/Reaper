@@ -126,6 +126,7 @@ def scan_project(
 
     counts = {
         "spdx_declared": sum(item["classification"] == "spdx-declared" for item in records),
+        "missing_file_spdx": sum(item["spdx_expression"] is None for item in records),
         "repository_license_present": sum(item["classification"] == "repository-license-present" for item in records),
         "needs_license_review": sum(item["classification"] == "needs-license-review" for item in records),
         "copyright_notices": sum(item["copyright_notice"] for item in records),
@@ -157,9 +158,9 @@ def render_text(report: dict[str, Any]) -> str:
         f"Root license files: {', '.join(report['license_files']) or 'none found'}",
         f"Root notice files: {', '.join(report['notice_files']) or 'none found'}",
         (
-            "SPDX-declared: {spdx_declared}; repository LICENSE present: "
-            "{repository_license_present}; review needed: {needs_license_review}; "
-            "copyright notices: {copyright_notices}"
+            "SPDX-declared: {spdx_declared}; missing file-level SPDX: {missing_file_spdx}; "
+            "repository LICENSE present: {repository_license_present}; review needed: "
+            "{needs_license_review}; copyright notices: {copyright_notices}"
         ).format(**counts),
     ]
     for item in report["files"]:
@@ -206,7 +207,7 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     else:
         print(render_text(report))
-    if args.require_spdx and report["counts"]["needs_license_review"]:
+    if args.require_spdx and report["counts"]["missing_file_spdx"]:
         return 1
     return 0
 
