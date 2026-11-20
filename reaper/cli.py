@@ -16,6 +16,7 @@ from .runtime import Interpreter
 from .parser import parse
 from .systems import format_tracks
 from .systems_languages import main as systems_languages_main
+from .systems_architectures import main as systems_architectures_main
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -36,6 +37,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--language-profile", choices=("pytyliki", "reaper", "oplague"), help="rank systems languages for a project profile")
     parser.add_argument("--available-languages", action="store_true", help="show only candidate toolchains found on PATH")
     parser.add_argument("--systems-json", action="store_true", help="emit the systems-language matrix as JSON")
+    parser.add_argument("--systems-architectures", action="store_true", help="list the 14 CPU, MCU and virtual-ISA architecture profiles")
+    parser.add_argument("--architecture-profile", choices=("pytyliki", "reaper", "oplague"), help="rank target architectures for a project profile")
+    parser.add_argument("--available-architectures", action="store_true", help="show only architecture toolchain candidates found on PATH")
+    parser.add_argument("--architectures-json", action="store_true", help="emit the architecture matrix as JSON")
     parser.add_argument("--evolve", action="store_true", help="run bounded syntax, test and improvement-proposal cycles")
     parser.add_argument("--iterations", type=int, default=1, help="number of evolution quality cycles (1-20)")
     return parser
@@ -74,6 +79,15 @@ def main(argv: list[str] | None = None) -> int:
         if args.systems_json:
             matrix_args.append("--json")
         return systems_languages_main(matrix_args)
+    if args.systems_architectures or args.architecture_profile or args.available_architectures or args.architectures_json:
+        matrix_args = []
+        if args.architecture_profile:
+            matrix_args.extend(["--profile", args.architecture_profile])
+        if args.available_architectures:
+            matrix_args.append("--available-only")
+        if args.architectures_json:
+            matrix_args.append("--json")
+        return systems_architectures_main(matrix_args)
     if args.evolve:
         root = Path(args.source) if args.source else Path.cwd()
         if not root.is_dir():
