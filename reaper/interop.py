@@ -61,7 +61,7 @@ def validate_matrix(data: Any) -> int:
             raise ValueError(f"{name}: missing description")
         commands = item.get("commands")
         if not isinstance(commands, list) or not all(
-            isinstance(command, str) and command and "/" not in command and "\\\\" not in command
+            isinstance(command, str) and command and "/" not in command and chr(92) not in command
             for command in commands
         ):
             raise ValueError(f"{name}: invalid command candidates")
