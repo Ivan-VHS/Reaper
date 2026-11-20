@@ -188,3 +188,12 @@ The optional audit mode writes a local hash-chained journal of source fingerprin
 ## Проверяемая целочисленная арифметика Canonical IR
 
 Нативный IR поддерживает сложение, вычитание, умножение и деление i64. Свёртывание выполняется только для двух констант; переполнение signed i64, деление на ноль и INT64_MIN / -1 возвращают диагностику. Fixed-point pipeline остаётся ограниченным бюджетом 1–64 итерации с проверкой IR до и после каждого прохода. Это гарантия уровня IR, а не заявление о полном паритете C-фронтенда или runtime.
+
+
+## Экосистема проектов
+
+Этот репозиторий входит в федерацию трёх самостоятельных проектов. Reaper отвечает за язык, среду выполнения и оркестрацию; OPlague — за инвентаризацию устройств Windows и анализ пакетов драйверов без изменений; Pytyliki — за ядро процессорных, memory- и математических операций на C11. See the [Матрица взаимосвязей 3 × 3](https://github.com/Ivan-VHS/Reaper/blob/main/docs/PROJECT_FEDERATION_MATRIX.md) for the 3 × 3 cross-product, implemented interfaces, data directions and safety boundaries.
+
+- [Reaper — язык, среда выполнения и оркестрация](https://github.com/Ivan-VHS/Reaper/blob/main/README.ru.md) · [integration contract](https://github.com/Ivan-VHS/Reaper/blob/main/docs/FEDERATED_INTEGRATION.md)
+- [OPlague — инвентаризация устройств Windows и анализ пакетов драйверов без изменений](https://github.com/Ivan-VHS/OPlague/blob/main/README.ru.md) · [integration contract](https://github.com/Ivan-VHS/OPlague/blob/main/docs/FEDERATED_INTEGRATION.md)
+- [Pytyliki — ядро процессорных, memory- и математических операций на C11](https://github.com/Ivan-VHS/Pytyliki/blob/main/README.ru.md) · [integration contract](https://github.com/Ivan-VHS/Pytyliki/blob/main/docs/FEDERATED_INTEGRATION.md)
