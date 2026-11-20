@@ -77,3 +77,8 @@ driver-management safety gates remain independent.
 - **OPlague:** [repository](https://github.com/Ivan-VHS/OPlague), [federation contract](https://github.com/Ivan-VHS/OPlague/blob/main/docs/FEDERATED_INTEGRATION.md), [device snapshot producer](https://github.com/Ivan-VHS/OPlague/blob/main/tools/federation.py), [project manifest](https://github.com/Ivan-VHS/OPlague/blob/main/project-contract.json).
 - **Pytyliki:** [repository](https://github.com/Ivan-VHS/Pytyliki), [federation contract](https://github.com/Ivan-VHS/Pytyliki/blob/main/docs/FEDERATED_INTEGRATION.md), [public ABI header](https://github.com/Ivan-VHS/Pytyliki/blob/main/src/interop.h), [project manifest](https://github.com/Ivan-VHS/Pytyliki/blob/main/project-contract.json).
 - **Reaper evidence:** [snapshot and comparison bridge](../reaper/federation.py), [native FFI bridge](../reaper/ffi.py), [project manifest](../project-contract.json).
+
+
+## OCTA-8 topology
+
+The shared [OCTA-8 horizontal peer mesh](OCTA_PYRAMID_FEDERATION.md) records the full directed Reaper↔Pytyliki↔OPlague product, its three local self-loops and eight pyramid facets. Reaper remains the orchestration layer; the apex is only protocol metadata and does not route runtime traffic.
