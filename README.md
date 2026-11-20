@@ -66,11 +66,22 @@ Python remains the executable compatibility reference until native parity is dem
 
 ## Documentation
 
-[Clinical Systems Reliability CSR-120](docs/CLINICAL_SYSTEMS_CSR120.md) · 
-
 [Governance and consent controls](docs/HUMAN_FIRST_GOVERNANCE.md) · [Anatidae UI/UX](docs/UI_UX_SYSTEM.md) · [12-principle motion](docs/DISNEY_MOTION_SYSTEM.md) · [Language](LANGUAGE.md) · [QCS frontend](docs/QCS_FRONTEND.md) · [MOST 666 registry](docs/MOST_FUNCTIONS_666.md) · [МОСТ specification](docs/MOST_LANGUAGE_SPEC.md) · [Runtime](docs/RUNTIME_PLATFORM.md) · [Engineering standard](docs/UNIFIED_ENGINEERING_STANDARD.md)
 
+
+[Governance and consent](docs/HUMAN_FIRST_GOVERNANCE.md) · [Anatidae constitution](docs/ANATIDAE_CONSTITUTION.md) · [Desktop design system](docs/ANATIDAE_DESKTOP_DESIGN_SYSTEM.md) · [UI/UX architecture](docs/UI_UX_ARCHITECTURE.md) · [12 animation principles](docs/DISNEY_MOTION_SYSTEM.md) · [Clinical Systems Reliability CSR-120](docs/CLINICAL_SYSTEMS_CSR120.md) · [MOST implementation status](docs/MOST_IMPLEMENTATION_STATUS.md) · [Project contract](docs/UNIFIED_PROJECT_CONTRACT.md)
 [Windows releases](https://github.com/Ivan-VHS/Reaper/releases) · [Desktop build](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml)
+
+## Anatidae doctrine and language guarantees
+
+- **Consent and accountability:** host-injected grants are HMAC-authenticated, scope-checked, time-bounded and revocable; audit records make execution decisions inspectable.
+- **Bounded execution:** quotas, resource accounting and input validation define runtime limits. Python remains the compatibility reference until native C17 parity is demonstrated.
+- **One canonical language contract:** МОСТ aliases share canonical REAPER symbols, parser and runtime; QCS is a separate validation frontend, not a hardware executor.
+- **Honest implementation status:** MOST 666 contains 147 existing specifications and 519 proposals; it does not mean 666 functions are implemented. Native C17 lowering remains partial.
+- **Trusted-code boundary:** in-process native FFI executes trusted ABI-compatible code; it is not a sandbox for untrusted extensions.
+- **Accessible tools and purposeful motion:** Studio/editor UX should have clear keyboard and focus behavior, readable diagnostics, localization and reduced-motion support. Animation clarifies feedback; it must not obscure state.
+
+The doctrine guides engineering decisions; it does not turn roadmap items into implemented runtime features.
 
 ## License
 
