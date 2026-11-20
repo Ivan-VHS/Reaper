@@ -49,8 +49,8 @@ Language proposal
 
 - Preserve Reaper's existing syntax and `~>` semantics unless a versioned change
   explicitly authorizes otherwise.
-- MOST remains an intent/semantic frontend; it must lower to the same canonical
-  typed IR rather than create a competing runtime.
+- МОСТ is an exact Russian keyword-alias table over REAPER. It must use the
+  existing REAPER parser, AST, typed IR and runtime; no intent frontend or fork.
 - Never infer permissions from source text. Filesystem, network, process and
   hardware effects require explicit capability boundaries.
 - No generated patch is accepted without tests that fail before the patch and
