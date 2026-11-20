@@ -1,29 +1,25 @@
 {
   "schema": "oplage.device-snapshot.v1",
   "captured_utc": "2026-11-20T10:00:00Z",
-  "source": {
-    "provider": "fixture",
-    "mode": "read_only"
-  },
+  "source": {"provider": "fixture", "mode": "read_only"},
+  "identity_protection": {"algorithm": "HMAC-SHA-256", "key_scope": "snapshot_ephemeral"},
   "summary": {
-    "total_devices": 100,
-    "ok_devices": 90,
-    "problem_devices": 6,
-    "other_status_devices": 4,
-    "devices_with_class": 100,
-    "devices_with_identity": 100,
-    "audited_packages": 0,
-    "valid_packages": 0
+    "total_devices": 5, "ok_devices": 3, "problem_devices": 1,
+    "other_status_devices": 1, "devices_with_class": 5,
+    "devices_with_identity": 5, "audited_packages": 1, "valid_packages": 1
   },
   "metrics": {
-    "device_ok_ratio": 0.9,
-    "device_problem_free_ratio": 0.94,
-    "device_class_coverage_ratio": 1,
-    "device_identity_coverage_ratio": 1,
-    "package_integrity_ratio": 1,
-    "package_audit_coverage_ratio": 1
+    "device_ok_ratio": 0.6, "device_problem_free_ratio": 0.8,
+    "device_class_coverage_ratio": 1.0, "device_identity_coverage_ratio": 1.0,
+    "package_integrity_ratio": 1.0, "package_audit_coverage_ratio": 1.0
   },
-  "devices": [],
-  "packages": [],
-  "snapshot_sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+  "devices": [
+    {"identity_sha256":"817c3e58cbb787f4075c685e88f3f3d7948ec9ad2f44f9a068116a440d60d7c8","friendly_name":"Fixture device 01","class":"Test","status":"OK","problem_code":null,"problem_reported":false},
+    {"identity_sha256":"2dad0198c04f2018381c2d2c78f4df9a38f1383222c7ded2a81369e1464ba3de","friendly_name":"Fixture device 02","class":"Test","status":"OK","problem_code":null,"problem_reported":false},
+    {"identity_sha256":"18dacfc4e0d38face5a0708cadc801904f31b0c307a3416a196552a9e467f7d4","friendly_name":"Fixture device 03","class":"Test","status":"OK","problem_code":null,"problem_reported":false},
+    {"identity_sha256":"13d3b8492c1a5bafd9306ae62bedee92bf81468d6e9bc5ce9555493643bca013","friendly_name":"Fixture device 04","class":"Test","status":"Error","problem_code":28,"problem_reported":true},
+    {"identity_sha256":"d675c8daf1c3dd9e030015c276fc720a17a74c9b634240b714bb09d0cc1ff28b","friendly_name":"Fixture device 05","class":"Test","status":"Unknown","problem_code":null,"problem_reported":false}
+  ],
+  "packages": [{"file_name":"fixture-driver.udrv","valid":true}],
+  "snapshot_sha256": "f339179b9b987ff621e31c21720cec984d48d60e35a0d53cc6cffa7f4ffe03ef"
 }

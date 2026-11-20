@@ -92,136 +92,68 @@ class CAbiLibrary:
         self.closed = True
 
 
-class _PlCpuInfo(ctypes.Structure):
-    _fields_ = [
-        ("vendor", ctypes.c_char * 32),
-        ("model", ctypes.c_char * 96),
-        ("logical_cpus", ctypes.c_uint),
-        ("family", ctypes.c_uint),
-        ("model_id", ctypes.c_uint),
-    ]
-
-
-class _PlBenchmark(ctypes.Structure):
-    _fields_ = [
-        ("iterations", ctypes.c_uint64),
-        ("elapsed_ms", ctypes.c_double),
-        ("score", ctypes.c_double),
-    ]
-
-
-class _PlAnalysis(ctypes.Structure):
-    _fields_ = [
-        ("files_scanned", ctypes.c_uint),
-        ("findings", ctypes.c_uint),
-        ("read_errors", ctypes.c_uint),
-    ]
-
-
-def _decode(value: bytes) -> str:
-    return value.split(b"\0", 1)[0].decode("utf-8", errors="replace")
-
-
 class PytylikiBridge:
-    """Typed adapter for Pytyliki's pl_* C ABI; no symbol guessing."""
+    """Typed adapter for the current Pytyliki C ABI v1 numerical contract.
+
+    The native module owns ABI signatures and finite/bounded vector checks.
+    This handle only adds lifecycle semantics for Reaper programs.
+    """
+
     def __init__(self, path: str) -> None:
-        target = Path(path).expanduser().resolve()
-        if not target.is_file():
-            raise FfiError(f"Pytyliki native library does not exist: {target}")
+        target = Path(path).expanduser()
+        if not target.is_absolute():
+            raise FfiError("Pytyliki library path must be absolute and explicit")
         try:
-            self.handle = ctypes.CDLL(str(target))
+            resolved = target.resolve(strict=True)
         except OSError as error:
-            raise FfiError(f"cannot load Pytyliki library {target}: {error}") from error
-        self.path = str(target)
+            raise FfiError(f"Pytyliki native library does not exist: {target}") from error
+        if not resolved.is_file():
+            raise FfiError(f"Pytyliki native library path is not a file: {resolved}")
+        try:
+            from .native import _load_library
+            _load_library(str(resolved))
+        except (OSError, TypeError, ValueError) as error:
+            raise FfiError(f"cannot validate Pytyliki C ABI v1 library: {error}") from error
+        self.path = str(resolved)
         self.closed = False
-        self._cpu: _PlCpuInfo | None = None
-        self._bench: _PlBenchmark | None = None
-        self._analysis: _PlAnalysis | None = None
-        self._configure()
 
     def _ensure_open(self) -> None:
         if self.closed:
-            raise FfiError("Pytyliki native library handle is closed")
+            raise FfiError("Pytyliki library handle is closed")
+
+    def norm(self, values: Any) -> float:
+        self._ensure_open()
+        from .native import pytyliki_norm
+        try:
+            return pytyliki_norm(values, self.path)
+        except (TypeError, ValueError, OSError) as error:
+            raise FfiError(f"Pytyliki norm failed: {error}") from error
+
+    def dot(self, left: Any, right: Any) -> float:
+        self._ensure_open()
+        from .native import pytyliki_dot
+        try:
+            return pytyliki_dot(left, right, self.path)
+        except (TypeError, ValueError, OSError) as error:
+            raise FfiError(f"Pytyliki dot product failed: {error}") from error
+
+    def distance(self, left: Any, right: Any) -> float:
+        self._ensure_open()
+        from .native import pytyliki_distance
+        try:
+            return pytyliki_distance(left, right, self.path)
+        except (TypeError, ValueError, OSError) as error:
+            raise FfiError(f"Pytyliki distance failed: {error}") from error
+
+    def orthogonal(self, left: Any, right: Any, tolerance: float) -> bool:
+        self._ensure_open()
+        from .native import pytyliki_orthogonal
+        try:
+            return pytyliki_orthogonal(left, right, tolerance, self.path)
+        except (TypeError, ValueError, OSError) as error:
+            raise FfiError(f"Pytyliki orthogonality check failed: {error}") from error
 
     def close(self) -> None:
-        # Keep the ctypes handle alive until process teardown; logical close
-        # prevents new calls without relying on platform-specific dlclose.
+        # ctypes has no portable cross-platform unload contract. Logical close
+        # rejects future calls; the OS releases the retained library handle.
         self.closed = True
-
-    def _configure(self) -> None:
-        try:
-            self.handle.pl_cpu_profile.argtypes = [ctypes.POINTER(_PlCpuInfo)]
-            self.handle.pl_cpu_profile.restype = ctypes.c_int
-            self.handle.pl_run_benchmark.argtypes = [ctypes.c_uint64, ctypes.POINTER(_PlBenchmark)]
-            self.handle.pl_run_benchmark.restype = ctypes.c_int
-            self.handle.pl_analyze_file.argtypes = [
-                ctypes.c_char_p, ctypes.POINTER(_PlAnalysis), ctypes.c_char_p, ctypes.c_size_t,
-            ]
-            self.handle.pl_analyze_file.restype = ctypes.c_int
-            self.handle.pl_write_json.argtypes = [
-                ctypes.c_char_p, ctypes.POINTER(_PlCpuInfo),
-                ctypes.POINTER(_PlBenchmark), ctypes.POINTER(_PlAnalysis),
-            ]
-            self.handle.pl_write_json.restype = ctypes.c_int
-        except AttributeError as error:
-            raise FfiError(f"Pytyliki library is missing an expected pl_* symbol: {error}") from error
-
-    @staticmethod
-    def _check(status: int, operation: str) -> None:
-        if status != 0:
-            raise FfiError(f"Pytyliki {operation} failed with status {status}")
-
-    def cpu_profile(self) -> dict[str, Any]:
-        self._ensure_open()
-        value = _PlCpuInfo()
-        self._check(self.handle.pl_cpu_profile(ctypes.byref(value)), "pl_cpu_profile")
-        self._cpu = value
-        return {
-            "vendor": _decode(value.vendor), "model": _decode(value.model),
-            "logical_cpus": int(value.logical_cpus), "family": int(value.family),
-            "model_id": int(value.model_id),
-        }
-
-    def benchmark(self, iterations: int) -> dict[str, Any]:
-        self._ensure_open()
-        if isinstance(iterations, bool) or not isinstance(iterations, int) or iterations < 1:
-            raise FfiError("benchmark iterations must be a positive integer")
-        value = _PlBenchmark()
-        self._check(self.handle.pl_run_benchmark(iterations, ctypes.byref(value)), "pl_run_benchmark")
-        self._bench = value
-        return {
-            "iterations": int(value.iterations),
-            "elapsed_ms": float(value.elapsed_ms),
-            "score": float(value.score),
-        }
-
-    def analyze_file(self, path: str) -> dict[str, Any]:
-        self._ensure_open()
-        value = _PlAnalysis()
-        details = ctypes.create_string_buffer(16_384)
-        self._check(
-            self.handle.pl_analyze_file(
-                str(Path(path).resolve()).encode("utf-8"),
-                ctypes.byref(value), details, ctypes.sizeof(details),
-            ),
-            "pl_analyze_file",
-        )
-        self._analysis = value
-        return {
-            "files_scanned": int(value.files_scanned),
-            "findings": int(value.findings),
-            "read_errors": int(value.read_errors),
-            "details": _decode(details.value),
-        }
-
-    def write_json(self, path: str) -> None:
-        self._ensure_open()
-        if self._cpu is None or self._bench is None or self._analysis is None:
-            raise FfiError("call cpu_profile(), benchmark(), and analyze_file() before write_json()")
-        self._check(
-            self.handle.pl_write_json(
-                str(Path(path).resolve()).encode("utf-8"),
-                ctypes.byref(self._cpu), ctypes.byref(self._bench), ctypes.byref(self._analysis),
-            ),
-            "pl_write_json",
-        )
