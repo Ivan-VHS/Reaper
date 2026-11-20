@@ -50,7 +50,7 @@ Native loading is opt-in. Both ffi_open(path) and pytyliki_open(path) fail unles
 
     python -m reaper --allow-native-ffi path/to/ffi_program.rpr
 
-The typed Pytyliki adapter matches the public structures and functions in Ivan-VHS/Pytyliki/src/core.h: pl_cpu_profile, pl_run_benchmark, pl_analyze_file, and pl_write_json. It validates status codes and exposes structured Reaper maps. The adapter is an opt-in wrapper, not a bundled Pytyliki binary; build Pytyliki as a shared library separately.
+The typed Pytyliki adapter validates the public ABI in Ivan-VHS/Pytyliki/src/interop.h, including pytyliki_abi_version() == 1 and the pytyliki_v1_* metric symbols. The handle returned by pytyliki_open(path) exposes norm, dot, distance and orthogonality through pytyliki_bridge_norm, pytyliki_bridge_dot, pytyliki_bridge_distance and pytyliki_bridge_orthogonal. It uses the same finite-vector and 1..4096 dimension checks as Reaper's direct numerical built-ins. This is an opt-in wrapper, not a bundled Pytyliki binary; build the pytyliki_ffi shared library separately. The old pl_* CPU/benchmark/source-analysis functions are not part of ABI v1.
 
 ffi_close(handle) logically invalidates a handle; the interpreter also closes all registered handles at run exit. Python ctypes does not provide a portable cross-platform library-unload contract, so physical unload is left to OS process teardown. Native FFI executes in-process and is not a sandbox. Only load trusted, ABI-compatible libraries.
 
