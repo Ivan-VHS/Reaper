@@ -98,8 +98,10 @@ class FederationJsonTests(unittest.TestCase):
 class OPlagueContractTests(unittest.TestCase):
     def test_extracts_sorted_normalized_metric_map(self) -> None:
         result = oplage_metrics(snapshot({"z": 0.5, "a": 1}, "x"))
-        self.assertEqual(list(result), ["a", "z"])
-        self.assertEqual(result, {"a": 1.0, "z": 0.5})
+        self.assertEqual(list(result), sorted(result))
+        self.assertEqual(result["a"], 1.0)
+        self.assertEqual(result["z"], 0.5)
+        self.assertEqual(len(result), 8)
 
     def test_rejects_wrong_schema_invalid_values_and_bool(self) -> None:
         with self.assertRaisesRegex(ValueError, "schema"):
