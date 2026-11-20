@@ -33,7 +33,7 @@ Reaper включает канонический словарь из 666 уни�
 - **Reaper Studio debugger:** breakpoints (F9), stepping, Continue/Stop, инспектор переменных и стек вызовов.
 - **Нативное направление C17:** lexer, expression parser и AST с управлением памятью, проверенный integer Canonical IR, контролируемое свёртывание ADD/SUB/MUL/DIV для signed i64 с отклонением переполнения и деления на ноль, ограниченный AST-to-IR lowering, начальный CLI и C-тесты.
 - **Self-hosting, этап 0 + частичный этап 1:** `selfhost/lexer.rpr` реализует токенизацию, а `selfhost/parser.rpr` — Pratt-парсер выражений на самом Reaper. Он учитывает реальный оператор потока `::`, приоритеты, правоассоциативное `**`, списки, вызовы функций и индексацию. Оба модуля проверяются bootstrap-assertions, Python unit-тестами и CTest. У lexer пока есть ограничение ASCII-идентификаторов; parser ещё не покрывает объявления, блоки и грамматику операторов и не заменяет эталонный frontend. См. [план bootstrap](docs/SELF_HOSTING_BOOTSTRAP.md).
-- **MOST:** документированный словарь языка и поэтапный контракт реализации.
+- **МОСТ (MOST):** русскоязычный фронтенд языка программирования REAPER. В нативном C17-лексере добавляется русская лексика; полный парсер объявлений, морфологический разрешатель, проверка типов и генерация кода остаются отдельными этапами. Все 66 правил формирования языка сведены в [спецификацию МОСТ](docs/MOST_RUSSIAN_66_RULES.md).
 
 Реализация C пока не является полноценным интерпретатором. Полные declarations/blocks, проверка типов, разрешение intent, анализ ownership, генерация native code и WASM ещё не реализованы. Python остаётся эталоном совместимости до подтверждения паритета runtime и CLI.
 
@@ -167,6 +167,7 @@ python -m unittest discover -s tests -p 'test_self_hosting.py' -v
 - [План self-hosting bootstrap](docs/SELF_HOSTING_BOOTSTRAP.md)
 - [Архитектура](docs/ARCHITECTURE.md)
 - [Спецификация MOST](docs/MOST_LANGUAGE_SPEC.md)
+- [МОСТ: 66 правил русского языка программирования](docs/MOST_RUSSIAN_66_RULES.md)
 - [План миграции на C](docs/C_MIGRATION.md)
 - [Примеры](examples/) · [Тесты](tests/)
 
