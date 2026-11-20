@@ -37,6 +37,7 @@ emit "answer = " ++ text(answer)
 - **Reaper Studio:** Windows editor for open/save/check/run, breakpoints, step/continue/stop, variable inspection and call stack.
 - **Embedded C and interop:** project scaffolding, MCU profile inspection, memory budgets and opt-in C ABI access to trusted libraries, including Pytyliki ABI v1.
 - **Additional systems:** local-first Polyglot; 666 reserved lexemes; 66 language/toolchain entries; 14 architecture profiles; MOST 20×20 matrix with 400 specified projections and an implemented integrity validator (not 400 executable compiler features).
+- **МОСТ:** exact Russian keyword aliases over REAPER 0.1. The Python reference executes a limited subset through the existing parser/runtime; the C17 lexer exposes canonical REAPER spellings. No separate parser, AST, type system, morphology engine or runtime is introduced.
 
 The native C17 track has a lexer, expression parser, owned AST, checked integer IR operations, limited lowering, optimizer tests and CLI bring-up. It is **not a complete interpreter**. The self-hosting lexer/parser is a staged bootstrap, not a replacement for the Python frontend.
 
@@ -76,7 +77,7 @@ The managed heap is accounting over Python's allocator, not a physical allocator
 
 ## Documentation and downloads
 
-[Language](LANGUAGE.md) · [Runtime platform](docs/RUNTIME_PLATFORM.md) · [Self-hosting plan](docs/SELF_HOSTING_BOOTSTRAP.md) · [Token catalogue](docs/TOKEN_CATALOG.md) · [Embedded C](docs/EMBEDDED_C_WORKBENCH.md) · [MOST matrix](docs/MOST_400_COMBINATORIAL_MATRIX.md) · [Engineering standard](docs/UNIFIED_ENGINEERING_STANDARD.md)
+[Language](LANGUAGE.md) · [Runtime platform](docs/RUNTIME_PLATFORM.md) · [Self-hosting plan](docs/SELF_HOSTING_BOOTSTRAP.md) · [Token catalogue](docs/TOKEN_CATALOG.md) · [Embedded C](docs/EMBEDDED_C_WORKBENCH.md) · [MOST matrix](docs/MOST_400_COMBINATORIAL_MATRIX.md) · [Engineering standard](docs/UNIFIED_ENGINEERING_STANDARD.md) · [МОСТ aliases](docs/MOST_LANGUAGE_SPEC.md) · [66 Russian readability rules](docs/MOST_RUSSIAN_66_RULES.md)
 
 [Windows releases](https://github.com/Ivan-VHS/Reaper/releases) · [Desktop build workflow](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml)
 
