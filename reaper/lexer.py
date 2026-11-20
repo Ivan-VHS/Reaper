@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .errors import LexError
+from .token_catalog import token_is_reserved
 
 
 KEYWORDS = {
@@ -128,6 +129,12 @@ class Lexer:
 
     def _operator_or_punctuation(self) -> None:
         start_line, start_column = self.line, self.column
+        triplet = self.source[self.index:self.index + 3]
+        if token_is_reserved(triplet):
+            for _ in range(3):
+                self._advance()
+            self.tokens.append(Token("CATALOG_OPERATOR", triplet, start_line, start_column))
+            return
         pair = self._peek() + self._peek(1)
         if pair in self._TWO_CHAR:
             self._advance()
