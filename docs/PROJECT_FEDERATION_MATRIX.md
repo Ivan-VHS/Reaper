@@ -17,8 +17,8 @@ Each cell describes the real interaction between a project and itself or one of 
 
 | Project × project | Reaper | OPlague | Pytyliki |
 |---|---|---|---|
-| **Reaper** | **Reaper × Reaper — implemented.** Language frontend, Python reference runtime, selectable Canonical IR VM, `.rpr` module graph, diagnostics and resource limits compose internally. | **Reaper × OPlague — implemented.** Reaper reads and validates OPlague's `oplage.device-snapshot.v1` JSON, extracts normalized metrics and creates a `reaper.oplage-comparison.v1` report. It does not mutate devices or drivers. | **Reaper × Pytyliki — optional, implemented.** Reaper can call Pytyliki C ABI v1 metric functions through an explicitly supplied trusted native-library path. |
-| **OPlague** | **OPlague × Reaper — implemented bidirectional artifact contract.** OPlague publishes `oplage.device-snapshot.v1` for Reaper and validates Reaper's `reaper.oplage-comparison.v1` through a bounded read-only report importer. The importer checks schema, normalized dimensions, finite values, component deltas and the report digest; it does not execute the report or change devices. Reaper retains orchestration ownership. | **OPlague × OPlague — implemented.** Read-only PnP inventory, INF/ZIP/UDRV inspection, exact-ID candidate graph, metric analysis and ordered `oplage.inspection-bundle.v1` report composition. | **OPlague × Pytyliki — optional, implemented.** OPlague can compare its Python metric result with Pytyliki's native Euclidean-distance implementation via ABI v1. A caller-supplied absolute path to a trusted library is required. |
+| **Reaper** | **Reaper × Reaper — implemented.** Language frontend, Python reference runtime, selectable Canonical IR VM, `.rpr` module graph, diagnostics and resource limits compose internally. | **Reaper × OPlague — implemented.** Reaper validates the full `oplage.device-snapshot.v1` envelope, derived counters and canonical SHA-256 fingerprint before extracting metrics and creating a `reaper.oplage-comparison.v1` report. It does not mutate devices or drivers. | **Reaper × Pytyliki — optional, implemented.** Reaper validates ABI v1 and calls the current `pytyliki_v1_*` numerical functions through an explicit trusted native-library path, both directly and through a typed handle. |
+| **OPlague** | **OPlague × Reaper — implemented bidirectional artifact contract.** OPlague exports bounded, versioned device snapshots for Reaper and validates Reaper's `reaper.oplage-comparison.v1` through a read-only report importer. It checks report schema, normalized dimensions, finite values, component deltas and canonical SHA-256; it does not execute the report or change devices. Reaper retains orchestration ownership. | **OPlague × OPlague — implemented.** Read-only PnP inventory, INF/ZIP/UDRV inspection, exact-ID candidate graph, metric analysis and ordered `oplage.inspection-bundle.v1` report composition. | **OPlague × Pytyliki — optional, implemented.** OPlague can compare its Python metric result with Pytyliki's native Euclidean-distance implementation via ABI v1. A caller-supplied absolute path to a trusted library is required. |
 | **Pytyliki** | **Pytyliki × Reaper — implemented provider side.** Pytyliki supplies a narrow C ABI v1 for bounded float64 metric operations. Pytyliki does not depend on Reaper or call its runtime. | **Pytyliki × OPlague — implemented provider side.** The same ABI v1 supplies an optional numerical cross-check. It does not inspect driver packages or perform device operations. | **Pytyliki × Pytyliki — implemented.** Portable C11 processor, memory, metric, embedded-reference and DSP modules are independently built and verified. |
 
 ## Actual data and call paths
@@ -27,7 +27,7 @@ Each cell describes the real interaction between a project and itself or one of 
 OPlague
   ├─ oplage.device-snapshot.v1 (bounded JSON file) ─────> Reaper
   └─ reaper.oplage-comparison.v1 (bounded JSON report) <─ Reaper
-       (validated by tools/reaper_report.py; read-only audit summary)
+       (validated by OPlague's read-only report importer)
 
 Pytyliki
   └─ pytyliki.c-abi.v1 (explicit trusted shared-library path)
@@ -37,10 +37,9 @@ Pytyliki
 
 | Interface | Provider | Consumer | Transport and constraint |
 |---|---|---|---|
-| `oplage.device-snapshot.v1` | OPlague | Reaper | UTF-8 JSON file; schema/version validation; bounded input; normalized finite metrics |
-| `reaper.oplage-comparison.v1` | Reaper | OPlague report validator | Bounded UTF-8 JSON; read-only mode, dimensions, finite values, numeric deltas and canonical SHA-256 are checked |
-| `oplage.reaper-report-audit.v1` | OPlague | User / downstream tooling | Read-only validation summary; validates report integrity without executing it or modifying hardware |\n
-| `oplage.inspection-bundle.v1` | OPlague | User / downstream tooling | Canonical ordered JSON summary with a deterministic SHA-256 fingerprint |
+| `oplage.device-snapshot.v1` | OPlague | Reaper | UTF-8 JSON; full v1 envelope and derived-counter validation; canonical SHA-256 verification; bounded finite metrics |
+| `reaper.oplage-comparison.v1` | Reaper | OPlague report validator | Bounded UTF-8 JSON; read-only mode, dimensions, finite values, component deltas and canonical SHA-256 are checked |
+| `oplage.reaper-report-audit.v1` | OPlague | User / downstream tooling | Read-only validation summary; no report execution or hardware mutation |\n| `oplage.inspection-bundle.v1` | OPlague | User / downstream tooling | Canonical ordered JSON summary with a deterministic SHA-256 fingerprint |
 | `pytyliki.c-abi.v1` | Pytyliki | Reaper, OPlague | Synchronous C ABI; explicit absolute path to a trusted shared library; caller-owned contiguous buffers |
 
 ## Integration boundaries
@@ -49,8 +48,8 @@ Pytyliki
 - **Read-only device boundary:** the OPlague-to-Reaper flow transports evidence and reports only. Reaper's federation built-ins do not install, remove, enable, disable or roll back drivers.
 - **No implicit native loading:** Reaper and OPlague load Pytyliki only when a caller explicitly supplies a trusted library path. Loading a shared library executes native code with the caller's permissions.
 - **Stable ABI:** Pytyliki ABI v1 uses fixed-width counts, contiguous float64 vectors, synchronous calls and caller-owned buffers. Consumers verify the ABI version and reject invalid dimensions or non-finite values.
-- **Bounded interchange:** JSON consumers reject oversized, malformed or non-finite input. OPlague's PnP snapshot omits raw PnP instance IDs; its hashed fingerprints remain linkable and are not a guarantee of anonymity.
-- **No reverse integrations claimed:** Pytyliki does not itself consume OPlague snapshots; OPlague does not execute Reaper programs; the projects do not exchange private in-memory structures.
+- **Bounded interchange:** JSON consumers reject oversized, malformed or non-finite input. OPlague's PnP snapshot omits raw PnP instance IDs and uses HMAC-SHA-256 pseudonyms; ephemeral keys prevent correlation by default, while caller-managed keys enable deliberate linkability. Pseudonyms are not anonymization.
+- **No implicit runtime execution:** Pytyliki does not consume OPlague snapshots or launch peer programs; OPlague validates Reaper report data but never executes Reaper code; projects do not exchange private in-memory structures.
 
 ## Useful cross-references
 
@@ -69,7 +68,7 @@ This matrix is an inventory of current repository evidence. A roadmap item, lang
 
 ## OCTA-8 horizontal peer product and octagonal pyramid
 
-The 3 × 3 matrix is now governed by the shared [OCTA-8 topology contract](OCTA_PYRAMID_FEDERATION.md). Its horizontal base contains Reaper, Pytyliki and OPlague as independent peer projects. The full directed pairwise product contains six links (three unordered pairs, both directions) and three project-local self-loops.
+The 3 × 3 matrix is governed by the shared [OCTA-8 topology contract](OCTA_PYRAMID_FEDERATION.md). Its horizontal base contains Reaper, Pytyliki and OPlague as independent peer projects. The full directed pairwise product contains six links (three unordered pairs in both directions) and three project-local self-loops.
 
 The pyramid contributes eight common facets: identity/namespaces, contracts/versioning, transport/bounds, provenance/integrity, validation/normalization, privacy/consent, execution/safety and audit/reproducibility. The apex is non-executable coordination metadata, not a runtime gateway.
 
@@ -77,4 +76,4 @@ The pyramid contributes eight common facets: identity/namespaces, contracts/vers
 - Reaper ↔ Pytyliki: explicit native ABI requests and synchronous numeric/status responses.
 - OPlague ↔ Pytyliki: explicit native ABI requests and synchronous numeric/status responses.
 
-The shared topology, schema, validator and mutation tests are checked into all three repositories. The topology validator checks the six directed edges and eight facets; contract changes are tested in each repository's CI.
+The shared topology, schema, validator and mutation tests are checked into all three repositories. The topology validator checks all six directed edges, eight facets and three local self-loops.
