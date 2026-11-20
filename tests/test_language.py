@@ -9,7 +9,9 @@ from reaper.parser import parse
 
 class LexerTests(unittest.TestCase):
     def test_russian_keyword_aliases(self) -> None:
-        tokens = tokenize("пусть число := истина\\nпеременная сумма := 0\\nесли не ложь и число { вывести сумма }")
+        tokens = tokenize("""пусть число := истина
+переменная сумма := 0
+если не ложь и число { вывести сумма }""")
         self.assertEqual(
             [token.kind for token in tokens[:15]],
             ["MAKE", "IDENT", ":=", "TRUE", "NEWLINE", "VARY", "IDENT", ":=", "NUMBER", "NEWLINE", "WHEN", "NOT", "FALSE", "AND", "IDENT"],
