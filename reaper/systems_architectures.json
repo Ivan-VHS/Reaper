@@ -1,0 +1,436 @@
+{
+  "schema": "systems-architecture-matrix/v1",
+  "count": 14,
+  "source_note": "Fourteen representative CPU, MCU and virtual-ISA target profiles. Toolchain names are PATH lookup candidates only; they do not prove target support, ABI compatibility, or working code generation.",
+  "profiles": {
+    "pytyliki": [
+      "native-cpu",
+      "simd",
+      "vector",
+      "cache",
+      "profiling",
+      "host-introspection",
+      "gpu",
+      "embedded",
+      "deterministic",
+      "bare-metal",
+      "windows-driver"
+    ],
+    "reaper": [
+      "cross-compilation",
+      "native",
+      "llvm",
+      "wasm",
+      "abi",
+      "memory-model",
+      "code-generation",
+      "static-analysis",
+      "simd",
+      "deterministic"
+    ],
+    "oplague": [
+      "windows-driver",
+      "pe-coff",
+      "x86",
+      "arm",
+      "arm64",
+      "abi",
+      "device-enumeration",
+      "compatibility",
+      "kernel-boundary"
+    ]
+  },
+  "architectures": [
+    {
+      "index": 1,
+      "id": "arch-01",
+      "name": "x86_64",
+      "family": "x86",
+      "vendor": "x86 ISA ecosystem",
+      "class": "desktop / server",
+      "word_bits": 64,
+      "pointer_model": "LP64 on most Unix-like systems; LLP64 on Windows",
+      "endianness": "little",
+      "execution_model": "out-of-order CISC; variable-length instruction encoding",
+      "abi": [
+        "System V AMD64",
+        "Microsoft x64"
+      ],
+      "windows_inf_decoration": "NTamd64",
+      "commands": [
+        "gcc",
+        "clang",
+        "clang-cl",
+        "cl"
+      ],
+      "tags": [
+        "native",
+        "simd",
+        "cache",
+        "windows-driver",
+        "pe-coff",
+        "server",
+        "profiling"
+      ]
+    },
+    {
+      "index": 2,
+      "id": "arch-02",
+      "name": "x86",
+      "family": "x86",
+      "vendor": "x86 ISA ecosystem",
+      "class": "legacy desktop / embedded",
+      "word_bits": 32,
+      "pointer_model": "ILP32",
+      "endianness": "little",
+      "execution_model": "legacy CISC with multiple microarchitectural execution styles",
+      "abi": [
+        "System V i386",
+        "Microsoft x86"
+      ],
+      "windows_inf_decoration": "NTx86",
+      "commands": [
+        "gcc",
+        "clang",
+        "clang-cl",
+        "cl"
+      ],
+      "tags": [
+        "native",
+        "windows-driver",
+        "pe-coff",
+        "embedded",
+        "legacy"
+      ]
+    },
+    {
+      "index": 3,
+      "id": "arch-03",
+      "name": "aarch64",
+      "family": "Arm",
+      "vendor": "Arm ecosystem",
+      "class": "mobile / desktop / server",
+      "word_bits": 64,
+      "pointer_model": "LP64 or platform-specific ILP32",
+      "endianness": "little (common platform profile)",
+      "execution_model": "load/store RISC with optional NEON and SVE vector extensions",
+      "abi": [
+        "AAPCS64",
+        "Windows ARM64 ABI"
+      ],
+      "windows_inf_decoration": "NTarm64",
+      "commands": [
+        "aarch64-linux-gnu-gcc",
+        "clang",
+        "clang-cl"
+      ],
+      "tags": [
+        "native",
+        "simd",
+        "vector",
+        "windows-driver",
+        "pe-coff",
+        "mobile",
+        "server"
+      ]
+    },
+    {
+      "index": 4,
+      "id": "arch-04",
+      "name": "armv7-m",
+      "family": "Arm",
+      "vendor": "Arm ecosystem",
+      "class": "microcontroller",
+      "word_bits": 32,
+      "pointer_model": "32-bit MCU address model; target/device-specific memory map",
+      "endianness": "target-defined (commonly little)",
+      "execution_model": "Thumb load/store RISC; interrupt-driven Cortex-M profile",
+      "abi": [
+        "AAPCS"
+      ],
+      "windows_inf_decoration": null,
+      "commands": [
+        "arm-none-eabi-gcc",
+        "clang"
+      ],
+      "tags": [
+        "embedded",
+        "bare-metal",
+        "deterministic",
+        "native",
+        "interrupts"
+      ]
+    },
+    {
+      "index": 5,
+      "id": "arch-05",
+      "name": "riscv64",
+      "family": "RISC-V",
+      "vendor": "RISC-V ecosystem",
+      "class": "embedded / server",
+      "word_bits": 64,
+      "pointer_model": "LP64 / LP64F / LP64D variants",
+      "endianness": "target-defined",
+      "execution_model": "modular load/store RISC with optional vector extension",
+      "abi": [
+        "RISC-V psABI LP64 variants"
+      ],
+      "windows_inf_decoration": null,
+      "commands": [
+        "riscv64-unknown-elf-gcc",
+        "riscv64-linux-gnu-gcc",
+        "clang"
+      ],
+      "tags": [
+        "native",
+        "bare-metal",
+        "embedded",
+        "simd",
+        "vector",
+        "cross-compilation"
+      ]
+    },
+    {
+      "index": 6,
+      "id": "arch-06",
+      "name": "riscv32",
+      "family": "RISC-V",
+      "vendor": "RISC-V ecosystem",
+      "class": "microcontroller / embedded",
+      "word_bits": 32,
+      "pointer_model": "ILP32 / ILP32E variants",
+      "endianness": "target-defined",
+      "execution_model": "modular load/store RISC with compact and optional extensions",
+      "abi": [
+        "RISC-V psABI ILP32 variants"
+      ],
+      "windows_inf_decoration": null,
+      "commands": [
+        "riscv64-unknown-elf-gcc",
+        "riscv32-unknown-elf-gcc",
+        "clang"
+      ],
+      "tags": [
+        "native",
+        "bare-metal",
+        "embedded",
+        "deterministic",
+        "cross-compilation"
+      ]
+    },
+    {
+      "index": 7,
+      "id": "arch-07",
+      "name": "loongarch64",
+      "family": "LoongArch",
+      "vendor": "Loongson ecosystem",
+      "class": "desktop / server",
+      "word_bits": 64,
+      "pointer_model": "LP64",
+      "endianness": "little (common platform profile)",
+      "execution_model": "load/store RISC with architecture-defined extensions",
+      "abi": [
+        "LoongArch LP64D / LP64S variants"
+      ],
+      "windows_inf_decoration": null,
+      "commands": [
+        "loongarch64-linux-gnu-gcc",
+        "clang"
+      ],
+      "tags": [
+        "native",
+        "server",
+        "cross-compilation"
+      ]
+    },
+    {
+      "index": 8,
+      "id": "arch-08",
+      "name": "e2k",
+      "family": "Elbrus",
+      "vendor": "MCST ecosystem",
+      "class": "VLIW desktop / server",
+      "word_bits": 64,
+      "pointer_model": "platform-specific 64-bit model",
+      "endianness": "platform-defined",
+      "execution_model": "VLIW with compiler-managed instruction scheduling",
+      "abi": [
+        "MCST E2K ABI"
+      ],
+      "windows_inf_decoration": null,
+      "commands": [
+        "lcc"
+      ],
+      "tags": [
+        "native",
+        "server",
+        "deterministic",
+        "code-generation",
+        "cross-compilation"
+      ]
+    },
+    {
+      "index": 9,
+      "id": "arch-09",
+      "name": "ppc64le",
+      "family": "Power ISA",
+      "vendor": "Power ISA ecosystem",
+      "class": "server / accelerator",
+      "word_bits": 64,
+      "pointer_model": "LP64",
+      "endianness": "little",
+      "execution_model": "load/store RISC with VSX vector facility on supported CPUs",
+      "abi": [
+        "ELFv2 PPC64LE ABI"
+      ],
+      "windows_inf_decoration": null,
+      "commands": [
+        "powerpc64le-linux-gnu-gcc",
+        "clang"
+      ],
+      "tags": [
+        "native",
+        "server",
+        "simd",
+        "vector",
+        "cross-compilation",
+        "profiling"
+      ]
+    },
+    {
+      "index": 10,
+      "id": "arch-10",
+      "name": "s390x",
+      "family": "IBM Z",
+      "vendor": "IBM Z ecosystem",
+      "class": "mainframe",
+      "word_bits": 64,
+      "pointer_model": "LP64",
+      "endianness": "big",
+      "execution_model": "register-rich CISC with vector facility on supported systems",
+      "abi": [
+        "Linux s390x ELF ABI"
+      ],
+      "windows_inf_decoration": null,
+      "commands": [
+        "s390x-linux-gnu-gcc",
+        "clang"
+      ],
+      "tags": [
+        "native",
+        "server",
+        "cross-compilation",
+        "big-endian",
+        "profiling"
+      ]
+    },
+    {
+      "index": 11,
+      "id": "arch-11",
+      "name": "avr",
+      "family": "AVR",
+      "vendor": "Microchip ecosystem",
+      "class": "8-bit microcontroller",
+      "word_bits": 8,
+      "pointer_model": "Harvard program/data spaces; pointer widths vary by device",
+      "endianness": "little",
+      "execution_model": "8-bit Harvard MCU with device-specific peripheral map",
+      "abi": [
+        "AVR-GCC calling convention"
+      ],
+      "windows_inf_decoration": null,
+      "commands": [
+        "avr-gcc"
+      ],
+      "tags": [
+        "embedded",
+        "bare-metal",
+        "deterministic",
+        "native",
+        "small-memory"
+      ]
+    },
+    {
+      "index": 12,
+      "id": "arch-12",
+      "name": "pic8",
+      "family": "Microchip PIC",
+      "vendor": "Microchip ecosystem",
+      "class": "8-bit microcontroller",
+      "word_bits": 8,
+      "pointer_model": "banked Harvard memory; device-specific address spaces",
+      "endianness": "device-defined",
+      "execution_model": "banked MCU with special-function registers and page boundaries",
+      "abi": [
+        "MPLAB XC8 device ABI"
+      ],
+      "windows_inf_decoration": null,
+      "commands": [
+        "xc8-cc"
+      ],
+      "tags": [
+        "embedded",
+        "bare-metal",
+        "deterministic",
+        "native",
+        "small-memory"
+      ]
+    },
+    {
+      "index": 13,
+      "id": "arch-13",
+      "name": "xmos-xcore",
+      "family": "XMOS",
+      "vendor": "XMOS ecosystem",
+      "class": "deterministic multicore MCU",
+      "word_bits": 32,
+      "pointer_model": "tile-local resources and platform memory model",
+      "endianness": "little",
+      "execution_model": "hardware threads, deterministic channels and CSP-style communication",
+      "abi": [
+        "XMOS XTC target ABI"
+      ],
+      "windows_inf_decoration": null,
+      "commands": [
+        "xcc"
+      ],
+      "tags": [
+        "embedded",
+        "bare-metal",
+        "deterministic",
+        "concurrency",
+        "channels",
+        "native"
+      ]
+    },
+    {
+      "index": 14,
+      "id": "arch-14",
+      "name": "wasm32",
+      "family": "WebAssembly",
+      "vendor": "WebAssembly ecosystem",
+      "class": "portable virtual ISA",
+      "word_bits": 32,
+      "pointer_model": "32-bit bounded linear memory",
+      "endianness": "little",
+      "execution_model": "validated stack machine with sandboxed linear memory",
+      "abi": [
+        "WASI Preview 1",
+        "WASI Preview 2 / Component Model"
+      ],
+      "windows_inf_decoration": null,
+      "commands": [
+        "wasm32-wasi-clang",
+        "clang"
+      ],
+      "tags": [
+        "wasm",
+        "sandboxed",
+        "cross-compilation",
+        "static-analysis",
+        "deterministic",
+        "native"
+      ]
+    }
+  ]
+}
