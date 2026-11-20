@@ -18,16 +18,16 @@ Each cell describes the real interaction between a project and itself or one of 
 | Project × project | Reaper | OPlague | Pytyliki |
 |---|---|---|---|
 | **Reaper** | **Reaper × Reaper — implemented.** Language frontend, Python reference runtime, selectable Canonical IR VM, `.rpr` module graph, diagnostics and resource limits compose internally. | **Reaper × OPlague — implemented.** Reaper reads and validates OPlague's `oplage.device-snapshot.v1` JSON, extracts normalized metrics and creates a `reaper.oplage-comparison.v1` report. It does not mutate devices or drivers. | **Reaper × Pytyliki — optional, implemented.** Reaper can call Pytyliki C ABI v1 metric functions through an explicitly supplied trusted native-library path. |
-| **OPlague** | **OPlague × Reaper — implemented producer side.** OPlague exports bounded, versioned device snapshots for Reaper. OPlague does not embed or execute the Reaper runtime; orchestration remains on the Reaper side. | **OPlague × OPlague — implemented.** Read-only PnP inventory, INF/ZIP/UDRV inspection, exact-ID candidate graph, metric analysis and ordered `oplage.inspection-bundle.v1` report composition. | **OPlague × Pytyliki — optional, implemented.** OPlague can compare its Python metric result with Pytyliki's native Euclidean-distance implementation via ABI v1. A caller-supplied absolute path to a trusted library is required. |
+| **OPlague** | **OPlague × Reaper — implemented bidirectional artifact contract.** OPlague publishes `oplage.device-snapshot.v1` for Reaper and validates Reaper's `reaper.oplage-comparison.v1` through a bounded read-only report importer. The importer checks schema, normalized dimensions, finite values, component deltas and the report digest; it does not execute the report or change devices. Reaper retains orchestration ownership. | **OPlague × OPlague — implemented.** Read-only PnP inventory, INF/ZIP/UDRV inspection, exact-ID candidate graph, metric analysis and ordered `oplage.inspection-bundle.v1` report composition. | **OPlague × Pytyliki — optional, implemented.** OPlague can compare its Python metric result with Pytyliki's native Euclidean-distance implementation via ABI v1. A caller-supplied absolute path to a trusted library is required. |
 | **Pytyliki** | **Pytyliki × Reaper — implemented provider side.** Pytyliki supplies a narrow C ABI v1 for bounded float64 metric operations. Pytyliki does not depend on Reaper or call its runtime. | **Pytyliki × OPlague — implemented provider side.** The same ABI v1 supplies an optional numerical cross-check. It does not inspect driver packages or perform device operations. | **Pytyliki × Pytyliki — implemented.** Portable C11 processor, memory, metric, embedded-reference and DSP modules are independently built and verified. |
 
 ## Actual data and call paths
 
 ```text
 OPlague
-  └─ oplage.device-snapshot.v1 (bounded JSON file)
-       └─> Reaper
-             └─ reaper.oplage-comparison.v1 (JSON audit report)
+  ├─ oplage.device-snapshot.v1 (bounded JSON file) ─────> Reaper
+  └─ reaper.oplage-comparison.v1 (bounded JSON report) <─ Reaper
+       (validated by tools/reaper_report.py; read-only audit summary)
 
 Pytyliki
   └─ pytyliki.c-abi.v1 (explicit trusted shared-library path)
@@ -38,7 +38,8 @@ Pytyliki
 | Interface | Provider | Consumer | Transport and constraint |
 |---|---|---|---|
 | `oplage.device-snapshot.v1` | OPlague | Reaper | UTF-8 JSON file; schema/version validation; bounded input; normalized finite metrics |
-| `reaper.oplage-comparison.v1` | Reaper | User / downstream tooling | JSON comparison report; dimension mismatches are errors, not silently filled |
+| `reaper.oplage-comparison.v1` | Reaper | OPlague report validator | Bounded UTF-8 JSON; read-only mode, dimensions, finite values, numeric deltas and canonical SHA-256 are checked |
+| `oplage.reaper-report-audit.v1` | OPlague | User / downstream tooling | Read-only validation summary; validates report integrity without executing it or modifying hardware |\n
 | `oplage.inspection-bundle.v1` | OPlague | User / downstream tooling | Canonical ordered JSON summary with a deterministic SHA-256 fingerprint |
 | `pytyliki.c-abi.v1` | Pytyliki | Reaper, OPlague | Synchronous C ABI; explicit absolute path to a trusted shared library; caller-owned contiguous buffers |
 
