@@ -17,6 +17,8 @@ from .modules import ModuleLoader
 from .parser import parse
 from .systems import format_tracks
 from .systems_languages import main as systems_languages_main
+from .systems_architectures import main as systems_architectures_main
+from .token_catalog import CATALOG_GROUPS, catalog_summary, token_catalog, token_info
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -31,7 +33,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--check", "--lint", dest="check", action="store_true", help="tokenize and parse without running the program")
     parser.add_argument("--repl", action="store_true", help="start the interactive Reaper prompt")
     parser.add_argument("--json", action="store_true", help="emit the run result and diagnostics as JSON")
-    parser.add_argument("--profile", action="store_true", help="report elapsed wall time and interpreter step count")
+    parser.add_argument("--profile", action="store_true", help="report elapsed time and interpreter step count")
     parser.add_argument("--engine", choices=("treewalk", "vm"), default="treewalk", help="execution engine (default: treewalk)")
     parser.add_argument("--allow-native-ffi", action="store_true", help="allow loading native C ABI libraries")
     parser.add_argument("--module-graph", action="store_true", help="print the transitive .rpr dependency graph as JSON without executing code")
@@ -42,14 +44,51 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--language-profile", choices=("pytyliki", "reaper", "oplague"), help="rank systems languages for a project profile")
     parser.add_argument("--available-languages", action="store_true", help="show only candidate toolchains found on PATH")
     parser.add_argument("--systems-json", action="store_true", help="emit the systems-language matrix as JSON")
+    parser.add_argument("--systems-architectures", action="store_true", help="list the 14 CPU, MCU and virtual-ISA architecture profiles")
+    parser.add_argument("--architecture-profile", choices=("pytyliki", "reaper", "oplague"), help="rank target architectures for a project profile")
+    parser.add_argument("--available-architectures", action="store_true", help="show only architecture toolchain candidates found on PATH")
+    parser.add_argument("--architectures-json", action="store_true", help="emit the architecture matrix as JSON")
+    parser.add_argument("--catalog", action="store_true", help="print all 666 reserved symbolic tokens as JSON")
+    parser.add_argument("--catalog-group", choices=CATALOG_GROUPS, help="filter --catalog by domain")
+    parser.add_argument("--catalog-token", metavar="LEXEME", help="show metadata for one token lexeme")
     parser.add_argument("--evolve", action="store_true", help="run bounded syntax, test and improvement-proposal cycles")
     parser.add_argument("--iterations", type=int, default=1, help="number of evolution quality cycles (1-20)")
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
+    arguments = sys.argv[1:] if argv is None else argv
+    if arguments and arguments[0] == "polyglot":
+        from .polyglot import main as polyglot_main
+        return polyglot_main(arguments[1:])
     parser = build_parser()
-    args = parser.parse_args(argv)
+    args = parser.parse_args(arguments)
+    if args.module_graph:
+        if not args.source:
+            parser.error("--module-graph requires a .rpr entry file")
+        try:
+            graph = ModuleLoader(Interpreter()).scan(str(Path(args.source)))
+        except (OSError, UnicodeError, ReaperError, ValueError) as error:
+            print(f"reaper: module graph failed: {error}", file=sys.stderr)
+            return 1
+        print(json.dumps(graph, ensure_ascii=False, indent=2))
+        return 0
+    if args.catalog or args.catalog_group is not None or args.catalog_token is not None:
+        if args.source or args.audit_log or args.verify_audit_log:
+            parser.error("catalogue inspection cannot be combined with a source or audit-log option")
+        if args.catalog_token is not None:
+            if args.catalog or args.catalog_group is not None:
+                parser.error("--catalog-token cannot be combined with --catalog or --catalog-group")
+            entry = token_info(args.catalog_token)
+            if entry is None:
+                print(f"reaper: unknown catalogue token {args.catalog_token!r}", file=sys.stderr)
+                return 1
+            print(json.dumps(entry, ensure_ascii=False, indent=2))
+            return 0
+        if not args.catalog:
+            parser.error("--catalog-group requires --catalog")
+        print(json.dumps({"summary": catalog_summary(), "tokens": token_catalog(args.catalog_group)}, ensure_ascii=False, indent=2))
+        return 0
     if args.repl:
         if args.source or args.check or args.evolve:
             parser.error("--repl cannot be combined with a source, --check or --evolve")
@@ -76,6 +115,15 @@ def main(argv: list[str] | None = None) -> int:
         if args.systems_json:
             matrix_args.append("--json")
         return systems_languages_main(matrix_args)
+    if args.systems_architectures or args.architecture_profile or args.available_architectures or args.architectures_json:
+        matrix_args = []
+        if args.architecture_profile:
+            matrix_args.extend(["--profile", args.architecture_profile])
+        if args.available_architectures:
+            matrix_args.append("--available-only")
+        if args.architectures_json:
+            matrix_args.append("--json")
+        return systems_architectures_main(matrix_args)
     if args.evolve:
         root = Path(args.source) if args.source else Path.cwd()
         if not root.is_dir():
@@ -95,19 +143,11 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--items must be a positive integer")
     if args.text_length < 1:
         parser.error("--text-length must be a positive integer")
-    path = Path(args.source)
-    if args.module_graph:
-        try:
-            graph = ModuleLoader(Interpreter()).scan(str(path))
-        except (OSError, UnicodeError, ReaperError, ValueError) as error:
-            print(f"reaper: module graph failed: {error}", file=sys.stderr)
-            return 1
-        print(json.dumps(graph, ensure_ascii=False, indent=2))
-        return 0
     if args.heap_bytes < 1:
         parser.error("--heap-bytes must be a positive integer")
     if args.open_resources < 1:
         parser.error("--open-resources must be a positive integer")
+    path = Path(args.source)
     output_lines: list[str] = []
     profile_data: dict[str, float | int] | None = None
     try:
