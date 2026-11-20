@@ -178,7 +178,6 @@ class Interpreter:
         else:
             raise self._error(node.token, f"unknown statement kind '{node.kind}'")
         return None
-
     def _evaluate(self, node: Node, environment: Environment) -> Any:
         self._tick(node.token)
         children = node.children or []
@@ -357,8 +356,7 @@ class Interpreter:
             except OverflowError as error:
                 raise ValueError("collection length exceeds interpreter limits") from error
             if size > self.max_collection_items:
-                raise ValueError(
-                    f"collection item limit ({self.max_collection_items}) exceeded"
+                raise ValueError(                    f"collection item limit ({self.max_collection_items}) exceeded"
                 )
             return size
 
@@ -375,10 +373,28 @@ class Interpreter:
         register("first", lambda values: _first(sequence(values)), 1, 1)
         register("rest", lambda values: sequence(values)[1:], 1, 1)
         register("sum", lambda values: _sum(sequence(values)), 1, 1)
-        register("sorted", lambda values: sorted(sequence(values)), 1, 1)
+        register("sorted", lambda values, *options: self._sorted(sequence(values), callback, *options), 1, 3)
+        register("sort_by", lambda values, fn, *direction: self._sort_by(sequence(values), callback, fn, direction[0] if direction else "asc"), 2, 3)
         register("map", lambda values, fn: self._map(sequence(values), callback, fn), 2, 2)
         register("keep", lambda values, fn: self._keep(sequence(values), callback, fn), 2, 2)
+        register("filter", lambda values, fn: self._keep(sequence(values), callback, fn), 2, 2)
         register("fold", lambda values, initial, fn: self._fold(sequence(values), initial, callback, fn), 3, 3)
+        register("reduce", lambda values, initial, fn: self._fold(sequence(values), initial, callback, fn), 3, 3)
+        register("chunk", lambda values, width: self._chunk(sequence(values), width), 2, 2)
+        register("take", lambda values, count: self._take(sequence(values), count), 2, 2)
+        register("drop", lambda values, count: self._drop(sequence(values), count), 2, 2)
+        register("flatten", lambda values: self._flatten(sequence(values)), 1, 1)
+        register("reverse", lambda values: values[::-1] if isinstance(values, str) else list(reversed(sequence(values))), 1, 1)
+        register("unique", lambda values: self._unique(sequence(values)), 1, 1)
+        register("split", self._split_text, 2, 2)
+        register("join", self._join_text, 2, 2)
+        register("trim", lambda value: self._require_text(value).strip(), 1, 1)
+        register("lower", lambda value: self._require_text(value).lower(), 1, 1)
+        register("upper", lambda value: self._require_text(value).upper(), 1, 1)
+        register("replace", self._replace_text, 3, 4)
+        register("contains", self._contains, 2, 2)
+        register("starts_with", self._starts_with, 2, 2)
+        register("ends_with", self._ends_with, 2, 2)
         register("say", lambda *values: self.output(" ".join(self._display(v) for v in values)), 1, None)
         register("ask", lambda prompt: input(self._display(prompt)), 1, 1)
         register("assert", self._assert, 1, 2)
@@ -387,7 +403,16 @@ class Interpreter:
         register("impact_search", impact_search, 1, 1)
         register("impact_rank", lambda profiles, dimension: impact_rank(sequence(profiles), dimension), 2, 2)
         register("metric_dot", lambda left, right: metric_space.dot(sequence(left), sequence(right)), 2, 2)
-        register("vector_norm", lambda values: metric_space.vector_norm(sequence(values)), 1, 1)
+        register("vector_norm", lambda values, *kind: metric_space.vector_norm(sequence(values), kind[0] if kind else "l2"), 1, 2)
+        register("vector_normalize", lambda values: metric_space.normalize(sequence(values)), 1, 1)
+        register("normalize_vector", lambda values: metric_space.normalize(sequence(values)), 1, 1)
+        register("manhattan_distance", lambda left, right: metric_space.manhattan_distance(sequence(left), sequence(right)), 2, 2)
+        register("chebyshev_distance", lambda left, right: metric_space.chebyshev_distance(sequence(left), sequence(right)), 2, 2)
+        register("squared_euclidean_distance", lambda left, right: metric_space.squared_euclidean_distance(sequence(left), sequence(right)), 2, 2)
+        register("cosine_similarity", lambda left, right: metric_space.cosine_similarity(sequence(left), sequence(right)), 2, 2)
+        register("angle_between", lambda left, right: metric_space.angle_between(sequence(left), sequence(right)), 2, 2)
+        register("vector_projection", lambda vector, onto: metric_space.project(vector, onto), 2, 2)
+        register("vector_centroid", lambda vectors: metric_space.centroid(sequence(vectors)), 1, 1)
         register("euclidean_distance", lambda left, right: metric_space.euclidean_distance(sequence(left), sequence(right)), 2, 2)
         register("is_orthogonal", lambda left, right, *tol: metric_space.is_orthogonal(
             sequence(left), sequence(right), tol[0] if tol else 1e-12
@@ -408,6 +433,124 @@ class Interpreter:
             sequence(values)
         ), 1, 1)
         register("reciprocal_altitude", metric_space.reciprocal_altitude, 2, 2)
+
+    @staticmethod
+    def _require_text(value: Any) -> str:
+        if not isinstance(value, str):
+            raise TypeError("expected text")
+        return value
+
+    def _sorted(self, values: Any, validator: Callable[[Any], None], *options: Any) -> list[Any]:
+        key_function = None
+        direction = "asc"
+        if len(options) == 1:
+            if isinstance(options[0], str):
+                direction = options[0]
+            else:
+                key_function = options[0]
+        elif len(options) == 2:
+            key_function, direction = options
+        if direction not in ("asc", "desc"):
+            raise ValueError("sort direction must be 'asc' or 'desc'")
+        if key_function is not None:
+            validator(key_function)
+            key = lambda item: self._call(key_function, [item], Token("BUILTIN", "sorted", 1, 1))
+        else:
+            key = None
+        return sorted(values, key=key, reverse=direction == "desc")
+
+    def _sort_by(self, values: Any, validator: Callable[[Any], None], function: Any, direction: Any) -> list[Any]:
+        return self._sorted(values, validator, function, direction)
+
+    def _chunk(self, values: Any, width: Any) -> list[Any]:
+        if isinstance(width, bool) or not isinstance(width, int) or width < 1:
+            raise ValueError("chunk width must be a positive whole number")
+        result = [values[index:index + width] for index in range(0, len(values), width)]
+        if len(result) > self.max_collection_items:
+            raise ValueError(f"collection item limit ({self.max_collection_items}) exceeded")
+        return result
+
+    @staticmethod
+    def _slice_count(count: Any, name: str) -> int:
+        if isinstance(count, bool) or not isinstance(count, int) or count < 0:
+            raise ValueError(f"{name} count must be a non-negative whole number")
+        return count
+
+    def _take(self, values: Any, count: Any) -> Any:
+        return values[:self._slice_count(count, "take")]
+
+    def _drop(self, values: Any, count: Any) -> Any:
+        return values[self._slice_count(count, "drop"):]
+
+    def _flatten(self, values: Any) -> list[Any]:
+        result: list[Any] = []
+        for item in values:
+            if not isinstance(item, (list, tuple)):
+                raise TypeError("flatten() expects a list of lists")
+            if len(result) + len(item) > self.max_collection_items:
+                raise ValueError(f"collection item limit ({self.max_collection_items}) exceeded")
+            result.extend(item)
+        return result
+
+    def _unique(self, values: Any) -> list[Any]:
+        result: list[Any] = []
+        seen: set[Any] = set()
+        for item in values:
+            try:
+                marker = (type(item), item)
+                if marker in seen:
+                    continue
+                seen.add(marker)
+            except TypeError:
+                if any(self._equal(item, previous) for previous in result):
+                    continue
+            result.append(item)
+        return result
+
+    def _split_text(self, value: Any, separator: Any) -> list[str]:
+        value = self._require_text(value)
+        separator = self._require_text(separator)
+        if not separator:
+            raise ValueError("split separator cannot be empty")
+        result = value.split(separator)
+        if len(result) > self.max_collection_items:
+            raise ValueError(f"collection item limit ({self.max_collection_items}) exceeded")
+        return result
+
+    def _join_text(self, values: Any, separator: Any) -> str:
+        if not isinstance(values, (list, tuple)):
+            raise TypeError("join() expects a list of text values")
+        separator = self._require_text(separator)
+        if any(not isinstance(item, str) for item in values):
+            raise TypeError("join() expects a list of text values")
+        result = separator.join(values)
+        if len(result) > self.max_text_length:
+            raise ValueError(f"text length limit ({self.max_text_length}) exceeded")
+        return result
+
+    def _replace_text(self, value: Any, old: Any, new: Any, *count: Any) -> str:
+        value, old, new = (self._require_text(item) for item in (value, old, new))
+        if count and (isinstance(count[0], bool) or not isinstance(count[0], int) or count[0] < 0):
+            raise ValueError("replace count must be a non-negative whole number")
+        result = value.replace(old, new, count[0] if count else -1)
+        if len(result) > self.max_text_length:
+            raise ValueError(f"text length limit ({self.max_text_length}) exceeded")
+        return result
+
+    def _contains(self, container: Any, needle: Any) -> bool:
+        if isinstance(container, str):
+            if not isinstance(needle, str):
+                raise TypeError("text membership expects text")
+            return needle in container
+        if isinstance(container, (list, tuple, range)):
+            return any(self._equal(item, needle) for item in container)
+        raise TypeError("contains() expects text or a sequence")
+
+    def _starts_with(self, value: Any, prefix: Any) -> bool:
+        return self._require_text(value).startswith(self._require_text(prefix))
+
+    def _ends_with(self, value: Any, suffix: Any) -> bool:
+        return self._require_text(value).endswith(self._require_text(suffix))
 
     def _map(self, values: Any, validator: Callable[[Any], None], function: Any) -> list[Any]:
         validator(function)
