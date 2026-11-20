@@ -24,7 +24,6 @@
       "bare-metal",
       "register-model",
       "machine-code",
-      "hardware",
       "memory-map",
       "deterministic",
       "assembly"
