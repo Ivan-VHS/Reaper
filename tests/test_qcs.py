@@ -40,7 +40,9 @@ class QcsFrontendTests(unittest.TestCase):
         self.assertEqual(validate(parse(SOURCE)), [])
 
     def test_unknown_domain_is_reported(self) -> None:
-        source = "[@ domain:madeUp, state:? @]\\nfunc f() {}\\n[@ end @]"
+        source = """[@ domain:madeUp, state:? @]
+func f() {}
+[@ end @]"""
         self.assertTrue(any("unknown QCS domain" in item for item in validate(parse(source))))
 
     def test_forbidden_angle_bar_and_tilde_characters(self) -> None:
@@ -50,15 +52,18 @@ class QcsFrontendTests(unittest.TestCase):
 
     def test_unterminated_frame_fails(self) -> None:
         with self.assertRaisesRegex(QcsError, "unterminated frame"):
-            parse("[@ domain:mmio @]\\nfunc f() {}")
+            parse("""[@ domain:mmio @]
+func f() {}""")
 
     def test_missing_domain_fails(self) -> None:
         with self.assertRaisesRegex(QcsError, "requires domain"):
-            parse("[@ state:! @]\\n[@ end @]")
+            parse("""[@ state:! @]
+[@ end @]""")
 
     def test_duplicate_attribute_fails(self) -> None:
         with self.assertRaisesRegex(QcsError, "duplicate frame attribute"):
-            parse("[@ domain:mmio, domain:dma @]\\n[@ end @]")
+            parse("""[@ domain:mmio, domain:dma @]
+[@ end @]""")
 
     def test_optional_generic_type(self) -> None:
         module = parse("func read() returns RingBuf(Int16)? { return nil }")
