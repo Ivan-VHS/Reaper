@@ -138,3 +138,12 @@ GitHub Actions 测试 Python 3.10、3.11 和 3.12，运行单元测试、检查�
 ## Canonical IR 中经过检查的整数运算
 
 原生 IR 支持 i64 加法、减法、乘法和除法。只有两个操作数均为常量时才执行常量折叠；signed i64 溢出、除零和 INT64_MIN / -1 会返回诊断。Fixed-point 流程限制为 1–64 次迭代，并在每次转换前后验证 IR。这是 IR 层能力，不代表 C 前端或运行时已达到完整功能对等。
+
+
+## 项目生态
+
+本仓库属于由三个独立项目组成的协作体系。Reaper 负责编程语言、运行时与工作流编排；OPlague 负责只读 Windows 设备清单和驱动程序包检查；Pytyliki 负责基于 C11 的处理器、内存与数值计算核心。 See the [3 × 3 项目协作矩阵](https://github.com/Ivan-VHS/Reaper/blob/main/docs/PROJECT_FEDERATION_MATRIX.md) for the 3 × 3 cross-product, implemented interfaces, data directions and safety boundaries.
+
+- [Reaper — 编程语言、运行时与工作流编排](https://github.com/Ivan-VHS/Reaper/blob/main/README.zh-CN.md) · [integration contract](https://github.com/Ivan-VHS/Reaper/blob/main/docs/FEDERATED_INTEGRATION.md)
+- [OPlague — 只读 Windows 设备清单与驱动程序包检查](https://github.com/Ivan-VHS/OPlague/blob/main/README.zh-CN.md) · [integration contract](https://github.com/Ivan-VHS/OPlague/blob/main/docs/FEDERATED_INTEGRATION.md)
+- [Pytyliki — C11 处理器、内存与数值计算核心](https://github.com/Ivan-VHS/Pytyliki/blob/main/README.zh-CN.md) · [integration contract](https://github.com/Ivan-VHS/Pytyliki/blob/main/docs/FEDERATED_INTEGRATION.md)
