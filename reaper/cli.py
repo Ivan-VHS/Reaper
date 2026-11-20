@@ -67,6 +67,9 @@ def main(argv: list[str] | None = None) -> int:
     if arguments and arguments[0] == "polyglot-code":
         from .polyglot_code import main as polyglot_code_main
         return polyglot_code_main(arguments[1:])
+    if arguments and arguments[0] == "compat":
+        from .reference_ecosystems import main as reference_ecosystems_main
+        return reference_ecosystems_main(arguments[1:])
     parser = build_parser()
     args = parser.parse_args(arguments)
     if args.module_graph:
