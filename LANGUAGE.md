@@ -6,7 +6,7 @@ Reaper is an independent, text-first, expression-oriented language with an expli
 
 1. **Calm surface, visible effects.** Console I/O is explicit through emit, say, and ask. Ordinary expressions do not access files, networks, or clocks.
 2. **Immutability by default.** make binds an immutable name. vary explicitly permits reassignment; change is the reassignment statement.
-3. **Flow as composition.** value |> transform(args) passes value as the first argument to the next call. Flow chains associate left to right.
+3. **Flow as composition.** value :: transform(args) passes value as the first argument to the next call. Flow chains associate left to right.
 4. **Structural composition.** Functions are values and can be passed to map, keep, and fold. No class hierarchy is needed.
 5. **Bounded execution.** A configurable step budget and call-depth limit stop runaway programs.
 6. **No silent coercion.** Arithmetic is numeric. ++ joins text only. Convert explicitly with text() or number().
@@ -27,9 +27,9 @@ craft add(total, value) {
 }
 
 make result := [1, 2, 3, 4, 5]
-    |> map(double)
-    |> keep(is_large)
-    |> fold(0, add)
+    :: map(double)
+    :: keep(is_large)
+    :: fold(0, add)
 
 emit "result = " ++ text(result)
 ~~~
@@ -78,7 +78,7 @@ Version 0.1 supports whole numbers, decimal numbers, text, booleans (true / fals
 
 Operators, from low to high precedence:
 
-1. |> — flow composition.
+1. :: — flow composition.
 2. or.
 3. and.
 4. ==, !=, <, <=, >, >=.
@@ -109,7 +109,7 @@ Calls use name(arguments); list indexing uses collection[index]. Arithmetic does
 | fold(list, initial, function) | Reduce values from left to right |
 | assert(condition[, message]) | Raise a runtime error when condition is false |
 
-Flow passes the left-hand value as the first argument: values |> map(double) is equivalent to map(values, double).
+Flow passes the left-hand value as the first argument: values :: map(double) is equivalent to map(values, double).
 
 ## Execution
 

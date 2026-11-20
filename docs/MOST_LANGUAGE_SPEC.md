@@ -36,7 +36,7 @@ test "saturating counter" {
 }
 ```
 
-The lexer recognizes the initial MOST keyword family (`module`, `import`, `fn`, `struct`, `enum`, `trait`, `impl`, `region`, `raw`, `arena`, `signal`, `async`, `await`, `match`, `test`, `comptime`, `requires`, `ensures`, and related control/type words) and multi-character operators including `|>`, `??`, `+%`, `+|`, `->`, and `:=`. Token recognition does not imply parser or runtime support.
+The lexer recognizes the initial MOST keyword family (`module`, `import`, `fn`, `struct`, `enum`, `trait`, `impl`, `region`, `raw`, `arena`, `signal`, `async`, `await`, `match`, `test`, `comptime`, `requires`, `ensures`, and related control/type words) and multi-character operators including `::`, `??`, `+%`, `+|`, `->`, and `:=`. Token recognition does not imply parser or runtime support.
 
 ## Compiler pipeline
 
@@ -61,7 +61,7 @@ A region allocator is not a substitute for borrow checking. Runtime tests alone 
 
 The type system includes fixed-width integers, floats, booleans, UTF-8 strings/slices, arrays, tuples, structs, enums with payloads, option/result types, function types, traits, and explicit pointer/ABI types. Exhaustive matching is a compile-time property. Generic monomorphization and compile-time evaluation must be bounded and deterministic.
 
-`|>` passes the left expression as the first argument. `??` unwraps an optional with a fallback. `+%` is wrapping addition; `+|` is saturating addition. More than two call arguments require labels in canonical source mode. Effects (I/O, allocation, mutation, unsafe, async) are explicit in function signatures or verified effect declarations.
+`::` passes the left expression as the first argument. `??` unwraps an optional with a fallback. `+%` is wrapping addition; `+|` is saturating addition. More than two call arguments require labels in canonical source mode. Effects (I/O, allocation, mutation, unsafe, async) are explicit in function signatures or verified effect declarations.
 
 ## Web and WASM boundary
 
