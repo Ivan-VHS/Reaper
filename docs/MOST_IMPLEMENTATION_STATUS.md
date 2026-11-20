@@ -24,6 +24,8 @@
 | Native code generation | planned | target ABI and executable conformance fixtures |
 | WASM/Web Core | specified | WASI/browser host tests and capability boundary |
 | Original 147-feature systems registry | specified | `docs/MOST_147_FEATURE_REGISTRY.md`; separate from the additional cognitive/text/data feature proposal set |
+| Directed 20×20 MOST architecture matrix | specified | `language/most_matrix_20x20.json`; 400 traceable projections, not 400 implemented compiler features |
+| Combinatorial matrix integrity validator | implemented | `tools/validate_most_matrix.py`, `tests/test_most_matrix.py`; verifies cardinality, pair coverage, traceability and fail-closed status |
 | Cognitive 147-function proposal set | architecture input; implementation not claimed | Must be mapped into compiler primitives, deterministic stdlib and optional intelligence services with per-feature acceptance gates |
 | 813-feature architecture map | specified | `docs/REAPER_813_FEATURE_ARCHITECTURE.md` |
 | MOST bilingual bridge | planned | AST/Intent AST, canonical symbols, scoped domain dictionaries and equivalent IR tests |

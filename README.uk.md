@@ -123,6 +123,7 @@ python -m unittest discover -s tests -p 'test_self_hosting.py' -v
 - [Об’єднана архітектура REAPER/MOST](docs/REAPER_UNIFIED_ARCHITECTURE.md)
 - [Архітектура](docs/ARCHITECTURE.md)
 - [Специфікація MOST](docs/MOST_LANGUAGE_SPEC.md)
+- [Матриця MOST 20×20: 400 архітектурних проєкцій](docs/MOST_400_COMBINATORIAL_MATRIX.md)
 - [План переходу на C](docs/C_MIGRATION.md)
 - [Приклади](examples/) · [Тести](tests/)
 
