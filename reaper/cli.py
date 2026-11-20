@@ -18,6 +18,8 @@ from .parser import parse
 from .systems import format_tracks
 from .systems_languages import main as systems_languages_main
 from .systems_architectures import main as systems_architectures_main
+from .systems_ecosystems import CATEGORIES as ECOSYSTEM_CATEGORIES, PROJECT_PROFILES as ECOSYSTEM_PROFILES
+from .systems_ecosystems import main as systems_ecosystems_main
 from .token_catalog import CATALOG_GROUPS, catalog_summary, token_catalog, token_info
 
 
@@ -48,6 +50,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--architecture-profile", choices=("pytyliki", "reaper", "oplague"), help="rank target architectures for a project profile")
     parser.add_argument("--available-architectures", action="store_true", help="show only architecture toolchain candidates found on PATH")
     parser.add_argument("--architectures-json", action="store_true", help="emit the architecture matrix as JSON")
+    parser.add_argument("--systems-ecosystems", action="store_true", help="list the 40 ISA, language, HDL, VM and GPU ecosystem profiles")
+    parser.add_argument("--ecosystem-profile", choices=ECOSYSTEM_PROFILES, help="rank ecosystem targets for a project profile")
+    parser.add_argument("--ecosystem-category", choices=ECOSYSTEM_CATEGORIES, help="filter ecosystem targets by category")
+    parser.add_argument("--ecosystem", metavar="NAME_OR_ID", help="inspect one exact ecosystem target")
+    parser.add_argument("--available-ecosystems", action="store_true", help="show ecosystem toolchain candidates found on PATH")
+    parser.add_argument("--ecosystems-json", action="store_true", help="emit the ecosystem integration matrix as JSON")
     parser.add_argument("--catalog", action="store_true", help="print all 666 reserved symbolic tokens as JSON")
     parser.add_argument("--catalog-group", choices=CATALOG_GROUPS, help="filter --catalog by domain")
     parser.add_argument("--catalog-token", metavar="LEXEME", help="show metadata for one token lexeme")
@@ -130,6 +138,20 @@ def main(argv: list[str] | None = None) -> int:
         if args.architectures_json:
             matrix_args.append("--json")
         return systems_architectures_main(matrix_args)
+    if (args.systems_ecosystems or args.ecosystem_profile or args.ecosystem_category
+            or args.ecosystem or args.available_ecosystems or args.ecosystems_json):
+        matrix_args = []
+        if args.ecosystem_profile:
+            matrix_args.extend(["--profile", args.ecosystem_profile])
+        if args.ecosystem_category:
+            matrix_args.extend(["--category", args.ecosystem_category])
+        if args.ecosystem:
+            matrix_args.extend(["--target", args.ecosystem])
+        if args.available_ecosystems:
+            matrix_args.append("--available-only")
+        if args.ecosystems_json:
+            matrix_args.append("--json")
+        return systems_ecosystems_main(matrix_args)
     if args.evolve:
         root = Path(args.source) if args.source else Path.cwd()
         if not root.is_dir():
