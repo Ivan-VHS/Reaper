@@ -93,7 +93,7 @@ emit report["allocations"]
             self.capture(source)
 
     def test_active_reset_preserves_initialized_bytes(self) -> None:
-        source = """\\
+        source = """\
 make buffer := ;::(8)
 memory_write(buffer, 0, "keep")
 :+;-:(buffer)
@@ -102,7 +102,7 @@ emit memory_read(buffer)
         self.assertEqual(self.capture(source), ["keep"])
 
     def test_discard_processed_prefix_compacts_receive_buffer(self) -> None:
-        source = """\\
+        source = """\
 make buffer := ;::(8)
 memory_write(buffer, 0, "abcDEF")
 [::]+;_(buffer, 3)
@@ -113,7 +113,7 @@ emit size(buffer)
         self.assertEqual(self.capture(source), ["DEF", "3"])
 
     def test_frame_rollback_restores_capacity_and_arena_accounting(self) -> None:
-        source = """\\
+        source = """\
 make arena := {;;}(16)
 make buffer := ;::(arena, 4)
 memory_write(buffer, 0, "data")
@@ -127,7 +127,7 @@ emit report["released"]
         self.assertEqual(self.capture(source), ["4", "4"])
 
     def test_cache_alignment_is_recorded_separately_from_stride(self) -> None:
-        source = """\\
+        source = """\
 make buffer := ;::(8)
 :+:--(buffer, 64)
 emit kind(buffer)
