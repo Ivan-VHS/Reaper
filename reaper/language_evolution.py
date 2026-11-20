@@ -14,6 +14,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+from io import StringIO
 import re
 import stat
 import sys
@@ -275,20 +276,28 @@ def _structural(source: str) -> tuple[tuple[UASTNode, ...], list[dict[str, Any]]
     stack: list[tuple[str, int]] = []
     pairs = {")": "(", "]": "[", "}": "{"}
     token_re = re.compile(r"//[^\n]*|/\*.*?\*/|\#[^\n]*|--[^\n]*|\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'|[(){}\[\]]", re.S)
+    cursor = 0
     for match in token_re.finditer(source):
+        line = source.count("\\n", cursor, match.start()) + 1
+        cursor = match.end()
         value = match.group()
-        line = source.count("\n", 0, match.start()) + 1
-        if value.startswith(("//", "/*", "#", "--", "\"", "'")):
+        if value.startswith(("//", "/*", "#", "--", "\\\"", "'")):
             continue
         if value in "({[":
-            stack.append((value, line))
+            if len(stack) < MAX_NODES:
+                stack.append((value, line))
+            elif len(opaque) < 100:
+                opaque.append({"line": line, "reason": "delimiter nesting limit", "token": value})
         elif value in pairs:
             if not stack or stack[-1][0] != pairs[value]:
-                opaque.append({"line": line, "reason": "unmatched closing delimiter", "token": value})
+                if len(opaque) < 100:
+                    opaque.append({"line": line, "reason": "unmatched closing delimiter", "token": value})
             else:
                 stack.pop()
-    opaque.extend({"line": line, "reason": "unclosed delimiter", "token": value} for value, line in stack)
+    opaque.extend({"line": line, "reason": "unclosed delimiter", "token": value} for value, line in stack[:100])
     for line_no, line in enumerate(source.splitlines(), 1):
+        if len(nodes) >= MAX_NODES:
+            break
         if not line.strip():
             continue
         for kind, pattern in patterns:
@@ -298,11 +307,16 @@ def _structural(source: str) -> tuple[tuple[UASTNode, ...], list[dict[str, Any]]
                 break
         else:
             nodes.append(UASTNode("Statement", None, line_no, line_no, .55, {"adapter": "structural-heuristic"}))
-    for line_no, line in enumerate(source.splitlines(), 1):
-        for match in re.finditer(r"\b([A-Za-z_]\w*)\s*\(", line):
-            if match.group(1) not in {"if", "for", "while", "switch", "match", "catch", "return", "sizeof"}:
-                nodes.append(UASTNode("Call", match.group(1), line_no, line_no, .68, {"adapter": "structural-heuristic"}))
-    nodes.extend(UASTNode("OpaqueNode", None, int(item["line"]), int(item["line"]), 0.0, item) for item in opaque)
+    if len(nodes) < MAX_NODES:
+        for line_no, line in enumerate(source.splitlines(), 1):
+            for match in re.finditer(r"\\b([A-Za-z_]\\w*)\\s*\\(", line):
+                if len(nodes) >= MAX_NODES:
+                    break
+                if match.group(1) not in {"if", "for", "while", "switch", "match", "catch", "return", "sizeof"}:
+                    nodes.append(UASTNode("Call", match.group(1), line_no, line_no, .68, {"adapter": "structural-heuristic"}))
+            if len(nodes) >= MAX_NODES:
+                break
+    nodes.extend(UASTNode("OpaqueNode", None, int(item["line"]), int(item["line"]), 0.0, item) for item in opaque[:max(0, MAX_NODES - len(nodes))])
     nodes.sort(key=lambda item: (item.start_line, item.kind, item.name or ""))
     return tuple(nodes[:MAX_NODES]), opaque
 
@@ -408,7 +422,9 @@ def _artifact_metadata(kind: str, name: str, text: str) -> dict[str, Any]:
     if kind == "runtime-trace":
         events, types = Counter(), Counter()
         valid = malformed = 0
-        for line in text.splitlines()[:100_000]:
+        for index, line in enumerate(StringIO(text)):
+            if index >= 100_000:
+                break
             if not line.strip():
                 continue
             try:
@@ -423,7 +439,7 @@ def _artifact_metadata(kind: str, name: str, text: str) -> dict[str, Any]:
                 for key in ("argument_type", "return_type", "value_type", "runtime_type"):
                     if isinstance(row.get(key), str):
                         types[row[key][:100]] += 1
-            except json.JSONDecodeError:
+            except (json.JSONDecodeError, RecursionError):
                 malformed += 1
         result.update(valid_records=valid, malformed_records=malformed, events=dict(events.most_common(40)), observed_types=dict(types.most_common(40)))
     elif kind == "grammar":
@@ -466,11 +482,20 @@ class OmniCoreEngine:
         if self.root.is_file():
             return [self.root]
         found = []
+        discovery_limit = self.limits[0] + 1
         for base, dirs, names in os.walk(self.root, topdown=True, followlinks=False):
             parent = Path(base)
             dirs[:] = sorted(name for name in dirs if name not in IGNORED and not (parent / name).is_symlink())
-            found.extend(parent / name for name in sorted(names) if not (parent / name).is_symlink() and (parent / name).is_file())
-        return sorted(found, key=lambda path: path.relative_to(self.root).as_posix())
+            for name in sorted(names):
+                candidate = parent / name
+                if candidate.is_symlink() or not candidate.is_file():
+                    continue
+                if candidate.suffix not in EXT and _artifact(candidate) is None:
+                    continue
+                found.append(candidate)
+                if len(found) >= discovery_limit:
+                    return found
+        return found
 
     def run(self) -> AbsorptionReport:
         paths = self._paths()
