@@ -34,6 +34,23 @@ reaper --systems-json
 
 Toolchain checks are PATH-only: they do not run or install compilers. The matrix is included in Python package data and its tests are registered with CTest.
 
+## 66 low-level reference ecosystems
+
+A second, separate registry preserves the 66 low-level and specialized entries supplied for Reaper: CPU assembly targets, systems languages, stack/register VMs, HDL, GPU/parallel toolchains and esoteric machines. It complements the existing systems-language capability matrix rather than replacing it.
+
+```sh
+reaper compat verify
+reaper compat list
+reaper compat list --profile reaper
+reaper compat list --profile embedded
+reaper compat list --category hdl
+reaper compat list --profile gpu
+reaper compat show "RISC-V"
+reaper compat show "LLVM IR" --json
+```
+
+The registry maps each ecosystem to Reaper compiler layers and capability tags, and performs PATH-only discovery of candidate toolchain executables. It does not invoke external tools, translate all 66 syntaxes, or claim that 66 backends are implemented. All entries are currently **catalogued-only**. See [the reference ecosystem bridge](docs/REFERENCE_ECOSYSTEM_BRIDGE.md) and [the machine-readable registry](reaper/reference_ecosystems.json).
+
 ## Systems architecture matrix
 
 Reaper complements its 66-position language and toolchain matrix with **14 CPU, MCU and virtual-ISA architecture profiles**. Use `python -m reaper --systems-architectures`, `--architecture-profile reaper`, `--available-architectures` or `--architectures-json`. Toolchain checks only look up executable names on PATH; they do not compile or run external code. See [the architecture matrix](docs/SYSTEMS_ARCHITECTURE_MATRIX.md).
