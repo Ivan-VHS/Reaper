@@ -32,6 +32,23 @@ reaper --systems-json
 
 Toolchain checks are PATH-only: they do not run or install compilers. The matrix is included in Python package data and its tests are registered with CTest.
 
+## 40 low-level interoperability ecosystems
+
+Reaper includes an original metadata catalogue for the requested 40 ISA, systems-language, HDL, bytecode/VM and specialized environments. It can identify optional external toolchain commands on PATH without running them:
+
+~~~sh
+reaper interop verify
+reaper interop list
+reaper interop list --group isa --available-only
+reaper interop list --group hdl --json
+~~~
+
+This is **toolchain discovery, not 40 implemented compilers or backends**. No foreign compiler or proprietary implementation is copied or bundled. See the interoperability and copyright inventory guide at docs/INTEROP_AND_COPYRIGHT.md.
+
+## Copyright and attribution inventory
+
+Run reaper copyright-scan PATH to inventory source-file SPDX identifiers and root-level LICENSE/NOTICE files. Use --json for machine-readable output or --require-spdx as a strict per-file header gate. The scanner is a bounded compliance aid; it does not detect plagiarism, prove rights or replace legal review. See docs/INTEROP_AND_COPYRIGHT.md.
+
 ## Systems architecture matrix
 
 Reaper complements its 66-position language and toolchain matrix with **14 CPU, MCU and virtual-ISA architecture profiles**. Use `python -m reaper --systems-architectures`, `--architecture-profile reaper`, `--available-architectures` or `--architectures-json`. Toolchain checks only look up executable names on PATH; they do not compile or run external code. See [the architecture matrix](docs/SYSTEMS_ARCHITECTURE_MATRIX.md).
