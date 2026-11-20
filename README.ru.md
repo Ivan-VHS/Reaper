@@ -31,7 +31,7 @@ Reaper включает канонический словарь из 666 уни�
 - **C ABI / Pytyliki:** opt-in ctypes FFI с проверяемыми сигнатурами и типизированный адаптер публичного pl_* API Pytyliki.
 - **Canonical IR / VM:** Python bytecode VM поверх Canonical IR; tree-walk остаётся стандартным движком.
 - **Reaper Studio debugger:** breakpoints (F9), stepping, Continue/Stop, инспектор переменных и стек вызовов.
-- **Нативное направление C17:** lexer, expression parser и AST с управлением памятью, проверенный integer Canonical IR, контролируемое свёртывание констант, ограниченный AST-to-IR lowering, начальный CLI и C-тесты.
+- **Нативное направление C17:** lexer, expression parser и AST с управлением памятью, проверенный integer Canonical IR, контролируемое свёртывание ADD/SUB/MUL/DIV для signed i64 с отклонением переполнения и деления на ноль, ограниченный AST-to-IR lowering, начальный CLI и C-тесты.
 - **Self-hosting, этап 0 + частичный этап 1:** `selfhost/lexer.rpr` реализует токенизацию, а `selfhost/parser.rpr` — Pratt-парсер выражений на самом Reaper. Он учитывает реальный оператор потока `::`, приоритеты, правоассоциативное `**`, списки, вызовы функций и индексацию. Оба модуля проверяются bootstrap-assertions, Python unit-тестами и CTest. У lexer пока есть ограничение ASCII-идентификаторов; parser ещё не покрывает объявления, блоки и грамматику операторов и не заменяет эталонный frontend. См. [план bootstrap](docs/SELF_HOSTING_BOOTSTRAP.md).
 - **MOST:** документированный словарь языка и поэтапный контракт реализации.
 
@@ -166,3 +166,8 @@ GitHub Actions тестирует Python 3.10, 3.11 и 3.12, запускает 
 ## Execution audit trail
 
 The optional audit mode writes a local hash-chained journal of source fingerprints and run lifecycle events without copying program output. Enable it with --audit-log PATH and verify it with --verify-audit-log PATH. The chain detects record edits but is not a digital signature or remote attestation; see docs/EXECUTION_AUDIT.md.
+
+
+## Проверяемая целочисленная арифметика Canonical IR
+
+Нативный IR поддерживает сложение, вычитание, умножение и деление i64. Свёртывание выполняется только для двух констант; переполнение signed i64, деление на ноль и INT64_MIN / -1 возвращают диагностику. Fixed-point pipeline остаётся ограниченным бюджетом 1–64 итерации с проверкой IR до и после каждого прохода. Это гарантия уровня IR, а не заявление о полном паритете C-фронтенда или runtime.
