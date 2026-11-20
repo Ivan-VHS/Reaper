@@ -1,12 +1,17 @@
-# Reaper — a flow-first programming language
+# Reaper — flow-first programming language
+
+<p align="center">
+  <a href="https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml/badge.svg"></a>
+  <img alt="Python 3.10+" src="https://img.shields.io/badge/reference-runtime-Python%203.10%2B-2563EB?style=flat-square">
+  <img alt="C17" src="https://img.shields.io/badge/native-track-C17-DC2626?style=flat-square">
+  <img alt="Apache 2.0" src="https://img.shields.io/badge/license-Apache--2.0-334155?style=flat-square">
+</p>
+
+**Reaper is an expression-oriented language built around readable syntax and explicit data flow.** Its `::` operator passes a value into the next operation. The repository contains a Python reference interpreter, a developing native C17 core, and Reaper Studio for Windows.
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
-**Reaper is an expression-oriented language built around readable syntax and explicit data flow.** Its `::` operator passes a value into the next operation. The repository contains a Python reference interpreter, a developing native C17 implementation and the first Reaper-written self-hosting frontend component.
-
-**Engineering standard:** [Unified Engineering Standard](docs/UNIFIED_ENGINEERING_STANDARD.md) — common rules for language semantics, reference/native parity, interoperability and verification.
-
-## Example
+## Language example
 
 ```reaper
 craft double(value) {
@@ -17,65 +22,27 @@ make answer := numbers :: map(double) :: sum()
 emit "answer = " ++ text(answer)
 ```
 
-## 666-token symbolic catalogue
+## Studio preview
 
-Reaper includes a canonical 666-entry vocabulary of unique three-symbol lexemes, with no digits, over `: ; [ { ] } + = _ - *`. The Python and native C lexers recognize the reserved codes; inspect them with `reaper --catalog`, `--catalog-group memory` or `--catalog-token ':::'`. Reserved catalogue entries are not yet executable operations. See [the token catalogue](docs/TOKEN_CATALOG.md).
+<p align="center"><img src="assets/reaper-terminal-preview.svg" alt="Illustrative Reaper command-line session preview" width="100%"></p>
+<sub>Expected output rendered from committed examples, not a live terminal or desktop screenshot. A captured Reaper Studio session is not yet committed.</sub>
 
-## 66-language systems capability matrix
+## Implemented capabilities
 
-Reaper exposes a capability catalogue covering memory ownership, linear resources, regions, compile-time programming, C ABI/FFI, concurrency, formal verification, embedded targets, SIMD and GPU/shader toolchains. The duplicate Clay and Nimrod/early-Nim source entries remain explicit aliases. Compiler discovery is separate from native backend implementation.
+- **Reference runtime:** Python 3.10+, lexer, parser, tree-walking interpreter, CLI, REPL and standard-library tests.
+- **Language core:** Unicode identifiers, functions/closures, recursion, immutable `make`, mutable `vary` with explicit `change`, conditionals, iteration and flow composition.
+- **Collections and metrics:** map/filter/fold/reduce, sorting, slicing, flattening, UTF-8 helpers, vector norms/distances, projections, quadratic forms and geometry.
+- **Modules and resources:** `.rpr` imports/exports, dependency graphs, cycle diagnostics, managed-resource ledger, LIFO regions, bounded file handles and deterministic cleanup.
+- **Execution and audit:** selectable Python bytecode VM, execution quotas, JSON output, profiling and hash-chained audit logs.
+- **Reaper Studio:** Windows editor for open/save/check/run, breakpoints, step/continue/stop, variable inspection and call stack.
+- **Embedded C and interop:** project scaffolding, MCU profile inspection, memory budgets and opt-in C ABI access to trusted libraries, including Pytyliki ABI v1.
+- **Additional systems:** local-first Polyglot; 666 reserved lexemes; 66 language/toolchain entries; 14 architecture profiles; MOST 20×20 matrix with 400 specified projections and an implemented integrity validator (not 400 executable compiler features).
 
-```bash
-reaper --systems-languages
-reaper --systems-languages --language-profile reaper
-reaper --available-languages --language-profile reaper
-reaper --systems-json
-```
+The native C17 track has a lexer, expression parser, owned AST, checked integer IR operations, limited lowering, optimizer tests and CLI bring-up. It is **not a complete interpreter**. The self-hosting lexer/parser is a staged bootstrap, not a replacement for the Python frontend.
 
-Toolchain checks are PATH-only: they do not run or install compilers. The matrix is included in Python package data and its tests are registered with CTest.
+## Run the reference interpreter
 
-## Systems architecture matrix
-
-Reaper complements its 66-position language and toolchain matrix with **14 CPU, MCU and virtual-ISA architecture profiles**. Use `python -m reaper --systems-architectures`, `--architecture-profile reaper`, `--available-architectures` or `--architectures-json`. Toolchain checks only look up executable names on PATH; they do not compile or run external code. See [the architecture matrix](docs/SYSTEMS_ARCHITECTURE_MATRIX.md).
-
-## Implemented today
-
-- **Python reference runtime:** Python 3.10+, tree-walking interpreter, lexer, parser, runtime, CLI and standard-library tests.
-- **Language core:** Unicode identifiers, comments, strings, functions and closures, recursion, immutable `make`, mutable `vary` with explicit `change`, conditionals, iteration and flow composition.
-- **Built-ins and diagnostics:** higher-order collection operations (map/filter/fold/reduce), stable key sorting, chunking/slicing/flattening/de-duplication, UTF-8 string utilities, source-aware errors and bounded execution.
-- **Metric standard library:** L1/L2/L-infinity norms, normalization, Euclidean/Manhattan/Chebyshev distances, cosine similarity, angles, projections and centroids, alongside quadratic forms and non-Euclidean models.
-- **CLI:** --lint, persistent line-oriented --repl, structured --json, --profile, selectable `--engine vm`, `--module-graph`, and opt-in `--allow-native-ffi`.
-- **`.rpr` modules:** explicit import/export, isolated module scopes, cached exports, dependency graphs and cycle diagnostics.
-- **Managed runtime resources:** tracked heap ledger, mark/sweep roots, LIFO regions, bounded text-file handles and deterministic cleanup.
-- **C ABI / Pytyliki:** opt-in typed bridge for the public `pl_*` API and Pytyliki ABI v1. Reaper can query native MCU profiles and reuse Pytyliki’s overflow-checked FLASH/SRAM budget through `pytyliki_embedded_profiles` and `pytyliki_embedded_budget`.
-- **Canonical IR / VM:** selectable Python bytecode VM over Canonical IR; tree-walk remains the default compatibility engine.
-- **Reaper Studio debugger:** statement breakpoints (F9), step/continue/stop, variable inspector and call stack.
-- **Native C17 track:** lexer, expression parser and owned AST, verified integer Canonical IR, checked constant folding for signed i64 addition, subtraction, multiplication and division (overflow and division by zero rejected), a limited AST-to-IR lowering slice, CLI bring-up and C tests.
-- **Self-hosting bootstrap — Stage 0 + partial Stage 1:** `selfhost/lexer.rpr` implements tokenization and `selfhost/parser.rpr` implements a Reaper-written Pratt expression parser with the real `::` flow operator, precedence, right-associative exponentiation, list literals, calls and indexing. Bootstrap assertions and Python/CTest tests cover both programs. The lexer still has an ASCII-identifier gap; the parser does not yet cover declarations, blocks or statement grammar and does not replace the reference frontend. See [the bootstrap plan](docs/SELF_HOSTING_BOOTSTRAP.md).
-- **MOST language track:** documented language vocabulary and staged implementation contract.
-
-The C implementation is not yet a full language interpreter. Full declarations/blocks, type checking, intent resolution, ownership analysis, native code generation and WASM are not complete. Python remains the compatibility reference until runtime and CLI parity is demonstrated.
-
-## Runtime platform
-
-Contracts and examples: [RUNTIME_PLATFORM.md](docs/RUNTIME_PLATFORM.md).
-
-```sh
-python -m reaper --engine vm examples/flow.rpr
-python -m reaper --module-graph examples/modules/main.rpr
-python -m reaper --heap-bytes 67108864 --open-resources 64 examples/flow.rpr
-python -m reaper --allow-native-ffi path/to/ffi_program.rpr
-```
-
-The managed heap is an accounting and reachability layer over Python's allocator (`sys.getsizeof`), not a separate physical allocator or process-RSS cap. The bytecode VM currently runs in the Python reference runtime; the native C17 core is not claimed to have VM parity. Native FFI runs in-process, requires trusted ABI-compatible libraries, and ctypes cannot guarantee portable physical library unloading.
-
-## Desktop workbench
-
-Reaper Studio provides a native Windows desktop editor and execution window for the Python reference runtime. It is a practical source workbench, not a claim that the developing C17 runtime has reached feature parity.
-
-## Run the Python interpreter
-
-Requirements: Python 3.10 or newer. No third-party runtime dependencies.
+Requirements: Python 3.10+. No third-party runtime dependencies.
 
 ```bash
 git clone https://github.com/Ivan-VHS/Reaper.git
@@ -83,17 +50,12 @@ cd Reaper
 python -m reaper examples/hello.rpr
 python -m reaper examples/flow.rpr
 python -m reaper --check examples/flow.rpr
+python -m reaper --engine vm examples/flow.rpr
 python -m reaper --repl
-python -m reaper --json --profile examples/flow.rpr
 python -m unittest discover -s tests -v
 ```
 
-Editable CLI installation:
-
-```bash
-python -m pip install -e .
-reaper examples/hello.rpr
-```
+Install the CLI with `python -m pip install -e .`. Run Reaper Studio on Windows with `python reaper_desktop.py`.
 
 ## Build the native C17 core
 
@@ -104,134 +66,20 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --parallel
 ctest --test-dir build --output-on-failure
 ./build/reaper-c --tokens examples/hello.rpr
-./build/reaper-c --evolution-status
 ```
 
-The native executable currently exposes the implemented bring-up and analysis paths; it is not a drop-in replacement for the Python interpreter.
+## Evolution and boundaries
 
+Started 17 Nov 2026 with lexer, parser, interpreter and CLI. Main added modules, quotas, VM, Studio debugger, Polyglot, Embedded C, partial C17/self-hosting tracks and the validated MOST 20×20 architecture matrix.
 
-## Native desktop application
+The managed heap is accounting over Python's allocator, not a physical allocator or process-RSS cap. Native FFI is opt-in and executes loaded code in-process; use trusted ABI-compatible libraries only. Toolchain discovery checks `PATH` and does not install compilers. Python remains the compatibility reference until native parity is demonstrated.
 
-**Reaper Studio** adds a Windows x64 desktop workbench on top of the existing Python reference runtime: edit `.rpr` files, open/save source, parse-check a program, run it, and inspect output/errors. The C17 implementation remains a separate developing core; the desktop app does not claim full C-runtime parity.
+## Documentation and downloads
 
-- [Windows x64 Releases](https://github.com/Ivan-VHS/Reaper/releases)
-- [Desktop build workflow and CI artifacts](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml)
-- [Latest workflow runs](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml?query=branch%3Amain)
+[Language](LANGUAGE.md) · [Runtime platform](docs/RUNTIME_PLATFORM.md) · [Self-hosting plan](docs/SELF_HOSTING_BOOTSTRAP.md) · [Token catalogue](docs/TOKEN_CATALOG.md) · [Embedded C](docs/EMBEDDED_C_WORKBENCH.md) · [MOST matrix](docs/MOST_400_COMBINATORIAL_MATRIX.md) · [Engineering standard](docs/UNIFIED_ENGINEERING_STANDARD.md)
 
-A successful workflow run uploads `Reaper-Studio-windows-x64.zip`; a `v*` tag publishes the same archive as a GitHub Release. Run from source with Python 3.10+ using `python reaper_desktop.py`.
+[Windows releases](https://github.com/Ivan-VHS/Reaper/releases) · [Desktop build workflow](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml)
 
+## License
 
-## Polyglot immersion
-
-Reaper now includes a local-first language-learning subsystem in its Python reference package: multi-language profiles, an offline content library, contextual phrase cards, spaced repetition, adaptive daily plans, comprehensibility estimates, practice logs and JSON export.
-
-```sh
-reaper polyglot init English --native Russian --level A0 --minutes 45
-reaper polyglot content add lesson.srt --kind dialogue --level A1
-reaper polyglot phrase add "Could you say that again?" --translation "Не могли бы вы повторить?" --context "Polite clarification"
-reaper polyglot plan
-reaper polyglot review
-reaper polyglot report
-```
-
-Data is stored locally in SQLite.
-
-Profiles also retain script-family defaults/overrides, tonal-language guidance, phonetic focus and a temporary romanization bridge. Phrase cards support personal examples and optional learner-supplied frequency ranks; reports show a coarse exposure phase. These are practice aids, not proficiency predictions. The 70–90% content band is a transparent estimate based on reviewed phrase cards, not an automatic comprehension test. Media playback, ASR/TTS, automatic translation and AI pronunciation scoring are not yet implemented. See [Polyglot immersion guide](docs/POLYGLOT_IMMERSION.md).
-
-## Programming-language polyglot
-
-A separate `polyglot-code` subsystem models programming-language learning as engineering practice: semantic concept tracking, execution and memory models, cross-language comparisons, katas, idiom notes, an error journal, adaptive study plans and progress export. It does not replace or alter the natural-language `polyglot` command.
-
-```sh
-reaper polyglot-code init Rust --known C,C++ --level working --minutes 60
-reaper polyglot-code concept list
-reaper polyglot-code compare memory --known-language C++ --known-model "References and RAII" --target-model "Ownership and borrowing"
-reaper polyglot-code kata list
-reaper polyglot-code plan
-reaper polyglot-code diagnose
-reaper polyglot-code report
-```
-
-The subsystem uses a separate local SQLite database. Toolchain discovery is PATH-only; it does not install compilers or execute learner code. Kata status and proficiency are explicitly self-recorded, not automatically graded. See [Programming-language immersion guide](docs/POLYGLOT_CODE.md).
-
-## Design and safety boundaries
-
-Programs are tokenized, parsed into an AST and evaluated by a bounded interpreter. Console effects are explicit through operations such as `emit`, `say` and `ask`. Ordinary expressions do not silently gain filesystem, network, clock, process, shell or hardware access.
-
-Default runtime quotas include 1,000,000 execution steps, 256 nested calls, 100,000 collection items and 1,000,000 characters from text concatenation. These are resource guardrails, **not a security sandbox**. Do not treat execution of untrusted programs as isolated from the host.
-
-## Self-hosting frontend: verified partial implementation
-
-Reaper has begun executing frontend logic written in Reaper itself; it is **not yet a self-hosting compiler**.
-
-- **Stage 0 lexer:** selfhost/lexer.rpr scans the currently supported ASCII-oriented token subset and emits source-located token records. Unicode identifier parity with the Python lexer remains open.
-- **Stage 1 Pratt expression parser:** selfhost/parser.rpr parses literals, names, unary and grouped expressions, list literals, function calls, indexing and infix operators. Its precedence table includes the :: flow operator and right-associative exponentiation (**).
-- **Reference implementation:** the Python parser and AST remain the compatibility oracle. The Reaper-written parser returns a stage-local array representation; declaration and statement grammar plus canonical-AST parity are not implemented yet.
-
-Run the focused bootstrap tests with:
-
-~~~bash
-python -m unittest discover -s tests -p 'test_self_hosting.py' -v
-~~~
-
-See the [self-hosting stage contract](docs/SELF_HOSTING_BOOTSTRAP.md), the [Reaper-written parser](selfhost/parser.rpr), and the [Reaper-written lexer](selfhost/lexer.rpr). A stage is counted as implemented only to the extent covered by its tests; file presence alone is not completion evidence.
-
-## Embedded C workbench
-
-Reaper includes an Embedded C project flow for reference Cortex-M4, RV32IMC and
-ATmega328P profiles. Create a project, review its JSON MCU profile and linker
-script, cross-build with a user-installed GNU toolchain, inspect ELF/map section
-sizes and receive FLASH/SRAM budget warnings:
-
-~~~sh
-python -m reaper embedded profiles
-python -m reaper embedded init ./board --profile cortex-m4-reference
-python -m reaper embedded inspect ./board
-python -m reaper embedded build ./board
-~~~
-
-Reaper Studio exposes the same create, inspect and background-build actions in
-its **Embedded C** menu. The register bank and CMSIS-SVD subset are deterministic
-simulation tools, not physical MMIO access. The generated startup/linker scaffold
-is a reference; add the exact vendor startup sequence and verify addresses before
-flashing. No built-in flashing, UART bootloader, SWD/JTAG debugger or live pin
-sampling is claimed. See [the Embedded C workbench guide](docs/EMBEDDED_C_WORKBENCH.md).
-
-## Documentation
-
-- [Language reference](LANGUAGE.md)
-- [Runtime platform: modules, heap, FFI, VM and debugger](docs/RUNTIME_PLATFORM.md)
-- [Runtime and CLI implementation update (20 Nov 2026)](docs/IMPLEMENTATION_UPDATE_2026-11-20.md)
-- [Unified REAPER/MOST architecture](docs/REAPER_UNIFIED_ARCHITECTURE.md)
-- [Self-hosting bootstrap plan](docs/SELF_HOSTING_BOOTSTRAP.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Concatenation and composition architecture](docs/CONCATENATION_ARCHITECTURE.md)
-- [Orthogonal metric engine](docs/ORTHOGONAL_METRIC_ENGINE.md)
-- [Systems architecture matrix](docs/SYSTEMS_ARCHITECTURE_MATRIX.md)
-- [Systems-language matrix](reaper/systems_languages.json)
-- [MOST language specification](docs/MOST_LANGUAGE_SPEC.md)
-- [MOST 20×20 combinatorial matrix](docs/MOST_400_COMBINATORIAL_MATRIX.md)
-- [C migration plan](docs/C_MIGRATION.md)
-- [Examples](examples/) · [Tests](tests/)
-
-## CI and license
-
-GitHub Actions tests Python 3.10, 3.11 and 3.12, runs the unit suite (including the Reaper-written bootstrap lexer), checks an example and executes the flow example. The native C core has its own CMake/CTest coverage.
-
-[Apache License 2.0](LICENSE).
-
-> 千里之行，始于足下。 — A journey of a thousand miles begins with a single step.
-
-
-## Execution audit trail
-
-The optional audit mode writes a local hash-chained journal of source fingerprints and run lifecycle events without copying program output. Enable it with --audit-log PATH and verify it with --verify-audit-log PATH. The chain detects record edits but is not a digital signature or remote attestation; see docs/EXECUTION_AUDIT.md.
-
-
-## Project ecosystem
-
-This repository is part of a federation of three independent projects. Reaper owns the language, runtime and orchestration; OPlague owns read-only Windows device inventory and driver-package inspection; Pytyliki owns the C11 processor, memory and numerical core. See the [3 × 3 federation matrix](https://github.com/Ivan-VHS/Reaper/blob/main/docs/PROJECT_FEDERATION_MATRIX.md) for the 3 × 3 cross-product, implemented interfaces, data directions and safety boundaries.
-
-- [Reaper — language, runtime and orchestration](https://github.com/Ivan-VHS/Reaper/blob/main/README.md) · [integration contract](https://github.com/Ivan-VHS/Reaper/blob/main/docs/FEDERATED_INTEGRATION.md)
-- [OPlague — read-only Windows device inventory and driver-package inspection](https://github.com/Ivan-VHS/OPlague/blob/main/README.md) · [integration contract](https://github.com/Ivan-VHS/OPlague/blob/main/docs/FEDERATED_INTEGRATION.md)
-- [Pytyliki — C11 processor, memory and numerical core](https://github.com/Ivan-VHS/Pytyliki/blob/main/README.md) · [integration contract](https://github.com/Ivan-VHS/Pytyliki/blob/main/docs/FEDERATED_INTEGRATION.md)
+[Apache License 2.0](LICENSE)

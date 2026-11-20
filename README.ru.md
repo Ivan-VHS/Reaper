@@ -1,10 +1,17 @@
-# Reaper — язык программирования с композицией потоков
+# Reaper — язык программирования с потоковой композицией
+
+<p align="center">
+  <a href="https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml/badge.svg"></a>
+  <img alt="Python 3.10+" src="https://img.shields.io/badge/reference-runtime-Python%203.10%2B-2563EB?style=flat-square">
+  <img alt="C17" src="https://img.shields.io/badge/native-track-C17-DC2626?style=flat-square">
+  <img alt="Apache 2.0" src="https://img.shields.io/badge/license-Apache--2.0-334155?style=flat-square">
+</p>
+
+**Reaper — выразительный язык с читаемым синтаксисом и явным потоком данных.** Оператор `::` передаёт значение следующей операции. Репозиторий содержит эталонный интерпретатор Python, развиваемое ядро C17 и Reaper Studio для Windows.
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
-**Reaper — expression-oriented язык с читаемым синтаксисом и явным потоком данных.** Оператор `::` передаёт значение следующей операции. В репозитории находятся эталонный интерпретатор Python, разрабатываемая нативная реализация C17 и первый компонент self-hosting, написанный на самом Reaper.
-
-## Пример
+## Пример языка
 
 ```reaper
 craft double(value) {
@@ -15,35 +22,27 @@ make answer := numbers :: map(double) :: sum()
 emit "answer = " ++ text(answer)
 ```
 
-## Каталог из 666 символических токенов
+## Предпросмотр Studio
 
-Reaper включает канонический словарь из 666 уникальных трёхсимвольных лексем без цифр на алфавите `: ; [ { ] } + = _ - *`. Python- и C-лексеры распознают зарезервированные коды; посмотреть их можно командами `reaper --catalog`, `--catalog-group memory` и `reaper --catalog-token ':::'`. Зарезервированные записи пока не являются исполняемыми операциями. См. [каталог токенов](docs/TOKEN_CATALOG.md).
+<p align="center"><img src="assets/reaper-terminal-preview.svg" alt="Иллюстративный предпросмотр терминальной сессии Reaper" width="100%"></p>
+<sub>Ожидаемый вывод по примерам в репозитории, а не снимок живого терминала или desktop-приложения. Скриншот Reaper Studio пока не добавлен.</sub>
 
-## Что реализовано
+## Реализованные возможности
 
-- **Эталонная среда Python:** Python 3.10+, tree-walking интерпретатор, lexer, parser, runtime, CLI и тесты на стандартной библиотеке.
-- **Ядро языка:** Unicode-идентификаторы, комментарии, строки, функции и closures, рекурсия, неизменяемый `make`, изменяемый `vary` с явным `change`, условия, циклы и композиция потоков.
-- **Встроенные операции и диагностика:** конвейеры :: , map/filter/fold/reduce, стабильная сортировка по ключу, chunk/take/drop/flatten/unique, UTF-8-операции над строками, явные преобразования, диагностика с координатами и лимиты исполнения.
-- **Метрическая библиотека:** нормы L1/L2/L∞, нормализация, евклидовы/манхэттенские/чебышёвские расстояния, косинусное сходство, угол, проекция и центроид, а также квадратичные формы и неевклидовы модели.
-- **CLI:** --lint, постоянный построчный --repl, структурированный --json, --profile, выбор --engine vm, граф модулей --module-graph и отдельное разрешение --allow-native-ffi.
-- **Модули .rpr:** import/export, изолированные пространства модулей, кэш экспортов, транзитивный граф зависимостей и диагностика циклов.
-- **Память и ресурсы reference runtime:** учёт heap-аллокаций вложенных контейнеров, mark/sweep roots, LIFO-регионы, лимит памяти, файловые handles и гарантированное закрытие при завершении запуска.
-- **C ABI / Pytyliki:** opt-in ctypes FFI с проверяемыми сигнатурами и типизированный адаптер публичного pl_* API Pytyliki.
-- **Canonical IR / VM:** Python bytecode VM поверх Canonical IR; tree-walk остаётся стандартным движком.
-- **Reaper Studio debugger:** breakpoints (F9), stepping, Continue/Stop, инспектор переменных и стек вызовов.
-- **Нативное направление C17:** lexer, expression parser и AST с управлением памятью, проверенный integer Canonical IR, контролируемое свёртывание ADD/SUB/MUL/DIV для signed i64 с отклонением переполнения и деления на ноль, ограниченный AST-to-IR lowering, начальный CLI и C-тесты.
-- **Self-hosting, этап 0 + частичный этап 1:** `selfhost/lexer.rpr` реализует токенизацию, а `selfhost/parser.rpr` — Pratt-парсер выражений на самом Reaper. Он учитывает реальный оператор потока `::`, приоритеты, правоассоциативное `**`, списки, вызовы функций и индексацию. Оба модуля проверяются bootstrap-assertions, Python unit-тестами и CTest. У lexer пока есть ограничение ASCII-идентификаторов; parser ещё не покрывает объявления, блоки и грамматику операторов и не заменяет эталонный frontend. См. [план bootstrap](docs/SELF_HOSTING_BOOTSTRAP.md).
-- **MOST:** документированный словарь языка и поэтапный контракт реализации.
+- **Эталонный runtime:** Python 3.10+, лексер, парсер, tree-walking-интерпретатор, CLI, REPL и тесты на стандартной библиотеке.
+- **Ядро языка:** Unicode-идентификаторы, функции и замыкания, рекурсия, неизменяемый `make`, изменяемый `vary` с явным `change`, условия, циклы и композиция потока.
+- **Коллекции и метрики:** map/filter/fold/reduce, сортировка, срезы, flatten, UTF-8-утилиты, нормы и расстояния векторов, проекции, квадратичные формы и геометрия.
+- **Модули и ресурсы:** импорты/экспорты `.rpr`, граф зависимостей, диагностика циклов, учёт ресурсов, LIFO-регионы, ограниченные файловые дескрипторы и очистка.
+- **Исполнение и аудит:** Python bytecode VM, лимиты исполнения, JSON, профилирование и журналы с хеш-цепочкой.
+- **Reaper Studio:** Windows-редактор с открытием/сохранением, проверкой и запуском кода, breakpoint, пошаговым управлением, просмотром переменных и стека вызовов.
+- **Embedded C и FFI:** шаблоны проектов, профили MCU, бюджет памяти и опциональный C ABI к доверенным библиотекам, включая Pytyliki ABI v1.
+- **Дополнительные системы:** локальный Polyglot; 666 зарезервированных лексем; 66 профилей языков/toolchain; 14 архитектур; матрица MOST 20×20 (400 специфицированных проекций) и реализованный валидатор целостности. Это не 400 исполняемых функций языка.
 
-Реализация C пока не является полноценным интерпретатором. Полные declarations/blocks, проверка типов, разрешение intent, анализ ownership, генерация native code и WASM ещё не реализованы. Python остаётся эталоном совместимости до подтверждения паритета runtime и CLI.
+Нативная ветка C17 включает лексер, expression-парсер, AST с владением, проверяемые целочисленные операции IR, ограниченный lowering, тесты оптимизатора и начальный CLI. Это **ещё не полноценный интерпретатор**. Self-hosting lexer/parser — этап bootstrap, а не замена Python frontend.
 
-## Скриншоты
+## Запуск интерпретатора
 
-Сейчас это проект языка и runtime, а не графическое приложение. В репозитории нет проверенного скриншота работающего терминала; иллюстративная терминальная графика удалена, чтобы не выдавать её за реальный захват. Фактический вывод можно получить запуском примеров ниже.
-
-## Запуск интерпретатора Python
-
-Требуется Python 3.10 или новее. Сторонние runtime-зависимости отсутствуют.
+Требуется Python 3.10+. Сторонние runtime-зависимости не нужны.
 
 ```bash
 git clone https://github.com/Ivan-VHS/Reaper.git
@@ -51,149 +50,36 @@ cd Reaper
 python -m reaper examples/hello.rpr
 python -m reaper examples/flow.rpr
 python -m reaper --check examples/flow.rpr
+python -m reaper --engine vm examples/flow.rpr
 python -m reaper --repl
-python -m reaper --json --profile examples/flow.rpr
 python -m unittest discover -s tests -v
 ```
 
-Установка CLI в editable-режиме:
+Установка CLI: `python -m pip install -e .`. Запуск Reaper Studio в Windows: `python reaper_desktop.py`.
 
-```bash
-python -m pip install -e .
-reaper examples/hello.rpr
-```
+## Сборка ядра C17
 
-## Сборка нативного ядра C17
-
-Требуются CMake и компилятор с поддержкой C17.
+Нужны CMake и компилятор C17.
 
 ```sh
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --parallel
 ctest --test-dir build --output-on-failure
 ./build/reaper-c --tokens examples/hello.rpr
-./build/reaper-c --evolution-status
 ```
 
-Нативный executable сейчас предоставляет реализованные bring-up и аналитические сценарии; он не является полноценной заменой интерпретатора Python.
+## Развитие и границы
 
-## Новая runtime-платформа
+Языковая основа появилась 17 ноября 2026 года: лексер, парсер, интерпретатор и CLI. Затем main получил модули, лимиты, VM, Studio, Polyglot, Embedded C, частичные C17/self-hosting и валидируемую матрицу MOST 20×20.
 
-Контракты и примеры: [RUNTIME_PLATFORM.md](docs/RUNTIME_PLATFORM.md).
+Managed heap — учёт поверх аллокатора Python, а не физический аллокатор или лимит RSS. Нативный FFI включается явно и исполняет загруженный код внутри процесса — используйте только доверенные ABI-совместимые библиотеки. Поиск toolchain проверяет `PATH`, но не устанавливает компиляторы. Python остаётся эталоном до подтверждения нативного паритета.
 
-```sh
-python -m reaper --engine vm examples/flow.rpr
-python -m reaper --module-graph examples/modules/main.rpr
-python -m reaper --heap-bytes 67108864 --open-resources 64 examples/flow.rpr
-python -m reaper --allow-native-ffi path/to/ffi_program.rpr
-```
+## Документация и загрузки
 
-Модульный пример: [examples/modules](examples/modules/).
+[Язык](LANGUAGE.md) · [Runtime platform](docs/RUNTIME_PLATFORM.md) · [План self-hosting](docs/SELF_HOSTING_BOOTSTRAP.md) · [Каталог токенов](docs/TOKEN_CATALOG.md) · [Embedded C](docs/EMBEDDED_C_WORKBENCH.md) · [Матрица MOST](docs/MOST_400_COMBINATORIAL_MATRIX.md) · [Инженерный стандарт](docs/UNIFIED_ENGINEERING_STANDARD.md)
 
-Важно: managed heap — это учёт и сборка достижимости поверх Python allocator с оценкой sys.getsizeof, а не самостоятельный физический allocator. Bytecode VM пока работает в Python reference runtime. Нативное C17 ядро не заявляется как VM с полным паритетом. C ABI работает в процессе и загружает только доверенные библиотеки; ctypes не гарантирует переносимый физический dlclose.
+[Релизы Windows](https://github.com/Ivan-VHS/Reaper/releases) · [Сборка desktop](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml)
 
-## Нативное desktop-приложение
+## Лицензия
 
-**Reaper Studio** — desktop-среда Windows x64 поверх существующего Python reference runtime: редактирование файлов `.rpr`, открытие и сохранение исходников, синтаксическая проверка, запуск программ и просмотр вывода/ошибок. Разработка ядра C17 продолжается отдельно; полного паритета C runtime пока нет.
-
-- [Релизы Windows x64](https://github.com/Ivan-VHS/Reaper/releases)
-- [Сборка приложения и CI-артефакты](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml)
-- [Последние сборки](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml?query=branch%3Amain)
-
-Успешная сборка публикует `Reaper-Studio-windows-x64.zip`; тег `v*` создаёт GitHub Release. Запуск из исходников (Python 3.10+): `python reaper_desktop.py`.
-
-## Полиглот-система погружения
-
-В Python reference package Reaper добавлена локальная подсистема обучения языкам: несколько языковых профилей, офлайн-библиотека текстов и субтитров, контекстные карточки фраз, интервальное повторение, адаптивный ежедневный план, оценка понятности материалов, журнал занятий и экспорт JSON.
-
-```sh
-reaper polyglot init English --native Russian --level A0 --minutes 45
-reaper polyglot content add lesson.srt --kind dialogue --level A1
-reaper polyglot phrase add "Could you say that again?" --translation "Не могли бы вы повторить?" --context "Вежливая просьба повторить фразу"
-reaper polyglot plan
-reaper polyglot review
-reaper polyglot report
-```
-
-Данные хранятся локально в SQLite.
-
-Профили также хранят письменность, тональность, фонетический фокус и временный мост транслитерации. Карточки поддерживают личные примеры и необязательный частотный ранг от пользователя; отчёт показывает приблизительный этап по накопленным часам практики. Это учебные ориентиры, а не прогноз уровня владения языком. Диапазон 70–90% рассчитывается как приближённая доля токенов из уже повторённых карточек, а не как автоматический тест понимания. Воспроизведение медиа, ASR/TTS, автоматический перевод и AI-оценка произношения пока не реализованы. См. [руководство по полиглот-системе](docs/POLYGLOT_IMMERSION.md).
-
-## Полиглот-система языков программирования
-
-Отдельная подсистема `polyglot-code` превращает освоение языков программирования в инженерную практику: карта семантических концепций, модели исполнения и памяти, сопоставление с уже известными языками, ката, база идиом, журнал ошибок, адаптивный план и экспорт прогресса. Она не подменяет и не изменяет команду `polyglot` для естественных языков.
-
-```sh
-reaper polyglot-code init Rust --known C,C++ --level working --minutes 60
-reaper polyglot-code concept list
-reaper polyglot-code compare memory --known-language C++ --known-model "References and RAII" --target-model "Ownership and borrowing"
-reaper polyglot-code kata list
-reaper polyglot-code plan
-reaper polyglot-code diagnose
-reaper polyglot-code report
-```
-
-Данные хранятся в отдельной локальной базе SQLite. Поиск тулчейнов проверяет только PATH: компиляторы не устанавливаются, пользовательский код не запускается, а выполнение ката и оценка прогресса отмечаются самим разработчиком. См. [руководство по поглощению языков программирования](docs/POLYGLOT_CODE.md).
-
-## Дизайн и границы безопасности
-
-Программа проходит токенизацию, парсинг в AST и выполняется ограниченным интерпретатором. Консольные эффекты явные: `emit`, `say`, `ask`. Обычные выражения не получают скрытый доступ к файловой системе, сети, часам, процессам, shell или оборудованию.
-
-Стандартные лимиты включают 1 000 000 шагов, 256 вложенных вызовов, 100 000 элементов коллекции и 1 000 000 символов конкатенации. Это ограничения ресурсов, **а не sandbox безопасности**. Не считайте запуск недоверенного кода изолированным от хост-системы.
-
-## Self-hosting frontend: подтверждённая частичная реализация
-
-Reaper уже выполняет часть логики frontend на собственном языке, но **пока не является self-hosting-компилятором**.
-
-- **Stage 0 — lexer:** selfhost/lexer.rpr сканирует поддерживаемое ASCII-ориентированное подмножество токенов и формирует записи с координатами исходника. Совместимость Unicode-идентификаторов с Python lexer ещё не завершена.
-- **Stage 1 — Pratt expression parser:** selfhost/parser.rpr разбирает литералы, имена, унарные и сгруппированные выражения, списки, вызовы функций, индексацию и инфиксные операторы. Таблица приоритетов включает потоковый оператор :: и правоассоциативное возведение в степень (**).
-- **Эталон:** Python parser и AST остаются oracle совместимости. Reaper-парсер возвращает промежуточное представление в виде массивов; грамматика объявлений и операторов, а также совместимость с каноническим AST пока не реализованы.
-
-Запуск профильных bootstrap-тестов:
-
-~~~bash
-python -m unittest discover -s tests -p 'test_self_hosting.py' -v
-~~~
-
-См. [контракт этапов self-hosting](docs/SELF_HOSTING_BOOTSTRAP.md), [парсер на Reaper](selfhost/parser.rpr) и [lexer на Reaper](selfhost/lexer.rpr). Этап считается реализованным только в пределах, подтверждённых тестами; одного наличия файла недостаточно.
-
-## Документация
-
-- [Справочник языка](LANGUAGE.md)
-- [Runtime platform: modules, heap, FFI, VM и debugger](docs/RUNTIME_PLATFORM.md)
-- [Полиглот-система погружения](docs/POLYGLOT_IMMERSION.md)
-- [Реализованные расширения runtime и CLI (20.11.2026)](docs/IMPLEMENTATION_UPDATE_2026-11-20.md)
-- [Объединённая архитектура REAPER/MOST](docs/REAPER_UNIFIED_ARCHITECTURE.md)
-- [План self-hosting bootstrap](docs/SELF_HOSTING_BOOTSTRAP.md)
-- [Архитектура](docs/ARCHITECTURE.md)
-- [Спецификация MOST](docs/MOST_LANGUAGE_SPEC.md)
-- [Матрица МОСТ 20×20: 400 архитектурных проекций](docs/MOST_400_COMBINATORIAL_MATRIX.md)
-- [План миграции на C](docs/C_MIGRATION.md)
-- [Примеры](examples/) · [Тесты](tests/)
-
-## CI и лицензия
-
-GitHub Actions тестирует Python 3.10, 3.11 и 3.12, запускает unit-тесты (включая Reaper-written bootstrap lexer и частичный Pratt parser), проверяет пример и выполняет flow-пример. У нативного ядра C есть отдельное покрытие CMake/CTest.
-
-[Apache License 2.0](LICENSE).
-
-> 千里之行，始于足下。 — Путь в тысячу ли начинается с первого шага.
-
-
-## Execution audit trail
-
-The optional audit mode writes a local hash-chained journal of source fingerprints and run lifecycle events without copying program output. Enable it with --audit-log PATH and verify it with --verify-audit-log PATH. The chain detects record edits but is not a digital signature or remote attestation; see docs/EXECUTION_AUDIT.md.
-
-
-## Проверяемая целочисленная арифметика Canonical IR
-
-Нативный IR поддерживает сложение, вычитание, умножение и деление i64. Свёртывание выполняется только для двух констант; переполнение signed i64, деление на ноль и INT64_MIN / -1 возвращают диагностику. Fixed-point pipeline остаётся ограниченным бюджетом 1–64 итерации с проверкой IR до и после каждого прохода. Это гарантия уровня IR, а не заявление о полном паритете C-фронтенда или runtime.
-
-
-## Экосистема проектов
-
-Этот репозиторий входит в федерацию трёх самостоятельных проектов. Reaper отвечает за язык, среду выполнения и оркестрацию; OPlague — за инвентаризацию устройств Windows и анализ пакетов драйверов без изменений; Pytyliki — за ядро процессорных, memory- и математических операций на C11. See the [Матрица взаимосвязей 3 × 3](https://github.com/Ivan-VHS/Reaper/blob/main/docs/PROJECT_FEDERATION_MATRIX.md) for the 3 × 3 cross-product, implemented interfaces, data directions and safety boundaries.
-
-- [Reaper — язык, среда выполнения и оркестрация](https://github.com/Ivan-VHS/Reaper/blob/main/README.ru.md) · [integration contract](https://github.com/Ivan-VHS/Reaper/blob/main/docs/FEDERATED_INTEGRATION.md)
-- [OPlague — инвентаризация устройств Windows и анализ пакетов драйверов без изменений](https://github.com/Ivan-VHS/OPlague/blob/main/README.ru.md) · [integration contract](https://github.com/Ivan-VHS/OPlague/blob/main/docs/FEDERATED_INTEGRATION.md)
-- [Pytyliki — ядро процессорных, memory- и математических операций на C11](https://github.com/Ivan-VHS/Pytyliki/blob/main/README.ru.md) · [integration contract](https://github.com/Ivan-VHS/Pytyliki/blob/main/docs/FEDERATED_INTEGRATION.md)
+[Apache License 2.0](LICENSE)
