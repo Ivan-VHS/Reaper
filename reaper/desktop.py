@@ -18,7 +18,7 @@ from reaper.errors import ReaperError
 from reaper.parser import parse
 from reaper.runtime import Interpreter
 from reaper.debugger import DebuggerStopped, RuntimeDebugger
-from reaper.ui_theme import apply_ui_theme
+from reaper.ui_theme import apply_theme, apply_ui_theme, set_dpi_awareness, toggle_theme
 
 STARTER = '''craft double(value) {
     yield value * 2
@@ -30,34 +30,41 @@ emit values :: map(double)
 
 class ReaperStudio(tk.Tk):
     def __init__(self) -> None:
+        set_dpi_awareness()
         super().__init__()
         self.title("Reaper Studio")
         self.geometry("1120x760")
         self.minsize(780, 560)
-        self.option_add("*Font", ("Segoe UI", 10))
+        self._theme_name = apply_theme(self, "reaper-studio")
+        self._theme_mode = tk.StringVar(value=self._theme_name)
         self.current_file: Path | None = None
         self.breakpoints: set[int] = set()
         self.debugger: RuntimeDebugger | None = None
         self._debug_wait = False
         self._debug_signal = tk.BooleanVar(value=False)
-        self._theme_mode = tk.StringVar(value="system")
 
         self._build_menu()
         toolbar = ttk.Frame(self, padding=(10, 8))
         toolbar.pack(fill="x")
-        ttk.Button(toolbar, text="Open", command=self.open_file).pack(side="left")
-        ttk.Button(toolbar, text="Save", command=self.save_file).pack(side="left", padx=4)
-        ttk.Separator(toolbar, orient="vertical").pack(side="left", fill="y", padx=8)
-        ttk.Button(toolbar, text="Check", command=self.check_source).pack(side="left")
-        ttk.Button(toolbar, text="Run", command=self.run_source).pack(side="left", padx=4)
-        ttk.Button(toolbar, text="Debug", command=self.debug_source).pack(side="left")
-        ttk.Button(toolbar, text="Breakpoint", command=self.toggle_breakpoint).pack(side="left", padx=4)
-        ttk.Button(toolbar, text="Continue", command=self.continue_debug).pack(side="left")
-        ttk.Button(toolbar, text="Step", command=self.step_debug).pack(side="left", padx=4)
-        ttk.Button(toolbar, text="Stop", command=self.stop_debug).pack(side="left")
-        ttk.Button(toolbar, text="Clear output", command=self.clear_output).pack(side="left", padx=4)
+        file_actions = ttk.Frame(toolbar)
+        file_actions.pack(fill="x")
+        run_actions = ttk.Frame(toolbar)
+        run_actions.pack(fill="x", pady=(6, 0))
+        ttk.Button(file_actions, text="Open", command=self.open_file).pack(side="left")
+        ttk.Button(file_actions, text="Save", command=self.save_file).pack(side="left", padx=4)
         self.file_label = tk.StringVar(value="Untitled.reaper")
-        ttk.Label(toolbar, textvariable=self.file_label, foreground="#526174").pack(side="right")
+        ttk.Label(file_actions, textvariable=self.file_label, style="Muted.TLabel").pack(side="right")
+        self.theme_button = ttk.Button(file_actions, text="Dark theme", command=self.toggle_ui_theme)
+        self.theme_button.pack(side="right", padx=(8, 10))
+        ttk.Separator(run_actions, orient="vertical").pack(side="left", fill="y", padx=8)
+        ttk.Button(run_actions, text="Check", command=self.check_source).pack(side="left")
+        ttk.Button(run_actions, text="Run", command=self.run_source, style="Primary.TButton").pack(side="left", padx=4)
+        ttk.Button(run_actions, text="Debug", command=self.debug_source).pack(side="left")
+        ttk.Button(run_actions, text="Breakpoint", command=self.toggle_breakpoint).pack(side="left", padx=4)
+        ttk.Button(run_actions, text="Continue", command=self.continue_debug).pack(side="left")
+        ttk.Button(run_actions, text="Step", command=self.step_debug).pack(side="left", padx=4)
+        ttk.Button(run_actions, text="Stop", command=self.stop_debug, style="Danger.TButton").pack(side="left")
+        ttk.Button(run_actions, text="Clear output", command=self.clear_output).pack(side="left", padx=4)
 
         panes = ttk.Panedwindow(self, orient="vertical")
         panes.pack(fill="both", expand=True, padx=10, pady=(0, 8))
@@ -65,7 +72,7 @@ class ReaperStudio(tk.Tk):
         output_frame = ttk.Frame(panes)
         panes.add(editor_frame, weight=3)
         panes.add(output_frame, weight=1)
-        ttk.Label(editor_frame, text="SOURCE", padding=(4, 4)).pack(anchor="w")
+        ttk.Label(editor_frame, text="SOURCE", padding=(4, 4), style="Section.TLabel").pack(anchor="w")
         self.editor = ScrolledText(editor_frame, wrap="none", undo=True, font=("Consolas", 11), tabs=("4c",))
         self.editor.pack(fill="both", expand=True)
         self.editor.insert("1.0", STARTER)
@@ -96,7 +103,11 @@ class ReaperStudio(tk.Tk):
         self.bind_all("<F5>", lambda _event: self.run_source())
         self.bind_all("<Shift-F5>", lambda _event: self.check_source())
         self.bind_all("<F9>", lambda _event: self.toggle_breakpoint())
-        self.apply_visual_theme()
+
+    def toggle_ui_theme(self) -> None:
+        self._theme_name = toggle_theme(self, "reaper-studio")
+        self._theme_mode.set(self._theme_name)
+        self.theme_button.configure(text="Light theme" if self._theme_name == "dark" else "Dark theme")
 
     def _build_menu(self) -> None:
         menu = tk.Menu(self)
@@ -128,7 +139,13 @@ class ReaperStudio(tk.Tk):
 
     def apply_visual_theme(self) -> None:
         """Apply System, Light or Dark colors without changing editor behavior."""
-        apply_ui_theme(self, self._theme_mode.get())
+        mode = self._theme_mode.get()
+        if mode == "system":
+            colors = apply_ui_theme(self, "system")
+            self._theme_name = colors["mode"]
+        else:
+            self._theme_name = apply_theme(self, "reaper-studio", mode)
+        self.theme_button.configure(text="Light theme" if self._theme_name == "dark" else "Dark theme")
 
     def embedded_new_project(self) -> None:
         directory = filedialog.askdirectory(parent=self, title="Create Embedded C project")
