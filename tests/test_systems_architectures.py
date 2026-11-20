@@ -35,7 +35,7 @@ class SystemsArchitectureMatrixTests(unittest.TestCase):
         reaper = select_architectures(data, profile="reaper", which=lambda _: None)
         oplague = select_architectures(data, profile="oplague", which=lambda _: None)
         self.assertTrue(reaper)
-        self.assertTrue(oplage)
+        self.assertTrue(oplague)
         self.assertGreaterEqual(reaper[0]["profile_score"], reaper[-1]["profile_score"])
         self.assertIn("wasm32", {item["name"] for item in reaper})
         self.assertIn("x86_64", {item["name"] for item in oplague})
