@@ -39,6 +39,7 @@ Reaper complements its 66-position language and toolchain matrix with **14 CPU, 
 - **Built-ins and diagnostics:** higher-order collection operations (map/filter/fold/reduce), stable key sorting, chunking/slicing/flattening/de-duplication, UTF-8 string utilities, source-aware errors and bounded execution.
 - **Metric standard library:** L1/L2/L-infinity norms, normalization, Euclidean/Manhattan/Chebyshev distances, cosine similarity, angles, projections and centroids, alongside quadratic forms and non-Euclidean models.
 - **CLI:** --lint, persistent line-oriented --repl, structured --json output and --profile execution metrics.
+- **Polyglot immersion workspace:** local language profiles, script-aware vocabulary-coverage estimates, contextual phrase cards, spaced repetition, a four-pillar daily plan and session analytics via `reaper polyglot`; see [the implementation guide](docs/POLYGLOT_IMMERSION.md).
 - **Native C17 track:** lexer, expression parser and owned AST, verified integer Canonical IR, checked constant folding, a limited AST-to-IR lowering slice, CLI bring-up and C tests.
 - **Self-hosting bootstrap — Stage 0:** `selfhost/lexer.rpr` implements the initial tokenizer in Reaper source. The Python bootstrap runs it in CI and checks token values, source positions, string escapes and invalid-character reporting. This first slice currently handles ASCII identifiers only; it does not replace the reference lexer or constitute a self-hosting compiler yet. See [the bootstrap plan](docs/SELF_HOSTING_BOOTSTRAP.md).
 - **MOST language track:** documented language vocabulary and staged implementation contract.
@@ -61,6 +62,9 @@ python -m reaper examples/flow.rpr
 python -m reaper --check examples/flow.rpr
 python -m reaper --repl
 python -m reaper --json --profile examples/flow.rpr
+python -m reaper polyglot init --target-language Spanish --code es --support-language Russian
+python -m reaper polyglot plan
+python -m reaper polyglot status
 python -m unittest discover -s tests -v
 ```
 
@@ -106,6 +110,7 @@ Default runtime quotas include 1,000,000 execution steps, 256 nested calls, 100,
 ## Documentation
 
 - [Language reference](LANGUAGE.md)
+- [Polyglot immersion system](docs/POLYGLOT_IMMERSION.md)
 - [Runtime and CLI implementation update (20 Nov 2026)](docs/IMPLEMENTATION_UPDATE_2026-11-20.md)
 - [Unified REAPER/MOST architecture](docs/REAPER_UNIFIED_ARCHITECTURE.md)
 - [Self-hosting bootstrap plan](docs/SELF_HOSTING_BOOTSTRAP.md)

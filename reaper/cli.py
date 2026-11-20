@@ -47,8 +47,12 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    raw_argv = list(sys.argv[1:] if argv is None else argv)
+    if raw_argv and raw_argv[0] == "polyglot":
+        from .polyglot import polyglot_main
+        return polyglot_main(raw_argv[1:])
     parser = build_parser()
-    args = parser.parse_args(argv)
+    args = parser.parse_args(raw_argv)
     if args.repl:
         if args.source or args.check or args.evolve:
             parser.error("--repl cannot be combined with a source, --check or --evolve")

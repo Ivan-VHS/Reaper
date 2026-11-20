@@ -22,6 +22,7 @@ emit "answer = " ++ text(answer)
 - **Встроенные операции и диагностика:** конвейеры :: , map/filter/fold/reduce, стабильная сортировка по ключу, chunk/take/drop/flatten/unique, UTF-8-операции над строками, явные преобразования, диагностика с координатами и лимиты исполнения.
 - **Метрическая библиотека:** нормы L1/L2/L∞, нормализация, евклидовы/манхэттенские/чебышёвские расстояния, косинусное сходство, угол, проекция и центроид, а также квадратичные формы и неевклидовы модели.
 - **CLI:** --lint, постоянный построчный --repl, структурированный --json и замеры --profile.
+- **Полиглот-погружение:** локальные профили языка, оценка понятности текста по знакомой лексике, контекстные фразы, интервальные повторы, четырёхопорный дневной план и журнал занятий через `reaper polyglot`; см. [руководство](docs/POLYGLOT_IMMERSION.md).
 - **Нативное направление C17:** lexer, expression parser и AST с управлением памятью, проверенный integer Canonical IR, контролируемое свёртывание констант, ограниченный AST-to-IR lowering, начальный CLI и C-тесты.
 - **Self-hosting, этап 0:** `selfhost/lexer.rpr` реализует начальный токенизатор на самом Reaper. Python bootstrap запускает его в CI и проверяет токены, координаты, escape-последовательности и ошибки символов. Пока поддерживаются только ASCII-идентификаторы; этот слой ещё не заменяет эталонный lexer и не является self-hosting-компилятором. См. [план bootstrap](docs/SELF_HOSTING_BOOTSTRAP.md).
 - **MOST:** документированный словарь языка и поэтапный контракт реализации.
@@ -44,6 +45,9 @@ python -m reaper examples/flow.rpr
 python -m reaper --check examples/flow.rpr
 python -m reaper --repl
 python -m reaper --json --profile examples/flow.rpr
+python -m reaper polyglot init --target-language Spanish --code es --support-language Russian
+python -m reaper polyglot plan
+python -m reaper polyglot status
 python -m unittest discover -s tests -v
 ```
 
@@ -87,6 +91,7 @@ ctest --test-dir build --output-on-failure
 ## Документация
 
 - [Справочник языка](LANGUAGE.md)
+- [Полиглот-система погружения](docs/POLYGLOT_IMMERSION.md)
 - [Реализованные расширения runtime и CLI (20.11.2026)](docs/IMPLEMENTATION_UPDATE_2026-11-20.md)
 - [Объединённая архитектура REAPER/MOST](docs/REAPER_UNIFIED_ARCHITECTURE.md)
 - [План self-hosting bootstrap](docs/SELF_HOSTING_BOOTSTRAP.md)

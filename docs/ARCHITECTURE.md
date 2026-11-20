@@ -15,6 +15,13 @@ The goal is one coherent language product with separable implementation layers. 
 5. **Diagnostics** — user-facing errors retain file, line and column where a source token exists.
 6. **Examples and conformance tests** — executable language examples and regression coverage for lexical, syntactic and runtime semantics.
 7. **Packaging** — a standard Python package with a CLI entry point and no third-party runtime dependencies.
+8. **Polyglot workspace** — an optional local-first application/library module for target-language profiles, content coverage estimates, contextual phrase cards, spaced repetition and study-session analytics. It is isolated from ordinary `.rpr` execution and uses an atomic, versioned JSON store.
+
+## Polyglot learning subsystem
+
+The optional Polyglot workspace is accessed through `reaper polyglot` and the `PolyglotWorkspace` Python API. It has its own versioned JSON persistence model; it does not add implicit filesystem or network behavior to Reaper source programs.
+
+Its core loop is understandable input → contextual phrase capture → deterministic spaced repetition → learner-reported speaking practice and feedback. The four daily pillars are audio/visual input, contextual reading, retention, and speaking/feedback. Text difficulty is estimated with a transparent vocabulary-coverage heuristic (word units for spaced writing systems and character/phrase coverage for compact scripts); this is not a comprehension test. Speech recognition, media retrieval/playback, dictionary lookup, and automated pronunciation scoring remain optional future adapters. See [POLYGLOT_IMMERSION.md](POLYGLOT_IMMERSION.md).
 
 ## Data and control flow
 
