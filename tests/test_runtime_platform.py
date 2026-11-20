@@ -73,8 +73,8 @@ class ModuleCliTests(unittest.TestCase):
             root = Path(directory)
             dependency = root / "dependency.rpr"
             entry = root / "entry.rpr"
-            dependency.write_text('export make value := 5\\n', encoding="utf-8")
-            entry.write_text('import "dependency.rpr"\\nemit 99\\n', encoding="utf-8")
+            dependency.write_text('export make value := 5\n', encoding="utf-8")
+            entry.write_text('import "dependency.rpr"\nemit 99\n', encoding="utf-8")
             stdout = io.StringIO()
             with redirect_stdout(stdout):
                 code = main(["--module-graph", str(entry)])
@@ -85,7 +85,7 @@ class ModuleCliTests(unittest.TestCase):
     def test_vm_engine_cli_executes_source(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory) / "main.rpr"
-            source.write_text('emit 6 * 7\\n', encoding="utf-8")
+            source.write_text('emit 6 * 7\n', encoding="utf-8")
             stdout = io.StringIO()
             with redirect_stdout(stdout):
                 code = main(["--engine", "vm", str(source)])
