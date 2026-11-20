@@ -32,9 +32,10 @@ class ReferenceEcosystemTests(unittest.TestCase):
         data = load_registry()
         hdl = select_ecosystems(data, category="hdl")
         gpu = select_ecosystems(data, category="gpu-compute")
-        self.assertEqual(len(hdl), 10)
+        self.assertEqual(len(hdl), 9)
         self.assertEqual(hdl[0]["name"], "Verilog")
         self.assertIn("CUDA C++", {item["name"] for item in gpu})
+        self.assertEqual(resolve_ecosystem(data, "FIRRTL")["integration_layer"], "hardware-ir")
         self.assertNotIn("Verilog", {item["name"] for item in gpu})
 
     def test_reaper_profile_ranks_native_and_safety_references(self):
