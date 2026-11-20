@@ -327,8 +327,8 @@ class Interpreter:
             self.globals.define(name, Builtin(name, callback, minimum, maximum))
 
         def sequence(value: Any) -> Any:
-            if not isinstance(value, (list, tuple, str, range, MemoryBuffer, MemoryView)):
-                raise TypeError("expected a list, text, range, memory buffer, or view")
+            if not isinstance(value, (list, tuple, str, range)):
+                raise TypeError("expected a list, text, or range")
             try:
                 size = len(value)
             except OverflowError as error:
@@ -383,6 +383,8 @@ class Interpreter:
             if isinstance(target, MemoryView):
                 if target.readonly or target.buffer.readonly:
                     raise ValueError("view is read-only")
+                if target.step != 1 or target.reverse:
+                    raise ValueError("writes require a contiguous forward view")
                 offset = self._whole_memory_integer(offset, "offset")
                 if offset + len(payload) > len(target):
                     raise ValueError("write exceeds view bounds")
