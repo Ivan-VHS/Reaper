@@ -20,7 +20,7 @@
 | Flat owned AST with source locations | implemented | `ReaperAstNode`; parser acceptance tests |
 | Declaration/block grammar | planned | function/module/record declarations, blocks and recovery |
 | Name resolution and static type checker | planned | symbol tables, inference, ADT/exhaustiveness tests |
-| MOST intent resolver | planned | scoped dictionaries, explicit ambiguity diagnostics and source-to-intent mapping |
+| Separate MOST intent resolver | deprecated / excluded | МОСТ uses exact aliases and the existing REAPER name resolver; no independent dictionary or intent stage |
 | Integer AST-to-IR lowering slice | implemented | `src/lower.c`, `include/reaper/lower.h`, `tests/test_lower.c`; integer literals and binary `+` lower to verified IR; unsupported AST kinds fail explicitly |
 | Ownership, borrow and region analysis | specified | CFG-based move/borrow checking and negative tests |
 | Effect/capability checking | specified | explicit effect rows and denied-capability tests |
@@ -56,18 +56,18 @@ The current executable opcode set is deliberately small (integer constant, signe
 
 ## Architectural invariants
 
-1. MOST is a semantic frontend, not a second runtime or memory model.
-2. REAPER and MOST must eventually lower to the same typed canonical IR.
-3. Morphology and synonyms resolve names only; they never silently change types or execution semantics.
-4. Ambiguous domain language must fail with a source-mapped diagnostic rather than be guessed.
-5. Deterministic core operations remain independent from optional probabilistic/generative services.
-6. A feature is implemented only when semantics, API, tests, documentation and target behavior have acceptance evidence.
+1. REAPER is the only language, parser, semantic model and runtime.
+2. МОСТ maps exact Russian keyword spellings to existing REAPER tokens before the same parser.
+3. No separate МОСТ parser, AST, type checker, intent resolver, standard library or backend is permitted.
+4. No stemming, guessed inflection, synonym lookup or probabilistic meaning selection occurs during compilation.
+5. Russian identifiers are ordinary REAPER identifiers and use the existing REAPER name resolver.
+6. A feature is implemented only when REAPER semantics, API, tests, documentation and target behavior have acceptance evidence.
 
 ## Next acceptance-gated phases
 
 - **M1 continuation:** declarations, blocks, source-span propagation, parser recovery and parser fuzz tests.
-- **M2:** MOST Intent AST, scoped domain dictionaries, explicit ambiguity reporting and equivalent lowering tests.
-- **M3:** name resolution, typed AST, type/effect checking and expansion of lowering to the full typed expression set.
+- **M2:** complete REAPER grammar and parser; exact Russian aliases enter the same parser.
+- **M3:** REAPER name resolution, typed AST, type/effect checking and expansion of lowering to the full typed expression set.
 - **M4:** ownership/region analysis, contracts and resource-effect verification.
 - **M5:** native code generation and target ABI conformance.
 - **M6:** runtime, standard library, WASM and host capabilities.
@@ -83,4 +83,4 @@ Python remains a compatibility oracle until C17 semantic parity is demonstrated.
 
 ## MOST Russian frontend boundary
 
-The native C17 lexer classifies the Russian reserved-word vocabulary as keyword tokens while keeping ordinary Russian names and proposed type names as identifiers. Separately, the Python reference runtime executes a limited Russian compatibility subset by mapping basic keywords to the existing grammar. Neither slice implies the full typed declaration grammar, inflection resolver, synonym lookup, Unicode NFC normalization, static type checking or native/WASM code generation. The complete 66-rule design mapping is in docs/MOST_RUSSIAN_66_RULES.md.
+The native C17 lexer classifies the Russian reserved-word vocabulary as keyword tokens while keeping ordinary Russian names and proposed type names as identifiers. The Python reference runtime executes a limited Russian compatibility subset by mapping basic keywords to existing REAPER parser token kinds. Both are REAPER implementations. No separate morphology resolver, synonym lookup, MOST AST, type system or backend is intended. The full REAPER declaration grammar, Unicode NFC validation, static type checking and native/WASM code generation remain separate REAPER milestones. The 66-rule readability mapping is in docs/MOST_RUSSIAN_66_RULES.md.
