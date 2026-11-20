@@ -209,6 +209,20 @@
         "typed-metadata",
         "source-map"
       ]
+    },
+    {
+      "id": "MOST-RU-COMPAT-001",
+      "name": "Executable Russian aliases for the reference interpreter subset",
+      "area": "syntax",
+      "status": "implemented",
+      "depends_on": [
+        "MOST-RU-LEX-001"
+      ],
+      "acceptance": [
+        "russian-lexer-aliases",
+        "russian-program-executes",
+        "runtime-regression"
+      ]
     }
   ]
 }
