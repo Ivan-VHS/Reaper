@@ -48,7 +48,7 @@ Reaper complements its 66-position language and toolchain matrix with **14 CPU, 
 - **C ABI / Pytyliki:** opt-in typed C ABI bridge and adapter for the public Pytyliki `pl_*` API.
 - **Canonical IR / VM:** selectable Python bytecode VM over Canonical IR; tree-walk remains the default compatibility engine.
 - **Reaper Studio debugger:** statement breakpoints (F9), step/continue/stop, variable inspector and call stack.
-- **Native C17 track:** lexer, expression parser and owned AST, verified integer Canonical IR, checked constant folding, a limited AST-to-IR lowering slice, CLI bring-up and C tests.
+- **Native C17 track:** lexer, expression parser and owned AST, verified integer Canonical IR, checked constant folding for signed i64 addition, subtraction, multiplication and division (overflow and division by zero rejected), a limited AST-to-IR lowering slice, CLI bring-up and C tests.
 - **Self-hosting bootstrap — Stage 0 + partial Stage 1:** `selfhost/lexer.rpr` implements tokenization and `selfhost/parser.rpr` implements a Reaper-written Pratt expression parser with the real `::` flow operator, precedence, right-associative exponentiation, list literals, calls and indexing. Bootstrap assertions and Python/CTest tests cover both programs. The lexer still has an ASCII-identifier gap; the parser does not yet cover declarations, blocks or statement grammar and does not replace the reference frontend. See [the bootstrap plan](docs/SELF_HOSTING_BOOTSTRAP.md).
 - **MOST language track:** documented language vocabulary and staged implementation contract.
 
