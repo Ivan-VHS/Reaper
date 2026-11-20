@@ -24,6 +24,8 @@ class SystemsEcosystemMatrixTests(unittest.TestCase):
         self.assertEqual(validate_matrix(data), 40)
         self.assertEqual([item["index"] for item in data["entries"]], list(range(1, 41)))
         names = {item["name"] for item in data["entries"]}
+        false_entry = next(item for item in data["entries"] if item["id"] == "esoteric-false")
+        self.assertEqual(false_entry["commands"], [])
         self.assertTrue({
             "x86", "ARM", "RISC-V", "MIPS", "AVR", "6502", "Z80",
             "C", "C++", "Rust", "Zig", "D", "Nim", "Ada", "Modula-2", "Oberon",
