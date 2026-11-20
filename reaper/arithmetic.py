@@ -54,6 +54,8 @@ def compute(left: Any, right: Any, operation: Any = "multiply") -> int | float:
     a, b = _number(left, "left"), _number(right, "right")
     if not isinstance(operation, str):
         raise TypeError("operation must be text")
+    if operation == "divide" and b == 0:
+        raise ValueError("division by zero")
     operations = {
         "add": lambda: a + b,
         "subtract": lambda: a - b,
