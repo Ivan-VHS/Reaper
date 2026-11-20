@@ -11,6 +11,8 @@ typedef struct { char message[256]; size_t line; size_t column; } ReaperLexError
 int reaper_lex(const char *source, ReaperTokenArray *out, ReaperLexError *error);
 void reaper_tokens_free(ReaperTokenArray *tokens);
 const char *reaper_token_kind_name(ReaperTokenKind kind);
+/* Return the canonical REAPER spelling for an alias token; preserve ordinary source text. */
+const char *reaper_token_canonical_text(const ReaperToken *token);
 #ifdef __cplusplus
 }
 #endif
