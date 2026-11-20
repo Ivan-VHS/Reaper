@@ -587,10 +587,28 @@ class Interpreter:
         register("ffi_bind", ffi_bind, 3, 4)
         register("ffi_close", ffi_close, 1, 1)
         register("pytyliki_open", pytyliki_open, 1, 1)
-        register("pytyliki_cpu_profile", lambda bridge: self._require_pytyliki(bridge).cpu_profile(), 1, 1)
-        register("pytyliki_benchmark", lambda bridge, count: self._require_pytyliki(bridge).benchmark(count), 2, 2)
-        register("pytyliki_analyze_file", lambda bridge, path: self._require_pytyliki(bridge).analyze_file(path), 2, 2)
-        register("pytyliki_write_json", lambda bridge, path: self._require_pytyliki(bridge).write_json(path), 2, 2)
+        register(
+            "pytyliki_bridge_norm",
+            lambda values, bridge: self._require_pytyliki(bridge).norm(values),
+            2, 2,
+        )
+        register(
+            "pytyliki_bridge_dot",
+            lambda left, right, bridge: self._require_pytyliki(bridge).dot(left, right),
+            3, 3,
+        )
+        register(
+            "pytyliki_bridge_distance",
+            lambda left, right, bridge: self._require_pytyliki(bridge).distance(left, right),
+            3, 3,
+        )
+        register(
+            "pytyliki_bridge_orthogonal",
+            lambda left, right, tolerance, bridge: self._require_pytyliki(bridge).orthogonal(
+                left, right, tolerance
+            ),
+            4, 4,
+        )
 
         def pytyliki_embedded_profiles(path: Any) -> list[dict[str, Any]]:
             if not self.allow_native_ffi:
