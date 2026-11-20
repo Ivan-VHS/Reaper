@@ -37,6 +37,7 @@ emit "answer = " ++ text(answer)
 - **Reaper Studio:** редактор Windows з відкриттям/збереженням, перевіркою й запуском, breakpoint, покроковим керуванням, переглядом змінних і стека викликів.
 - **Embedded C та FFI:** шаблони проєктів, профілі MCU, бюджет пам’яті й опційний C ABI до довірених бібліотек, зокрема Pytyliki ABI v1.
 - **Додаткові системи:** локальний Polyglot; 666 зарезервованих лексем; 66 профілів мов/toolchain; 14 архітектур; матриця MOST 20×20 (400 специфікованих проєкцій) і реалізований валідатор цілісності. Це не 400 виконуваних функцій мови.
+- **МОСТ:** точні російські псевдоніми ключових слів REAPER 0.1. Використовуються ті самі parser, AST і runtime; Python-еталон виконує обмежену підмножину, а C17-лексер повертає канонічні написання токенів REAPER. Окремої граматики, морфології, системи типів чи runtime немає.
 
 Нативний напрям C17 містить лексер, expression-парсер, AST з володінням, перевірені цілочисельні операції IR, обмежений lowering, тести оптимізатора та початковий CLI. Це **ще не повноцінний інтерпретатор**. Self-hosting lexer/parser — етап bootstrap, а не заміна Python frontend.
 
@@ -76,7 +77,7 @@ Managed heap — облік поверх алокатора Python, а не фі
 
 ## Документація та завантаження
 
-[Мова](LANGUAGE.md) · [Runtime platform](docs/RUNTIME_PLATFORM.md) · [План self-hosting](docs/SELF_HOSTING_BOOTSTRAP.md) · [Каталог токенів](docs/TOKEN_CATALOG.md) · [Embedded C](docs/EMBEDDED_C_WORKBENCH.md) · [Матриця MOST](docs/MOST_400_COMBINATORIAL_MATRIX.md) · [Інженерний стандарт](docs/UNIFIED_ENGINEERING_STANDARD.md)
+[Мова](LANGUAGE.md) · [Runtime platform](docs/RUNTIME_PLATFORM.md) · [План self-hosting](docs/SELF_HOSTING_BOOTSTRAP.md) · [Каталог токенів](docs/TOKEN_CATALOG.md) · [Embedded C](docs/EMBEDDED_C_WORKBENCH.md) · [Матриця MOST](docs/MOST_400_COMBINATORIAL_MATRIX.md) · [Інженерний стандарт](docs/UNIFIED_ENGINEERING_STANDARD.md) · [Псевдоніми МОСТ](docs/MOST_LANGUAGE_SPEC.md) · [66 правил російського запису](docs/MOST_RUSSIAN_66_RULES.md)
 
 [Релізи Windows](https://github.com/Ivan-VHS/Reaper/releases) · [Збирання desktop](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml)
 
