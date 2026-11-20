@@ -76,3 +76,10 @@ The current executable opcode set is deliberately small (integer constant, signe
     ctest --test-dir build --output-on-failure
 
 Python remains a compatibility oracle until C17 semantic parity is demonstrated. This branch does not remove Python or claim full native interpreter parity.
+
+
+## Consolidated 666-function registry
+
+`language/functions_666.json` содержит 666 стабильных MOST API/feature contracts (147 прежних предложений + 519 расширений). Это каталог спецификации и source traceability, не 666 исполняемых функций. См. `docs/MOST_FUNCTIONS_666.md`; проверка: `python tools/validate_most_functions.py`.
+
+В текущей ветке native C17 есть частичный frontend (lexer, expression parser, owned AST/source positions, integer lowering slice and verified IR). Полный MOST grammar, intent resolver, static type/effect/ownership analysis и native backend ещё не завершены. Python reference runtime и внешние C11/Python-проекты помечены отдельно; все 666 записей сейчас имеют `most_native=false`.
