@@ -9,7 +9,9 @@
 | Slice | Current state | Evidence / next gate |
 |---|---|---|
 | C17 build and native lexer | implemented | `src/lexer.c`, `tests/test_lexer.c` |
-| MOST lexical vocabulary | implemented | keyword/operator lexer tests; grammar is not implied |
+| REAPER lexical vocabulary | implemented | keyword/operator lexer tests; grammar is not implied |
+| Russian REAPER keyword aliases | implemented in Python reference | reaper/lexer.py maps 21 exact spellings to existing parser token kinds |
+| C17 Russian alias canonicalization | implemented lexical API | reaper_token_canonical_text() returns REAPER spelling while preserving original token text; tests/test_lexer.c |
 | Semantic IR data model | implemented | `include/reaper/ir.h` |
 | IR structural verifier | implemented | `src/ir.c`, `tests/test_ir.c` |
 | Bounded fixed-point optimizer driver | implemented | `reaper_ir_optimize_fixed_point`; verified pass loop, 64-iteration ceiling, convergence report and idempotence tests |\n| Native C17 evolution evidence gate | implemented | `src/evolution.c`, `include/reaper/evolution.h`, `tests/test_evolution.c`; fail-closed acceptance gates and human approval requirement |\n| Checked i64 constant-folding pass | implemented | `src/optimizer.c`, `include/reaper/optimizer.h`, `tests/test_optimizer.c`; rejects signed overflow and verifies input/output IR |
@@ -17,7 +19,7 @@
 | Flat owned AST with source locations | implemented | `ReaperAstNode`; parser acceptance tests |
 | Declaration/block grammar | planned | function/module/record declarations, blocks and recovery |
 | Name resolution and static type checker | planned | symbol tables, inference, ADT/exhaustiveness tests |
-| MOST intent resolver | planned | scoped dictionaries, explicit ambiguity diagnostics and source-to-intent mapping |
+| Separate MOST intent resolver | deprecated / excluded | МОСТ uses exact aliases and the existing REAPER name resolver; no independent dictionary or intent stage |
 | Integer AST-to-IR lowering slice | implemented | `src/lower.c`, `include/reaper/lower.h`, `tests/test_lower.c`; integer literals and binary `+` lower to verified IR; unsupported AST kinds fail explicitly |
 | Ownership, borrow and region analysis | specified | CFG-based move/borrow checking and negative tests |
 | Effect/capability checking | specified | explicit effect rows and denied-capability tests |
@@ -28,7 +30,7 @@
 | Combinatorial matrix integrity validator | implemented | `tools/validate_most_matrix.py`, `tests/test_most_matrix.py`; verifies cardinality, pair coverage, traceability and fail-closed status |
 | Cognitive 147-function proposal set | architecture input; implementation not claimed | Must be mapped into compiler primitives, deterministic stdlib and optional intelligence services with per-feature acceptance gates |
 | 813-feature architecture map | specified | `docs/REAPER_813_FEATURE_ARCHITECTURE.md` |
-| MOST bilingual bridge | planned | AST/Intent AST, canonical symbols, scoped domain dictionaries and equivalent IR tests |
+| Separate MOST bilingual bridge | deprecated / excluded | exact keyword aliases enter the REAPER token stream; no second frontend or resolver |
 
 ## Parser M1 contract
 
@@ -55,18 +57,18 @@ The current executable opcode set is deliberately small (integer constant, signe
 
 ## Architectural invariants
 
-1. MOST is a semantic frontend, not a second runtime or memory model.
-2. REAPER and MOST must eventually lower to the same typed canonical IR.
-3. Morphology and synonyms resolve names only; they never silently change types or execution semantics.
-4. Ambiguous domain language must fail with a source-mapped diagnostic rather than be guessed.
-5. Deterministic core operations remain independent from optional probabilistic/generative services.
-6. A feature is implemented only when semantics, API, tests, documentation and target behavior have acceptance evidence.
+1. REAPER is the only language, parser, semantic model and runtime.
+2. МОСТ maps exact Russian keyword spellings to existing REAPER tokens before the same parser.
+3. No separate МОСТ parser, AST, type checker, intent resolver, standard library or backend is permitted.
+4. No stemming, guessed inflection, synonym lookup or probabilistic meaning selection occurs during compilation.
+5. Russian identifiers are ordinary REAPER identifiers and use the existing REAPER name resolver.
+6. A feature is implemented only when REAPER semantics, API, tests, documentation and target behavior have acceptance evidence.
 
 ## Next acceptance-gated phases
 
 - **M1 continuation:** declarations, blocks, source-span propagation, parser recovery and parser fuzz tests.
-- **M2:** MOST Intent AST, scoped domain dictionaries, explicit ambiguity reporting and equivalent lowering tests.
-- **M3:** name resolution, typed AST, type/effect checking and expansion of lowering to the full typed expression set.
+- **M2:** complete REAPER grammar and parser; exact Russian aliases enter the same parser.
+- **M3:** REAPER name resolution, typed AST, type/effect checking and expansion of lowering to the full typed expression set.
 - **M4:** ownership/region analysis, contracts and resource-effect verification.
 - **M5:** native code generation and target ABI conformance.
 - **M6:** runtime, standard library, WASM and host capabilities.
@@ -78,3 +80,8 @@ The current executable opcode set is deliberately small (integer constant, signe
     ctest --test-dir build --output-on-failure
 
 Python remains a compatibility oracle until C17 semantic parity is demonstrated. This branch does not remove Python or claim full native interpreter parity.
+
+
+## МОСТ: implementation boundary
+
+МОСТ is an exact alias table over REAPER 0.1, not a new frontend. The Python reference executes the supported Russian subset through existing REAPER parser token kinds. The C17 lexer provides a canonical-token accessor for Russian spellings. No separate grammar, AST, runtime, morphology engine or synonym resolver is planned. The 66 rules are readability guidance only; see docs/MOST_LANGUAGE_SPEC.md and docs/MOST_RUSSIAN_66_RULES.md.
