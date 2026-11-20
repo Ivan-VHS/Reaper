@@ -191,6 +191,7 @@ class MemoryFrame:
     snapshot: bytes = field(init=False)
     old_length: int = field(init=False)
     old_cursor: int = field(init=False)
+    old_capacity: int = field(init=False)
     closed: bool = False
 
     def __post_init__(self) -> None:
@@ -198,6 +199,7 @@ class MemoryFrame:
         self.snapshot = bytes(self.buffer.data)
         self.old_length = self.buffer.length
         self.old_cursor = self.buffer.cursor
+        self.old_capacity = self.buffer.capacity
 
     def commit(self) -> MemoryBuffer:
         if self.closed:
@@ -208,7 +210,11 @@ class MemoryFrame:
     def rollback(self) -> MemoryBuffer:
         if self.closed:
             raise ValueError("frame is closed")
+        current_capacity = self.buffer.capacity
         self.buffer.data[:] = self.snapshot
+        self.buffer.capacity = self.old_capacity
+        if self.buffer.arena is not None and not self.buffer.arena.closed:
+            self.buffer.arena.used = max(0, self.buffer.arena.used + self.old_capacity - current_capacity)
         self.buffer.length = self.old_length
         self.buffer.cursor = self.old_cursor
         self.closed = True
@@ -288,7 +294,7 @@ def apply_memory_glyph(operation: str, *arguments: Any) -> Any:
             return args[1].child(args[0])
         return MemoryArena(args[0])
 
-    if operation in {"arena_close", "arena_release"}:
+    if operation in {"arena_close", "arena_release", "local_close"}:
         if len(args) != 1 or not isinstance(args[0], MemoryArena):
             raise TypeError("expected one memory arena")
         return args[0].close()
@@ -316,17 +322,39 @@ def apply_memory_glyph(operation: str, *arguments: Any) -> Any:
             raise TypeError("expected pool and slot count")
         return args[0].reserve(args[1])
 
-    if operation in {"clear", "zero", "clear_iteration", "index_clear", "active_reset"}:
+    if operation in {"clear", "zero", "clear_iteration", "index_clear"}:
         if len(args) != 1:
             raise TypeError("expected one buffer")
         buffer = _buffer(args[0])
         buffer.clear()
-        if operation == "active_reset":
-            buffer.metadata["active_count"] = 0
+        return buffer
+
+    if operation == "active_reset":
+        if len(args) != 1:
+            raise TypeError("expected one buffer")
+        buffer = _buffer(args[0])
+        buffer.metadata["active_count"] = 0
+        return buffer
+
+    if operation == "discard_processed":
+        if len(args) != 1:
+            raise TypeError("expected one receive buffer")
+        buffer = _buffer(args[0])
+        if buffer.readonly:
+            raise ValueError("buffer is read-only")
+        processed = buffer.cursor
+        if processed > buffer.length:
+            raise ValueError("processed cursor exceeds initialized data")
+        remaining = buffer.length - processed
+        if remaining:
+            buffer.data[:remaining] = buffer.data[processed:buffer.length]
+        buffer.data[remaining:buffer.length] = b"\\0" * processed
+        buffer.length = remaining
+        buffer.cursor = 0
         return buffer
 
     if operation in {"stride", "stride_2d", "sample_stride", "read_step",
-                     "cache_alignment", "multidim_stride"}:
+                     "multidim_stride"}:
         if not 2 <= len(args) <= 3:
             raise TypeError("expected buffer, stride, and optional secondary stride")
         buffer = _buffer(args[0])
@@ -334,6 +362,16 @@ def apply_memory_glyph(operation: str, *arguments: Any) -> Any:
         if len(args) == 3:
             buffer.metadata["secondary_stride"] = _whole(args[2], "secondary stride", 1)
         buffer.metadata["last_stride_operation"] = operation
+        return buffer
+
+    if operation == "cache_alignment":
+        if len(args) != 2:
+            raise TypeError("expected buffer and cache-line alignment")
+        buffer = _buffer(args[0])
+        alignment = _whole(args[1], "cache-line alignment", 1)
+        if alignment & (alignment - 1):
+            raise ValueError("cache-line alignment must be a power of two")
+        buffer.metadata["cache_line_alignment"] = alignment
         return buffer
 
     if operation in {"pin", "task_pin"}:
@@ -359,7 +397,9 @@ def apply_memory_glyph(operation: str, *arguments: Any) -> Any:
 
     if operation in {"own", "export_mark", "commit", "status_commit"}:
         if len(args) != 1:
-            raise TypeError("expected one buffer")
+            raise TypeError("expected one buffer or memory frame")
+        if operation == "commit" and isinstance(args[0], MemoryFrame):
+            return args[0].commit()
         buffer = _buffer(args[0])
         buffer.metadata[operation] = True
         return buffer
@@ -412,8 +452,7 @@ def apply_memory_glyph(operation: str, *arguments: Any) -> Any:
         return args[0].release_all()
 
     if operation in {"frame_open", "bounded_frame_open", "sandbox_open",
-                     "local_open", "batch_open", "stream_frame_open",
-                     "subarray_open"}:
+                     "batch_open", "stream_frame_open", "subarray_open"}:
         if len(args) not in {1, 2}:
             raise TypeError("expected buffer and optional frame limit")
         buffer = _buffer(args[0])
@@ -421,7 +460,7 @@ def apply_memory_glyph(operation: str, *arguments: Any) -> Any:
             raise ValueError("frame limit exceeds buffer capacity")
         return MemoryFrame(buffer)
 
-    if operation in {"sandbox_close", "local_close", "bounded_frame_close",
+    if operation in {"sandbox_close", "bounded_frame_close",
                      "batch_close", "stream_frame_close", "subarray_close"}:
         if len(args) != 1 or not isinstance(args[0], MemoryFrame):
             raise TypeError("expected one open memory frame")
