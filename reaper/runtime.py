@@ -466,7 +466,7 @@ class Interpreter:
         register("iterate", iterate, 3, 3)
         register("cross_multiply", lambda left, right: arithmetic.cross_multiply(sequence(left), sequence(right)), 2, 2)
         register("exponentiate", arithmetic.exponentiate, 2, 2)
-        register("factor", arithmetic.factor, 1, 1)
+        register("factorize", arithmetic.factor, 1, 1)
         register("combine", lambda left, right: arithmetic.combine(sequence(left), sequence(right)), 2, 2)
         register("fuse", lambda left, right: arithmetic.fuse(sequence(left), sequence(right)), 2, 2)
         register("aggregate", lambda values: arithmetic.aggregate(sequence(values)), 1, 1)
