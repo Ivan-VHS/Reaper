@@ -15,6 +15,7 @@ from .memory import MemoryManager, HeapLimitError, RegionError
 from .resources import ResourceManager, ResourceHandle
 from .ffi import CAbiLibrary, NativeFunction, PytylikiBridge, FfiError
 from .debugger import RuntimeDebugger, DebugSnapshot, DebuggerStopped
+from .token_catalog import TOKEN_CATALOG_SIZE, token_catalog, token_info, token_is_reserved
 
 __version__ = "0.1.0"
 __all__ = [
@@ -23,6 +24,7 @@ __all__ = [
     "Interpreter", "LexError", "ParseError", "ReaperError", "ReaperRuntimeError",
     "decompose_sequence", "distribute_weighted", "divide_fraction",
     "euclidean_divmod", "factor_pairs", "recombine", "run", "split_evenly",
+    "TOKEN_CATALOG_SIZE", "token_catalog", "token_info", "token_is_reserved",
     "CanonicalIR", "IRVerificationError", "lower_to_ir", "BytecodeProgram",
     "VirtualMachine", "assemble_bytecode", "ModuleCycleError", "ModuleError",
     "ModuleLoader", "MemoryManager", "HeapLimitError", "RegionError",
