@@ -31,7 +31,99 @@ static void test_most_russian_vocabulary(void){
  assert(has_canonical(&t,"when"));assert(has_canonical(&t,"otherwise"));assert(has_canonical(&t,"each"));assert(has_canonical(&t,"in"));assert(has_canonical(&t,"emit"));
  assert(has_canonical(&t,"loop"));assert(has_canonical(&t,"while"));assert(has_canonical(&t,"true"));assert(has_canonical(&t,"false"));assert(has_canonical(&t,"nothing"));
  assert(has_canonical(&t,"and"));assert(has_canonical(&t,"or"));assert(has_canonical(&t,"not"));assert(has_canonical(&t,"import"));assert(has_canonical(&t,"export"));assert(has_canonical(&t,"as"));
- assert(has(&t,"удвоить",REAPER_TOK_IDENTIFIER));assert(has(&t,"значение",REAPER_TOK_IDENTIFIER));assert(has(&t,"модуль",REAPER_TOK_IDENTIFIER));
+ assert(has(&t,"удвоить",REAPER_TOK_IDENTIFIER));assert(has(&t,"значение",REAPER_TOK_IDENTIFIER));assert(has(&t,"модуль",REAPER_TOK_KEYWORD));
  reaper_tokens_free(&t);
 }
-int main(void){test_program();test_escape();test_bad_escape();test_unterminated();test_most_surface();test_most_operator_family();test_most_russian_vocabulary();puts("native lexer tests: 7 groups passed");return 0;}
+
+typedef struct {const char *alias;const char *canonical;} AliasExpectation;
+static void test_most_extended_aliases(void){
+ static const AliasExpectation cases[]={
+   {"модуль","module"},
+   {"публичный","pub"},
+   {"процедура","fn"},
+   {"структура","struct"},
+   {"перечисление","enum"},
+   {"типаж","trait"},
+   {"реализация","impl"},
+   {"тип","type"},
+   {"константа","const"},
+   {"связать","let"},
+   {"изменяемый","mut"},
+   {"возврат","return"},
+   {"условие","if"},
+   {"альтернатива","else"},
+   {"выбор","match"},
+   {"область","region"},
+   {"сырой","raw"},
+   {"арена","arena"},
+   {"сигнал","signal"},
+   {"асинхронно","async"},
+   {"ожидать","await"},
+   {"тест","test"},
+   {"вычислить_при_сборке","comptime"},
+   {"требует","requires"},
+   {"гарантирует","ensures"},
+   {"небезопасно","unsafe"},
+   {"внешний","extern"},
+   {"где","where"},
+   {"уничтожить","drop"},
+   {"для_каждого","for"},
+   {"прервать","break"},
+   {"продолжить","continue"},
+   {"отложить","defer"}
+ };
+ const char *source=
+   "модуль "
+    "публичный "
+    "процедура "
+    "структура "
+    "перечисление "
+    "типаж "
+    "реализация "
+    "тип "
+    "константа "
+    "связать "
+    "изменяемый "
+    "возврат "
+    "условие "
+    "альтернатива "
+    "выбор "
+    "область "
+    "сырой "
+    "арена "
+    "сигнал "
+    "асинхронно "
+    "ожидать "
+    "тест "
+    "вычислить_при_сборке "
+    "требует "
+    "гарантирует "
+    "небезопасно "
+    "внешний "
+    "где "
+    "уничтожить "
+    "для_каждого "
+    "прервать "
+    "продолжить "
+    "отложить ";
+ ReaperTokenArray t={0};ReaperLexError e={{0},0,0};assert(reaper_lex(source,&t,&e));
+ for(size_t i=0;i<sizeof cases/sizeof cases[0];++i){
+  assert(has(&t,cases[i].alias,REAPER_TOK_KEYWORD));
+  assert(has_canonical(&t,cases[i].canonical));
+ }
+ reaper_tokens_free(&t);
+ ReaperTokenArray unknown={0};
+ assert(reaper_lex("структуры", &unknown, &e));
+ assert(has(&unknown,"структуры",REAPER_TOK_IDENTIFIER));
+ reaper_tokens_free(&unknown);
+}
+static void test_utf8_columns_count_codepoints(void){
+ const char *source="вывести утка + 1";
+ ReaperTokenArray t={0};ReaperLexError e={{0},0,0};assert(reaper_lex(source,&t,&e));
+ int found=0;
+ for(size_t i=0;i<t.length;++i)if(!strcmp(t.items[i].text,"+")){
+  assert(t.items[i].column==14);found=1;
+ }
+ assert(found);reaper_tokens_free(&t);
+}
+int main(void){test_program();test_escape();test_bad_escape();test_unterminated();test_most_surface();test_most_operator_family();test_most_russian_vocabulary();test_most_extended_aliases();test_utf8_columns_count_codepoints();puts("native lexer tests: 9 groups passed");return 0;}

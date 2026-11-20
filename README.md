@@ -27,7 +27,7 @@ emit "answer = " ++ text(answer)
 - **Python reference runtime:** lexer, parser, interpreter, CLI, REPL, modules, closures, collections, resource tracking, quotas, optional bytecode VM, profiling and hash-chained audit. Host-injected consent grants add HMAC-authenticated scope checks, finite TTL and revocation.
 - **Reaper Studio:** Windows editor with check/run/debug, breakpoints, variables and call-stack inspection.
 - **Native C17:** lexer, expression parser, owned AST, checked integer IR operations and limited lowering. Not yet a complete interpreter; Python remains the compatibility reference.
-- **МОСТ:** exact Russian keyword aliases over REAPER 0.1 and its shared parser/runtime; no separate semantics or runtime.
+- **МОСТ:** Russian-first source surface with 54 exact keyword aliases (21 executable in the REAPER 0.1 reference subset; 33 lexically reserved for future grammar work), UTF-8-aware source columns, and one canonical semantic core. See the [20-principle Russian-native profile](docs/MOST_RUSSIAN_NATIVE_PROFILE.md).
 - **QCS 1.0:** independent hardware-domain frontend with source locations, frame parser, Pratt expressions and JSON AST. It does not replace `.rpr` or execute hardware operations. Run: `reaper-qcs check examples/qcs_irq.qcs`.
 - **THESIS assertion graph:** versioned claims, source-linked evidence relations, exact time/scope comparability, review states and append-only revisions. It never auto-verifies a claim ([design](docs/THESIS_ASSERTION_GRAPH.md)).
 - **MOST Function Registry 666:** 666 traceable API contracts (147 existing specifications + 519 proposals), with source inventory and validator. This is a specification catalogue, not 666 implemented functions.
@@ -69,7 +69,7 @@ Python remains the executable compatibility reference until native parity is dem
 
 [THESIS assertion provenance graph](docs/THESIS_ASSERTION_GRAPH.md)
 
-[Governance and consent controls](docs/HUMAN_FIRST_GOVERNANCE.md) · [Anatidae UI/UX](docs/UI_UX_SYSTEM.md) · [12-principle motion](docs/DISNEY_MOTION_SYSTEM.md) · [Language](LANGUAGE.md) · [QCS frontend](docs/QCS_FRONTEND.md) · [MOST 666 registry](docs/MOST_FUNCTIONS_666.md) · [МОСТ specification](docs/MOST_LANGUAGE_SPEC.md) · [Runtime](docs/RUNTIME_PLATFORM.md) · [Engineering standard](docs/UNIFIED_ENGINEERING_STANDARD.md)
+[Governance and consent controls](docs/HUMAN_FIRST_GOVERNANCE.md) · [Anatidae UI/UX](docs/UI_UX_SYSTEM.md) · [12-principle motion](docs/DISNEY_MOTION_SYSTEM.md) · [Language](LANGUAGE.md) · [QCS frontend](docs/QCS_FRONTEND.md) · [MOST 666 registry](docs/MOST_FUNCTIONS_666.md) · [МОСТ specification](docs/MOST_LANGUAGE_SPEC.md) · [Russian-native profile](docs/MOST_RUSSIAN_NATIVE_PROFILE.md) · [Runtime](docs/RUNTIME_PLATFORM.md) · [Engineering standard](docs/UNIFIED_ENGINEERING_STANDARD.md)
 
 
 [Governance and consent](docs/HUMAN_FIRST_GOVERNANCE.md) · [Anatidae constitution](docs/ANATIDAE_CONSTITUTION.md) · [Desktop design system](docs/ANATIDAE_DESKTOP_DESIGN_SYSTEM.md) · [UI/UX architecture](docs/UI_UX_ARCHITECTURE.md) · [12 animation principles](docs/DISNEY_MOTION_SYSTEM.md) · [Clinical Systems Reliability CSR-120](docs/CLINICAL_SYSTEMS_CSR120.md) · [MOST implementation status](docs/MOST_IMPLEMENTATION_STATUS.md) · [Project contract](docs/UNIFIED_PROJECT_CONTRACT.md)
