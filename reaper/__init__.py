@@ -1,6 +1,11 @@
 """Reaper — a small, flow-first programming language."""
 
 from .composition import compose, concat, concat_text, merge_mappings, pipe
+from .arithmetic import (
+    accumulate, aggregate, amplify, cartesianize, combine, compute, compound,
+    convolve, couple, cross_multiply, expand, exponentiate, factor, fuse,
+    multiply, pair, product, scale,
+)
 from .decomposition import (
     DivisionResult, decompose_sequence, distribute_weighted, divide_fraction,
     euclidean_divmod, factor_pairs, recombine, split_evenly,
@@ -20,6 +25,9 @@ from .token_catalog import TOKEN_CATALOG_SIZE, token_catalog, token_info, token_
 __version__ = "0.1.0"
 __all__ = [
     "DivisionResult", "ExecutionLimitError", "EvolutionEngine", "EvolutionReport",
+    "accumulate", "aggregate", "amplify", "cartesianize", "combine", "compute",
+    "compound", "convolve", "couple", "cross_multiply", "expand", "exponentiate",
+    "factor", "fuse", "multiply", "pair", "product", "scale",
     "compose", "concat", "concat_text", "merge_mappings", "pipe",
     "Interpreter", "LexError", "ParseError", "ReaperError", "ReaperRuntimeError",
     "decompose_sequence", "distribute_weighted", "divide_fraction",
