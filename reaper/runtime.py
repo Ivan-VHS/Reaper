@@ -114,11 +114,15 @@ class Interpreter:
         self.debugger = debugger
         self.call_stack: list[str] = []
         self._active_vm: Any = None
+        self._current_environment: Environment | None = None
         self._ffi_libraries: list[Any] = []
         self._install_builtins()
 
     def _memory_roots(self) -> list[Any]:
-        return [self.globals, self.module_loader.cache]
+        roots: list[Any] = [self.globals, self.module_loader.cache]
+        if self._current_environment is not None:
+            roots.append(self._current_environment)
+        return roots
 
     def run(self, source: str, filename: str = "<memory>", engine: str = "treewalk") -> Any:
         if engine not in {"treewalk", "vm"}:
@@ -146,6 +150,7 @@ class Interpreter:
                 library.close()
             self._ffi_libraries.clear()
             self.module_loader.end_root(root)
+            self._current_environment = None
             self.memory.collect(self._memory_roots())
 
     def _tick(self, token: Token) -> None:
@@ -176,6 +181,7 @@ class Interpreter:
         return result
 
     def _execute(self, node: Node, environment: Environment) -> Any:
+        self._current_environment = environment
         if self.debugger is not None:
             self.debugger.before_statement(node.token, environment, self.call_stack, self.filename)
         self._tick(node.token)
@@ -245,6 +251,7 @@ class Interpreter:
             raise self._error(node.token, f"unknown statement kind '{node.kind}'")
         return None
     def _evaluate(self, node: Node, environment: Environment) -> Any:
+        self._current_environment = environment
         self._tick(node.token)
         children = node.children or []
         if node.kind == "literal":
