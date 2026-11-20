@@ -181,3 +181,23 @@ Not implemented yet: static type checking, algebraic effect handlers, semantic-g
 ## Orthogonal metric built-ins
 
 Reaper also provides pure numerical helpers: metric_dot, vector_norm (L1/L2/L-infinity), vector_normalize, euclidean_distance, squared_euclidean_distance, manhattan_distance, chebyshev_distance, cosine_similarity, angle_between, vector_projection, vector_centroid, is_orthogonal, quadratic_form, law_of_cosines, de_gua_area, parseval_energy, unit_circle_residual, spherical_hypotenuse, hyperbolic_hypotenuse, minkowski_interval, combine_variances and reciprocal_altitude. All vector arguments are lists of finite numbers. The vector and matrix limits, dimensional checks, geometric domains and statistical assumptions are documented in docs/ORTHOGONAL_METRIC_ENGINE.md. These helpers do not grant host I/O or hardware capabilities.
+
+
+## Russian-language surface syntax
+
+The reference lexer accepts Russian spellings for the existing Reaper core. Russian aliases map to the same token kinds as the English keywords; they do not create different runtime semantics.
+
+    пусть исходные := [1, 2, 3, 4]
+    функция удвоить(значение) {
+        вернуть значение * 2
+    }
+    пусть итог := исходные :: map(удвоить) :: sum()
+    если итог > 10 {
+        вывести "Сумма: " ++ text(итог)
+    } иначе {
+        вывести "Недостаточно"
+    }
+
+Core aliases include пусть/создать (immutable binding), изменяемая (mutable binding), изменить (reassignment), функция/процедура, вернуть, вывести, если/иначе, для/среди, цикл пока, истина/ложь, и/или/не, and импорт/экспорт/как.
+
+See [RUSSIAN_LANGUAGE_PROFILE](docs/RUSSIAN_LANGUAGE_PROFILE.md) for the full alias table, the 20 design pillars, implementation boundaries, and third-party rights policy.
