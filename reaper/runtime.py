@@ -114,6 +114,7 @@ class Interpreter:
         self.debugger = debugger
         self.call_stack: list[str] = []
         self._active_vm: Any = None
+        self._ffi_libraries: list[Any] = []
         self._install_builtins()
 
     def _memory_roots(self) -> list[Any]:
@@ -141,6 +142,9 @@ class Interpreter:
             raise ReaperRuntimeError(f"{filename}: yield can only be used inside a craft function") from signal
         finally:
             self.resources.close_all()
+            for library in reversed(self._ffi_libraries):
+                library.close()
+            self._ffi_libraries.clear()
             self.module_loader.end_root(root)
             self.memory.collect(self._memory_roots())
 
@@ -494,7 +498,9 @@ class Interpreter:
                 raise ValueError("native FFI is disabled; run with --allow-native-ffi")
             if not isinstance(path, str):
                 raise TypeError("ffi_open expects a native library path")
-            return CAbiLibrary(path)
+            library = CAbiLibrary(path)
+            self._ffi_libraries.append(library)
+            return library
 
         def ffi_bind(library: Any, symbol: Any, result_type: Any, argument_types: Any = "") -> NativeFunction:
             if not isinstance(library, CAbiLibrary):
@@ -508,7 +514,14 @@ class Interpreter:
                 raise ValueError("native FFI is disabled; run with --allow-native-ffi")
             if not isinstance(path, str):
                 raise TypeError("pytyliki_open expects a native library path")
-            return PytylikiBridge(path)
+            bridge = PytylikiBridge(path)
+            self._ffi_libraries.append(bridge)
+            return bridge
+
+        def ffi_close(library: Any) -> None:
+            if not isinstance(library, (CAbiLibrary, PytylikiBridge)):
+                raise TypeError("ffi_close expects a handle returned by ffi_open or pytyliki_open")
+            library.close()
 
         register("file_open", open_file, 1, 2)
         register("file_read", self.resources.read, 1, 1)
@@ -522,6 +535,7 @@ class Interpreter:
         register("region_end", lambda token: self.memory.end_region(token, self._memory_roots()), 1, 1)
         register("ffi_open", ffi_open, 1, 1)
         register("ffi_bind", ffi_bind, 3, 4)
+        register("ffi_close", ffi_close, 1, 1)
         register("pytyliki_open", pytyliki_open, 1, 1)
         register("pytyliki_cpu_profile", lambda bridge: self._require_pytyliki(bridge).cpu_profile(), 1, 1)
         register("pytyliki_benchmark", lambda bridge, count: self._require_pytyliki(bridge).benchmark(count), 2, 2)
