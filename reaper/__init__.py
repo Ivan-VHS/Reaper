@@ -8,6 +8,13 @@ from .decomposition import (
 from .errors import ExecutionLimitError, LexError, ParseError, ReaperError, ReaperRuntimeError
 from .evolution import EvolutionEngine, EvolutionReport
 from .runtime import Interpreter, run
+from .ir import CanonicalIR, IRVerificationError, lower as lower_to_ir
+from .vm import BytecodeProgram, VirtualMachine, assemble as assemble_bytecode
+from .modules import ModuleCycleError, ModuleError, ModuleLoader
+from .memory import MemoryManager, HeapLimitError, RegionError
+from .resources import ResourceManager, ResourceHandle
+from .ffi import CAbiLibrary, NativeFunction, PytylikiBridge, FfiError
+from .debugger import RuntimeDebugger, DebugSnapshot, DebuggerStopped
 
 __version__ = "0.1.0"
 __all__ = [
@@ -16,5 +23,10 @@ __all__ = [
     "Interpreter", "LexError", "ParseError", "ReaperError", "ReaperRuntimeError",
     "decompose_sequence", "distribute_weighted", "divide_fraction",
     "euclidean_divmod", "factor_pairs", "recombine", "run", "split_evenly",
-    "__version__",
+    "CanonicalIR", "IRVerificationError", "lower_to_ir", "BytecodeProgram",
+    "VirtualMachine", "assemble_bytecode", "ModuleCycleError", "ModuleError",
+    "ModuleLoader", "MemoryManager", "HeapLimitError", "RegionError",
+    "ResourceManager", "ResourceHandle", "CAbiLibrary", "NativeFunction",
+    "PytylikiBridge", "FfiError", "RuntimeDebugger", "DebugSnapshot",
+    "DebuggerStopped", "__version__",
 ]
