@@ -5,6 +5,8 @@ import ctypes
 from pathlib import Path
 from typing import Any
 
+from .errors import ReaperRuntimeError
+
 
 ABI_TYPES: dict[str, Any] = {
     "void": None,
@@ -18,7 +20,7 @@ ABI_TYPES: dict[str, Any] = {
 }
 
 
-class FfiError(RuntimeError):
+class FfiError(ReaperRuntimeError):
     pass
 
 
