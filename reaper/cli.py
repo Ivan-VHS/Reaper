@@ -61,6 +61,12 @@ def main(argv: list[str] | None = None) -> int:
     if arguments and arguments[0] == "embedded":
         from .embedded import main as embedded_main
         return embedded_main(arguments[1:])
+    if arguments and arguments[0] == "interop":
+        from .interop import main as interop_main
+        return interop_main(arguments[1:])
+    if arguments and arguments[0] == "copyright-scan":
+        from .copyright import main as copyright_main
+        return copyright_main(arguments[1:])
     if arguments and arguments[0] == "polyglot":
         from .polyglot import main as polyglot_main
         return polyglot_main(arguments[1:])
