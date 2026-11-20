@@ -3,7 +3,15 @@ from __future__ import annotations
 
 from pathlib import Path
 import tkinter as tk
+import threading
 from tkinter import filedialog, messagebox, ttk
+
+from reaper.embedded import (
+    EmbeddedError,
+    build_project as embedded_build_project,
+    init_project as embedded_init_project,
+    inspect_project as embedded_inspect_project,
+)
 from tkinter.scrolledtext import ScrolledText
 
 from reaper.errors import ReaperError
@@ -101,7 +109,75 @@ class ReaperStudio(tk.Tk):
         run_menu.add_command(label="Run program", command=self.run_source, accelerator="F5")
         run_menu.add_command(label="Clear output", command=self.clear_output)
         menu.add_cascade(label="Run", menu=run_menu)
+        embedded_menu = tk.Menu(menu, tearoff=False)
+        embedded_menu.add_command(label="New Embedded C project…", command=self.embedded_new_project)
+        embedded_menu.add_command(label="Inspect MCU profile…", command=self.embedded_inspect_project)
+        embedded_menu.add_command(label="Build firmware…", command=self.embedded_build)
+        menu.add_cascade(label="Embedded C", menu=embedded_menu)
         self.configure(menu=menu)
+
+    def embedded_new_project(self) -> None:
+        directory = filedialog.askdirectory(parent=self, title="Create Embedded C project")
+        if not directory:
+            return
+        try:
+            root = embedded_init_project(directory)
+        except (EmbeddedError, OSError, ValueError) as error:
+            messagebox.showerror("Embedded C project", str(error), parent=self)
+            return
+        self._append_output(f"EMBEDDED: created {root}")
+        self._append_output("Review embedded.json and linker.ld against the exact MCU datasheet.")
+
+    def embedded_inspect_project(self) -> None:
+        directory = filedialog.askdirectory(parent=self, title="Select Embedded C project")
+        if not directory:
+            return
+        try:
+            report = embedded_inspect_project(directory)
+        except (EmbeddedError, OSError, ValueError) as error:
+            messagebox.showerror("Embedded C profile", str(error), parent=self)
+            return
+        profile = report["profile"]
+        self._append_output(
+            f"MCU: {profile['id']} | {profile['architecture']} | "
+            f"{profile['clock_hz']} Hz | toolchain {'found' if report['toolchain'] else 'missing'}"
+        )
+        self._append_output(
+            f"FLASH: {profile['flash']['size']} bytes | SRAM: {profile['sram']['size']} bytes | "
+            f"stack reserve: {profile['stack_bytes']} bytes"
+        )
+
+    def embedded_build(self) -> None:
+        directory = filedialog.askdirectory(parent=self, title="Select Embedded C project to build")
+        if not directory:
+            return
+        self._append_output(f"EMBEDDED: building {directory} …")
+        def worker() -> None:
+            try:
+                result = embedded_build_project(directory)
+            except Exception as error:
+                self.after(0, self._finish_embedded_build, None, str(error))
+                return
+            self.after(0, self._finish_embedded_build, result, None)
+        threading.Thread(target=worker, name="reaper-embedded-build", daemon=True).start()
+
+    def _finish_embedded_build(self, result: dict[str, object] | None, error: str | None) -> None:
+        if error:
+            self._append_output(f"EMBEDDED BUILD FAILED: {error}")
+            self.status.set("Embedded build failed")
+            return
+        assert result is not None
+        self._append_output(f"EMBEDDED BUILD: {'OVER BUDGET' if result['over_budget'] else 'success'}")
+        for kind, path in result["artifacts"].items():
+            self._append_output(f"{kind}: {path}")
+        budget = result["budget"]
+        self._append_output(
+            f"FLASH: {budget['flash_used']}/{budget['flash_total']} bytes "
+            f"({budget['flash_percent']}%) | SRAM incl. stack: "
+            f"{budget['sram_used_with_stack']}/{budget['sram_total']} bytes "
+            f"({budget['sram_percent']}%)"
+        )
+        self.status.set("Embedded build complete" if not result["over_budget"] else "Embedded image over memory budget")
 
     def _source_name(self) -> str:
         return str(self.current_file) if self.current_file else "<editor>"
