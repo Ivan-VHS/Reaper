@@ -27,4 +27,4 @@ The parser consumes only the REAPER token stream. МОСТ is an exact keyword-a
 
 ## Next gate
 
-M1 continuation: declaration/block grammar, recoverable diagnostics and complete source spans. M2: MOST Intent AST and scoped dictionary resolver. Both source frontends must eventually lower to the same typed canonical IR.
+M1 continuation: complete REAPER declaration/block grammar, recoverable diagnostics and complete source spans. The exact Russian keyword aliases must enter the same parser. No MOST Intent AST or scoped dictionary resolver is planned.
