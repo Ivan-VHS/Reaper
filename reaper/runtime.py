@@ -10,7 +10,7 @@ from .errors import ExecutionLimitError, ReaperRuntimeError
 from .lexer import Token
 from .parser import Node, parse
 from .impact import catalog as impact_catalog, find_profile as impact_profile, rank_profiles as impact_rank, search_profiles as impact_search
-from . import metric_space
+from . import arithmetic, metric_space
 
 
 @dataclass(slots=True)
@@ -364,6 +364,21 @@ class Interpreter:
             if not isinstance(value, (UserFunction, Builtin)):
                 raise TypeError("expected a Reaper function")
 
+        def iterate(seed: Any, steps: Any, function: Any) -> list[Any]:
+            callback(function)
+            if isinstance(steps, bool) or not isinstance(steps, int) or steps < 0:
+                raise ValueError("iterate steps must be a non-negative whole number")
+            if steps + 1 > self.max_collection_items:
+                raise ValueError(f"collection item limit ({self.max_collection_items}) exceeded")
+            token = Token("BUILTIN", "iterate", 1, 1)
+            history = [seed]
+            value = seed
+            for _ in range(steps):
+                self._tick(token)
+                value = self._call(function, [value], token)
+                history.append(value)
+            return history
+
         register("size", bounded_size, 1, 1)
         register("text", self._display, 1, 1)
         register("number", self._to_number, 1, 1)
@@ -433,6 +448,28 @@ class Interpreter:
             sequence(values)
         ), 1, 1)
         register("reciprocal_altitude", metric_space.reciprocal_altitude, 2, 2)
+
+        # Bounded automatic compute and sequence-composition primitives.
+        register("multiply", arithmetic.multiply, 2, 2)
+        register("product", lambda values: arithmetic.product(sequence(values)), 1, 1)
+        register("compute", arithmetic.compute, 2, 3)
+        register("calculate", arithmetic.compute, 2, 3)
+        register("scale", lambda values, factor: arithmetic.scale(sequence(values), factor), 2, 2)
+        register("amplify", arithmetic.amplify, 2, 2)
+        register("compound", lambda left, right: arithmetic.compound(sequence(left), sequence(right)), 2, 2)
+        register("expand", lambda values, count: arithmetic.expand(sequence(values), count), 2, 2)
+        register("accumulate", lambda values: arithmetic.accumulate(sequence(values)), 1, 1)
+        register("iterate", iterate, 3, 3)
+        register("cross_multiply", lambda left, right: arithmetic.cross_multiply(sequence(left), sequence(right)), 2, 2)
+        register("exponentiate", arithmetic.exponentiate, 2, 2)
+        register("factor", arithmetic.factor, 1, 1)
+        register("combine", lambda left, right: arithmetic.combine(sequence(left), sequence(right)), 2, 2)
+        register("fuse", lambda left, right: arithmetic.fuse(sequence(left), sequence(right)), 2, 2)
+        register("aggregate", lambda values: arithmetic.aggregate(sequence(values)), 1, 1)
+        register("pair", arithmetic.pair, 2, 2)
+        register("couple", lambda left, right: arithmetic.couple(sequence(left), sequence(right)), 2, 2)
+        register("convolve", lambda signal, kernel: arithmetic.convolve(sequence(signal), sequence(kernel)), 2, 2)
+        register("cartesianize", lambda left, right: arithmetic.cartesianize(sequence(left), sequence(right)), 2, 2)
         from .federation import read_json, write_json, oplage_metrics, compare_oplage_snapshots
         from .native import pytyliki_norm, pytyliki_dot, pytyliki_distance, pytyliki_orthogonal
         register("read_json", read_json, 1, 1)
