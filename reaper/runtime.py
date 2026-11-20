@@ -11,6 +11,8 @@ from .lexer import Token
 from .parser import Node, parse
 from .impact import catalog as impact_catalog, find_profile as impact_profile, rank_profiles as impact_rank, search_profiles as impact_search
 from . import metric_space
+from .glyphs import GLYPHS
+from .memory import MemoryArena, MemoryBuffer, MemoryFrame, MemoryPool, MemoryView, apply_memory_glyph
 
 
 @dataclass(slots=True)
@@ -325,8 +327,8 @@ class Interpreter:
             self.globals.define(name, Builtin(name, callback, minimum, maximum))
 
         def sequence(value: Any) -> Any:
-            if not isinstance(value, (list, tuple, str, range)):
-                raise TypeError("expected a list, text, or range")
+            if not isinstance(value, (list, tuple, str, range, MemoryBuffer, MemoryView)):
+                raise TypeError("expected a list, text, range, memory buffer, or view")
             try:
                 size = len(value)
             except OverflowError as error:
@@ -349,8 +351,8 @@ class Interpreter:
             return sequence(self._range(*arguments))
 
         def bounded_size(value: Any) -> int:
-            if not isinstance(value, (str, list, tuple, dict, range)):
-                raise TypeError("expected text, list, map, or range")
+            if not isinstance(value, (str, list, tuple, dict, range, MemoryBuffer, MemoryView)):
+                raise TypeError("expected text, list, map, range, memory buffer, or view")
             try:
                 size = len(value)
             except OverflowError as error:
@@ -363,6 +365,40 @@ class Interpreter:
         def callback(value: Any) -> None:
             if not isinstance(value, (UserFunction, Builtin)):
                 raise TypeError("expected a Reaper function")
+
+        def memory_payload(value: Any) -> bytes:
+            if isinstance(value, str):
+                return value.encode("utf-8")
+            if isinstance(value, (bytes, bytearray)):
+                return bytes(value)
+            if isinstance(value, list) and all(
+                isinstance(item, int) and not isinstance(item, bool) and 0 <= item <= 255
+                for item in value
+            ):
+                return bytes(value)
+            raise TypeError("payload must be text, bytes, or a list of byte values")
+
+        def memory_write(target: Any, offset: int, value: Any) -> int:
+            payload = memory_payload(value)
+            if isinstance(target, MemoryView):
+                if target.readonly or target.buffer.readonly:
+                    raise ValueError("view is read-only")
+                offset = self._whole_memory_integer(offset, "offset")
+                if offset + len(payload) > len(target):
+                    raise ValueError("write exceeds view bounds")
+                return target.buffer.write(target.start + offset, payload)
+            if not isinstance(target, MemoryBuffer):
+                raise TypeError("expected a Reaper memory buffer or view")
+            return target.write(offset, payload)
+
+        def memory_read(target: Any, offset: int = 0, length: int | None = None) -> Any:
+            if isinstance(target, MemoryView):
+                if offset != 0 or length is not None:
+                    raise ValueError("offset and length are not accepted with a view")
+                return target.read()
+            if not isinstance(target, MemoryBuffer):
+                raise TypeError("expected a Reaper memory buffer or view")
+            return target.read(offset, length)
 
         register("size", bounded_size, 1, 1)
         register("text", self._display, 1, 1)
@@ -398,6 +434,21 @@ class Interpreter:
         register("say", lambda *values: self.output(" ".join(self._display(v) for v in values)), 1, None)
         register("ask", lambda prompt: input(self._display(prompt)), 1, 1)
         register("assert", self._assert, 1, 2)
+        register("memory_write", memory_write, 3, 3)
+        register("memory_read", memory_read, 1, 3)
+        register("memory_capacity", lambda buffer: buffer.capacity if isinstance(buffer, MemoryBuffer) else _raise_type("expected a memory buffer"), 1, 1)
+        for spec in GLYPHS:
+            internal_name = f"\\0glyph:{spec.token}"
+            if spec.implemented:
+                action = lambda *values, operation=spec.operation: apply_memory_glyph(operation, *values)
+            else:
+                action = lambda *values, glyph=spec.token: _raise_type(
+                    f"glyph {glyph!r} is reserved; no runtime operation is assigned yet"
+                )
+            self.globals.define(
+                internal_name,
+                Builtin(f"glyph {spec.token}", action, 0, None),
+            )
         register("impact_catalog", impact_catalog, 0, 0)
         register("impact_profile", impact_profile, 1, 1)
         register("impact_search", impact_search, 1, 1)
@@ -611,6 +662,18 @@ class Interpreter:
             return "map"
         if isinstance(value, (UserFunction, Builtin)):
             return "craft"
+        if isinstance(value, MemoryBuffer):
+            return "memory_buffer"
+        if isinstance(value, MemoryView):
+            return "memory_view"
+        if isinstance(value, MemoryArena):
+            return "memory_arena"
+        if isinstance(value, MemoryFrame):
+            return "memory_frame"
+        if isinstance(value, MemoryPool):
+            return "memory_pool"
+        if isinstance(value, bytes):
+            return "bytes"
         return "unknown"
 
     def _assert(self, condition: Any, message: Any = "assertion failed") -> None:
@@ -634,7 +697,25 @@ class Interpreter:
             return left.keys() == right.keys() and all(self._equal(left[key], right[key]) for key in left)
         return left == right
 
+    @staticmethod
+    def _whole_memory_integer(value: Any, label: str) -> int:
+        if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+            raise ValueError(f"{label} must be a non-negative whole number")
+        return value
+
     def _display(self, value: Any) -> str:
+        if isinstance(value, MemoryBuffer):
+            return f"memory_buffer(length={value.length}, capacity={value.capacity}, alignment={value.alignment})"
+        if isinstance(value, MemoryView):
+            return f"memory_view(length={len(value)}, step={value.step}, readonly={str(value.readonly).lower()})"
+        if isinstance(value, MemoryArena):
+            return f"memory_arena(used={value.used}, limit={value.limit}, closed={str(value.closed).lower()})"
+        if isinstance(value, MemoryFrame):
+            return f"memory_frame(closed={str(value.closed).lower()})"
+        if isinstance(value, MemoryPool):
+            return f"memory_pool(slot_size={value.slot_size}, capacity={value.capacity})"
+        if isinstance(value, bytes):
+            return value.hex()
         if value is None:
             return "nothing"
         if value is True:
