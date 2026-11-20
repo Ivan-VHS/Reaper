@@ -17,4 +17,13 @@ static void test_program(void){const char *s="make value := [1, 2] :: map(double
 static void test_escape(void){ReaperTokenArray t={0};ReaperLexError e={{0},0,0};assert(reaper_lex("emit \"a\\nb\"\n",&t,&e));assert(!strcmp(t.items[1].text,"a\nb"));reaper_tokens_free(&t);}
 static void test_bad_escape(void){ReaperTokenArray t={0};ReaperLexError e={{0},0,0};assert(!reaper_lex("emit \"bad\\q\"\n",&t,&e));assert(strstr(e.message,"escape"));assert(t.length==0);}
 static void test_unterminated(void){ReaperTokenArray t={0};ReaperLexError e={{0},0,0};assert(!reaper_lex("emit \"unfinished",&t,&e));assert(e.line==1&&e.column==6);}
-int main(void){test_program();test_escape();test_bad_escape();test_unterminated();test_most_surface();test_most_operator_family();puts("native lexer tests: 6 groups passed");return 0;}
+static void test_most_russian_vocabulary(void){
+ const char *s="модуль счётчик\nструктура Состояние { значение: целое32 = 0 }\nфункция увеличить(шаг: целое32) -> целое32 { если шаг > 0 { вернуть шаг } иначе { вернуть 0 } }\nпусть число: целое64 := 42\nпеременная сумма: целое64 := число\nизменить сумма := сумма + 1\nвывести сумма\n";
+ ReaperTokenArray t={0};ReaperLexError e={{0},0,0};assert(reaper_lex(s,&t,&e));
+ assert(has(&t,"модуль",REAPER_TOK_KEYWORD));assert(has(&t,"структура",REAPER_TOK_KEYWORD));assert(has(&t,"функция",REAPER_TOK_KEYWORD));
+ assert(has(&t,"если",REAPER_TOK_KEYWORD));assert(has(&t,"иначе",REAPER_TOK_KEYWORD));assert(has(&t,"вернуть",REAPER_TOK_KEYWORD));
+ assert(has(&t,"пусть",REAPER_TOK_KEYWORD));assert(has(&t,"переменная",REAPER_TOK_KEYWORD));assert(has(&t,"изменить",REAPER_TOK_KEYWORD));assert(has(&t,"вывести",REAPER_TOK_KEYWORD));
+ assert(has(&t,"счётчик",REAPER_TOK_IDENTIFIER));assert(has(&t,"Состояние",REAPER_TOK_IDENTIFIER));assert(has(&t,"целое32",REAPER_TOK_IDENTIFIER));
+ reaper_tokens_free(&t);
+}
+int main(void){test_program();test_escape();test_bad_escape();test_unterminated();test_most_surface();test_most_operator_family();test_most_russian_vocabulary();puts("native lexer tests: 7 groups passed");return 0;}
