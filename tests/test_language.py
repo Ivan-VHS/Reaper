@@ -18,8 +18,43 @@ class LexerTests(unittest.TestCase):
         )
 
     def test_extended_russian_keywords_are_reserved_and_exact(self) -> None:
-        words = [alias for alias, _canonical in [["модуль","module"],["публичный","pub"],["процедура","fn"],["структура","struct"],["перечисление","enum"],["типаж","trait"],["реализация","impl"],["тип","type"],["константа","const"],["связать","let"],["изменяемый","mut"],["возврат","return"],["условие","if"],["альтернатива","else"],["выбор","match"],["область","region"],["сырой","raw"],["арена","arena"],["сигнал","signal"],["асинхронно","async"],["ожидать","await"],["тест","test"],["вычислить_при_сборке","comptime"],["требует","requires"],["гарантирует","ensures"],["небезопасно","unsafe"],["внешний","extern"],["где","where"],["уничтожить","drop"],["для_каждого","for"],["прервать","break"],["продолжить","continue"],["отложить","defer"]]]
-        expected = [canonical.upper() for _alias, canonical in [["модуль","module"],["публичный","pub"],["процедура","fn"],["структура","struct"],["перечисление","enum"],["типаж","trait"],["реализация","impl"],["тип","type"],["константа","const"],["связать","let"],["изменяемый","mut"],["возврат","return"],["условие","if"],["альтернатива","else"],["выбор","match"],["область","region"],["сырой","raw"],["арена","arena"],["сигнал","signal"],["асинхронно","async"],["ожидать","await"],["тест","test"],["вычислить_при_сборке","comptime"],["требует","requires"],["гарантирует","ensures"],["небезопасно","unsafe"],["внешний","extern"],["где","where"],["уничтожить","drop"],["для_каждого","for"],["прервать","break"],["продолжить","continue"],["отложить","defer"]]]
+        aliases = [
+            ("модуль", "module"),
+            ("публичный", "pub"),
+            ("процедура", "fn"),
+            ("структура", "struct"),
+            ("перечисление", "enum"),
+            ("типаж", "trait"),
+            ("реализация", "impl"),
+            ("тип", "type"),
+            ("константа", "const"),
+            ("связать", "let"),
+            ("изменяемый", "mut"),
+            ("возврат", "return"),
+            ("условие", "if"),
+            ("альтернатива", "else"),
+            ("выбор", "match"),
+            ("область", "region"),
+            ("сырой", "raw"),
+            ("арена", "arena"),
+            ("сигнал", "signal"),
+            ("асинхронно", "async"),
+            ("ожидать", "await"),
+            ("тест", "test"),
+            ("вычислить_при_сборке", "comptime"),
+            ("требует", "requires"),
+            ("гарантирует", "ensures"),
+            ("небезопасно", "unsafe"),
+            ("внешний", "extern"),
+            ("где", "where"),
+            ("уничтожить", "drop"),
+            ("для_каждого", "for"),
+            ("прервать", "break"),
+            ("продолжить", "continue"),
+            ("отложить", "defer"),
+        ]
+        words = [alias for alias, _canonical in aliases]
+        expected = [canonical.upper() for _alias, canonical in aliases]
         tokens = tokenize(" ".join(words))
         self.assertEqual([token.kind for token in tokens[:-1]], expected)
         self.assertEqual([token.value for token in tokens[:-1]], words)
