@@ -395,18 +395,15 @@ class Interpreter:
             if isinstance(target, MemoryView):
                 if offset != 0 or length is not None:
                     raise ValueError("offset and length are not accepted with a view")
-                    data = target.read()
-            else:
-                if not isinstance(target, MemoryBuffer):
-                    raise TypeError("expected a Reaper memory buffer or view")
+                data = target.read()
+            elif isinstance(target, MemoryBuffer):
                 data = target.read(offset, length)
+            else:
+                raise TypeError("expected a Reaper memory buffer or view")
             try:
                 return data.decode("utf-8")
             except UnicodeDecodeError:
                 return data
-            if not isinstance(target, MemoryBuffer):
-                raise TypeError("expected a Reaper memory buffer or view")
-            return target.read(offset, length)
 
         register("size", bounded_size, 1, 1)
         register("text", self._display, 1, 1)
