@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Conservative source-license and attribution inventory for Reaper projects.
 
 This is a review aid, not a plagiarism detector or legal opinion. It reads source
