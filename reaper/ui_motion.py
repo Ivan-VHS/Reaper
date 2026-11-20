@@ -1,11 +1,13 @@
-"""Small, opt-in motion primitives for the Reaper Studio Tk interface.
+"""Small, opt-in motion primitives for a Tk desktop interface.
 
-Motion is deliberately restrained and can be disabled with UI_REDUCED_MOTION=1.
+Motion is deliberately restrained and respects UI_REDUCED_MOTION=1 plus the
+Windows client-area animation accessibility setting.
 """
 from __future__ import annotations
 
 import os
 import tkinter as tk
+
 
 DURATIONS_MS = {
     "instant": 0,
@@ -24,10 +26,22 @@ def ease_out(progress: float) -> float:
 
 
 def reduced_motion_enabled() -> bool:
-    """Read the explicit, portable accessibility override."""
-    return os.environ.get("UI_REDUCED_MOTION", "").strip().lower() in {
-        "1", "true", "yes", "on"
-    }
+    """Read the portable override and Windows animation accessibility flag."""
+    override = os.environ.get("UI_REDUCED_MOTION", "").strip().lower()
+    if override in {"1", "true", "yes", "on"}:
+        return True
+    if os.name == "nt":
+        try:
+            import ctypes
+            enabled = ctypes.c_int(1)
+            # SPI_GETCLIENTAREAANIMATION: FALSE means client-area animation is off.
+            if ctypes.windll.user32.SystemParametersInfoW(
+                0x1042, 0, ctypes.byref(enabled), 0
+            ):
+                return not bool(enabled.value)
+        except (AttributeError, OSError, TypeError):
+            pass
+    return False
 
 
 class MotionController:
