@@ -151,7 +151,7 @@ class PolyglotCodeCliTests(unittest.TestCase):
             with contextlib.redirect_stdout(output):
                 self.assertEqual(main(["--db", str(db), "roadmap", "--stage", "2"]), 0)
             self.assertIn("Этап 2: Semantics", output.getvalue())
-            self.assertTrue(db.exists())
+            self.assertFalse(db.exists())
 
 
 if __name__ == "__main__":
