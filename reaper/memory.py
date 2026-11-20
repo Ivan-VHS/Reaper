@@ -435,6 +435,8 @@ def apply_memory_glyph(operation: str, *arguments: Any) -> Any:
         released = buffer.capacity
         buffer.closed = True
         buffer.data.clear()
+        if buffer.arena is not None and not buffer.arena.closed:
+            buffer.arena.used = max(0, buffer.arena.used - released)
         buffer.capacity = buffer.length = buffer.cursor = 0
         return released
 
