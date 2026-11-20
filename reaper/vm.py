@@ -153,7 +153,6 @@ class VirtualMachine:
                 try:
                     item = next(iterators[-1])
                 except StopIteration:
-                    iterators.pop()
                     ip = end_target
                 else:
                     scopes.append(environment)
