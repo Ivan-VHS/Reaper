@@ -174,6 +174,27 @@ python -m unittest discover -s tests -p 'test_self_hosting.py' -v
 
 See the [self-hosting stage contract](docs/SELF_HOSTING_BOOTSTRAP.md), the [Reaper-written parser](selfhost/parser.rpr), and the [Reaper-written lexer](selfhost/lexer.rpr). A stage is counted as implemented only to the extent covered by its tests; file presence alone is not completion evidence.
 
+## Embedded C workbench
+
+Reaper includes an Embedded C project flow for reference Cortex-M4, RV32IMC and
+ATmega328P profiles. Create a project, review its JSON MCU profile and linker
+script, cross-build with a user-installed GNU toolchain, inspect ELF/map section
+sizes and receive FLASH/SRAM budget warnings:
+
+~~~sh
+python -m reaper embedded profiles
+python -m reaper embedded init ./board --profile cortex-m4-reference
+python -m reaper embedded inspect ./board
+python -m reaper embedded build ./board
+~~~
+
+Reaper Studio exposes the same create, inspect and background-build actions in
+its **Embedded C** menu. The register bank and CMSIS-SVD subset are deterministic
+simulation tools, not physical MMIO access. The generated startup/linker scaffold
+is a reference; add the exact vendor startup sequence and verify addresses before
+flashing. No built-in flashing, UART bootloader, SWD/JTAG debugger or live pin
+sampling is claimed. See [the Embedded C workbench guide](docs/EMBEDDED_C_WORKBENCH.md).
+
 ## Documentation
 
 - [Language reference](LANGUAGE.md)
