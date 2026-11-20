@@ -101,3 +101,8 @@ Acceptance: Check/Run/Debug behavior remains unchanged; no unsupported native ca
 - [Constitution of the Ducks](ANATIDAE_CONSTITUTION.md) · [MOST language specification](MOST_LANGUAGE_SPEC.md)
 - [MOST 400 matrix](MOST_400_COMBINATORIAL_MATRIX.md) · [Runtime platform](RUNTIME_PLATFORM.md)
 - [Project federation](PROJECT_FEDERATION_MATRIX.md)
+
+
+## White-blue-red Anatidae design authority
+
+The product palette and platform implementation rules are standardized in [ANATIDAE_DESKTOP_DESIGN_SYSTEM.md](ANATIDAE_DESKTOP_DESIGN_SYSTEM.md). That document supersedes earlier exploratory color-preset examples in this architecture. The production UI uses semantic white, blue and red tokens with separate light/dark surfaces; unrelated accent palettes are not part of the product identity.
