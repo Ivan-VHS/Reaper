@@ -42,12 +42,30 @@ Reaper complements its 66-position language and toolchain matrix with **14 CPU, 
 - **Language core:** Unicode identifiers, comments, strings, functions and closures, recursion, immutable `make`, mutable `vary` with explicit `change`, conditionals, iteration and flow composition.
 - **Built-ins and diagnostics:** higher-order collection operations (map/filter/fold/reduce), stable key sorting, chunking/slicing/flattening/de-duplication, UTF-8 string utilities, source-aware errors and bounded execution.
 - **Metric standard library:** L1/L2/L-infinity norms, normalization, Euclidean/Manhattan/Chebyshev distances, cosine similarity, angles, projections and centroids, alongside quadratic forms and non-Euclidean models.
-- **CLI:** --lint, persistent line-oriented --repl, structured --json output and --profile execution metrics.
+- **CLI:** --lint, persistent line-oriented --repl, structured --json, --profile, selectable `--engine vm`, `--module-graph`, and opt-in `--allow-native-ffi`.
+- **`.rpr` modules:** explicit import/export, isolated module scopes, cached exports, dependency graphs and cycle diagnostics.
+- **Managed runtime resources:** tracked heap ledger, mark/sweep roots, LIFO regions, bounded text-file handles and deterministic cleanup.
+- **C ABI / Pytyliki:** opt-in typed C ABI bridge and adapter for the public Pytyliki `pl_*` API.
+- **Canonical IR / VM:** selectable Python bytecode VM over Canonical IR; tree-walk remains the default compatibility engine.
+- **Reaper Studio debugger:** statement breakpoints (F9), step/continue/stop, variable inspector and call stack.
 - **Native C17 track:** lexer, expression parser and owned AST, verified integer Canonical IR, checked constant folding, a limited AST-to-IR lowering slice, CLI bring-up and C tests.
 - **Self-hosting bootstrap — Stage 0 + partial Stage 1:** `selfhost/lexer.rpr` implements tokenization and `selfhost/parser.rpr` implements a Reaper-written Pratt expression parser with the real `::` flow operator, precedence, right-associative exponentiation, list literals, calls and indexing. Bootstrap assertions and Python/CTest tests cover both programs. The lexer still has an ASCII-identifier gap; the parser does not yet cover declarations, blocks or statement grammar and does not replace the reference frontend. See [the bootstrap plan](docs/SELF_HOSTING_BOOTSTRAP.md).
 - **MOST language track:** documented language vocabulary and staged implementation contract.
 
 The C implementation is not yet a full language interpreter. Full declarations/blocks, type checking, intent resolution, ownership analysis, native code generation and WASM are not complete. Python remains the compatibility reference until runtime and CLI parity is demonstrated.
+
+## Runtime platform
+
+Contracts and examples: [RUNTIME_PLATFORM.md](docs/RUNTIME_PLATFORM.md).
+
+```sh
+python -m reaper --engine vm examples/flow.rpr
+python -m reaper --module-graph examples/modules/main.rpr
+python -m reaper --heap-bytes 67108864 --open-resources 64 examples/flow.rpr
+python -m reaper --allow-native-ffi path/to/ffi_program.rpr
+```
+
+The managed heap is an accounting and reachability layer over Python's allocator (`sys.getsizeof`), not a separate physical allocator or process-RSS cap. The bytecode VM currently runs in the Python reference runtime; the native C17 core is not claimed to have VM parity. Native FFI runs in-process, requires trusted ABI-compatible libraries, and ctypes cannot guarantee portable physical library unloading.
 
 ## Desktop workbench
 
@@ -143,6 +161,7 @@ Default runtime quotas include 1,000,000 execution steps, 256 nested calls, 100,
 ## Documentation
 
 - [Language reference](LANGUAGE.md)
+- [Runtime platform: modules, heap, FFI, VM and debugger](docs/RUNTIME_PLATFORM.md)
 - [Runtime and CLI implementation update (20 Nov 2026)](docs/IMPLEMENTATION_UPDATE_2026-11-20.md)
 - [Unified REAPER/MOST architecture](docs/REAPER_UNIFIED_ARCHITECTURE.md)
 - [Self-hosting bootstrap plan](docs/SELF_HOSTING_BOOTSTRAP.md)

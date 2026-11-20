@@ -38,6 +38,14 @@ emit "result = " ++ text(result)
 
 Reaper includes a canonical 666-entry symbolic vocabulary over `: ; [ { ] } + = _ - *`. Each reserved lexeme is a unique three-symbol code with no digits. The six groups cover memory, streams, types, arithmetic, metrics and diagnostics. The Python and native C lexers recognize these codes; use `reaper --catalog` or the `token_catalog()`, `token_info()` and `token_is_reserved()` built-ins to inspect them. Vocabulary registration does not imply operation semantics are implemented: reserved operators are rejected by the parser until their contracts are implemented. See [TOKEN_CATALOG](docs/TOKEN_CATALOG.md).
 
+## Modules
+
+Modules are UTF-8 .rpr files resolved relative to the importing file. An import with as binds a module map; an import without an alias binds its explicitly exported names. Access a member with map indexing, for example module["function"](...). Export declarations can mark an existing name or declare a make, vary, or craft binding. Import cycles are rejected and the CLI can inspect the transitive graph without executing code:
+
+~~~sh
+python -m reaper --module-graph examples/modules/main.rpr
+~~~
+
 ## Source format
 
 - Source files use the .rpr extension.
@@ -117,6 +125,12 @@ Calls use name(arguments); list indexing uses collection[index]. Arithmetic does
 | split(text, separator) / join(texts, separator) | Split and join strings |
 | trim / lower / upper / replace / contains / starts_with / ends_with | UTF-8 string operations |
 | assert(condition[, message]) | Raise a runtime error when condition is false |
+| file_open(path[, mode]) / file_read(handle) / file_write(handle, text) / file_close(handle) | Explicit UTF-8 file access with owned handles |
+| with_file(path, mode, function) | Scoped file access; always closes the handle |
+| heap_stats() / heap_collect() | Inspect the tracked heap ledger / collect unreachable tracked containers |
+| region_begin() / region_end(token) | Open and close nested LIFO allocation regions |
+| ffi_open(path) / ffi_bind(library, symbol, return_type[, argument_types]) / ffi_close(handle) | Opt-in native C ABI calls |
+| pytyliki_open(path) / pytyliki_cpu_profile(bridge) / pytyliki_benchmark(bridge, iterations) | Typed Pytyliki C ABI adapter |
 
 Flow passes the left-hand value as the first argument: values :: map(double) is equivalent to map(values, double).
 
@@ -132,6 +146,9 @@ python -m reaper --profile examples/flow.rpr
 python -m reaper --json --profile examples/flow.rpr
 python -m reaper --steps 2000000 examples/flow.rpr
 python -m reaper --items 50000 --text-length 500000 examples/flow.rpr
+python -m reaper --engine vm examples/flow.rpr
+python -m reaper --module-graph examples/modules/main.rpr
+python -m reaper --heap-bytes 67108864 --open-resources 64 examples/flow.rpr
 ~~~
 
 The default limits are 1,000,000 execution steps, 256 nested function calls, 100,000 collection items and 1,000,000 characters produced by text concatenation. The CLI exposes `--steps`, `--items` and `--text-length`; the Python API exposes the same collection and text limits through `Interpreter` and `run()`.
@@ -148,6 +165,12 @@ The bootstrap has started, but Reaper is not yet a self-hosting compiler.
 - **Not yet implemented:** a Reaper-written parser/AST builder, semantic analysis, Canonical IR construction, optimizer, native code generator and reproducible stage-0/stage-1 compiler rebuild.
 
 The Python interpreter remains the compatibility oracle. The bootstrap stages and acceptance gates are defined in [SELF_HOSTING_BOOTSTRAP](docs/SELF_HOSTING_BOOTSTRAP.md).
+
+## Runtime platform status
+
+The Python reference runtime now includes .rpr modules with explicit exports and cycle detection, a tracked heap with mark/sweep reachability and LIFO regions, deterministic scoped file handles, opt-in C ABI FFI and a typed Pytyliki adapter, Canonical IR lowering and a selectable bytecode VM. Reaper Studio exposes statement breakpoints, stepping, visible lexical variables and the function call stack. See [RUNTIME_PLATFORM.md](docs/RUNTIME_PLATFORM.md) for contracts and limits.
+
+These are reference-runtime facilities. The heap ledger estimates allocation size and does not replace Python's physical allocator. Native library handles are logically invalidated; physical unload is platform-managed. Native FFI is in-process and not a sandbox. The new bytecode VM is currently Python-based; native C17 bytecode execution is not yet claimed.
 
 ## Implementation boundary
 

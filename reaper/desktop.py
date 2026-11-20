@@ -9,13 +9,14 @@ from tkinter.scrolledtext import ScrolledText
 from reaper.errors import ReaperError
 from reaper.parser import parse
 from reaper.runtime import Interpreter
+from reaper.debugger import DebuggerStopped, RuntimeDebugger
 
 STARTER = '''craft double(value) {
     yield value * 2
 }
 
 make values := [1, 2, 3, 4]
-emit values ~> map(double)
+emit values :: map(double)
 '''
 
 class ReaperStudio(tk.Tk):
@@ -26,6 +27,10 @@ class ReaperStudio(tk.Tk):
         self.minsize(780, 560)
         self.option_add("*Font", ("Segoe UI", 10))
         self.current_file: Path | None = None
+        self.breakpoints: set[int] = set()
+        self.debugger: RuntimeDebugger | None = None
+        self._debug_wait = False
+        self._debug_signal = tk.BooleanVar(value=False)
 
         self._build_menu()
         toolbar = ttk.Frame(self, padding=(10, 8))
@@ -35,6 +40,11 @@ class ReaperStudio(tk.Tk):
         ttk.Separator(toolbar, orient="vertical").pack(side="left", fill="y", padx=8)
         ttk.Button(toolbar, text="Check", command=self.check_source).pack(side="left")
         ttk.Button(toolbar, text="Run", command=self.run_source).pack(side="left", padx=4)
+        ttk.Button(toolbar, text="Debug", command=self.debug_source).pack(side="left")
+        ttk.Button(toolbar, text="Breakpoint", command=self.toggle_breakpoint).pack(side="left", padx=4)
+        ttk.Button(toolbar, text="Continue", command=self.continue_debug).pack(side="left")
+        ttk.Button(toolbar, text="Step", command=self.step_debug).pack(side="left", padx=4)
+        ttk.Button(toolbar, text="Stop", command=self.stop_debug).pack(side="left")
         ttk.Button(toolbar, text="Clear output", command=self.clear_output).pack(side="left", padx=4)
         self.file_label = tk.StringVar(value="Untitled.reaper")
         ttk.Label(toolbar, textvariable=self.file_label, foreground="#526174").pack(side="right")
@@ -49,9 +59,25 @@ class ReaperStudio(tk.Tk):
         self.editor = ScrolledText(editor_frame, wrap="none", undo=True, font=("Consolas", 11), tabs=("4c",))
         self.editor.pack(fill="both", expand=True)
         self.editor.insert("1.0", STARTER)
-        ttk.Label(output_frame, text="OUTPUT", padding=(4, 4)).pack(anchor="w")
-        self.output = ScrolledText(output_frame, height=9, wrap="word", font=("Consolas", 10), state="disabled")
+        debug_tabs = ttk.Notebook(output_frame)
+        debug_tabs.pack(fill="both", expand=True)
+        output_page = ttk.Frame(debug_tabs)
+        variables_page = ttk.Frame(debug_tabs)
+        stack_page = ttk.Frame(debug_tabs)
+        debug_tabs.add(output_page, text="Output")
+        debug_tabs.add(variables_page, text="Variables")
+        debug_tabs.add(stack_page, text="Call stack")
+        self.output_tabs = debug_tabs
+        self.output = ScrolledText(output_page, height=9, wrap="word", font=("Consolas", 10), state="disabled")
         self.output.pack(fill="both", expand=True)
+        self.variables_view = ttk.Treeview(variables_page, columns=("value",), show="tree headings")
+        self.variables_view.heading("#0", text="Name")
+        self.variables_view.heading("value", text="Value")
+        self.variables_view.column("#0", width=220, stretch=True)
+        self.variables_view.column("value", width=520, stretch=True)
+        self.variables_view.pack(fill="both", expand=True)
+        self.stack_view = tk.Listbox(stack_page, font=("Consolas", 10))
+        self.stack_view.pack(fill="both", expand=True)
 
         self.status = tk.StringVar(value="Ready — check the source before running it")
         ttk.Label(self, textvariable=self.status, relief="sunken", anchor="w", padding=(8, 4)).pack(fill="x")
@@ -59,6 +85,7 @@ class ReaperStudio(tk.Tk):
         self.bind_all("<Control-s>", lambda _event: self.save_file())
         self.bind_all("<F5>", lambda _event: self.run_source())
         self.bind_all("<Shift-F5>", lambda _event: self.check_source())
+        self.bind_all("<F9>", lambda _event: self.toggle_breakpoint())
 
     def _build_menu(self) -> None:
         menu = tk.Menu(self)
@@ -141,7 +168,86 @@ class ReaperStudio(tk.Tk):
         self._append_output(f"CHECK OK: {self._source_name()} parsed successfully")
         self.status.set("Source check passed")
 
+    def toggle_breakpoint(self) -> None:
+        line = int(self.editor.index("insert").split(".")[0])
+        if line in self.breakpoints:
+            self.breakpoints.remove(line)
+            self.status.set(f"Breakpoint removed at line {line}")
+        else:
+            self.breakpoints.add(line)
+            self.status.set(f"Breakpoint added at line {line}")
+        self._append_output("Breakpoints: " + (", ".join(map(str, sorted(self.breakpoints))) or "none"))
+
+    def _pause_for_debug(self, snapshot: Any) -> None:
+        self.variables_view.delete(*self.variables_view.get_children())
+        for name, value in snapshot.variables.items():
+            self.variables_view.insert("", "end", text=name, values=(self._debug_value(value),))
+        self.stack_view.delete(0, "end")
+        for index, name in enumerate(snapshot.call_stack):
+            self.stack_view.insert("end", f"{index}: {name}")
+        if not snapshot.call_stack:
+            self.stack_view.insert("end", "<module>")
+        self.output_tabs.select(1)
+        self.status.set(f"Paused at {snapshot.filename}:{snapshot.line}:{snapshot.column}")
+        self._debug_wait = True
+        self._debug_signal.set(False)
+        while self._debug_wait:
+            self.wait_variable(self._debug_signal)
+
+    @staticmethod
+    def _debug_value(value: Any) -> str:
+        rendered = repr(value)
+        return rendered if len(rendered) <= 240 else rendered[:237] + "..."
+
+    def _release_debugger(self, step: bool = False, stop: bool = False) -> None:
+        if self.debugger is None or not self._debug_wait:
+            return
+        if stop:
+            self.debugger.stop()
+        elif step:
+            self.debugger.step()
+        else:
+            self.debugger.continue_execution()
+        self._debug_wait = False
+        self._debug_signal.set(True)
+
+    def continue_debug(self) -> None:
+        self._release_debugger()
+
+    def step_debug(self) -> None:
+        self._release_debugger(step=True)
+
+    def stop_debug(self) -> None:
+        self._release_debugger(stop=True)
+
+    def _run_with_debugger(self, first_step: bool = False) -> None:
+        source = self.editor.get("1.0", "end-1c")
+        self.clear_output()
+        debugger = RuntimeDebugger(self.breakpoints, self._pause_for_debug)
+        if first_step:
+            debugger.step()
+        self.debugger = debugger
+        try:
+            Interpreter(output=self._append_output, debugger=debugger).run(source, self._source_name())
+        except DebuggerStopped:
+            self.status.set("Debug session stopped")
+        except ReaperError as error:
+            self._append_output(f"RUNTIME ERROR: {error}")
+            self.status.set("Execution failed")
+            return
+        finally:
+            self.debugger = None
+            self._debug_wait = False
+        if not debugger.stop_requested:
+            self.status.set("Execution completed")
+
+    def debug_source(self) -> None:
+        self._run_with_debugger(first_step=True)
+
     def run_source(self) -> None:
+        if self.breakpoints:
+            self._run_with_debugger()
+            return
         source = self.editor.get("1.0", "end-1c")
         self.clear_output()
         try:

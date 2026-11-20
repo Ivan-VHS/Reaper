@@ -35,9 +35,11 @@ reaper --profile examples/flow.rpr
 reaper --json --profile examples/flow.rpr
 ~~~
 
-## Deliberate implementation boundaries
+## Runtime platform additions
 
-The current change does not claim to implement module imports/exports, a tracing garbage collector, deterministic external-resource scopes, a native C ABI/FFI bridge, or a full bytecode virtual machine. Those require language-level contracts and native-runtime work; the repository's existing Canonical IR and C17 bring-up remain the foundation for that next stage. Reaper Studio continues to use the Python reference runtime and is not a GUI debugger yet.
+The Python reference runtime now includes .rpr imports/exports, dependency graph scanning and cycle detection; a tracked heap with nested-container accounting, mark/sweep roots and explicit LIFO regions; owned file handles and automatic cleanup; opt-in generic C ABI calls and a typed adapter for Pytyliki's pl_* core API; Canonical IR lowering, bytecode assembly and a selectable stack VM; and Reaper Studio statement breakpoints, stepping, variable inspection and call stack display.
+
+The precise contracts and limits are in [RUNTIME_PLATFORM.md](RUNTIME_PLATFORM.md). These capabilities currently belong to the Python reference runtime. The heap is an accounting/collection layer over Python's allocator, native FFI executes in-process, and ctypes cannot promise portable physical library unloading. The C17 implementation remains a separate bring-up and is not claimed to have full runtime/VM parity.
 
 ## Regression coverage
 

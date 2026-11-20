@@ -11,7 +11,7 @@ from .token_catalog import token_is_reserved
 KEYWORDS = {
     "make", "vary", "change", "craft", "yield", "emit", "when",
     "otherwise", "each", "in", "loop", "while", "true", "false",
-    "nothing", "and", "or", "not",
+    "nothing", "and", "or", "not", "import", "export", "as",
 }
 
 
