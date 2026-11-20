@@ -29,6 +29,7 @@ emit "answer = " ++ text(answer)
 - **Нативний C17:** лексер, expression-парсер, AST із володінням, перевірені integer IR-операції та обмежений lowering. Це ще не повний інтерпретатор; Python лишається еталоном.
 - **МОСТ:** точні російські псевдоніми ключових слів REAPER 0.1 над тим самим parser/runtime; окремої семантики чи runtime немає.
 - **QCS 1.0:** окремий frontend апаратного синтаксису: позиції джерела, frame parser, Pratt expressions і JSON AST. Не замінює `.rpr` та не виконує апаратні операції. Команда: `reaper-qcs check examples/qcs_irq.qcs`.
+- **Граф тверджень ТЕЗИС:** версіоновані твердження, пов’язані з джерелами свідчення, перевірка зіставності періоду й області, статуси перевірки та незмінна історія виправлень. Автоматичного визнання твердження істинним немає ([опис](docs/THESIS_ASSERTION_GRAPH.md)).
 - **Реєстр MOST 666:** 666 API-контрактів (147 наявних специфікацій + 519 пропозицій), source inventory і валідатор. Це каталог специфікацій, а не 666 готових функцій.
 - **Системи й interop:** Embedded C, профілі MCU та бюджети пам’яті; opt-in Pytyliki C ABI v1; 66 мов/toolchain, 14 архітектурних профілів і перевірена матриця MOST 20×20.
 
@@ -65,6 +66,8 @@ ctest --test-dir build --output-on-failure
 Python залишається виконуваним еталоном до підтвердження нативного паритету. Managed heap — облік поверх алокатора Python, а не фізичний алокатор чи ліміт RSS. Нативний FFI виконує довірений ABI-сумісний код у процесі. Пошук toolchain перевіряє `PATH`, але не встановлює компілятори. МОСТ зіставляє імена з канонічними символами REAPER; QCS не доводить апаратні контракти.
 
 ## Документація
+
+[Граф походження тверджень ТЕЗИС](docs/THESIS_ASSERTION_GRAPH.md)
 
 [Anatidae UI/UX](docs/UI_UX_SYSTEM.md) · [12 принципів анімації](docs/DISNEY_MOTION_SYSTEM.md) · [Мова](LANGUAGE.md) · [QCS frontend](docs/QCS_FRONTEND.md) · [Реєстр MOST 666](docs/MOST_FUNCTIONS_666.md) · [Специфікація МОСТ](docs/MOST_LANGUAGE_SPEC.md) · [Runtime](docs/RUNTIME_PLATFORM.md) · [Інженерний стандарт](docs/UNIFIED_ENGINEERING_STANDARD.md)
 

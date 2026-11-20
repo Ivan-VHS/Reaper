@@ -29,6 +29,7 @@ emit "answer = " ++ text(answer)
 - **Нативный C17:** лексер, expression-парсер, AST с владением, проверяемые integer IR-операции и ограниченный lowering. Это ещё не полный интерпретатор; Python остаётся эталоном.
 - **МОСТ:** точные русские псевдонимы ключевых слов REAPER 0.1 над тем же parser/runtime; отдельной семантики или runtime нет.
 - **QCS 1.0:** самостоятельный frontend аппаратного синтаксиса: позиции исходника, frame parser, Pratt expressions и JSON AST. Не заменяет `.rpr` и не исполняет аппаратные операции. Команда: `reaper-qcs check examples/qcs_irq.qcs`.
+- **Граф утверждений ТЕЗИС:** версионируемые тезисы, связанные с источниками свидетельства, проверка сопоставимости периода и области, статусы ревью и добавляемая история исправлений. Автоматического признания тезиса истинным нет ([описание](docs/THESIS_ASSERTION_GRAPH.md)).
 - **Реестр MOST 666:** 666 контрактов API (147 существующих спецификаций + 519 предложений), source inventory и валидатор. Это каталог спецификаций, а не 666 готовых функций.
 - **Системы и interop:** Embedded C, профили MCU и бюджеты памяти; opt-in Pytyliki C ABI v1; 66 языков/toolchain, 14 архитектурных профилей и проверяемая матрица MOST 20×20.
 
@@ -65,6 +66,8 @@ ctest --test-dir build --output-on-failure
 Python остаётся исполняемым эталоном до подтверждения нативного паритета. Managed heap — учёт поверх аллокатора Python, не физический аллокатор и не лимит RSS. Нативный FFI исполняет доверенный ABI-совместимый код внутри процесса. Поиск toolchain проверяет `PATH`, но не устанавливает компиляторы. МОСТ разрешает имена в канонические символы REAPER; QCS-разбор не доказывает аппаратные контракты.
 
 ## Документация
+
+[Граф происхождения утверждений ТЕЗИС](docs/THESIS_ASSERTION_GRAPH.md)
 
 [Anatidae UI/UX](docs/UI_UX_SYSTEM.md) · [12 принципов анимации](docs/DISNEY_MOTION_SYSTEM.md) · [Язык](LANGUAGE.md) · [QCS frontend](docs/QCS_FRONTEND.md) · [Реестр MOST 666](docs/MOST_FUNCTIONS_666.md) · [Спецификация МОСТ](docs/MOST_LANGUAGE_SPEC.md) · [Runtime](docs/RUNTIME_PLATFORM.md) · [Инженерный стандарт](docs/UNIFIED_ENGINEERING_STANDARD.md)
 
