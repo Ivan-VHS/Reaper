@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Metadata-only interoperability catalogue for external low-level ecosystems.
 
 This module discovers optional executables on PATH. It never invokes toolchains,
