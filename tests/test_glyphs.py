@@ -90,10 +90,7 @@ emit report["allocations"]
         self.assertEqual(self.capture(source), ["6", "1"])
 
     def test_parent_arena_caps_nested_arena_reservations(self) -> None:
-        source = """\\
-make arena := {;;}(8)
-make child := {;;}(9, arena)
-"""
+        source = "make arena := {;;}(8)\\nmake child := {;;}(9, arena)"
         with self.assertRaisesRegex(ReaperRuntimeError, "parent arena memory limit"):
             self.capture(source)
 
