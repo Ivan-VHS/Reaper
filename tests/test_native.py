@@ -220,7 +220,7 @@ class PytylikiBridgeHandleTests(unittest.TestCase):
                 Interpreter(output=output.append, allow_native_ffi=True).run(
                     source_template.format(library=path)
                 )
-        self.assertEqual(output, ["5.0", "8.0", "5.0", "True"])
+        self.assertEqual(output, ["5.0", "8.0", "5.0", "true"])
 
 
 if __name__ == "__main__":
