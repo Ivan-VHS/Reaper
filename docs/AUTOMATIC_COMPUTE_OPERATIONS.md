@@ -13,7 +13,7 @@ They are available directly in `.rpr` programs.
 | Expand | `expand(values, repetitions)` |
 | Accumulate / Iterate | `accumulate(values)`, `iterate(seed, steps, function)` |
 | Cross-multiply | `cross_multiply(left, right)` (outer product) |
-| Exponentiate / Factor | `exponentiate(base, power)`, `factor(integer)` |
+| Exponentiate / Factor | `exponentiate(base, power)`, `factorize(integer)` |
 | Combine / Fuse | `combine(left, right)`, `fuse(left, right)` |
 | Aggregate | `aggregate(values)` (count, sum, product, mean, min, max) |
 | Pair / Couple | `pair(a, b)`, `couple(left, right)` |
