@@ -77,7 +77,7 @@ The managed heap is accounting over Python's allocator, not a physical allocator
 
 ## Documentation and downloads
 
-[UI/UX architecture](docs/UI_UX_ARCHITECTURE.md) · [Language](LANGUAGE.md) · [Runtime platform](docs/RUNTIME_PLATFORM.md) · [Self-hosting plan](docs/SELF_HOSTING_BOOTSTRAP.md) · [Token catalogue](docs/TOKEN_CATALOG.md) · [Embedded C](docs/EMBEDDED_C_WORKBENCH.md) · [MOST matrix](docs/MOST_400_COMBINATORIAL_MATRIX.md) · [Engineering standard](docs/UNIFIED_ENGINEERING_STANDARD.md) · [МОСТ aliases](docs/MOST_LANGUAGE_SPEC.md) · [66 Russian readability rules](docs/MOST_RUSSIAN_66_RULES.md)
+[UI/UX system](docs/UI_UX_SYSTEM.md) · [Language](LANGUAGE.md) · [Runtime platform](docs/RUNTIME_PLATFORM.md) · [Self-hosting plan](docs/SELF_HOSTING_BOOTSTRAP.md) · [Token catalogue](docs/TOKEN_CATALOG.md) · [Embedded C](docs/EMBEDDED_C_WORKBENCH.md) · [MOST matrix](docs/MOST_400_COMBINATORIAL_MATRIX.md) · [Engineering standard](docs/UNIFIED_ENGINEERING_STANDARD.md) · [МОСТ aliases](docs/MOST_LANGUAGE_SPEC.md) · [66 Russian readability rules](docs/MOST_RUSSIAN_66_RULES.md)
 
 [Windows releases](https://github.com/Ivan-VHS/Reaper/releases) · [Desktop build workflow](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml)
 
