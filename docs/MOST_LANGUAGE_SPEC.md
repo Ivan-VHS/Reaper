@@ -1,6 +1,6 @@
 # MOST — language architecture and implementation contract
 
-**Status:** language design integrated into the native REAPER development line; lexical foundation only. This document is a specification and staged acceptance contract, not a claim that all 66 capabilities exist.
+**Status:** MOST is specified as the Russian-first source language frontend; the native C17 lexer is being extended with Russian reserved words. The complete Russian grammar, resolver, type checker and backend are not yet implemented.
 
 MOST is the systems-and-web language track of REAPER. It targets deterministic native code and WebAssembly from one statically typed source language. The C17 implementation is the bootstrap host; it is not the language's permanent runtime requirement.
 
@@ -13,30 +13,60 @@ MOST is the systems-and-web language track of REAPER. It targets deterministic n
 5. A single source model lowers to verified typed IR, then to native or WASM backends.
 6. The Python interpreter remains a compatibility oracle until the native implementation passes differential conformance; it is not a MOST backend.
 7. Every capability has an implementation state and executable acceptance tests. Roadmap text never counts as implementation.
+8. Russian is the primary source-language vocabulary of MOST; compatible REAPER syntax remains available and shares the same semantics.
+9. Morphology and synonyms are explicit, scoped lookup tables. The compiler never guesses a program meaning from unrestricted natural-language text.
+10. Unicode normalization and source mapping are compiler contracts; spoken prosody and voice recognition are separate host tools.
 
 ## Canonical surface syntax
 
-The language uses canonical four-space indentation, braces for blocks, UTF-8 identifiers, and a formatter/parser agreement. The first native lexer accepts the token vocabulary; grammar and semantic enforcement are subsequent gates.
+MOST is Russian-first. The following is the target spelling for the Russian frontend:
 
-```most
+~~~most
+модуль счётчик
+
+структура Состояние {
+    значение: целое32 = 0
+}
+
+функция увеличить(значение: целое32, шаг: целое32) -> целое32 {
+    вернуть значение +| шаг
+}
+
+пусть шаг: целое32 = 2
+переменная итог: целое32 = увеличить(40, шаг)
+
+если итог > 0 {
+    вывести "готово"
+} иначе {
+    вывести "пусто"
+}
+~~~
+
+This example documents the planned grammar; it is not yet a promise that the whole program parses or executes. The native C17 lexer recognizes the Russian keyword vocabulary, while declaration grammar, MOST intent resolution, type checking and backend support remain later gates.
+
+The compatibility REAPER surface keeps its existing forms and semantics:
+
+~~~reaper
 module counter
 
 struct State {
     value: signal<i32> = 0
 }
 
-fn increment(@: ~State, step: i32) -> i32 {
-    @.value = @.value +| step
+fn increment(value: i32, step: i32) -> i32 {
+    value +| step
 }
+~~~
 
-test "saturating counter" {
-    let mut count: i32 = i32.MAX
-    count = count +| 10
-    assert(count == i32.MAX)
-}
-```
+Both source forms must lower to equivalent typed AST/Canonical IR. Source spelling, canonical symbol and source range remain available for diagnostics and tooling.
 
-The lexer recognizes the initial MOST keyword family (`module`, `import`, `fn`, `struct`, `enum`, `trait`, `impl`, `region`, `raw`, `arena`, `signal`, `async`, `await`, `match`, `test`, `comptime`, `requires`, `ensures`, and related control/type words) and multi-character operators including `::`, `??`, `+%`, `+|`, `->`, and `:=`. Token recognition does not imply parser or runtime support.
+### Russian lexical vocabulary
+
+The initial reserved-word set includes module/access words (модуль, импорт, как, публичный, экспорт), declarations (функция, структура, перечисление, типаж, реализация, тип, константа), bindings (пусть, переменная, изменить), control flow (вернуть, если, иначе, выбор, для, в, пока, прервать, продолжить, отложить), memory and resource words (область, сырой, арена, уничтожить), task/reactivity words (сигнал, асинхронно, ожидать), contracts (тест, вычислить_при_сборке, требует, гарантирует), system boundaries (небезопасно, внешний, где), values and logic (истина, ложь, ничего, и, или, не), and interaction words (вывести, сказать, спросить).
+
+Names such as счётчик, состояние, файл and целое32 remain identifiers. Built-in type aliases are registered in the type table, not treated as control keywords. The lexer retains the original spelling; exact NFC validation and code-point source columns are separate conformance work.
+
+Russian case forms and synonyms are not accepted by free-form stemming. They will be resolved by explicit per-module dictionaries after lexing, with unknown-name and ambiguity diagnostics. No probabilistic or network lookup may silently select a symbol.
 
 ## Compiler pipeline
 
@@ -73,16 +103,20 @@ The browser still supplies Web APIs and a JavaScript host boundary where the pla
 
 C ABI declarations must specify layout, alignment, calling convention, ownership and error mapping. Header ingestion begins with a constrained declarator parser; full preprocessing and arbitrary macro evaluation are not assumed. SIMD abstractions lower per target with scalar fallbacks. Endian wrappers and bit-width integers have explicit serialization rules. Bare-metal targets require a documented target description and linker/runtime contract.
 
-## 66-rule implementation ledger
+## 66-rule language-formation ledger
 
-| Rules | Area | Required gate |
+The 66 sociolinguistic, phonetic, semantic and grammatical principles are mapped to concrete language design decisions in [MOST_RUSSIAN_66_RULES.md](MOST_RUSSIAN_66_RULES.md). The ledger is normative input for design and acceptance planning, not a claim that every capability already exists.
+
+| Rules | MOST interpretation | Acceptance owner |
 |---|---|---|
-| 1–11 | Identity, autonomy, canonical source, static semantics, deterministic errors and compiler | Grammar, semantic checker, freestanding compiler bootstrap, deterministic artifact tests |
-| 12–22 | Regions, pointers, linear resources, slices, arenas, layout and drop | Ownership/region checker, allocator tests, ABI/layout fixtures, unsafe boundary tests |
-| 23–33 | Types, pattern matching, extensions, pipelines, strings, named calls, comptime and units | Parser/AST, type inference, exhaustiveness, constant evaluator and semantic conformance |
-| 34–44 | DOM, signals, declarative UI, Web APIs, serialization, CSS, async, routing and hydration | WASM backend, browser host tests, direct DOM update tests, XSS and hydration fixtures |
-| 45–55 | C ABI, headers, SIMD, endian, bitfields, concurrency, assembly, cross-compilation, mmap and profiling | Native backend, target matrix, FFI ABI tests, sanitizer and race tests |
-| 56–66 | Tests, fuzzing, docs tests, stack/resource analysis, conditional compilation, reproducibility, crypto, packages, headers/docs, contracts and frozen core | CI gates, fuzz corpus, deterministic builds, cryptographic vectors and compatibility suite |
+| 1–11 | Clear commands, functions, scopes, explicit results, quantities, capabilities and teachable examples | Grammar, symbols, types, effects, docs |
+| 12–22 | Namespaced domain vocabularies, imports, dialect isolation, editioning and stable public conventions | Modules, resolver, package/version manager |
+| 23–33 | Contrastive spelling, Unicode identifiers, formatter rules and strict separation of written syntax from speech | Lexer, Unicode validator, formatter, optional host adapter |
+| 34–44 | Explicit canonical names, composition, aliases, imports, semantic specialization and deterministic macros | Resolver, type checker, standard library |
+| 45–55 | Formal grammar, fixed declaration order, explicit morphology, typing, provenance and grammar versioning | Parser, resolver, type/effect checker |
+| 56–66 | Learnability, stable core, composition, bounded recursion, introspection, documentation and governed evolution | Runtime, tooling, CI, edition policy |
+
+The human-language mechanisms do not become hidden execution behavior: intonation does not change syntax, tone does not change values, social prestige does not select overloads, and natural-language ambiguity is a compile error. See the linked document for the complete rule-by-rule mapping and delivery stages.
 
 ## Delivery phases and truthful status
 
