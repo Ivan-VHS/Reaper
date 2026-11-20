@@ -38,6 +38,21 @@ Toolchain checks are PATH-only: they do not run or install compilers. The matrix
 
 Reaper complements its 66-position language and toolchain matrix with **14 CPU, MCU and virtual-ISA architecture profiles**. Use `python -m reaper --systems-architectures`, `--architecture-profile reaper`, `--available-architectures` or `--architectures-json`. Toolchain checks only look up executable names on PATH; they do not compile or run external code. See [the architecture matrix](docs/SYSTEMS_ARCHITECTURE_MATRIX.md).
 
+## Systems ecosystem integration matrix
+
+Reaper also includes a separate, validated **40-entry systems ecosystem registry** spanning the seven requested ISA families, nine systems languages, five HDLs, nine VM/bytecode systems and ten specialized/GPU environments. It provides exact target lookup, project-profile ranking, category filtering, JSON output and PATH-only toolchain discovery:
+
+```bash
+python -m reaper --systems-ecosystems
+python -m reaper --ecosystem-category isa
+python -m reaper --ecosystem-profile reaper
+python -m reaper --ecosystem "RISC-V"
+python -m reaper --available-ecosystems
+python -m reaper.systems_ecosystems --verify
+```
+
+Discovery does not execute compilers or prove backend support. The registry is an integration contract and capability map, not 40 bundled compilers, emulators, HDL simulators or GPU runtimes. See [Systems ecosystem integration](docs/SYSTEMS_ECOSYSTEM_INTEGRATION.md).
+
 ## Implemented today
 
 - **Python reference runtime:** Python 3.10+, tree-walking interpreter, lexer, parser, runtime, CLI and standard-library tests.
@@ -48,6 +63,7 @@ Reaper complements its 66-position language and toolchain matrix with **14 CPU, 
 - **`.rpr` modules:** explicit import/export, isolated module scopes, cached exports, dependency graphs and cycle diagnostics.
 - **Managed runtime resources:** tracked heap ledger, mark/sweep roots, LIFO regions, bounded text-file handles and deterministic cleanup.
 - **C ABI / Pytyliki:** opt-in typed bridge for the public `pl_*` API and Pytyliki ABI v1. Reaper can query native MCU profiles and reuse Pytyliki’s overflow-checked FLASH/SRAM budget through `pytyliki_embedded_profiles` and `pytyliki_embedded_budget`.
+- **40-entry systems ecosystem integration layer:** ISA, systems-language, HDL, VM/bytecode and GPU/esoteric descriptors with schema validation, target selection, project ranking and PATH-only toolchain discovery. Foreign backends remain separately gated.
 - **Canonical IR / VM:** selectable Python bytecode VM over Canonical IR; tree-walk remains the default compatibility engine.
 - **Reaper Studio debugger:** statement breakpoints (F9), step/continue/stop, variable inspector and call stack.
 - **Native C17 track:** lexer, expression parser and owned AST, verified integer Canonical IR, checked constant folding for signed i64 addition, subtraction, multiplication and division (overflow and division by zero rejected), a limited AST-to-IR lowering slice, CLI bring-up and C tests.
@@ -208,6 +224,7 @@ sampling is claimed. See [the Embedded C workbench guide](docs/EMBEDDED_C_WORKBE
 - [Concatenation and composition architecture](docs/CONCATENATION_ARCHITECTURE.md)
 - [Orthogonal metric engine](docs/ORTHOGONAL_METRIC_ENGINE.md)
 - [Systems architecture matrix](docs/SYSTEMS_ARCHITECTURE_MATRIX.md)
+- [Systems ecosystem integration](docs/SYSTEMS_ECOSYSTEM_INTEGRATION.md)
 - [Systems-language matrix](reaper/systems_languages.json)
 - [MOST language specification](docs/MOST_LANGUAGE_SPEC.md)
 - [C migration plan](docs/C_MIGRATION.md)

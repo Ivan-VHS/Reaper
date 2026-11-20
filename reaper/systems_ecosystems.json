@@ -1,0 +1,929 @@
+{
+  "schema": "systems-ecosystem-matrix/v1",
+  "count": 40,
+  "categories": [
+    "isa",
+    "system-language",
+    "hdl",
+    "vm-bytecode",
+    "specialized"
+  ],
+  "profiles": {
+    "reaper": [
+      "native",
+      "cross-compilation",
+      "wasm",
+      "llvm",
+      "ir",
+      "system-language",
+      "bytecode",
+      "hdl",
+      "gpu",
+      "shader",
+      "verification",
+      "deterministic",
+      "c-abi"
+    ],
+    "pytyliki": [
+      "native",
+      "embedded",
+      "bare-metal",
+      "harvard",
+      "simd",
+      "gpu",
+      "shader",
+      "hdl",
+      "c-abi",
+      "small-memory",
+      "risc",
+      "riscv",
+      "arm",
+      "avr"
+    ],
+    "oplague": [
+      "native",
+      "windows-driver",
+      "pe-coff",
+      "x86",
+      "arm",
+      "c-abi",
+      "system-language",
+      "cross-compilation",
+      "llvm"
+    ]
+  },
+  "source_note": "A 40-entry integration registry for ISA families, systems languages, HDLs, VM/bytecode systems and specialized/GPU environments. Toolchain checks are PATH-only discovery and do not prove that a compiler, runtime, ABI, simulator or backend is supported or functional.",
+  "entries": [
+    {
+      "index": 1,
+      "id": "isa-x86",
+      "name": "x86",
+      "category": "isa",
+      "family": "Intel/AMD",
+      "model": "native-isa",
+      "commands": [
+        "clang",
+        "gcc",
+        "nasm",
+        "yasm"
+      ],
+      "tags": [
+        "native",
+        "cisc",
+        "x86",
+        "simd",
+        "windows-driver",
+        "pe-coff",
+        "cross-compilation"
+      ],
+      "summary": "32-bit and legacy x86 instruction-set family; instruction extensions and ABI are target-specific",
+      "standard": "IA-32"
+    },
+    {
+      "index": 2,
+      "id": "isa-arm",
+      "name": "ARM",
+      "category": "isa",
+      "family": "Arm",
+      "model": "native-isa",
+      "commands": [
+        "arm-none-eabi-gcc",
+        "aarch64-linux-gnu-gcc",
+        "clang"
+      ],
+      "tags": [
+        "native",
+        "risc",
+        "arm",
+        "embedded",
+        "bare-metal",
+        "simd",
+        "windows-driver",
+        "cross-compilation"
+      ],
+      "summary": "AArch32/AArch64 family with profile-specific execution states and extensions",
+      "standard": "Armv7-A/Armv7-M/AArch64"
+    },
+    {
+      "index": 3,
+      "id": "isa-riscv",
+      "name": "RISC-V",
+      "category": "isa",
+      "family": "RISC-V",
+      "model": "native-isa",
+      "commands": [
+        "riscv64-unknown-elf-gcc",
+        "riscv32-unknown-elf-gcc",
+        "clang"
+      ],
+      "tags": [
+        "native",
+        "risc",
+        "riscv",
+        "embedded",
+        "bare-metal",
+        "modular-isa",
+        "cross-compilation"
+      ],
+      "summary": "Modular base ISA with explicitly selected extensions and ABI",
+      "standard": "RV32/RV64 + extensions"
+    },
+    {
+      "index": 4,
+      "id": "isa-mips",
+      "name": "MIPS",
+      "category": "isa",
+      "family": "MIPS Technologies",
+      "model": "native-isa",
+      "commands": [
+        "mips-linux-gnu-gcc",
+        "mipsel-linux-gnu-gcc",
+        "clang"
+      ],
+      "tags": [
+        "native",
+        "risc",
+        "mips",
+        "embedded",
+        "cross-compilation"
+      ],
+      "summary": "MIPS32/MIPS64 load-store ISA profiles and endian-specific ABIs",
+      "standard": "MIPS32/MIPS64"
+    },
+    {
+      "index": 5,
+      "id": "isa-avr",
+      "name": "AVR",
+      "category": "isa",
+      "family": "Microchip",
+      "model": "native-isa",
+      "commands": [
+        "avr-gcc",
+        "avra"
+      ],
+      "tags": [
+        "native",
+        "harvard",
+        "avr",
+        "embedded",
+        "bare-metal",
+        "small-memory"
+      ],
+      "summary": "8-bit Harvard microcontroller ISA with device-specific register maps",
+      "standard": "AVR 8-bit"
+    },
+    {
+      "index": 6,
+      "id": "isa-6502",
+      "name": "6502",
+      "category": "isa",
+      "family": "MOS Technology / WDC",
+      "model": "native-isa",
+      "commands": [
+        "cl65",
+        "ca65",
+        "cc65"
+      ],
+      "tags": [
+        "native",
+        "6502",
+        "embedded",
+        "bare-metal",
+        "retro",
+        "small-memory"
+      ],
+      "summary": "8-bit accumulator ISA with variant-specific opcodes and memory maps",
+      "standard": "6502/65C02"
+    },
+    {
+      "index": 7,
+      "id": "isa-z80",
+      "name": "Z80",
+      "category": "isa",
+      "family": "Zilog",
+      "model": "native-isa",
+      "commands": [
+        "zcc",
+        "sdcc",
+        "sdasz80"
+      ],
+      "tags": [
+        "native",
+        "z80",
+        "embedded",
+        "retro",
+        "small-memory"
+      ],
+      "summary": "8-bit accumulator/register ISA with prefixed opcode spaces",
+      "standard": "Z80"
+    },
+    {
+      "index": 8,
+      "id": "lang-c",
+      "name": "C",
+      "category": "system-language",
+      "family": "C committee",
+      "model": "compiled-language",
+      "commands": [
+        "cc",
+        "clang",
+        "gcc"
+      ],
+      "tags": [
+        "native",
+        "system-language",
+        "c-abi",
+        "manual-memory",
+        "embedded",
+        "bare-metal"
+      ],
+      "summary": "Portable systems language with explicit object layout, pointers and ABI boundaries",
+      "standard": "C17/C23 toolchain dependent"
+    },
+    {
+      "index": 9,
+      "id": "lang-cpp",
+      "name": "C++",
+      "category": "system-language",
+      "family": "ISO C++",
+      "model": "compiled-language",
+      "commands": [
+        "c++",
+        "clang++",
+        "g++"
+      ],
+      "tags": [
+        "native",
+        "system-language",
+        "c-abi",
+        "templates",
+        "zero-cost-abstraction",
+        "embedded"
+      ],
+      "summary": "Systems language with templates, RAII, object model and C interoperability",
+      "standard": "C++20/C++23 toolchain dependent"
+    },
+    {
+      "index": 10,
+      "id": "lang-rust",
+      "name": "Rust",
+      "category": "system-language",
+      "family": "Rust project",
+      "model": "compiled-language",
+      "commands": [
+        "rustc",
+        "cargo"
+      ],
+      "tags": [
+        "native",
+        "system-language",
+        "ownership",
+        "borrow-checking",
+        "memory-safety",
+        "no-ambient-ffi"
+      ],
+      "summary": "Ownership and borrowing systems language with explicit unsafe and FFI boundaries",
+      "standard": "Rust stable toolchain"
+    },
+    {
+      "index": 11,
+      "id": "lang-zig",
+      "name": "Zig",
+      "category": "system-language",
+      "family": "Zig Software Foundation",
+      "model": "compiled-language",
+      "commands": [
+        "zig"
+      ],
+      "tags": [
+        "native",
+        "system-language",
+        "manual-memory",
+        "compile-time",
+        "c-abi",
+        "cross-compilation"
+      ],
+      "summary": "Explicit allocator and compile-time oriented systems language",
+      "standard": "Zig toolchain"
+    },
+    {
+      "index": 12,
+      "id": "lang-d",
+      "name": "D",
+      "category": "system-language",
+      "family": "D Language Foundation",
+      "model": "compiled-language",
+      "commands": [
+        "dmd",
+        "ldc2",
+        "gdc"
+      ],
+      "tags": [
+        "native",
+        "system-language",
+        "systems",
+        "templates",
+        "c-abi",
+        "gc-optional"
+      ],
+      "summary": "Systems language with multiple compiler families and configurable runtime models",
+      "standard": "D language"
+    },
+    {
+      "index": 13,
+      "id": "lang-nim",
+      "name": "Nim",
+      "category": "system-language",
+      "family": "Nim project",
+      "model": "compiled-language",
+      "commands": [
+        "nim"
+      ],
+      "tags": [
+        "native",
+        "system-language",
+        "metaprogramming",
+        "c-interop",
+        "cross-compilation"
+      ],
+      "summary": "Compiled language with macro system and configurable memory managers",
+      "standard": "Nim stable toolchain"
+    },
+    {
+      "index": 14,
+      "id": "lang-ada",
+      "name": "Ada",
+      "category": "system-language",
+      "family": "Ada community",
+      "model": "compiled-language",
+      "commands": [
+        "gnatmake",
+        "gnat",
+        "gcc"
+      ],
+      "tags": [
+        "native",
+        "system-language",
+        "safety-critical",
+        "contracts",
+        "embedded",
+        "formal-verification"
+      ],
+      "summary": "Strongly typed systems language with contracts and real-time profiles",
+      "standard": "Ada 2012/2022"
+    },
+    {
+      "index": 15,
+      "id": "lang-modula2",
+      "name": "Modula-2",
+      "category": "system-language",
+      "family": "Niklaus Wirth lineage",
+      "model": "compiled-language",
+      "commands": [
+        "gm2"
+      ],
+      "tags": [
+        "native",
+        "system-language",
+        "modular",
+        "structured",
+        "systems"
+      ],
+      "summary": "Modular systems language with explicit module and low-level facilities",
+      "standard": "ISO Modula-2 / compiler dependent"
+    },
+    {
+      "index": 16,
+      "id": "lang-oberon",
+      "name": "Oberon",
+      "category": "system-language",
+      "family": "Wirth language family",
+      "model": "compiled-language",
+      "commands": [
+        "obnc",
+        "oo2c",
+        "voc"
+      ],
+      "tags": [
+        "native",
+        "system-language",
+        "modular",
+        "structured",
+        "systems"
+      ],
+      "summary": "Compact modular language family; dialect and compiler compatibility must be selected",
+      "standard": "Oberon-1/Oberon-2 dialects"
+    },
+    {
+      "index": 17,
+      "id": "hdl-verilog",
+      "name": "Verilog",
+      "category": "hdl",
+      "family": "IEEE HDL",
+      "model": "hardware-description",
+      "commands": [
+        "iverilog",
+        "verilator",
+        "yosys"
+      ],
+      "tags": [
+        "hdl",
+        "hardware",
+        "rtl",
+        "simulation",
+        "synthesis",
+        "verification"
+      ],
+      "summary": "RTL hardware description and simulation/synthesis frontend",
+      "standard": "IEEE 1364"
+    },
+    {
+      "index": 18,
+      "id": "hdl-systemverilog",
+      "name": "SystemVerilog",
+      "category": "hdl",
+      "family": "IEEE HDL",
+      "model": "hardware-description",
+      "commands": [
+        "verilator",
+        "iverilog",
+        "slang",
+        "yosys"
+      ],
+      "tags": [
+        "hdl",
+        "hardware",
+        "rtl",
+        "verification",
+        "assertions",
+        "synthesis"
+      ],
+      "summary": "SystemVerilog RTL, assertions and verification language",
+      "standard": "IEEE 1800"
+    },
+    {
+      "index": 19,
+      "id": "hdl-vhdl",
+      "name": "VHDL",
+      "category": "hdl",
+      "family": "IEEE HDL",
+      "model": "hardware-description",
+      "commands": [
+        "ghdl",
+        "nvc"
+      ],
+      "tags": [
+        "hdl",
+        "hardware",
+        "rtl",
+        "simulation",
+        "synthesis",
+        "verification",
+        "strong-types"
+      ],
+      "summary": "Strongly typed concurrent hardware description language",
+      "standard": "IEEE 1076"
+    },
+    {
+      "index": 20,
+      "id": "hdl-chisel",
+      "name": "Chisel",
+      "category": "hdl",
+      "family": "UC Berkeley / Chisel",
+      "model": "hardware-description",
+      "commands": [
+        "sbt"
+      ],
+      "tags": [
+        "hdl",
+        "hardware",
+        "generator",
+        "scala",
+        "rtl",
+        "synthesis"
+      ],
+      "summary": "Scala-embedded hardware construction language producing FIRRTL/SystemVerilog flows",
+      "standard": "Chisel version and FIRRTL toolchain"
+    },
+    {
+      "index": 21,
+      "id": "hdl-bluespec",
+      "name": "Bluespec",
+      "category": "hdl",
+      "family": "Bluespec",
+      "model": "hardware-description",
+      "commands": [
+        "bsc"
+      ],
+      "tags": [
+        "hdl",
+        "hardware",
+        "rule-based",
+        "rtl",
+        "formal-verification",
+        "synthesis"
+      ],
+      "summary": "Rule-based hardware design language and compiler toolchain",
+      "standard": "Bluespec SystemVerilog"
+    },
+    {
+      "index": 22,
+      "id": "vm-wasm",
+      "name": "WebAssembly",
+      "category": "vm-bytecode",
+      "family": "W3C / WASM",
+      "model": "virtual-machine",
+      "commands": [
+        "wasmtime",
+        "wasm-tools",
+        "wasm-opt",
+        "clang"
+      ],
+      "tags": [
+        "bytecode",
+        "vm",
+        "wasm",
+        "sandboxed",
+        "portable",
+        "validation"
+      ],
+      "summary": "Validated stack-machine binary format with host/runtime and WASI boundaries",
+      "standard": "WebAssembly Core / Component Model"
+    },
+    {
+      "index": 23,
+      "id": "vm-llvm-ir",
+      "name": "LLVM IR",
+      "category": "vm-bytecode",
+      "family": "LLVM project",
+      "model": "intermediate-representation",
+      "commands": [
+        "llvm-as",
+        "opt",
+        "llc",
+        "clang"
+      ],
+      "tags": [
+        "bytecode",
+        "ir",
+        "llvm",
+        "optimizer",
+        "codegen",
+        "native"
+      ],
+      "summary": "Typed SSA intermediate representation; versioned IR and target triple must match LLVM",
+      "standard": "LLVM IR (versioned)"
+    },
+    {
+      "index": 24,
+      "id": "vm-jvm",
+      "name": "JVM",
+      "category": "vm-bytecode",
+      "family": "JVM ecosystem",
+      "model": "virtual-machine",
+      "commands": [
+        "javac",
+        "java",
+        "jar"
+      ],
+      "tags": [
+        "bytecode",
+        "vm",
+        "jvm",
+        "managed-runtime",
+        "verification",
+        "jit"
+      ],
+      "summary": "Class-file bytecode and managed execution/runtime interface",
+      "standard": "JVM class-file versions"
+    },
+    {
+      "index": 25,
+      "id": "vm-dalvik",
+      "name": "Dalvik",
+      "category": "vm-bytecode",
+      "family": "Android Runtime lineage",
+      "model": "virtual-machine",
+      "commands": [
+        "d8",
+        "dx",
+        "dalvikvm",
+        "adb"
+      ],
+      "tags": [
+        "bytecode",
+        "vm",
+        "android",
+        "dex",
+        "managed-runtime"
+      ],
+      "summary": "DEX bytecode compatibility target; runtime availability depends on Android platform",
+      "standard": "DEX / Dalvik compatibility"
+    },
+    {
+      "index": 26,
+      "id": "vm-luajit",
+      "name": "LuaJIT",
+      "category": "vm-bytecode",
+      "family": "LuaJIT project",
+      "model": "virtual-machine",
+      "commands": [
+        "luajit"
+      ],
+      "tags": [
+        "bytecode",
+        "vm",
+        "jit",
+        "ffi",
+        "embedded"
+      ],
+      "summary": "LuaJIT bytecode and runtime; ABI and FFI remain process-local",
+      "standard": "Lua 5.1 compatibility + extensions"
+    },
+    {
+      "index": 27,
+      "id": "vm-forth",
+      "name": "Forth",
+      "category": "vm-bytecode",
+      "family": "Forth standards",
+      "model": "stack-language",
+      "commands": [
+        "gforth",
+        "forth"
+      ],
+      "tags": [
+        "bytecode",
+        "vm",
+        "stack-machine",
+        "embedded",
+        "interactive"
+      ],
+      "summary": "Concatenative stack language and implementation-defined dictionary/runtime",
+      "standard": "Forth 2012 / implementation dependent"
+    },
+    {
+      "index": 28,
+      "id": "vm-postscript",
+      "name": "PostScript",
+      "category": "vm-bytecode",
+      "family": "Adobe / ISO",
+      "model": "stack-language",
+      "commands": [
+        "gs"
+      ],
+      "tags": [
+        "bytecode",
+        "vm",
+        "stack-machine",
+        "graphics",
+        "document"
+      ],
+      "summary": "Stack-based page-description language with interpreter-managed graphics state",
+      "standard": "PostScript Level 3"
+    },
+    {
+      "index": 29,
+      "id": "vm-bcpl",
+      "name": "BCPL",
+      "category": "vm-bytecode",
+      "family": "BCPL lineage",
+      "model": "compiled-language",
+      "commands": [
+        "bcpl"
+      ],
+      "tags": [
+        "bytecode",
+        "vm",
+        "systems",
+        "historical",
+        "compiler"
+      ],
+      "summary": "Historical systems language and compiler/runtime ecosystem",
+      "standard": "BCPL"
+    },
+    {
+      "index": 30,
+      "id": "vm-bliss",
+      "name": "BLISS",
+      "category": "vm-bytecode",
+      "family": "DEC / historical systems",
+      "model": "compiled-language",
+      "commands": [
+        "bliss"
+      ],
+      "tags": [
+        "bytecode",
+        "vm",
+        "systems",
+        "historical",
+        "compiler"
+      ],
+      "summary": "Historical systems implementation language; target/compiler variants differ",
+      "standard": "BLISS-16/32/36 variants"
+    },
+    {
+      "index": 31,
+      "id": "esoteric-brainfuck",
+      "name": "Brainfuck",
+      "category": "specialized",
+      "family": "Esoteric languages",
+      "model": "esoteric-language",
+      "commands": [
+        "bf",
+        "bfi",
+        "brainfuck"
+      ],
+      "tags": [
+        "esoteric",
+        "turing-complete",
+        "interpreter",
+        "research"
+      ],
+      "summary": "Minimal tape-and-pointer language; bounded memory and step limits required",
+      "standard": "Canonical eight-command dialect"
+    },
+    {
+      "index": 32,
+      "id": "esoteric-false",
+      "name": "FALSE",
+      "category": "specialized",
+      "family": "Wouter van Oortmerssen",
+      "model": "esoteric-language",
+      "commands": [],
+      "tags": [
+        "esoteric",
+        "stack-machine",
+        "interpreter",
+        "research"
+      ],
+      "summary": "Compact stack-oriented esoteric language with implementation-defined extensions",
+      "standard": "FALSE language"
+    },
+    {
+      "index": 33,
+      "id": "esoteric-befunge",
+      "name": "Befunge",
+      "category": "specialized",
+      "family": "Esoteric languages",
+      "model": "esoteric-language",
+      "commands": [
+        "befunge",
+        "bef"
+      ],
+      "tags": [
+        "esoteric",
+        "2d-language",
+        "stack-machine",
+        "interpreter",
+        "research"
+      ],
+      "summary": "Two-dimensional instruction-grid language; execution bounds are essential",
+      "standard": "Befunge-93 / Befunge-98"
+    },
+    {
+      "index": 34,
+      "id": "esoteric-malbolge",
+      "name": "Malbolge",
+      "category": "specialized",
+      "family": "Esoteric languages",
+      "model": "esoteric-language",
+      "commands": [
+        "malbolge"
+      ],
+      "tags": [
+        "esoteric",
+        "interpreter",
+        "research",
+        "obfuscated"
+      ],
+      "summary": "Ternary instruction encoding and self-modifying execution model",
+      "standard": "Malbolge"
+    },
+    {
+      "index": 35,
+      "id": "esoteric-piet",
+      "name": "Piet",
+      "category": "specialized",
+      "family": "Esoteric languages",
+      "model": "image-language",
+      "commands": [
+        "npiet"
+      ],
+      "tags": [
+        "esoteric",
+        "image-language",
+        "interpreter",
+        "research"
+      ],
+      "summary": "Image-colour transition language; image decoding is part of the frontend",
+      "standard": "Piet"
+    },
+    {
+      "index": 36,
+      "id": "esoteric-whitespace",
+      "name": "Whitespace",
+      "category": "specialized",
+      "family": "Esoteric languages",
+      "model": "esoteric-language",
+      "commands": [
+        "whitespace",
+        "wspace"
+      ],
+      "tags": [
+        "esoteric",
+        "stack-machine",
+        "interpreter",
+        "research"
+      ],
+      "summary": "Whitespace-only token language; source preservation is mandatory",
+      "standard": "Whitespace language"
+    },
+    {
+      "index": 37,
+      "id": "gpu-glsl",
+      "name": "GLSL",
+      "category": "specialized",
+      "family": "Khronos graphics",
+      "model": "shader-language",
+      "commands": [
+        "glslangValidator",
+        "glslc"
+      ],
+      "tags": [
+        "gpu",
+        "shader",
+        "graphics",
+        "vulkan",
+        "opengl",
+        "compile"
+      ],
+      "summary": "GPU shading language; stage, profile and graphics API define the target",
+      "standard": "GLSL / ESSL"
+    },
+    {
+      "index": 38,
+      "id": "gpu-hlsl",
+      "name": "HLSL",
+      "category": "specialized",
+      "family": "Microsoft Direct3D",
+      "model": "shader-language",
+      "commands": [
+        "dxc",
+        "fxc"
+      ],
+      "tags": [
+        "gpu",
+        "shader",
+        "graphics",
+        "direct3d",
+        "compile"
+      ],
+      "summary": "GPU shading language; shader model and DXIL/DXBC target define compatibility",
+      "standard": "HLSL / Shader Model"
+    },
+    {
+      "index": 39,
+      "id": "gpu-spirv",
+      "name": "SPIR-V",
+      "category": "specialized",
+      "family": "Khronos",
+      "model": "shader-bytecode",
+      "commands": [
+        "spirv-as",
+        "spirv-val",
+        "spirv-opt"
+      ],
+      "tags": [
+        "gpu",
+        "shader",
+        "bytecode",
+        "validation",
+        "vulkan",
+        "opencl"
+      ],
+      "summary": "Portable shader/compute intermediate binary with environment-specific validation",
+      "standard": "SPIR-V version and target environment"
+    },
+    {
+      "index": 40,
+      "id": "gpu-ptx",
+      "name": "PTX",
+      "category": "specialized",
+      "family": "NVIDIA",
+      "model": "gpu-assembly",
+      "commands": [
+        "ptxas",
+        "nvcc"
+      ],
+      "tags": [
+        "gpu",
+        "cuda",
+        "assembly",
+        "codegen",
+        "native"
+      ],
+      "summary": "Virtual ISA for NVIDIA GPU toolchains; compute capability gates instructions",
+      "standard": "PTX ISA version / SM target"
+    }
+  ]
+}
