@@ -14,8 +14,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
-SPDX_RE = re.compile(r"SPDX-License-Identifier:\\s*([^\\r\\n*]+)", re.IGNORECASE)
-COPYRIGHT_RE = re.compile(r"(?:copyright|©|\\(c\\))", re.IGNORECASE)
+SPDX_RE = re.compile(r"SPDX-License-Identifier:\s*([^\r\n*]+)", re.IGNORECASE)
+COPYRIGHT_RE = re.compile(r"(?:copyright|©|\(c\))", re.IGNORECASE)
 SOURCE_EXTENSIONS = {
     ".rpr", ".py", ".pyi", ".c", ".h", ".cc", ".cpp", ".cxx", ".hpp",
     ".rs", ".zig", ".d", ".di", ".nim", ".adb", ".ads", ".mod", ".obn",
@@ -103,7 +103,7 @@ def scan_project(
             total_bytes += len(raw)
             scanned += 1
             header = raw[: min(len(raw), 16_384)].decode("utf-8", errors="replace")
-            header = "\\n".join(header.splitlines()[:80])
+            header = "\n".join(header.splitlines()[:80])
             match = SPDX_RE.search(header)
             expression = match.group(1).strip().rstrip("*/").strip() if match else None
             has_copyright = bool(COPYRIGHT_RE.search(header))
@@ -174,7 +174,7 @@ def render_text(report: dict[str, Any]) -> str:
         "This inventory is not a plagiarism detector or legal opinion.",
         "It does not certify ownership, permission, attribution completeness or license compatibility.",
     ])
-    return "\\n".join(lines)
+    return "\n".join(lines)
 
 
 def main(argv: list[str] | None = None) -> int:
