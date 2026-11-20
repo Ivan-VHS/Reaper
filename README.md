@@ -52,9 +52,9 @@ Reaper complements its 66-position language and toolchain matrix with **14 CPU, 
 - **Reaper Studio debugger:** statement breakpoints (F9), step/continue/stop, variable inspector and call stack.
 - **Native C17 track:** lexer, expression parser and owned AST, verified integer Canonical IR, checked constant folding for signed i64 addition, subtraction, multiplication and division (overflow and division by zero rejected), a limited AST-to-IR lowering slice, CLI bring-up and C tests.
 - **Self-hosting bootstrap — Stage 0 + partial Stage 1:** `selfhost/lexer.rpr` implements tokenization and `selfhost/parser.rpr` implements a Reaper-written Pratt expression parser with the real `::` flow operator, precedence, right-associative exponentiation, list literals, calls and indexing. Bootstrap assertions and Python/CTest tests cover both programs. The lexer still has an ASCII-identifier gap; the parser does not yet cover declarations, blocks or statement grammar and does not replace the reference frontend. See [the bootstrap plan](docs/SELF_HOSTING_BOOTSTRAP.md).
-- **MOST language track:** documented language vocabulary and staged implementation contract.
+- **МОСТ:** an exact Russian keyword-alias profile over REAPER 0.1. It reuses REAPER's grammar, parser, AST, standard operations and runtime; the Python reference executes a limited Russian subset, while the C17 lexer exposes canonical REAPER token spellings. No separate language engine is planned.
 
-The C implementation is not yet a full language interpreter. Full declarations/blocks, type checking, intent resolution, ownership analysis, native code generation and WASM are not complete. Python remains the compatibility reference until runtime and CLI parity is demonstrated.
+The C implementation is not yet a full language interpreter. Full REAPER declarations/blocks, type checking, ownership analysis, native code generation and WASM are not complete. МОСТ adds no separate parser or intent-resolution layer. Python remains the compatibility reference until runtime and CLI parity is demonstrated.
 
 ## Runtime platform
 
@@ -209,7 +209,8 @@ sampling is claimed. See [the Embedded C workbench guide](docs/EMBEDDED_C_WORKBE
 - [Orthogonal metric engine](docs/ORTHOGONAL_METRIC_ENGINE.md)
 - [Systems architecture matrix](docs/SYSTEMS_ARCHITECTURE_MATRIX.md)
 - [Systems-language matrix](reaper/systems_languages.json)
-- [MOST language specification](docs/MOST_LANGUAGE_SPEC.md)
+- [МОСТ Russian keyword aliases](docs/MOST_LANGUAGE_SPEC.md)
+- [66 rules for the Russian REAPER surface](docs/MOST_RUSSIAN_66_RULES.md)
 - [MOST 20×20 combinatorial matrix](docs/MOST_400_COMBINATORIAL_MATRIX.md)
 - [C migration plan](docs/C_MIGRATION.md)
 - [Examples](examples/) · [Tests](tests/)
