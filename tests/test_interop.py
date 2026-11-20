@@ -7,6 +7,7 @@ from io import StringIO
 from pathlib import Path
 import tempfile
 
+from reaper.cli import main as reaper_cli_main
 from reaper.interop import (
     EXPECTED_GROUP_COUNTS,
     inspect_toolchains,
@@ -65,6 +66,13 @@ class InteroperabilityCatalogueTests(unittest.TestCase):
         output = StringIO()
         with redirect_stdout(output):
             result = main(["verify"])
+        self.assertEqual(result, 0)
+        self.assertIn("PASS (40 entries)", output.getvalue())
+
+    def test_reaper_cli_dispatch(self):
+        output = StringIO()
+        with redirect_stdout(output):
+            result = reaper_cli_main(["interop", "verify"])
         self.assertEqual(result, 0)
         self.assertIn("PASS (40 entries)", output.getvalue())
 
