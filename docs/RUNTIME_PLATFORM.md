@@ -54,6 +54,24 @@ The typed Pytyliki adapter matches the public structures and functions in Ivan-V
 
 ffi_close(handle) logically invalidates a handle; the interpreter also closes all registered handles at run exit. Python ctypes does not provide a portable cross-platform library-unload contract, so physical unload is left to OS process teardown. Native FFI executes in-process and is not a sandbox. Only load trusted, ABI-compatible libraries.
 
+## Embedded C targets and source review
+
+The reference runtime exposes `embedded_targets()`, `embedded_profile(name)`,
+`embedded_toolchain(name)`, `embedded_inspect(source)` and
+`embedded_build_plan(target, source, output)`. Seven profiles cover host C11,
+AVR ATmega328P, ARM Cortex-M0, RISC-V32 IMAC, MSP430G2553, Xtensa ESP32 and
+WebAssembly/WASI. Toolchain discovery uses PATH lookup only. Source inspection
+is limited to 1 MiB and reports advisory lexical markers for dynamic allocation,
+blocking delays, peripheral-register-oriented code and host I/O.
+
+The build-plan function returns an argv list, not a shell command, and never
+starts a compiler. Reaper can also read Pytyliki's additive Embedded C ABI
+functions through `pytyliki_embedded_targets(path)` and
+`pytyliki_embedded_inspect(source, path)`; these require the existing
+`--allow-native-ffi` opt-in and an explicit absolute path. Firmware upload,
+register writes, covert injection and firmware execution are not implemented.
+See [the Embedded C guide](EMBEDDED_C.md).
+
 ## Canonical IR and bytecode VM
 
 reaper.ir.lower(parse(source)) lowers the parsed AST into a stack-based Canonical IR. The verifier checks opcode membership, nested functions and jump-target bounds. reaper.vm.assemble maps IR instructions to stable integer opcodes, and VirtualMachine executes constants, lexical environments, calls, closures, control flow, lists, imports/exports and :: pipelines.
