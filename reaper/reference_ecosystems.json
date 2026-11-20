@@ -55,7 +55,6 @@
       "bytecode",
       "stack-machine",
       "register-vm",
-      "interpreter",
       "jit",
       "actors",
       "image-runtime"
