@@ -1,10 +1,17 @@
-# Reaper — мова програмування з композицією потоків
+# Reaper — мова програмування з потоковою композицією
+
+<p align="center">
+  <a href="https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml/badge.svg"></a>
+  <img alt="Python 3.10+" src="https://img.shields.io/badge/reference-runtime-Python%203.10%2B-2563EB?style=flat-square">
+  <img alt="C17" src="https://img.shields.io/badge/native-track-C17-DC2626?style=flat-square">
+  <img alt="Apache 2.0" src="https://img.shields.io/badge/license-Apache--2.0-334155?style=flat-square">
+</p>
+
+**Reaper — виразна мова з читабельним синтаксисом і явним потоком даних.** Оператор `::` передає значення наступній операції. Репозиторій містить еталонний інтерпретатор Python, нативне ядро C17 у розробці та Reaper Studio для Windows.
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
-**Reaper — expression-oriented мова з читабельним синтаксисом і явним потоком даних.** Оператор `::` передає значення наступній операції. Репозиторій містить еталонний інтерпретатор Python і розроблювану нативну реалізацію C17.
-
-## Приклад
+## Приклад мови
 
 ```reaper
 craft double(value) {
@@ -15,27 +22,27 @@ make answer := numbers :: map(double) :: sum()
 emit "answer = " ++ text(answer)
 ```
 
-## Каталог із 666 символічних токенів
+## Попередній перегляд Studio
 
-Reaper містить канонічний словник із 666 унікальних трисимвольних лексем без цифр на алфавіті `: ; [ { ] } + = _ - *`. Python- і C-лексери розпізнають зарезервовані коди; переглянути їх можна командами `reaper --catalog`, `reaper --catalog-group memory` та `reaper --catalog-token ':::'`. Зарезервовані записи поки не є виконуваними операціями. Див. [каталог токенів](docs/TOKEN_CATALOG.md).
+<p align="center"><img src="assets/reaper-terminal-preview.svg" alt="Ілюстративний попередній перегляд термінальної сесії Reaper" width="100%"></p>
+<sub>Очікуваний вивід за прикладами репозиторію, а не знімок живого термінала чи desktop-програми. Скриншот Reaper Studio поки не додано.</sub>
 
-## Що реалізовано
+## Реалізовані можливості
 
-- **Еталонне середовище Python:** Python 3.10+, tree-walking інтерпретатор, lexer, parser, runtime, CLI та тести на стандартній бібліотеці.
-- **Ядро мови:** Unicode-ідентифікатори, коментарі, рядки, функції й closures, рекурсія, незмінний `make`, змінний `vary` з явним `change`, умови, цикли та композиція потоків.
-- **Вбудовані операції й діагностика:** операції над колекціями, явні перетворення, помилки lexer/parser/runtime з прив’язкою до джерела та ліміти виконання.
-- **Нативний напрям C17:** lexer, expression parser і AST з керуванням пам’яттю, перевірений integer Canonical IR, контрольоване згортання ADD/SUB/MUL/DIV для signed i64 з відхиленням переповнення й ділення на нуль, обмежений AST-to-IR lowering, початковий CLI та C-тести.
-- **MOST:** документований словник мови й поетапний контракт реалізації.
+- **Еталонний runtime:** Python 3.10+, лексер, парсер, tree-walking-інтерпретатор, CLI, REPL і тести на стандартній бібліотеці.
+- **Ядро мови:** Unicode-ідентифікатори, функції та замикання, рекурсія, незмінний `make`, змінний `vary` з явним `change`, умови, цикли й композиція потоку.
+- **Колекції та метрики:** map/filter/fold/reduce, сортування, зрізи, flatten, UTF-8-утиліти, векторні норми/відстані, проєкції, квадратичні форми та геометрія.
+- **Модулі й ресурси:** імпорт/експорт `.rpr`, граф залежностей, діагностика циклів, облік ресурсів, LIFO-регіони, обмежені файлові дескриптори та очищення.
+- **Виконання й аудит:** Python bytecode VM, ліміти виконання, JSON, профілювання та журнали з хеш-ланцюгом.
+- **Reaper Studio:** редактор Windows з відкриттям/збереженням, перевіркою й запуском, breakpoint, покроковим керуванням, переглядом змінних і стека викликів.
+- **Embedded C та FFI:** шаблони проєктів, профілі MCU, бюджет пам’яті й опційний C ABI до довірених бібліотек, зокрема Pytyliki ABI v1.
+- **Додаткові системи:** локальний Polyglot; 666 зарезервованих лексем; 66 профілів мов/toolchain; 14 архітектур; матриця MOST 20×20 (400 специфікованих проєкцій) і реалізований валідатор цілісності. Це не 400 виконуваних функцій мови.
 
-Реалізація C поки не є повним інтерпретатором. Повні declarations/blocks, перевірка типів, розв’язання intent, аналіз ownership, генерація native code та WASM ще не реалізовані. Python залишається еталоном сумісності до підтвердження паритету runtime і CLI.
+Нативний напрям C17 містить лексер, expression-парсер, AST з володінням, перевірені цілочисельні операції IR, обмежений lowering, тести оптимізатора та початковий CLI. Це **ще не повноцінний інтерпретатор**. Self-hosting lexer/parser — етап bootstrap, а не заміна Python frontend.
 
-## Скріншоти
+## Запуск інтерпретатора
 
-Зараз це проєкт мови та runtime, а не графічний застосунок. У репозиторії немає перевіреного скриншота живого термінала; ілюстративну графіку термінала прибрано, щоб не видавати її за справжнє захоплення. Реальний вивід можна отримати запуском прикладів нижче.
-
-## Запуск інтерпретатора Python
-
-Потрібен Python 3.10 або новіший. Сторонні runtime-залежності відсутні.
+Потрібен Python 3.10+. Сторонні runtime-залежності не потрібні.
 
 ```bash
 git clone https://github.com/Ivan-VHS/Reaper.git
@@ -43,108 +50,36 @@ cd Reaper
 python -m reaper examples/hello.rpr
 python -m reaper examples/flow.rpr
 python -m reaper --check examples/flow.rpr
+python -m reaper --engine vm examples/flow.rpr
+python -m reaper --repl
 python -m unittest discover -s tests -v
 ```
 
-Встановлення CLI в editable-режимі:
+Інсталяція CLI: `python -m pip install -e .`. Запуск Reaper Studio у Windows: `python reaper_desktop.py`.
 
-```bash
-python -m pip install -e .
-reaper examples/hello.rpr
-```
+## Збирання ядра C17
 
-## Збирання нативного ядра C17
-
-Потрібні CMake та компілятор із підтримкою C17.
+Потрібні CMake і компілятор C17.
 
 ```sh
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --parallel
 ctest --test-dir build --output-on-failure
 ./build/reaper-c --tokens examples/hello.rpr
-./build/reaper-c --evolution-status
 ```
 
-Нативний executable наразі надає реалізовані bring-up та аналізувальні сценарії; він не замінює інтерпретатор Python.
+## Розвиток і межі
 
-## Нативний desktop-застосунок
+Основа мови з’явилася 17 листопада 2026 року: лексер, парсер, інтерпретатор і CLI. Далі main отримав модулі, ліміти, VM, Studio, Polyglot, Embedded C, часткові C17/self-hosting і валідовану матрицю MOST 20×20.
 
-**Reaper Studio** — desktop-середовище Windows x64 на базі наявного Python reference runtime: редагування файлів `.rpr`, відкриття та збереження коду, перевірка синтаксису, запуск програм і перегляд виводу/помилок. Розробка ядра C17 триває окремо; повної паритетності C runtime ще немає.
+Managed heap — облік поверх алокатора Python, а не фізичний алокатор чи ліміт RSS. Нативний FFI вмикається явно та виконує завантажений код у процесі — використовуйте лише довірені ABI-сумісні бібліотеки. Пошук toolchain перевіряє `PATH`, але не встановлює компілятори. Python залишається еталоном до підтвердження нативного паритету.
 
-- [Релізи Windows x64](https://github.com/Ivan-VHS/Reaper/releases)
-- [Збирання застосунку та CI-артефакти](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml)
-- [Останні збирання](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml?query=branch%3Amain)
+## Документація та завантаження
 
-Успішна збірка публікує `Reaper-Studio-windows-x64.zip`; тег `v*` створює GitHub Release. Запуск із вихідного коду (Python 3.10+): `python reaper_desktop.py`.
+[Мова](LANGUAGE.md) · [Runtime platform](docs/RUNTIME_PLATFORM.md) · [План self-hosting](docs/SELF_HOSTING_BOOTSTRAP.md) · [Каталог токенів](docs/TOKEN_CATALOG.md) · [Embedded C](docs/EMBEDDED_C_WORKBENCH.md) · [Матриця MOST](docs/MOST_400_COMBINATORIAL_MATRIX.md) · [Інженерний стандарт](docs/UNIFIED_ENGINEERING_STANDARD.md)
 
-## Поліглот-система занурення
+[Релізи Windows](https://github.com/Ivan-VHS/Reaper/releases) · [Збирання desktop](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml)
 
-У Python reference package Reaper додано локальну підсистему вивчення мов: кілька мовних профілів, офлайн-бібліотеку текстів і субтитрів, контекстні картки фраз, інтервальне повторення, адаптивний щоденний план, оцінку зрозумілості матеріалів, журнал занять та експорт JSON.
+## Ліцензія
 
-```sh
-reaper polyglot init English --native Ukrainian --level A0 --minutes 45
-reaper polyglot content add lesson.srt --kind dialogue --level A1
-reaper polyglot phrase add "Could you say that again?" --translation "Не могли б ви повторити?" --context "Ввічливе прохання повторити фразу"
-reaper polyglot plan
-reaper polyglot review
-reaper polyglot report
-```
-
-Дані зберігаються локально в SQLite.
-
-Профілі також зберігають тип письма, тональність, фонетичний фокус і тимчасовий міст транслітерації. Картки підтримують особисті приклади й необов’язковий частотний ранг від користувача; звіт показує приблизний етап за накопиченими годинами практики. Це навчальні орієнтири, а не прогноз рівня володіння мовою. Діапазон 70–90% є приблизною часткою токенів із повторених карток, а не автоматичним тестом розуміння. Відтворення медіа, ASR/TTS, автоматичний переклад та AI-оцінювання вимови ще не реалізовані. Див. [посібник із поліглот-системи](docs/POLYGLOT_IMMERSION.md).
-
-## Дизайн і межі безпеки
-
-Програма проходить токенізацію, парсинг в AST і виконується обмеженим інтерпретатором. Консольні ефекти явні: `emit`, `say`, `ask`. Звичайні вирази не отримують прихованого доступу до файлової системи, мережі, годинника, процесів, shell чи обладнання.
-
-Стандартні ліміти включають 1 000 000 кроків, 256 вкладених викликів, 100 000 елементів колекції та 1 000 000 символів конкатенації. Це обмеження ресурсів, **а не sandbox безпеки**. Не вважайте запуск недовіреного коду ізольованим від хост-системи.
-
-## Self-hosting frontend: перевірена часткова реалізація
-
-Reaper уже виконує частину логіки frontend власною мовою, але **ще не є self-hosting-компілятором**.
-
-- **Stage 0 — lexer:** selfhost/lexer.rpr сканує підтримувану ASCII-орієнтовану підмножину токенів і створює записи з координатами у вихідному коді. Сумісність Unicode-ідентифікаторів із Python lexer ще не завершена.
-- **Stage 1 — Pratt expression parser:** selfhost/parser.rpr розбирає літерали, імена, унарні та згруповані вирази, списки, виклики функцій, індексацію й інфіксні оператори. Таблиця пріоритетів містить потоковий оператор :: і правоасоціативне піднесення до степеня (**).
-- **Еталонна реалізація:** Python parser та AST залишаються oracle сумісності. Парсер на Reaper повертає проміжне подання-масив; граматика оголошень і операторів та відповідність канонічному AST ще не реалізовані.
-
-Запуск цільових bootstrap-тестів:
-
-~~~bash
-python -m unittest discover -s tests -p 'test_self_hosting.py' -v
-~~~
-
-Див. [контракт етапів self-hosting](docs/SELF_HOSTING_BOOTSTRAP.md), [парсер на Reaper](selfhost/parser.rpr) і [lexer на Reaper](selfhost/lexer.rpr). Етап вважається реалізованим лише в межах, підтверджених тестами; самої наявності файла недостатньо.
-
-## Документація
-
-- [Довідник мови](LANGUAGE.md)
-- [Поліглот-система занурення](docs/POLYGLOT_IMMERSION.md)
-- [Об’єднана архітектура REAPER/MOST](docs/REAPER_UNIFIED_ARCHITECTURE.md)
-- [Архітектура](docs/ARCHITECTURE.md)
-- [Специфікація MOST](docs/MOST_LANGUAGE_SPEC.md)
-- [Матриця MOST 20×20: 400 архітектурних проєкцій](docs/MOST_400_COMBINATORIAL_MATRIX.md)
-- [План переходу на C](docs/C_MIGRATION.md)
-- [Приклади](examples/) · [Тести](tests/)
-
-## CI та ліцензія
-
-GitHub Actions тестує Python 3.10, 3.11 і 3.12, запускає unit-тести, перевіряє приклад і виконує flow-приклад. Нативне ядро C має окреме покриття CMake/CTest.
-
-[Apache License 2.0](LICENSE).
-
-> 千里之行，始于足下。 — Подорож у тисячу миль починається з першого кроку.
-
-
-## Перевірювана цілочисельна арифметика Canonical IR
-
-Нативний IR підтримує додавання, віднімання, множення й ділення i64. Згортання виконується лише для двох констант; переповнення signed i64, ділення на нуль і INT64_MIN / -1 повертають діагностику. Fixed-point pipeline обмежений бюджетом 1–64 ітерації з перевіркою IR до та після кожного проходу. Це гарантія рівня IR, а не твердження про повний паритет C-фронтенду чи runtime.
-
-
-## Екосистема проєктів
-
-Цей репозиторій входить до федерації трьох самостійних проєктів. Reaper відповідає за мову, середовище виконання й оркестрацію; OPlague — за інвентаризацію пристроїв Windows та аналіз пакетів драйверів без змін; Pytyliki — за ядро процесорних, memory- та математичних операцій на C11. See the [Матриця взаємозв’язків 3 × 3](https://github.com/Ivan-VHS/Reaper/blob/main/docs/PROJECT_FEDERATION_MATRIX.md) for the 3 × 3 cross-product, implemented interfaces, data directions and safety boundaries.
-
-- [Reaper — мова, середовище виконання й оркестрація](https://github.com/Ivan-VHS/Reaper/blob/main/README.uk.md) · [integration contract](https://github.com/Ivan-VHS/Reaper/blob/main/docs/FEDERATED_INTEGRATION.md)
-- [OPlague — інвентаризація пристроїв Windows та аналіз пакетів драйверів без змін](https://github.com/Ivan-VHS/OPlague/blob/main/README.uk.md) · [integration contract](https://github.com/Ivan-VHS/OPlague/blob/main/docs/FEDERATED_INTEGRATION.md)
-- [Pytyliki — ядро процесорних, memory- та математичних операцій на C11](https://github.com/Ivan-VHS/Pytyliki/blob/main/README.uk.md) · [integration contract](https://github.com/Ivan-VHS/Pytyliki/blob/main/docs/FEDERATED_INTEGRATION.md)
+[Apache License 2.0](LICENSE)
