@@ -56,6 +56,19 @@ Reaper complements its 66-position language and toolchain matrix with **14 CPU, 
 
 The C implementation is not yet a full language interpreter. Full declarations/blocks, type checking, intent resolution, ownership analysis, native code generation and WASM are not complete. Python remains the compatibility reference until runtime and CLI parity is demonstrated.
 
+## Quantum Contour Syntax (QCS)
+
+Reaper provides an independent QCS 1.0 frontend for hardware-domain source files. It includes a position-aware lexer, recursive-descent frame/declaration parser, Pratt expressions, a JSON-serializable AST and a 65-domain registry. It does not alter the existing `.rpr` grammar or claim that hardware operations and invariants are executable/proven.
+
+```sh
+reaper-qcs check examples/qcs_irq.qcs
+reaper-qcs tokens examples/qcs_irq.qcs
+reaper-qcs ast examples/qcs_irq.qcs
+python -m reaper.qcs check examples/qcs_irq.qcs
+```
+
+The native C11 companion in Pytyliki provides frame-aware validation and AST inspection. See [QCS frontend specification](docs/QCS_FRONTEND.md).
+
 ## Runtime platform
 
 Contracts and examples: [RUNTIME_PLATFORM.md](docs/RUNTIME_PLATFORM.md).
@@ -200,6 +213,7 @@ sampling is claimed. See [the Embedded C workbench guide](docs/EMBEDDED_C_WORKBE
 ## Documentation
 
 - [Language reference](LANGUAGE.md)
+- [Quantum Contour Syntax frontend](docs/QCS_FRONTEND.md)
 - [Runtime platform: modules, heap, FFI, VM and debugger](docs/RUNTIME_PLATFORM.md)
 - [Runtime and CLI implementation update (20 Nov 2026)](docs/IMPLEMENTATION_UPDATE_2026-11-20.md)
 - [Unified REAPER/MOST architecture](docs/REAPER_UNIFIED_ARCHITECTURE.md)
