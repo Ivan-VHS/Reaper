@@ -42,17 +42,27 @@ class MemoryManager:
         return sum(item.size for item in self.allocations.values())
 
     def track(self, value: Any) -> Any:
-        if not isinstance(value, (list, dict, bytearray)):
-            return value
-        identity = id(value)
-        if identity in self.allocations:
-            return value
-        size = sys.getsizeof(value)
-        if self.used_bytes + size > self.max_heap_bytes:
-            raise HeapLimitError(
-                f"Reaper heap limit ({self.max_heap_bytes} bytes) exceeded"
-            )
-        self.allocations[identity] = Allocation(value, size, self.regions[-1])
+        pending = [value]
+        visited: set[int] = set()
+        while pending:
+            current = pending.pop()
+            if not isinstance(current, (list, dict, bytearray)):
+                continue
+            identity = id(current)
+            if identity in visited or identity in self.allocations:
+                continue
+            visited.add(identity)
+            size = sys.getsizeof(current)
+            if self.used_bytes + size > self.max_heap_bytes:
+                raise HeapLimitError(
+                    f"Reaper heap limit ({self.max_heap_bytes} bytes) exceeded"
+                )
+            self.allocations[identity] = Allocation(current, size, self.regions[-1])
+            if isinstance(current, dict):
+                pending.extend(current.keys())
+                pending.extend(current.values())
+            elif isinstance(current, list):
+                pending.extend(current)
         return value
 
     def begin_region(self) -> int:
