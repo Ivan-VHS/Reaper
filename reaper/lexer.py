@@ -15,6 +15,33 @@ KEYWORDS = {
 }
 
 
+# Russian spellings for the executable compatibility subset. These map to
+# existing parser token kinds; they do not introduce a second runtime.
+KEYWORD_ALIASES = {
+    "пусть": "MAKE",
+    "переменная": "VARY",
+    "изменить": "CHANGE",
+    "функция": "CRAFT",
+    "вернуть": "YIELD",
+    "вывести": "EMIT",
+    "если": "WHEN",
+    "иначе": "OTHERWISE",
+    "для": "EACH",
+    "в": "IN",
+    "цикл": "LOOP",
+    "пока": "WHILE",
+    "истина": "TRUE",
+    "ложь": "FALSE",
+    "ничего": "NOTHING",
+    "и": "AND",
+    "или": "OR",
+    "не": "NOT",
+    "импорт": "IMPORT",
+    "экспорт": "EXPORT",
+    "как": "AS",
+}
+
+
 @dataclass(frozen=True, slots=True)
 class Token:
     kind: str
@@ -124,7 +151,7 @@ class Lexer:
         while self._peek().isalnum() or self._peek() == "_":
             self._advance()
         value = self.source[start:self.index]
-        kind = value.upper() if value in KEYWORDS else "IDENT"
+        kind = KEYWORD_ALIASES.get(value, value.upper() if value in KEYWORDS else "IDENT")
         self.tokens.append(Token(kind, value, start_line, start_column))
 
     def _operator_or_punctuation(self) -> None:
