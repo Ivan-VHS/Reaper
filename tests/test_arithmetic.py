@@ -66,9 +66,10 @@ class ArithmeticOperationsTests(unittest.TestCase):
         make values := accumulate([1, 2, 3])
         emit multiply(6, 7)
         emit product(values)
+        emit scale_values([1, 2], 3)
         emit cartesianize([1, 2], [3])
         """)
-        self.assertEqual(output, ["42", "18", "[[1, 3], [2, 3]]"])
+        self.assertEqual(output, ["42", "18", "[3, 6]", "[[1, 3], [2, 3]]"])
 
     def test_runtime_iterate_builtin(self):
         output = []
