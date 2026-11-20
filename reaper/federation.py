@@ -136,8 +136,8 @@ def validate_oplage_snapshot(snapshot: Any) -> dict[str, float]:
     if not isinstance(source.get("provider"), str) or source.get("mode") != "read_only":
         raise ValueError(f"{label}.source must declare a provider and read_only mode")
 
-    identity = snapshot.get("identity_protection")
-    if identity is not None:
+    if "identity_protection" in snapshot:
+        identity = snapshot["identity_protection"]
         if not isinstance(identity, Mapping) or set(identity) != {"algorithm", "key_scope"}:
             raise ValueError(f"{label}.identity_protection has an invalid shape")
         if identity.get("algorithm") != "HMAC-SHA-256" or identity.get("key_scope") not in {
