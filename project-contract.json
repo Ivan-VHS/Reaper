@@ -100,6 +100,16 @@
         "selfhost/parser.rpr",
         "tests/test_self_hosting.py"
       ]
+    },
+    {
+      "id": "composition.vertical-self-product",
+      "status": "implemented",
+      "summary": "Repeatedly squares an explicit deterministic transformation pipeline by applying the same pass sequence 2^depth times.",
+      "evidence": [
+        "reaper/self_product.py",
+        "tests/test_self_product.py",
+        "docs/SELF_PRODUCT_COMPOSITION.md"
+      ]
     }
   ],
   "interfaces": [
@@ -152,6 +162,7 @@
     "Canonical IR and selectable execution engines.",
     "Versioned .rpr module interfaces and explicit import/export boundaries.",
     "Opt-in C ABI adapters and validated versioned JSON interchange.",
-    "Native C17 frontend stages with Python reference behavior as the compatibility oracle."
+    "Native C17 frontend stages with Python reference behavior as the compatibility oracle.",
+    "Bounded vertical self-composition for deterministic compiler and data-flow transformation pipelines."
   ]
 }
