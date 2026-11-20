@@ -10,7 +10,7 @@ from .errors import LexError
 KEYWORDS = {
     "make", "vary", "change", "craft", "yield", "emit", "when",
     "otherwise", "each", "in", "loop", "while", "true", "false",
-    "nothing", "and", "or", "not",
+    "nothing", "and", "or", "not", "import", "export", "as",
 }
 
 
