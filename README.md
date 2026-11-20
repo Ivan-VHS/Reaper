@@ -2,7 +2,7 @@
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
-**Reaper is an expression-oriented language built around readable syntax and explicit data flow.** Its `|>` operator passes a value into the next operation. The repository currently contains a Python reference interpreter and a developing native C17 implementation.
+**Reaper is an expression-oriented language built around readable syntax and explicit data flow.** Its `|>` operator passes a value into the next operation. The repository contains a Python reference interpreter, a developing native C17 implementation and the first Reaper-written self-hosting frontend component.
 
 ## Example
 
@@ -21,6 +21,7 @@ emit "answer = " ++ text(answer)
 - **Language core:** Unicode identifiers, comments, strings, functions and closures, recursion, immutable `make`, mutable `vary` with explicit `change`, conditionals, iteration and flow composition.
 - **Built-ins and diagnostics:** collection operations, explicit conversions, orthogonal metric mathematics (n-D distance, dot products, quadratic forms, Parseval energy and non-Euclidean models), source-aware errors and configurable execution limits.
 - **Native C17 track:** lexer, expression parser and owned AST, verified integer Canonical IR, checked constant folding, a limited AST-to-IR lowering slice, CLI bring-up and C tests.
+- **Self-hosting bootstrap — Stage 0:** `selfhost/lexer.rpr` implements the initial tokenizer in Reaper source. The Python bootstrap runs it in CI and checks token values, source positions, string escapes and invalid-character reporting. This first slice currently handles ASCII identifiers only; it does not replace the reference lexer or constitute a self-hosting compiler yet. See [the bootstrap plan](docs/SELF_HOSTING_BOOTSTRAP.md).
 - **MOST language track:** documented language vocabulary and staged implementation contract.
 
 The C implementation is not yet a full language interpreter. Full declarations/blocks, type checking, intent resolution, ownership analysis, native code generation and WASM are not complete. Python remains the compatibility reference until runtime and CLI parity is demonstrated.
@@ -85,6 +86,7 @@ Default runtime quotas include 1,000,000 execution steps, 256 nested calls, 100,
 
 - [Language reference](LANGUAGE.md)
 - [Unified REAPER/MOST architecture](docs/REAPER_UNIFIED_ARCHITECTURE.md)
+- [Self-hosting bootstrap plan](docs/SELF_HOSTING_BOOTSTRAP.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Concatenation and composition architecture](docs/CONCATENATION_ARCHITECTURE.md)
 - [Orthogonal metric engine](docs/ORTHOGONAL_METRIC_ENGINE.md)
@@ -94,7 +96,7 @@ Default runtime quotas include 1,000,000 execution steps, 256 nested calls, 100,
 
 ## CI and license
 
-GitHub Actions tests Python 3.10, 3.11 and 3.12, runs the unit suite, checks an example and executes the flow example. The native C core has its own CMake/CTest coverage.
+GitHub Actions tests Python 3.10, 3.11 and 3.12, runs the unit suite (including the Reaper-written bootstrap lexer), checks an example and executes the flow example. The native C core has its own CMake/CTest coverage.
 
 [Apache License 2.0](LICENSE).
 
