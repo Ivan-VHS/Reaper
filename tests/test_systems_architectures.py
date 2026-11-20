@@ -7,6 +7,7 @@ from contextlib import redirect_stdout
 from io import StringIO
 from pathlib import Path
 
+from reaper.cli import main as reaper_cli_main
 from reaper.systems_architectures import (
     describe_toolchains,
     load_matrix,
@@ -67,6 +68,17 @@ class SystemsArchitectureMatrixTests(unittest.TestCase):
         broken["architectures"][0]["word_bits"] = 24
         with self.assertRaisesRegex(ValueError, "word_bits"):
             validate_matrix(broken)
+
+    def test_reaper_cli_exposes_the_architecture_catalogue(self):
+        output = StringIO()
+        with redirect_stdout(output):
+            result = reaper_cli_main(["--systems-architectures"])
+        self.assertEqual(result, 0)
+        self.assertIn("Systems architecture matrix: 14 result(s)", output.getvalue())
+        with redirect_stdout(StringIO()) as sink:
+            result = reaper_cli_main(["--architecture-profile", "oplague"])
+        self.assertEqual(result, 0)
+        self.assertIn("x86_64", sink.getvalue())
 
     def test_cli_and_external_matrix_path(self):
         output = StringIO()
