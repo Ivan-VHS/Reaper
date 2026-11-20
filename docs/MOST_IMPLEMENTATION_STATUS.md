@@ -10,7 +10,8 @@
 |---|---|---|
 | C17 build and native lexer | implemented | `src/lexer.c`, `tests/test_lexer.c` |
 | MOST lexical vocabulary | implemented | keyword/operator lexer tests; grammar is not implied |
-| Russian MOST keyword vocabulary | implemented in lexer | src/lexer.c and tests/test_lexer.c; token recognition only, not executable grammar |
+| Russian MOST keyword vocabulary | implemented in native lexer | src/lexer.c and tests/test_lexer.c; full declaration grammar is not implied |
+| Russian executable compatibility subset | implemented in Python reference runtime | reaper/lexer.py maps core Russian spellings to existing parser tokens; tests/test_language.py executes a function/loop/conditional sample |
 | Russian 66-rule language design | specified | docs/MOST_RUSSIAN_66_RULES.md; full parser/resolver/type system remain future gates |
 | Semantic IR data model | implemented | `include/reaper/ir.h` |
 | IR structural verifier | implemented | `src/ir.c`, `tests/test_ir.c` |
