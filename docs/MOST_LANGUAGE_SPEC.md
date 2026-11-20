@@ -104,3 +104,10 @@ The 1.0 core grammar and semantics are frozen. Additions after 1.0 use versioned
 ## 147-feature architecture extension
 
 The extended architecture backlog, including all 147 proposed capabilities, semantic constraints, platform caveats, duplicate resolution, implementation waves and truthful status ledger, is maintained in [MOST_147_FEATURE_REGISTRY.md](MOST_147_FEATURE_REGISTRY.md). The registry extends the 66 foundational rules; it does not imply that the listed features are already implemented. The canonical numbering is normalized to seven non-overlapping groups (1–21 through 127–147).
+
+
+## Russian-language frontend boundary
+
+Reaper's Russian keyword surface is documented in [RUSSIAN_LANGUAGE_PROFILE.md](RUSSIAN_LANGUAGE_PROFILE.md). The Python reference implementation resolves the currently supported aliases to the existing Reaper token kinds, while the C17 lexer recognizes a broader reserved-word vocabulary.
+
+MOST remains a distinct statically typed systems-language track. Its complete Russian grammar, intent/name resolution, typed AST, semantic checks, native backend, and WASM conformance are not implemented by the Reaper alias layer. Any future MOST bridge must preserve explicit semantics and reject ambiguous phrase resolution instead of guessing.

@@ -7,7 +7,7 @@
 #include <string.h>
 static const char *const keywords[]={
  "make","vary","change","craft","yield","emit","when","otherwise","each","in","loop","while","true","false","nothing","and","or","not",
- "module","import","as","pub","export","fn","struct","enum","trait","impl","type","const","let","mut","return","if","else","match","region","raw","arena","signal","async","await","test","comptime","requires","ensures","unsafe","extern","drop","where","for","break","continue","defer"
+ "module","import","as","pub","export","fn","struct","enum","trait","impl","type","const","let","mut","return","if","else","match","region","raw","arena","signal","async","await","test","comptime","requires","ensures","unsafe","extern","drop","where","for","break","continue","defer","пусть","создать","неизменяемое","неизменяемая","изменяемая","изменяемый","переменная","изменить","присвоить","переприсвоить","функция","процедура","вернуть","возвратить","вывести","показать","напечатать","если","когда","иначе","каждый","для","в","среди","цикл","пока","истина","ложь","ничего","пусто","и","или","не","импорт","экспорт","как","модуль","структура","перечисление","типаж","реализация","тип","константа","совпадение","регион","сырой","арена","сигнал","асинхронно","ожидать","тест","требует","обеспечивает","небезопасно","внешний","освободить","где","прервать","продолжить","отложить"
 };
 static int is_keyword(const char *s){for(size_t i=0;i<sizeof keywords/sizeof keywords[0];++i)if(strcmp(s,keywords[i])==0)return 1;return 0;}
 static int append_token(ReaperTokenArray *o,ReaperTokenKind k,const char *s,size_t n,size_t l,size_t c){

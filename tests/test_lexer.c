@@ -17,4 +17,9 @@ static void test_program(void){const char *s="make value := [1, 2] :: map(double
 static void test_escape(void){ReaperTokenArray t={0};ReaperLexError e={{0},0,0};assert(reaper_lex("emit \"a\\nb\"\n",&t,&e));assert(!strcmp(t.items[1].text,"a\nb"));reaper_tokens_free(&t);}
 static void test_bad_escape(void){ReaperTokenArray t={0};ReaperLexError e={{0},0,0};assert(!reaper_lex("emit \"bad\\q\"\n",&t,&e));assert(strstr(e.message,"escape"));assert(t.length==0);}
 static void test_unterminated(void){ReaperTokenArray t={0};ReaperLexError e={{0},0,0};assert(!reaper_lex("emit \"unfinished",&t,&e));assert(e.line==1&&e.column==6);}
-int main(void){test_program();test_escape();test_bad_escape();test_unterminated();test_most_surface();test_most_operator_family();puts("native lexer tests: 6 groups passed");return 0;}
+static void test_russian_keywords(void){
+ const char *s="пусть число := 1\nфункция удвоить(значение) { вернуть значение * 2 }\nесли истина и не ложь { вывести удвоить(число) }\nмодуль счётчики";
+ ReaperTokenArray t={0};ReaperLexError e={{0},0,0};assert(reaper_lex(s,&t,&e));
+ assert(has(&t,"пусть",REAPER_TOK_KEYWORD));assert(has(&t,"функция",REAPER_TOK_KEYWORD));assert(has(&t,"вернуть",REAPER_TOK_KEYWORD));assert(has(&t,"если",REAPER_TOK_KEYWORD));assert(has(&t,"истина",REAPER_TOK_KEYWORD));assert(has(&t,"вывести",REAPER_TOK_KEYWORD));assert(has(&t,"модуль",REAPER_TOK_KEYWORD));assert(has(&t,"счётчики",REAPER_TOK_IDENTIFIER));assert(has(&t,"значение",REAPER_TOK_IDENTIFIER));reaper_tokens_free(&t);
+}
+int main(void){test_program();test_escape();test_bad_escape();test_unterminated();test_most_surface();test_most_operator_family();test_russian_keywords();puts("native lexer tests: 7 groups passed");return 0;}

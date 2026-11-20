@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from .errors import LexError
 from .token_catalog import token_is_reserved
+from .russian import RUSSIAN_KEYWORD_ALIASES
 
 
 KEYWORDS = {
@@ -124,7 +125,9 @@ class Lexer:
         while self._peek().isalnum() or self._peek() == "_":
             self._advance()
         value = self.source[start:self.index]
-        kind = value.upper() if value in KEYWORDS else "IDENT"
+        kind = RUSSIAN_KEYWORD_ALIASES.get(value)
+        if kind is None:
+            kind = value.upper() if value in KEYWORDS else "IDENT"
         self.tokens.append(Token(kind, value, start_line, start_column))
 
     def _operator_or_punctuation(self) -> None:

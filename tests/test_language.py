@@ -201,5 +201,43 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(self.capture(source), ["right"])
 
 
+    def test_russian_keyword_aliases_preserve_source_spelling(self) -> None:
+        tokens = tokenize("пусть счётчик := 1\nфункция удвоить(значение) {\n вернуть значение * 2\n}\nвывести удвоить(счётчик)")
+        pairs = {(token.value, token.kind) for token in tokens}
+        self.assertIn(("пусть", "MAKE"), pairs)
+        self.assertIn(("функция", "CRAFT"), pairs)
+        self.assertIn(("вернуть", "YIELD"), pairs)
+        self.assertIn(("вывести", "EMIT"), pairs)
+        self.assertIn(("счётчик", "IDENT"), pairs)
+        self.assertIn(("значение", "IDENT"), pairs)
+
+    def test_russian_surface_executes_with_existing_semantics(self) -> None:
+        source = """
+        пусть основа := 21
+        функция удвоить(значение) {
+            вернуть значение * 2
+        }
+        если истина и не ложь {
+            вывести удвоить(основа)
+        } иначе {
+            вывести 0
+        }
+        """
+        self.assertEqual(self.capture(source), ["42"])
+
+    def test_russian_iteration_and_mutation_aliases(self) -> None:
+        source = """
+        изменяемая сумма := 0
+        для значение среди [1, 2, 3, 4] {
+            изменить сумма := сумма + значение
+        }
+        цикл пока сумма < 11 {
+            изменить сумма := сумма + 1
+        }
+        вывести сумма
+        """
+        self.assertEqual(self.capture(source), ["11"])
+
+
 if __name__ == "__main__":
     unittest.main()
