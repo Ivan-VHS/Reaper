@@ -1,0 +1,1527 @@
+{
+  "schema": "reaper-reference-ecosystems/v1",
+  "count": 66,
+  "source": "User-provided 66-entry low-level, systems, assembly, HDL, GPU, VM and esoteric catalogue.",
+  "status_policy": "catalogued-only",
+  "profiles": {
+    "reaper": [
+      "native",
+      "static-types",
+      "ownership",
+      "memory-safety",
+      "abi",
+      "ffi",
+      "ir",
+      "optimization",
+      "wasm",
+      "embedded",
+      "bare-metal",
+      "simd",
+      "compute"
+    ],
+    "embedded": [
+      "embedded",
+      "bare-metal",
+      "register-model",
+      "machine-code",
+      "hardware",
+      "memory-map",
+      "deterministic",
+      "assembly"
+    ],
+    "gpu": [
+      "gpu",
+      "shader",
+      "compute",
+      "parallel",
+      "simd",
+      "vector",
+      "ir",
+      "bytecode"
+    ],
+    "hdl": [
+      "hdl",
+      "rtl",
+      "fpga",
+      "asic",
+      "simulation",
+      "synthesis",
+      "verification",
+      "hardware-generation",
+      "hardware-ir"
+    ],
+    "vm": [
+      "vm",
+      "bytecode",
+      "stack-machine",
+      "register-vm",
+      "interpreter",
+      "jit",
+      "actors",
+      "image-runtime"
+    ],
+    "stack": [
+      "stack-machine",
+      "concatenative",
+      "bytecode",
+      "minimal-vm"
+    ],
+    "esoteric": [
+      "esoteric",
+      "minimal-vm",
+      "visual",
+      "one-instruction",
+      "conformance",
+      "turing-complete"
+    ]
+  },
+  "languages": [
+    {
+      "index": 1,
+      "id": "ref-01",
+      "name": "x86 / x86-64 Assembly",
+      "category": "assembly-isa",
+      "integration_layer": "target-assembler",
+      "toolchains": [
+        "nasm",
+        "as",
+        "llvm-mc"
+      ],
+      "capabilities": [
+        "native",
+        "machine-code",
+        "register-model",
+        "abi",
+        "assembly"
+      ],
+      "role": "Register-level code generation and platform ABI lowering.",
+      "aliases": [
+        "x86-64",
+        "amd64",
+        "Intel assembly"
+      ],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 2,
+      "id": "ref-02",
+      "name": "ARM64 / AArch64 Assembly",
+      "category": "assembly-isa",
+      "integration_layer": "target-assembler",
+      "toolchains": [
+        "aarch64-linux-gnu-as",
+        "arm-linux-gnueabihf-as",
+        "llvm-mc"
+      ],
+      "capabilities": [
+        "native",
+        "machine-code",
+        "register-model",
+        "abi",
+        "assembly",
+        "embedded"
+      ],
+      "role": "AArch64 instruction selection, calling conventions and embedded targets.",
+      "aliases": [
+        "ARM64",
+        "AArch64"
+      ],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 3,
+      "id": "ref-03",
+      "name": "RISC-V Assembly (RV64I)",
+      "category": "assembly-isa",
+      "integration_layer": "target-assembler",
+      "toolchains": [
+        "riscv64-linux-gnu-as",
+        "riscv64-unknown-elf-as",
+        "llvm-mc"
+      ],
+      "capabilities": [
+        "native",
+        "machine-code",
+        "register-model",
+        "abi",
+        "assembly",
+        "embedded"
+      ],
+      "role": "RISC-V ISA profiles, extensions and target-specific lowering.",
+      "aliases": [
+        "RISC-V",
+        "RV64I"
+      ],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 4,
+      "id": "ref-04",
+      "name": "MIPS Assembly",
+      "category": "assembly-isa",
+      "integration_layer": "target-assembler",
+      "toolchains": [
+        "mips-linux-gnu-as",
+        "mipsel-linux-gnu-as",
+        "llvm-mc"
+      ],
+      "capabilities": [
+        "native",
+        "machine-code",
+        "register-model",
+        "abi",
+        "assembly",
+        "embedded"
+      ],
+      "role": "MIPS register conventions, instruction selection and ABI layout.",
+      "aliases": [
+        "MIPS"
+      ],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 5,
+      "id": "ref-05",
+      "name": "AVR Assembly",
+      "category": "assembly-isa",
+      "integration_layer": "target-assembler",
+      "toolchains": [
+        "avr-as"
+      ],
+      "capabilities": [
+        "machine-code",
+        "register-model",
+        "assembly",
+        "embedded",
+        "bare-metal",
+        "memory-map"
+      ],
+      "role": "Small-MCU register allocation, address spaces and bounded memory layouts.",
+      "aliases": [
+        "AVR"
+      ],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 6,
+      "id": "ref-06",
+      "name": "MOS 6502 Assembly",
+      "category": "assembly-isa",
+      "integration_layer": "target-assembler",
+      "toolchains": [
+        "ca65",
+        "xa",
+        "acme"
+      ],
+      "capabilities": [
+        "machine-code",
+        "register-model",
+        "assembly",
+        "bare-metal",
+        "memory-map",
+        "embedded"
+      ],
+      "role": "8-bit accumulator, zero-page and bank-aware target lowering.",
+      "aliases": [
+        "6502",
+        "MOS 6502"
+      ],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 7,
+      "id": "ref-07",
+      "name": "Zilog Z80 Assembly",
+      "category": "assembly-isa",
+      "integration_layer": "target-assembler",
+      "toolchains": [
+        "z80asm",
+        "sjasmplus",
+        "z88dk-z80asm"
+      ],
+      "capabilities": [
+        "machine-code",
+        "register-model",
+        "assembly",
+        "bare-metal",
+        "embedded"
+      ],
+      "role": "8-bit register-pair and bank-switch-aware code generation.",
+      "aliases": [
+        "Z80"
+      ],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 8,
+      "id": "ref-08",
+      "name": "Motorola 68000 (m68k) Assembly",
+      "category": "assembly-isa",
+      "integration_layer": "target-assembler",
+      "toolchains": [
+        "m68k-linux-gnu-as",
+        "vasmm68k_mot",
+        "llvm-mc"
+      ],
+      "capabilities": [
+        "native",
+        "machine-code",
+        "register-model",
+        "abi",
+        "assembly",
+        "embedded"
+      ],
+      "role": "m68k instruction selection, register conventions and object ABI.",
+      "aliases": [
+        "m68k",
+        "68000"
+      ],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 9,
+      "id": "ref-09",
+      "name": "PowerPC Assembly",
+      "category": "assembly-isa",
+      "integration_layer": "target-assembler",
+      "toolchains": [
+        "powerpc-linux-gnu-as",
+        "powerpc64le-linux-gnu-as",
+        "llvm-mc"
+      ],
+      "capabilities": [
+        "native",
+        "machine-code",
+        "register-model",
+        "abi",
+        "assembly"
+      ],
+      "role": "PowerPC/POWER ABI and architecture-specific lowering.",
+      "aliases": [
+        "PowerPC",
+        "PPC"
+      ],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 10,
+      "id": "ref-10",
+      "name": "SPARC Assembly",
+      "category": "assembly-isa",
+      "integration_layer": "target-assembler",
+      "toolchains": [
+        "sparc64-linux-gnu-as",
+        "llvm-mc"
+      ],
+      "capabilities": [
+        "native",
+        "machine-code",
+        "register-model",
+        "abi",
+        "assembly"
+      ],
+      "role": "SPARC register-window and calling-convention lowering.",
+      "aliases": [
+        "SPARC"
+      ],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 11,
+      "id": "ref-11",
+      "name": "WebAssembly Text Format (WAT)",
+      "category": "virtual-isa",
+      "integration_layer": "wasm-toolchain",
+      "toolchains": [
+        "wat2wasm",
+        "wasm-tools"
+      ],
+      "capabilities": [
+        "wasm",
+        "ir",
+        "bytecode",
+        "vm",
+        "memory-safety",
+        "sandbox-boundary"
+      ],
+      "role": "Portable WebAssembly module emission and validation.",
+      "aliases": [
+        "WAT",
+        "WebAssembly"
+      ],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 12,
+      "id": "ref-12",
+      "name": "LLVM IR",
+      "category": "compiler-ir",
+      "integration_layer": "llvm-toolchain",
+      "toolchains": [
+        "llvm-as",
+        "opt",
+        "llc"
+      ],
+      "capabilities": [
+        "ir",
+        "optimization",
+        "native",
+        "wasm",
+        "compiler-backend"
+      ],
+      "role": "Typed SSA interchange, verification, optimization and target selection.",
+      "aliases": [
+        "LLVM"
+      ],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 13,
+      "id": "ref-13",
+      "name": "C",
+      "category": "systems-language",
+      "integration_layer": "native-frontend",
+      "toolchains": [
+        "cc",
+        "gcc",
+        "clang"
+      ],
+      "capabilities": [
+        "native",
+        "static-types",
+        "abi",
+        "ffi",
+        "manual-memory",
+        "embedded"
+      ],
+      "role": "Stable C ABI boundary, host integration and freestanding bootstrap.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 14,
+      "id": "ref-14",
+      "name": "C++",
+      "category": "systems-language",
+      "integration_layer": "native-frontend",
+      "toolchains": [
+        "c++",
+        "g++",
+        "clang++"
+      ],
+      "capabilities": [
+        "native",
+        "static-types",
+        "abi",
+        "ffi",
+        "templates",
+        "zero-cost"
+      ],
+      "role": "C++ interoperability and native library boundary.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 15,
+      "id": "ref-15",
+      "name": "Rust",
+      "category": "systems-language",
+      "integration_layer": "native-frontend",
+      "toolchains": [
+        "rustc",
+        "cargo"
+      ],
+      "capabilities": [
+        "native",
+        "static-types",
+        "ownership",
+        "memory-safety",
+        "linear-types",
+        "ffi",
+        "concurrency"
+      ],
+      "role": "Ownership, borrowing, lifetimes and safe FFI reference semantics.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 16,
+      "id": "ref-16",
+      "name": "Zig",
+      "category": "systems-language",
+      "integration_layer": "native-frontend",
+      "toolchains": [
+        "zig"
+      ],
+      "capabilities": [
+        "native",
+        "static-types",
+        "manual-memory",
+        "compile-time",
+        "abi",
+        "embedded",
+        "no-runtime"
+      ],
+      "role": "Explicit allocators, compile-time evaluation and cross-target ABI design.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 17,
+      "id": "ref-17",
+      "name": "D",
+      "category": "systems-language",
+      "integration_layer": "native-frontend",
+      "toolchains": [
+        "dmd",
+        "ldc2",
+        "gdc"
+      ],
+      "capabilities": [
+        "native",
+        "static-types",
+        "compile-time",
+        "metaprogramming",
+        "ffi",
+        "manual-memory"
+      ],
+      "role": "Contracts, compile-time programming and optional runtime boundaries.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 18,
+      "id": "ref-18",
+      "name": "Nim",
+      "category": "systems-language",
+      "integration_layer": "native-frontend",
+      "toolchains": [
+        "nim"
+      ],
+      "capabilities": [
+        "native",
+        "static-types",
+        "compile-time",
+        "metaprogramming",
+        "ffi",
+        "wasm"
+      ],
+      "role": "Compile-time macros, ARC/ORC memory models and generated-code interop.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 19,
+      "id": "ref-19",
+      "name": "Ada",
+      "category": "systems-language",
+      "integration_layer": "native-frontend",
+      "toolchains": [
+        "gnatmake",
+        "gnat"
+      ],
+      "capabilities": [
+        "native",
+        "static-types",
+        "formal-verification",
+        "deterministic",
+        "embedded",
+        "concurrency"
+      ],
+      "role": "Strong typing, contracts and safety-critical system constraints.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 20,
+      "id": "ref-20",
+      "name": "SPARK",
+      "category": "systems-language",
+      "integration_layer": "formal-methods",
+      "toolchains": [
+        "gnatprove"
+      ],
+      "capabilities": [
+        "formal-verification",
+        "proofs",
+        "static-types",
+        "deterministic",
+        "memory-safety"
+      ],
+      "role": "Proof-oriented contracts and verified-subset semantics.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 21,
+      "id": "ref-21",
+      "name": "Modula-2",
+      "category": "systems-language",
+      "integration_layer": "native-frontend",
+      "toolchains": [
+        "gm2",
+        "m2c"
+      ],
+      "capabilities": [
+        "native",
+        "static-types",
+        "modules",
+        "manual-memory",
+        "embedded"
+      ],
+      "role": "Explicit module interfaces and low-level systems conventions.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 22,
+      "id": "ref-22",
+      "name": "Oberon",
+      "category": "systems-language",
+      "integration_layer": "native-frontend",
+      "toolchains": [
+        "voc",
+        "obc"
+      ],
+      "capabilities": [
+        "native",
+        "static-types",
+        "modules",
+        "manual-memory",
+        "embedded"
+      ],
+      "role": "Minimal modules, type extension and hardware-facing abstractions.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 23,
+      "id": "ref-23",
+      "name": "BCPL",
+      "category": "systems-language",
+      "integration_layer": "historical-frontend",
+      "toolchains": [
+        "cintcode",
+        "bcpl"
+      ],
+      "capabilities": [
+        "native",
+        "machine-word",
+        "manual-memory",
+        "historical"
+      ],
+      "role": "Machine-word semantics and historical low-level language interoperability.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 24,
+      "id": "ref-24",
+      "name": "BLISS",
+      "category": "systems-language",
+      "integration_layer": "historical-frontend",
+      "toolchains": [
+        "bliss"
+      ],
+      "capabilities": [
+        "native",
+        "machine-word",
+        "manual-memory",
+        "historical"
+      ],
+      "role": "Word-oriented expressions and explicit address-level semantics.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 25,
+      "id": "ref-25",
+      "name": "Forth",
+      "category": "vm-language",
+      "integration_layer": "stack-vm",
+      "toolchains": [
+        "gforth"
+      ],
+      "capabilities": [
+        "vm",
+        "bytecode",
+        "stack-machine",
+        "concatenative",
+        "embedded",
+        "bare-metal"
+      ],
+      "role": "Stack-effect typing, threaded execution and small embedded runtimes.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 26,
+      "id": "ref-26",
+      "name": "Factor",
+      "category": "vm-language",
+      "integration_layer": "stack-vm",
+      "toolchains": [],
+      "capabilities": [
+        "vm",
+        "stack-machine",
+        "concatenative",
+        "dynamic-types",
+        "jit"
+      ],
+      "role": "Combinator and stack-effect models for concatenative execution.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 27,
+      "id": "ref-27",
+      "name": "PostScript",
+      "category": "vm-language",
+      "integration_layer": "stack-vm",
+      "toolchains": [
+        "gs"
+      ],
+      "capabilities": [
+        "vm",
+        "stack-machine",
+        "bytecode",
+        "graphics"
+      ],
+      "role": "Operand-stack execution and deterministic graphics-language interop.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 28,
+      "id": "ref-28",
+      "name": "Lua / LuaJIT",
+      "category": "vm-language",
+      "integration_layer": "register-vm",
+      "toolchains": [
+        "lua",
+        "luajit"
+      ],
+      "capabilities": [
+        "vm",
+        "register-vm",
+        "bytecode",
+        "scripting",
+        "jit",
+        "ffi"
+      ],
+      "role": "Register VM, embeddable scripting and optional JIT/FFI boundaries.",
+      "aliases": [
+        "Lua",
+        "LuaJIT"
+      ],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 29,
+      "id": "ref-29",
+      "name": "JVM Bytecode (Jasmin)",
+      "category": "vm-language",
+      "integration_layer": "stack-vm",
+      "toolchains": [
+        "jasmin"
+      ],
+      "capabilities": [
+        "vm",
+        "bytecode",
+        "stack-machine",
+        "managed-runtime"
+      ],
+      "role": "JVM stack verification and class-file interoperability.",
+      "aliases": [
+        "JVM",
+        "Jasmin"
+      ],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 30,
+      "id": "ref-30",
+      "name": "Dalvik / Smali Bytecode",
+      "category": "vm-language",
+      "integration_layer": "register-vm",
+      "toolchains": [
+        "smali",
+        "baksmali"
+      ],
+      "capabilities": [
+        "vm",
+        "bytecode",
+        "register-vm",
+        "managed-runtime",
+        "android"
+      ],
+      "role": "Register-based bytecode inspection and Android runtime boundary.",
+      "aliases": [
+        "Dalvik",
+        "Smali"
+      ],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 31,
+      "id": "ref-31",
+      "name": "Erlang",
+      "category": "vm-language",
+      "integration_layer": "actor-vm",
+      "toolchains": [
+        "erl",
+        "erlc"
+      ],
+      "capabilities": [
+        "vm",
+        "bytecode",
+        "concurrency",
+        "actors",
+        "fault-tolerance"
+      ],
+      "role": "Actor processes, message passing and BEAM interoperability.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 32,
+      "id": "ref-32",
+      "name": "Elixir",
+      "category": "vm-language",
+      "integration_layer": "actor-vm",
+      "toolchains": [
+        "elixir",
+        "elixirc"
+      ],
+      "capabilities": [
+        "vm",
+        "bytecode",
+        "concurrency",
+        "actors",
+        "macros"
+      ],
+      "role": "BEAM actor model, macros and explicit process boundaries.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 33,
+      "id": "ref-33",
+      "name": "Smalltalk",
+      "category": "vm-language",
+      "integration_layer": "image-vm",
+      "toolchains": [
+        "gst"
+      ],
+      "capabilities": [
+        "vm",
+        "bytecode",
+        "dynamic-types",
+        "image-runtime"
+      ],
+      "role": "Image-based object model and reflective runtime boundary.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 34,
+      "id": "ref-34",
+      "name": "Objective-C",
+      "category": "systems-language",
+      "integration_layer": "native-frontend",
+      "toolchains": [
+        "clang"
+      ],
+      "capabilities": [
+        "native",
+        "static-types",
+        "abi",
+        "ffi",
+        "dynamic-dispatch"
+      ],
+      "role": "Objective-C runtime messaging and C interoperability.",
+      "aliases": [
+        "Objective C",
+        "ObjC"
+      ],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 35,
+      "id": "ref-35",
+      "name": "Swift",
+      "category": "systems-language",
+      "integration_layer": "native-frontend",
+      "toolchains": [
+        "swiftc"
+      ],
+      "capabilities": [
+        "native",
+        "static-types",
+        "value-semantics",
+        "ownership",
+        "abi",
+        "concurrency"
+      ],
+      "role": "Value semantics, ARC and typed native interoperability.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 36,
+      "id": "ref-36",
+      "name": "Vala",
+      "category": "systems-language",
+      "integration_layer": "native-frontend",
+      "toolchains": [
+        "valac"
+      ],
+      "capabilities": [
+        "native",
+        "static-types",
+        "c-abi",
+        "gobject",
+        "code-generation"
+      ],
+      "role": "C/GObject lowering and generated-code boundary.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 37,
+      "id": "ref-37",
+      "name": "Verilog",
+      "category": "hdl",
+      "integration_layer": "hardware-flow",
+      "toolchains": [
+        "iverilog",
+        "verilator"
+      ],
+      "capabilities": [
+        "hdl",
+        "rtl",
+        "fpga",
+        "asic",
+        "simulation",
+        "synthesis"
+      ],
+      "role": "RTL circuit description, simulation and hardware synthesis flow.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 38,
+      "id": "ref-38",
+      "name": "SystemVerilog",
+      "category": "hdl",
+      "integration_layer": "hardware-flow",
+      "toolchains": [
+        "verilator",
+        "iverilog",
+        "slang"
+      ],
+      "capabilities": [
+        "hdl",
+        "rtl",
+        "fpga",
+        "asic",
+        "simulation",
+        "synthesis",
+        "verification"
+      ],
+      "role": "RTL plus assertions, interfaces and hardware verification.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 39,
+      "id": "ref-39",
+      "name": "VHDL",
+      "category": "hdl",
+      "integration_layer": "hardware-flow",
+      "toolchains": [
+        "ghdl"
+      ],
+      "capabilities": [
+        "hdl",
+        "rtl",
+        "fpga",
+        "asic",
+        "simulation",
+        "synthesis",
+        "static-types"
+      ],
+      "role": "Strongly typed RTL design and event simulation.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 40,
+      "id": "ref-40",
+      "name": "Chisel",
+      "category": "hdl",
+      "integration_layer": "hardware-generator",
+      "toolchains": [
+        "sbt",
+        "mill"
+      ],
+      "capabilities": [
+        "hdl",
+        "rtl",
+        "fpga",
+        "asic",
+        "hardware-generation",
+        "compile-time"
+      ],
+      "role": "Parameterized hardware construction lowered to RTL.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 41,
+      "id": "ref-41",
+      "name": "Bluespec (BSV)",
+      "category": "hdl",
+      "integration_layer": "hardware-flow",
+      "toolchains": [
+        "bsc"
+      ],
+      "capabilities": [
+        "hdl",
+        "rtl",
+        "fpga",
+        "asic",
+        "atomic-rules",
+        "formal-verification"
+      ],
+      "role": "Guarded atomic actions and rule-based hardware scheduling.",
+      "aliases": [
+        "BSV",
+        "Bluespec"
+      ],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 42,
+      "id": "ref-42",
+      "name": "SpinalHDL",
+      "category": "hdl",
+      "integration_layer": "hardware-generator",
+      "toolchains": [
+        "sbt"
+      ],
+      "capabilities": [
+        "hdl",
+        "rtl",
+        "fpga",
+        "asic",
+        "hardware-generation",
+        "static-types"
+      ],
+      "role": "Typed RTL generation with explicit clock/reset domains.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 43,
+      "id": "ref-43",
+      "name": "Amaranth (nMigen)",
+      "category": "hdl",
+      "integration_layer": "hardware-generator",
+      "toolchains": [],
+      "capabilities": [
+        "hdl",
+        "rtl",
+        "fpga",
+        "hardware-generation",
+        "python-dsl"
+      ],
+      "role": "Python-hosted synchronous logic construction and RTL emission.",
+      "aliases": [
+        "Amaranth",
+        "nMigen"
+      ],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 44,
+      "id": "ref-44",
+      "name": "Silice",
+      "category": "hdl",
+      "integration_layer": "hardware-flow",
+      "toolchains": [
+        "silice"
+      ],
+      "capabilities": [
+        "hdl",
+        "rtl",
+        "fpga",
+        "hardware-generation",
+        "state-machines"
+      ],
+      "role": "Algorithmic FPGA description and finite-state machine lowering.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 45,
+      "id": "ref-45",
+      "name": "MyHDL",
+      "category": "hdl",
+      "integration_layer": "hardware-generator",
+      "toolchains": [],
+      "capabilities": [
+        "hdl",
+        "rtl",
+        "fpga",
+        "simulation",
+        "hardware-generation",
+        "python-dsl"
+      ],
+      "role": "Python-based behavioral modeling and RTL conversion.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 46,
+      "id": "ref-46",
+      "name": "FIRRTL",
+      "category": "compiler-ir",
+      "integration_layer": "hardware-ir",
+      "toolchains": [
+        "firtool"
+      ],
+      "capabilities": [
+        "hdl",
+        "rtl",
+        "hardware-ir",
+        "optimization",
+        "hardware-generation"
+      ],
+      "role": "Hardware compiler IR for typed circuit transforms and RTL emission.",
+      "aliases": [
+        "firrtl",
+        "FIRRTL"
+      ],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 47,
+      "id": "ref-47",
+      "name": "GLSL",
+      "category": "gpu-compute",
+      "integration_layer": "gpu-toolchain",
+      "toolchains": [
+        "glslangValidator",
+        "glslc"
+      ],
+      "capabilities": [
+        "gpu",
+        "shader",
+        "compute",
+        "parallel",
+        "vector",
+        "ir"
+      ],
+      "role": "Shader-stage compilation and GPU compute entry points.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 48,
+      "id": "ref-48",
+      "name": "HLSL",
+      "category": "gpu-compute",
+      "integration_layer": "gpu-toolchain",
+      "toolchains": [
+        "dxc",
+        "fxc"
+      ],
+      "capabilities": [
+        "gpu",
+        "shader",
+        "compute",
+        "parallel",
+        "vector",
+        "ir"
+      ],
+      "role": "DirectX shader and compute pipeline interoperability.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 49,
+      "id": "ref-49",
+      "name": "SPIR-V Assembly",
+      "category": "compiler-ir",
+      "integration_layer": "gpu-ir",
+      "toolchains": [
+        "spirv-as",
+        "spirv-val"
+      ],
+      "capabilities": [
+        "gpu",
+        "shader",
+        "compute",
+        "ir",
+        "bytecode",
+        "verification"
+      ],
+      "role": "Explicit GPU intermediate representation assembly and validation.",
+      "aliases": [
+        "SPIR-V"
+      ],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 50,
+      "id": "ref-50",
+      "name": "CUDA C++",
+      "category": "gpu-compute",
+      "integration_layer": "gpu-toolchain",
+      "toolchains": [
+        "nvcc"
+      ],
+      "capabilities": [
+        "gpu",
+        "compute",
+        "parallel",
+        "vector",
+        "native",
+        "ffi"
+      ],
+      "role": "NVIDIA GPU kernels, launch geometry and device memory boundaries.",
+      "aliases": [
+        "CUDA"
+      ],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 51,
+      "id": "ref-51",
+      "name": "PTX",
+      "category": "gpu-compute",
+      "integration_layer": "gpu-ir",
+      "toolchains": [
+        "ptxas",
+        "nvdisasm"
+      ],
+      "capabilities": [
+        "gpu",
+        "compute",
+        "parallel",
+        "ir",
+        "machine-code",
+        "register-model"
+      ],
+      "role": "Virtual GPU ISA, register allocation and device code generation.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 52,
+      "id": "ref-52",
+      "name": "OpenCL C",
+      "category": "gpu-compute",
+      "integration_layer": "gpu-toolchain",
+      "toolchains": [
+        "clang",
+        "clspv",
+        "ocloc"
+      ],
+      "capabilities": [
+        "gpu",
+        "compute",
+        "parallel",
+        "vector",
+        "c-abi"
+      ],
+      "role": "Portable heterogeneous compute kernels and device capability checks.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 53,
+      "id": "ref-53",
+      "name": "Metal Shading Language",
+      "category": "gpu-compute",
+      "integration_layer": "gpu-toolchain",
+      "toolchains": [
+        "xcrun"
+      ],
+      "capabilities": [
+        "gpu",
+        "shader",
+        "compute",
+        "parallel",
+        "vector",
+        "apple-platform"
+      ],
+      "role": "Apple GPU shader and compute integration through the Metal toolchain.",
+      "aliases": [
+        "MSL",
+        "Metal"
+      ],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 54,
+      "id": "ref-54",
+      "name": "WGSL",
+      "category": "gpu-compute",
+      "integration_layer": "gpu-toolchain",
+      "toolchains": [
+        "naga",
+        "tint"
+      ],
+      "capabilities": [
+        "gpu",
+        "shader",
+        "compute",
+        "parallel",
+        "vector",
+        "wasm",
+        "verification"
+      ],
+      "role": "WebGPU shader validation and browser GPU host boundary.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 55,
+      "id": "ref-55",
+      "name": "ISPC",
+      "category": "gpu-compute",
+      "integration_layer": "cpu-vector-toolchain",
+      "toolchains": [
+        "ispc"
+      ],
+      "capabilities": [
+        "native",
+        "simd",
+        "vector",
+        "parallel",
+        "compute"
+      ],
+      "role": "CPU SPMD and SIMD code generation with target fallbacks.",
+      "aliases": [
+        "ISPC"
+      ],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 56,
+      "id": "ref-56",
+      "name": "Chapel",
+      "category": "systems-language",
+      "integration_layer": "parallel-frontend",
+      "toolchains": [
+        "chpl"
+      ],
+      "capabilities": [
+        "native",
+        "parallel",
+        "concurrency",
+        "distributed",
+        "static-types"
+      ],
+      "role": "Parallel and distributed task/data locality reference model.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 57,
+      "id": "ref-57",
+      "name": "Brainfuck",
+      "category": "esoteric",
+      "integration_layer": "conformance-vm",
+      "toolchains": [
+        "bf",
+        "brainfuck"
+      ],
+      "capabilities": [
+        "esoteric",
+        "minimal-vm",
+        "turing-complete",
+        "conformance"
+      ],
+      "role": "Minimal tape-machine semantics for interpreter conformance tests.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 58,
+      "id": "ref-58",
+      "name": "FALSE",
+      "category": "esoteric",
+      "integration_layer": "conformance-vm",
+      "toolchains": [],
+      "capabilities": [
+        "esoteric",
+        "stack-machine",
+        "minimal-vm",
+        "conformance"
+      ],
+      "role": "Compact stack-machine semantics as an interpreter conformance fixture.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 59,
+      "id": "ref-59",
+      "name": "Befunge-98",
+      "category": "esoteric",
+      "integration_layer": "conformance-vm",
+      "toolchains": [
+        "befunge"
+      ],
+      "capabilities": [
+        "esoteric",
+        "stack-machine",
+        "two-dimensional-control",
+        "conformance"
+      ],
+      "role": "Instruction-pointer routing and stack execution test fixture.",
+      "aliases": [
+        "Befunge",
+        "Befunge-98"
+      ],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 60,
+      "id": "ref-60",
+      "name": "Whitespace",
+      "category": "esoteric",
+      "integration_layer": "conformance-vm",
+      "toolchains": [],
+      "capabilities": [
+        "esoteric",
+        "stack-machine",
+        "minimal-vm",
+        "conformance"
+      ],
+      "role": "Whitespace-tokenized instruction semantics for lexer/parser stress tests.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 61,
+      "id": "ref-61",
+      "name": "Malbolge",
+      "category": "esoteric",
+      "integration_layer": "conformance-vm",
+      "toolchains": [],
+      "capabilities": [
+        "esoteric",
+        "minimal-vm",
+        "self-modifying",
+        "ternary",
+        "conformance"
+      ],
+      "role": "Self-modifying ternary-machine semantics for hostile-input tests.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 62,
+      "id": "ref-62",
+      "name": "Piet",
+      "category": "esoteric",
+      "integration_layer": "visual-vm",
+      "toolchains": [
+        "npiet"
+      ],
+      "capabilities": [
+        "esoteric",
+        "visual",
+        "stack-machine",
+        "image-program",
+        "conformance"
+      ],
+      "role": "Image-encoded control flow and color-transition execution fixture.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 63,
+      "id": "ref-63",
+      "name": "Ook!",
+      "category": "esoteric",
+      "integration_layer": "conformance-vm",
+      "toolchains": [],
+      "capabilities": [
+        "esoteric",
+        "minimal-vm",
+        "tape-machine",
+        "conformance"
+      ],
+      "role": "Alternate textual encoding of Brainfuck-style tape instructions.",
+      "aliases": [
+        "Ook"
+      ],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 64,
+      "id": "ref-64",
+      "name": "HQ9+",
+      "category": "esoteric",
+      "integration_layer": "conformance-vm",
+      "toolchains": [],
+      "capabilities": [
+        "esoteric",
+        "minimal-vm",
+        "fixed-command",
+        "conformance"
+      ],
+      "role": "Tiny fixed-command interpreter fixture, not a general backend.",
+      "aliases": [],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 65,
+      "id": "ref-65",
+      "name": "Subleq",
+      "category": "esoteric",
+      "integration_layer": "oisc-vm",
+      "toolchains": [],
+      "capabilities": [
+        "esoteric",
+        "one-instruction",
+        "minimal-vm",
+        "machine-word",
+        "conformance"
+      ],
+      "role": "One-instruction machine semantics and branch-condition verification.",
+      "aliases": [
+        "OISC"
+      ],
+      "adapter_state": "catalogued-only"
+    },
+    {
+      "index": 66,
+      "id": "ref-66",
+      "name": "Forth-83 / CamelForth",
+      "category": "vm-language",
+      "integration_layer": "embedded-stack-vm",
+      "toolchains": [
+        "gforth"
+      ],
+      "capabilities": [
+        "vm",
+        "stack-machine",
+        "concatenative",
+        "embedded",
+        "bare-metal",
+        "no-runtime"
+      ],
+      "role": "Small-footprint embedded Forth and threaded-code runtime reference.",
+      "aliases": [
+        "Forth-83",
+        "CamelForth"
+      ],
+      "adapter_state": "catalogued-only"
+    }
+  ]
+}
