@@ -24,8 +24,7 @@ class EmbeddedPytylikiRuntimeTests(unittest.TestCase):
         make embedded := pytyliki_embedded_profiles("/absolute/path/libpytyliki_ffi.so")
         emit size(embedded)
         emit embedded[0]["id"]
-        make parts := {"text_bytes": 1024, "rodata_bytes": 256, "data_bytes": 128, "bss_bytes": 512, "noinit_bytes": 64, "stack_reserve_bytes": 2048}
-        make report := pytyliki_embedded_budget("cortex-m4-reference", parts, "/absolute/path/libpytyliki_ffi.so")
+        make report := pytyliki_embedded_budget("cortex-m4-reference", 1024, 256, 128, 512, 64, 2048, "/absolute/path/libpytyliki_ffi.so")
         emit report["flash_used_bytes"]
         emit report["sram_fits"]
         """
@@ -41,12 +40,12 @@ class EmbeddedPytylikiRuntimeTests(unittest.TestCase):
         with self.assertRaisesRegex(ReaperRuntimeError, "native FFI is disabled"):
             Interpreter(output=lambda _: None).run(source)
 
-    def test_native_budget_builtin_requires_a_sections_map(self) -> None:
+    def test_native_budget_builtin_validates_section_arguments(self) -> None:
         source = (
-            'emit pytyliki_embedded_budget("cortex-m4-reference", 12, '
+            'emit pytyliki_embedded_budget("cortex-m4-reference", "bad", 0, 0, 0, 0, 0, '
             '"/absolute/path/libpytyliki_ffi.so")'
         )
-        with self.assertRaisesRegex(ReaperRuntimeError, "sections map"):
+        with self.assertRaisesRegex(ReaperRuntimeError, "integer"):
             Interpreter(output=lambda _: None, allow_native_ffi=True).run(source)
 
 
