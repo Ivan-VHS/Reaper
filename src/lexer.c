@@ -1,4 +1,5 @@
 #include "reaper/lexer.h"
+#include "reaper/glyphs.h"
 #include <ctype.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -39,7 +40,9 @@ int reaper_lex(const char *source,ReaperTokenArray *out,ReaperLexError *error){
   }
   if(isdigit(c)){const char *s=p;size_t sc=col;while(isdigit((unsigned char)*p)){++p;++col;}if(*p=='.'&&isdigit((unsigned char)p[1])){++p;++col;while(isdigit((unsigned char)*p)){++p;++col;}}if(!append_token(out,REAPER_TOK_NUMBER,s,(size_t)(p-s),line,sc))goto oom;continue;}
   if(ident_start(c)){const char *s=p;size_t sc=col;while(ident_more((unsigned char)*p)){++p;++col;}size_t n=(size_t)(p-s);char *w=malloc(n+1);if(!w)goto oom;memcpy(w,s,n);w[n]='\0';ReaperTokenKind k=is_keyword(w)?REAPER_TOK_KEYWORD:REAPER_TOK_IDENTIFIER;free(w);if(!append_token(out,k,s,n,line,sc))goto oom;continue;}
-  size_t sc=col;if(p[1]&&is_pair_operator(p)){if(!append_token(out,REAPER_TOK_OPERATOR,p,2,line,sc))goto oom;p+=2;col+=2;continue;}
+  size_t sc=col;size_t glyph_length=0;const char *glyph=reaper_glyph_match(p,&glyph_length);
+  if(glyph&&glyph_length){if(!append_token(out,REAPER_TOK_GLYPH,p,glyph_length,line,sc))goto oom;p+=glyph_length;col+=glyph_length;continue;}
+  if(p[1]&&is_pair_operator(p)){if(!append_token(out,REAPER_TOK_OPERATOR,p,2,line,sc))goto oom;p+=2;col+=2;continue;}
   if(one_op((char)c)){ReaperTokenKind k=strchr("(){}[],;.",(char)c)?REAPER_TOK_PUNCTUATION:REAPER_TOK_OPERATOR;if(!append_token(out,k,p,1,line,sc))goto oom;++p;++col;continue;}
   reaper_tokens_free(out);return fail(error,line,col,"unexpected character");
  }
@@ -47,4 +50,4 @@ int reaper_lex(const char *source,ReaperTokenArray *out,ReaperLexError *error){
 oom: reaper_tokens_free(out);return fail(error,line,col,"out of memory while tokenizing source");
 }
 void reaper_tokens_free(ReaperTokenArray *t){if(!t)return;for(size_t i=0;i<t->length;++i)free(t->items[i].text);free(t->items);memset(t,0,sizeof *t);}
-const char *reaper_token_kind_name(ReaperTokenKind k){switch(k){case REAPER_TOK_EOF:return "EOF";case REAPER_TOK_NEWLINE:return "NEWLINE";case REAPER_TOK_IDENTIFIER:return "IDENT";case REAPER_TOK_KEYWORD:return "KEYWORD";case REAPER_TOK_NUMBER:return "NUMBER";case REAPER_TOK_STRING:return "STRING";case REAPER_TOK_OPERATOR:return "OPERATOR";case REAPER_TOK_PUNCTUATION:return "PUNCTUATION";default:return "UNKNOWN";}}
+const char *reaper_token_kind_name(ReaperTokenKind k){switch(k){case REAPER_TOK_EOF:return "EOF";case REAPER_TOK_NEWLINE:return "NEWLINE";case REAPER_TOK_IDENTIFIER:return "IDENT";case REAPER_TOK_KEYWORD:return "KEYWORD";case REAPER_TOK_NUMBER:return "NUMBER";case REAPER_TOK_STRING:return "STRING";case REAPER_TOK_OPERATOR:return "OPERATOR";case REAPER_TOK_PUNCTUATION:return "PUNCTUATION";case REAPER_TOK_GLYPH:return "GLYPH";default:return "UNKNOWN";}}
