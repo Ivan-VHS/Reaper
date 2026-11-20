@@ -278,10 +278,10 @@ def _structural(source: str) -> tuple[tuple[UASTNode, ...], list[dict[str, Any]]
     token_re = re.compile(r"//[^\n]*|/\*.*?\*/|\#[^\n]*|--[^\n]*|\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'|[(){}\[\]]", re.S)
     cursor = 0
     for match in token_re.finditer(source):
-        line = source.count("\\n", cursor, match.start()) + 1
+        line = source.count("\n", cursor, match.start()) + 1
         cursor = match.end()
         value = match.group()
-        if value.startswith(("//", "/*", "#", "--", "\\\"", "'")):
+        if value.startswith(("//", "/*", "#", "--", chr(34), "'")):
             continue
         if value in "({[":
             if len(stack) < MAX_NODES:
@@ -309,7 +309,7 @@ def _structural(source: str) -> tuple[tuple[UASTNode, ...], list[dict[str, Any]]
             nodes.append(UASTNode("Statement", None, line_no, line_no, .55, {"adapter": "structural-heuristic"}))
     if len(nodes) < MAX_NODES:
         for line_no, line in enumerate(source.splitlines(), 1):
-            for match in re.finditer(r"\\b([A-Za-z_]\\w*)\\s*\\(", line):
+            for match in re.finditer(r"\b([A-Za-z_]\w*)\s*\(", line):
                 if len(nodes) >= MAX_NODES:
                     break
                 if match.group(1) not in {"if", "for", "while", "switch", "match", "catch", "return", "sizeof"}:
