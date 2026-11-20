@@ -49,6 +49,13 @@ typedef struct {
 
 /* Verify a topologically ordered, immutable IR module. Returns 1 on success. */
 int reaper_ir_verify(const ReaperIrModule *module, ReaperIrError *error);
+/* Execute the verified, pure i64 IR subset.
+ * values is caller-owned scratch storage with one slot per IR node.
+ * Returns 1 on success, 0 on invalid IR, capacity, division or overflow.
+ * The result output is written only after the final RETURN succeeds. */
+int reaper_ir_execute_i64(const ReaperIrModule *module, int64_t *values,
+                          size_t value_capacity, int64_t *result,
+                          ReaperIrError *error);
 const char *reaper_ir_type_name(ReaperIrType type);
 const char *reaper_ir_opcode_name(ReaperIrOpcode opcode);
 
