@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import json
 import sys
 import time
 from pathlib import Path
@@ -16,6 +17,7 @@ from .runtime import Interpreter
 from .parser import parse
 from .systems import format_tracks
 from .systems_languages import main as systems_languages_main
+from .glyphs import GLYPHS
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -31,6 +33,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--repl", action="store_true", help="start the interactive Reaper prompt")
     parser.add_argument("--json", action="store_true", help="emit the run result and diagnostics as JSON")
     parser.add_argument("--profile", action="store_true", help="report elapsed time and interpreter step count")
+    parser.add_argument("--glyphs", action="store_true", help="list the 666 punctuation-only glyph operators")
+    parser.add_argument("--glyphs-json", action="store_true", help="emit the glyph registry as JSON")
     parser.add_argument("--systems", action="store_true", help="list the 20 engineering system contracts")
     parser.add_argument("--systems-languages", action="store_true", help="list the 66 systems-language capability profiles")
     parser.add_argument("--language-profile", choices=("pytyliki", "reaper", "oplague"), help="rank systems languages for a project profile")
@@ -50,6 +54,22 @@ def main(argv: list[str] | None = None) -> int:
         if args.json:
             parser.error("--repl does not support --json")
         return _repl()
+    if args.glyphs or args.glyphs_json:
+        if args.source or args.audit_log or args.verify_audit_log:
+            parser.error("--glyphs cannot be combined with a source or audit-log arguments")
+        entries = [
+            {"index": item.index, "token": item.token, "category": item.category,
+             "operation": item.operation, "description": item.description,
+             "implemented": item.implemented}
+            for item in GLYPHS
+        ]
+        if args.glyphs_json:
+            print(json.dumps(entries, ensure_ascii=False, indent=2))
+        else:
+            for item in entries:
+                status = "implemented" if item["implemented"] else "reserved"
+                print(f'{item["index"]:03d}  {item["token"]:<10}  {status:<11}  {item["description"]}')
+        return 0
     if args.verify_audit_log:
         if args.source or args.audit_log:
             parser.error("--verify-audit-log cannot be combined with a source or --audit-log")
