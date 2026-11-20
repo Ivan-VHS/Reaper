@@ -31,7 +31,7 @@ static void test_most_russian_vocabulary(void){
  assert(has_canonical(&t,"when"));assert(has_canonical(&t,"otherwise"));assert(has_canonical(&t,"each"));assert(has_canonical(&t,"in"));assert(has_canonical(&t,"emit"));
  assert(has_canonical(&t,"loop"));assert(has_canonical(&t,"while"));assert(has_canonical(&t,"true"));assert(has_canonical(&t,"false"));assert(has_canonical(&t,"nothing"));
  assert(has_canonical(&t,"and"));assert(has_canonical(&t,"or"));assert(has_canonical(&t,"not"));assert(has_canonical(&t,"import"));assert(has_canonical(&t,"export"));assert(has_canonical(&t,"as"));
- assert(has(&t,"удвоить",REAPER_TOK_IDENTIFIER));assert(has(&t,"значение",REAPER_TOK_IDENTIFIER));assert(has(&t,"модуль",REAPER_TOK_IDENTIFIER));
+ assert(has(&t,"удвоить",REAPER_TOK_IDENTIFIER));assert(has(&t,"значение",REAPER_TOK_IDENTIFIER));assert(has(&t,"модуль",REAPER_TOK_KEYWORD));
  reaper_tokens_free(&t);
 }
 
