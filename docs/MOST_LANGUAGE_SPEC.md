@@ -2,7 +2,7 @@
 
 **Status:** MOST is specified as the Russian-first source language frontend; the native C17 lexer is being extended with Russian reserved words. The complete Russian grammar, resolver, type checker and backend are not yet implemented.
 
-MOST is the systems-and-web language track of REAPER. It targets deterministic native code and WebAssembly from one statically typed source language. The C17 implementation is the bootstrap host; it is not the language's permanent runtime requirement.
+MOST is the Russian-first systems-and-web programming language track associated with REAPER. It targets deterministic native code and WebAssembly from one statically typed source language. The C17 implementation is the bootstrap host; it is not the language's permanent runtime requirement.
 
 ## Design invariants
 
