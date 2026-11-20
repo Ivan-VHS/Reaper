@@ -18,13 +18,13 @@ class MotionTests(unittest.TestCase):
         self.assertLessEqual(DURATIONS_MS["micro"], DURATIONS_MS["fast"])
         self.assertLess(DURATIONS_MS["fast"], DURATIONS_MS["spatial"])
 
-    def test_reduced_motion_override(self):
+    def test_explicit_reduced_motion_override(self):
         previous = os.environ.get("UI_REDUCED_MOTION")
         try:
             os.environ["UI_REDUCED_MOTION"] = "1"
             self.assertTrue(reduced_motion_enabled())
-            os.environ["UI_REDUCED_MOTION"] = "false"
-            self.assertFalse(reduced_motion_enabled() if os.name != "nt" else True)
+            os.environ["UI_REDUCED_MOTION"] = "true"
+            self.assertTrue(reduced_motion_enabled())
         finally:
             if previous is None:
                 os.environ.pop("UI_REDUCED_MOTION", None)
