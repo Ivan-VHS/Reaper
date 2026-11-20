@@ -132,3 +132,8 @@ Python 3.10+ is required. The interpreter uses only the Python standard library.
 Implemented in 0.1: lexer, parser, tree-walk interpreter, lexical closures, lists, functions, flow composition, console I/O, source diagnostics, an execution-step budget, call-depth limits, collection-item limits and text-concatenation limits.
 
 Not implemented yet: static type checking, algebraic effect handlers, semantic-graph storage, native compilation, GPU execution, distributed scheduling, formal verification, package registry, or self-hosting compiler. These are roadmap goals, not current guarantees.
+
+
+## Orthogonal metric built-ins
+
+Reaper also provides pure numerical helpers: metric_dot, vector_norm, euclidean_distance, is_orthogonal, quadratic_form, law_of_cosines, de_gua_area, parseval_energy, unit_circle_residual, spherical_hypotenuse, hyperbolic_hypotenuse, minkowski_interval, combine_variances and reciprocal_altitude. All vector arguments are lists of finite numbers. The vector and matrix limits, dimensional checks, geometric domains and statistical assumptions are documented in docs/ORTHOGONAL_METRIC_ENGINE.md. These helpers do not grant host I/O or hardware capabilities.
