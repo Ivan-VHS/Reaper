@@ -20,6 +20,8 @@ emit "answer = " ++ text(answer)
 Reaper exposes a capability catalogue covering memory ownership, linear resources, regions, compile-time programming, C ABI/FFI, concurrency, formal verification, embedded targets, SIMD and GPU/shader toolchains. The duplicate Clay and Nimrod/early-Nim source entries remain explicit aliases. Compiler discovery is separate from native backend implementation.
 
 ```bash
+reaper --glyphs
+reaper --glyphs-json
 reaper --systems-languages
 reaper --systems-languages --language-profile reaper
 reaper --available-languages --language-profile reaper
@@ -32,6 +34,7 @@ Toolchain checks are PATH-only: they do not run or install compilers. The matrix
 
 - **Python reference runtime:** Python 3.10+, tree-walking interpreter, lexer, parser, runtime, CLI and standard-library tests.
 - **Language core:** Unicode identifiers, comments, strings, functions and closures, recursion, immutable `make`, mutable `vary` with explicit `change`, conditionals, iteration and flow composition.
+- **Punctuation glyph registry:** 666 unique digit-free operator tokens; first 120 are callable memory/buffer/arena primitives in the Python runtime, with maximal-munch lexing in Python and C17. Remaining entries are explicitly reserved.
 - **Built-ins and diagnostics:** higher-order collection operations (map/filter/fold/reduce), stable key sorting, chunking/slicing/flattening/de-duplication, UTF-8 string utilities, source-aware errors and bounded execution.
 - **Metric standard library:** L1/L2/L-infinity norms, normalization, Euclidean/Manhattan/Chebyshev distances, cosine similarity, angles, projections and centroids, alongside quadratic forms and non-Euclidean models.
 - **CLI:** --lint, persistent line-oriented --repl, structured --json output and --profile execution metrics.
