@@ -1,0 +1,173 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Ivan-VHS/OPlague/blob/main/schemas/oplage.device-snapshot.v1.schema.json",
+  "title": "OPlague device snapshot v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "captured_utc",
+    "source",
+    "summary",
+    "metrics",
+    "devices",
+    "packages",
+    "snapshot_sha256"
+  ],
+  "properties": {
+    "schema": {
+      "const": "oplage.device-snapshot.v1"
+    },
+    "captured_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "provider",
+        "mode"
+      ],
+      "properties": {
+        "provider": {
+          "type": "string"
+        },
+        "mode": {
+          "const": "read_only"
+        }
+      },
+      "additionalProperties": false
+    },
+    "identity_protection": {
+      "type": "object",
+      "required": [
+        "algorithm",
+        "key_scope"
+      ],
+      "properties": {
+        "algorithm": {
+          "const": "HMAC-SHA-256"
+        },
+        "key_scope": {
+          "enum": [
+            "snapshot_ephemeral",
+            "caller_managed"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "total_devices",
+        "ok_devices",
+        "problem_devices",
+        "other_status_devices",
+        "devices_with_class",
+        "devices_with_identity",
+        "audited_packages",
+        "valid_packages"
+      ],
+      "properties": {
+        "total_devices": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ok_devices": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "problem_devices": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "other_status_devices": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "devices_with_class": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "devices_with_identity": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "audited_packages": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "valid_packages": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "metrics": {
+      "type": "object",
+      "minProperties": 6,
+      "maxProperties": 128,
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      }
+    },
+    "devices": {
+      "type": "array",
+      "maxItems": 10000,
+      "items": {
+        "type": "object",
+        "required": [
+          "identity_sha256",
+          "friendly_name",
+          "class",
+          "status",
+          "problem_code",
+          "problem_reported"
+        ],
+        "properties": {
+          "identity_sha256": {
+            "type": "string",
+            "pattern": "^(?:[0-9a-f]{64})?$"
+          },
+          "friendly_name": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "class": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "status": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "problem_code": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "problem_reported": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "packages": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {
+        "type": "object"
+      }
+    },
+    "snapshot_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "additionalProperties": false
+}
