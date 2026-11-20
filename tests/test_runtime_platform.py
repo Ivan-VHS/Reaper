@@ -159,7 +159,7 @@ emit total
 class DebuggerTests(unittest.TestCase):
     def test_breakpoint_snapshot_contains_variables_and_call_stack(self) -> None:
         snapshots = []
-        debugger = RuntimeDebugger({3}, snapshots.append)
+        debugger = RuntimeDebugger({2}, snapshots.append)
         source = (
             "craft double(value) {\n"
             "    yield value * 2\n"
@@ -169,8 +169,9 @@ class DebuggerTests(unittest.TestCase):
         )
         Interpreter(output=lambda _line: None, debugger=debugger).run(source)
         self.assertEqual(len(snapshots), 1)
-        self.assertEqual(snapshots[0].line, 3)
+        self.assertEqual(snapshots[0].line, 2)
         self.assertEqual(snapshots[0].variables["start"], 10)
+        self.assertEqual(snapshots[0].call_stack, ["double"])
 
 
 if __name__ == "__main__":
