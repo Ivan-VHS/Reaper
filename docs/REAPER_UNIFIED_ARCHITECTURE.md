@@ -27,7 +27,7 @@ The native C17 implementation is the destination implementation. The Python 0.1 
 MOST is the Russian-language semantic frontend and systems/web language track associated with REAPER. It is not a second runtime, memory model or independent backend.
 
 - REAPER frontend: canonical REAPER syntax and AST.
-- MOST frontend: Russian source vocabulary, intent AST, scoped domain dictionaries and ambiguity diagnostics.
+- MOST frontend: Russian-first source vocabulary, target Russian grammar, intent AST, explicit inflection/synonym dictionaries and ambiguity diagnostics. The 66-rule design mapping is maintained in docs/MOST_RUSSIAN_66_RULES.md.
 - Shared semantic core: name resolution, types, effects, ownership and contracts.
 - Shared Canonical IR: both frontends lower to equivalent typed IR.
 - Backends: native targets and WASM consume the same verified IR.
