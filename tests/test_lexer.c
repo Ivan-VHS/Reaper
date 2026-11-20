@@ -19,7 +19,7 @@ static void test_escape(void){ReaperTokenArray t={0};ReaperLexError e={{0},0,0};
 static void test_bad_escape(void){ReaperTokenArray t={0};ReaperLexError e={{0},0,0};assert(!reaper_lex("emit \"bad\\q\"\n",&t,&e));assert(strstr(e.message,"escape"));assert(t.length==0);}
 static void test_unterminated(void){ReaperTokenArray t={0};ReaperLexError e={{0},0,0};assert(!reaper_lex("emit \"unfinished",&t,&e));assert(e.line==1&&e.column==6);}
 static void test_most_russian_vocabulary(void){
- const char *s="функция удвоить(значение) { вернуть значение * 2 }\nпусть число := истина\nпеременная сумма := 0\nизменить сумма := сумма + 1\nдля элемент в range(1, 4) { если не ложь и элемент > 0 { вывести сумма } иначе { вывести ничего } }\nцикл пока сумма < 5 { изменить сумма := сумма + 1 }\nимпорт модуль как имя\nэкспорт имя\n";
+ const char *s="функция удвоить(значение) { вернуть значение * 2 }\nпусть число := истина\nпеременная сумма := 0\nизменить сумма := сумма + 1\nдля элемент в range(1, 4) { если не ложь и элемент > 0 или ложь { вывести сумма } иначе { вывести ничего } }\nцикл пока сумма < 5 { изменить сумма := сумма + 1 }\nимпорт модуль как имя\nэкспорт имя\n";
  ReaperTokenArray t={0};ReaperLexError e={{0},0,0};assert(reaper_lex(s,&t,&e));
  assert(has(&t,"функция",REAPER_TOK_KEYWORD));assert(has(&t,"вернуть",REAPER_TOK_KEYWORD));assert(has(&t,"пусть",REAPER_TOK_KEYWORD));
  assert(has(&t,"переменная",REAPER_TOK_KEYWORD));assert(has(&t,"изменить",REAPER_TOK_KEYWORD));assert(has(&t,"вывести",REAPER_TOK_KEYWORD));
