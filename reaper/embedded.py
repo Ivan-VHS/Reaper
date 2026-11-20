@@ -265,7 +265,7 @@ def memory_budget(profile: McuProfile, sections: dict[str, int]) -> dict[str, An
     return {
         "flash_used": flash_used,
         "flash_total": profile.flash.size,
-        "flash_percent": round(flash_used * 100.0 / profile.flash.size, 2),
+        "flash_percent": round(flash_used * 100.0 / profile.flash.size, 3),
         "flash_ok": flash_used <= profile.flash.size,
         "sram_static_used": data + bss,
         "stack_reserved": profile.stack_bytes,
