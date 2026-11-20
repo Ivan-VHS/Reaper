@@ -19,6 +19,7 @@ from reaper.parser import parse
 from reaper.runtime import Interpreter
 from reaper.debugger import DebuggerStopped, RuntimeDebugger
 from reaper.ui_motion import MotionController
+from reaper.ui_theme import apply_ui_theme
 
 STARTER = '''craft double(value) {
     yield value * 2
@@ -40,6 +41,7 @@ class ReaperStudio(tk.Tk):
         self.debugger: RuntimeDebugger | None = None
         self._debug_wait = False
         self._debug_signal = tk.BooleanVar(value=False)
+        self._theme_mode = tk.StringVar(value="system")
 
         self._build_menu()
         toolbar = ttk.Frame(self, padding=(10, 8))
@@ -97,6 +99,7 @@ class ReaperStudio(tk.Tk):
         self.bind_all("<F9>", lambda _event: self.toggle_breakpoint())
         self._motion = MotionController(self)
         self._motion.fade_in()
+        self.apply_visual_theme()
 
     def _build_menu(self) -> None:
         menu = tk.Menu(self)
@@ -117,7 +120,18 @@ class ReaperStudio(tk.Tk):
         embedded_menu.add_command(label="Inspect MCU profile…", command=self.embedded_inspect_project)
         embedded_menu.add_command(label="Build firmware…", command=self.embedded_build)
         menu.add_cascade(label="Embedded C", menu=embedded_menu)
+        view_menu = tk.Menu(menu, tearoff=False)
+        for mode, label in (("system", "System"), ("light", "Light"), ("dark", "Dark")):
+            view_menu.add_radiobutton(
+                label=label, variable=self._theme_mode, value=mode,
+                command=self.apply_visual_theme,
+            )
+        menu.add_cascade(label="View", menu=view_menu)
         self.configure(menu=menu)
+
+    def apply_visual_theme(self) -> None:
+        """Apply System, Light or Dark colors without changing editor behavior."""
+        apply_ui_theme(self, self._theme_mode.get())
 
     def embedded_new_project(self) -> None:
         directory = filedialog.askdirectory(parent=self, title="Create Embedded C project")
