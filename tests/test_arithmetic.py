@@ -80,7 +80,7 @@ class ArithmeticOperationsTests(unittest.TestCase):
 
     def test_runtime_rejects_operation_errors_as_language_errors(self):
         with self.assertRaisesRegex(ReaperRuntimeError, "factor"):
-            Interpreter(output=lambda _line: None).run("emit factor(0)")
+            Interpreter(output=lambda _line: None).run("emit factorize(0)")
 
 
 if __name__ == "__main__":
