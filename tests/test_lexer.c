@@ -1,4 +1,6 @@
 #include "reaper/lexer.h"
+#include "reaper/glyphs.h"
+#include <ctype.h>
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -17,4 +19,11 @@ static void test_program(void){const char *s="make value := [1, 2] |> map(double
 static void test_escape(void){ReaperTokenArray t={0};ReaperLexError e={{0},0,0};assert(reaper_lex("emit \"a\\nb\"\n",&t,&e));assert(!strcmp(t.items[1].text,"a\nb"));reaper_tokens_free(&t);}
 static void test_bad_escape(void){ReaperTokenArray t={0};ReaperLexError e={{0},0,0};assert(!reaper_lex("emit \"bad\\q\"\n",&t,&e));assert(strstr(e.message,"escape"));assert(t.length==0);}
 static void test_unterminated(void){ReaperTokenArray t={0};ReaperLexError e={{0},0,0};assert(!reaper_lex("emit \"unfinished",&t,&e));assert(e.line==1&&e.column==6);}
-int main(void){test_program();test_escape();test_bad_escape();test_unterminated();test_most_surface();test_most_operator_family();puts("native lexer tests: 6 groups passed");return 0;}
+static void test_punctuation_glyphs(void){
+ assert(reaper_glyph_count()==666);
+ for(size_t i=0;i<reaper_glyph_count();++i){const char *g=reaper_glyph_at(i);assert(g&&*g);for(const char *p=g;*p;++p)assert(!isdigit((unsigned char)*p));}
+ const char *s=";;:_- ::;";ReaperTokenArray t={0};ReaperLexError e={{0},0,0};assert(reaper_lex(s,&t,&e));
+ assert(t.length==3);assert(t.items[0].kind==REAPER_TOK_GLYPH&&!strcmp(t.items[0].text,";;:_-"));
+ assert(t.items[1].kind==REAPER_TOK_GLYPH&&!strcmp(t.items[1].text,"::;"));reaper_tokens_free(&t);
+}
+int main(void){test_punctuation_glyphs();test_program();test_escape();test_bad_escape();test_unterminated();test_most_surface();test_most_operator_family();puts("native lexer tests: 6 groups passed");return 0;}
