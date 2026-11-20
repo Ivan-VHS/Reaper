@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any, Callable
 
 from .errors import ExecutionLimitError, ReaperRuntimeError
+from .governance import ConsentAuthority
 from .lexer import Token
 from .parser import Node, parse
 from .impact import catalog as impact_catalog, find_profile as impact_profile, rank_profiles as impact_rank, search_profiles as impact_search
@@ -91,6 +92,7 @@ class Interpreter:
         max_heap_bytes: int = 64 * 1024 * 1024,
         max_open_resources: int = 64,
         debugger: RuntimeDebugger | None = None,
+        consent_authority: ConsentAuthority | None = None,
     ) -> None:
         if (
             max_steps < 1
@@ -113,6 +115,7 @@ class Interpreter:
         self.resources = ResourceManager(max_open=max_open_resources)
         self.module_loader = ModuleLoader(self)
         self.debugger = debugger
+        self.consent_authority = consent_authority
         self.call_stack: list[str] = []
         self._active_vm: Any = None
         self._current_environment: Environment | None = None
@@ -500,6 +503,27 @@ class Interpreter:
         register("token_catalog", lambda *group: token_catalog(group[0] if group else None), 0, 1)
         register("token_info", token_info, 1, 1)
         register("token_is_reserved", token_is_reserved, 1, 1)
+
+        def consent_check(token: Any, subject: Any, purpose: Any, scope: Any) -> bool:
+            if self.consent_authority is None:
+                raise ReaperRuntimeError(
+                    "consent_check requires a host-injected ConsentAuthority"
+                )
+            if not all(isinstance(value, str) for value in (subject, purpose, scope)):
+                raise TypeError("consent_check subject, purpose and scope must be text")
+            return self.consent_authority.verify(
+                token, subject=subject, purpose=purpose, scope=scope
+            )
+
+        def consent_revoke(token: Any) -> bool:
+            if self.consent_authority is None:
+                raise ReaperRuntimeError(
+                    "consent_revoke requires a host-injected ConsentAuthority"
+                )
+            return self.consent_authority.revoke(token)
+
+        register("consent_check", consent_check, 4, 4)
+        register("consent_revoke", consent_revoke, 1, 1)
 
         def script_directory() -> Path:
             if self.filename.startswith("<") and self.filename.endswith(">"):
