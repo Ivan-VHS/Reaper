@@ -1,6 +1,7 @@
 #include "reaper/lexer.h"
 #include "reaper/ast.h"
 #include "reaper/evolution.h"
+#include "reaper/token_catalog.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,14 +24,31 @@ static void usage(FILE *f) {
       "  --ast-json          Parse one expression and print deterministic AST JSON\n",REAPER_VERSION);
 }
 int main(int argc,char **argv) {
-    int dump=0,ast_json=0; const char *path=NULL;
+    int dump=0,ast_json=0,catalog_dump=0; const char *catalog_lookup=NULL; const char *path=NULL;
     for(int i=1;i<argc;++i) {
         if(strcmp(argv[i],"--version")==0){puts("Reaper " REAPER_VERSION " (C17 native core)");return 0;}
         if(strcmp(argv[i],"--evolution-status")==0){reaper_evolution_print_status();return 0;}
         if(strcmp(argv[i],"--tokens")==0){dump=1;continue;}
         if(strcmp(argv[i],"--ast-json")==0){ast_json=1;continue;}
+        if(strcmp(argv[i],"--catalog")==0){catalog_dump=1;continue;}
+        if(strcmp(argv[i],"--catalog-token")==0){if(i+1>=argc){usage(stderr);return 2;}catalog_lookup=argv[++i];continue;}
         if(argv[i][0]=='-'||(dump&&ast_json)){usage(stderr);return 2;}
         if(path){usage(stderr);return 2;} path=argv[i];
+    }
+    if(catalog_dump||catalog_lookup){
+        if(path||dump||ast_json||(catalog_dump&&catalog_lookup)){usage(stderr);return 2;}
+        if(!reaper_token_catalog_validate()){fprintf(stderr,"reaper-c: token catalogue integrity failure\\n");return 1;}
+        if(catalog_lookup){
+            const ReaperCatalogEntry *entry=reaper_token_catalog_lookup(catalog_lookup);
+            if(!entry){fprintf(stderr,"reaper-c: unknown catalogue token %s\\n",catalog_lookup);return 1;}
+            printf("%03zu\\t%s\\t%s\\t%s\\n",entry->ordinal,entry->lexeme,entry->group,entry->name);
+            return 0;
+        }
+        for(size_t i=0;i<reaper_token_catalog_count();++i){
+            const ReaperCatalogEntry *entry=reaper_token_catalog_at(i);
+            printf("%03zu\\t%s\\t%s\\t%s\\n",entry->ordinal,entry->lexeme,entry->group,entry->name);
+        }
+        return 0;
     }
     if(!path||(dump&&ast_json)){usage(stderr);return 2;}
     char *source=read_file(path);

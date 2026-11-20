@@ -15,6 +15,10 @@ make answer := numbers :: map(double) :: sum()
 emit "answer = " ++ text(answer)
 ```
 
+## 666-token symbolic catalogue
+
+Reaper includes a canonical 666-entry vocabulary of unique three-symbol lexemes, with no digits, over `: ; [ { ] } + = _ - *`. The Python and native C lexers recognize the reserved codes; inspect them with `reaper --catalog`, `--catalog-group memory` or `--catalog-token ':::'`. Reserved catalogue entries are not yet executable operations. See [the token catalogue](docs/TOKEN_CATALOG.md).
+
 ## 66-language systems capability matrix
 
 Reaper exposes a capability catalogue covering memory ownership, linear resources, regions, compile-time programming, C ABI/FFI, concurrency, formal verification, embedded targets, SIMD and GPU/shader toolchains. The duplicate Clay and Nimrod/early-Nim source entries remain explicit aliases. Compiler discovery is separate from native backend implementation.
