@@ -37,6 +37,7 @@ emit "answer = " ++ text(answer)
 - **Reaper Studio：** Windows 编辑器，支持打开/保存、检查、运行、断点、单步/继续/停止、变量查看和调用栈。
 - **Embedded C 与互操作：** 项目脚手架、MCU 配置检查、内存预算，以及连接可信库的可选 C ABI（包括 Pytyliki ABI v1）。
 - **扩展系统：** 本地 Polyglot；666 个保留词元；66 个语言/工具链配置；14 个架构配置；MOST 20×20 矩阵含 400 个已定义投影，并配有已实现的完整性验证器（投影并非 400 项可执行语言功能）。
+- **МОСТ：** REAPER 0.1 的精确俄语关键字别名。它复用同一 parser、AST 和 runtime；Python 参考实现执行有限子集，C17 词法分析器提供 REAPER 规范关键字名称。没有独立语法、形态分析器、类型系统或运行时。
 
 原生 C17 路线包含词法分析器、表达式解析器、自有 AST、经过检查的整数 IR 运算、有限 lowering、优化器测试和初始 CLI，**尚不是完整解释器**。自举 lexer/parser 仍处于分阶段 bootstrap。
 
@@ -76,7 +77,7 @@ ctest --test-dir build --output-on-failure
 
 ## 文档与下载
 
-[语言说明](LANGUAGE.md) · [运行时平台](docs/RUNTIME_PLATFORM.md) · [自举计划](docs/SELF_HOSTING_BOOTSTRAP.md) · [词元目录](docs/TOKEN_CATALOG.md) · [Embedded C](docs/EMBEDDED_C_WORKBENCH.md) · [MOST 矩阵](docs/MOST_400_COMBINATORIAL_MATRIX.md) · [工程标准](docs/UNIFIED_ENGINEERING_STANDARD.md)
+[语言说明](LANGUAGE.md) · [运行时平台](docs/RUNTIME_PLATFORM.md) · [自举计划](docs/SELF_HOSTING_BOOTSTRAP.md) · [词元目录](docs/TOKEN_CATALOG.md) · [Embedded C](docs/EMBEDDED_C_WORKBENCH.md) · [MOST 矩阵](docs/MOST_400_COMBINATORIAL_MATRIX.md) · [工程标准](docs/UNIFIED_ENGINEERING_STANDARD.md) · [МОСТ 别名规范](docs/MOST_LANGUAGE_SPEC.md) · [66 条俄语可读性规则](docs/MOST_RUSSIAN_66_RULES.md)
 
 [Windows 发布版](https://github.com/Ivan-VHS/Reaper/releases) · [桌面构建工作流](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml)
 
