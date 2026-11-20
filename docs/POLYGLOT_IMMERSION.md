@@ -40,7 +40,9 @@ reaper polyglot content add ./lesson-one.srt --kind dialogue --level A1 \
 reaper polyglot phrase add "Could you say that again?" \
   --translation "Не могли бы вы повторить?" \
   --context "A polite request when you did not catch a sentence" \
-  --pronunciation "kəd juː seɪ ðæt əˈɡen" --tag conversation
+  --pronunciation "kəd juː seɪ ðæt əˈɡen" \
+  --personal-example "Could you say that again a little more slowly?" \
+  --frequency-rank 420 --tag conversation
 
 # See today's balanced routine and available material
 reaper polyglot plan
@@ -66,7 +68,7 @@ Without --target, commands work when exactly one profile exists. If several lang
 
 1. Import a short item that is interesting and mostly understandable. Supported text inputs are UTF-8 .txt, .md, .srt and .vtt; subtitle timestamps and cue numbers are stripped.
 2. Add a small number of reusable phrases, including a translation and the original context. Attach pronunciation hints, source labels and tags where useful.
-3. Run reaper polyglot plan. A0–A2 profiles bias the schedule towards comprehensible listening/reading. B1–C2 profiles reserve more time for output and conversation. Pending reviews increase the review share, within a bounded limit.
+3. Run reaper polyglot plan. A0–A2 profiles bias the schedule towards comprehensible listening/reading. B1–C2 profiles reserve more time for output and conversation. Pending reviews increase the review share, within a bounded limit. The profile also carries a script family, a phonetic focus, tonal-language flag and optional romanization bridge. Re-run init for the same target language to adjust them (for example, switch the bridge off after native-script reading improves).
 4. Run reaper polyglot review. The native-language meaning is shown first; recall the target phrase aloud or in writing, reveal the answer, then grade recall from 0 to 5.
 5. Record speaking, writing, shadowing or conversation with practice or session. The score is a self-assessment, not an automatic language evaluation.
 6. Use suggest to choose imported material and report to check whether practice is regular.
@@ -79,7 +81,7 @@ A reviewed phrase contributes its tokens to the profile's known-term set. For ev
 
 - it is not a CEFR classifier, semantic understanding test or proof that the learner understands 80% of a text;
 - context, inflection, polysemy and cognates are not modelled;
-- Chinese/Japanese/Korean text currently receives a rough character-level estimate because morphological segmentation is not bundled;
+- Chinese/Japanese/Korean and Thai text currently receives a rough character-level estimate because morphological segmentation is not bundled;
 - the estimate improves as phrase cards are reviewed, but should be combined with the learner's own comprehension judgement.
 
 No text is silently translated or sent to an external service.
@@ -116,6 +118,19 @@ The first successful review is scheduled after one day, the next after three day
 | reaper polyglot export --output FILE | Export profile data as JSON |
 
 Use reaper polyglot COMMAND --help for command-specific options. The global --db and --target options go immediately after polyglot.
+
+## Script, phonetics and learning phases
+
+Language names and optional language codes select a starting script family. Use --script to override it when a language variant uses a different writing system. Tonal defaults are inferred for Mandarin/Chinese, Cantonese, Vietnamese, Thai and Lao; --tonal or --non-tonal can override that inference. The profile stores a phonetic-focus note and whether romanization is being used as a temporary bridge:
+
+~~~sh
+reaper polyglot init Japanese --native Russian --code ja --script auto --romanization-bridge on
+reaper polyglot init Mandarin --native Russian --code zh --tonal
+reaper polyglot init Serbian --native Russian --script latin --non-tonal
+reaper polyglot profile
+~~~
+
+Phrase cards accept --personal-example and --frequency-rank. Frequency rank is optional learner-supplied metadata, used to bring high-frequency cards forward; Reaper does not bundle or claim a universal frequency corpus. The report also shows a coarse exposure phase (setup, sound foundation, comprehensible input, guided output, authentic content, automation) derived from total logged practice minutes. These hour bands are planning heuristics, not proficiency tests or fluency promises.
 
 ## Current implementation boundaries
 

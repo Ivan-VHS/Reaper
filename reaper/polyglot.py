@@ -18,11 +18,28 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterable
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 CEFR_LEVELS = ("A0", "A1", "A2", "B1", "B2", "C1", "C2")
 CONTENT_KINDS = ("text", "dialogue", "story", "article", "audio", "video")
 SESSION_MODES = ("listening", "reading", "speaking", "writing", "shadowing", "conversation", "review")
-WORD_RE = re.compile(r"[^\W_]+(?:['’][^\W_]+)?", re.UNICODE)
+SCRIPT_FAMILIES = ("auto", "latin", "cyrillic", "arabic", "devanagari", "han", "japanese", "hangul", "thai", "other")
+LANGUAGE_SCRIPT_CODES = {
+    "zh": "han", "yue": "han", "ja": "japanese", "ko": "hangul",
+    "ar": "arabic", "fa": "arabic", "ur": "arabic",
+    "hi": "devanagari", "mr": "devanagari", "th": "thai", "lo": "thai",
+    "ru": "cyrillic", "uk": "cyrillic", "bg": "cyrillic",
+    "sr": "cyrillic", "mk": "cyrillic", "be": "cyrillic",
+}
+LANGUAGE_SCRIPT_NAMES = {
+    "chinese": "han", "mandarin": "han", "cantonese": "han", "中文": "han",
+    "japanese": "japanese", "日本語": "japanese", "korean": "hangul", "한국어": "hangul",
+    "arabic": "arabic", "persian": "arabic", "farsi": "arabic", "urdu": "arabic",
+    "hindi": "devanagari", "marathi": "devanagari", "thai": "thai", "lao": "thai",
+    "russian": "cyrillic", "ukrainian": "cyrillic", "bulgarian": "cyrillic",
+    "serbian": "cyrillic", "macedonian": "cyrillic", "belarusian": "cyrillic",
+}
+TONAL_LANGUAGE_CODES = {"zh", "yue", "vi", "th", "lo", "yo", "ha"}
+TONAL_LANGUAGE_NAMES = {"mandarin", "chinese", "cantonese", "vietnamese", "thai", "lao", "yoruba", "hausa"}
 CJK_RANGES = ((0x3400, 0x4DBF), (0x4E00, 0x9FFF), (0xF900, 0xFAFF),
               (0x3040, 0x30FF), (0x31F0, 0x31FF), (0xAC00, 0xD7AF))
 
@@ -45,29 +62,100 @@ def normalize_text(value: str) -> str:
     return unicodedata.normalize("NFKC", value).strip()
 
 
+def infer_script_family(language: str, language_code: str = "") -> str:
+    """Infer a practical writing-system default from a language code/name."""
+    code = language_code.strip().casefold().split("-")[0]
+    if code in LANGUAGE_SCRIPT_CODES:
+        return LANGUAGE_SCRIPT_CODES[code]
+    return LANGUAGE_SCRIPT_NAMES.get(normalize_text(language).casefold(), "latin")
+
+
+def infer_tonal_language(language: str, language_code: str = "") -> bool:
+    code = language_code.strip().casefold().split("-")[0]
+    return code in TONAL_LANGUAGE_CODES or normalize_text(language).casefold() in TONAL_LANGUAGE_NAMES
+
+
+def default_phonetic_focus(script_family: str, tonal_language: bool) -> str:
+    if tonal_language:
+        return "tone contours, syllable pairs, and minimal-pair listening"
+    return {
+        "japanese": "mora timing, pitch accent exposure, and kana-linked audio",
+        "han": "syllable pronunciation, tone awareness, and word-boundary listening",
+        "hangul": "batchim, sound changes, and connected-speech listening",
+        "arabic": "consonant contrasts, vowel length, and stress",
+        "devanagari": "aspiration, retroflex contrasts, and vowel length",
+        "cyrillic": "word stress, vowel reduction, and consonant softness",
+        "thai": "tone contours, vowel length, and final consonants",
+    }.get(script_family, "sound contrasts, stress, and connected speech")
+
+
+def script_learning_notes(profile: dict[str, Any]) -> list[str]:
+    script = profile.get("script_family", "latin")
+    notes = {
+        "japanese": ["Study kana alongside audio; add kanji through recurring words and phrases."],
+        "han": ["Attach pronunciation and tone information to each new spoken word or phrase."],
+        "hangul": ["Pair Hangul syllable blocks with natural audio; notice sound changes across word boundaries."],
+        "arabic": ["Use vowelled examples early, then gradually remove reading aids."],
+        "devanagari": ["Learn native script and sound together; use transliteration only as a temporary bridge."],
+        "cyrillic": ["Mark stress in examples when it is not predictable from spelling."],
+        "thai": ["Learn tone and vowel length with the syllable, not as a separate decoration."],
+    }.get(script, ["Keep spelling, audio, and useful phrases linked from the beginning."])
+    if profile.get("tonal_language"):
+        notes.append("Treat tone as part of the syllable; store it with pronunciation and review it in audio context.")
+    if profile.get("romanization_bridge"):
+        notes.append("Romanization is a temporary bridge: reduce it as native-script reading becomes comfortable.")
+    return notes
+
+
 def _is_cjk(character: str) -> bool:
     point = ord(character)
     return any(start <= point <= end for start, end in CJK_RANGES)
 
 
-def tokenize(text: str) -> list[str]:
-    """Tokenize whitespace languages; use a documented character estimate for CJK.
+def _is_compact_script(character: str) -> bool:
+    point = ord(character)
+    return _is_cjk(character) or 0x0E00 <= point <= 0x0E7F
 
-    Accurate Chinese/Japanese morphology requires a language-specific tokenizer.
-    Character-level CJK coverage is a rough signal, not a comprehension score.
+
+def tokenize(text: str) -> list[str]:
+    """Tokenize whitespace languages and approximate compact scripts by grapheme units.
+
+    Chinese/Japanese/Korean morphology is not inferred. Compact-script characters
+    are counted as units and combining marks remain attached to their base.
+    This is a coverage heuristic, not a comprehension score.
     """
     normalized = unicodedata.normalize("NFKC", text).casefold()
     tokens: list[str] = []
-    for match in WORD_RE.finditer(normalized):
-        token = match.group(0)
-        if any(_is_cjk(character) for character in token):
-            tokens.extend(character for character in token if not character.isspace())
-        else:
-            tokens.append(token)
-    captured = "".join(tokens)
-    for character in normalized:
-        if _is_cjk(character) and character not in captured:
-            tokens.append(character)
+    index = 0
+    while index < len(normalized):
+        character = normalized[index]
+        if unicodedata.category(character).startswith("M") and tokens:
+            tokens[-1] += character
+            index += 1
+            continue
+        if _is_compact_script(character):
+            unit = character
+            index += 1
+            while index < len(normalized) and unicodedata.category(normalized[index]).startswith("M"):
+                unit += normalized[index]
+                index += 1
+            tokens.append(unit)
+            continue
+        if character.isalnum():
+            start = index
+            index += 1
+            while index < len(normalized):
+                following = normalized[index]
+                if _is_compact_script(following):
+                    break
+                category = unicodedata.category(following)
+                if following.isalnum() or category.startswith("M") or following in {"'", "’"}:
+                    index += 1
+                else:
+                    break
+            tokens.append(normalized[start:index])
+            continue
+        index += 1
     return tokens
 
 
@@ -119,6 +207,11 @@ class PolyglotStore:
                 current_level TEXT NOT NULL DEFAULT 'A0',
                 goal TEXT NOT NULL DEFAULT '',
                 daily_minutes INTEGER NOT NULL DEFAULT 45,
+                language_code TEXT NOT NULL DEFAULT '',
+                script_family TEXT NOT NULL DEFAULT 'auto',
+                tonal_language INTEGER NOT NULL DEFAULT 0,
+                romanization_bridge INTEGER NOT NULL DEFAULT 0,
+                phonetic_focus TEXT NOT NULL DEFAULT '',
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
             );
@@ -138,6 +231,7 @@ class PolyglotStore:
                 phrase TEXT NOT NULL, translation TEXT NOT NULL,
                 context TEXT NOT NULL DEFAULT '', pronunciation TEXT NOT NULL DEFAULT '',
                 source TEXT NOT NULL DEFAULT '', tags_json TEXT NOT NULL DEFAULT '[]',
+                personal_example TEXT NOT NULL DEFAULT '', frequency_rank INTEGER,
                 ease REAL NOT NULL DEFAULT 2.5, interval_days INTEGER NOT NULL DEFAULT 0,
                 repetitions INTEGER NOT NULL DEFAULT 0, lapses INTEGER NOT NULL DEFAULT 0,
                 due_on TEXT NOT NULL, last_reviewed_at TEXT NOT NULL DEFAULT '',
@@ -166,6 +260,26 @@ class PolyglotStore:
                 ON sessions(profile_id, created_at);
             """
         )
+        # Additive migrations keep existing local workspaces usable.
+        migrations = {
+            "profiles": {
+                "language_code": "TEXT NOT NULL DEFAULT ''",
+                "script_family": "TEXT NOT NULL DEFAULT 'auto'",
+                "tonal_language": "INTEGER NOT NULL DEFAULT 0",
+                "romanization_bridge": "INTEGER NOT NULL DEFAULT 0",
+                "phonetic_focus": "TEXT NOT NULL DEFAULT ''",
+            },
+            "phrases": {
+                "personal_example": "TEXT NOT NULL DEFAULT ''",
+                "frequency_rank": "INTEGER",
+            },
+        }
+        for table, additions in migrations.items():
+            present = {row["name"] for row in self.connection.execute(f"PRAGMA table_info({table})")}
+            for column, declaration in additions.items():
+                if column not in present:
+                    self.connection.execute(f"ALTER TABLE {table} ADD COLUMN {column} {declaration}")
+
         row = self.connection.execute(
             "SELECT value FROM metadata WHERE key='schema_version'"
         ).fetchone()
@@ -178,11 +292,36 @@ class PolyglotStore:
             raise PolyglotError(
                 f"database schema {row['value']} is newer than supported {SCHEMA_VERSION}"
             )
+        elif int(row["value"]) < SCHEMA_VERSION:
+            self.connection.execute(
+                "UPDATE metadata SET value=? WHERE key='schema_version'",
+                (str(SCHEMA_VERSION),),
+            )
+
+        # Profiles created by schema v1 had no script/phonetic metadata.
+        legacy_profiles = self.connection.execute(
+            """SELECT id,target_language,language_code FROM profiles
+               WHERE script_family='auto' OR script_family=''"""
+        ).fetchall()
+        for legacy in legacy_profiles:
+            language = legacy["target_language"]
+            code = legacy["language_code"] or ""
+            script = infer_script_family(language, code)
+            tonal = infer_tonal_language(language, code)
+            bridge = script in {"han", "japanese", "hangul", "arabic", "devanagari", "thai"}
+            focus = default_phonetic_focus(script, tonal)
+            self.connection.execute(
+                """UPDATE profiles SET script_family=?,tonal_language=?,
+                   romanization_bridge=?,phonetic_focus=? WHERE id=?""",
+                (script, int(tonal), int(bridge), focus, legacy["id"]),
+            )
         self.connection.commit()
 
     def create_profile(
         self, target_language: str, native_language: str, level: str = "A0",
-        goal: str = "", daily_minutes: int = 45,
+        goal: str = "", daily_minutes: int = 45, language_code: str = "",
+        script_family: str = "auto", tonal_language: bool | None = None,
+        romanization_bridge: bool | None = None, phonetic_focus: str = "",
     ) -> dict[str, Any]:
         target_language = normalize_text(target_language)
         native_language = normalize_text(native_language)
@@ -191,20 +330,38 @@ class PolyglotStore:
             raise PolyglotError("target and native language names cannot be empty")
         if level not in CEFR_LEVELS:
             raise PolyglotError(f"level must be one of: {', '.join(CEFR_LEVELS)}")
-        if not 5 <= daily_minutes <= 240:
-            raise PolyglotError("daily minutes must be between 5 and 240")
+        if isinstance(daily_minutes, bool) or not isinstance(daily_minutes, int) or not 5 <= daily_minutes <= 240:
+            raise PolyglotError("daily minutes must be an integer between 5 and 240")
+        if script_family not in SCRIPT_FAMILIES:
+            raise PolyglotError(f"script family must be one of: {', '.join(SCRIPT_FAMILIES)}")
+        language_code = language_code.strip().casefold()
+        resolved_script = infer_script_family(target_language, language_code) if script_family == "auto" else script_family
+        inferred_tonal = infer_tonal_language(target_language, language_code)
+        if tonal_language is not None and not isinstance(tonal_language, bool):
+            raise PolyglotError("tonal_language must be a boolean or None")
+        if romanization_bridge is not None and not isinstance(romanization_bridge, bool):
+            raise PolyglotError("romanization_bridge must be a boolean or None")
+        tonal = inferred_tonal if tonal_language is None else tonal_language
+        bridge_default = resolved_script in {"han", "japanese", "hangul", "arabic", "devanagari", "thai"}
+        bridge = bridge_default if romanization_bridge is None else romanization_bridge
+        focus = phonetic_focus.strip() or default_phonetic_focus(resolved_script, tonal)
         now = utc_now()
         self.connection.execute(
             """
             INSERT INTO profiles(target_language,native_language,current_level,goal,
-                                 daily_minutes,created_at,updated_at)
-            VALUES(?,?,?,?,?,?,?)
+                                 daily_minutes,language_code,script_family,tonal_language,
+                                 romanization_bridge,phonetic_focus,created_at,updated_at)
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
             ON CONFLICT(target_language) DO UPDATE SET
               native_language=excluded.native_language,
               current_level=excluded.current_level, goal=excluded.goal,
-              daily_minutes=excluded.daily_minutes, updated_at=excluded.updated_at
+              daily_minutes=excluded.daily_minutes, language_code=excluded.language_code,
+              script_family=excluded.script_family, tonal_language=excluded.tonal_language,
+              romanization_bridge=excluded.romanization_bridge,
+              phonetic_focus=excluded.phonetic_focus, updated_at=excluded.updated_at
             """,
-            (target_language, native_language, level, goal, daily_minutes, now, now),
+            (target_language, native_language, level, goal, daily_minutes, language_code,
+             resolved_script, int(tonal), int(bridge), focus, now, now),
         )
         self.connection.commit()
         return self.get_profile(target_language)
@@ -277,8 +434,8 @@ class PolyglotStore:
         item["unknown_terms"] = sorted(unique - known)[:30]
         item["in_comprehensible_band"] = 0.70 <= ratio <= 0.90
         item["coverage_note"] = (
-            "rough character-level estimate for CJK"
-            if any(_is_cjk(char) for char in item["body"])
+            "rough character-level estimate for compact-script text (CJK/Thai)"
+            if any(_is_compact_script(char) for char in item["body"])
             else "rough token estimate based on reviewed phrase cards"
         )
         return item
@@ -311,23 +468,29 @@ class PolyglotStore:
         self, profile: dict[str, Any], phrase: str, translation: str,
         context: str = "", pronunciation: str = "", source: str = "",
         tags: Iterable[str] = (), content_id: int | None = None,
+        personal_example: str = "", frequency_rank: int | None = None,
     ) -> int:
         phrase, translation = normalize_text(phrase), normalize_text(translation)
         if not phrase or not translation:
             raise PolyglotError("phrase and translation are required")
         if content_id is not None:
             self.get_content(profile, content_id)
+        if frequency_rank is not None and (
+            isinstance(frequency_rank, bool) or not isinstance(frequency_rank, int) or frequency_rank < 1
+        ):
+            raise PolyglotError("frequency rank must be a positive integer")
         now = utc_now()
         try:
             cursor = self.connection.execute(
                 """
                 INSERT INTO phrases(profile_id,content_id,phrase,translation,context,
-                    pronunciation,source,tags_json,due_on,created_at,updated_at)
-                VALUES(?,?,?,?,?,?,?,?,?,?,?)
+                    pronunciation,source,tags_json,personal_example,frequency_rank,
+                    due_on,created_at,updated_at)
+                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)
                 """,
                 (profile["id"], content_id, phrase, translation, context,
                  pronunciation, source, json.dumps(list(tags), ensure_ascii=False),
-                 date.today().isoformat(), now, now),
+                 personal_example.strip(), frequency_rank, date.today().isoformat(), now, now),
             )
         except sqlite3.IntegrityError as error:
             raise PolyglotError("this phrase and context already exist for the selected language") from error
@@ -341,7 +504,7 @@ class PolyglotStore:
         if due_only:
             query += " AND due_on<=?"
             params.append(date.today().isoformat())
-        query += " ORDER BY due_on,created_at LIMIT ?"
+        query += " ORDER BY CASE WHEN frequency_rank IS NULL THEN 1 ELSE 0 END, frequency_rank, due_on,created_at LIMIT ?"
         params.append(max(1, min(limit, 500)))
         rows = self.connection.execute(query, params).fetchall()
         result = []
@@ -439,6 +602,12 @@ class PolyglotStore:
             ("speaking", "Пересказ, shadowing или короткий монолог"),
             ("reflection", "Отметить, что стало легче и что мешало пониманию"),
         ]
+        if profile.get("tonal_language"):
+            tasks[0] = (tasks[0][0], tasks[0][1] + "; проверяйте тон вместе со слогом")
+        if profile.get("romanization_bridge"):
+            tasks[1] = (tasks[1][0], tasks[1][1] + "; постепенно переходите на родную письменность")
+        if profile.get("phonetic_focus"):
+            tasks[3] = (tasks[3][0], tasks[3][1] + f"; фокус: {profile['phonetic_focus']}")
         return [
             {"mode": mode, "minutes": amount, "task": task}
             for (mode, task), amount in zip(tasks, minutes) if amount > 0
@@ -461,6 +630,24 @@ class PolyglotStore:
         content_count = self.connection.execute(
             "SELECT COUNT(*) AS count FROM content WHERE profile_id=?", (profile["id"],)
         ).fetchone()["count"]
+        lifetime = self.connection.execute(
+            "SELECT COALESCE(SUM(minutes),0) AS minutes FROM sessions WHERE profile_id=?",
+            (profile["id"],),
+        ).fetchone()
+        total_minutes = int(lifetime["minutes"] or 0)
+        total_hours = total_minutes / 60
+        if total_minutes == 0:
+            phase = "setup"
+        elif total_hours < 10:
+            phase = "sound_foundation"
+        elif total_hours < 40:
+            phase = "comprehensible_input"
+        elif total_hours < 100:
+            phase = "guided_output"
+        elif total_hours < 300:
+            phase = "authentic_content"
+        else:
+            phase = "automation"
         return {
             "profile": profile, "content_items": int(content_count),
             "phrase_cards": int(counts["total"] or 0),
@@ -469,6 +656,11 @@ class PolyglotStore:
             "due_cards": self.due_count(profile), "known_terms": len(self._known_terms(profile["id"])),
             "last_7_days_minutes": int(sessions["minutes"] or 0),
             "last_7_days_sessions": int(sessions["count"] or 0),
+            "total_study_minutes": total_minutes,
+            "total_study_hours": round(total_hours, 2),
+            "learning_phase": phase,
+            "phase_note": "Exposure-hour phases are planning heuristics, not proficiency predictions.",
+            "script_guidance": script_learning_notes(profile),
         }
 
     def export_profile(self, profile: dict[str, Any]) -> dict[str, Any]:
@@ -503,6 +695,8 @@ def run_review(
         output_fn(f"Ответ: {card['phrase']}")
         if card["pronunciation"]:
             output_fn(f"Произношение: {card['pronunciation']}")
+        if card.get("personal_example"):
+            output_fn(f"Личный пример: {card['personal_example']}")
         rating = fixed_rating
         if rating is None:
             while True:
@@ -544,6 +738,14 @@ def build_parser() -> argparse.ArgumentParser:
     init.add_argument("--level", default="A0", choices=CEFR_LEVELS)
     init.add_argument("--goal", default="")
     init.add_argument("--minutes", type=int, default=45)
+    init.add_argument("--code", default="", help="optional language code, e.g. es, ja, zh, ko")
+    init.add_argument("--script", choices=SCRIPT_FAMILIES, default="auto")
+    tonal = init.add_mutually_exclusive_group()
+    tonal.add_argument("--tonal", dest="tonal_language", action="store_true")
+    tonal.add_argument("--non-tonal", dest="tonal_language", action="store_false")
+    init.set_defaults(tonal_language=None)
+    init.add_argument("--romanization-bridge", choices=("on", "off"), default=None)
+    init.add_argument("--phonetic-focus", default="")
     commands.add_parser("profile", help="list configured language profiles")
 
     content = commands.add_parser("content", help="manage contextual learning material")
@@ -567,6 +769,8 @@ def build_parser() -> argparse.ArgumentParser:
     add_phrase.add_argument("--pronunciation", default="")
     add_phrase.add_argument("--source", default="")
     add_phrase.add_argument("--content-id", type=int)
+    add_phrase.add_argument("--personal-example", default="", help="a sentence you can use about your own life")
+    add_phrase.add_argument("--frequency-rank", type=int, help="optional manually supplied frequency rank")
     add_phrase.add_argument("--tag", action="append", default=[])
     list_phrase = phrase_commands.add_parser("list", help="list phrase cards")
     list_phrase.add_argument("--due", action="store_true")
@@ -601,7 +805,11 @@ def main(argv: list[str] | None = None) -> int:
         with PolyglotStore(args.db) as store:
             if args.command == "init":
                 profile = store.create_profile(
-                    args.language, args.native, args.level, args.goal, args.minutes
+                    args.language, args.native, args.level, args.goal, args.minutes,
+                    language_code=args.code, script_family=args.script,
+                    tonal_language=args.tonal_language,
+                    romanization_bridge=(None if args.romanization_bridge is None else args.romanization_bridge == "on"),
+                    phonetic_focus=args.phonetic_focus,
                 )
                 print(
                     f"Профиль настроен: {profile['target_language']} ({profile['current_level']}), "
@@ -616,8 +824,13 @@ def main(argv: list[str] | None = None) -> int:
                     print(
                         f"{profile['target_language']} ← {profile['native_language']} | "
                         f"{profile['current_level']} | {profile['daily_minutes']} мин/день | "
+                        f"{profile['script_family']} | "
+                        f"{'тональный' if profile['tonal_language'] else 'нетональный'} | "
+                        f"транслитерация: {'вкл.' if profile['romanization_bridge'] else 'выкл.'} | "
                         f"{profile['goal'] or 'цель не задана'}"
                     )
+                    for note in script_learning_notes(profile):
+                        print(f"  подсказка: {note}")
                 return 0
 
             profile = store.get_profile(args.target)
@@ -644,6 +857,7 @@ def main(argv: list[str] | None = None) -> int:
                     card_id = store.add_phrase(
                         profile, args.phrase, args.translation, args.context, args.pronunciation,
                         args.source, args.tag, args.content_id,
+                        args.personal_example, args.frequency_rank,
                     )
                     print(f"Фраза добавлена: id={card_id}; первое повторение назначено на сегодня.")
                 else:
@@ -653,7 +867,8 @@ def main(argv: list[str] | None = None) -> int:
                     for card in cards:
                         print(
                             f"#{card['id']} {card['phrase']} — {card['translation']} | "
-                            f"повторений: {card['repetitions']} | следующее: {card['due_on']}"
+                            f"повторений: {card['repetitions']} | следующее: {card['due_on']} | "
+                            f"частотный ранг: {card['frequency_rank'] or '—'}"
                         )
                 return 0
             if args.command == "plan":
@@ -706,6 +921,9 @@ def main(argv: list[str] | None = None) -> int:
                     f"закреплены (2+ повторения): {data['consolidated_cards']}"
                 )
                 print(f"Ожидают повторения: {data['due_cards']} · известных токенов: {data['known_terms']}")
+                print(f"Этап: {data['learning_phase']} · всего практики: {data['total_study_hours']} ч")
+                for note in data["script_guidance"]:
+                    print(f"Подсказка: {note}")
                 print(
                     f"За 7 дней: {data['last_7_days_sessions']} сессий · "
                     f"{data['last_7_days_minutes']} минут практики"
