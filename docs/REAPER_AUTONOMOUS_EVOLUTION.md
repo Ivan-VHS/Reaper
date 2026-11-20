@@ -110,3 +110,20 @@ unreviewed code execution, hidden network access, or automatic permission
 expansion. The engine is bounded by explicit budgets. A billion requested
 iterations is not a useful correctness criterion; reproducible evidence and
 verified convergence are.
+
+## OmniCore ingestion relationship
+
+The Python reference package now contains the first external-language ingestion slice:
+`reaper/language_evolution.py` (OmniCore M1). It discovers source files, grammar
+artifacts, build manifests and JSONL runtime traces; emits a normalized UAST where
+an adapter is available; extracts heuristic evidence; and creates deterministic,
+review-required `lang-evo-*` proposals with provenance. See
+`docs/OMNICORE_LANGUAGE_EVOLUTION.md`.
+
+This is an upstream observation/proposal component, not an implementation of the
+native EV engine. It does not execute foreign code, generate patches, update the
+grammar, modify Reaper sources or publish language features. The native C17 EV0
+gate remains authoritative for acceptance evidence and maintainer approval.
+The future native ingestion adapter must converge on the same proposal/evidence
+contract and canonical IR; it must not bypass EV0, compatibility checks, CI or
+repository review policy.
