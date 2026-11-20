@@ -1,12 +1,16 @@
 from __future__ import annotations
 
+import io
+import json
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 from pathlib import Path
 
 from reaper import Interpreter, ModuleCycleError, MemoryManager, RegionError, RuntimeDebugger
 from reaper.errors import ReaperRuntimeError
 from reaper.modules import ModuleLoader
+from reaper.cli import main
 
 
 class ModuleRuntimeTests(unittest.TestCase):
@@ -61,6 +65,32 @@ class ModuleRuntimeTests(unittest.TestCase):
             self.assertEqual(graph[a], [b])
             self.assertEqual(graph[b], [c])
             self.assertEqual(graph[c], [])
+
+
+class ModuleCliTests(unittest.TestCase):
+    def test_module_graph_cli_emits_json_without_execution(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            dependency = root / "dependency.rpr"
+            entry = root / "entry.rpr"
+            dependency.write_text('export make value := 5\\n', encoding="utf-8")
+            entry.write_text('import "dependency.rpr"\\nemit 99\\n', encoding="utf-8")
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                code = main(["--module-graph", str(entry)])
+            graph = json.loads(stdout.getvalue())
+            self.assertEqual(code, 0)
+            self.assertEqual(graph[str(entry.resolve())], [str(dependency.resolve())])
+
+    def test_vm_engine_cli_executes_source(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "main.rpr"
+            source.write_text('emit 6 * 7\\n', encoding="utf-8")
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                code = main(["--engine", "vm", str(source)])
+            self.assertEqual(code, 0)
+            self.assertEqual(stdout.getvalue().strip(), "42")
 
 
 class ManagedRuntimeTests(unittest.TestCase):
