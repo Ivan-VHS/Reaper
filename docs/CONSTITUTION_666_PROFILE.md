@@ -32,7 +32,7 @@ A syntax example or roadmap paragraph is not evidence of implementation.
 
 1. No hidden effects: ordinary expressions do not perform file, network, clock, process or hardware I/O. Console interaction remains explicit through documented operations.
 2. Mutation is visible: make binds an immutable name; vary explicitly permits reassignment; change performs reassignment. New mutation forms require an explicit syntax and semantics proposal.
-3. Flow is composition: ~> passes the left value as the first argument; associativity and evaluation order are specified and tested.
+3. Flow is composition: :: passes the left value as the first argument; associativity and evaluation order are specified and tested.
 4. Conversions are explicit: numeric, text and boolean values are not silently coerced. Conversion functions document failure behavior.
 5. Execution is bounded: steps, call depth, collection items and generated text are limited. New recursive, iterative, parsing or allocation paths add quotas or prove a safe bound.
 6. Errors are user-facing contracts: syntax, name, type/value and quota failures are distinguishable and tested. A failure is never silently converted to a successful value.
