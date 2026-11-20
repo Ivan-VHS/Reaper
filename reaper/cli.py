@@ -21,7 +21,7 @@ from .token_catalog import CATALOG_GROUPS, catalog_summary, token_catalog, token
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="reaper", description="Run and improve a Reaper language project.")
+    parser = argparse.ArgumentParser(prog="reaper", description="Run, inspect and improve a Reaper language project.")
     parser.add_argument("source", nargs="?", help="path to a .rpr source file, or project directory with --evolve")
     parser.add_argument("--steps", type=int, default=1_000_000, help="maximum execution steps (default: 1000000)")
     parser.add_argument("--items", type=int, default=100_000, help="maximum items in any collection (default: 100000)")
@@ -55,6 +55,9 @@ def main(argv: list[str] | None = None) -> int:
     if arguments and arguments[0] == "polyglot":
         from .polyglot import main as polyglot_main
         return polyglot_main(arguments[1:])
+    if arguments and arguments[0] == "absorb":
+        from .language_evolution import main as absorb_main
+        return absorb_main(arguments[1:])
     parser = build_parser()
     args = parser.parse_args(arguments)
     if args.catalog or args.catalog_group is not None or args.catalog_token is not None:
