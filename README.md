@@ -225,3 +225,8 @@ GitHub Actions tests Python 3.10, 3.11 and 3.12, runs the unit suite (including 
 ## Execution audit trail
 
 The optional audit mode writes a local hash-chained journal of source fingerprints and run lifecycle events without copying program output. Enable it with --audit-log PATH and verify it with --verify-audit-log PATH. The chain detects record edits but is not a digital signature or remote attestation; see docs/EXECUTION_AUDIT.md.
+
+
+## MOST Function Registry 666
+
+Сводный реестр 666 MOST API/feature contracts (147 существующих предложений + 519 расширений), source map из Reaper, Pytyliki и OPlague, границы интеграции и валидатор: [docs/MOST_FUNCTIONS_666.md](docs/MOST_FUNCTIONS_666.md). Машинный каталог: [language/functions_666.json](language/functions_666.json). Записи являются спецификацией, а не 666 уже реализованными runtime-функциями.
