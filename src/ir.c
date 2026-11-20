@@ -33,13 +33,16 @@ int reaper_ir_verify(const ReaperIrModule *module, ReaperIrError *error) {
                 return reject(error, i, "CONST_I64 cannot have operands");
             break;
         case REAPER_IR_OP_ADD_I64:
+        case REAPER_IR_OP_SUB_I64:
+        case REAPER_IR_OP_MUL_I64:
+        case REAPER_IR_OP_DIV_I64:
             if (node->type != REAPER_IR_TYPE_I64)
-                return reject(error, i, "ADD_I64 must produce i64");
+                return reject(error, i, "integer arithmetic must produce i64");
             if (!valid_ref(node->lhs, i) || !valid_ref(node->rhs, i))
-                return reject(error, i, "ADD_I64 operands must reference earlier nodes");
+                return reject(error, i, "integer arithmetic operands must reference earlier nodes");
             if (module->nodes[node->lhs].type != REAPER_IR_TYPE_I64 ||
                 module->nodes[node->rhs].type != REAPER_IR_TYPE_I64)
-                return reject(error, i, "ADD_I64 operands must both be i64");
+                return reject(error, i, "integer arithmetic operands must both be i64");
             break;
         case REAPER_IR_OP_RETURN:
             if (node->type != REAPER_IR_TYPE_UNIT)
@@ -68,6 +71,9 @@ const char *reaper_ir_opcode_name(ReaperIrOpcode opcode) {
     case REAPER_IR_OP_CONST_I64: return "const.i64";
     case REAPER_IR_OP_ADD_I64: return "add.i64";
     case REAPER_IR_OP_RETURN: return "return";
+    case REAPER_IR_OP_SUB_I64: return "sub.i64";
+    case REAPER_IR_OP_MUL_I64: return "mul.i64";
+    case REAPER_IR_OP_DIV_I64: return "div.i64";
     default: return "invalid";
     }
 }
