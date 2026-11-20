@@ -37,8 +37,16 @@ def validate(root: Path = ROOT) -> list[str]:
         errors.append("manifest contains duplicate source spellings")
     if expected != KEYWORD_ALIASES:
         errors.append("Python KEYWORD_ALIASES differs from the JSON manifest")
-    if not set(expected.values()).issubset(KEYWORDS):
-        errors.append("one or more canonical aliases are absent from Python KEYWORDS")
+    runtime_canonical = {
+        entry["canonical"] for entry in entries if entry.get("support") == "runtime"
+    }
+    reserved_canonical = {
+        entry["canonical"] for entry in entries if entry.get("support") == "lexical_reserved"
+    }
+    if not runtime_canonical.issubset(KEYWORDS):
+        errors.append("runtime aliases must map to existing Python parser keywords")
+    if runtime_canonical | reserved_canonical != set(expected.values()):
+        errors.append("manifest support classes do not cover all canonical aliases")
 
     marker = "static const ReaperKeywordAlias russian_aliases[] = {"
     if marker not in c_source:
