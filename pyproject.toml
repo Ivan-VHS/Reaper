@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
 authors = [{ name = "Reaper contributors" }]
-keywords = ["programming-language", "interpreter", "dataflow"]
+keywords = ["programming-language", "interpreter", "dataflow", "qcs"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Environment :: Console",
@@ -25,6 +25,7 @@ classifiers = [
 
 [project.scripts]
 reaper = "reaper.cli:main"
+reaper-qcs = "reaper.qcs:main"
 reaper-polyglot = "reaper.polyglot:main"
 reaper-polyglot-code = "reaper.polyglot_code:main"
 reaper-embedded = "reaper.embedded:main"

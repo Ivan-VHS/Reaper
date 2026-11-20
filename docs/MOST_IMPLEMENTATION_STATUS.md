@@ -85,3 +85,8 @@ Python remains a compatibility oracle until C17 semantic parity is demonstrated.
 ## МОСТ: implementation boundary
 
 МОСТ is an exact alias table over REAPER 0.1, not a new frontend. The Python reference executes the supported Russian subset through existing REAPER parser token kinds. The C17 lexer provides a canonical-token accessor for Russian spellings. No separate grammar, AST, runtime, morphology engine or synonym resolver is planned. The 66 rules are readability guidance only; see docs/MOST_LANGUAGE_SPEC.md and docs/MOST_RUSSIAN_66_RULES.md.
+
+
+## MOST Function Registry 666
+
+The current registry contains 666 API/feature contracts, not 666 implemented runtime functions. Every entry currently declares `most_native=false`; external Python/C11 APIs are tracked separately from the native MOST surface. Promotion to implemented requires typed signatures, effect/capability and ownership contracts, resource bounds, executable conformance tests, documentation and source mapping. Run `python tools/validate_most_functions.py`.

@@ -1,0 +1,7 @@
+[@ domain:irq(vector: 32), budget:120ns, state:! @]
+func timerTick(counter: UInt64?) {
+    guard let current = counter else { return }
+    let next = current &+ 1
+    next send IRQQueue.enqueue()
+}
+[@ end @]
