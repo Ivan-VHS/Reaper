@@ -10,6 +10,7 @@ from .errors import ExecutionLimitError, ReaperRuntimeError
 from .lexer import Token
 from .parser import Node, parse
 from .impact import catalog as impact_catalog, find_profile as impact_profile, rank_profiles as impact_rank, search_profiles as impact_search
+from . import metric_space
 
 
 @dataclass(slots=True)
@@ -385,6 +386,28 @@ class Interpreter:
         register("impact_profile", impact_profile, 1, 1)
         register("impact_search", impact_search, 1, 1)
         register("impact_rank", lambda profiles, dimension: impact_rank(sequence(profiles), dimension), 2, 2)
+        register("metric_dot", lambda left, right: metric_space.dot(sequence(left), sequence(right)), 2, 2)
+        register("vector_norm", lambda values: metric_space.vector_norm(sequence(values)), 1, 1)
+        register("euclidean_distance", lambda left, right: metric_space.euclidean_distance(sequence(left), sequence(right)), 2, 2)
+        register("is_orthogonal", lambda left, right, *tol: metric_space.is_orthogonal(
+            sequence(left), sequence(right), tol[0] if tol else 1e-12
+        ), 2, 3)
+        register("quadratic_form", lambda values, matrix: metric_space.quadratic_form(
+            sequence(values), sequence(matrix)
+        ), 2, 2)
+        register("law_of_cosines", metric_space.law_of_cosines, 3, 3)
+        register("de_gua_area", metric_space.de_gua_area, 3, 3)
+        register("parseval_energy", lambda values: metric_space.parseval_energy(sequence(values)), 1, 1)
+        register("unit_circle_residual", metric_space.unit_circle_residual, 1, 1)
+        register("spherical_hypotenuse", metric_space.spherical_hypotenuse, 2, 2)
+        register("hyperbolic_hypotenuse", metric_space.hyperbolic_hypotenuse, 2, 2)
+        register("minkowski_interval", lambda ct, spatial: metric_space.minkowski_interval(
+            ct, sequence(spatial)
+        ), 2, 2)
+        register("combine_variances", lambda values: metric_space.combine_uncorrelated_variances(
+            sequence(values)
+        ), 1, 1)
+        register("reciprocal_altitude", metric_space.reciprocal_altitude, 2, 2)
 
     def _map(self, values: Any, validator: Callable[[Any], None], function: Any) -> list[Any]:
         validator(function)
