@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .errors import LexError
+from .operator_registry import LEGACY_GLYPH_OPERATORS, operator_by_glyph
 
 
 KEYWORDS = {
@@ -25,7 +26,8 @@ class Token:
 class Lexer:
     """Convert source text into a position-aware token stream."""
 
-    _TWO_CHAR = {":=", "==", "!=", "<=", ">=", "//", "**", "++", "::"}
+    _TWO_CHAR = {"!=", "<=", ">=", "//", "**"}
+    _GLYPH_CHARS = frozenset(":;=+")
     _ONE_CHAR = set("+-*/%<>(){}[],")
 
     def __init__(self, source: str, filename: str = "<memory>") -> None:
@@ -52,6 +54,8 @@ class Lexer:
                 self._number()
             elif char.isalpha() or char == "_":
                 self._identifier()
+            elif char in self._GLYPH_CHARS:
+                self._glyph_operator()
             else:
                 self._operator_or_punctuation()
         self.tokens.append(Token("EOF", "", self.line, self.column))
@@ -126,6 +130,26 @@ class Lexer:
         kind = value.upper() if value in KEYWORDS else "IDENT"
         self.tokens.append(Token(kind, value, start_line, start_column))
 
+    def _glyph_operator(self) -> None:
+        start_line, start_column = self.line, self.column
+        start = self.index
+        while not self._at_end() and self._peek() in self._GLYPH_CHARS:
+            self._advance()
+        value = self.source[start:self.index]
+        if len(value) > 5:
+            raise LexError(
+                f"{self.filename}:{start_line}:{start_column}: operator glyph run exceeds five characters"
+            )
+        if len(value) == 1:
+            kind = ";" if value == ";" else value
+            self.tokens.append(Token(kind, value, start_line, start_column))
+            return
+        if value not in LEGACY_GLYPH_OPERATORS and operator_by_glyph(value) is None:
+            raise LexError(
+                f"{self.filename}:{start_line}:{start_column}: unregistered operator glyph sequence {value!r}"
+            )
+        self.tokens.append(Token(value, value, start_line, start_column))
+
     def _operator_or_punctuation(self) -> None:
         start_line, start_column = self.line, self.column
         pair = self._peek() + self._peek(1)
@@ -135,7 +159,7 @@ class Lexer:
             self.tokens.append(Token(pair, pair, start_line, start_column))
             return
         char = self._peek()
-        if char in self._ONE_CHAR or char == "=":
+        if char in self._ONE_CHAR:
             self._advance()
             self.tokens.append(Token(char, char, start_line, start_column))
             return

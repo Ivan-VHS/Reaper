@@ -7,6 +7,7 @@ from typing import Any
 
 from .errors import ParseError
 from .lexer import Token, tokenize
+from .operator_registry import operator_by_glyph
 
 
 @dataclass(slots=True)
@@ -21,8 +22,8 @@ _PRECEDENCE = {
     "::": 1,
     "OR": 2,
     "AND": 3,
-    "==": 4, "!=": 4, "<": 4, "<=": 4, ">": 4, ">=": 4,
-    "++": 5,
+    "==": 4, "=::": 4, "!=": 4, "<": 4, "<=": 4, ">": 4, ">=": 4,
+    "++": 5, "++:": 5,
     "+": 6, "-": 6,
     "*": 7, "/": 7, "//": 7, "%": 7,
     "**": 8,
@@ -47,13 +48,15 @@ class Parser:
         if self._match("MAKE", "VARY"):
             declaration = self._previous()
             name = self._consume("IDENT", "expected a name after declaration")
-            self._consume(":=", "expected ':=' after the name")
+            if not self._match("::=", ":="):
+                raise self._error(self._peek(), "expected '::=' after the name")
             value = self._expression()
             return Node("declare", declaration, value=(name.value, declaration.kind == "VARY"), children=[value])
         if self._match("CHANGE"):
             token = self._previous()
             name = self._consume("IDENT", "expected a mutable name after 'change'")
-            self._consume(":=", "expected ':=' after the name")
+            if not self._match("::=", ":="):
+                raise self._error(self._peek(), "expected '::=' after the name")
             return Node("change", token, value=name.value, children=[self._expression()])
         if self._match("EMIT"):
             token = self._previous()
@@ -137,6 +140,15 @@ class Parser:
                 continue
             operator = self._peek().kind
             precedence = _PRECEDENCE.get(operator, 0)
+            if precedence == 0:
+                spec = operator_by_glyph(operator)
+                if spec is not None:
+                    state = "reserved" if spec.status == "reserved" else "not valid in this expression position"
+                    raise self._error(
+                        self._peek(),
+                        f"operator '{operator}' (RPR_OP_{spec.id:03d}) is {state}; executable semantics are unavailable",
+                    )
+                break
             if precedence < minimum:
                 break
             token = self._advance()
@@ -166,7 +178,7 @@ class Parser:
         if self._match("STRING"):
             token = self._previous()
             return Node("literal", token, value=token.value)
-        if self._match("TRUE", "FALSE", "NOT", "-", "("):
+        if self._match("TRUE", "FALSE", "NOT", "-", ":++", "("):
             token = self._previous()
             if token.kind == "(":
                 expression = self._expression()
@@ -198,6 +210,9 @@ class Parser:
 
     def _statement_end(self) -> None:
         if self._match("NEWLINE"):
+            self._skip_newlines()
+            return
+        if self._match(";"):
             self._skip_newlines()
             return
         if self._check("}") or self._check("EOF"):

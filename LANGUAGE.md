@@ -37,7 +37,7 @@ emit "result = " ++ text(result)
 ## Source format
 
 - Source files use the .rpr extension.
-- Newlines separate statements; semicolons are not part of the language.
+- Newlines or a single semicolon separate statements; multi-character semicolon runs are registered glyph tokens.
 - Comments begin with # and continue to the end of the line.
 - Text literals use double quotes and support \n, \r, \t, \", and \\ escapes.
 - Identifiers accept Unicode letters, digits after the first character, and underscores.
@@ -45,9 +45,9 @@ emit "result = " ++ text(result)
 ## Statements
 
 ~~~reaper
-make fixed_value := expression
-vary changing_value := expression
-change changing_value := expression
+make fixed_value ::= expression
+vary changing_value ::= expression
+change changing_value ::= expression
 
 craft function_name(argument, another) {
     yield expression
@@ -154,3 +154,12 @@ Not implemented yet: static type checking, algebraic effect handlers, semantic-g
 ## Orthogonal metric built-ins
 
 Reaper also provides pure numerical helpers: metric_dot, vector_norm (L1/L2/L-infinity), vector_normalize, euclidean_distance, squared_euclidean_distance, manhattan_distance, chebyshev_distance, cosine_similarity, angle_between, vector_projection, vector_centroid, is_orthogonal, quadratic_form, law_of_cosines, de_gua_area, parseval_energy, unit_circle_residual, spherical_hypotenuse, hyperbolic_hypotenuse, minkowski_interval, combine_variances and reciprocal_altitude. All vector arguments are lists of finite numbers. The vector and matrix limits, dimensional checks, geometric domains and statistical assumptions are documented in docs/ORTHOGONAL_METRIC_ENGINE.md. These helpers do not grant host I/O or hardware capabilities.
+
+
+## Punctuation operator catalogue
+
+Reaper assigns 666 stable operator IDs using only `:`, `;`, `=` and `+`. IDs 001–048 are named anchors; IDs 049–666 are reversible five-character base-4 glyphs. Six fixed ranges cover memory, execution flow, binding/types, arithmetic, metrics and system diagnostics.
+
+Executable in the Python reference runtime: `::=` (strict declaration), `:++` (mutable numeric prefix increment), `::` (pipeline), `=::` (type-strict structural equality), and `++:` (bounded list concatenation). Historical `:=`, `==`, and `++` spellings remain compatible. Other registered entries are reserved and fail with an operator-ID diagnostic until their semantics are implemented.
+
+Inspect the catalogue with `python -m reaper --operators` or `python -m reaper --operators-json`. See [the complete operator specification](docs/OPERATOR_SYSTEM_666.md).

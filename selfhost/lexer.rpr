@@ -149,20 +149,32 @@ craft tokenize(source) {
         yield [keyword_kind(value), value, start_line, start_column]
     }
 
+    craft is_glyph(char) {
+        yield char == ":" or char == ";" or char == "=" or char == "+"
+    }
+
     craft scan_operator(start_line, start_column) {
-        make pair := current(0) ++ current(1)
-        when pair == ":=" or pair == "==" or pair == "!=" or pair == "<=" or pair == ">=" or pair == "//" or pair == "**" or pair == "++" or pair == "::" {
-            make ignored_first := advance()
-            make ignored_second := advance()
-            yield [pair, pair, start_line, start_column]
+        when is_glyph(current(0)) {
+            vary value := ""
+            loop while index < source_length and is_glyph(current(0)) {
+                change value := value ++ advance()
+            }
+            yield [value, value, start_line, start_column]
         } otherwise {
-            make char := current(0)
-            when char == "+" or char == "-" or char == "*" or char == "/" or char == "%" or char == "<" or char == ">" or char == "(" or char == ")" or char == "{" or char == "}" or char == "[" or char == "]" or char == "," or char == "=" {
-                make ignored := advance()
-                yield [char, char, start_line, start_column]
+            make pair := current(0) ++ current(1)
+            when pair == "!=" or pair == "<=" or pair == ">=" or pair == "//" or pair == "**" {
+                make ignored_first := advance()
+                make ignored_second := advance()
+                yield [pair, pair, start_line, start_column]
             } otherwise {
-                make ignored := advance()
-                yield ["ERROR", "unexpected character " ++ char, start_line, start_column]
+                make char := current(0)
+                when char == "-" or char == "*" or char == "/" or char == "%" or char == "<" or char == ">" or char == "(" or char == ")" or char == "{" or char == "}" or char == "[" or char == "]" or char == "," {
+                    make ignored := advance()
+                    yield [char, char, start_line, start_column]
+                } otherwise {
+                    make ignored := advance()
+                    yield ["ERROR", "unexpected character " ++ char, start_line, start_column]
+                }
             }
         }
     }
