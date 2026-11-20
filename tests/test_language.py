@@ -8,6 +8,13 @@ from reaper.parser import parse
 
 
 class LexerTests(unittest.TestCase):
+    def test_russian_keyword_aliases(self) -> None:
+        tokens = tokenize("пусть число := истина\\nпеременная сумма := 0\\nесли не ложь и число { вывести сумма }")
+        self.assertEqual(
+            [token.kind for token in tokens[:15]],
+            ["MAKE", "IDENT", ":=", "TRUE", "NEWLINE", "VARY", "IDENT", ":=", "NUMBER", "NEWLINE", "WHEN", "NOT", "FALSE", "AND", "IDENT"],
+        )
+
     def test_keywords_and_unicode_identifiers(self) -> None:
         tokens = tokenize("make утка := true # comment\nemit утка")
         self.assertEqual(
@@ -34,6 +41,25 @@ class RuntimeTests(unittest.TestCase):
         output: list[str] = []
         Interpreter(output=output.append, max_steps=max_steps).run(source)
         return output
+
+
+    def test_russian_program_subset_executes(self) -> None:
+        source = """
+        функция удвоить(значение) {
+            вернуть значение * 2
+        }
+        пусть значение := 5
+        переменная итог := 0
+        для элемент в range(1, 4) {
+            изменить итог := итог + удвоить(элемент)
+        }
+        если итог == 12 {
+            вывести "готово"
+        } иначе {
+            вывести "ошибка"
+        }
+        """
+        self.assertEqual(self.capture(source), ["готово"])
 
     def test_hello_and_string_join(self) -> None:
         self.assertEqual(
