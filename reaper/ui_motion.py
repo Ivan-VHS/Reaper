@@ -58,7 +58,7 @@ class MotionController:
         if not self._enabled or self.duration_ms == 0:
             return
         try:
-            self.root.after_idle(self._start)
+            self._start()
         except tk.TclError:
             self._enabled = False
 
