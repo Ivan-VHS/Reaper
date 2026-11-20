@@ -78,7 +78,7 @@ emit memory_read(view)
 | 050 | `_::++` | `sandbox_close` | Close a sandbox and extract its result |
 | 051 | `;;:-:` | `read_lock` | Prevent writes while a buffer is being read |
 | 052 | `::;-:` | `reverse_view` | Create a reverse-order view |
-| 053 | `;::-` | `table_allocate` | Allocate a fixed-row table buffer |
+| 053 | `;::-:` | `table_allocate` | Allocate a fixed-row table buffer |
 | 054 | `;+:--` | `table_reserve` | Reserve room for additional table records |
 | 055 | `:+;-:` | `active_reset` | Reset the active-element counter |
 | 056 | `:+:--` | `cache_alignment` | Set cache-line alignment metadata |
