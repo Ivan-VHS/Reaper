@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import tempfile
 import unittest
@@ -17,11 +18,46 @@ from reaper import Interpreter, ReaperRuntimeError
 
 
 def snapshot(metrics: dict[str, float], digest: str) -> dict[str, object]:
-    return {
-        "schema": OPLAGE_SNAPSHOT_SCHEMA,
-        "snapshot_sha256": digest,
-        "metrics": metrics,
+    values = {
+        "device_ok_ratio": 0.0,
+        "device_problem_free_ratio": 0.0,
+        "device_class_coverage_ratio": 0.0,
+        "device_identity_coverage_ratio": 0.0,
+        "package_integrity_ratio": 0.0,
+        "package_audit_coverage_ratio": 0.0,
     }
+    values.update(metrics)
+    result: dict[str, object] = {
+        "schema": OPLAGE_SNAPSHOT_SCHEMA,
+        "captured_utc": "2026-11-20T00:00:00Z",
+        "source": {"provider": f"test-{digest}", "mode": "read_only"},
+        "identity_protection": {
+            "algorithm": "HMAC-SHA-256", "key_scope": "snapshot_ephemeral",
+        },
+        "summary": {
+            "total_devices": 0, "ok_devices": 0, "problem_devices": 0,
+            "other_status_devices": 0, "devices_with_class": 0,
+            "devices_with_identity": 0, "audited_packages": 0, "valid_packages": 0,
+        },
+        "metrics": values,
+        "devices": [],
+        "packages": [],
+    }
+    canonical = json.dumps(
+        result, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False
+    ).encode("utf-8")
+    result["snapshot_sha256"] = hashlib.sha256(canonical).hexdigest()
+    return result
+
+
+def reseal_snapshot(value: dict[str, object]) -> dict[str, object]:
+    payload = dict(value)
+    payload.pop("snapshot_sha256", None)
+    canonical = json.dumps(
+        payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False
+    ).encode("utf-8")
+    value["snapshot_sha256"] = hashlib.sha256(canonical).hexdigest()
+    return value
 
 
 class FederationJsonTests(unittest.TestCase):
@@ -82,6 +118,12 @@ class OPlagueContractTests(unittest.TestCase):
         self.assertAlmostEqual(result["euclidean_distance"], (0.2**2 + 0.5**2) ** 0.5)
         self.assertAlmostEqual(result["components"]["memory"]["difference"], 0.5)
         self.assertEqual(result["distance_backend"], "reaper-python")
+
+    def test_rejects_tampered_snapshot_fingerprint(self) -> None:
+        value = snapshot({"device_ok_ratio": 0.5}, "tampered")
+        value["metrics"]["device_ok_ratio"] = 0.25
+        with self.assertRaisesRegex(ValueError, "fingerprint mismatch"):
+            oplage_metrics(value)
 
     def test_rejects_dimension_drift(self) -> None:
         with self.assertRaisesRegex(ValueError, "dimensions differ"):
