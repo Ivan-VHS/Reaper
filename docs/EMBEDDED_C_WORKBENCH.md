@@ -100,8 +100,7 @@ two opt-in functions:
 
 ```reaper
 make profiles := pytyliki_embedded_profiles("/absolute/path/libpytyliki_ffi.so")
-make sections := {"text_bytes": 8192, "rodata_bytes": 1024, "data_bytes": 128, "bss_bytes": 512, "noinit_bytes": 64, "stack_reserve_bytes": 2048}
-make budget := pytyliki_embedded_budget("cortex-m4-reference", sections, "/absolute/path/libpytyliki_ffi.so")
+make budget := pytyliki_embedded_budget("cortex-m4-reference", 8192, 1024, 128, 512, 64, 2048, "/absolute/path/libpytyliki_ffi.so")
 emit profiles[0]["id"]
 emit budget["flash_fits"]
 ```
@@ -114,6 +113,6 @@ uint64 section size and returns the native overflow-checked budget result.
 It does not expose raw MMIO access or flash transport.
 
 The functions are `pytyliki_embedded_profiles(path)` and
-`pytyliki_embedded_budget(profile_id, sections, path)`. The sections map must
-contain `text_bytes`, `rodata_bytes`, `data_bytes`, `bss_bytes`,
-`noinit_bytes` and `stack_reserve_bytes`.
+`pytyliki_embedded_budget(profile_id, text, rodata, data, bss, noinit, stack, path)`.
+The six section sizes are positional non-negative integer byte counts in this
+order: text, rodata, data, bss, noinit and reserved stack.
