@@ -133,13 +133,24 @@ class PytylikiBridge:
         except OSError as error:
             raise FfiError(f"cannot load Pytyliki library {target}: {error}") from error
         self.path = str(target)
+        self.closed = False
         self._cpu: _PlCpuInfo | None = None
         self._bench: _PlBenchmark | None = None
         self._analysis: _PlAnalysis | None = None
         self._configure()
 
+    def _ensure_open(self) -> None:
+        if self.closed:
+            raise FfiError("Pytyliki native library handle is closed")
+
+    def close(self) -> None:
+        # Keep the ctypes handle alive until process teardown; logical close
+        # prevents new calls without relying on platform-specific dlclose.
+        self.closed = True
+
     def _configure(self) -> None:
-        self.handle.pl_cpu_profile.argtypes = [ctypes.POINTER(_PlCpuInfo)]
+        try:
+            self.handle.pl_cpu_profile.argtypes = [ctypes.POINTER(_PlCpuInfo)]
         self.handle.pl_cpu_profile.restype = ctypes.c_int
         self.handle.pl_run_benchmark.argtypes = [ctypes.c_uint64, ctypes.POINTER(_PlBenchmark)]
         self.handle.pl_run_benchmark.restype = ctypes.c_int
@@ -151,7 +162,9 @@ class PytylikiBridge:
             ctypes.c_char_p, ctypes.POINTER(_PlCpuInfo),
             ctypes.POINTER(_PlBenchmark), ctypes.POINTER(_PlAnalysis),
         ]
-        self.handle.pl_write_json.restype = ctypes.c_int
+            self.handle.pl_write_json.restype = ctypes.c_int
+        except AttributeError as error:
+            raise FfiError(f"Pytyliki library is missing an expected pl_* symbol: {error}") from error
 
     @staticmethod
     def _check(status: int, operation: str) -> None:
@@ -159,6 +172,7 @@ class PytylikiBridge:
             raise FfiError(f"Pytyliki {operation} failed with status {status}")
 
     def cpu_profile(self) -> dict[str, Any]:
+        self._ensure_open()
         value = _PlCpuInfo()
         self._check(self.handle.pl_cpu_profile(ctypes.byref(value)), "pl_cpu_profile")
         self._cpu = value
@@ -169,6 +183,7 @@ class PytylikiBridge:
         }
 
     def benchmark(self, iterations: int) -> dict[str, Any]:
+        self._ensure_open()
         if isinstance(iterations, bool) or not isinstance(iterations, int) or iterations < 1:
             raise FfiError("benchmark iterations must be a positive integer")
         value = _PlBenchmark()
@@ -181,6 +196,7 @@ class PytylikiBridge:
         }
 
     def analyze_file(self, path: str) -> dict[str, Any]:
+        self._ensure_open()
         value = _PlAnalysis()
         details = ctypes.create_string_buffer(16_384)
         self._check(
@@ -199,6 +215,7 @@ class PytylikiBridge:
         }
 
     def write_json(self, path: str) -> None:
+        self._ensure_open()
         if self._cpu is None or self._bench is None or self._analysis is None:
             raise FfiError("call cpu_profile(), benchmark(), and analyze_file() before write_json()")
         self._check(
