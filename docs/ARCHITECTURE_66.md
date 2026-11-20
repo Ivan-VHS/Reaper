@@ -32,7 +32,7 @@ Reaper is a standalone language implementation, not a service collection. Its lo
 
 ### C. Language semantics and bounded automation
 
-19. Preserve explicit data-flow composition through the ~> operator.
+19. Preserve explicit data-flow composition through the :: operator.
 20. Preserve immutability by default with make and explicit mutation through vary/change.
 21. Keep console effects visible through explicit emit/say/ask operations.
 22. Keep coercions explicit; do not silently convert booleans, numbers and text.
