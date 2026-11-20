@@ -43,7 +43,12 @@ class MemoryBuffer:
         self._ensure_open()
         capacity = _whole(capacity, "capacity")
         if capacity > self.capacity:
-            self.data.extend(b"\0" * (capacity - self.capacity))
+            growth = capacity - self.capacity
+            if self.arena is not None:
+                if self.arena.closed or self.arena.used + growth > self.arena.limit:
+                    raise ValueError("arena memory limit exceeded")
+                self.arena.used += growth
+            self.data.extend(b"\0" * growth)
             self.capacity = capacity
         return self.capacity
 
@@ -131,6 +136,7 @@ class MemoryArena:
     children: list["MemoryArena"] = field(default_factory=list)
     used: int = 0
     closed: bool = False
+    reserved_from_parent: int = 0
 
     def __post_init__(self) -> None:
         self.limit = _whole(self.limit, "arena limit")
@@ -149,7 +155,11 @@ class MemoryArena:
     def child(self, limit: int) -> "MemoryArena":
         if self.closed:
             raise ValueError("arena is closed")
-        child = MemoryArena(limit, self)
+        limit = _whole(limit, "child arena limit")
+        if self.used + limit > self.limit:
+            raise ValueError("parent arena memory limit exceeded")
+        self.used += limit
+        child = MemoryArena(limit, self, reserved_from_parent=limit)
         self.children.append(child)
         return child
 
@@ -160,7 +170,6 @@ class MemoryArena:
         for child in reversed(self.children):
             if not child.closed:
                 child_report = child.close()
-                released += child_report["released"]
                 count += child_report["allocations"]
         for buffer in self.allocations:
             buffer.closed = True
@@ -170,6 +179,9 @@ class MemoryArena:
         self.children.clear()
         self.used = 0
         self.closed = True
+        if self.parent is not None and self.reserved_from_parent:
+            self.parent.used = max(0, self.parent.used - self.reserved_from_parent)
+            self.reserved_from_parent = 0
         return {"released": released, "allocations": count}
 
 
