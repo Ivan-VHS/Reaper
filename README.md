@@ -11,7 +11,7 @@
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
-## Language example
+## Example
 
 ```reaper
 craft double(value) {
@@ -22,45 +22,36 @@ make answer := numbers :: map(double) :: sum()
 emit "answer = " ++ text(answer)
 ```
 
-## Studio preview
+## Capabilities
 
-<p align="center"><img src="assets/reaper-terminal-preview.svg" alt="Illustrative Reaper command-line session preview" width="100%"></p>
-<sub>Expected output rendered from committed examples, not a live terminal or desktop screenshot. A captured Reaper Studio session is not yet committed.</sub>
+- **Python reference runtime:** lexer, parser, interpreter, CLI, REPL, modules, closures, collections, resource tracking, quotas, optional bytecode VM, profiling and hash-chained audit.
+- **Reaper Studio:** Windows editor with check/run/debug, breakpoints, variables and call-stack inspection.
+- **Native C17:** lexer, expression parser, owned AST, checked integer IR operations and limited lowering. Not yet a complete interpreter; Python remains the compatibility reference.
+- **МОСТ:** exact Russian keyword aliases over REAPER 0.1 and its shared parser/runtime; no separate semantics or runtime.
+- **QCS 1.0:** independent hardware-domain frontend with source locations, frame parser, Pratt expressions and JSON AST. It does not replace `.rpr` or execute hardware operations. Run: `reaper-qcs check examples/qcs_irq.qcs`.
+- **MOST Function Registry 666:** 666 traceable API contracts (147 existing specifications + 519 proposals), with source inventory and validator. This is a specification catalogue, not 666 implemented functions.
+- **Systems and interop:** Embedded C, MCU profiles and memory budgets; opt-in Pytyliki C ABI v1; 66 language/toolchain entries, 14 architecture profiles and the validated MOST 20×20 matrix.
 
-## Implemented capabilities
+## Run
 
-- **Reference runtime:** Python 3.10+, lexer, parser, tree-walking interpreter, CLI, REPL and standard-library tests.
-- **Language core:** Unicode identifiers, functions/closures, recursion, immutable `make`, mutable `vary` with explicit `change`, conditionals, iteration and flow composition.
-- **Collections and metrics:** map/filter/fold/reduce, sorting, slicing, flattening, UTF-8 helpers, vector norms/distances, projections, quadratic forms and geometry.
-- **Modules and resources:** `.rpr` imports/exports, dependency graphs, cycle diagnostics, managed-resource ledger, LIFO regions, bounded file handles and deterministic cleanup.
-- **Execution and audit:** selectable Python bytecode VM, execution quotas, JSON output, profiling and hash-chained audit logs.
-- **Reaper Studio:** Windows editor for open/save/check/run, breakpoints, step/continue/stop, variable inspection and call stack.
-- **Embedded C and interop:** project scaffolding, MCU profile inspection, memory budgets and opt-in C ABI access to trusted libraries, including Pytyliki ABI v1.
-- **Additional systems:** local-first Polyglot; 666 reserved lexemes; 66 language/toolchain entries; 14 architecture profiles; MOST 20×20 matrix with 400 specified projections and an implemented integrity validator (not 400 executable compiler features).
-- **МОСТ:** exact Russian keyword aliases over REAPER 0.1. The Python reference executes a limited subset through the existing parser/runtime; the C17 lexer exposes canonical REAPER spellings. No separate parser, AST, type system, morphology engine or runtime is introduced.
-
-The native C17 track has a lexer, expression parser, owned AST, checked integer IR operations, limited lowering, optimizer tests and CLI bring-up. It is **not a complete interpreter**. The self-hosting lexer/parser is a staged bootstrap, not a replacement for the Python frontend.
-
-## Run the reference interpreter
-
-Requirements: Python 3.10+. No third-party runtime dependencies.
+Requires Python 3.10+; no third-party runtime dependencies.
 
 ```bash
 git clone https://github.com/Ivan-VHS/Reaper.git
 cd Reaper
-python -m reaper examples/hello.rpr
 python -m reaper examples/flow.rpr
 python -m reaper --check examples/flow.rpr
 python -m reaper --engine vm examples/flow.rpr
 python -m reaper --repl
+python -m pip install -e .
 python -m unittest discover -s tests -v
 ```
 
-Install the CLI with `python -m pip install -e .`. Run Reaper Studio on Windows with `python reaper_desktop.py`.
+Run Studio on Windows with `python reaper_desktop.py`.
 
-## Build the native C17 core
+## Build C17
 
-Requirements: CMake and a C17-capable compiler.
+Requires CMake and a C17-capable compiler.
 
 ```sh
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
@@ -69,34 +60,16 @@ ctest --test-dir build --output-on-failure
 ./build/reaper-c --tokens examples/hello.rpr
 ```
 
-## Evolution and boundaries
+## Architecture and boundaries
 
-Started 17 Nov 2026 with lexer, parser, interpreter and CLI. Main added modules, quotas, VM, Studio debugger, Polyglot, Embedded C, partial C17/self-hosting tracks and the validated MOST 20×20 architecture matrix.
+Python remains the executable compatibility reference until native parity is demonstrated. The managed heap is accounting over Python's allocator, not a physical allocator or RSS cap. Native FFI runs trusted ABI-compatible code in-process. Toolchain discovery checks `PATH`; it does not install compilers. MOST aliases resolve to canonical REAPER symbols; QCS parsing does not prove hardware contracts.
 
-The managed heap is accounting over Python's allocator, not a physical allocator or process-RSS cap. Native FFI is opt-in and executes loaded code in-process; use trusted ABI-compatible libraries only. Toolchain discovery checks `PATH` and does not install compilers. Python remains the compatibility reference until native parity is demonstrated.
+## Documentation
 
-## Documentation and downloads
+[Anatidae UI/UX](docs/UI_UX_SYSTEM.md) · [12-principle motion](docs/DISNEY_MOTION_SYSTEM.md) · [Language](LANGUAGE.md) · [QCS frontend](docs/QCS_FRONTEND.md) · [MOST 666 registry](docs/MOST_FUNCTIONS_666.md) · [МОСТ specification](docs/MOST_LANGUAGE_SPEC.md) · [Runtime](docs/RUNTIME_PLATFORM.md) · [Engineering standard](docs/UNIFIED_ENGINEERING_STANDARD.md)
 
-[UI/UX system](docs/UI_UX_SYSTEM.md) · [Language](LANGUAGE.md) · [Runtime platform](docs/RUNTIME_PLATFORM.md) · [Self-hosting plan](docs/SELF_HOSTING_BOOTSTRAP.md) · [Token catalogue](docs/TOKEN_CATALOG.md) · [Embedded C](docs/EMBEDDED_C_WORKBENCH.md) · [MOST matrix](docs/MOST_400_COMBINATORIAL_MATRIX.md) · [Engineering standard](docs/UNIFIED_ENGINEERING_STANDARD.md) · [МОСТ aliases](docs/MOST_LANGUAGE_SPEC.md) · [66 Russian readability rules](docs/MOST_RUSSIAN_66_RULES.md)
-
-[Windows releases](https://github.com/Ivan-VHS/Reaper/releases) · [Desktop build workflow](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml)
+[Windows releases](https://github.com/Ivan-VHS/Reaper/releases) · [Desktop build](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml)
 
 ## License
 
 [Apache License 2.0](LICENSE)
-
-## Quantum Contour Syntax (QCS)
-
-The independent QCS 1.0 frontend provides source-located lexing, frame/declaration parsing, Pratt expressions, a JSON-serializable AST and a 65-domain registry. It does not replace the `.rpr` grammar or execute hardware operations.
-
-```sh
-reaper-qcs check examples/qcs_irq.qcs
-reaper-qcs tokens examples/qcs_irq.qcs
-reaper-qcs ast examples/qcs_irq.qcs
-```
-
-See [QCS frontend specification](docs/QCS_FRONTEND.md). The native C11 companion validator is maintained in Pytyliki.
-
-## MOST Function Registry 666
-
-The machine-readable registry contains 666 traceable API/feature contracts: 147 existing specifications and 519 proposals. It is a specification catalogue, not 666 implemented runtime functions. See [MOST_FUNCTIONS_666.md](docs/MOST_FUNCTIONS_666.md); validate it with `python tools/validate_most_functions.py`.

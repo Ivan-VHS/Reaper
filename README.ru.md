@@ -11,7 +11,7 @@
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
-## Пример языка
+## Пример
 
 ```reaper
 craft double(value) {
@@ -22,43 +22,34 @@ make answer := numbers :: map(double) :: sum()
 emit "answer = " ++ text(answer)
 ```
 
-## Предпросмотр Studio
+## Возможности
 
-<p align="center"><img src="assets/reaper-terminal-preview.svg" alt="Иллюстративный предпросмотр терминальной сессии Reaper" width="100%"></p>
-<sub>Ожидаемый вывод по примерам в репозитории, а не снимок живого терминала или desktop-приложения. Скриншот Reaper Studio пока не добавлен.</sub>
+- **Python runtime:** лексер, парсер, интерпретатор, CLI, REPL, модули, замыкания, коллекции, учёт ресурсов, квоты, bytecode VM, профилирование и аудит с хеш-цепочкой.
+- **Reaper Studio:** Windows-редактор с проверкой, запуском, отладкой, breakpoint, просмотром переменных и стека вызовов.
+- **Нативный C17:** лексер, expression-парсер, AST с владением, проверяемые integer IR-операции и ограниченный lowering. Это ещё не полный интерпретатор; Python остаётся эталоном.
+- **МОСТ:** точные русские псевдонимы ключевых слов REAPER 0.1 над тем же parser/runtime; отдельной семантики или runtime нет.
+- **QCS 1.0:** самостоятельный frontend аппаратного синтаксиса: позиции исходника, frame parser, Pratt expressions и JSON AST. Не заменяет `.rpr` и не исполняет аппаратные операции. Команда: `reaper-qcs check examples/qcs_irq.qcs`.
+- **Реестр MOST 666:** 666 контрактов API (147 существующих спецификаций + 519 предложений), source inventory и валидатор. Это каталог спецификаций, а не 666 готовых функций.
+- **Системы и interop:** Embedded C, профили MCU и бюджеты памяти; opt-in Pytyliki C ABI v1; 66 языков/toolchain, 14 архитектурных профилей и проверяемая матрица MOST 20×20.
 
-## Реализованные возможности
+## Запуск
 
-- **Эталонный runtime:** Python 3.10+, лексер, парсер, tree-walking-интерпретатор, CLI, REPL и тесты на стандартной библиотеке.
-- **Ядро языка:** Unicode-идентификаторы, функции и замыкания, рекурсия, неизменяемый `make`, изменяемый `vary` с явным `change`, условия, циклы и композиция потока.
-- **Коллекции и метрики:** map/filter/fold/reduce, сортировка, срезы, flatten, UTF-8-утилиты, нормы и расстояния векторов, проекции, квадратичные формы и геометрия.
-- **Модули и ресурсы:** импорты/экспорты `.rpr`, граф зависимостей, диагностика циклов, учёт ресурсов, LIFO-регионы, ограниченные файловые дескрипторы и очистка.
-- **Исполнение и аудит:** Python bytecode VM, лимиты исполнения, JSON, профилирование и журналы с хеш-цепочкой.
-- **Reaper Studio:** Windows-редактор с открытием/сохранением, проверкой и запуском кода, breakpoint, пошаговым управлением, просмотром переменных и стека вызовов.
-- **Embedded C и FFI:** шаблоны проектов, профили MCU, бюджет памяти и опциональный C ABI к доверенным библиотекам, включая Pytyliki ABI v1.
-- **Дополнительные системы:** локальный Polyglot; 666 зарезервированных лексем; 66 профилей языков/toolchain; 14 архитектур; матрица MOST 20×20 (400 специфицированных проекций) и реализованный валидатор целостности. Это не 400 исполняемых функций языка.
-- **МОСТ:** точные русские псевдонимы ключевых слов REAPER 0.1. Используются тот же parser, AST и runtime; Python-эталон исполняет ограниченное подмножество, C17-лексер возвращает канонические написания токенов REAPER. Отдельных грамматики, морфологии, системы типов или runtime нет.
-
-Нативная ветка C17 включает лексер, expression-парсер, AST с владением, проверяемые целочисленные операции IR, ограниченный lowering, тесты оптимизатора и начальный CLI. Это **ещё не полноценный интерпретатор**. Self-hosting lexer/parser — этап bootstrap, а не замена Python frontend.
-
-## Запуск интерпретатора
-
-Требуется Python 3.10+. Сторонние runtime-зависимости не нужны.
+Нужен Python 3.10+, сторонние runtime-зависимости отсутствуют.
 
 ```bash
 git clone https://github.com/Ivan-VHS/Reaper.git
 cd Reaper
-python -m reaper examples/hello.rpr
 python -m reaper examples/flow.rpr
 python -m reaper --check examples/flow.rpr
 python -m reaper --engine vm examples/flow.rpr
 python -m reaper --repl
+python -m pip install -e .
 python -m unittest discover -s tests -v
 ```
 
-Установка CLI: `python -m pip install -e .`. Запуск Reaper Studio в Windows: `python reaper_desktop.py`.
+Reaper Studio в Windows: `python reaper_desktop.py`.
 
-## Сборка ядра C17
+## Сборка C17
 
 Нужны CMake и компилятор C17.
 
@@ -69,15 +60,13 @@ ctest --test-dir build --output-on-failure
 ./build/reaper-c --tokens examples/hello.rpr
 ```
 
-## Развитие и границы
+## Архитектура и ограничения
 
-Языковая основа появилась 17 ноября 2026 года: лексер, парсер, интерпретатор и CLI. Затем main получил модули, лимиты, VM, Studio, Polyglot, Embedded C, частичные C17/self-hosting и валидируемую матрицу MOST 20×20.
+Python остаётся исполняемым эталоном до подтверждения нативного паритета. Managed heap — учёт поверх аллокатора Python, не физический аллокатор и не лимит RSS. Нативный FFI исполняет доверенный ABI-совместимый код внутри процесса. Поиск toolchain проверяет `PATH`, но не устанавливает компиляторы. МОСТ разрешает имена в канонические символы REAPER; QCS-разбор не доказывает аппаратные контракты.
 
-Managed heap — учёт поверх аллокатора Python, а не физический аллокатор или лимит RSS. Нативный FFI включается явно и исполняет загруженный код внутри процесса — используйте только доверенные ABI-совместимые библиотеки. Поиск toolchain проверяет `PATH`, но не устанавливает компиляторы. Python остаётся эталоном до подтверждения нативного паритета.
+## Документация
 
-## Документация и загрузки
-
-[Язык](LANGUAGE.md) · [Runtime platform](docs/RUNTIME_PLATFORM.md) · [План self-hosting](docs/SELF_HOSTING_BOOTSTRAP.md) · [Каталог токенов](docs/TOKEN_CATALOG.md) · [Embedded C](docs/EMBEDDED_C_WORKBENCH.md) · [Матрица MOST](docs/MOST_400_COMBINATORIAL_MATRIX.md) · [Инженерный стандарт](docs/UNIFIED_ENGINEERING_STANDARD.md)
+[Anatidae UI/UX](docs/UI_UX_SYSTEM.md) · [12 принципов анимации](docs/DISNEY_MOTION_SYSTEM.md) · [Язык](LANGUAGE.md) · [QCS frontend](docs/QCS_FRONTEND.md) · [Реестр MOST 666](docs/MOST_FUNCTIONS_666.md) · [Спецификация МОСТ](docs/MOST_LANGUAGE_SPEC.md) · [Runtime](docs/RUNTIME_PLATFORM.md) · [Инженерный стандарт](docs/UNIFIED_ENGINEERING_STANDARD.md)
 
 [Релизы Windows](https://github.com/Ivan-VHS/Reaper/releases) · [Сборка desktop](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml)
 
