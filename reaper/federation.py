@@ -109,6 +109,8 @@ def validate_oplage_snapshot(snapshot: Any) -> dict[str, float]:
     label = "OPlague snapshot"
     if not isinstance(snapshot, Mapping):
         raise TypeError(f"{label} must be a JSON object")
+    if snapshot.get("schema") != OPLAGE_SNAPSHOT_SCHEMA:
+        raise ValueError(f"{label} schema must be {OPLAGE_SNAPSHOT_SCHEMA}")
     keys = set(snapshot)
     allowed = _SNAPSHOT_REQUIRED_FIELDS | {"identity_protection"}
     missing = _SNAPSHOT_REQUIRED_FIELDS - keys
@@ -117,8 +119,6 @@ def validate_oplage_snapshot(snapshot: Any) -> dict[str, float]:
         raise ValueError(
             f"{label} fields are invalid; missing={sorted(missing)}, extra={sorted(extra)}"
         )
-    if snapshot.get("schema") != OPLAGE_SNAPSHOT_SCHEMA:
-        raise ValueError(f"{label} schema must be {OPLAGE_SNAPSHOT_SCHEMA}")
 
     captured = snapshot.get("captured_utc")
     if not isinstance(captured, str):
