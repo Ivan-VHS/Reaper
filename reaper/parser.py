@@ -178,6 +178,9 @@ class Parser:
         if self._match("NOTHING"):
             token = self._previous()
             return Node("literal", token, value=None)
+        if self._match("GLYPH"):
+            token = self._previous()
+            return Node("name", token, value=f"\\0glyph:{token.value}")
         if self._match("IDENT"):
             token = self._previous()
             return Node("name", token, value=token.value)
