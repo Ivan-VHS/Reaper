@@ -31,3 +31,6 @@ reaper-studio = "reaper.desktop:main"
 
 [tool.setuptools]
 packages = ["reaper"]
+
+[tool.setuptools.package-data]
+reaper = ["systems_languages.json"]
