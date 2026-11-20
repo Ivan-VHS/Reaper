@@ -56,6 +56,7 @@ A reserved token is not an executable language feature. A discovered compiler is
 ## Related contracts
 
 - [Unified Reaper architecture](REAPER_UNIFIED_ARCHITECTURE.md)
+- [48-point engineering roadmap and acceptance gates](ENGINEERING_48_ROADMAP.md)
 - [Federated integration](FEDERATED_INTEGRATION.md)
 - [Token catalogue](TOKEN_CATALOG.md)
 - [Runtime platform contract](RUNTIME_PLATFORM.md)

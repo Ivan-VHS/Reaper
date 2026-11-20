@@ -203,6 +203,7 @@ sampling is claimed. See [the Embedded C workbench guide](docs/EMBEDDED_C_WORKBE
 - [Runtime platform: modules, heap, FFI, VM and debugger](docs/RUNTIME_PLATFORM.md)
 - [Runtime and CLI implementation update (20 Nov 2026)](docs/IMPLEMENTATION_UPDATE_2026-11-20.md)
 - [Unified REAPER/MOST architecture](docs/REAPER_UNIFIED_ARCHITECTURE.md)
+- [48-point engineering architecture and acceptance roadmap](docs/ENGINEERING_48_ROADMAP.md)
 - [Self-hosting bootstrap plan](docs/SELF_HOSTING_BOOTSTRAP.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Concatenation and composition architecture](docs/CONCATENATION_ARCHITECTURE.md)

@@ -16,7 +16,7 @@ The following is supported by the current Reaper 0.1 implementation and its test
 
 - UTF-8 source processing through a lexer, parser and tree-walking interpreter.
 - Immutable `make` bindings and explicit reassignment through `vary` / `change`.
-- Functions, lexical closures, recursion, lists and the `~>` flow operator.
+- Functions, lexical closures, recursion, lists and the `::` flow operator.
 - Explicit console operations (`emit`, `say`, `ask`).
 - Instruction, call-depth, collection-item and text-length limits.
 - A Python 3.10+ standard-library implementation, CLI, examples and unittest suite.
@@ -28,7 +28,7 @@ These are the current baseline, not evidence that the future AETHER-ANAS runtime
 | AETHER-ANAS principle | Reaper 0.1 state | Integration direction |
 |---|---|---|
 | One coherent, standalone language product | Implemented | Preserve the single package, CLI and runtime |
-| Explicit data flow and composable functions | Implemented | Preserve `~>` semantics and test associativity |
+| Explicit data flow and composable functions | Implemented | Preserve `::` semantics and test associativity |
 | Immutability as the default binding mode | Partial | Keep mutation explicit; specify collection/value semantics |
 | Bounded execution and resource guardrails | Partial | Extend quotas only with pre-allocation checks and boundary tests |
 | Semantic IR / content-addressed hypergraph | Not implemented | Introduce a canonical intermediate representation before considering graph storage |

@@ -164,6 +164,7 @@ python -m unittest discover -s tests -p 'test_self_hosting.py' -v
 - [Полиглот-система погружения](docs/POLYGLOT_IMMERSION.md)
 - [Реализованные расширения runtime и CLI (20.11.2026)](docs/IMPLEMENTATION_UPDATE_2026-11-20.md)
 - [Объединённая архитектура REAPER/MOST](docs/REAPER_UNIFIED_ARCHITECTURE.md)
+- [48 инженерных требований и план приёмки](docs/ENGINEERING_48_ROADMAP.md)
 - [План self-hosting bootstrap](docs/SELF_HOSTING_BOOTSTRAP.md)
 - [Архитектура](docs/ARCHITECTURE.md)
 - [Спецификация MOST](docs/MOST_LANGUAGE_SPEC.md)
