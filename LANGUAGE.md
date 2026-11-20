@@ -154,3 +154,36 @@ Not implemented yet: static type checking, algebraic effect handlers, semantic-g
 ## Orthogonal metric built-ins
 
 Reaper also provides pure numerical helpers: metric_dot, vector_norm (L1/L2/L-infinity), vector_normalize, euclidean_distance, squared_euclidean_distance, manhattan_distance, chebyshev_distance, cosine_similarity, angle_between, vector_projection, vector_centroid, is_orthogonal, quadratic_form, law_of_cosines, de_gua_area, parseval_energy, unit_circle_residual, spherical_hypotenuse, hyperbolic_hypotenuse, minkowski_interval, combine_variances and reciprocal_altitude. All vector arguments are lists of finite numbers. The vector and matrix limits, dimensional checks, geometric domains and statistical assumptions are documented in docs/ORTHOGONAL_METRIC_ENGINE.md. These helpers do not grant host I/O or hardware capabilities.
+
+
+## Punctuation-only memory glyphs
+
+Reaper has a punctuation glyph registry with **666 unique source tokens**. Every glyph is composed only from `:`, `;`, `[`, `]`, `{`, `}`, `+`, `=`, `_`, `-` and `*`. Numeric IDs are registry metadata and never appear inside a glyph token. The lexer uses longest-match recognition, so a longer glyph is consumed as one token even when it begins with a shorter glyph.
+
+The first 120 glyphs form the memory, buffers, arenas and views family. They are callable expressions: the glyph is the callee and arguments follow in parentheses.
+
+~~~reaper
+make arena := {;;}(64)
+make buffer := ;::(arena, 16)
+memory_write(buffer, 0, "Reaper")
+make view := ::;(buffer, 0, 6)
+emit memory_read(view)
+
+make frame := };;=;(buffer)
+memory_write(buffer, 0, "broken")
+;;:[:(frame)
+emit memory_read(buffer)
+make report := };;(arena)
+emit report["released"]
+~~~
+
+The runtime provides bounded byte buffers, checked reads and writes, zero-copy views, reserve/clear, cursors, chunking, arenas, nested arenas, and transactional frames. `memory_write(buffer, offset, value)` accepts text, bytes, or a list of byte values. `memory_read(buffer[, offset[, length]])` returns UTF-8 text when valid and otherwise returns bytes, which display as hexadecimal. `memory_capacity(buffer)` reports allocated capacity.
+
+The memory model is deliberately safe and explicit. Buffers are Reaper-owned byte arrays, views are non-owning bounded descriptors, alignment is validated metadata rather than a promise about a native pointer address, and pinning is a logical lifetime marker—not OS page locking. Raw addresses, arbitrary process memory access and hardware DMA are not exposed.
+
+Glyphs 121–666 are reserved extension slots generated deterministically in base eleven from the punctuation alphabet. They tokenize and appear in the registry, but calls fail clearly until their operations receive defined semantics. Inspect the registry with:
+
+~~~sh
+python -m reaper --glyphs
+python -m reaper --glyphs-json
+~~~
