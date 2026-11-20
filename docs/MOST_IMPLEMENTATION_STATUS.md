@@ -83,4 +83,4 @@ Python remains a compatibility oracle until C17 semantic parity is demonstrated.
 
 ## MOST Russian frontend boundary
 
-The native C17 lexer classifies the Russian reserved-word vocabulary as keyword tokens while keeping ordinary Russian names and proposed type names as identifiers. This is a lexical milestone only. It does not imply declaration parsing, inflection resolution, synonym lookup, Unicode NFC normalization, static typing, execution or code generation. The complete 66-rule design mapping is in docs/MOST_RUSSIAN_66_RULES.md.
+The native C17 lexer classifies the Russian reserved-word vocabulary as keyword tokens while keeping ordinary Russian names and proposed type names as identifiers. Separately, the Python reference runtime executes a limited Russian compatibility subset by mapping basic keywords to the existing grammar. Neither slice implies the full typed declaration grammar, inflection resolver, synonym lookup, Unicode NFC normalization, static type checking or native/WASM code generation. The complete 66-rule design mapping is in docs/MOST_RUSSIAN_66_RULES.md.
