@@ -40,6 +40,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--heap-bytes", type=int, default=64 * 1024 * 1024, help="managed heap ceiling in bytes")
     parser.add_argument("--open-resources", type=int, default=64, help="maximum simultaneously open managed files")
     parser.add_argument("--systems", action="store_true", help="list the 20 engineering system contracts")
+    parser.add_argument("--embedded-targets", action="store_true", help="print Embedded C target profiles as JSON")
     parser.add_argument("--systems-languages", action="store_true", help="list the 66 systems-language capability profiles")
     parser.add_argument("--language-profile", choices=("pytyliki", "reaper", "oplague"), help="rank systems languages for a project profile")
     parser.add_argument("--available-languages", action="store_true", help="show only candidate toolchains found on PATH")
@@ -66,6 +67,12 @@ def main(argv: list[str] | None = None) -> int:
         return polyglot_code_main(arguments[1:])
     parser = build_parser()
     args = parser.parse_args(arguments)
+    if args.embedded_targets:
+        if args.source or args.audit_log or args.verify_audit_log:
+            parser.error("--embedded-targets cannot be combined with a source or audit-log option")
+        from .embedded import embedded_targets
+        print(json.dumps(embedded_targets(), ensure_ascii=False, indent=2))
+        return 0
     if args.module_graph:
         if not args.source:
             parser.error("--module-graph requires a .rpr entry file")
