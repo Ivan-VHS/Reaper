@@ -29,15 +29,15 @@ Default easing: `ease-out` for entry, `ease-in` for exit, `ease-in-out` for repo
 1. **Squash and stretch** — restrained press feedback and elastic overscroll; never deform text or data.
 2. **Anticipation** — hover/focus previews and clear affordances before a consequential action; never delay the action.
 3. **Staging** — one dominant focus; dim or quiet secondary surfaces only when a modal task requires it.
-4. **Follow-through and overlap** — short, bounded stagger for related content; parent motion leads child motion.
-5. **Slow in and slow out** — consistent easing curves for entry, exit, and repositioning.
-6. **Arcs** — optional curved trajectories for spatial transitions; preserve straight, predictable movement in dense workspaces.
-7. **Secondary action** — supporting icon or status feedback that reinforces, but never competes with, the primary result.
-8. **Timing** — use the tokens above; input response must remain immediate and transitions must be interruptible.
-9. **Exaggeration** — reserve stronger emphasis for meaningful success, validation errors, and critical alerts.
-10. **Solid drawing** — preserve geometry, alignment, clipping, layer order, focus rings, and readable contrast throughout every frame.
-11. **Appeal** — motion should match the product's established character and feel deliberate rather than ornamental.
-12. **Consistent appeal / staging across scenes** — treat the complete user journey as one coherent motion language; do not animate isolated screens with unrelated rules.
+4. **Straight-ahead action and pose-to-pose** — use explicit state-to-state transitions for predictable UI workflows; reserve continuous, frame-by-frame motion for genuinely continuous interactions such as dragging or meters. Both approaches must be deterministic and interruptible.
+5. **Follow-through and overlap** — short, bounded stagger for related content; parent motion leads child motion.
+6. **Slow in and slow out** — consistent easing curves for entry, exit, and repositioning.
+7. **Arcs** — optional curved trajectories for spatial transitions; preserve straight, predictable movement in dense workspaces.
+8. **Secondary action** — supporting icon or status feedback that reinforces, but never competes with, the primary result.
+9. **Timing** — use the tokens above; input response must remain immediate and transitions must be interruptible.
+10. **Exaggeration** — reserve stronger emphasis for meaningful success, validation errors, and critical alerts.
+11. **Solid drawing** — preserve geometry, alignment, clipping, layer order, focus rings, and readable contrast throughout every frame.
+12. **Appeal** — motion should match the product's established character and feel deliberate rather than ornamental.
 
 ## Component behavior
 
