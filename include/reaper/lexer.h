@@ -4,7 +4,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-typedef enum { REAPER_TOK_EOF=0, REAPER_TOK_NEWLINE, REAPER_TOK_IDENTIFIER, REAPER_TOK_KEYWORD, REAPER_TOK_NUMBER, REAPER_TOK_STRING, REAPER_TOK_OPERATOR, REAPER_TOK_PUNCTUATION } ReaperTokenKind;
+typedef enum { REAPER_TOK_EOF=0, REAPER_TOK_NEWLINE, REAPER_TOK_IDENTIFIER, REAPER_TOK_KEYWORD, REAPER_TOK_NUMBER, REAPER_TOK_STRING, REAPER_TOK_OPERATOR, REAPER_TOK_PUNCTUATION, REAPER_TOK_GLYPH } ReaperTokenKind;
 typedef struct { ReaperTokenKind kind; char *text; size_t line; size_t column; } ReaperToken;
 typedef struct { ReaperToken *items; size_t length; size_t capacity; } ReaperTokenArray;
 typedef struct { char message[256]; size_t line; size_t column; } ReaperLexError;
