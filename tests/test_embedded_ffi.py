@@ -24,19 +24,8 @@ class EmbeddedPytylikiRuntimeTests(unittest.TestCase):
         make embedded := pytyliki_embedded_profiles("/absolute/path/libpytyliki_ffi.so")
         emit size(embedded)
         emit embedded[0]["id"]
-        make parts := {
-            "text_bytes": 1024,
-            "rodata_bytes": 256,
-            "data_bytes": 128,
-            "bss_bytes": 512,
-            "noinit_bytes": 64,
-            "stack_reserve_bytes": 2048
-        }
-        make report := pytyliki_embedded_budget(
-            "cortex-m4-reference",
-            parts,
-            "/absolute/path/libpytyliki_ffi.so"
-        )
+        make parts := {"text_bytes": 1024, "rodata_bytes": 256, "data_bytes": 128, "bss_bytes": 512, "noinit_bytes": 64, "stack_reserve_bytes": 2048}
+        make report := pytyliki_embedded_budget("cortex-m4-reference", parts, "/absolute/path/libpytyliki_ffi.so")
         emit report["flash_used_bytes"]
         emit report["sram_fits"]
         """
