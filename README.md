@@ -4,6 +4,8 @@
 
 **Reaper is an expression-oriented language built around readable syntax and explicit data flow.** Its `::` operator passes a value into the next operation. The repository contains a Python reference interpreter, a developing native C17 implementation and the first Reaper-written self-hosting frontend component.
 
+**Engineering standard:** [Unified Engineering Standard](docs/UNIFIED_ENGINEERING_STANDARD.md) — common rules for language semantics, reference/native parity, interoperability and verification.
+
 ## Example
 
 ```reaper
