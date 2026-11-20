@@ -5,12 +5,14 @@ import sys
 from dataclasses import dataclass
 from typing import Any, Iterable
 
+from .errors import ReaperRuntimeError
 
-class HeapLimitError(MemoryError):
+
+class HeapLimitError(ReaperRuntimeError):
     pass
 
 
-class RegionError(RuntimeError):
+class RegionError(ReaperRuntimeError):
     pass
 
 
