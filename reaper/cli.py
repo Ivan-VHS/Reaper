@@ -13,6 +13,7 @@ from .audit import AuditLog, AuditLogError, verify_audit_log
 from .errors import ReaperError
 from .evolution import EvolutionEngine
 from .runtime import Interpreter
+from .modules import ModuleLoader
 from .parser import parse
 from .systems import format_tracks
 from .systems_languages import main as systems_languages_main
@@ -30,7 +31,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--check", "--lint", dest="check", action="store_true", help="tokenize and parse without running the program")
     parser.add_argument("--repl", action="store_true", help="start the interactive Reaper prompt")
     parser.add_argument("--json", action="store_true", help="emit the run result and diagnostics as JSON")
-    parser.add_argument("--profile", action="store_true", help="report elapsed time and interpreter step count")
+    parser.add_argument("--profile", action="store_true", help="report elapsed wall time and interpreter step count")
+    parser.add_argument("--engine", choices=("treewalk", "vm"), default="treewalk", help="execution engine (default: treewalk)")
+    parser.add_argument("--allow-native-ffi", action="store_true", help="allow loading native C ABI libraries")
+    parser.add_argument("--module-graph", action="store_true", help="print the transitive .rpr dependency graph as JSON without executing code")
+    parser.add_argument("--heap-bytes", type=int, default=64 * 1024 * 1024, help="managed heap ceiling in bytes")
+    parser.add_argument("--open-resources", type=int, default=64, help="maximum simultaneously open managed files")
     parser.add_argument("--systems", action="store_true", help="list the 20 engineering system contracts")
     parser.add_argument("--systems-languages", action="store_true", help="list the 66 systems-language capability profiles")
     parser.add_argument("--language-profile", choices=("pytyliki", "reaper", "oplague"), help="rank systems languages for a project profile")
@@ -90,6 +96,18 @@ def main(argv: list[str] | None = None) -> int:
     if args.text_length < 1:
         parser.error("--text-length must be a positive integer")
     path = Path(args.source)
+    if args.module_graph:
+        try:
+            graph = ModuleLoader(Interpreter()).scan(str(path))
+        except (OSError, UnicodeError, ReaperError, ValueError) as error:
+            print(f"reaper: module graph failed: {error}", file=sys.stderr)
+            return 1
+        print(json.dumps(graph, ensure_ascii=False, indent=2))
+        return 0
+    if args.heap_bytes < 1:
+        parser.error("--heap-bytes must be a positive integer")
+    if args.open_resources < 1:
+        parser.error("--open-resources must be a positive integer")
     output_lines: list[str] = []
     profile_data: dict[str, float | int] | None = None
     try:
@@ -129,9 +147,12 @@ def main(argv: list[str] | None = None) -> int:
             max_steps=args.steps,
             max_collection_items=args.items,
             max_text_length=args.text_length,
+            allow_native_ffi=args.allow_native_ffi,
+            max_heap_bytes=args.heap_bytes,
+            max_open_resources=args.open_resources,
         )
         try:
-            interpreter.run(source, str(path))
+            interpreter.run(source, str(path), engine=args.engine)
             profile_data = {
                 "elapsed_seconds": round(time.perf_counter() - started, 9),
                 "steps": interpreter.steps,
