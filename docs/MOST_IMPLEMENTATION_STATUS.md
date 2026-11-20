@@ -12,7 +12,7 @@
 | MOST lexical vocabulary | implemented | keyword/operator lexer tests; grammar is not implied |
 | Russian MOST keyword vocabulary | implemented in native lexer | src/lexer.c and tests/test_lexer.c; full declaration grammar is not implied |
 | Russian executable compatibility subset | implemented in Python reference runtime | reaper/lexer.py maps core Russian spellings to existing parser tokens; tests/test_language.py executes a function/loop/conditional sample |
-| Russian 66-rule language design | specified | docs/MOST_RUSSIAN_66_RULES.md; full parser/resolver/type system remain future gates |
+| Russian 66-rule design guidance | specified | docs/MOST_RUSSIAN_66_RULES.md; readability guidance only, not new language features |
 | Semantic IR data model | implemented | `include/reaper/ir.h` |
 | IR structural verifier | implemented | `src/ir.c`, `tests/test_ir.c` |
 | Bounded fixed-point optimizer driver | implemented | `reaper_ir_optimize_fixed_point`; verified pass loop, 64-iteration ceiling, convergence report and idempotence tests |\n| Native C17 evolution evidence gate | implemented | `src/evolution.c`, `include/reaper/evolution.h`, `tests/test_evolution.c`; fail-closed acceptance gates and human approval requirement |\n| Checked i64 constant-folding pass | implemented | `src/optimizer.c`, `include/reaper/optimizer.h`, `tests/test_optimizer.c`; rejects signed overflow and verifies input/output IR |
@@ -29,11 +29,11 @@
 | Original 147-feature systems registry | specified | `docs/MOST_147_FEATURE_REGISTRY.md`; separate from the additional cognitive/text/data feature proposal set |
 | Cognitive 147-function proposal set | architecture input; implementation not claimed | Must be mapped into compiler primitives, deterministic stdlib and optional intelligence services with per-feature acceptance gates |
 | 813-feature architecture map | specified | `docs/REAPER_813_FEATURE_ARCHITECTURE.md` |
-| MOST bilingual bridge | planned | AST/Intent AST, canonical symbols, scoped domain dictionaries and equivalent IR tests |
+| Separate MOST bilingual bridge | deprecated / excluded | exact keyword aliases enter the REAPER token stream; no second frontend or resolver |
 
 ## Parser M1 contract
 
-The current parser accepts exactly one expression and produces a flat, owned AST. It does not yet parse the Russian declaration grammar described by MOST:
+The current native parser accepts exactly one REAPER expression and produces a flat, owned AST. It does not yet parse the complete REAPER declaration/block grammar. Russian keyword aliases do not define a separate grammar:
 - integer/decimal/string/boolean/null literals and identifiers;
 - prefix arithmetic/logical operators;
 - arithmetic, comparison, equality, boolean, null-coalescing and flow operators;
@@ -83,4 +83,4 @@ Python remains a compatibility oracle until C17 semantic parity is demonstrated.
 
 ## MOST Russian frontend boundary
 
-The native C17 lexer classifies the Russian reserved-word vocabulary as keyword tokens while keeping ordinary Russian names and proposed type names as identifiers. The Python reference runtime executes a limited Russian compatibility subset by mapping basic keywords to existing REAPER parser token kinds. Both are REAPER implementations. No separate morphology resolver, synonym lookup, MOST AST, type system or backend is intended. The full REAPER declaration grammar, Unicode NFC validation, static type checking and native/WASM code generation remain separate REAPER milestones. The 66-rule readability mapping is in docs/MOST_RUSSIAN_66_RULES.md.
+The native C17 lexer classifies the supported Russian REAPER aliases as keyword tokens and provides a canonical-spelling accessor; ordinary Russian names remain identifiers. The Python reference runtime executes a limited Russian compatibility subset by mapping basic keywords to existing REAPER parser token kinds. Both are REAPER implementations. No separate morphology resolver, synonym lookup, MOST AST, type system or backend is intended. The full REAPER declaration grammar, Unicode NFC validation, static type checking and native/WASM code generation remain separate REAPER milestones. The 66-rule readability mapping is in docs/MOST_RUSSIAN_66_RULES.md.
