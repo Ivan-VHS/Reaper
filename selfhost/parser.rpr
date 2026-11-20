@@ -1,0 +1,172 @@
+# Stage-1 self-hosting slice: a Pratt expression parser written in Reaper.
+# Input tokens use [kind, value, line, column], matching the reference lexer.
+
+craft parse_expression(tokens) {
+    vary cursor := 0
+    vary failed := false
+    vary error_message := ""
+    vary error_line := 1
+    vary error_column := 1
+    make token_count := size(tokens)
+
+    craft peek() {
+        when cursor < token_count {
+            yield tokens[cursor]
+        }
+        yield ["EOF", "", 1, 1]
+    }
+
+    craft advance() {
+        make token := peek()
+        when token[0] != "EOF" {
+            change cursor := cursor + 1
+        }
+        yield token
+    }
+
+    craft fail(message, token) {
+        change failed := true
+        change error_message := message
+        change error_line := token[2]
+        change error_column := token[3]
+        yield ["ERROR", message, token[2], token[3]]
+    }
+
+    craft precedence(kind) {
+        when kind == "|>" { yield 1 }
+        when kind == "OR" { yield 2 }
+        when kind == "AND" { yield 3 }
+        when kind == "==" or kind == "!=" or kind == "<" or kind == "<=" or kind == ">" or kind == ">=" { yield 4 }
+        when kind == "++" { yield 5 }
+        when kind == "+" or kind == "-" { yield 6 }
+        when kind == "*" or kind == "/" or kind == "//" or kind == "%" { yield 7 }
+        when kind == "**" { yield 8 }
+        yield 0
+    }
+
+    craft parse_bp(minimum) {
+        make first := advance()
+        vary left := ["ERROR", "expected expression", first[2], first[3]]
+
+        when first[0] == "NUMBER" or first[0] == "STRING" or first[0] == "TRUE" or first[0] == "FALSE" or first[0] == "NOTHING" {
+            change left := ["literal", first[0], first[1], first[2], first[3]]
+        } otherwise {
+            when first[0] == "IDENT" {
+                change left := ["name", first[1], first[2], first[3]]
+            } otherwise {
+                when first[0] == "-" or first[0] == "NOT" {
+                    make operand := parse_bp(9)
+                    when failed {
+                        change left := ["ERROR", error_message, error_line, error_column]
+                    } otherwise {
+                        change left := ["unary", first[0], operand, first[2], first[3]]
+                    }
+                } otherwise {
+                    when first[0] == "(" {
+                        change left := parse_bp(1)
+                        when not failed and peek()[0] != ")" {
+                            make ignored := fail("expected ')' to close expression", peek())
+                            change left := ignored
+                        } otherwise {
+                            when not failed {
+                                make ignored_close := advance()
+                            }
+                        }
+                    } otherwise {
+                        make ignored := fail("expected a literal, identifier, or parenthesized expression", first)
+                        change left := ignored
+                    }
+                }
+            }
+        }
+
+        loop while not failed and precedence(peek()[0]) >= minimum and precedence(peek()[0]) > 0 {
+            make operator_token := advance()
+            make operator_precedence := precedence(operator_token[0])
+            vary next_minimum := operator_precedence + 1
+            when operator_token[0] == "**" {
+                change next_minimum := operator_precedence
+            }
+            make right := parse_bp(next_minimum)
+            when failed {
+                change left := ["ERROR", error_message, error_line, error_column]
+            } otherwise {
+                change left := ["binary", operator_token[0], left, right, operator_token[2], operator_token[3]]
+            }
+        }
+
+        yield left
+    }
+
+    when token_count == 0 {
+        yield ["ERROR", "token stream is empty", 1, 1]
+    }
+
+    make root := parse_bp(1)
+    loop while peek()[0] == "NEWLINE" {
+        make ignored_newline := advance()
+    }
+
+    when failed {
+        yield ["ERROR", error_message, error_line, error_column]
+    }
+    when peek()[0] != "EOF" {
+        make ignored := fail("unexpected token after expression", peek())
+        yield ignored
+    }
+    yield ["OK", root]
+}
+
+# Precedence: multiplication groups before addition, then comparison, then flow.
+make precedence_tokens := [
+    ["NUMBER", "2", 1, 1],
+    ["+", "+", 1, 3],
+    ["NUMBER", "3", 1, 5],
+    ["*", "*", 1, 7],
+    ["NUMBER", "4", 1, 9],
+    ["EOF", "", 1, 10]
+]
+make precedence_expected := [
+    "OK",
+    ["binary", "+",
+        ["literal", "NUMBER", "2", 1, 1],
+        ["binary", "*",
+            ["literal", "NUMBER", "3", 1, 5],
+            ["literal", "NUMBER", "4", 1, 9],
+            1, 7
+        ],
+        1, 3
+    ]
+]
+assert(parse_expression(precedence_tokens) == precedence_expected, "Pratt precedence mismatch")
+
+# Exponentiation is right-associative, matching the reference parser.
+make power_tokens := [
+    ["NUMBER", "2", 1, 1], ["**", "**", 1, 2],
+    ["NUMBER", "3", 1, 4], ["**", "**", 1, 5],
+    ["NUMBER", "2", 1, 7], ["EOF", "", 1, 8]
+]
+make power_result := parse_expression(power_tokens)
+assert(power_result[0] == "OK", "power expression failed")
+assert(power_result[1][3][0] == "binary", "power operator must associate to the right")
+
+# Parentheses and unary NOT preserve source positions.
+make grouped_tokens := [
+    ["(", "(", 2, 1], ["NOT", "not", 2, 2],
+    ["IDENT", "ready", 2, 6], [")", ")", 2, 11],
+    ["EOF", "", 2, 12]
+]
+make grouped_result := parse_expression(grouped_tokens)
+assert(grouped_result[0] == "OK", "grouped unary expression failed")
+assert(grouped_result[1][0] == "unary", "group should return its inner unary node")
+assert(grouped_result[1][3] == 2 and grouped_result[1][4] == 2, "unary source position mismatch")
+
+# Invalid trailing input must be rejected with a source location.
+make trailing_tokens := [
+    ["NUMBER", "1", 3, 1], ["NUMBER", "2", 3, 3], ["EOF", "", 3, 4]
+]
+make trailing_result := parse_expression(trailing_tokens)
+assert(trailing_result[0] == "ERROR", "trailing token was accepted")
+assert(trailing_result[2] == 3 and trailing_result[3] == 3, "error source position mismatch")
+
+emit "SELFHOST_PARSER_OK"
