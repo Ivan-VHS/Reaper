@@ -24,7 +24,7 @@ emit "answer = " ++ text(answer)
 
 ## 功能
 
-- **Python 参考运行时：** lexer、parser、解释器、CLI、REPL、模块、闭包、集合、资源跟踪、执行配额、可选字节码 VM、性能分析和哈希链审计。
+- **Python 参考运行时：** lexer、parser、解释器、CLI、REPL、模块、闭包、集合、资源跟踪、执行配额、可选字节码 VM、性能分析和哈希链审计；宿主注入的授权支持 HMAC 身份认证、作用域检查、有限 TTL 和撤销。
 - **Reaper Studio：** Windows 编辑器，支持检查、运行、调试、断点、变量和调用栈查看。
 - **原生 C17：** lexer、表达式解析器、自有 AST、受检整数 IR 操作和有限 lowering。尚不是完整解释器；Python 仍是兼容性参考。
 - **МОСТ：** REAPER 0.1 的精确俄语关键字别名，复用相同 parser/runtime，不另建语义或运行时。
@@ -68,7 +68,20 @@ ctest --test-dir build --output-on-failure
 
 [Anatidae UI/UX](docs/UI_UX_SYSTEM.md) · [12 项动画原则](docs/DISNEY_MOTION_SYSTEM.md) · [语言](LANGUAGE.md) · [QCS frontend](docs/QCS_FRONTEND.md) · [MOST 666 注册表](docs/MOST_FUNCTIONS_666.md) · [МОСТ 规范](docs/MOST_LANGUAGE_SPEC.md) · [运行时](docs/RUNTIME_PLATFORM.md) · [工程标准](docs/UNIFIED_ENGINEERING_STANDARD.md)
 
+
+[治理与授权](docs/HUMAN_FIRST_GOVERNANCE.md) · [Anatidae 宪章](docs/ANATIDAE_CONSTITUTION.md) · [桌面设计系统](docs/ANATIDAE_DESKTOP_DESIGN_SYSTEM.md) · [UI/UX 架构](docs/UI_UX_ARCHITECTURE.md) · [12 项动效原则](docs/DISNEY_MOTION_SYSTEM.md) · [临床系统可靠性 CSR-120](docs/CLINICAL_SYSTEMS_CSR120.md) · [MOST 实现状态](docs/MOST_IMPLEMENTATION_STATUS.md) · [项目契约](docs/UNIFIED_PROJECT_CONTRACT.md)
 [Windows 发布版](https://github.com/Ivan-VHS/Reaper/releases) · [桌面构建工作流](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml)
+
+## Anatidae 准则与语言保证
+
+- **明确授权与可追责性：** 宿主注入的授权具有 HMAC 身份认证、作用域检查、有限有效期和撤销机制；审计记录使执行决策可检查。
+- **有界执行：** 配额、资源记账和输入校验定义运行时边界。证明原生 C17 达到语义对等之前，Python 仍是兼容性参考实现。
+- **单一规范语言契约：** МОСТ 别名共用 REAPER 规范符号、parser 和 runtime；QCS 是独立验证前端，不是硬件执行器。
+- **如实标注实现状态：** MOST 666 注册表包含 147 项既有规格和 519 项提案，并不表示已有 666 个函数实现。原生 C17 lowering 仍不完整。
+- **可信代码边界：** 进程内原生 FFI 会执行可信且 ABI 兼容的代码；它不是不可信扩展的沙箱。
+- **无障碍工具与有目的的动效：** Studio 和编辑器集成应提供清晰的键盘与焦点行为、可读诊断、本地化及减少动态效果支持。动效应增强反馈，而不是遮蔽状态。
+
+本准则用于指导工程决策，不会把路线图项目包装成已实现的运行时功能。
 
 ## 许可证
 
