@@ -35,6 +35,21 @@ reaper --profile examples/flow.rpr
 reaper --json --profile examples/flow.rpr
 ~~~
 
+## Native C17 IR optimizer update
+
+The verified native IR now also defines SUB_I64, MUL_I64 and DIV_I64
+alongside ADD_I64. The constant-folding pass evaluates operations only when
+both operands are verified integer constants. Signed overflow is detected
+before addition, subtraction or multiplication; division rejects zero and the
+INT64_MIN / -1 overflow case. Failed folds return a source-node diagnostic
+instead of relying on undefined behavior.
+
+The fixed-point driver still uses an explicit 1–64 pass budget, verifies the
+IR before and after folding, reports its iteration and changed-node counts,
+and rejects a budget exhausted before convergence. This is a bounded native IR
+capability, not evidence that the developing C frontend or runtime supports all
+four operations end to end.
+
 ## Deliberate implementation boundaries
 
 The current change does not claim to implement module imports/exports, a tracing garbage collector, deterministic external-resource scopes, a native C ABI/FFI bridge, or a full bytecode virtual machine. Those require language-level contracts and native-runtime work; the repository's existing Canonical IR and C17 bring-up remain the foundation for that next stage. Reaper Studio continues to use the Python reference runtime and is not a GUI debugger yet.
