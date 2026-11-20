@@ -8,9 +8,26 @@
 static const char *const keywords[]={
  "make","vary","change","craft","yield","emit","when","otherwise","each","in","loop","while","true","false","nothing","and","or","not",
  "module","import","as","pub","export","fn","struct","enum","trait","impl","type","const","let","mut","return","if","else","match","region","raw","arena","signal","async","await","test","comptime","requires","ensures","unsafe","extern","drop","where","for","break","continue","defer",
- "модуль","импорт","как","публичный","экспорт","функция","структура","перечисление","типаж","реализация","тип","константа","пусть","переменная","изменить","вернуть","если","иначе","выбор","область","сырой","арена","сигнал","асинхронно","ожидать","тест","вычислить_при_сборке","требует","гарантирует","небезопасно","внешний","уничтожить","где","для","в","пока","прервать","продолжить","отложить","истина","ложь","ничего","и","или","не","вывести","сказать","спросить"
+ "пусть","переменная","изменить","функция","вернуть","вывести","если","иначе","для","в","цикл","пока","истина","ложь","ничего","и","или","не","импорт","экспорт","как"
 };
 static int is_keyword(const char *s){for(size_t i=0;i<sizeof keywords/sizeof keywords[0];++i)if(strcmp(s,keywords[i])==0)return 1;return 0;}
+
+typedef struct { const char *alias; const char *canonical; } ReaperKeywordAlias;
+static const ReaperKeywordAlias russian_aliases[] = {
+ {"пусть","make"},{"переменная","vary"},{"изменить","change"},
+ {"функция","craft"},{"вернуть","yield"},{"вывести","emit"},
+ {"если","when"},{"иначе","otherwise"},{"для","each"},{"в","in"},
+ {"цикл","loop"},{"пока","while"},{"истина","true"},{"ложь","false"},
+ {"ничего","nothing"},{"и","and"},{"или","or"},{"не","not"},
+ {"импорт","import"},{"экспорт","export"},{"как","as"}
+};
+const char *reaper_token_canonical_text(const ReaperToken *token){
+ if(!token||!token->text)return "";
+ if(token->kind!=REAPER_TOK_KEYWORD)return token->text;
+ for(size_t i=0;i<sizeof russian_aliases/sizeof russian_aliases[0];++i)
+  if(strcmp(token->text,russian_aliases[i].alias)==0)return russian_aliases[i].canonical;
+ return token->text;
+}
 static int append_token(ReaperTokenArray *o,ReaperTokenKind k,const char *s,size_t n,size_t l,size_t c){
  if(o->length==o->capacity){size_t z=o->capacity?o->capacity*2:32;if(z<o->capacity||z>SIZE_MAX/sizeof *o->items)return 0;ReaperToken *p=realloc(o->items,z*sizeof *p);if(!p)return 0;o->items=p;o->capacity=z;}
  char *v=malloc(n+1);if(!v)return 0;memcpy(v,s,n);v[n]='\0';o->items[o->length++]=(ReaperToken){k,v,l,c};return 1;
