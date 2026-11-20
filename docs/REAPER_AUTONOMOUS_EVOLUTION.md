@@ -58,8 +58,8 @@ Observe implementation + test/benchmark evidence
 
 ## Architecture and ownership
 
-- REAPER remains the language; MOST remains a semantic frontend.
-- Both frontends must converge on the same typed canonical IR.
+- REAPER is the only language and semantic core.
+- МОСТ is an exact Russian keyword-alias profile; both spellings use the same parser, AST and typed Canonical IR.
 - The C17 compiler and evolution gate are the native destination.
 - Python is a temporary compatibility oracle until full differential parity;
   it is not required by the final native build.
@@ -90,7 +90,7 @@ rollback snapshots. Proposed patches remain unapplied until explicit approval.
 
 ### EV4 — Compiler and language evolution
 Versioned grammar, typed symbols, ADTs, effects/capabilities, ownership/regions,
-MOST intent resolution and full typed IR. Each feature has a unique ID,
+REAPER name resolution, type checking and full typed IR. Each feature has a unique ID,
 dependencies, acceptance tests and status.
 
 ### EV5 — REAPER IDE
