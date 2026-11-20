@@ -83,9 +83,14 @@ def validate_registry(data: Any) -> int:
 
     if indices != set(range(1, EXPECTED_COUNT + 1)):
         raise ValueError("source indices must cover 1..66")
+    canonical_names = {
+        _normalize_name(item["name"]): item["id"]
+        for item in languages
+    }
     for item in languages:
         for alias in item["aliases"]:
-            if alias.casefold() in names:
+            owner = canonical_names.get(_normalize_name(alias))
+            if owner is not None and owner != item["id"]:
                 raise ValueError(f"{item['id']}: alias duplicates another canonical name: {alias!r}")
 
     for profile, tags in profiles.items():
