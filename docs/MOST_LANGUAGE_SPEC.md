@@ -104,3 +104,14 @@ The 1.0 core grammar and semantics are frozen. Additions after 1.0 use versioned
 ## 147-feature architecture extension
 
 The extended architecture backlog, including all 147 proposed capabilities, semantic constraints, platform caveats, duplicate resolution, implementation waves and truthful status ledger, is maintained in [MOST_147_FEATURE_REGISTRY.md](MOST_147_FEATURE_REGISTRY.md). The registry extends the 66 foundational rules; it does not imply that the listed features are already implemented. The canonical numbering is normalized to seven non-overlapping groups (1–21 through 127–147).
+
+ 
+## MOST Function Registry 666
+
+Каталог контрактов `language/functions_666.json` и его нормативное описание `MOST_FUNCTIONS_666.md` объединяют 147 прежних специфицированных возможностей и 519 дополнительных API-предложений. Это 666 стабильных записей спецификации, не 666 уже вызываемых функций.
+
+Реестр не смешивается с 66 базовыми правилами, 666 лексическими токенами и 666-rule Constitution profile. В нём отдельно отслеживаются спецификация, состояние реализации, внешние source references и факт наличия native MOST callable. Сейчас для всех строк `most_native=false`.
+
+MOST остаётся русскоязычным frontend над общей canonical typed IR REAPER. Морфология и синонимы разрешают имя к каноническому символу, но не меняют типы, эффекты, capabilities, ownership или runtime. Неоднозначность завершается диагностикой. Новые имена не становятся lexer keywords или runtime builtins до отдельного принятия.
+
+Для перевода записи в implemented необходимы сигнатура, ошибки/эффекты, capability и ownership contract, resource limits, target gate, исходная реализация, executable acceptance tests, документация и source mapping. Подробно: [MOST Function Registry 666](MOST_FUNCTIONS_666.md).
