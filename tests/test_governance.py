@@ -77,17 +77,20 @@ class ConsentAuthorityTests(unittest.TestCase):
         self.assertFalse(other.revoke(self.token))
 
     def test_runtime_exposes_host_controlled_consent_builtins(self) -> None:
+        runtime_token = self.authority.issue(
+            "local-user", "report-export", ["write-json"], 3600
+        )
         interpreter = Interpreter(consent_authority=self.authority)
         check = interpreter.globals.get("consent_check")
         revoke = interpreter.globals.get("consent_revoke")
         self.assertIsInstance(check, Builtin)
         self.assertIsInstance(revoke, Builtin)
         self.assertTrue(check.callback(
-            self.token, "local-user", "report-export", "write-json"
+            runtime_token, "local-user", "report-export", "write-json"
         ))
-        self.assertTrue(revoke.callback(self.token))
+        self.assertTrue(revoke.callback(runtime_token))
         self.assertFalse(check.callback(
-            self.token, "local-user", "report-export", "write-json"
+            runtime_token, "local-user", "report-export", "write-json"
         ))
 
     def test_runtime_never_treats_missing_authority_as_allow(self) -> None:
