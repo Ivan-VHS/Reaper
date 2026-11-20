@@ -7,6 +7,7 @@ from io import StringIO
 from pathlib import Path
 import tempfile
 
+from reaper.cli import main as reaper_cli_main
 from reaper.copyright import main, render_text, scan_project
 
 
@@ -71,6 +72,15 @@ class CopyrightInventoryTests(unittest.TestCase):
             report = json.loads(output.getvalue())
             self.assertEqual(report["counts"]["spdx_declared"], 1)
             self.assertIn("\n", render_text(report))
+
+    def test_reaper_cli_dispatch(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "module.py").write_text("# SPDX-License-Identifier: MIT\\n", encoding="utf-8")
+            with redirect_stdout(StringIO()) as output:
+                result = reaper_cli_main(["copyright-scan", str(root), "--json"])
+            self.assertEqual(result, 0)
+            self.assertEqual(json.loads(output.getvalue())["counts"]["spdx_declared"], 1)
 
     def test_size_limits_are_reported(self):
         with tempfile.TemporaryDirectory() as folder:
