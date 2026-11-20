@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TextIO
 
+from .errors import ReaperRuntimeError
+
 
 @dataclass(frozen=True, slots=True)
 class ResourceHandle:
@@ -12,7 +14,7 @@ class ResourceHandle:
     resource_id: int
 
 
-class ResourceError(RuntimeError):
+class ResourceError(ReaperRuntimeError):
     pass
 
 
