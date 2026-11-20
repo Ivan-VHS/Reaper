@@ -158,6 +158,22 @@ Programs are tokenized, parsed into an AST and evaluated by a bounded interprete
 
 Default runtime quotas include 1,000,000 execution steps, 256 nested calls, 100,000 collection items and 1,000,000 characters from text concatenation. These are resource guardrails, **not a security sandbox**. Do not treat execution of untrusted programs as isolated from the host.
 
+## Self-hosting frontend: verified partial implementation
+
+Reaper has begun executing frontend logic written in Reaper itself; it is **not yet a self-hosting compiler**.
+
+- **Stage 0 lexer:** selfhost/lexer.rpr scans the currently supported ASCII-oriented token subset and emits source-located token records. Unicode identifier parity with the Python lexer remains open.
+- **Stage 1 Pratt expression parser:** selfhost/parser.rpr parses literals, names, unary and grouped expressions, list literals, function calls, indexing and infix operators. Its precedence table includes the :: flow operator and right-associative exponentiation (**).
+- **Reference implementation:** the Python parser and AST remain the compatibility oracle. The Reaper-written parser returns a stage-local array representation; declaration and statement grammar plus canonical-AST parity are not implemented yet.
+
+Run the focused bootstrap tests with:
+
+~~~bash
+python -m unittest discover -s tests -p 'test_self_hosting.py' -v
+~~~
+
+See the [self-hosting stage contract](docs/SELF_HOSTING_BOOTSTRAP.md), the [Reaper-written parser](selfhost/parser.rpr), and the [Reaper-written lexer](selfhost/lexer.rpr). A stage is counted as implemented only to the extent covered by its tests; file presence alone is not completion evidence.
+
 ## Documentation
 
 - [Language reference](LANGUAGE.md)

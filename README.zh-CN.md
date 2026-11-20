@@ -100,6 +100,22 @@ reaper polyglot report
 
 默认配额包括 1,000,000 个执行步骤、256 层嵌套调用、100,000 个集合元素和 1,000,000 个文本拼接字符。这些是资源限制，**不是安全沙箱**。不要认为运行不可信程序时主机环境已被隔离。
 
+## 自举前端：已验证的部分实现
+
+Reaper 已开始执行由 Reaper 自身编写的前端逻辑，但**目前还不是自举编译器**。
+
+- **Stage 0 词法分析器：** selfhost/lexer.rpr 扫描当前支持的、以 ASCII 为主的词法子集，并生成带源码位置的 token 记录。与 Python lexer 的 Unicode 标识符兼容性仍待完成。
+- **Stage 1 Pratt 表达式解析器：** selfhost/parser.rpr 解析字面量、名称、一元与分组表达式、列表、函数调用、索引和中缀运算符。优先级表包含流运算符 :: 和右结合的幂运算符（**）。
+- **参考实现：** Python parser 和 AST 仍是兼容性基准。Reaper 编写的解析器返回阶段性的数组表示；声明与语句语法以及规范 AST 一致性尚未实现。
+
+运行专项 bootstrap 测试：
+
+~~~bash
+python -m unittest discover -s tests -p 'test_self_hosting.py' -v
+~~~
+
+参见 [自举阶段契约](docs/SELF_HOSTING_BOOTSTRAP.md)、[Reaper 编写的解析器](selfhost/parser.rpr) 和 [Reaper 编写的词法分析器](selfhost/lexer.rpr)。功能只在测试覆盖的范围内视为已实现；仅有源文件并不代表阶段完成。
+
 ## 文档
 
 - [语言参考](LANGUAGE.md)
