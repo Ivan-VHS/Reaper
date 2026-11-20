@@ -590,7 +590,7 @@ class PolyglotCodeStore:
                 ("review", "Обновить ментальные модели и журнал ошибок", 0.15),
             ]
         if profile["family"] in ("ownership", "manual-memory"):
-            tasks[0] = ("model", "Исследовать владение, время жизни, копирование и стоимость аллокаций", tasks[0][2] + 0.05)
+            tasks[0] = (tasks[0][0], "Исследовать владение, время жизни, копирование и стоимость аллокаций", tasks[0][2] + 0.05)
             last = tasks[-1]
             tasks[-1] = (last[0], last[1], last[2] - 0.05)
         if profile["family"] in ("dynamic", "garbage-collected", "managed-runtime"):
@@ -756,6 +756,9 @@ def _print_roadmap(stage_filter: int | None = None) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if args.command == "roadmap":
+        _print_roadmap(args.stage)
+        return 0
     try:
         with PolyglotCodeStore(args.db) as store:
             if args.command == "init":
