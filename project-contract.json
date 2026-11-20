@@ -110,6 +110,17 @@
         "tests/test_self_product.py",
         "docs/SELF_PRODUCT_COMPOSITION.md"
       ]
+    },
+    {
+      "id": "federation.octa-8-horizontal-peer-mesh",
+      "status": "implemented",
+      "summary": "Validates the complete three-project directed peer product, eight octagonal pyramid facets and local self-loops without introducing a central runtime dependency.",
+      "evidence": [
+        "federation/octa-pyramid.v1.json",
+        "tools/validate_octa_pyramid.py",
+        "tests/test_octa_pyramid.py",
+        "docs/OCTA_PYRAMID_FEDERATION.md"
+      ]
     }
   ],
   "interfaces": [
@@ -132,6 +143,16 @@
         "reaper/federation.py",
         "tests/test_federation.py"
       ]
+    },
+    {
+      "id": "octa.pyramid.peer-mesh.v1",
+      "format": "OCTA-8 octagonal-pyramid topology and peer contract",
+      "direction": "both",
+      "status": "implemented",
+      "evidence": [
+        "federation/octa-pyramid.v1.json",
+        "docs/OCTA_PYRAMID_FEDERATION.md"
+      ]
     }
   ],
   "integrations": [
@@ -150,6 +171,22 @@
       "status": "optional",
       "opt_in": true,
       "summary": "Uses an explicitly enabled native bridge and trusted shared-library path for metric cross-checks."
+    },
+    {
+      "project": "oplague",
+      "interface": "octa.pyramid.peer-mesh.v1",
+      "mode": "shared-contract",
+      "status": "implemented",
+      "opt_in": false,
+      "summary": "Participates in the direct OCTA-8 peer mesh; OPlague publishes device snapshots and validates Reaper comparison reports."
+    },
+    {
+      "project": "pytyliki",
+      "interface": "octa.pyramid.peer-mesh.v1",
+      "mode": "shared-contract",
+      "status": "implemented",
+      "opt_in": false,
+      "summary": "Participates in the OCTA-8 peer mesh through explicit synchronous Pytyliki ABI request/response."
     }
   ],
   "safety_boundaries": [
