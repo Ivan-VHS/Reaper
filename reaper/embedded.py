@@ -115,7 +115,10 @@ def profile_from_dict(raw: dict[str, Any]) -> McuProfile:
         size = _positive_int(item.get("size"), f"{key}.size")
         if base + size > 0x1_0000_0000:
             raise EmbeddedError(f"{key} region exceeds the 32-bit address space")
-        return Region(str(item.get("name", key.upper())), base, size)
+        name = str(item.get("name", key.upper()))
+        if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", name):
+            raise EmbeddedError(f"{key}.name must be a linker-safe identifier")
+        return Region(name, base, size)
 
     flash, sram = region("flash"), region("sram")
     if flash.base < sram.base + sram.size and sram.base < flash.base + flash.size:
@@ -389,15 +392,26 @@ class RegisterBank:
     def add(self, register: SimRegister) -> None:
         if not register.name or register.name in self._registers:
             raise EmbeddedError(f"duplicate or empty register name: {register.name!r}")
-        if register.address < 0 or register.address > 0xFFFFFFFF:
+        if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_.]*", register.name):
+            raise EmbeddedError("register name contains unsupported characters")
+        if not 0 <= register.address <= 0xFFFFFFFF:
             raise EmbeddedError("register address must fit in 32 bits")
+        if not 0 <= register.value <= 0xFFFFFFFF or not 0 <= register.writable_mask <= 0xFFFFFFFF:
+            raise EmbeddedError("register value and writable mask must fit in uint32")
+        if register.access not in {"read-only", "write-only", "read-write"}:
+            raise EmbeddedError(f"unsupported register access mode: {register.access}")
+        if register.access == "read-only" and register.writable_mask:
+            raise EmbeddedError("read-only register cannot have writable bits")
         self._registers[register.name] = register
 
     def read(self, name: str) -> int:
         try:
-            return self._registers[name].value
+            register = self._registers[name]
         except KeyError as error:
             raise EmbeddedError(f"unknown simulated register: {name}") from error
+        if register.access == "write-only":
+            raise EmbeddedError(f"register is write-only: {name}")
+        return register.value
 
     def write(self, name: str, value: int) -> int:
         try:
@@ -440,6 +454,8 @@ def load_svd(path: str | Path) -> RegisterBank:
             name = f"{peripheral.findtext('name', 'PERIPH')}.{name_node.text.strip()}"
             reset = int((node.findtext("resetValue") or "0").strip(), 0)
             access = (node.findtext("access") or "read-write").strip()
+            if access not in {"read-only", "write-only", "read-write"}:
+                continue
             mask = 0 if access == "read-only" else 0xFFFFFFFF
             bank.add(SimRegister(name, base + int(offset_node.text.strip(), 0), reset, mask, access))
     return bank
