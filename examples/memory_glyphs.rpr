@@ -1,0 +1,15 @@
+# Memory glyphs: bounded arena, buffer, view and transactional rollback
+make arena := {;;}(64)
+make buffer := ;::(arena, 16)
+memory_write(buffer, 0, "Reaper")
+make view := ::;(buffer, 0, 6)
+emit memory_read(view)
+
+make frame := };;=;(buffer)
+memory_write(buffer, 0, "broken")
+;;:[:(frame)
+emit memory_read(buffer)
+
+make report := };;(arena)
+emit report["released"]
+emit report["allocations"]
