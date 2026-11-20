@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 static int has(const ReaperTokenArray *t,const char *s,ReaperTokenKind k){for(size_t i=0;i<t->length;++i)if(t->items[i].kind==k&&!strcmp(t->items[i].text,s))return 1;return 0;}
+static int has_canonical(const ReaperTokenArray *t,const char *s){for(size_t i=0;i<t->length;++i)if(!strcmp(reaper_token_canonical_text(&t->items[i]),s))return 1;return 0;}
 static void test_most_surface(void){
  const char *s="module counter\nstruct State { value: signal<i32> = 0 }\nfn increment(@: ~State, step: i32) -> i32 { @.value = @.value +| step }\n";
  ReaperTokenArray t={0};ReaperLexError e={{0},0,0};assert(reaper_lex(s,&t,&e));
@@ -18,12 +19,19 @@ static void test_escape(void){ReaperTokenArray t={0};ReaperLexError e={{0},0,0};
 static void test_bad_escape(void){ReaperTokenArray t={0};ReaperLexError e={{0},0,0};assert(!reaper_lex("emit \"bad\\q\"\n",&t,&e));assert(strstr(e.message,"escape"));assert(t.length==0);}
 static void test_unterminated(void){ReaperTokenArray t={0};ReaperLexError e={{0},0,0};assert(!reaper_lex("emit \"unfinished",&t,&e));assert(e.line==1&&e.column==6);}
 static void test_most_russian_vocabulary(void){
- const char *s="модуль счётчик\nструктура Состояние { значение: целое32 = 0 }\nфункция увеличить(шаг: целое32) -> целое32 { если шаг > 0 { вернуть шаг } иначе { вернуть 0 } }\nпусть число: целое64 := 42\nпеременная сумма: целое64 := число\nизменить сумма := сумма + 1\nвывести сумма\n";
+ const char *s="функция удвоить(значение) { вернуть значение * 2 }\nпусть число := истина\nпеременная сумма := 0\nизменить сумма := сумма + 1\nдля элемент в range(1, 4) { если не ложь и элемент > 0 { вывести сумма } иначе { вывести ничего } }\nцикл пока сумма < 5 { изменить сумма := сумма + 1 }\nимпорт модуль как имя\nэкспорт имя\n";
  ReaperTokenArray t={0};ReaperLexError e={{0},0,0};assert(reaper_lex(s,&t,&e));
- assert(has(&t,"модуль",REAPER_TOK_KEYWORD));assert(has(&t,"структура",REAPER_TOK_KEYWORD));assert(has(&t,"функция",REAPER_TOK_KEYWORD));
- assert(has(&t,"если",REAPER_TOK_KEYWORD));assert(has(&t,"иначе",REAPER_TOK_KEYWORD));assert(has(&t,"вернуть",REAPER_TOK_KEYWORD));
- assert(has(&t,"пусть",REAPER_TOK_KEYWORD));assert(has(&t,"переменная",REAPER_TOK_KEYWORD));assert(has(&t,"изменить",REAPER_TOK_KEYWORD));assert(has(&t,"вывести",REAPER_TOK_KEYWORD));
- assert(has(&t,"счётчик",REAPER_TOK_IDENTIFIER));assert(has(&t,"Состояние",REAPER_TOK_IDENTIFIER));assert(has(&t,"целое32",REAPER_TOK_IDENTIFIER));
+ assert(has(&t,"функция",REAPER_TOK_KEYWORD));assert(has(&t,"вернуть",REAPER_TOK_KEYWORD));assert(has(&t,"пусть",REAPER_TOK_KEYWORD));
+ assert(has(&t,"переменная",REAPER_TOK_KEYWORD));assert(has(&t,"изменить",REAPER_TOK_KEYWORD));assert(has(&t,"вывести",REAPER_TOK_KEYWORD));
+ assert(has(&t,"если",REAPER_TOK_KEYWORD));assert(has(&t,"иначе",REAPER_TOK_KEYWORD));assert(has(&t,"для",REAPER_TOK_KEYWORD));assert(has(&t,"в",REAPER_TOK_KEYWORD));
+ assert(has(&t,"цикл",REAPER_TOK_KEYWORD));assert(has(&t,"пока",REAPER_TOK_KEYWORD));assert(has(&t,"истина",REAPER_TOK_KEYWORD));assert(has(&t,"ложь",REAPER_TOK_KEYWORD));
+ assert(has(&t,"ничего",REAPER_TOK_KEYWORD));assert(has(&t,"и",REAPER_TOK_KEYWORD));assert(has(&t,"или",REAPER_TOK_KEYWORD));assert(has(&t,"не",REAPER_TOK_KEYWORD));
+ assert(has(&t,"импорт",REAPER_TOK_KEYWORD));assert(has(&t,"экспорт",REAPER_TOK_KEYWORD));assert(has(&t,"как",REAPER_TOK_KEYWORD));
+ assert(has_canonical(&t,"craft"));assert(has_canonical(&t,"yield"));assert(has_canonical(&t,"make"));assert(has_canonical(&t,"vary"));assert(has_canonical(&t,"change"));
+ assert(has_canonical(&t,"when"));assert(has_canonical(&t,"otherwise"));assert(has_canonical(&t,"each"));assert(has_canonical(&t,"in"));assert(has_canonical(&t,"emit"));
+ assert(has_canonical(&t,"loop"));assert(has_canonical(&t,"while"));assert(has_canonical(&t,"true"));assert(has_canonical(&t,"false"));assert(has_canonical(&t,"nothing"));
+ assert(has_canonical(&t,"and"));assert(has_canonical(&t,"or"));assert(has_canonical(&t,"not"));assert(has_canonical(&t,"import"));assert(has_canonical(&t,"export"));assert(has_canonical(&t,"as"));
+ assert(has(&t,"удвоить",REAPER_TOK_IDENTIFIER));assert(has(&t,"значение",REAPER_TOK_IDENTIFIER));assert(has(&t,"модуль",REAPER_TOK_IDENTIFIER));
  reaper_tokens_free(&t);
 }
 int main(void){test_program();test_escape();test_bad_escape();test_unterminated();test_most_surface();test_most_operator_family();test_most_russian_vocabulary();puts("native lexer tests: 7 groups passed");return 0;}
