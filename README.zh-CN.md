@@ -73,6 +73,21 @@ ctest --test-dir build --output-on-failure
 
 成功运行会上传 `Reaper-Studio-windows-x64.zip`；`v*` 标签会发布 GitHub Release。Windows + Python 3.10+ 源码启动命令：`python reaper_desktop.py`。
 
+## 多语言沉浸学习系统
+
+Reaper 的 Python 参考实现现已加入本地优先的语言学习子系统：多语言档案、离线文本与字幕库、带上下文的短语卡片、间隔重复、每日自适应计划、可理解度估算、学习记录和 JSON 导出。
+
+```sh
+reaper polyglot init English --native Russian --level A0 --minutes 45
+reaper polyglot content add lesson.srt --kind dialogue --level A1
+reaper polyglot phrase add "Could you say that again?" --translation "能再说一遍吗？" --context "礼貌地请求对方重复"
+reaper polyglot plan
+reaper polyglot review
+reaper polyglot report
+```
+
+数据保存在本地 SQLite 数据库中。70–90% 区间只是根据已复习短语卡片估算的词元覆盖率，并非自动理解测试。媒体播放、语音识别/合成、自动翻译和 AI 发音评分尚未实现。详见[多语言沉浸学习指南](docs/POLYGLOT_IMMERSION.md)。
+
 ## 设计与安全边界
 
 程序经过词法分析、AST 解析，并由受限解释器执行。控制台副作用通过 `emit`、`say` 和 `ask` 等操作显式表达。普通表达式不会自动获得文件系统、网络、时钟、进程、shell 或硬件访问权限。
@@ -82,6 +97,7 @@ ctest --test-dir build --output-on-failure
 ## 文档
 
 - [语言参考](LANGUAGE.md)
+- [多语言沉浸学习系统](docs/POLYGLOT_IMMERSION.md)
 - [REAPER/MOST 统一架构](docs/REAPER_UNIFIED_ARCHITECTURE.md)
 - [架构](docs/ARCHITECTURE.md)
 - [MOST 语言规范](docs/MOST_LANGUAGE_SPEC.md)

@@ -25,6 +25,7 @@ classifiers = [
 
 [project.scripts]
 reaper = "reaper.cli:main"
+reaper-polyglot = "reaper.polyglot:main"
 
 [project.gui-scripts]
 reaper-studio = "reaper.desktop:main"

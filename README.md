@@ -97,6 +97,21 @@ The native executable currently exposes the implemented bring-up and analysis pa
 A successful workflow run uploads `Reaper-Studio-windows-x64.zip`; a `v*` tag publishes the same archive as a GitHub Release. Run from source with Python 3.10+ using `python reaper_desktop.py`.
 
 
+## Polyglot immersion
+
+Reaper now includes a local-first language-learning subsystem in its Python reference package: multi-language profiles, an offline content library, contextual phrase cards, spaced repetition, adaptive daily plans, comprehensibility estimates, practice logs and JSON export.
+
+```sh
+reaper polyglot init English --native Russian --level A0 --minutes 45
+reaper polyglot content add lesson.srt --kind dialogue --level A1
+reaper polyglot phrase add "Could you say that again?" --translation "Не могли бы вы повторить?" --context "Polite clarification"
+reaper polyglot plan
+reaper polyglot review
+reaper polyglot report
+```
+
+Data is stored locally in SQLite. The 70–90% content band is a transparent estimate based on reviewed phrase cards, not an automatic comprehension test. Media playback, ASR/TTS, automatic translation and AI pronunciation scoring are not yet implemented. See [Polyglot immersion guide](docs/POLYGLOT_IMMERSION.md).
+
 ## Design and safety boundaries
 
 Programs are tokenized, parsed into an AST and evaluated by a bounded interpreter. Console effects are explicit through operations such as `emit`, `say` and `ask`. Ordinary expressions do not silently gain filesystem, network, clock, process, shell or hardware access.

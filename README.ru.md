@@ -78,6 +78,21 @@ ctest --test-dir build --output-on-failure
 
 Успешная сборка публикует `Reaper-Studio-windows-x64.zip`; тег `v*` создаёт GitHub Release. Запуск из исходников (Python 3.10+): `python reaper_desktop.py`.
 
+## Полиглот-система погружения
+
+В Python reference package Reaper добавлена локальная подсистема обучения языкам: несколько языковых профилей, офлайн-библиотека текстов и субтитров, контекстные карточки фраз, интервальное повторение, адаптивный ежедневный план, оценка понятности материалов, журнал занятий и экспорт JSON.
+
+```sh
+reaper polyglot init English --native Russian --level A0 --minutes 45
+reaper polyglot content add lesson.srt --kind dialogue --level A1
+reaper polyglot phrase add "Could you say that again?" --translation "Не могли бы вы повторить?" --context "Вежливая просьба повторить фразу"
+reaper polyglot plan
+reaper polyglot review
+reaper polyglot report
+```
+
+Данные хранятся локально в SQLite. Диапазон 70–90% рассчитывается как приближённая доля токенов из уже повторённых карточек, а не как автоматический тест понимания. Воспроизведение медиа, ASR/TTS, автоматический перевод и AI-оценка произношения пока не реализованы. См. [руководство по полиглот-системе](docs/POLYGLOT_IMMERSION.md).
+
 ## Дизайн и границы безопасности
 
 Программа проходит токенизацию, парсинг в AST и выполняется ограниченным интерпретатором. Консольные эффекты явные: `emit`, `say`, `ask`. Обычные выражения не получают скрытый доступ к файловой системе, сети, часам, процессам, shell или оборудованию.
@@ -87,6 +102,7 @@ ctest --test-dir build --output-on-failure
 ## Документация
 
 - [Справочник языка](LANGUAGE.md)
+- [Полиглот-система погружения](docs/POLYGLOT_IMMERSION.md)
 - [Реализованные расширения runtime и CLI (20.11.2026)](docs/IMPLEMENTATION_UPDATE_2026-11-20.md)
 - [Объединённая архитектура REAPER/MOST](docs/REAPER_UNIFIED_ARCHITECTURE.md)
 - [План self-hosting bootstrap](docs/SELF_HOSTING_BOOTSTRAP.md)
