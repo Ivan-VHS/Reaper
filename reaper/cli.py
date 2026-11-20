@@ -13,6 +13,7 @@ from .evolution import EvolutionEngine
 from .runtime import Interpreter
 from .parser import parse
 from .systems import format_tracks
+from .atlas import format_atlas
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -26,6 +27,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--verify-audit-log", metavar="PATH", help="verify a journal and exit")
     parser.add_argument("--check", action="store_true", help="tokenize and parse without running the program")
     parser.add_argument("--systems", action="store_true", help="list the 20 engineering system contracts")
+    parser.add_argument("--atlas", action="store_true", help="list the 66 low-level language and architecture reference profiles")
+    parser.add_argument("--atlas-kind", choices=("all", "languages", "architectures"), default="all", help="select systems atlas entries")
+    parser.add_argument("--atlas-query", help="search the systems atlas by name or descriptive trait")
     parser.add_argument("--evolve", action="store_true", help="run bounded syntax, test and improvement-proposal cycles")
     parser.add_argument("--iterations", type=int, default=1, help="number of evolution quality cycles (1-20)")
     return parser
@@ -46,6 +50,14 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.systems:
         print(format_tracks())
+        return 0
+    if args.atlas or args.atlas_query is not None:
+        if args.source or args.audit_log:
+            parser.error("--atlas cannot be combined with a source file or --audit-log")
+        try:
+            print(format_atlas(args.atlas_kind, args.atlas_query))
+        except ValueError as error:
+            parser.error(str(error))
         return 0
     if args.evolve:
         root = Path(args.source) if args.source else Path.cwd()
