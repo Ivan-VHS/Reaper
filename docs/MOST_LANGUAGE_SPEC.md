@@ -1,10 +1,8 @@
-# MOST — language architecture and implementation contract
+# REAPER / МОСТ — единая спецификация русского профиля
 
-**Status:** MOST is specified as the Russian-first source language frontend; the native C17 lexer is being extended with Russian reserved words. The complete Russian grammar, resolver, type checker and backend are not yet implemented.
+**Статус:** МОСТ — русская запись языка REAPER, а не отдельный язык с независимыми правилами. REAPER является единственным источником грамматики, типов, семантики, IR, runtime, ABI и backend. МОСТ заменяет ограниченный набор ключевых слов REAPER точными русскими лексическими псевдонимами. Реализация C17 и Python reference runtime принадлежат REAPER; отдельные компилятор, AST, библиотека исполнения или backend для МОСТ не создаются.
 
-MOST is the Russian-first systems-and-web programming language track associated with REAPER. It targets deterministic native code and WebAssembly from one statically typed source language. The C17 implementation is the bootstrap host; it is not the language's permanent runtime requirement.
-
-## Design invariants
+## Единые инварианты REAPER / МОСТ
 
 1. No subject-oriented receiver keywords. `@` denotes the current lexical receiver/context.
 2. No implicit allocation, conversion, thread creation, exception unwinding, or ambient global state.
@@ -15,64 +13,85 @@ MOST is the Russian-first systems-and-web programming language track associated 
 7. Every capability has an implementation state and executable acceptance tests. Roadmap text never counts as implementation.
 8. Russian is the primary source-language vocabulary of MOST; compatible REAPER syntax remains available and shares the same semantics.
 9. Morphology and synonyms are explicit, scoped lookup tables. The compiler never guesses a program meaning from unrestricted natural-language text.
-10. Unicode normalization and source mapping are compiler contracts; spoken prosody and voice recognition are separate host tools.
+10. Unicode validation and source mapping are общие контракты REAPER; spoken prosody and voice recognition are external host concerns.
+11. МОСТ does not define its own parser, grammar engine, AST, type checker, standard library, runtime, bytecode, ABI or backend.
+12. A Russian keyword is an exact alias of one existing REAPER keyword/token. Aliases may not add a new operation or alter evaluation semantics.
+13. No automatic stemming, case inference, free-form synonym resolution or probabilistic intent selection is part of compilation. Use exact spellings and ordinary REAPER identifiers.
 
-## Canonical surface syntax
+## Каноническая русская запись
 
-MOST is Russian-first. The following is the target spelling for the Russian frontend:
+МОСТ использует только конструкции REAPER. Русские слова — точные написания уже существующих ключевых слов; типы, операторы, приоритеты, области видимости, ошибки и вычисления принадлежат REAPER.
+
+### Рабочее подмножество
 
 ~~~most
-модуль счётчик
-
-структура Состояние {
-    значение: целое32 = 0
+функция удвоить(значение) {
+    вернуть значение * 2
 }
 
-функция увеличить(значение: целое32, шаг: целое32) -> целое32 {
-    вернуть значение +| шаг
+пусть значение := 5
+переменная итог := 0
+
+для элемент в range(1, 4) {
+    изменить итог := итог + удвоить(элемент)
 }
 
-пусть шаг: целое32 = 2
-переменная итог: целое32 = увеличить(40, шаг)
-
-если итог > 0 {
+если итог == 12 {
     вывести "готово"
 } иначе {
-    вывести "пусто"
+    вывести "ошибка"
 }
 ~~~
 
-This example documents the planned grammar; it is not yet a promise that the whole program parses or executes. The native C17 lexer recognizes the Russian keyword vocabulary, while declaration grammar, MOST intent resolution, type checking and backend support remain later gates.
+Этот пример выполняется в Python reference runtime REAPER через существующие конструкции Reaper: \`craft/yield\`, \`make/vary/change\`, \`each/in\`, \`when/otherwise\` и \`emit\`. Он не создаёт отдельную модель исполнения МОСТ.
 
-The compatibility REAPER surface keeps its existing forms and semantics:
+### Точное соответствие ключевых слов
 
-~~~reaper
-module counter
+| Русское написание | Единственное соответствие REAPER |
+|---|---|
+| пусть | make |
+| переменная | vary |
+| изменить | change |
+| функция | craft |
+| вернуть | yield |
+| вывести | emit |
+| если | when |
+| иначе | otherwise |
+| для | each |
+| в | in |
+| цикл | loop |
+| пока | while |
+| истина / ложь / ничего | true / false / nothing |
+| и / или / не | and / or / not |
+| импорт / экспорт / как | import / export / as |
+| модуль / структура / перечисление / типаж | module / struct / enum / trait |
+| тип / константа / область / арена / сигнал | type / const / region / arena / signal |
+| асинхронно / ожидать | async / await |
+| тест / вычислить_при_сборке | test / comptime |
+| требует / гарантирует | requires / ensures |
+| небезопасно / внешний / где | unsafe / extern / where |
+| прервать / продолжить / отложить / уничтожить | break / continue / defer / drop |
+| сказать / спросить | документированные host/API-псевдонимы; не новые runtime-операции |
 
-struct State {
-    value: signal<i32> = 0
-}
+Псевдоним становится зарезервированным словом только там, где его английский оригинал уже является ключевым словом REAPER. Русские названия типов и переменных, например \`счётчик\`, \`состояние\`, \`целое32\`, — обычные идентификаторы, а не новые встроенные типы или ключевые слова.
 
-fn increment(value: i32, step: i32) -> i32 {
-    value +| step
-}
-~~~
+### Только REAPER-совместимая поверхность
 
-Both source forms must lower to equivalent typed AST/Canonical IR. Source spelling, canonical symbol and source range remain available for diagnostics and tooling.
+- Исходная грамматика — грамматика REAPER; русское слово заменяет только соответствующий ключевой токен.
+- Существующий оператор потока REAPER \`::\` сохраняет точную семантику.
+- Существующие значения, функции, коллекции, модули, типы и ошибки не дублируются под другой runtime.
+- Неподдерживаемая конструкция REAPER остаётся неподдерживаемой и в МОСТ; русский псевдоним не делает её исполняемой.
+- Фрагмент МОСТ должен после замены псевдонимов давать тот же REAPER-код и тот же результат.
 
-### Russian lexical vocabulary
+### Что не входит в МОСТ
 
-The initial reserved-word set includes module/access words (модуль, импорт, как, публичный, экспорт), declarations (функция, структура, перечисление, типаж, реализация, тип, константа), bindings (пусть, переменная, изменить), control flow (вернуть, если, иначе, выбор, для, в, пока, прервать, продолжить, отложить), memory and resource words (область, сырой, арена, уничтожить), task/reactivity words (сигнал, асинхронно, ожидать), contracts (тест, вычислить_при_сборке, требует, гарантирует), system boundaries (небезопасно, внешний, где), values and logic (истина, ложь, ничего, и, или, не), and interaction words (вывести, сказать, спросить).
-
-Names such as счётчик, состояние, файл and целое32 remain identifiers. Built-in type aliases are registered in the type table, not treated as control keywords. The lexer retains the original spelling; exact NFC validation and code-point source columns are separate conformance work.
-
-Russian case forms and synonyms are not accepted by free-form stemming. They will be resolved by explicit per-module dictionaries after lexing, with unknown-name and ambiguity diagnostics. No probabilistic or network lookup may silently select a symbol.
+Нет отдельной русской грамматики свободного порядка слов, самостоятельной морфологической модели, автоматического склонения, синонимического угадывания, голосового парсера, новых типов, нового стандарта библиотеки или своего AST. Для нескольких имён используются обычные идентификаторы, функции, модули и aliases, уже предусмотренные REAPER.
 
 ## Compiler pipeline
 
-`UTF-8 source → tokens → CST/AST → name resolution → type/effect checking → ownership & region analysis → typed MOST IR → verification/optimization → native or WASM backend`.
+`UTF-8 source → exact Russian keyword alias mapping → REAPER token stream → REAPER parser/AST → REAPER name/type/effect checks → REAPER ownership/region analysis → REAPER Canonical IR → REAPER verifier/optimizer → existing REAPER backends`.
 
-The IR must be immutable, source-mapped, deterministic and independently verifiable. Frontends must not emit machine code directly. Backend selection must not change source semantics.
+The REAPER IR remains immutable, source-mapped, deterministic and independently verifiable. The alias layer does not emit or own an AST/IR. The same REAPER parser and backend consume both spellings.
 
 ## Memory and safety model
 
@@ -105,24 +124,24 @@ C ABI declarations must specify layout, alignment, calling convention, ownership
 
 ## 66-rule language-formation ledger
 
-The 66 sociolinguistic, phonetic, semantic and grammatical principles are mapped to concrete language design decisions in [MOST_RUSSIAN_66_RULES.md](MOST_RUSSIAN_66_RULES.md). The ledger is normative input for design and acceptance planning, not a claim that every capability already exists.
+The 66 human-language principles are used only to improve the Russian readability, consistency and learnability of REAPER's surface syntax. They do not authorize a second compiler, new semantics, morphology engine or separate runtime. See [MOST_RUSSIAN_66_RULES.md](MOST_RUSSIAN_66_RULES.md).
 
 | Rules | MOST interpretation | Acceptance owner |
 |---|---|---|
 | 1–11 | Clear commands, functions, scopes, explicit results, quantities, capabilities and teachable examples | Grammar, symbols, types, effects, docs |
-| 12–22 | Namespaced domain vocabularies, imports, dialect isolation, editioning and stable public conventions | Modules, resolver, package/version manager |
+| 12–22 | Reuse of REAPER modules, imports, naming and compatibility policy | Existing REAPER modules and package/version manager |
 | 23–33 | Contrastive spelling, Unicode identifiers, formatter rules and strict separation of written syntax from speech | Lexer, Unicode validator, formatter, optional host adapter |
-| 34–44 | Explicit canonical names, composition, aliases, imports, semantic specialization and deterministic macros | Resolver, type checker, standard library |
-| 45–55 | Formal grammar, fixed declaration order, explicit morphology, typing, provenance and grammar versioning | Parser, resolver, type/effect checker |
+| 34–44 | Exact aliases, REAPER identifiers, composition and existing import/API contracts | Existing REAPER lexer, parser, name resolver and standard library |
+| 45–55 | Exact REAPER grammar, fixed token mapping, typing, provenance and grammar versioning | Existing REAPER parser and type/effect checker |
 | 56–66 | Learnability, stable core, composition, bounded recursion, introspection, documentation and governed evolution | Runtime, tooling, CI, edition policy |
 
 The human-language mechanisms do not become hidden execution behavior: intonation does not change syntax, tone does not change values, social prestige does not select overloads, and natural-language ambiguity is a compile error. See the linked document for the complete rule-by-rule mapping and delivery stages.
 
 ## Delivery phases and truthful status
 
-- **M0 — Native lexical base:** C17 scanner, source locations, MOST keywords/operators. This branch implements this phase.
-- **M1 — Grammar:** declarations, expressions, blocks, functions, structs/enums, Pratt expressions, parser diagnostics.
-- **M2 — Semantic core:** symbol tables, static types, inference, ADTs, exhaustive match, contracts and typed IR.
+- **M0 — Russian aliases:** map exact Russian spellings to existing REAPER keyword tokens. The Python compatibility subset is executable; the C17 lexer recognizes the Russian vocabulary.
+- **M1 — REAPER grammar:** complete the existing REAPER parser once; the Russian aliases are accepted by this same parser, with no MOST grammar fork.
+- **M2 — REAPER semantic core:** symbol tables, static types, inference, ADTs, exhaustive match, contracts and typed REAPER IR.
 - **M3 — Safe memory:** regions, borrows, move/linear checking, slices, drop elaboration and allocator interfaces.
 - **M4 — Native executable:** portable object/ELF first, then PE and Mach-O; C ABI and target-specific codegen.
 - **M5 — WASM:** WASI and browser WASM targets, host bindings, UI and signals.
@@ -132,7 +151,7 @@ No claim of sub-5-MB self-hosting, full C-header parsing, 15-KB universal web bu
 
 ## Compatibility policy
 
-The 1.0 core grammar and semantics are frozen. Additions after 1.0 use versioned standard-library modules or explicitly versioned language editions; security fixes and compiler bug fixes must not silently change valid program meaning. Binary ABI stability is a separate promise from source compatibility.
+The REAPER 1.0 core grammar and semantics are authoritative for both English and Russian spellings. A change to REAPER grammar automatically governs МОСТ aliases; there is no independent MOST edition or compatibility promise. Security fixes and compiler bug fixes must not silently change valid program meaning.
 
 
 ## 147-feature architecture extension
