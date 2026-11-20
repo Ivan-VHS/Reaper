@@ -1,6 +1,6 @@
 {
-  "schema": "most.feature-registry/v1",
-  "language": "MOST",
+  "schema": "reaper.feature-registry/v1",
+  "language": "REAPER",
   "edition": "0.1",
   "features": [
     {
@@ -167,6 +167,125 @@
         "duplicate-pair-rejection",
         "execution-claim-rejection"
       ]
+    },
+    {
+      "id": "MOST-RU-LEX-001",
+      "name": "Russian canonical keyword vocabulary",
+      "area": "syntax",
+      "status": "implemented",
+      "depends_on": [],
+      "acceptance": [
+        "native-lexer-positive",
+        "russian-identifiers-remain-identifiers",
+        "ci"
+      ]
+    },
+    {
+      "id": "MOST-RU-UTF8-001",
+      "name": "Validated UTF-8 and NFC source normalization",
+      "area": "syntax",
+      "status": "planned",
+      "depends_on": [
+        "MOST-RU-LEX-001"
+      ],
+      "acceptance": [
+        "utf8-negative",
+        "nfc-equivalence",
+        "unicode-source-spans"
+      ]
+    },
+    {
+      "id": "MOST-RU-GRM-001",
+      "name": "Shared REAPER declaration and block grammar for Russian aliases",
+      "area": "syntax",
+      "status": "planned",
+      "depends_on": [
+        "MOST-RU-LEX-001"
+      ],
+      "acceptance": [
+        "parser-positive",
+        "parser-negative",
+        "source-span"
+      ]
+    },
+    {
+      "id": "MOST-RU-MOR-001",
+      "name": "Separate Russian morphology resolver (excluded; exact aliases only)",
+      "area": "resolver",
+      "status": "deprecated",
+      "depends_on": [],
+      "acceptance": [
+        "paradigm-positive",
+        "unknown-form-negative",
+        "collision-negative"
+      ]
+    },
+    {
+      "id": "MOST-RU-RES-001",
+      "name": "Separate MOST intent resolver (excluded; use REAPER name resolution)",
+      "area": "resolver",
+      "status": "deprecated",
+      "depends_on": [],
+      "acceptance": [
+        "unique-resolution",
+        "ambiguous-resolution-negative",
+        "source-map"
+      ]
+    },
+    {
+      "id": "MOST-RU-DIA-001",
+      "name": "Separate MOST dialect grammar (excluded; use REAPER modules and namespaces)",
+      "area": "modules",
+      "status": "deprecated",
+      "depends_on": [],
+      "acceptance": [
+        "scope-isolation",
+        "import-compatibility",
+        "edition-migration"
+      ]
+    },
+    {
+      "id": "MOST-RU-PRO-001",
+      "name": "Optional speech input remains an external REAPER IDE/host adapter",
+      "area": "host",
+      "status": "planned",
+      "depends_on": [
+        "MOST-RU-GRM-001"
+      ],
+      "acceptance": [
+        "transcript-confirmation",
+        "ambiguity-rejection",
+        "semantic-independence"
+      ]
+    },
+    {
+      "id": "MOST-RU-META-001",
+      "name": "Shared REAPER token/source mapping for Russian aliases",
+      "area": "tooling",
+      "status": "planned",
+      "depends_on": [
+        "MOST-RU-LEX-001"
+      ],
+      "acceptance": [
+        "deterministic-symbol-table",
+        "typed-metadata",
+        "source-map"
+      ]
+    },
+    {
+      "id": "MOST-RU-COMPAT-001",
+      "name": "Executable Russian aliases for the reference interpreter subset",
+      "area": "syntax",
+      "status": "implemented",
+      "depends_on": [
+        "MOST-RU-LEX-001"
+      ],
+      "acceptance": [
+        "russian-lexer-aliases",
+        "russian-program-executes",
+        "runtime-regression"
+      ]
     }
-  ]
+  ],
+  "profile": "МОСТ — exact Russian keyword aliases; no separate parser, semantics, runtime or backend"
 }
