@@ -58,6 +58,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     arguments = sys.argv[1:] if argv is None else argv
+    if arguments and arguments[0] == "embedded":
+        from .embedded import main as embedded_main
+        return embedded_main(arguments[1:])
     if arguments and arguments[0] == "polyglot":
         from .polyglot import main as polyglot_main
         return polyglot_main(arguments[1:])
