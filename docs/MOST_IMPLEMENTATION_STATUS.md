@@ -10,6 +10,8 @@
 |---|---|---|
 | C17 build and native lexer | implemented | `src/lexer.c`, `tests/test_lexer.c` |
 | MOST lexical vocabulary | implemented | keyword/operator lexer tests; grammar is not implied |
+| Russian MOST keyword vocabulary | implemented in lexer | src/lexer.c and tests/test_lexer.c; token recognition only, not executable grammar |
+| Russian 66-rule language design | specified | docs/MOST_RUSSIAN_66_RULES.md; full parser/resolver/type system remain future gates |
 | Semantic IR data model | implemented | `include/reaper/ir.h` |
 | IR structural verifier | implemented | `src/ir.c`, `tests/test_ir.c` |
 | Bounded fixed-point optimizer driver | implemented | `reaper_ir_optimize_fixed_point`; verified pass loop, 64-iteration ceiling, convergence report and idempotence tests |\n| Native C17 evolution evidence gate | implemented | `src/evolution.c`, `include/reaper/evolution.h`, `tests/test_evolution.c`; fail-closed acceptance gates and human approval requirement |\n| Checked i64 constant-folding pass | implemented | `src/optimizer.c`, `include/reaper/optimizer.h`, `tests/test_optimizer.c`; rejects signed overflow and verifies input/output IR |
@@ -30,7 +32,7 @@
 
 ## Parser M1 contract
 
-The current parser accepts exactly one expression and produces a flat, owned AST:
+The current parser accepts exactly one expression and produces a flat, owned AST. It does not yet parse the Russian declaration grammar described by MOST:
 - integer/decimal/string/boolean/null literals and identifiers;
 - prefix arithmetic/logical operators;
 - arithmetic, comparison, equality, boolean, null-coalescing and flow operators;
@@ -76,3 +78,8 @@ The current executable opcode set is deliberately small (integer constant, signe
     ctest --test-dir build --output-on-failure
 
 Python remains a compatibility oracle until C17 semantic parity is demonstrated. This branch does not remove Python or claim full native interpreter parity.
+
+
+## MOST Russian frontend boundary
+
+The native C17 lexer classifies the Russian reserved-word vocabulary as keyword tokens while keeping ordinary Russian names and proposed type names as identifiers. This is a lexical milestone only. It does not imply declaration parsing, inflection resolution, synonym lookup, Unicode NFC normalization, static typing, execution or code generation. The complete 66-rule design mapping is in docs/MOST_RUSSIAN_66_RULES.md.
