@@ -210,6 +210,7 @@ sampling is claimed. See [the Embedded C workbench guide](docs/EMBEDDED_C_WORKBE
 - [Systems architecture matrix](docs/SYSTEMS_ARCHITECTURE_MATRIX.md)
 - [Systems-language matrix](reaper/systems_languages.json)
 - [MOST language specification](docs/MOST_LANGUAGE_SPEC.md)
+- [MOST 20×20 combinatorial matrix](docs/MOST_400_COMBINATORIAL_MATRIX.md)
 - [C migration plan](docs/C_MIGRATION.md)
 - [Examples](examples/) · [Tests](tests/)
 

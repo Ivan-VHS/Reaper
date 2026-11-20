@@ -104,3 +104,10 @@ The 1.0 core grammar and semantics are frozen. Additions after 1.0 use versioned
 ## 147-feature architecture extension
 
 The extended architecture backlog, including all 147 proposed capabilities, semantic constraints, platform caveats, duplicate resolution, implementation waves and truthful status ledger, is maintained in [MOST_147_FEATURE_REGISTRY.md](MOST_147_FEATURE_REGISTRY.md). The registry extends the 66 foundational rules; it does not imply that the listed features are already implemented. The canonical numbering is normalized to seven non-overlapping groups (1–21 through 127–147).
+
+
+## Directed 20×20 combinatorial architecture matrix
+
+The 20-profile basis and all 400 directed projections are defined in [MOST_400_COMBINATORIAL_MATRIX.md](MOST_400_COMBINATORIAL_MATRIX.md) and the machine-readable source [language/most_matrix_20x20.json](../language/most_matrix_20x20.json). A row is the source layer/action vector and a column is the target layer/application vector; swapping them creates a distinct ordered projection.
+
+The matrix is an architecture and traceability layer, not 400 new language keywords or a claim of 400 implemented compiler features. Every source profile must resolve through explicit, versioned dictionaries and lower to the same typed Canonical IR. Ambiguous morphology produces a source-mapped diagnostic rather than an inferred guess. The validator checks the 20-element basis, all 400 unique ordered pairs, action-vector consistency and specified-only status. See [MOST_IMPLEMENTATION_STATUS.md](MOST_IMPLEMENTATION_STATUS.md) for the implementation boundary.

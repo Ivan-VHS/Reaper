@@ -167,6 +167,7 @@ python -m unittest discover -s tests -p 'test_self_hosting.py' -v
 - [План self-hosting bootstrap](docs/SELF_HOSTING_BOOTSTRAP.md)
 - [Архитектура](docs/ARCHITECTURE.md)
 - [Спецификация MOST](docs/MOST_LANGUAGE_SPEC.md)
+- [Матрица МОСТ 20×20: 400 архитектурных проекций](docs/MOST_400_COMBINATORIAL_MATRIX.md)
 - [План миграции на C](docs/C_MIGRATION.md)
 - [Примеры](examples/) · [Тесты](tests/)
 
