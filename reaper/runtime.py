@@ -575,17 +575,26 @@ class Interpreter:
                 raise TypeError("pytyliki_embedded_profiles expects an explicit library path")
             return pytyliki_native.pytyliki_embedded_profiles(path)
 
-        def pytyliki_embedded_budget(profile_id: Any, sections: Any, path: Any) -> dict[str, Any]:
+        def pytyliki_embedded_budget(
+            profile_id: Any, text_bytes: Any, rodata_bytes: Any, data_bytes: Any,
+            bss_bytes: Any, noinit_bytes: Any, stack_reserve_bytes: Any, path: Any
+        ) -> dict[str, Any]:
             if not self.allow_native_ffi:
                 raise ValueError("native FFI is disabled; run with --allow-native-ffi")
             if not isinstance(profile_id, str) or not isinstance(path, str):
                 raise TypeError("pytyliki_embedded_budget expects a profile id and an explicit library path")
-            if not isinstance(sections, dict):
-                raise TypeError("pytyliki_embedded_budget expects a sections map")
+            sections = {
+                "text_bytes": text_bytes,
+                "rodata_bytes": rodata_bytes,
+                "data_bytes": data_bytes,
+                "bss_bytes": bss_bytes,
+                "noinit_bytes": noinit_bytes,
+                "stack_reserve_bytes": stack_reserve_bytes,
+            }
             return pytyliki_native.pytyliki_embedded_budget(profile_id, sections, path)
 
         register("pytyliki_embedded_profiles", pytyliki_embedded_profiles, 1, 1)
-        register("pytyliki_embedded_budget", pytyliki_embedded_budget, 3, 3)
+        register("pytyliki_embedded_budget", pytyliki_embedded_budget, 8, 8)
 
         register("impact_catalog", impact_catalog, 0, 0)
         register("impact_profile", impact_profile, 1, 1)
