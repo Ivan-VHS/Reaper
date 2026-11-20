@@ -75,7 +75,7 @@ The alias map is a lexical compatibility table, not a semantic frontend. After t
 
 | Earlier project thread / artifact | Preserved design contribution | Current status boundary |
 |---|---|---|
-| MOST 66 foundational rules | System language, deterministic semantics, memory safety, Web/WASM and ABI contract | Specification, not 66 shipped features |
+| МОСТ 66 language-formation rules | Readability and consistency guidance for Russian aliases over REAPER | Design guidance only; no separate language semantics |
 | MOST 147 registry | First extension catalogue and normalized unique IDs | Backlog; each item needs code/tests |
 | REAPER 813 map | Compiler, type, runtime, data, security, tooling and host roadmap | Architecture map, not 813 implementations |
 | 666-rule Constitution profile | Conformance labels: Implemented, Partial, Planned, Not applicable | Evaluation framework, not capability count |
