@@ -88,6 +88,7 @@ class MemoryView:
     step: int = 1
     readonly: bool = False
     label: str = "view"
+    reverse: bool = False
 
     def __post_init__(self) -> None:
         self.buffer._ensure_open()
@@ -106,12 +107,15 @@ class MemoryView:
 
     def read(self) -> bytes:
         self.buffer._ensure_open()
-        return bytes(self.buffer.data[self.start:self.stop:self.step])
+        value = bytes(self.buffer.data[self.start:self.stop:self.step])
+        return value[::-1] if self.reverse else value
 
     def write(self, payload: bytes) -> int:
         self.buffer._ensure_open()
         if self.readonly or self.buffer.readonly:
             raise ValueError("view is read-only")
+        if self.reverse:
+            raise ValueError("writes to reverse views are not supported")
         if self.step != 1:
             raise ValueError("writes to strided views are not supported")
         if len(payload) > self.stop - self.start:
@@ -155,7 +159,9 @@ class MemoryArena:
         released, count = self.used, len(self.allocations)
         for child in reversed(self.children):
             if not child.closed:
-                child.close()
+                child_report = child.close()
+                released += child_report["released"]
+                count += child_report["allocations"]
         for buffer in self.allocations:
             buffer.closed = True
             buffer.data.clear()
@@ -230,13 +236,13 @@ def _buffer(value: Any) -> MemoryBuffer:
     return value
 
 
-def _view(args: tuple[Any, ...], *, readonly: bool = False, label: str = "view") -> MemoryView:
+def _view(args: tuple[Any, ...], *, readonly: bool = False, label: str = "view", reverse: bool = False) -> MemoryView:
     if not 3 <= len(args) <= 4:
         raise TypeError("expected buffer, start, end, and optional step")
     buffer = _buffer(args[0])
     start, stop = _whole(args[1], "slice start"), _whole(args[2], "slice end")
     step = _whole(args[3], "slice step", 1) if len(args) == 4 else 1
-    return MemoryView(buffer, start, stop, step, readonly, label)
+    return MemoryView(buffer, start, stop, step, readonly, label, reverse)
 
 
 def _alloc(args: tuple[Any, ...], purpose: str, forced_alignment: int | None = None) -> MemoryBuffer:
@@ -270,19 +276,15 @@ def apply_memory_glyph(operation: str, *arguments: Any) -> Any:
             return args[1].child(args[0])
         return MemoryArena(args[0])
 
-    if operation in {"arena_close", "arena_release", "sandbox_close", "local_close",
-                     "task_close", "bounded_frame_close", "batch_close",
-                     "stream_frame_close", "subarray_close"}:
+    if operation in {"arena_close", "arena_release"}:
         if len(args) != 1 or not isinstance(args[0], MemoryArena):
             raise TypeError("expected one memory arena")
         return args[0].close()
 
     if operation in {"view", "slice", "checked_view", "external_view",
                      "readonly_view", "strided_view", "length_view", "reverse_view"}:
-        view = _view(args, readonly=operation in {"readonly_view", "checked_view"}, label=operation)
-        if operation == "reverse_view":
-            view.readonly = True
-            view.label = "reverse"
+        view = _view(args, readonly=operation in {"readonly_view", "checked_view"},
+                     label=operation, reverse=operation == "reverse_view")
         return view
 
     if operation == "header_body":
@@ -406,6 +408,23 @@ def apply_memory_glyph(operation: str, *arguments: Any) -> Any:
         if len(args) == 2 and _whole(args[1], "frame limit") > buffer.capacity:
             raise ValueError("frame limit exceeds buffer capacity")
         return MemoryFrame(buffer)
+
+    if operation in {"sandbox_close", "local_close", "bounded_frame_close",
+                     "batch_close", "stream_frame_close", "subarray_close"}:
+        if len(args) != 1 or not isinstance(args[0], MemoryFrame):
+            raise TypeError("expected one open memory frame")
+        return args[0].commit()
+
+    if operation == "task_close":
+        if len(args) != 1 or not isinstance(args[0], MemoryBuffer):
+            raise TypeError("expected one temporary memory buffer")
+        buffer = args[0]
+        buffer._ensure_open()
+        released = buffer.capacity
+        buffer.closed = True
+        buffer.data.clear()
+        buffer.capacity = buffer.length = buffer.cursor = 0
+        return released
 
     if operation == "frame_commit":
         if len(args) != 1 or not isinstance(args[0], MemoryFrame):
