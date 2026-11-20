@@ -6,7 +6,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from reaper import native
+from reaper import Interpreter, native
+from reaper.ffi import FfiError, PytylikiBridge
 
 
 class FakeFunction:
@@ -168,6 +169,58 @@ class NativeBridgeTests(unittest.TestCase):
             native._vector([float("nan")])
         with self.assertRaises(ValueError):
             native._vector([1.0] * 4097)
+
+
+class PytylikiBridgeHandleTests(unittest.TestCase):
+    def setUp(self) -> None:
+        native._load_library.cache_clear()
+
+    def tearDown(self) -> None:
+        native._load_library.cache_clear()
+
+    def test_typed_bridge_uses_public_abi_v1_and_closes_logically(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "libpytyliki.so"
+            path.touch()
+            with patch("reaper.native.ctypes.CDLL", return_value=FakeLibrary()) as loader:
+                bridge = PytylikiBridge(str(path))
+                self.assertEqual(bridge.norm([3, 4]), 5.0)
+                self.assertEqual(bridge.dot([3, 4], [0, 2]), 8.0)
+                self.assertEqual(bridge.distance([3, 4], [0, 0]), 5.0)
+                self.assertTrue(bridge.orthogonal([1, 0], [0, 1], 1e-12))
+                self.assertEqual(loader.call_count, 1)
+                bridge.close()
+                with self.assertRaisesRegex(FfiError, "closed"):
+                    bridge.norm([3, 4])
+
+    def test_typed_bridge_rejects_relative_path_and_wrong_abi(self) -> None:
+        with self.assertRaisesRegex(FfiError, "absolute"):
+            PytylikiBridge("pytyliki_ffi.dll")
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "libpytyliki.so"
+            path.touch()
+            with patch("reaper.native.ctypes.CDLL", return_value=FakeLibrary(version=2)):
+                with self.assertRaisesRegex(FfiError, "unsupported Pytyliki ABI"):
+                    PytylikiBridge(str(path))
+
+    def test_reaper_language_can_use_typed_bridge_builtins(self) -> None:
+        source_template = (
+            'make bridge := pytyliki_open("{library}")\n'
+            'emit text(pytyliki_bridge_norm([3, 4], bridge))\n'
+            'emit text(pytyliki_bridge_dot([3, 4], [0, 2], bridge))\n'
+            'emit text(pytyliki_bridge_distance([3, 4], [0, 0], bridge))\n'
+            'emit text(pytyliki_bridge_orthogonal([1, 0], [0, 1], 0.000000000001, bridge))\n'
+            'ffi_close(bridge)\n'
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "libpytyliki.so"
+            path.touch()
+            output: list[str] = []
+            with patch("reaper.native.ctypes.CDLL", return_value=FakeLibrary()):
+                Interpreter(output=output.append, allow_native_ffi=True).run(
+                    source_template.format(library=path)
+                )
+        self.assertEqual(output, ["5.0", "8.0", "5.0", "True"])
 
 
 if __name__ == "__main__":
