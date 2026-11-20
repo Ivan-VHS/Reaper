@@ -13,6 +13,7 @@ from .evolution import EvolutionEngine
 from .runtime import Interpreter
 from .parser import parse
 from .systems import format_tracks
+from .systems_languages import main as systems_languages_main
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -26,6 +27,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--verify-audit-log", metavar="PATH", help="verify a journal and exit")
     parser.add_argument("--check", action="store_true", help="tokenize and parse without running the program")
     parser.add_argument("--systems", action="store_true", help="list the 20 engineering system contracts")
+    parser.add_argument("--systems-languages", action="store_true", help="list the 66 systems-language capability profiles")
+    parser.add_argument("--language-profile", choices=("pytyliki", "reaper", "oplague"), help="rank systems languages for a project profile")
+    parser.add_argument("--available-languages", action="store_true", help="show only candidate toolchains found on PATH")
+    parser.add_argument("--systems-json", action="store_true", help="emit the systems-language matrix as JSON")
     parser.add_argument("--evolve", action="store_true", help="run bounded syntax, test and improvement-proposal cycles")
     parser.add_argument("--iterations", type=int, default=1, help="number of evolution quality cycles (1-20)")
     return parser
@@ -47,6 +52,13 @@ def main(argv: list[str] | None = None) -> int:
     if args.systems:
         print(format_tracks())
         return 0
+    if args.systems_languages or args.language_profile or args.available_languages or args.systems_json:
+        matrix_args = ["--profile", args.language_profile or "reaper"]
+        if args.available_languages:
+            matrix_args.append("--available-only")
+        if args.systems_json:
+            matrix_args.append("--json")
+        return systems_languages_main(matrix_args)
     if args.evolve:
         root = Path(args.source) if args.source else Path.cwd()
         if not root.is_dir():
