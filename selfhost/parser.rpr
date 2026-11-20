@@ -1,0 +1,285 @@
+# Stage-1 frontend slice: expression parsing implemented in Reaper itself.
+# Tokens use [kind, value, line, column], matching the Reaper reference lexer.
+# AST values are compact arrays; the Python parser remains the compatibility oracle.
+
+craft parse_expression(tokens) {
+    vary cursor := 0
+    vary failed := false
+    vary error_message := ""
+    vary error_line := 1
+    vary error_column := 1
+    make token_count := size(tokens)
+
+    craft peek() {
+        when cursor < token_count {
+            yield tokens[cursor]
+        }
+        yield ["EOF", "", 1, 1]
+    }
+
+    craft advance() {
+        make token := peek()
+        when token[0] != "EOF" {
+            change cursor := cursor + 1
+        }
+        yield token
+    }
+
+    craft skip_newlines() {
+        loop while peek()[0] == "NEWLINE" {
+            make ignored_newline := advance()
+        }
+    }
+
+    craft fail(message, token) {
+        change failed := true
+        change error_message := message
+        change error_line := token[2]
+        change error_column := token[3]
+        yield ["ERROR", message, token[2], token[3]]
+    }
+
+    craft precedence(kind) {
+        when kind == "::" { yield 1 }
+        when kind == "OR" { yield 2 }
+        when kind == "AND" { yield 3 }
+        when kind == "==" or kind == "!=" or kind == "<" or kind == "<=" or kind == ">" or kind == ">=" { yield 4 }
+        when kind == "++" { yield 5 }
+        when kind == "+" or kind == "-" { yield 6 }
+        when kind == "*" or kind == "/" or kind == "//" or kind == "%" { yield 7 }
+        when kind == "**" { yield 8 }
+        yield 0
+    }
+
+    craft parse_arguments() {
+        vary arguments := []
+        skip_newlines()
+        when peek()[0] != ")" {
+            change arguments := push(arguments, parse_bp(1))
+            skip_newlines()
+            loop while not failed and peek()[0] == "," {
+                make ignored_comma := advance()
+                skip_newlines()
+                when peek()[0] != ")" {
+                    change arguments := push(arguments, parse_bp(1))
+                    skip_newlines()
+                }
+            }
+        }
+        when not failed and peek()[0] != ")" {
+            make ignored := fail("expected ')' after call arguments", peek())
+        }
+        when not failed {
+            make ignored_close := advance()
+        }
+        yield arguments
+    }
+
+    craft parse_list_items() {
+        vary items := []
+        skip_newlines()
+        when peek()[0] != "]" {
+            change items := push(items, parse_bp(1))
+            skip_newlines()
+            loop while not failed and peek()[0] == "," {
+                make ignored_comma := advance()
+                skip_newlines()
+                when peek()[0] != "]" {
+                    change items := push(items, parse_bp(1))
+                    skip_newlines()
+                }
+            }
+        }
+        when not failed and peek()[0] != "]" {
+            make ignored := fail("expected ']' after list items", peek())
+        }
+        when not failed {
+            make ignored_close := advance()
+        }
+        yield items
+    }
+
+    craft parse_bp(minimum) {
+        make first := advance()
+        vary left := ["ERROR", "expected expression", first[2], first[3]]
+
+        when first[0] == "NUMBER" or first[0] == "STRING" or first[0] == "TRUE" or first[0] == "FALSE" or first[0] == "NOTHING" {
+            change left := ["literal", first[0], first[1], first[2], first[3]]
+        } otherwise {
+            when first[0] == "IDENT" {
+                change left := ["name", first[1], first[2], first[3]]
+            } otherwise {
+                when first[0] == "-" or first[0] == "NOT" {
+                    skip_newlines()
+                    make operand := parse_bp(9)
+                    when failed {
+                        change left := ["ERROR", error_message, error_line, error_column]
+                    } otherwise {
+                        change left := ["unary", first[0], operand, first[2], first[3]]
+                    }
+                } otherwise {
+                    when first[0] == "(" {
+                        skip_newlines()
+                        change left := parse_bp(1)
+                        skip_newlines()
+                        when not failed and peek()[0] != ")" {
+                            make ignored := fail("expected ')' to close expression", peek())
+                            change left := ignored
+                        } otherwise {
+                            when not failed {
+                                make ignored_close := advance()
+                            }
+                        }
+                    } otherwise {
+                        when first[0] == "[" {
+                            make items := parse_list_items()
+                            when failed {
+                                change left := ["ERROR", error_message, error_line, error_column]
+                            } otherwise {
+                                change left := ["list", items, first[2], first[3]]
+                            }
+                        } otherwise {
+                            make ignored := fail("expected a literal, identifier, list, or parenthesized expression", first)
+                            change left := ignored
+                        }
+                    }
+                }
+            }
+        }
+
+        loop while not failed and (peek()[0] == "(" or peek()[0] == "[" or (precedence(peek()[0]) >= minimum and precedence(peek()[0]) > 0)) {
+            when peek()[0] == "(" {
+                make open_token := advance()
+                make arguments := parse_arguments()
+                when not failed {
+                    change left := ["call", left, arguments, open_token[2], open_token[3]]
+                }
+            } otherwise {
+                when peek()[0] == "[" {
+                    make open_token := advance()
+                    skip_newlines()
+                    make index_expression := parse_bp(1)
+                    skip_newlines()
+                    when not failed and peek()[0] != "]" {
+                        make ignored := fail("expected ']' after index expression", peek())
+                    } otherwise {
+                        when not failed {
+                            make ignored_close := advance()
+                            change left := ["index", left, index_expression, open_token[2], open_token[3]]
+                        }
+                    }
+                } otherwise {
+                    make operator_token := advance()
+                    make operator_precedence := precedence(operator_token[0])
+                    vary next_minimum := operator_precedence + 1
+                    when operator_token[0] == "**" {
+                        change next_minimum := operator_precedence
+                    }
+                    skip_newlines()
+                    make right := parse_bp(next_minimum)
+                    when failed {
+                        change left := ["ERROR", error_message, error_line, error_column]
+                    } otherwise {
+                        change left := ["binary", operator_token[0], left, right, operator_token[2], operator_token[3]]
+                    }
+                }
+            }
+        }
+        yield left
+    }
+
+    when token_count == 0 {
+        yield ["ERROR", "token stream is empty", 1, 1]
+    }
+
+    skip_newlines()
+    make root := parse_bp(1)
+    skip_newlines()
+
+    when failed {
+        yield ["ERROR", error_message, error_line, error_column]
+    }
+    when peek()[0] != "EOF" {
+        make ignored := fail("unexpected token after expression", peek())
+        yield ignored
+    }
+    yield ["OK", root]
+}
+
+# Multiplication binds more tightly than addition.
+make precedence_tokens := [
+    ["NUMBER", "2", 1, 1], ["+", "+", 1, 3],
+    ["NUMBER", "3", 1, 5], ["*", "*", 1, 7],
+    ["NUMBER", "4", 1, 9], ["EOF", "", 1, 10]
+]
+make precedence_expected := [
+    "OK",
+    ["binary", "+",
+        ["literal", "NUMBER", "2", 1, 1],
+        ["binary", "*",
+            ["literal", "NUMBER", "3", 1, 5],
+            ["literal", "NUMBER", "4", 1, 9],
+            1, 7
+        ],
+        1, 3
+    ]
+]
+assert(parse_expression(precedence_tokens) == precedence_expected, "Pratt precedence mismatch")
+
+# Power is right-associative, as in the reference parser.
+make power_tokens := [
+    ["NUMBER", "2", 1, 1], ["**", "**", 1, 2],
+    ["NUMBER", "3", 1, 4], ["**", "**", 1, 5],
+    ["NUMBER", "2", 1, 7], ["EOF", "", 1, 8]
+]
+make power_result := parse_expression(power_tokens)
+assert(power_result[0] == "OK", "power expression failed")
+assert(power_result[1][3][0] == "binary", "power operator must associate to the right")
+
+# The language's actual flow operator is ::.
+make flow_tokens := [
+    ["IDENT", "source", 1, 1], ["::", "::", 1, 8],
+    ["IDENT", "transform", 1, 11], ["EOF", "", 1, 20]
+]
+make flow_result := parse_expression(flow_tokens)
+assert(flow_result[0] == "OK" and flow_result[1][1] == "::", "flow operator precedence mismatch")
+
+# Parenthesized unary expression retains the operator's source location.
+make grouped_tokens := [
+    ["(", "(", 2, 1], ["NOT", "not", 2, 2],
+    ["IDENT", "ready", 2, 6], [")", ")", 2, 11],
+    ["EOF", "", 2, 12]
+]
+make grouped_result := parse_expression(grouped_tokens)
+assert(grouped_result[0] == "OK", "grouped unary expression failed")
+assert(grouped_result[1][0] == "unary", "group should return its inner unary node")
+assert(grouped_result[1][3] == 2 and grouped_result[1][4] == 2, "unary source position mismatch")
+
+# Postfix calls, list literals and indexing compose in the same expression.
+make postfix_tokens := [
+    ["IDENT", "sum", 1, 1], ["(", "(", 1, 4],
+    ["[", "[", 1, 5], ["NUMBER", "1", 1, 6],
+    [",", ",", 1, 7], ["NUMBER", "2", 1, 8],
+    ["]", "]", 1, 9], [")", ")", 1, 10],
+    ["[", "[", 1, 11], ["NUMBER", "0", 1, 12],
+    ["]", "]", 1, 13], ["EOF", "", 1, 14]
+]
+make postfix_result := parse_expression(postfix_tokens)
+assert(postfix_result[0] == "OK", "call/list/index expression failed")
+assert(postfix_result[1][0] == "index", "outer postfix node should be index")
+assert(postfix_result[1][1][0] == "call", "inner postfix node should be call")
+assert(postfix_result[1][1][2][0][0] == "list", "call argument should be a list literal")
+
+# Missing delimiters and trailing input must be rejected with source coordinates.
+make missing_close := parse_expression([
+    ["(", "(", 3, 1], ["NUMBER", "1", 3, 2], ["EOF", "", 3, 3]
+])
+assert(missing_close[0] == "ERROR" and missing_close[2] == 3, "missing ')' was accepted")
+
+make trailing_tokens := parse_expression([
+    ["NUMBER", "1", 4, 1], ["NUMBER", "2", 4, 3], ["EOF", "", 4, 4]
+])
+assert(trailing_tokens[0] == "ERROR", "trailing token was accepted")
+assert(trailing_tokens[2] == 4 and trailing_tokens[3] == 3, "error source position mismatch")
+
+emit "SELFHOST_PARSER_OK"
