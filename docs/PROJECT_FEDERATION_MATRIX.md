@@ -64,3 +64,16 @@ Pytyliki
 When an interface changes, update its provider contract, every affected consumer contract, the relevant tests and all three `docs/FEDERATED_INTEGRATION.md` files in the same change. Preserve existing interface versions for compatible extensions; introduce a new versioned identifier for breaking changes. Keep this matrix synchronized with the three `project-contract.json` manifests.
 
 This matrix is an inventory of current repository evidence. A roadmap item, language/toolchain catalogue entry or architecture idea must not be presented as an implemented cross-project feature until code, tests and contract evidence exist.
+
+
+## OCTA-8 horizontal peer product and octagonal pyramid
+
+The 3 × 3 matrix is now governed by the shared [OCTA-8 topology contract](OCTA_PYRAMID_FEDERATION.md). Its horizontal base contains Reaper, Pytyliki and OPlague as independent peer projects. The full directed pairwise product contains six links (three unordered pairs, both directions) and three project-local self-loops.
+
+The pyramid contributes eight common facets: identity/namespaces, contracts/versioning, transport/bounds, provenance/integrity, validation/normalization, privacy/consent, execution/safety and audit/reproducibility. The apex is non-executable coordination metadata, not a runtime gateway.
+
+- Reaper ↔ OPlague: OPlague snapshot JSON flows to Reaper; Reaper comparison JSON flows back to OPlague's read-only report validator.
+- Reaper ↔ Pytyliki: explicit native ABI requests and synchronous numeric/status responses.
+- OPlague ↔ Pytyliki: explicit native ABI requests and synchronous numeric/status responses.
+
+The shared topology, schema, validator and mutation tests are checked into all three repositories. The topology validator checks the six directed edges and eight facets; contract changes are tested in each repository's CI.
