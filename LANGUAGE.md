@@ -34,6 +34,10 @@ make result := [1, 2, 3, 4, 5]
 emit "result = " ++ text(result)
 ~~~
 
+## 666-token symbolic catalogue
+
+Reaper includes a canonical 666-entry symbolic vocabulary over `: ; [ { ] } + = _ - *`. Each reserved lexeme is a unique three-symbol code with no digits. The six groups cover memory, streams, types, arithmetic, metrics and diagnostics. The Python and native C lexers recognize these codes; use `reaper --catalog` or the `token_catalog()`, `token_info()` and `token_is_reserved()` built-ins to inspect them. Vocabulary registration does not imply operation semantics are implemented: reserved operators are rejected by the parser until their contracts are implemented. See [TOKEN_CATALOG](docs/TOKEN_CATALOG.md).
+
 ## Source format
 
 - Source files use the .rpr extension.

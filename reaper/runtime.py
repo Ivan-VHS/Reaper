@@ -11,6 +11,7 @@ from .lexer import Token
 from .parser import Node, parse
 from .impact import catalog as impact_catalog, find_profile as impact_profile, rank_profiles as impact_rank, search_profiles as impact_search
 from . import arithmetic, metric_space
+from .token_catalog import token_catalog, token_info, token_is_reserved
 
 
 @dataclass(slots=True)
@@ -413,6 +414,9 @@ class Interpreter:
         register("say", lambda *values: self.output(" ".join(self._display(v) for v in values)), 1, None)
         register("ask", lambda prompt: input(self._display(prompt)), 1, 1)
         register("assert", self._assert, 1, 2)
+        register("token_catalog", lambda *group: token_catalog(group[0] if group else None), 0, 1)
+        register("token_info", token_info, 1, 1)
+        register("token_is_reserved", token_is_reserved, 1, 1)
         register("impact_catalog", impact_catalog, 0, 0)
         register("impact_profile", impact_profile, 1, 1)
         register("impact_search", impact_search, 1, 1)

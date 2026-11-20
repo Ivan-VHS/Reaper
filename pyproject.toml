@@ -25,6 +25,7 @@ classifiers = [
 
 [project.scripts]
 reaper = "reaper.cli:main"
+reaper-polyglot = "reaper.polyglot:main"
 
 [project.gui-scripts]
 reaper-studio = "reaper.desktop:main"
@@ -33,4 +34,4 @@ reaper-studio = "reaper.desktop:main"
 packages = ["reaper"]
 
 [tool.setuptools.package-data]
-reaper = ["systems_architectures.json", "systems_languages.json"]
+reaper = ["systems_architectures.json", "systems_languages.json", "token_catalog.json"]

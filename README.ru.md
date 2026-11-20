@@ -15,6 +15,10 @@ make answer := numbers :: map(double) :: sum()
 emit "answer = " ++ text(answer)
 ```
 
+## Каталог из 666 символических токенов
+
+Reaper включает канонический словарь из 666 уникальных трёхсимвольных лексем без цифр на алфавите `: ; [ { ] } + = _ - *`. Python- и C-лексеры распознают зарезервированные коды; посмотреть их можно командами `reaper --catalog`, `--catalog-group memory` и `reaper --catalog-token ':::'`. Зарезервированные записи пока не являются исполняемыми операциями. См. [каталог токенов](docs/TOKEN_CATALOG.md).
+
 ## Что реализовано
 
 - **Эталонная среда Python:** Python 3.10+, tree-walking интерпретатор, lexer, parser, runtime, CLI и тесты на стандартной библиотеке.
@@ -23,7 +27,7 @@ emit "answer = " ++ text(answer)
 - **Метрическая библиотека:** нормы L1/L2/L∞, нормализация, евклидовы/манхэттенские/чебышёвские расстояния, косинусное сходство, угол, проекция и центроид, а также квадратичные формы и неевклидовы модели.
 - **CLI:** --lint, постоянный построчный --repl, структурированный --json и замеры --profile.
 - **Нативное направление C17:** lexer, expression parser и AST с управлением памятью, проверенный integer Canonical IR, контролируемое свёртывание констант, ограниченный AST-to-IR lowering, начальный CLI и C-тесты.
-- **Self-hosting, этап 0:** `selfhost/lexer.rpr` реализует начальный токенизатор на самом Reaper. Python bootstrap запускает его в CI и проверяет токены, координаты, escape-последовательности и ошибки символов. Пока поддерживаются только ASCII-идентификаторы; этот слой ещё не заменяет эталонный lexer и не является self-hosting-компилятором. См. [план bootstrap](docs/SELF_HOSTING_BOOTSTRAP.md).
+- **Self-hosting, этап 0 + частичный этап 1:** `selfhost/lexer.rpr` реализует токенизацию, а `selfhost/parser.rpr` — Pratt-парсер выражений на самом Reaper. Он учитывает реальный оператор потока `::`, приоритеты, правоассоциативное `**`, списки, вызовы функций и индексацию. Оба модуля проверяются bootstrap-assertions, Python unit-тестами и CTest. У lexer пока есть ограничение ASCII-идентификаторов; parser ещё не покрывает объявления, блоки и грамматику операторов и не заменяет эталонный frontend. См. [план bootstrap](docs/SELF_HOSTING_BOOTSTRAP.md).
 - **MOST:** документированный словарь языка и поэтапный контракт реализации.
 
 Реализация C пока не является полноценным интерпретатором. Полные declarations/blocks, проверка типов, разрешение intent, анализ ownership, генерация native code и WASM ещё не реализованы. Python остаётся эталоном совместимости до подтверждения паритета runtime и CLI.
@@ -78,6 +82,21 @@ ctest --test-dir build --output-on-failure
 
 Успешная сборка публикует `Reaper-Studio-windows-x64.zip`; тег `v*` создаёт GitHub Release. Запуск из исходников (Python 3.10+): `python reaper_desktop.py`.
 
+## Полиглот-система погружения
+
+В Python reference package Reaper добавлена локальная подсистема обучения языкам: несколько языковых профилей, офлайн-библиотека текстов и субтитров, контекстные карточки фраз, интервальное повторение, адаптивный ежедневный план, оценка понятности материалов, журнал занятий и экспорт JSON.
+
+```sh
+reaper polyglot init English --native Russian --level A0 --minutes 45
+reaper polyglot content add lesson.srt --kind dialogue --level A1
+reaper polyglot phrase add "Could you say that again?" --translation "Не могли бы вы повторить?" --context "Вежливая просьба повторить фразу"
+reaper polyglot plan
+reaper polyglot review
+reaper polyglot report
+```
+
+Данные хранятся локально в SQLite. Диапазон 70–90% рассчитывается как приближённая доля токенов из уже повторённых карточек, а не как автоматический тест понимания. Воспроизведение медиа, ASR/TTS, автоматический перевод и AI-оценка произношения пока не реализованы. См. [руководство по полиглот-системе](docs/POLYGLOT_IMMERSION.md).
+
 ## Дизайн и границы безопасности
 
 Программа проходит токенизацию, парсинг в AST и выполняется ограниченным интерпретатором. Консольные эффекты явные: `emit`, `say`, `ask`. Обычные выражения не получают скрытый доступ к файловой системе, сети, часам, процессам, shell или оборудованию.
@@ -87,6 +106,7 @@ ctest --test-dir build --output-on-failure
 ## Документация
 
 - [Справочник языка](LANGUAGE.md)
+- [Полиглот-система погружения](docs/POLYGLOT_IMMERSION.md)
 - [Реализованные расширения runtime и CLI (20.11.2026)](docs/IMPLEMENTATION_UPDATE_2026-11-20.md)
 - [Объединённая архитектура REAPER/MOST](docs/REAPER_UNIFIED_ARCHITECTURE.md)
 - [План self-hosting bootstrap](docs/SELF_HOSTING_BOOTSTRAP.md)
@@ -97,7 +117,7 @@ ctest --test-dir build --output-on-failure
 
 ## CI и лицензия
 
-GitHub Actions тестирует Python 3.10, 3.11 и 3.12, запускает unit-тесты (включая Reaper-written bootstrap lexer), проверяет пример и выполняет flow-пример. У нативного ядра C есть отдельное покрытие CMake/CTest.
+GitHub Actions тестирует Python 3.10, 3.11 и 3.12, запускает unit-тесты (включая Reaper-written bootstrap lexer и частичный Pratt parser), проверяет пример и выполняет flow-пример. У нативного ядра C есть отдельное покрытие CMake/CTest.
 
 [Apache License 2.0](LICENSE).
 
