@@ -109,7 +109,7 @@ Default runtime quotas include 1,000,000 execution steps, 256 nested calls, 100,
 
 ## CI and license
 
-GitHub Actions tests Python 3.10, 3.11 and 3.12, runs the unit suite (including the Reaper-written bootstrap lexer), checks an example and executes the flow example. The native C core has its own CMake/CTest coverage.
+GitHub Actions tests Python 3.10, 3.11 and 3.12, runs the unit suite (including the Reaper-written bootstrap lexer and partial Pratt parser), checks an example and executes the flow example. The native C core has its own CMake/CTest coverage.
 
 [Apache License 2.0](LICENSE).
 
