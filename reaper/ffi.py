@@ -151,17 +151,17 @@ class PytylikiBridge:
     def _configure(self) -> None:
         try:
             self.handle.pl_cpu_profile.argtypes = [ctypes.POINTER(_PlCpuInfo)]
-        self.handle.pl_cpu_profile.restype = ctypes.c_int
-        self.handle.pl_run_benchmark.argtypes = [ctypes.c_uint64, ctypes.POINTER(_PlBenchmark)]
-        self.handle.pl_run_benchmark.restype = ctypes.c_int
-        self.handle.pl_analyze_file.argtypes = [
-            ctypes.c_char_p, ctypes.POINTER(_PlAnalysis), ctypes.c_char_p, ctypes.c_size_t,
-        ]
-        self.handle.pl_analyze_file.restype = ctypes.c_int
-        self.handle.pl_write_json.argtypes = [
-            ctypes.c_char_p, ctypes.POINTER(_PlCpuInfo),
-            ctypes.POINTER(_PlBenchmark), ctypes.POINTER(_PlAnalysis),
-        ]
+            self.handle.pl_cpu_profile.restype = ctypes.c_int
+            self.handle.pl_run_benchmark.argtypes = [ctypes.c_uint64, ctypes.POINTER(_PlBenchmark)]
+            self.handle.pl_run_benchmark.restype = ctypes.c_int
+            self.handle.pl_analyze_file.argtypes = [
+                ctypes.c_char_p, ctypes.POINTER(_PlAnalysis), ctypes.c_char_p, ctypes.c_size_t,
+            ]
+            self.handle.pl_analyze_file.restype = ctypes.c_int
+            self.handle.pl_write_json.argtypes = [
+                ctypes.c_char_p, ctypes.POINTER(_PlCpuInfo),
+                ctypes.POINTER(_PlBenchmark), ctypes.POINTER(_PlAnalysis),
+            ]
             self.handle.pl_write_json.restype = ctypes.c_int
         except AttributeError as error:
             raise FfiError(f"Pytyliki library is missing an expected pl_* symbol: {error}") from error
