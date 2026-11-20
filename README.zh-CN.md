@@ -25,9 +25,9 @@ Reaper 包含一个规范的 666 项符号词汇表：每个词素由允许字�
 - **语言核心：** Unicode 标识符、注释、字符串、函数与闭包、递归、不可变绑定 `make`、通过显式 `change` 修改的 `vary`、条件、循环和数据流组合。
 - **内置操作与诊断：** 集合操作、显式类型转换、带源码位置的词法/解析/运行时错误，以及执行配额。
 - **原生 C17 路线：** lexer、表达式解析器和自有 AST、经过验证的整数 Canonical IR、支持 signed i64 加减乘除的受检常量折叠（拒绝溢出与除零）、有限 AST-to-IR lowering、CLI bring-up 模式和 C 测试。
-- **MOST 路线：** 已文档化的语言词汇和分阶段实现规范。
+- **МОСТ：** REAPER 0.1 的精确俄语关键字别名层。它复用同一 parser、AST、标准操作和 runtime；Python 参考实现执行有限俄语子集。МОСТ 没有独立语法、形态分析器或 runtime。参见 [别名规范](docs/MOST_LANGUAGE_SPEC.md) 和 [66 条俄语设计规则](docs/MOST_RUSSIAN_66_RULES.md)。
 
-C 实现目前还不是完整解释器。完整声明与代码块、类型检查、intent 解析、ownership 分析、原生代码生成和 WASM 尚未实现。在运行时与 CLI 达到经过验证的兼容性之前，Python 仍是参考实现。
+C 实现目前还不是完整解释器。完整声明与代码块、类型检查、ownership 分析、原生代码生成和 WASM 尚未实现。在运行时与 CLI 达到经过验证的兼容性之前，Python 仍是参考实现。
 
 ## 截图
 
