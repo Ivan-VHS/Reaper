@@ -21,7 +21,10 @@ typedef enum {
     REAPER_IR_OP_INVALID = 0,
     REAPER_IR_OP_CONST_I64,
     REAPER_IR_OP_ADD_I64,
-    REAPER_IR_OP_RETURN
+    REAPER_IR_OP_RETURN,
+    REAPER_IR_OP_SUB_I64,
+    REAPER_IR_OP_MUL_I64,
+    REAPER_IR_OP_DIV_I64
 } ReaperIrOpcode;
 
 typedef struct {

@@ -44,3 +44,17 @@ The precise contracts and limits are in [RUNTIME_PLATFORM.md](RUNTIME_PLATFORM.m
 ## Regression coverage
 
 `tests/test_extended_runtime.py` covers the new collection/string APIs, limits, CLI JSON diagnostics, profiling, and persistent REPL state. Vector algorithms remain in the metric-space regression suite. The full unit suite and native C17/CTest suite are the release gates.
+## Native C17 IR optimizer update
+
+The verified native IR also defines SUB_I64, MUL_I64 and DIV_I64 alongside
+ADD_I64. The constant-folding pass evaluates these operations only when both
+operands are verified integer constants. Signed overflow is detected before
+addition, subtraction or multiplication; division rejects zero and the
+INT64_MIN / -1 overflow case. Failures return a source-node diagnostic rather
+than relying on undefined behavior.
+
+The fixed-point driver retains its explicit 1–64 pass budget, verifies IR
+before and after folding, reports iteration and changed-node counts, and
+rejects a budget exhausted before convergence. This is a bounded native IR
+capability, not evidence that the developing C frontend or runtime supports all
+four operations end to end.
