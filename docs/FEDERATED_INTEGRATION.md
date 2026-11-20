@@ -25,18 +25,31 @@ non-finite and non-JSON values, enforce the same size limit, and atomically
 replace only the explicitly named output file. Parent directories are not
 created implicitly.
 
-OPlague snapshots must use the oplage.device-snapshot.v1 schema. Each metric
-must be finite and normalized to [0, 1], higher meaning healthier/better.
-Reference and candidate snapshots must expose identical metric dimensions.
-A dimension change is an explicit error, not an implicit zero fill.
+OPlague snapshots must use the complete oplage.device-snapshot.v1 contract;
+the consumer-side schema copy is
+[../schemas/oplage.device-snapshot.v1.schema.json](../schemas/oplage.device-snapshot.v1.schema.json).
+Before exposing metrics, Reaper validates the complete top-level envelope,
+timestamp and read-only source declaration, identity-protection metadata,
+device/package record shapes, summary counters derived from those records,
+and 6..128 finite normalized metrics in [0, 1]. It recomputes the canonical
+SHA-256 fingerprint and rejects a mismatch. The fingerprint detects content
+drift; it is not a vendor signature or authenticity proof. Reference and
+candidate snapshots must expose identical metric dimensions. A dimension
+change is an explicit error, not an implicit zero fill.
 
 ## Pytyliki FFI bridge
 
 Native functions load only from an explicit absolute file path supplied by
-the .rpr program. Reaper checks pytyliki_abi_version() == 1 and verifies all
-required ABI v1 symbols before use. Inputs are contiguous float64 vectors with
-1..4096 values. Buffers are owned by Reaper for the duration of the synchronous
-call and are never retained by Pytyliki.
+the .rpr program. Reaper checks pytyliki_abi_version() == 1 and verifies the
+public pytyliki_v1_* ABI symbols from src/interop.h before use. Direct built-ins
+accept finite vectors with 1..4096 float64 values. The typed handle returned by
+pytyliki_open(path) exposes pytyliki_bridge_norm(values, bridge),
+pytyliki_bridge_dot(left, right, bridge),
+pytyliki_bridge_distance(left, right, bridge), and
+pytyliki_bridge_orthogonal(left, right, tolerance, bridge). Buffers are owned
+by Reaper for the duration of each synchronous call and are never retained by
+Pytyliki. The obsolete pl_* CPU-profile/benchmark/source-scan adapter is not
+part of the current public ABI and is no longer exposed.
 
 Examples of explicit native library paths:
 
