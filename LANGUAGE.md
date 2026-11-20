@@ -105,8 +105,13 @@ Calls use name(arguments); list indexing uses collection[index]. Arithmetic does
 | first(list) / rest(list) | Read the first value / return all but the first |
 | sum(list) / sorted(list) | Numeric sum / sorted copy |
 | map(list, function) | Transform every item |
-| keep(list, predicate) | Keep items whose predicate is truthy |
-| fold(list, initial, function) | Reduce values from left to right |
+| keep(list, predicate) / filter(list, predicate) | Keep items whose predicate is truthy |
+| fold(list, initial, function) / reduce(list, initial, function) | Reduce values from left to right |
+| sorted(list[, key][, "asc" or "desc"]) / sort_by(list, key[, direction]) | Stable sorting with optional function key and direction |
+| chunk(list, width) / take(list, count) / drop(list, count) | Split into bounded blocks or take/drop a prefix |
+| flatten(list_of_lists) / unique(list) / reverse(sequence) | One-level flattening, stable de-duplication, reverse |
+| split(text, separator) / join(texts, separator) | Split and join strings |
+| trim / lower / upper / replace / contains / starts_with / ends_with | UTF-8 string operations |
 | assert(condition[, message]) | Raise a runtime error when condition is false |
 
 Flow passes the left-hand value as the first argument: values :: map(double) is equivalent to map(values, double).
@@ -117,6 +122,10 @@ Flow passes the left-hand value as the first argument: values :: map(double) is 
 python -m reaper examples/hello.rpr
 python -m reaper examples/flow.rpr
 python -m reaper --check examples/flow.rpr
+python -m reaper --lint examples/flow.rpr
+python -m reaper --repl
+python -m reaper --profile examples/flow.rpr
+python -m reaper --json --profile examples/flow.rpr
 python -m reaper --steps 2000000 examples/flow.rpr
 python -m reaper --items 50000 --text-length 500000 examples/flow.rpr
 ~~~
@@ -144,4 +153,4 @@ Not implemented yet: static type checking, algebraic effect handlers, semantic-g
 
 ## Orthogonal metric built-ins
 
-Reaper also provides pure numerical helpers: metric_dot, vector_norm, euclidean_distance, is_orthogonal, quadratic_form, law_of_cosines, de_gua_area, parseval_energy, unit_circle_residual, spherical_hypotenuse, hyperbolic_hypotenuse, minkowski_interval, combine_variances and reciprocal_altitude. All vector arguments are lists of finite numbers. The vector and matrix limits, dimensional checks, geometric domains and statistical assumptions are documented in docs/ORTHOGONAL_METRIC_ENGINE.md. These helpers do not grant host I/O or hardware capabilities.
+Reaper also provides pure numerical helpers: metric_dot, vector_norm (L1/L2/L-infinity), vector_normalize, euclidean_distance, squared_euclidean_distance, manhattan_distance, chebyshev_distance, cosine_similarity, angle_between, vector_projection, vector_centroid, is_orthogonal, quadratic_form, law_of_cosines, de_gua_area, parseval_energy, unit_circle_residual, spherical_hypotenuse, hyperbolic_hypotenuse, minkowski_interval, combine_variances and reciprocal_altitude. All vector arguments are lists of finite numbers. The vector and matrix limits, dimensional checks, geometric domains and statistical assumptions are documented in docs/ORTHOGONAL_METRIC_ENGINE.md. These helpers do not grant host I/O or hardware capabilities.

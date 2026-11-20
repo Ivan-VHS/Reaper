@@ -46,8 +46,15 @@ def dot(left: Any, right: Any) -> float:
     return _finite_sum((x * y for x, y in zip(a, b)), "dot product")
 
 
-def vector_norm(values: Any) -> float:
-    return _finite_result(math.hypot(*_vector(values)), "vector norm")
+def vector_norm(values: Any, kind: Any = "l2") -> float:
+    vector = _vector(values)
+    if kind == "l1":
+        return _finite_sum((abs(value) for value in vector), "L1 norm")
+    if kind in ("linf", "infinity", "max"):
+        return _finite_result(max(map(abs, vector)), "L-infinity norm")
+    if kind in ("l2", "euclidean"):
+        return _finite_result(math.hypot(*vector), "L2 norm")
+    raise ValueError("norm kind must be 'l1', 'l2', or 'linf'")
 
 
 def euclidean_distance(left: Any, right: Any) -> float:
@@ -162,3 +169,88 @@ def reciprocal_altitude(side_a: Any, side_b: Any) -> float:
         raise ValueError("right-triangle side lengths must be positive")
     smaller, larger = sorted((a, b))
     return _finite_result(smaller / math.hypot(1.0, smaller / larger), "reciprocal altitude")
+
+
+
+def normalize(values: Any) -> list[float]:
+    vector = _vector(values)
+    length = math.hypot(*vector)
+    if length == 0.0:
+        raise ValueError("cannot normalize a zero vector")
+    return [_finite_result(value / length, "normalized component") for value in vector]
+
+
+def _matching_vectors(left: Any, right: Any) -> tuple[list[float], list[float]]:
+    a, b = _vector(left, "left vector"), _vector(right, "right vector")
+    if len(a) != len(b):
+        raise ValueError("vectors must have the same dimension")
+    return a, b
+
+
+def manhattan_distance(left: Any, right: Any) -> float:
+    a, b = _matching_vectors(left, right)
+    return _finite_sum((abs(x - y) for x, y in zip(a, b)), "Manhattan distance")
+
+
+def chebyshev_distance(left: Any, right: Any) -> float:
+    a, b = _matching_vectors(left, right)
+    return _finite_result(max(abs(x - y) for x, y in zip(a, b)), "Chebyshev distance")
+
+
+def squared_euclidean_distance(left: Any, right: Any) -> float:
+    a, b = _matching_vectors(left, right)
+    return _finite_sum(((x - y) * (x - y) for x, y in zip(a, b)), "squared Euclidean distance")
+
+
+def cosine_similarity(left: Any, right: Any) -> float:
+    a, b = _matching_vectors(left, right)
+    scale_a, scale_b = max(map(abs, a)), max(map(abs, b))
+    if scale_a == 0.0 or scale_b == 0.0:
+        raise ValueError("cosine similarity is undefined for a zero vector")
+    scaled_a = [value / scale_a for value in a]
+    scaled_b = [value / scale_b for value in b]
+    norm_a, norm_b = math.hypot(*scaled_a), math.hypot(*scaled_b)
+    value = _finite_sum(
+        ((x / norm_a) * (y / norm_b) for x, y in zip(scaled_a, scaled_b)),
+        "cosine similarity",
+    )
+    return max(-1.0, min(1.0, value))
+
+
+def angle_between(left: Any, right: Any) -> float:
+    return math.acos(cosine_similarity(left, right))
+
+
+def project(vector: Any, onto: Any) -> list[float]:
+    values, basis = _matching_vectors(vector, onto)
+    scale = max(map(abs, basis))
+    if scale == 0.0:
+        raise ValueError("cannot project onto a zero vector")
+    scaled_basis = [value / scale for value in basis]
+    denominator = _finite_sum((value * value for value in scaled_basis), "projection denominator")
+    numerator = _finite_sum(
+        (value * component for value, component in zip(values, scaled_basis)),
+        "projection numerator",
+    )
+    factor = numerator / denominator
+    return [
+        _finite_result(factor * component, "projection component")
+        for component in scaled_basis
+    ]
+
+
+def centroid(vectors: Any) -> list[float]:
+    if not isinstance(vectors, (list, tuple)) or not vectors:
+        raise ValueError("centroid expects a non-empty list of vectors")
+    if len(vectors) > MAX_DIMENSION:
+        raise ValueError(f"centroid accepts at most {MAX_DIMENSION} vectors")
+    rows = [_vector(row, f"vector {index}") for index, row in enumerate(vectors)]
+    dimension = len(rows[0])
+    if any(len(row) != dimension for row in rows):
+        raise ValueError("all vectors must have the same dimension")
+    count = len(rows)
+    return [
+        _finite_result(_finite_sum((row[column] for row in rows), "centroid sum") / count,
+                       "centroid component")
+        for column in range(dimension)
+    ]

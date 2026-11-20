@@ -19,7 +19,9 @@ emit "answer = " ++ text(answer)
 
 - **Эталонная среда Python:** Python 3.10+, tree-walking интерпретатор, lexer, parser, runtime, CLI и тесты на стандартной библиотеке.
 - **Ядро языка:** Unicode-идентификаторы, комментарии, строки, функции и closures, рекурсия, неизменяемый `make`, изменяемый `vary` с явным `change`, условия, циклы и композиция потоков.
-- **Встроенные операции и диагностика:** операции над коллекциями, явные преобразования, ортогональная метрическая математика (n-мерное расстояние, скалярные произведения, квадратичные формы, энергия Парсеваля и неевклидовы модели), диагностика с привязкой к исходнику и лимиты исполнения.
+- **Встроенные операции и диагностика:** конвейеры :: , map/filter/fold/reduce, стабильная сортировка по ключу, chunk/take/drop/flatten/unique, UTF-8-операции над строками, явные преобразования, диагностика с координатами и лимиты исполнения.
+- **Метрическая библиотека:** нормы L1/L2/L∞, нормализация, евклидовы/манхэттенские/чебышёвские расстояния, косинусное сходство, угол, проекция и центроид, а также квадратичные формы и неевклидовы модели.
+- **CLI:** --lint, постоянный построчный --repl, структурированный --json и замеры --profile.
 - **Нативное направление C17:** lexer, expression parser и AST с управлением памятью, проверенный integer Canonical IR, контролируемое свёртывание констант, ограниченный AST-to-IR lowering, начальный CLI и C-тесты.
 - **Self-hosting, этап 0:** `selfhost/lexer.rpr` реализует начальный токенизатор на самом Reaper. Python bootstrap запускает его в CI и проверяет токены, координаты, escape-последовательности и ошибки символов. Пока поддерживаются только ASCII-идентификаторы; этот слой ещё не заменяет эталонный lexer и не является self-hosting-компилятором. См. [план bootstrap](docs/SELF_HOSTING_BOOTSTRAP.md).
 - **MOST:** документированный словарь языка и поэтапный контракт реализации.
@@ -40,6 +42,8 @@ cd Reaper
 python -m reaper examples/hello.rpr
 python -m reaper examples/flow.rpr
 python -m reaper --check examples/flow.rpr
+python -m reaper --repl
+python -m reaper --json --profile examples/flow.rpr
 python -m unittest discover -s tests -v
 ```
 
@@ -83,6 +87,7 @@ ctest --test-dir build --output-on-failure
 ## Документация
 
 - [Справочник языка](LANGUAGE.md)
+- [Реализованные расширения runtime и CLI (20.11.2026)](docs/IMPLEMENTATION_UPDATE_2026-11-20.md)
 - [Объединённая архитектура REAPER/MOST](docs/REAPER_UNIFIED_ARCHITECTURE.md)
 - [План self-hosting bootstrap](docs/SELF_HOSTING_BOOTSTRAP.md)
 - [Архитектура](docs/ARCHITECTURE.md)
