@@ -1,0 +1,157 @@
+{
+  "schema": "unified.project-contract.v1",
+  "project": {
+    "id": "reaper",
+    "name": "Reaper",
+    "repository": "Ivan-VHS/Reaper",
+    "summary": "Flow-first programming language with a Python reference runtime, selectable Canonical IR VM, developing native C17 frontend, explicit modules, bounded resources and opt-in interoperability.",
+    "documentation": "docs/UNIFIED_PROJECT_CONTRACT.md"
+  },
+  "implementation": {
+    "languages": [
+      "Reaper language",
+      "Python 3.10+",
+      "C17"
+    ],
+    "runtime_platforms": [
+      "Windows",
+      "Linux",
+      "macOS"
+    ],
+    "desktop_platforms": [
+      "Windows"
+    ]
+  },
+  "capabilities": [
+    {
+      "id": "language.python-reference-runtime",
+      "status": "implemented",
+      "summary": "Reference lexer, parser, AST interpreter, CLI and bounded execution semantics.",
+      "evidence": [
+        "reaper/lexer.py",
+        "reaper/parser.py",
+        "reaper/runtime.py",
+        "reaper/cli.py"
+      ]
+    },
+    {
+      "id": "runtime.canonical-ir-vm",
+      "status": "implemented",
+      "summary": "Selectable Python bytecode VM over Canonical IR while tree-walk execution remains the compatibility default.",
+      "evidence": [
+        "reaper/ir.py",
+        "reaper/vm.py",
+        "reaper/cli.py"
+      ]
+    },
+    {
+      "id": "modules.explicit-import-export",
+      "status": "implemented",
+      "summary": "Versioned .rpr module loading, isolated scopes, cached exports, dependency graph and cycle diagnostics.",
+      "evidence": [
+        "reaper/modules.py",
+        "tests/test_language.py"
+      ]
+    },
+    {
+      "id": "resources.bounded-managed-ledger",
+      "status": "implemented",
+      "summary": "Managed resource accounting, heap and open-file quotas, deterministic cleanup and execution limits.",
+      "evidence": [
+        "reaper/resources.py",
+        "reaper/runtime.py",
+        "tests/test_runtime_platform.py"
+      ]
+    },
+    {
+      "id": "interop.oplage-device-snapshot",
+      "status": "implemented",
+      "summary": "Consumes versioned OPlague device snapshots and exposes normalized comparison reporting.",
+      "evidence": [
+        "reaper/federation.py",
+        "tests/test_federation.py",
+        "docs/FEDERATED_INTEGRATION.md"
+      ]
+    },
+    {
+      "id": "interop.pytyliki-c-abi",
+      "status": "implemented",
+      "summary": "Optional typed bridge to Pytyliki C ABI v1; native loading is explicitly gated by the caller.",
+      "evidence": [
+        "reaper/ffi.py",
+        "docs/FEDERATED_INTEGRATION.md"
+      ]
+    },
+    {
+      "id": "embedded.reference-workbench",
+      "status": "partial",
+      "summary": "Creates and inspects reference MCU projects and cross-builds with user-installed toolchains; no built-in flashing or live hardware debugging is claimed.",
+      "evidence": [
+        "reaper/embedded.py",
+        "docs/EMBEDDED_C_WORKBENCH.md"
+      ]
+    },
+    {
+      "id": "selfhosting.frontend-bootstrap",
+      "status": "partial",
+      "summary": "Reaper-written tokenizer and Pratt expression parser cover a tested subset, not a complete self-hosting compiler.",
+      "evidence": [
+        "selfhost/lexer.rpr",
+        "selfhost/parser.rpr",
+        "tests/test_self_hosting.py"
+      ]
+    }
+  ],
+  "interfaces": [
+    {
+      "id": "oplage.device-snapshot.v1",
+      "format": "Versioned JSON device snapshot",
+      "direction": "consumes",
+      "status": "implemented",
+      "evidence": [
+        "reaper/federation.py",
+        "docs/FEDERATED_INTEGRATION.md"
+      ]
+    },
+    {
+      "id": "reaper.oplage-comparison.v1",
+      "format": "Versioned JSON comparison report",
+      "direction": "provides",
+      "status": "implemented",
+      "evidence": [
+        "reaper/federation.py",
+        "tests/test_federation.py"
+      ]
+    }
+  ],
+  "integrations": [
+    {
+      "project": "oplague",
+      "interface": "oplage.device-snapshot.v1",
+      "mode": "json-file",
+      "status": "implemented",
+      "opt_in": true,
+      "summary": "Reads a caller-selected OPlague snapshot and validates its declared schema before comparison."
+    },
+    {
+      "project": "pytyliki",
+      "interface": "pytyliki.c-abi.v1",
+      "mode": "native-ffi",
+      "status": "optional",
+      "opt_in": true,
+      "summary": "Uses an explicitly enabled native bridge and trusted shared-library path for metric cross-checks."
+    }
+  ],
+  "safety_boundaries": [
+    "Execution quotas are resource guardrails, not a security sandbox for untrusted programs.",
+    "Filesystem, process, network, clock, shell and native-library effects remain explicit or opt-in rather than ambient expression behavior.",
+    "Native FFI executes in-process native code and must only load trusted ABI-compatible libraries.",
+    "The native C17 implementation and self-hosting frontend remain partial; Python is the compatibility reference."
+  ],
+  "extension_points": [
+    "Canonical IR and selectable execution engines.",
+    "Versioned .rpr module interfaces and explicit import/export boundaries.",
+    "Opt-in C ABI adapters and validated versioned JSON interchange.",
+    "Native C17 frontend stages with Python reference behavior as the compatibility oracle."
+  ]
+}
