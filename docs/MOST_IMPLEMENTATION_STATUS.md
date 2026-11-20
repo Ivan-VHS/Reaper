@@ -10,8 +10,11 @@
 |---|---|---|
 | C17 build and native lexer | implemented | `src/lexer.c`, `tests/test_lexer.c` |
 | REAPER lexical vocabulary | implemented | keyword/operator lexer tests; grammar is not implied |
-| Russian REAPER keyword aliases | implemented in Python reference | reaper/lexer.py maps 21 exact spellings to existing parser token kinds |
-| C17 Russian alias canonicalization | implemented lexical API | reaper_token_canonical_text() returns REAPER spelling while preserving original token text; tests/test_lexer.c |
+| Russian REAPER keyword aliases | implemented in Python reference | reaper/lexer.py maps 54 exact spellings: 21 runtime-supported aliases and 33 lexical reservations; parity is checked against language/most_keyword_aliases.json |
+| C17 Russian alias canonicalization | implemented lexical API | reaper_token_canonical_text() canonicalizes all 54 aliases while preserving original token text; tests/test_lexer.c |
+| Python/C17 source columns for valid UTF-8 | implemented | C17 counts UTF-8 code points; tests/test_lexer.c |
+| 20-principle Russian native profile | specified | language/most_russian_native_profile.json; docs/MOST_RUSSIAN_NATIVE_PROFILE.md |
+| Alias manifest parity validator | implemented | tools/validate_most_keywords.py; tests/test_most_russian_profile.py |
 | Semantic IR data model | implemented | `include/reaper/ir.h` |
 | IR structural verifier | implemented | `src/ir.c`, `tests/test_ir.c` |
 | Bounded fixed-point optimizer driver | implemented | `reaper_ir_optimize_fixed_point`; verified pass loop, 64-iteration ceiling, convergence report and idempotence tests |\n| Native C17 evolution evidence gate | implemented | `src/evolution.c`, `include/reaper/evolution.h`, `tests/test_evolution.c`; fail-closed acceptance gates and human approval requirement |\n| Checked i64 constant-folding pass | implemented | `src/optimizer.c`, `include/reaper/optimizer.h`, `tests/test_optimizer.c`; rejects signed overflow and verifies input/output IR |
@@ -84,9 +87,14 @@ Python remains a compatibility oracle until C17 semantic parity is demonstrated.
 
 ## МОСТ: implementation boundary
 
-МОСТ is an exact alias table over REAPER 0.1, not a new frontend. The Python reference executes the supported Russian subset through existing REAPER parser token kinds. The C17 lexer provides a canonical-token accessor for Russian spellings. No separate grammar, AST, runtime, morphology engine or synonym resolver is planned. The 66 rules are readability guidance only; see docs/MOST_LANGUAGE_SPEC.md and docs/MOST_RUSSIAN_66_RULES.md.
+МОСТ is a Russian-first exact-alias surface over REAPER, not a second compiler. The Python/C17 lexers recognize 54 exact aliases; 21 are executable through the REAPER 0.1 reference grammar and 33 are reserved lexically for future grammar milestones. The canonical manifest checks cross-lexer parity. No separate grammar, AST, runtime, morphology engine or synonym resolver is planned. The 66 rules are readability guidance only; see docs/MOST_LANGUAGE_SPEC.md, docs/MOST_RUSSIAN_NATIVE_PROFILE.md and docs/MOST_RUSSIAN_66_RULES.md.
 
 
 ## MOST Function Registry 666
 
 The current registry contains 666 API/feature contracts, not 666 implemented runtime functions. Every entry currently declares `most_native=false`; external Python/C11 APIs are tracked separately from the native MOST surface. Promotion to implemented requires typed signatures, effect/capability and ownership contracts, resource bounds, executable conformance tests, documentation and source mapping. Run `python tools/validate_most_functions.py`.
+
+
+## Russian-native profile v0.2.0
+
+The profile defines 20 engineering dimensions spanning Russian-first source syntax, deterministic lexical mapping, UTF-8 source positions, canonical IR boundaries, explicit system capabilities, modularity, author rights and third-party license compliance. The structured source is `language/most_russian_native_profile.json`. Run `python tools/validate_most_keywords.py` to validate alias parity and profile cardinality. The profile does not promote the 33 lexical reservations into supported grammar.
