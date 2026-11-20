@@ -69,3 +69,11 @@ make report := oplage_compare(baseline, current, "C:/trusted/Pytyliki/build/Rele
 The JSON and native bridge do not expose device mutation. Reaper cannot install,
 remove, enable, disable or roll back drivers through these built-ins. OPlague's
 driver-management safety gates remain independent.
+
+
+## Cross-repository references
+
+- **Shared 3 × 3 map:** [Project federation matrix](https://github.com/Ivan-VHS/Reaper/blob/main/docs/PROJECT_FEDERATION_MATRIX.md).
+- **OPlague:** [repository](https://github.com/Ivan-VHS/OPlague), [federation contract](https://github.com/Ivan-VHS/OPlague/blob/main/docs/FEDERATED_INTEGRATION.md), [device snapshot producer](https://github.com/Ivan-VHS/OPlague/blob/main/tools/federation.py), [project manifest](https://github.com/Ivan-VHS/OPlague/blob/main/project-contract.json).
+- **Pytyliki:** [repository](https://github.com/Ivan-VHS/Pytyliki), [federation contract](https://github.com/Ivan-VHS/Pytyliki/blob/main/docs/FEDERATED_INTEGRATION.md), [public ABI header](https://github.com/Ivan-VHS/Pytyliki/blob/main/src/interop.h), [project manifest](https://github.com/Ivan-VHS/Pytyliki/blob/main/project-contract.json).
+- **Reaper evidence:** [snapshot and comparison bridge](../reaper/federation.py), [native FFI bridge](../reaper/ffi.py), [project manifest](../project-contract.json).
