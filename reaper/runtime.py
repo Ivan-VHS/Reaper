@@ -18,6 +18,7 @@ from .ffi import CAbiLibrary, NativeFunction, PytylikiBridge
 from .memory import HeapLimitError, MemoryManager, RegionError
 from .modules import ModuleError, ModuleLoader
 from .resources import ResourceError, ResourceHandle, ResourceManager
+from .token_catalog import token_catalog, token_info, token_is_reserved
 
 
 @dataclass(slots=True)
@@ -481,6 +482,9 @@ class Interpreter:
         register("say", lambda *values: self.output(" ".join(self._display(v) for v in values)), 1, None)
         register("ask", lambda prompt: input(self._display(prompt)), 1, 1)
         register("assert", self._assert, 1, 2)
+        register("token_catalog", lambda *group: token_catalog(group[0] if group else None), 0, 1)
+        register("token_info", token_info, 1, 1)
+        register("token_is_reserved", token_is_reserved, 1, 1)
 
         def script_directory() -> Path:
             if self.filename.startswith("<") and self.filename.endswith(">"):
@@ -584,6 +588,16 @@ class Interpreter:
             sequence(values)
         ), 1, 1)
         register("reciprocal_altitude", metric_space.reciprocal_altitude, 2, 2)
+        from .federation import read_json, write_json, oplage_metrics, compare_oplage_snapshots
+        from .native import pytyliki_norm, pytyliki_dot, pytyliki_distance, pytyliki_orthogonal
+        register("read_json", read_json, 1, 1)
+        register("write_json", write_json, 2, 2)
+        register("oplage_metrics", oplage_metrics, 1, 1)
+        register("oplage_compare", compare_oplage_snapshots, 2, 3)
+        register("pytyliki_norm", pytyliki_norm, 2, 2)
+        register("pytyliki_dot", pytyliki_dot, 3, 3)
+        register("pytyliki_distance", pytyliki_distance, 3, 3)
+        register("pytyliki_orthogonal", pytyliki_orthogonal, 4, 4)
 
     @staticmethod
     def _require_pytyliki(value: Any) -> PytylikiBridge:
