@@ -17,7 +17,7 @@ Each cell describes the real interaction between a project and itself or one of 
 
 | Project × project | Reaper | OPlague | Pytyliki |
 |---|---|---|---|
-| **Reaper** | **Reaper × Reaper — implemented.** Language frontend, Python reference runtime, selectable Canonical IR VM, `.rpr` module graph, diagnostics and resource limits compose internally. | **Reaper × OPlague — implemented.** Reaper reads and validates OPlague's `oplage.device-snapshot.v1` JSON, extracts normalized metrics and creates a `reaper.oplage-comparison.v1` report. It does not mutate devices or drivers. | **Reaper × Pytyliki — optional, implemented.** Reaper can call Pytyliki C ABI v1 metric functions through an explicitly supplied trusted native-library path. |
+| **Reaper** | **Reaper × Reaper — implemented.** Language frontend, Python reference runtime, selectable Canonical IR VM, `.rpr` module graph, diagnostics and resource limits compose internally. | **Reaper × OPlague — implemented.** Reaper validates the full `oplage.device-snapshot.v1` envelope, derived counters and canonical SHA-256 fingerprint before extracting metrics and creating a `reaper.oplage-comparison.v1` report. It does not mutate devices or drivers. | **Reaper × Pytyliki — optional, implemented.** Reaper validates ABI v1 and calls the current `pytyliki_v1_*` numerical functions through an explicit trusted native-library path, both directly and through a typed handle. |
 | **OPlague** | **OPlague × Reaper — implemented producer side.** OPlague exports bounded, versioned device snapshots for Reaper. OPlague does not embed or execute the Reaper runtime; orchestration remains on the Reaper side. | **OPlague × OPlague — implemented.** Read-only PnP inventory, INF/ZIP/UDRV inspection, exact-ID candidate graph, metric analysis and ordered `oplage.inspection-bundle.v1` report composition. | **OPlague × Pytyliki — optional, implemented.** OPlague can compare its Python metric result with Pytyliki's native Euclidean-distance implementation via ABI v1. A caller-supplied absolute path to a trusted library is required. |
 | **Pytyliki** | **Pytyliki × Reaper — implemented provider side.** Pytyliki supplies a narrow C ABI v1 for bounded float64 metric operations. Pytyliki does not depend on Reaper or call its runtime. | **Pytyliki × OPlague — implemented provider side.** The same ABI v1 supplies an optional numerical cross-check. It does not inspect driver packages or perform device operations. | **Pytyliki × Pytyliki — implemented.** Portable C11 processor, memory, metric, embedded-reference and DSP modules are independently built and verified. |
 
@@ -37,7 +37,7 @@ Pytyliki
 
 | Interface | Provider | Consumer | Transport and constraint |
 |---|---|---|---|
-| `oplage.device-snapshot.v1` | OPlague | Reaper | UTF-8 JSON file; schema/version validation; bounded input; normalized finite metrics |
+| `oplage.device-snapshot.v1` | OPlague | Reaper | UTF-8 JSON; full v1 envelope and derived-counter validation; canonical SHA-256 verification; bounded finite metrics |
 | `reaper.oplage-comparison.v1` | Reaper | User / downstream tooling | JSON comparison report; dimension mismatches are errors, not silently filled |
 | `oplage.inspection-bundle.v1` | OPlague | User / downstream tooling | Canonical ordered JSON summary with a deterministic SHA-256 fingerprint |
 | `pytyliki.c-abi.v1` | Pytyliki | Reaper, OPlague | Synchronous C ABI; explicit absolute path to a trusted shared library; caller-owned contiguous buffers |
@@ -48,7 +48,7 @@ Pytyliki
 - **Read-only device boundary:** the OPlague-to-Reaper flow transports evidence and reports only. Reaper's federation built-ins do not install, remove, enable, disable or roll back drivers.
 - **No implicit native loading:** Reaper and OPlague load Pytyliki only when a caller explicitly supplies a trusted library path. Loading a shared library executes native code with the caller's permissions.
 - **Stable ABI:** Pytyliki ABI v1 uses fixed-width counts, contiguous float64 vectors, synchronous calls and caller-owned buffers. Consumers verify the ABI version and reject invalid dimensions or non-finite values.
-- **Bounded interchange:** JSON consumers reject oversized, malformed or non-finite input. OPlague's PnP snapshot omits raw PnP instance IDs; its hashed fingerprints remain linkable and are not a guarantee of anonymity.
+- **Bounded interchange:** JSON consumers reject oversized, malformed or non-finite input. OPlague's PnP snapshot omits raw PnP instance IDs and uses HMAC-SHA-256 pseudonyms; ephemeral keys prevent correlation by default, while caller-managed keys enable deliberate linkability. Pseudonyms are not anonymization.
 - **No reverse integrations claimed:** Pytyliki does not itself consume OPlague snapshots; OPlague does not execute Reaper programs; the projects do not exchange private in-memory structures.
 
 ## Useful cross-references
