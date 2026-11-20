@@ -1,0 +1,443 @@
+{
+  "schema": "reaper-interop-matrix/v1",
+  "count": 40,
+  "support_level": "toolchain-discovery",
+  "notice": "Original interoperability metadata only. Names, command candidates and concise descriptions do not include or reproduce third-party compiler, assembler, ISA, HDL or VM implementations. PATH discovery does not prove compatibility or implementation support.",
+  "groups": {
+    "isa": "Processor instruction-set ecosystems",
+    "systems-language": "Systems programming languages",
+    "hdl": "Hardware description languages and generators",
+    "bytecode-vm": "Bytecode, intermediate representations and virtual machines",
+    "specialized": "Specialized, shader and esoteric environments"
+  },
+  "entries": [
+    {
+      "id": "isa-x86",
+      "name": "x86",
+      "group": "isa",
+      "kind": "instruction-set",
+      "commands": [
+        "nasm",
+        "yasm",
+        "as",
+        "clang"
+      ],
+      "description": "x86 instruction-set tooling and assembly workflows."
+    },
+    {
+      "id": "isa-arm",
+      "name": "ARM",
+      "group": "isa",
+      "kind": "instruction-set",
+      "commands": [
+        "arm-none-eabi-gcc",
+        "arm-none-eabi-as",
+        "clang"
+      ],
+      "description": "ARM and Cortex cross-toolchain discovery."
+    },
+    {
+      "id": "isa-risc-v",
+      "name": "RISC-V",
+      "group": "isa",
+      "kind": "instruction-set",
+      "commands": [
+        "riscv64-unknown-elf-gcc",
+        "riscv32-unknown-elf-gcc",
+        "llvm-mc"
+      ],
+      "description": "RISC-V GNU and LLVM toolchain discovery."
+    },
+    {
+      "id": "isa-mips",
+      "name": "MIPS",
+      "group": "isa",
+      "kind": "instruction-set",
+      "commands": [
+        "mips-linux-gnu-gcc",
+        "mipsel-linux-gnu-gcc",
+        "llvm-mc"
+      ],
+      "description": "MIPS big-endian and little-endian toolchain candidates."
+    },
+    {
+      "id": "isa-avr",
+      "name": "AVR",
+      "group": "isa",
+      "kind": "instruction-set",
+      "commands": [
+        "avr-gcc",
+        "avra"
+      ],
+      "description": "AVR microcontroller assembly and C toolchains."
+    },
+    {
+      "id": "isa-6502",
+      "name": "6502",
+      "group": "isa",
+      "kind": "instruction-set",
+      "commands": [
+        "ca65",
+        "cl65",
+        "xa"
+      ],
+      "description": "6502-family assembler and cc65 toolchain discovery."
+    },
+    {
+      "id": "isa-z80",
+      "name": "Z80",
+      "group": "isa",
+      "kind": "instruction-set",
+      "commands": [
+        "z80asm",
+        "sjasmplus",
+        "sdcc"
+      ],
+      "description": "Z80 assembler and SDCC toolchain discovery."
+    },
+    {
+      "id": "lang-c",
+      "name": "C",
+      "group": "systems-language",
+      "kind": "programming-language",
+      "commands": [
+        "cc",
+        "gcc",
+        "clang"
+      ],
+      "description": "C compiler discovery and ABI-oriented workflows."
+    },
+    {
+      "id": "lang-cpp",
+      "name": "C++",
+      "group": "systems-language",
+      "kind": "programming-language",
+      "commands": [
+        "c++",
+        "g++",
+        "clang++"
+      ],
+      "description": "C++ compiler discovery and native interoperability."
+    },
+    {
+      "id": "lang-rust",
+      "name": "Rust",
+      "group": "systems-language",
+      "kind": "programming-language",
+      "commands": [
+        "rustc",
+        "cargo"
+      ],
+      "description": "Rust compiler and Cargo toolchain discovery."
+    },
+    {
+      "id": "lang-zig",
+      "name": "Zig",
+      "group": "systems-language",
+      "kind": "programming-language",
+      "commands": [
+        "zig"
+      ],
+      "description": "Zig compiler and cross-target toolchain discovery."
+    },
+    {
+      "id": "lang-d",
+      "name": "D",
+      "group": "systems-language",
+      "kind": "programming-language",
+      "commands": [
+        "ldc2",
+        "dmd",
+        "gdc"
+      ],
+      "description": "D language compiler family discovery."
+    },
+    {
+      "id": "lang-nim",
+      "name": "Nim",
+      "group": "systems-language",
+      "kind": "programming-language",
+      "commands": [
+        "nim"
+      ],
+      "description": "Nim compiler and package toolchain discovery."
+    },
+    {
+      "id": "lang-ada",
+      "name": "Ada",
+      "group": "systems-language",
+      "kind": "programming-language",
+      "commands": [
+        "gnatmake",
+        "gprbuild"
+      ],
+      "description": "GNAT Ada build toolchain discovery."
+    },
+    {
+      "id": "lang-modula-2",
+      "name": "Modula-2",
+      "group": "systems-language",
+      "kind": "programming-language",
+      "commands": [
+        "gm2"
+      ],
+      "description": "GNU Modula-2 compiler discovery."
+    },
+    {
+      "id": "lang-oberon",
+      "name": "Oberon",
+      "group": "systems-language",
+      "kind": "programming-language",
+      "commands": [
+        "oo2c",
+        "voc"
+      ],
+      "description": "Oberon-family compiler candidates; availability is distribution-specific."
+    },
+    {
+      "id": "hdl-verilog",
+      "name": "Verilog",
+      "group": "hdl",
+      "kind": "hardware-description",
+      "commands": [
+        "iverilog",
+        "verilator"
+      ],
+      "description": "Verilog simulator and lint/compiler discovery."
+    },
+    {
+      "id": "hdl-systemverilog",
+      "name": "SystemVerilog",
+      "group": "hdl",
+      "kind": "hardware-description",
+      "commands": [
+        "verilator",
+        "iverilog",
+        "slang"
+      ],
+      "description": "SystemVerilog parser, simulator and lint toolchain discovery."
+    },
+    {
+      "id": "hdl-vhdl",
+      "name": "VHDL",
+      "group": "hdl",
+      "kind": "hardware-description",
+      "commands": [
+        "ghdl",
+        "nvc"
+      ],
+      "description": "VHDL analysis and simulation toolchain discovery."
+    },
+    {
+      "id": "hdl-chisel",
+      "name": "Chisel",
+      "group": "hdl",
+      "kind": "hardware-construction",
+      "commands": [
+        "sbt",
+        "scala"
+      ],
+      "description": "Chisel/Scala build environment discovery."
+    },
+    {
+      "id": "hdl-bluespec",
+      "name": "Bluespec",
+      "group": "hdl",
+      "kind": "hardware-construction",
+      "commands": [
+        "bsc"
+      ],
+      "description": "Bluespec compiler discovery."
+    },
+    {
+      "id": "vm-webassembly",
+      "name": "WebAssembly",
+      "group": "bytecode-vm",
+      "kind": "bytecode-vm",
+      "commands": [
+        "wasmtime",
+        "wasm-tools",
+        "wasm-opt"
+      ],
+      "description": "WebAssembly runtime, validation and optimization tool discovery."
+    },
+    {
+      "id": "vm-llvm-ir",
+      "name": "LLVM IR",
+      "group": "bytecode-vm",
+      "kind": "intermediate-representation",
+      "commands": [
+        "llvm-as",
+        "opt",
+        "llc"
+      ],
+      "description": "LLVM assembler, optimizer and code-generator discovery."
+    },
+    {
+      "id": "vm-jvm",
+      "name": "JVM",
+      "group": "bytecode-vm",
+      "kind": "virtual-machine",
+      "commands": [
+        "java",
+        "javac",
+        "jar"
+      ],
+      "description": "Java compiler, runtime and archive-tool discovery."
+    },
+    {
+      "id": "vm-dalvik",
+      "name": "Dalvik",
+      "group": "bytecode-vm",
+      "kind": "virtual-machine",
+      "commands": [
+        "d8",
+        "dx",
+        "smali"
+      ],
+      "description": "Android DEX and Dalvik-related tool discovery."
+    },
+    {
+      "id": "vm-luajit",
+      "name": "LuaJIT",
+      "group": "bytecode-vm",
+      "kind": "virtual-machine",
+      "commands": [
+        "luajit"
+      ],
+      "description": "LuaJIT runtime and bytecode tooling discovery."
+    },
+    {
+      "id": "vm-forth",
+      "name": "Forth",
+      "group": "bytecode-vm",
+      "kind": "stack-machine",
+      "commands": [
+        "gforth"
+      ],
+      "description": "Forth interpreter and development environment discovery."
+    },
+    {
+      "id": "vm-postscript",
+      "name": "PostScript",
+      "group": "bytecode-vm",
+      "kind": "stack-machine",
+      "commands": [
+        "gs"
+      ],
+      "description": "PostScript interpreter discovery."
+    },
+    {
+      "id": "vm-bcpl",
+      "name": "BCPL",
+      "group": "bytecode-vm",
+      "kind": "programming-language",
+      "commands": [
+        "bcpl"
+      ],
+      "description": "BCPL compiler/runtime candidate discovery."
+    },
+    {
+      "id": "vm-bliss",
+      "name": "BLISS",
+      "group": "bytecode-vm",
+      "kind": "programming-language",
+      "commands": [],
+      "description": "BLISS ecosystem reference; no portable default command is assumed."
+    },
+    {
+      "id": "spec-brainfuck",
+      "name": "Brainfuck",
+      "group": "specialized",
+      "kind": "esoteric-language",
+      "commands": [
+        "bf"
+      ],
+      "description": "Brainfuck interpreter candidate discovery."
+    },
+    {
+      "id": "spec-false",
+      "name": "FALSE",
+      "group": "specialized",
+      "kind": "esoteric-language",
+      "commands": [],
+      "description": "FALSE language reference; no command name is assumed."
+    },
+    {
+      "id": "spec-befunge",
+      "name": "Befunge",
+      "group": "specialized",
+      "kind": "esoteric-language",
+      "commands": [],
+      "description": "Befunge interpreter ecosystem reference."
+    },
+    {
+      "id": "spec-malbolge",
+      "name": "Malbolge",
+      "group": "specialized",
+      "kind": "esoteric-language",
+      "commands": [],
+      "description": "Malbolge implementation ecosystem reference."
+    },
+    {
+      "id": "spec-piet",
+      "name": "Piet",
+      "group": "specialized",
+      "kind": "esoteric-language",
+      "commands": [],
+      "description": "Piet visual-language ecosystem reference."
+    },
+    {
+      "id": "spec-whitespace",
+      "name": "Whitespace",
+      "group": "specialized",
+      "kind": "esoteric-language",
+      "commands": [],
+      "description": "Whitespace interpreter ecosystem reference."
+    },
+    {
+      "id": "spec-glsl",
+      "name": "GLSL",
+      "group": "specialized",
+      "kind": "shader-language",
+      "commands": [
+        "glslangValidator",
+        "glslc"
+      ],
+      "description": "GLSL shader compiler and validator discovery."
+    },
+    {
+      "id": "spec-hlsl",
+      "name": "HLSL",
+      "group": "specialized",
+      "kind": "shader-language",
+      "commands": [
+        "dxc"
+      ],
+      "description": "DirectX Shader Compiler discovery."
+    },
+    {
+      "id": "spec-spirv",
+      "name": "SPIR-V",
+      "group": "specialized",
+      "kind": "shader-intermediate",
+      "commands": [
+        "spirv-as",
+        "spirv-val",
+        "spirv-dis"
+      ],
+      "description": "SPIR-V assembler, validator and disassembler discovery."
+    },
+    {
+      "id": "spec-ptx",
+      "name": "PTX",
+      "group": "specialized",
+      "kind": "gpu-virtual-isa",
+      "commands": [
+        "ptxas",
+        "nvcc"
+      ],
+      "description": "NVIDIA PTX assembler and CUDA compiler discovery."
+    }
+  ]
+}
