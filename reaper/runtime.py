@@ -11,6 +11,13 @@ from .lexer import Token
 from .parser import Node, parse
 from .impact import catalog as impact_catalog, find_profile as impact_profile, rank_profiles as impact_rank, search_profiles as impact_search
 from . import metric_space
+from pathlib import Path
+
+from .debugger import RuntimeDebugger
+from .ffi import CAbiLibrary, NativeFunction, PytylikiBridge
+from .memory import HeapLimitError, MemoryManager, RegionError
+from .modules import ModuleError, ModuleLoader
+from .resources import ResourceError, ResourceHandle, ResourceManager
 
 
 @dataclass(slots=True)
@@ -23,6 +30,7 @@ class Environment:
     def __init__(self, parent: Environment | None = None) -> None:
         self.parent = parent
         self.values: dict[str, Binding] = {}
+        self.exports: set[str] = set()
 
     def define(self, name: str, value: Any, mutable: bool = False) -> None:
         if name in self.values:
@@ -78,6 +86,10 @@ class Interpreter:
         max_call_depth: int = 256,
         max_collection_items: int = 100_000,
         max_text_length: int = 1_000_000,
+        allow_native_ffi: bool = False,
+        max_heap_bytes: int = 64 * 1024 * 1024,
+        max_open_resources: int = 64,
+        debugger: RuntimeDebugger | None = None,
     ) -> None:
         if (
             max_steps < 1
@@ -95,15 +107,42 @@ class Interpreter:
         self.call_depth = 0
         self.filename = "<memory>"
         self.globals = Environment()
+        self.allow_native_ffi = allow_native_ffi
+        self.memory = MemoryManager(max_heap_bytes=max_heap_bytes)
+        self.resources = ResourceManager(max_open=max_open_resources)
+        self.module_loader = ModuleLoader(self)
+        self.debugger = debugger
+        self.call_stack: list[str] = []
+        self._active_vm: Any = None
         self._install_builtins()
 
-    def run(self, source: str, filename: str = "<memory>") -> Any:
+    def _memory_roots(self) -> list[Any]:
+        return [self.globals, self.module_loader.cache]
+
+    def run(self, source: str, filename: str = "<memory>", engine: str = "treewalk") -> Any:
+        if engine not in {"treewalk", "vm"}:
+            raise ValueError("engine must be 'treewalk' or 'vm'")
         self.filename = filename
         tree = parse(source, filename)
+        root = self.module_loader.begin_root(filename)
         try:
+            if engine == "vm":
+                from .ir import lower
+                from .vm import VirtualMachine, assemble
+                program = assemble(lower(tree, filename))
+                machine = VirtualMachine(self, program)
+                self._active_vm = machine
+                try:
+                    return machine.run()
+                finally:
+                    self._active_vm = None
             return self._execute_block(tree, self.globals, create_scope=False)
         except _ReturnSignal as signal:
             raise ReaperRuntimeError(f"{filename}: yield can only be used inside a craft function") from signal
+        finally:
+            self.resources.close_all()
+            self.module_loader.end_root(root)
+            self.memory.collect(self._memory_roots())
 
     def _tick(self, token: Token) -> None:
         self.steps += 1
@@ -133,9 +172,32 @@ class Interpreter:
         return result
 
     def _execute(self, node: Node, environment: Environment) -> Any:
+        if self.debugger is not None:
+            self.debugger.before_statement(node.token, environment, self.call_stack, self.filename)
         self._tick(node.token)
         children = node.children or []
-        if node.kind == "declare":
+        if node.kind == "import":
+            specifier, alias = node.value
+            exports = self.module_loader.load(specifier, self.filename)
+            if alias:
+                environment.define(alias, exports)
+            else:
+                for symbol, value in exports.items():
+                    environment.define(symbol, value)
+        elif node.kind == "export":
+            if children:
+                declaration = children[0]
+                self._execute(declaration, environment)
+                if declaration.kind == "declare":
+                    name = declaration.value[0]
+                else:
+                    name = declaration.value[0]
+            else:
+                name = node.value
+            if name not in environment.values:
+                raise self._error(node.token, f"cannot export undefined local name '{name}'")
+            environment.exports.add(name)
+        elif node.kind == "declare":
             name, mutable = node.value
             environment.define(name, self._evaluate(children[0], environment), mutable)
         elif node.kind == "change":
@@ -191,7 +253,7 @@ class Interpreter:
                     node.token,
                     f"collection item limit ({self.max_collection_items}) exceeded",
                 )
-            return [self._evaluate(item, environment) for item in children]
+            return self.memory.track([self._evaluate(item, environment) for item in children])
         if node.kind == "index":
             collection = self._evaluate(children[0], environment)
             index = self._evaluate(children[1], environment)
@@ -294,11 +356,20 @@ class Interpreter:
                 )
                 raise self._error(token, f"{callee.name}() expects {expected} arguments, got {len(arguments)}")
             try:
-                return callee.callback(*arguments)
+                return self.memory.track(callee.callback(*arguments))
             except ReaperRuntimeError:
                 raise
             except (TypeError, ValueError, OverflowError) as error:
                 raise self._error(token, f"{callee.name}(): {error}") from error
+        if isinstance(callee, NativeFunction):
+            try:
+                return self.memory.track(callee(*arguments))
+            except (TypeError, ValueError, OSError, RuntimeError) as error:
+                raise self._error(token, f"native call {callee.symbol} failed: {error}") from error
+        if getattr(callee, "__reaper_bytecode__", False):
+            if self._active_vm is None:
+                raise self._error(token, "bytecode function called outside the virtual machine")
+            return self.memory.track(self._active_vm.call_function(callee, arguments, token))
         if isinstance(callee, UserFunction):
             if len(arguments) != len(callee.parameters):
                 raise self._error(
@@ -310,13 +381,14 @@ class Interpreter:
             for name, value in zip(callee.parameters, arguments):
                 local.define(name, value)
             self.call_depth += 1
+            self.call_stack.append(callee.name)
             try:
                 try:
-                    self._execute_block(callee.body, local, create_scope=False)
+                    return self.memory.track(self._execute_block(callee.body, local, create_scope=False))
                 except _ReturnSignal as signal:
-                    return signal.value
-                return None
+                    return self.memory.track(signal.value)
             finally:
+                self.call_stack.pop()
                 self.call_depth -= 1
         raise self._error(token, "this value cannot be called")
 
@@ -361,7 +433,7 @@ class Interpreter:
             return size
 
         def callback(value: Any) -> None:
-            if not isinstance(value, (UserFunction, Builtin)):
+            if not isinstance(value, (UserFunction, Builtin, NativeFunction)) and not getattr(value, "__reaper_bytecode__", False):
                 raise TypeError("expected a Reaper function")
 
         register("size", bounded_size, 1, 1)
@@ -398,6 +470,64 @@ class Interpreter:
         register("say", lambda *values: self.output(" ".join(self._display(v) for v in values)), 1, None)
         register("ask", lambda prompt: input(self._display(prompt)), 1, 1)
         register("assert", self._assert, 1, 2)
+
+        def script_directory() -> Path:
+            if self.filename.startswith("<") and self.filename.endswith(">"):
+                return Path.cwd()
+            return Path(self.filename).resolve().parent
+
+        def open_file(path: Any, mode: Any = "r") -> ResourceHandle:
+            if not isinstance(path, str) or not isinstance(mode, str):
+                raise TypeError("file_open expects text path and mode")
+            return self.resources.open_text(path, mode, script_directory())
+
+        def with_file(path: Any, mode: Any, function: Any) -> Any:
+            callback(function)
+            handle = open_file(path, mode)
+            try:
+                return self._call(function, [handle], Token("BUILTIN", "with_file", 1, 1))
+            finally:
+                self.resources.close(handle)
+
+        def ffi_open(path: Any) -> CAbiLibrary:
+            if not self.allow_native_ffi:
+                raise ValueError("native FFI is disabled; run with --allow-native-ffi")
+            if not isinstance(path, str):
+                raise TypeError("ffi_open expects a native library path")
+            return CAbiLibrary(path)
+
+        def ffi_bind(library: Any, symbol: Any, result_type: Any, argument_types: Any = "") -> NativeFunction:
+            if not isinstance(library, CAbiLibrary):
+                raise TypeError("ffi_bind expects a library returned by ffi_open")
+            if not all(isinstance(value, str) for value in (symbol, result_type, argument_types)):
+                raise TypeError("ffi_bind symbol and type signatures must be text")
+            return library.bind(symbol, result_type, argument_types)
+
+        def pytyliki_open(path: Any) -> PytylikiBridge:
+            if not self.allow_native_ffi:
+                raise ValueError("native FFI is disabled; run with --allow-native-ffi")
+            if not isinstance(path, str):
+                raise TypeError("pytyliki_open expects a native library path")
+            return PytylikiBridge(path)
+
+        register("file_open", open_file, 1, 2)
+        register("file_read", self.resources.read, 1, 1)
+        register("file_write", self.resources.write, 2, 2)
+        register("file_close", self.resources.close, 1, 1)
+        register("with_file", with_file, 3, 3)
+        register("resource_stats", self.resources.stats, 0, 0)
+        register("heap_stats", self.memory.stats, 0, 0)
+        register("heap_collect", lambda: self.memory.collect(self._memory_roots()), 0, 0)
+        register("region_begin", self.memory.begin_region, 0, 0)
+        register("region_end", lambda token: self.memory.end_region(token, self._memory_roots()), 1, 1)
+        register("ffi_open", ffi_open, 1, 1)
+        register("ffi_bind", ffi_bind, 3, 4)
+        register("pytyliki_open", pytyliki_open, 1, 1)
+        register("pytyliki_cpu_profile", lambda bridge: self._require_pytyliki(bridge).cpu_profile(), 1, 1)
+        register("pytyliki_benchmark", lambda bridge, count: self._require_pytyliki(bridge).benchmark(count), 2, 2)
+        register("pytyliki_analyze_file", lambda bridge, path: self._require_pytyliki(bridge).analyze_file(path), 2, 2)
+        register("pytyliki_write_json", lambda bridge, path: self._require_pytyliki(bridge).write_json(path), 2, 2)
+
         register("impact_catalog", impact_catalog, 0, 0)
         register("impact_profile", impact_profile, 1, 1)
         register("impact_search", impact_search, 1, 1)
@@ -433,6 +563,12 @@ class Interpreter:
             sequence(values)
         ), 1, 1)
         register("reciprocal_altitude", metric_space.reciprocal_altitude, 2, 2)
+
+    @staticmethod
+    def _require_pytyliki(value: Any) -> PytylikiBridge:
+        if not isinstance(value, PytylikiBridge):
+            raise TypeError("expected a Pytyliki bridge returned by pytyliki_open")
+        return value
 
     @staticmethod
     def _require_text(value: Any) -> str:
@@ -609,8 +745,10 @@ class Interpreter:
             return "list"
         if isinstance(value, dict):
             return "map"
-        if isinstance(value, (UserFunction, Builtin)):
+        if isinstance(value, (UserFunction, Builtin, NativeFunction)) or getattr(value, "__reaper_bytecode__", False):
             return "craft"
+        if isinstance(value, ResourceHandle):
+            return "resource"
         return "unknown"
 
     def _assert(self, condition: Any, message: Any = "assertion failed") -> None:
