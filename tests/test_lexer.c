@@ -26,4 +26,4 @@ static void test_punctuation_glyphs(void){
  assert(t.length==3);assert(t.items[0].kind==REAPER_TOK_GLYPH&&!strcmp(t.items[0].text,";;:_-"));
  assert(t.items[1].kind==REAPER_TOK_GLYPH&&!strcmp(t.items[1].text,"::;"));reaper_tokens_free(&t);
 }
-int main(void){test_punctuation_glyphs();test_program();test_escape();test_bad_escape();test_unterminated();test_most_surface();test_most_operator_family();puts("native lexer tests: 6 groups passed");return 0;}
+int main(void){test_punctuation_glyphs();test_program();test_escape();test_bad_escape();test_unterminated();test_most_surface();test_most_operator_family();puts("native lexer tests: 7 groups passed");return 0;}
