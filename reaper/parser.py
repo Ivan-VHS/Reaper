@@ -44,6 +44,22 @@ class Parser:
         return Node("program", self._peek(), children=statements)
 
     def _statement(self) -> Node:
+        if self._match("IMPORT"):
+            token = self._previous()
+            specifier = self._consume("STRING", "expected a quoted .rpr path after 'import'")
+            alias = None
+            if self._match("AS"):
+                alias = self._consume("IDENT", "expected an import alias after 'as'").value
+            return Node("import", token, value=(specifier.value, alias))
+        if self._match("EXPORT"):
+            token = self._previous()
+            if self._check("MAKE") or self._check("VARY") or self._check("CRAFT"):
+                declaration = self._statement()
+                if declaration.kind not in {"declare", "function"}:
+                    raise self._error(token, "inline export must declare a name or craft")
+                return Node("export", token, children=[declaration])
+            name = self._consume("IDENT", "expected a name after 'export'")
+            return Node("export", token, value=name.value)
         if self._match("MAKE", "VARY"):
             declaration = self._previous()
             name = self._consume("IDENT", "expected a name after declaration")
