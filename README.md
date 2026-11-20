@@ -15,6 +15,19 @@ make answer := numbers |> map(double) |> sum()
 emit "answer = " ++ text(answer)
 ```
 
+## 66-language systems capability matrix
+
+Reaper exposes a capability catalogue covering memory ownership, linear resources, regions, compile-time programming, C ABI/FFI, concurrency, formal verification, embedded targets, SIMD and GPU/shader toolchains. The duplicate Clay and Nimrod/early-Nim source entries remain explicit aliases. Compiler discovery is separate from native backend implementation.
+
+```bash
+reaper --systems-languages
+reaper --systems-languages --language-profile reaper
+reaper --available-languages --language-profile reaper
+reaper --systems-json
+```
+
+Toolchain checks are PATH-only: they do not run or install compilers. The matrix is included in Python package data and its tests are registered with CTest.
+
 ## Implemented today
 
 - **Python reference runtime:** Python 3.10+, tree-walking interpreter, lexer, parser, runtime, CLI and standard-library tests.
