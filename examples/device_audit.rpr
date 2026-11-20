@@ -1,0 +1,25 @@
+# Read-only federation workflow.
+# OPlague snapshot commands:
+#   python -m tools.federation snapshot --output examples/data/oplage-baseline.json
+#   python -m tools.federation snapshot --output examples/data/oplage-current.json
+#
+# Optional native backend: pass an absolute Pytyliki library path as the third
+# argument to oplage_compare. Reaper's own metric engine is the safe default.
+
+make baseline := read_json("examples/data/oplage-baseline.json")
+make current := read_json("examples/data/oplage-current.json")
+make current_metrics := oplage_metrics(current)
+make report := oplage_compare(baseline, current)
+
+emit "Report: " ++ report["schema"]
+emit "Distance backend: " ++ report["distance_backend"]
+emit "Device health ratio: " ++ text(current_metrics["device_ok_ratio"])
+emit "Euclidean configuration shift: " ++ text(report["euclidean_distance"])
+
+when report["euclidean_distance"] > 0.25 {
+    emit "WARNING: configuration shift exceeds 0.25"
+} otherwise {
+    emit "Configuration shift is within the configured tolerance"
+}
+
+write_json("device-audit-report.json", report)
