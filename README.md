@@ -114,7 +114,9 @@ reaper polyglot review
 reaper polyglot report
 ```
 
-Data is stored locally in SQLite. The 70–90% content band is a transparent estimate based on reviewed phrase cards, not an automatic comprehension test. Media playback, ASR/TTS, automatic translation and AI pronunciation scoring are not yet implemented. See [Polyglot immersion guide](docs/POLYGLOT_IMMERSION.md).
+Data is stored locally in SQLite.
+
+Profiles also retain script-family defaults/overrides, tonal-language guidance, phonetic focus and a temporary romanization bridge. Phrase cards support personal examples and optional learner-supplied frequency ranks; reports show a coarse exposure phase. These are practice aids, not proficiency predictions. The 70–90% content band is a transparent estimate based on reviewed phrase cards, not an automatic comprehension test. Media playback, ASR/TTS, automatic translation and AI pronunciation scoring are not yet implemented. See [Polyglot immersion guide](docs/POLYGLOT_IMMERSION.md).
 
 ## Programming-language polyglot
 
