@@ -21,7 +21,12 @@ emit "answer = " ++ text(answer)
 - **Ядро языка:** Unicode-идентификаторы, комментарии, строки, функции и closures, рекурсия, неизменяемый `make`, изменяемый `vary` с явным `change`, условия, циклы и композиция потоков.
 - **Встроенные операции и диагностика:** конвейеры :: , map/filter/fold/reduce, стабильная сортировка по ключу, chunk/take/drop/flatten/unique, UTF-8-операции над строками, явные преобразования, диагностика с координатами и лимиты исполнения.
 - **Метрическая библиотека:** нормы L1/L2/L∞, нормализация, евклидовы/манхэттенские/чебышёвские расстояния, косинусное сходство, угол, проекция и центроид, а также квадратичные формы и неевклидовы модели.
-- **CLI:** --lint, постоянный построчный --repl, структурированный --json и замеры --profile.
+- **CLI:** --lint, постоянный построчный --repl, структурированный --json, --profile, выбор --engine vm, граф модулей --module-graph и отдельное разрешение --allow-native-ffi.
+- **Модули .rpr:** import/export, изолированные пространства модулей, кэш экспортов, транзитивный граф зависимостей и диагностика циклов.
+- **Память и ресурсы reference runtime:** учёт heap-аллокаций вложенных контейнеров, mark/sweep roots, LIFO-регионы, лимит памяти, файловые handles и гарантированное закрытие при завершении запуска.
+- **C ABI / Pytyliki:** opt-in ctypes FFI с проверяемыми сигнатурами и типизированный адаптер публичного pl_* API Pytyliki.
+- **Canonical IR / VM:** Python bytecode VM поверх Canonical IR; tree-walk остаётся стандартным движком.
+- **Reaper Studio debugger:** breakpoints (F9), stepping, Continue/Stop, инспектор переменных и стек вызовов.
 - **Нативное направление C17:** lexer, expression parser и AST с управлением памятью, проверенный integer Canonical IR, контролируемое свёртывание констант, ограниченный AST-to-IR lowering, начальный CLI и C-тесты.
 - **Self-hosting, этап 0:** `selfhost/lexer.rpr` реализует начальный токенизатор на самом Reaper. Python bootstrap запускает его в CI и проверяет токены, координаты, escape-последовательности и ошибки символов. Пока поддерживаются только ASCII-идентификаторы; этот слой ещё не заменяет эталонный lexer и не является self-hosting-компилятором. См. [план bootstrap](docs/SELF_HOSTING_BOOTSTRAP.md).
 - **MOST:** документированный словарь языка и поэтапный контракт реализации.
@@ -67,6 +72,21 @@ ctest --test-dir build --output-on-failure
 ```
 
 Нативный executable сейчас предоставляет реализованные bring-up и аналитические сценарии; он не является полноценной заменой интерпретатора Python.
+
+## Новая runtime-платформа
+
+Контракты и примеры: [RUNTIME_PLATFORM.md](docs/RUNTIME_PLATFORM.md).
+
+```sh
+python -m reaper --engine vm examples/flow.rpr
+python -m reaper --module-graph examples/modules/main.rpr
+python -m reaper --heap-bytes 67108864 --open-resources 64 examples/flow.rpr
+python -m reaper --allow-native-ffi path/to/ffi_program.rpr
+```
+
+Модульный пример: [examples/modules](examples/modules/).
+
+Важно: managed heap — это учёт и сборка достижимости поверх Python allocator с оценкой sys.getsizeof, а не самостоятельный физический allocator. Bytecode VM пока работает в Python reference runtime. Нативное C17 ядро не заявляется как VM с полным паритетом. C ABI работает в процессе и загружает только доверенные библиотеки; ctypes не гарантирует переносимый физический dlclose.
 
 ## Нативное desktop-приложение
 
