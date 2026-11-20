@@ -544,7 +544,7 @@ class PolyglotCodeStore:
             raise PolyglotCodeError("kata score must be from 0 to 5")
         self.connection.execute("""
             INSERT INTO kata_progress(profile_id,kata_id,status,score,solution_path,notes,updated_at)
-            VALUES(?,?,'completed',?,?,?,?,?)
+            VALUES(?,?,'completed',?,?,?,?)
             ON CONFLICT(profile_id,kata_id) DO UPDATE SET
                 status='completed', score=excluded.score, solution_path=excluded.solution_path,
                 notes=excluded.notes, updated_at=excluded.updated_at
