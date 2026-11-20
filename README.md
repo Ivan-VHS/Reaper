@@ -112,6 +112,22 @@ reaper polyglot report
 
 Data is stored locally in SQLite. The 70–90% content band is a transparent estimate based on reviewed phrase cards, not an automatic comprehension test. Media playback, ASR/TTS, automatic translation and AI pronunciation scoring are not yet implemented. See [Polyglot immersion guide](docs/POLYGLOT_IMMERSION.md).
 
+## Programming-language polyglot
+
+A separate `polyglot-code` subsystem models programming-language learning as engineering practice: semantic concept tracking, execution and memory models, cross-language comparisons, katas, idiom notes, an error journal, adaptive study plans and progress export. It does not replace or alter the natural-language `polyglot` command.
+
+```sh
+reaper polyglot-code init Rust --known C,C++ --level working --minutes 60
+reaper polyglot-code concept list
+reaper polyglot-code compare memory --known-language C++ --known-model "References and RAII" --target-model "Ownership and borrowing"
+reaper polyglot-code kata list
+reaper polyglot-code plan
+reaper polyglot-code diagnose
+reaper polyglot-code report
+```
+
+The subsystem uses a separate local SQLite database. Toolchain discovery is PATH-only; it does not install compilers or execute learner code. Kata status and proficiency are explicitly self-recorded, not automatically graded. See [Programming-language immersion guide](docs/POLYGLOT_CODE.md).
+
 ## Design and safety boundaries
 
 Programs are tokenized, parsed into an AST and evaluated by a bounded interpreter. Console effects are explicit through operations such as `emit`, `say` and `ask`. Ordinary expressions do not silently gain filesystem, network, clock, process, shell or hardware access.
