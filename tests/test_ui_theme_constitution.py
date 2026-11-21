@@ -19,6 +19,11 @@ class UiThemeConstitutionTests(unittest.TestCase):
             self.assertGreaterEqual(contrast_ratio(palette["on_blue"], palette["blue"]), 4.5)
             self.assertGreaterEqual(contrast_ratio(palette["on_red"], palette["red"]), 4.5)
 
+    def test_atmospheric_profiles_are_resolved(self) -> None:
+        self.assertEqual(palette_for("dawn")["bg"], "#F3F6FA")
+        self.assertEqual(palette_for("sunset")["bg"], "#F5EFE8")
+        self.assertEqual(palette_for("night")["bg"], "#081522")
+
     def test_invalid_color_is_rejected(self) -> None:
         with self.assertRaises(ValueError):
             contrast_ratio("blue", "#FFFFFF")
