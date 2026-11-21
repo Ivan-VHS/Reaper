@@ -80,6 +80,14 @@ class _ReturnSignal(Exception):
         self.value = value
 
 
+class _BreakSignal(Exception):
+    """Internal non-local control transfer for the nearest enclosing loop."""
+
+
+class _ContinueSignal(Exception):
+    """Internal non-local control transfer to the nearest loop header."""
+
+
 class Interpreter:
     def __init__(
         self,
@@ -147,7 +155,11 @@ class Interpreter:
                     self._active_vm = None
             return self._execute_block(tree, self.globals, create_scope=False)
         except _ReturnSignal as signal:
-            raise ReaperRuntimeError(f"{filename}: yield can only be used inside a craft function") from signal
+            raise ReaperRuntimeError(f"{filename}: return/yield can only be used inside a function") from signal
+        except _BreakSignal as signal:
+            raise ReaperRuntimeError(f"{filename}: break can only be used inside a loop") from signal
+        except _ContinueSignal as signal:
+            raise ReaperRuntimeError(f"{filename}: continue can only be used inside a loop") from signal
         finally:
             self.resources.close_all()
             for library in reversed(self._ffi_libraries):
@@ -221,6 +233,10 @@ class Interpreter:
         elif node.kind == "yield":
             value = self._evaluate(children[0], environment) if children else None
             raise _ReturnSignal(value)
+        elif node.kind == "break":
+            raise _BreakSignal()
+        elif node.kind == "continue":
+            raise _ContinueSignal()
         elif node.kind == "function":
             name, parameters = node.value
             environment.define(name, UserFunction(name, parameters, children[0], environment))
@@ -231,21 +247,33 @@ class Interpreter:
                 return self._execute_block(children[2], environment)
         elif node.kind == "each":
             values = self._evaluate(children[0], environment)
+            if isinstance(values, dict):
+                values = list(values.keys())
             if not isinstance(values, (list, tuple, str, range)):
-                raise self._error(node.token, "'each' needs a list, text, or range")
+                raise self._error(node.token, "'for/each' needs a list, map, text, or range")
             self._check_collection_size(values, node.token)
             result = None
             for value in values:
                 self._tick(node.token)
                 scope = Environment(environment)
                 scope.define(node.value, value)
-                result = self._execute_block(children[1], scope)
+                try:
+                    result = self._execute_block(children[1], scope)
+                except _ContinueSignal:
+                    continue
+                except _BreakSignal:
+                    break
             return result
         elif node.kind == "while":
             result = None
             while self._truthy(self._evaluate(children[0], environment)):
                 self._tick(node.token)
-                result = self._execute_block(children[1], environment)
+                try:
+                    result = self._execute_block(children[1], environment)
+                except _ContinueSignal:
+                    continue
+                except _BreakSignal:
+                    break
             return result
         elif node.kind == "expression":
             return self._evaluate(children[0], environment)
@@ -269,6 +297,25 @@ class Interpreter:
                     f"collection item limit ({self.max_collection_items}) exceeded",
                 )
             return self.memory.track([self._evaluate(item, environment) for item in children])
+        if node.kind == "map":
+            if len(children) // 2 > self.max_collection_items:
+                raise self._error(node.token, f"collection item limit ({self.max_collection_items}) exceeded")
+            result: dict[Any, Any] = {}
+            for index in range(0, len(children), 2):
+                key = self._evaluate(children[index], environment)
+                value = self._evaluate(children[index + 1], environment)
+                try:
+                    result[key] = value
+                except TypeError as error:
+                    raise self._error(node.token, "map keys must be hashable values") from error
+            return self.memory.track(result)
+        if node.kind == "member":
+            target = self._evaluate(children[0], environment)
+            if not isinstance(target, dict):
+                raise self._error(node.token, "field access requires a map value")
+            if node.value not in target:
+                raise self._error(node.token, f"map has no field '{node.value}'")
+            return target[node.value]
         if node.kind == "index":
             collection = self._evaluate(children[0], environment)
             index = self._evaluate(children[1], environment)
@@ -298,6 +345,8 @@ class Interpreter:
                 return self._evaluate(children[1], environment) if self._truthy(left) else left
             if operator == "OR":
                 return left if self._truthy(left) else self._evaluate(children[1], environment)
+            if operator == "??":
+                return left if left is not None else self._evaluate(children[1], environment)
             if operator == "::":
                 right = children[1]
                 if right.kind == "call":
@@ -315,6 +364,13 @@ class Interpreter:
             return self._equal(left, right)
         if operator == "!=":
             return not self._equal(left, right)
+        if operator == "IN":
+            if isinstance(right, (list, tuple, str, range, dict)):
+                try:
+                    return left in right
+                except TypeError as error:
+                    raise self._error(token, f"membership check failed: {error}") from error
+            raise self._error(token, "'in' expects a list, map, text, or range on the right")
         if operator == "++":
             if isinstance(left, str) and isinstance(right, str):
                 if len(left) + len(right) > self.max_text_length:
@@ -402,6 +458,10 @@ class Interpreter:
                     return self.memory.track(self._execute_block(callee.body, local, create_scope=False))
                 except _ReturnSignal as signal:
                     return self.memory.track(signal.value)
+                except _BreakSignal as signal:
+                    raise self._error(token, "break cannot cross a function boundary") from signal
+                except _ContinueSignal as signal:
+                    raise self._error(token, "continue cannot cross a function boundary") from signal
             finally:
                 self.call_stack.pop()
                 self.call_depth -= 1
