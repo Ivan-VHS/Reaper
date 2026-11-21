@@ -29,7 +29,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--steps", type=int, default=1_000_000, help="maximum execution steps (default: 1000000)")
     parser.add_argument("--items", type=int, default=100_000, help="maximum items in any collection (default: 100000)")
     parser.add_argument("--text-length", type=int, default=1_000_000, help="maximum text length in characters (default: 1000000)")
-    parser.add_argument("--version", action="version", version="Reaper 0.1.0")
+    parser.add_argument("--version", action="version", version="Reaper 0.2.0")
     parser.add_argument("--audit-log", metavar="PATH", help="append a hash-chained local execution journal")
     parser.add_argument("--verify-audit-log", metavar="PATH", help="verify a journal and exit")
     parser.add_argument("--check", "--lint", dest="check", action="store_true", help="tokenize and parse without running the program")
