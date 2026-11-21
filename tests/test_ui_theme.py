@@ -1,4 +1,6 @@
-from reaper.ui_theme import palette_for
+from reaper.ui_theme import (
+    PALETTES, palette_contrast_issues, palette_for,
+)
 
 
 def test_light_and_dark_palettes_are_distinct_and_complete():
@@ -21,3 +23,10 @@ def test_unknown_theme_is_rejected():
         assert "system" in str(error)
     else:
         raise AssertionError("unknown themes must be rejected")
+
+
+def test_every_palette_meets_ui_ux_40026_text_contrast():
+    required_status_tokens = {"success", "warning", "error", "info"}
+    for name, palette in PALETTES.items():
+        assert required_status_tokens.issubset(palette), name
+        assert palette_contrast_issues(palette) == [], name
