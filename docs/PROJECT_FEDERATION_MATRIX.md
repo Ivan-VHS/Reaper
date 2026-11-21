@@ -1,79 +1,37 @@
-# Three-project federation matrix
+# Four-project repository federation matrix
 
-**Reference snapshot:** 2026-11-20  
-**Scope:** Reaper × OPlague × Pytyliki. This is an evidence-based integration map, not a proposal to merge three independent products into one runtime.
+**Reference:** 2026-11-21  
+**Scope:** Reaper × Pytyliki × OPlague × VentuSample. This is an evidence-based capability map, not a proposal to merge four independent products into one runtime.
 
 ## Product boundaries
 
-| Project | Owns | Main implemented surface |
+| Project | Owns | Current implemented surface |
 |---|---|---|
-| [Reaper](https://github.com/Ivan-VHS/Reaper) | Programming language, execution and workflow orchestration | Python reference runtime, Canonical IR VM, module graph, bounded resources, opt-in native FFI and MOST language track |
-| [OPlague](https://github.com/Ivan-VHS/OPlague) | Windows device inventory and driver-package inspection | Read-only PnP snapshots, INF/ZIP/UDRV inspection, deterministic report composition and hardware-profile analysis |
-| [Pytyliki](https://github.com/Ivan-VHS/Pytyliki) | Portable processor, memory and numerical systems core | C11 processor inventory, bounded workloads, memory kernel, metric engine, DSP and public C ABI v1 |
+| [Reaper](https://github.com/Ivan-VHS/Reaper) | Programming language and execution/orchestration | Python reference interpreter, selectable Canonical IR VM, developing native C17 frontend, МОСТ alias surface, bounded resources, embedded reference workbench and opt-in FFI |
+| [Pytyliki](https://github.com/Ivan-VHS/Pytyliki) | Portable processor and numerical systems core | C11 processor discovery, bounded benchmarks, memory kernel, DSP, metric engine, TRACE provenance and C ABI v1 |
+| [OPlague](https://github.com/Ivan-VHS/OPlague) | Windows device and driver-package evidence | Read-only PnP inventory, bounded INF/ZIP/UDRV inspection, exact-ID candidate graph, DRIVE-LENS evidence, reports and snapshots |
+| [VentuSample](https://github.com/Ivan-VHS/VentuSample) | Hip-hop sample-pack generation | C++20 DSP renderer, 13 procedural styles, five output targets, PCM16 WAV chop import/export and deterministic manifests |
 
-## The 3 × 3 cross-product
+## Four-by-four product map
 
-Each cell describes the real interaction between a project and itself or one of its peers. **Implemented** means code and/or a versioned contract exists; **optional** means the caller must explicitly enable or select it; **not connected** means no such runtime integration is claimed.
+| From / To | Reaper | Pytyliki | OPlague | VentuSample |
+|---|---|---|---|---|
+| **Reaper** | Language/runtime/VM self-loop | **Implemented:** explicit Pytyliki ABI v1 calls | **Implemented:** exports comparison reports; consumes bounded OPlague snapshots | **Planned:** render-request adapter; pack consumer not yet implemented |
+| **Pytyliki** | **Implemented:** ABI v1 provider side for synchronous calls | C11 processor/DSP/memory/metric self-loop | **Implemented:** ABI v1 provider for OPlague cross-checks | **Planned:** no VentuSample native adapter is shipped |
+| **OPlague** | **Implemented:** versioned device snapshot provider and Reaper report validator | **Implemented:** optional native metric call through explicitly selected ABI v1 | Read-only PnP/INF/ZIP/UDRV inspection and evidence self-loop | **Not applicable:** no direct shared domain operation |
+| **VentuSample** | **Partial:** exports `ventusample.pack.v1` JSON + WAV artifacts; Reaper consumer is not implemented | **Planned:** possible explicit ABI v1 use after differential tests | **Not applicable:** no direct shared domain operation | Offline seeded sample generation, sample slicing and WAV/manifest export self-loop |
 
-| Project × project | Reaper | OPlague | Pytyliki |
-|---|---|---|---|
-| **Reaper** | **Reaper × Reaper — implemented.** Language frontend, Python reference runtime, selectable Canonical IR VM, `.rpr` module graph, diagnostics and resource limits compose internally. | **Reaper × OPlague — implemented.** Reaper validates the full `oplage.device-snapshot.v1` envelope, derived counters and canonical SHA-256 fingerprint before extracting metrics and creating a `reaper.oplage-comparison.v1` report. It does not mutate devices or drivers. | **Reaper × Pytyliki — optional, implemented.** Reaper validates ABI v1 and calls the current `pytyliki_v1_*` numerical functions through an explicit trusted native-library path, both directly and through a typed handle. |
-| **OPlague** | **OPlague × Reaper — implemented bidirectional artifact contract.** OPlague exports bounded, versioned device snapshots for Reaper and validates Reaper's `reaper.oplage-comparison.v1` through a read-only report importer. It checks report schema, normalized dimensions, finite values, component deltas and canonical SHA-256; it does not execute the report or change devices. Reaper retains orchestration ownership. | **OPlague × OPlague — implemented.** Read-only PnP inventory, INF/ZIP/UDRV inspection, exact-ID candidate graph, metric analysis and ordered `oplage.inspection-bundle.v1` report composition. | **OPlague × Pytyliki — optional, implemented.** OPlague can compare its Python metric result with Pytyliki's native Euclidean-distance implementation via ABI v1. A caller-supplied absolute path to a trusted library is required. |
-| **Pytyliki** | **Pytyliki × Reaper — implemented provider side.** Pytyliki supplies a narrow C ABI v1 for bounded float64 metric operations. Pytyliki does not depend on Reaper or call its runtime. | **Pytyliki × OPlague — implemented provider side.** The same ABI v1 supplies an optional numerical cross-check. It does not inspect driver packages or perform device operations. | **Pytyliki × Pytyliki — implemented.** Portable C11 processor, memory, metric, embedded-reference and DSP modules are independently built and verified. |
+The OCTA-8 topology contains **12 directed links** (four projects × three other projects) and **four independent self-loops**. See [the validated topology contract](OCTA_PYRAMID_FEDERATION.md).
 
-## Actual data and call paths
+## Shared engineering doctrine
 
-```text
-OPlague
-  ├─ oplage.device-snapshot.v1 (bounded JSON file) ─────> Reaper
-  └─ reaper.oplage-comparison.v1 (bounded JSON report) <─ Reaper
-       (validated by OPlague's read-only report importer)
+- **Human-first governance:** operator intent, explicit consent, visible consequences and no silent privileged changes.
+- **Hydrodynamic clarity:** calm white/blue/red semantic surfaces, accessible focus, readable errors and purposeful reduced motion.
+- **Bounded execution:** size, range, frame, resource and time limits at data boundaries.
+- **Provenance:** input identity, source digests, versioned contracts, deterministic manifests and audit trails.
+- **Independent product ownership:** no hidden runtime gateway; each repository retains its own build, release and test lifecycle.
+- **Honest implementation states:** design registries and roadmap proposals are not callable APIs; producer-side file export is not a consumer-side integration.
 
-Pytyliki
-  └─ pytyliki.c-abi.v1 (explicit trusted shared-library path)
-       ├─> Reaper (opt-in metric calls)
-       └─> OPlague (opt-in metric cross-check)
-```
+## Links
 
-| Interface | Provider | Consumer | Transport and constraint |
-|---|---|---|---|
-| `oplage.device-snapshot.v1` | OPlague | Reaper | UTF-8 JSON; full v1 envelope and derived-counter validation; canonical SHA-256 verification; bounded finite metrics |
-| `reaper.oplage-comparison.v1` | Reaper | OPlague report validator | Bounded UTF-8 JSON; read-only mode, dimensions, finite values, component deltas and canonical SHA-256 are checked |
-| `oplage.reaper-report-audit.v1` | OPlague | User / downstream tooling | Read-only validation summary; no report execution or hardware mutation |\n| `oplage.inspection-bundle.v1` | OPlague | User / downstream tooling | Canonical ordered JSON summary with a deterministic SHA-256 fingerprint |
-| `pytyliki.c-abi.v1` | Pytyliki | Reaper, OPlague | Synchronous C ABI; explicit absolute path to a trusted shared library; caller-owned contiguous buffers |
-
-## Integration boundaries
-
-- **No monolithic merge:** the projects keep their own source trees, build systems, release cycles and domain ownership.
-- **Read-only device boundary:** the OPlague-to-Reaper flow transports evidence and reports only. Reaper's federation built-ins do not install, remove, enable, disable or roll back drivers.
-- **No implicit native loading:** Reaper and OPlague load Pytyliki only when a caller explicitly supplies a trusted library path. Loading a shared library executes native code with the caller's permissions.
-- **Stable ABI:** Pytyliki ABI v1 uses fixed-width counts, contiguous float64 vectors, synchronous calls and caller-owned buffers. Consumers verify the ABI version and reject invalid dimensions or non-finite values.
-- **Bounded interchange:** JSON consumers reject oversized, malformed or non-finite input. OPlague's PnP snapshot omits raw PnP instance IDs and uses HMAC-SHA-256 pseudonyms; ephemeral keys prevent correlation by default, while caller-managed keys enable deliberate linkability. Pseudonyms are not anonymization.
-- **No implicit runtime execution:** Pytyliki does not consume OPlague snapshots or launch peer programs; OPlague validates Reaper report data but never executes Reaper code; projects do not exchange private in-memory structures.
-
-## Useful cross-references
-
-| Project | Integration contract | Project contract | Implementation evidence |
-|---|---|---|---|
-| Reaper | [Federated integration](https://github.com/Ivan-VHS/Reaper/blob/main/docs/FEDERATED_INTEGRATION.md) | [project-contract.json](https://github.com/Ivan-VHS/Reaper/blob/main/project-contract.json) | [federation.py](https://github.com/Ivan-VHS/Reaper/blob/main/reaper/federation.py) · [ffi.py](https://github.com/Ivan-VHS/Reaper/blob/main/reaper/ffi.py) |
-| OPlague | [Federated integration](https://github.com/Ivan-VHS/OPlague/blob/main/docs/FEDERATED_INTEGRATION.md) | [project-contract.json](https://github.com/Ivan-VHS/OPlague/blob/main/project-contract.json) | [federation.py](https://github.com/Ivan-VHS/OPlague/blob/main/tools/federation.py) · [pytyliki_ffi.py](https://github.com/Ivan-VHS/OPlague/blob/main/tools/pytyliki_ffi.py) · [report_composer.py](https://github.com/Ivan-VHS/OPlague/blob/main/tools/report_composer.py) |
-| Pytyliki | [Federated integration](https://github.com/Ivan-VHS/Pytyliki/blob/main/docs/FEDERATED_INTEGRATION.md) | [project-contract.json](https://github.com/Ivan-VHS/Pytyliki/blob/main/project-contract.json) | [interop.h](https://github.com/Ivan-VHS/Pytyliki/blob/main/src/interop.h) · [interop.c](https://github.com/Ivan-VHS/Pytyliki/blob/main/src/interop.c) |
-
-## Change rule
-
-When an interface changes, update its provider contract, every affected consumer contract, the relevant tests and all three `docs/FEDERATED_INTEGRATION.md` files in the same change. Preserve existing interface versions for compatible extensions; introduce a new versioned identifier for breaking changes. Keep this matrix synchronized with the three `project-contract.json` manifests.
-
-This matrix is an inventory of current repository evidence. A roadmap item, language/toolchain catalogue entry or architecture idea must not be presented as an implemented cross-project feature until code, tests and contract evidence exist.
-
-
-## OCTA-8 horizontal peer product and octagonal pyramid
-
-The 3 × 3 matrix is governed by the shared [OCTA-8 topology contract](OCTA_PYRAMID_FEDERATION.md). Its horizontal base contains Reaper, Pytyliki and OPlague as independent peer projects. The full directed pairwise product contains six links (three unordered pairs in both directions) and three project-local self-loops.
-
-The pyramid contributes eight common facets: identity/namespaces, contracts/versioning, transport/bounds, provenance/integrity, validation/normalization, privacy/consent, execution/safety and audit/reproducibility. The apex is non-executable coordination metadata, not a runtime gateway.
-
-- Reaper ↔ OPlague: OPlague snapshot JSON flows to Reaper; Reaper comparison JSON flows back to OPlague's read-only report validator.
-- Reaper ↔ Pytyliki: explicit native ABI requests and synchronous numeric/status responses.
-- OPlague ↔ Pytyliki: explicit native ABI requests and synchronous numeric/status responses.
-
-The shared topology, schema, validator and mutation tests are checked into all three repositories. The topology validator checks all six directed edges, eight facets and three local self-loops.
+[Reaper](https://github.com/Ivan-VHS/Reaper) · [Pytyliki](https://github.com/Ivan-VHS/Pytyliki) · [OPlague](https://github.com/Ivan-VHS/OPlague) · [VentuSample](https://github.com/Ivan-VHS/VentuSample)

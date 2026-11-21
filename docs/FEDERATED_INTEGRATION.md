@@ -92,6 +92,8 @@ driver-management safety gates remain independent.
 - **Reaper evidence:** [snapshot and comparison bridge](../reaper/federation.py), [native FFI bridge](../reaper/ffi.py), [project manifest](../project-contract.json).
 
 
-## OCTA-8 topology
+## OCTA-8 four-project topology
 
-The shared [OCTA-8 horizontal peer mesh](OCTA_PYRAMID_FEDERATION.md) records six directed links for Reaper↔Pytyliki↔OPlague, three local self-loops and eight protocol facets. OPlague validates Reaper's versioned read-only comparison report; the apex is metadata-only and does not route runtime traffic.
+The shared [OCTA-8 peer map](OCTA_PYRAMID_FEDERATION.md) records twelve status-labelled directed links and four independent self-loops. Reaper consumes OPlague snapshots and exports read-only comparison reports; Reaper and OPlague may request numerical operations from Pytyliki only through an explicitly selected trusted ABI v1 library. VentuSample currently exports WAV assets and a versioned `ventusample.pack.v1` manifest, but a Reaper-side consumer is still planned. Reaper render requests to VentuSample and VentuSample's Pytyliki FFI bridge are also planned, not implemented. OPlague and VentuSample have no direct shared domain interface.
+
+The apex remains non-executable metadata. The topology does not add an implicit runtime gateway or grant driver mutation.

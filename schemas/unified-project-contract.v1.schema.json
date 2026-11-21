@@ -4,29 +4,92 @@
   "title": "Ivan-VHS Unified Project Contract v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "project", "implementation", "capabilities", "interfaces", "integrations", "safety_boundaries", "extension_points"],
+  "required": [
+    "schema",
+    "project",
+    "implementation",
+    "capabilities",
+    "interfaces",
+    "integrations",
+    "safety_boundaries",
+    "extension_points"
+  ],
   "properties": {
-    "schema": { "const": "unified.project-contract.v1" },
+    "schema": {
+      "const": "unified.project-contract.v1"
+    },
     "project": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "name", "repository", "summary", "documentation"],
+      "required": [
+        "id",
+        "name",
+        "repository",
+        "summary",
+        "documentation"
+      ],
       "properties": {
-        "id": { "enum": ["pytyliki", "reaper", "oplague"] },
-        "name": { "type": "string", "minLength": 1 },
-        "repository": { "type": "string", "pattern": "^Ivan-VHS/(Pytyliki|Reaper|OPlague)$" },
-        "summary": { "type": "string", "minLength": 1 },
-        "documentation": { "type": "string", "minLength": 1 }
+        "id": {
+          "enum": [
+            "reaper",
+            "pytyliki",
+            "oplague",
+            "ventusample"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repository": {
+          "type": "string",
+          "pattern": "^Ivan-VHS/(Pytyliki|Reaper|OPlague)$"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "documentation": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     },
     "implementation": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["languages", "runtime_platforms", "desktop_platforms"],
+      "required": [
+        "languages",
+        "runtime_platforms",
+        "desktop_platforms"
+      ],
       "properties": {
-        "languages": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
-        "runtime_platforms": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
-        "desktop_platforms": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+        "languages": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "runtime_platforms": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "desktop_platforms": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
       }
     },
     "capabilities": {
@@ -35,12 +98,36 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "status", "summary", "evidence"],
+        "required": [
+          "id",
+          "status",
+          "summary",
+          "evidence"
+        ],
         "properties": {
-          "id": { "type": "string", "pattern": "^[a-z0-9]+([.-][a-z0-9]+)*$" },
-          "status": { "enum": ["implemented", "partial"] },
-          "summary": { "type": "string", "minLength": 1 },
-          "evidence": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+([.-][a-z0-9]+)*$"
+          },
+          "status": {
+            "enum": [
+              "implemented",
+              "partial"
+            ]
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
         }
       }
     },
@@ -49,13 +136,44 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "format", "direction", "status", "evidence"],
+        "required": [
+          "id",
+          "format",
+          "direction",
+          "status",
+          "evidence"
+        ],
         "properties": {
-          "id": { "type": "string", "pattern": "^[a-z0-9]+([.-][a-z0-9]+)*$" },
-          "format": { "type": "string", "minLength": 1 },
-          "direction": { "enum": ["provides", "consumes", "both"] },
-          "status": { "enum": ["implemented", "partial"] },
-          "evidence": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+([.-][a-z0-9]+)*$"
+          },
+          "format": {
+            "type": "string",
+            "minLength": 1
+          },
+          "direction": {
+            "enum": [
+              "provides",
+              "consumes",
+              "both"
+            ]
+          },
+          "status": {
+            "enum": [
+              "implemented",
+              "partial"
+            ]
+          },
+          "evidence": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
         }
       }
     },
@@ -64,26 +182,66 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["project", "interface", "mode", "status", "opt_in", "summary"],
+        "required": [
+          "project",
+          "interface",
+          "mode",
+          "status",
+          "opt_in",
+          "summary"
+        ],
         "properties": {
-          "project": { "enum": ["pytyliki", "reaper", "oplague"] },
-          "interface": { "type": "string", "minLength": 1 },
-          "mode": { "enum": ["native-ffi", "json-file", "shared-contract"] },
-          "status": { "enum": ["implemented", "optional", "planned"] },
-          "opt_in": { "type": "boolean" },
-          "summary": { "type": "string", "minLength": 1 }
+          "project": {
+            "enum": [
+              "reaper",
+              "pytyliki",
+              "oplague",
+              "ventusample"
+            ]
+          },
+          "interface": {
+            "type": "string",
+            "minLength": 1
+          },
+          "mode": {
+            "enum": [
+              "native-ffi",
+              "json-file",
+              "shared-contract"
+            ]
+          },
+          "status": {
+            "enum": [
+              "implemented",
+              "optional",
+              "planned"
+            ]
+          },
+          "opt_in": {
+            "type": "boolean"
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       }
     },
     "safety_boundaries": {
       "type": "array",
       "minItems": 1,
-      "items": { "type": "string", "minLength": 1 }
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
     },
     "extension_points": {
       "type": "array",
       "minItems": 1,
-      "items": { "type": "string", "minLength": 1 }
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
     }
   }
 }
