@@ -72,6 +72,9 @@ static void fold_and_map_are_bounded_and_non_mutating(void) {
     assert(reaper_capability_map_i64(
         input, 4U, multiply_value, (void *)&multiplier,
         mapped, 3U) == REAPER_CAPABILITY_OUT_OF_RANGE);
+    assert(reaper_capability_map_i64(
+        input, 4U, multiply_value, (void *)&multiplier,
+        (int64_t *)input, 4U) == REAPER_CAPABILITY_INVALID_ARGUMENT);
 }
 
 static void reverse_supports_copy_and_in_place(void) {
