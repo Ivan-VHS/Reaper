@@ -18,9 +18,10 @@ Reaper — язык выражений с явным потоком данных
 | QCS 1.0 | отдельный hardware-domain parser и JSON AST; без управления hardware |
 | THESIS | граф доказательств; утверждения не проверяются автоматически |
 | Реестры | 813 предложений; 666 API-контрактов; запись каталога не равна готовой функции |
-| Внутренние продукты | 18 встроенных сервисов; Operandu + Doopraul; Python reference runtime |\n| Федерация | OPlague snapshots, VentuSample manifests, optional Pytyliki C ABI |
+| Внутренние продукты | 18 встроенных сервисов; Operandu + Dropaul; Python reference runtime |
+| Федерация | OPlague snapshots, VentuSample manifests, optional Pytyliki C ABI |
 
-Запуск: `python -m reaper examples/flow.rpr` · Проверка: `python -m reaper --check examples/flow.rpr` · VM: `python -m reaper --engine vm examples/flow.rpr` · REPL: `python -m reaper --repl` · Продукты: `python -m reaper --products` · Doopraul: `python -m reaper --product-info Doopraul` · Тесты: `python -m unittest discover -s tests -v`.
+Запуск: `python -m reaper examples/flow.rpr` · Проверка: `python -m reaper --check examples/flow.rpr` · VM: `python -m reaper --engine vm examples/flow.rpr` · REPL: `python -m reaper --repl` · Продукты: `python -m reaper --products` · Dropaul: `python -m reaper --product-info Dropaul` · Тесты: `python -m unittest discover -s tests -v`.
 
 Studio: `python reaper_desktop.py` (Windows). Native: `cmake -S . -B build -DCMAKE_BUILD_TYPE=Release`, затем build и CTest.
 
