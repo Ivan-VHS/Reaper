@@ -7,6 +7,8 @@
 
 Reaper — язык выражений с явным потоком данных: оператор `::` передаёт значение следующей операции. Python runtime остаётся текущей исполняемой эталонной реализацией. Реализация на C17 развивается отдельно и пока не заменяет runtime полностью.
 
+**Языковой срез 0.2:** в эталонной грамматике реализованы `let/const/mut`, `fn/return`, `if/else`, `for/while`, `break/continue`, map-литералы и доступ к полям, оператор принадлежности и ленивый `??`. Новые возможности проверяются в tree-walk interpreter и stack VM. Полный перечень работающего синтаксиса и ограничений: [справочник языка Reaper 0.2](docs/LANGUAGE_REFERENCE_0.2.md).
+
 ## Реальный снимок Reaper Studio
 
 <p align="center"><img src="assets/screenshots/reaper-studio.png" alt="Reaper Studio под Windows 11" width="100%"></p>
