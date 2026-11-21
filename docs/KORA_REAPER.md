@@ -15,20 +15,20 @@ Kora adds 66 standard functions in seven manifest-backed plugins: ZDORO, DILLY, 
 
 ## Python API
 
-\`\`\`python
+```python
 from reaper.kora import KoraPluginManager, runtime
 host = KoraPluginManager()
 host.call("num.clamp", 12, 0, 10)             # 10
 host.call("str.slugify", "My REAPER Mix")     # my-reaper-mix
 host.call("arr.chunk", [1, 2, 3, 4, 5], 2)
 runtime.map.deep_merge({"fx":{"wet":0.5}}, {"fx":{"enabled":True}})
-\`\`\`
+```
 
-The canonical names and ownership are in \`reaper/kora/manifest.json\`. All calls use \`reaper.kora.runtime:call\`; plugin enable/disable is enforced by \`KoraPluginManager\`.
+The canonical names and ownership are in `reaper/kora/manifest.json`. All calls use `reaper.kora.runtime:call`; plugin enable/disable is enforced by `KoraPluginManager`.
 
 ## Install and run applications inside REAPER
 
-In Cockos REAPER open **Actions → Show action list → ReaScript → Load**, choose a \`.lua\` script from \`reaper_scripts/kora/\`, then run it from the Action List. A ZIP of the scripts is published by the **Kora REAPER builds** workflow.
+In Cockos REAPER open **Actions → Show action list → ReaScript → Load**, choose a `.lua` script from `reaper_scripts/kora/`, then run it from the Action List. A ZIP of the scripts is published by the **Kora REAPER builds** workflow.
 
 - **Track Health Dashboard**: read-only project name, BPM, track counts, mute/solo state and tracks without media.
 - **Prefix Selected Tracks**: prompts for a prefix and renames selected tracks in one REAPER undo block.
@@ -40,8 +40,8 @@ The Python utility library and Lua ReaScript host are separate runtimes: the Lua
 
 ## Test and build
 
-\`\`\`sh
+```sh
 python -m unittest tests.test_kora tests.test_kora_reascripts -v
 python -m unittest discover -s tests -v
 python -m pip wheel . --no-deps --wheel-dir dist
-\`\`\`
+```

@@ -4,9 +4,9 @@ from reaper.kora import runtime as k,KoraPluginManager
 class KoraTests(unittest.TestCase):
  def test_manifest_has_66_functions(self):
   h=KoraPluginManager();self.assertEqual(sum(p["function_count"] for p in h.list_plugins()),66)
-  self.assertEqual(len(h.list_plugins()),7);self.assertEqual(h.call("num.clamp",12,0,10),10)
+  self.assertEqual(len(h.list_plugins()),7);self.assertEqual(h.call("num.clamp",12,0,10),10);h.set_enabled("zdoro",False);self.assertRaises(RuntimeError,lambda:h.call("num.clamp",12,0,10))
  def test_num(self):
-  self.assertEqual(k.num.lerp(0,10,.5),5);self.assertEqual(k.num.map_range(5,0,10,0,100),50)
+  self.assertEqual(k.num.clamp(12,0,10),10);self.assertEqual(k.num.lerp(0,10,.5),5);self.assertEqual(k.num.map_range(5,0,10,0,100),50);self.assertEqual(k.num.round_to(1.234,2),1.23);self.assertEqual(k.num.sign(-4),-1)
   self.assertTrue(k.num.approx_eq(.3,.3001,.001));self.assertEqual(k.num.gcd(12,18),6)
   self.assertEqual(k.num.lcm(4,6),12);self.assertTrue(k.num.is_prime(97));self.assertFalse(k.num.is_prime(1))
   self.assertIn(k.num.rand_int(1,2),(1,2));self.assertIsInstance(k.num.rand_normal(0,1),float)
@@ -44,15 +44,15 @@ class KoraTests(unittest.TestCase):
   with tempfile.TemporaryDirectory() as td:
    p=Path(td)/"a.txt";k.io.write_atomic(p,"hello");self.assertEqual(k.io.read_text(p),"hello")
    w=k.io.watch_dir(td,lambda e:None);w.close()
-  self.assertEqual(k.json_api.parse_safe('{"a":1}').value,{"a":1});self.assertIsInstance(k.json_api.parse_safe("{"),k.Err)
-  self.assertIn('"a": 1',k.json_api.stringify_pretty({"a":1}));self.assertIsInstance(k.time_api.now_ms(),int)
-  self.assertIn("2024",k.time_api.format_iso(1704067200000));self.assertEqual(k.sys_api.env_get("KORA_MISSING","fallback"),"fallback")
-  self.assertIsInstance(k.sys_api.args(),list);self.assertEqual(k.meta.type_of(None),"null")
+  self.assertEqual(k.json.parse_safe('{"a":1}').value,{"a":1});self.assertIsInstance(k.json.parse_safe("{"),k.Err)
+  self.assertIn('"a": 1',k.json.stringify_pretty({"a":1}));self.assertIsInstance(k.time.now_ms(),int)
+  self.assertIn("2024",k.time.format_iso(1704067200000));self.assertEqual(k.sys.env_get("KORA_MISSING","fallback"),"fallback")
+  self.assertIsInstance(k.sys.args(),list);self.assertEqual(k.meta.type_of(None),"null")
  def test_async(self):
   async def run():
    async def ok():return 5
    async def bad():raise ValueError("bad")
    v=await k.async_.all_settled([ok(),bad()]);self.assertEqual(v[0]["status"],"fulfilled");self.assertEqual(v[1]["status"],"rejected")
-   self.assertEqual(await k.async_.race_timeout(ok(),100),5);await k.time_api.sleep(0)
+   self.assertEqual(await k.async_.race_timeout(ok(),100),5);await k.time.sleep(0)
   asyncio.run(run())
 if __name__=="__main__":unittest.main()
