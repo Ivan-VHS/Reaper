@@ -9,13 +9,15 @@ on:
       - "README*"
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   capture-live-studio:
     name: Reaper Studio live Windows capture
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -30,6 +32,22 @@ jobs:
           $pythonw = $python -replace 'python.exe$', 'pythonw.exe'
           if (-not (Test-Path $pythonw)) { throw "pythonw.exe was not found beside the configured Python runtime." }
           .github/scripts/capture_desktop_screenshot.ps1 -FilePath $pythonw -Arguments @("reaper_desktop.py") -OutputPath "assets/screenshots/reaper-studio.png" -StartupSeconds 15
+      - name: Commit screenshot to same-repository pull request
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        shell: pwsh
+        env:
+          TARGET_BRANCH: ${{ github.head_ref }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "assets/screenshots/reaper-studio.png"
+          git diff --cached --quiet
+          if ($LASTEXITCODE -ne 0) {
+            git commit -m "docs: refresh live Reaper Studio screenshot"
+            git push origin "HEAD:$env:TARGET_BRANCH"
+          } else {
+            Write-Host "Screenshot is unchanged; no repository commit is needed."
+          }
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: readme-screenshot-reaper
