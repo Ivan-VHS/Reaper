@@ -44,7 +44,7 @@ test("filesystem promises read and write binary data without blocking the test",
 
 test("crypto hashes binary buffers deterministically", () => {
   const digest = createHash("sha256").update("NOO TAH").digest("hex");
-  assert.equal(digest.length, 64);
+  assert.equal(digest, "57b42951ad980b7611ca5a1ca423ee76932a828c19a950d417e533c57a2bcc8f");
   assert.equal(createHash("sha256").update("NOO TAH").digest("hex"), digest);
   assert.equal(randomBytes(32).length, 32);
 });
