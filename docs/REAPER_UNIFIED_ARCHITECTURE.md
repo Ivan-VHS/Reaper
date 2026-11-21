@@ -11,4 +11,4 @@
 | Effects | capability-gated host operations |
 | Native target | C17, later standards only after conformance |
 
-Python 0.1 remains the reference until differential tests cover the complete language/CLI. Native parser/IR milestones do not imply a completed compiler.
+Python 0.2 is the executable reference for the documented language slice. The tree-walk and verified stack VM have conformance coverage for that slice; full C17 language parity remains a separate milestone. Native parser/IR milestones do not imply a completed native compiler.
