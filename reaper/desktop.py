@@ -18,6 +18,7 @@ from reaper.errors import ReaperError
 from reaper.parser import parse
 from reaper.runtime import Interpreter
 from reaper.debugger import DebuggerStopped, RuntimeDebugger
+from reaper.products import list_products
 from reaper.ui_motion import MotionController
 from reaper.ui_theme import apply_theme, apply_ui_theme, set_dpi_awareness, toggle_theme
 
@@ -131,6 +132,9 @@ class ReaperStudio(tk.Tk):
         embedded_menu.add_command(label="Проверить профиль микроконтроллера…", command=self.embedded_inspect_project)
         embedded_menu.add_command(label="Собрать прошивку…", command=self.embedded_build)
         menu.add_cascade(label="Встроенная C", menu=embedded_menu)
+        product_menu = tk.Menu(menu, tearoff=False)
+        product_menu.add_command(label="Обзор внутренних продуктов…", command=self.show_internal_products)
+        menu.add_cascade(label="Внутренние продукты", menu=product_menu)
         view_menu = tk.Menu(menu, tearoff=False)
         for mode, label in (("system", "Системная"), ("light", "Светлая"), ("dark", "Тёмная")):
             view_menu.add_radiobutton(
@@ -139,6 +143,31 @@ class ReaperStudio(tk.Tk):
             )
         menu.add_cascade(label="Вид", menu=view_menu)
         self.configure(menu=menu)
+
+    def show_internal_products(self) -> None:
+        """Show the integrated product registry inside Reaper Studio."""
+        window = tk.Toplevel(self)
+        window.title("REAPER — внутренние продукты")
+        window.geometry("820x560")
+        window.minsize(640, 420)
+        window.transient(self)
+        frame = ttk.Frame(window, padding=12)
+        frame.pack(fill="both", expand=True)
+        ttk.Label(frame, text="Внутренние продукты REAPER", style="Section.TLabel").pack(anchor="w")
+        ttk.Label(frame, text="Единая среда · общие API · отдельные зоны ответственности", style="Muted.TLabel").pack(anchor="w", pady=(2, 10))
+        table = ttk.Treeview(frame, columns=("domain", "purpose", "service"), show="tree headings")
+        table.heading("#0", text="Продукт")
+        table.heading("domain", text="Направление")
+        table.heading("purpose", text="Назначение")
+        table.heading("service", text="Основная операция")
+        table.column("#0", width=130, stretch=False)
+        table.column("domain", width=150, stretch=False)
+        table.column("purpose", width=330, stretch=True)
+        table.column("service", width=170, stretch=False)
+        for item in list_products():
+            table.insert("", "end", text=item["name"], values=(item["domain"], item["purpose"], item["primary_service"]))
+        table.pack(fill="both", expand=True)
+        ttk.Label(frame, text="Сервисы работают в Python reference runtime; нативная C17-паритетность не заявляется.", style="Muted.TLabel").pack(anchor="w", pady=(8, 0))
 
     def apply_visual_theme(self) -> None:
         """Apply System, Light or Dark colors without changing editor behavior."""
