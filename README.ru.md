@@ -115,3 +115,11 @@ emit "result = " ++ text(result)
 [Контракт IDE 666](docs/IDE_666_IMPLEMENTATION.md) · [LSP/DAP](docs/REAPER_IDE.md) · [Node.js](docs/NOO_TAH.md) · [Kora для REAPER](docs/KORA_REAPER.md) · [Плагины](docs/PLUGINS.md) · [Внутренние продукты](docs/INTERNAL_PRODUCTS.md) · [Функции](docs/FEATURES.md) · [Язык](LANGUAGE.md) · [Архитектура](docs/ARCHITECTURE.md) · [Реестр 813](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [Федерация](docs/PROJECT_FEDERATION_MATRIX.md) · [Индекс](docs/README.md)
 
 [English](README.md) · [Українська](README.uk.md) · [简体中文](README.zh-CN.md) · [Релизы](https://github.com/Ivan-VHS/Reaper/releases) · [Apache-2.0](LICENSE)
+
+<!-- VISUAL-DOCS:BEGIN -->
+## Визуальная карта архитектуры
+
+![Карта Reaper: исходный код, Python runtime, IDE-сервисы и незавершённое направление C17](assets/visual-documentation-map.svg)
+
+Это статическая архитектурная иллюстрация, а не скриншот Studio и не заявление о полной совместимости C17. Реальный снимок Windows выше относится к поставляемому desktop UI. См. [визуальный стандарт документации](docs/VISUAL_DOCUMENTATION.md).
+<!-- VISUAL-DOCS:END -->
