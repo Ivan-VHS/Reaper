@@ -33,6 +33,14 @@ int reaper_ir_verify(const ReaperIrModule *module, ReaperIrError *error) {
             if (node->lhs != REAPER_IR_NO_VALUE || node->rhs != REAPER_IR_NO_VALUE)
                 return reject(error, i, "CONST_I64 cannot have operands");
             break;
+        case REAPER_IR_OP_NEG_I64:
+            if (node->type != REAPER_IR_TYPE_I64)
+                return reject(error, i, "NEG_I64 must produce i64");
+            if (!valid_ref(node->lhs, i) || node->rhs != REAPER_IR_NO_VALUE)
+                return reject(error, i, "NEG_I64 requires one earlier value operand");
+            if (module->nodes[node->lhs].type != REAPER_IR_TYPE_I64)
+                return reject(error, i, "NEG_I64 operand must be i64");
+            break;
         case REAPER_IR_OP_ADD_I64:
         case REAPER_IR_OP_SUB_I64:
         case REAPER_IR_OP_MUL_I64:
@@ -121,6 +129,11 @@ int reaper_ir_execute_i64(const ReaperIrModule *module, int64_t *values,
         int64_t value = 0;
         switch (node->opcode) {
         case REAPER_IR_OP_CONST_I64: value = node->immediate; break;
+        case REAPER_IR_OP_NEG_I64:
+            if (values[node->lhs] == INT64_MIN)
+                return execute_error(error, i, "signed i64 negation overflow");
+            value = -values[node->lhs];
+            break;
         case REAPER_IR_OP_ADD_I64:
             if (!add_i64_checked(values[node->lhs], values[node->rhs], &value))
                 return execute_error(error, i, "signed i64 addition overflow");
@@ -167,6 +180,7 @@ const char *reaper_ir_opcode_name(ReaperIrOpcode opcode) {
     case REAPER_IR_OP_SUB_I64: return "sub.i64";
     case REAPER_IR_OP_MUL_I64: return "mul.i64";
     case REAPER_IR_OP_DIV_I64: return "div.i64";
+    case REAPER_IR_OP_NEG_I64: return "neg.i64";
     default: return "invalid";
     }
 }
