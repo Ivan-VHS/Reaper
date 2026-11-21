@@ -63,7 +63,7 @@ static const ReaperCapabilityFunction SRETUO[] = {
     FN("rollback_state", 1U, 1U, "Restore a validated state snapshot."),
     FN("mirror_mapping", 1U, 1U, "Swap mapping keys and values after uniqueness checks."),
     FN("undo_last_op", 1U, 1U, "Undo the last reversible operation in a history stack."),
-    FN("flip_axis", 2U, 2U, "Transpose or reflect a matrix along the selected axis.")
+    FN("flip_axis", 1U, 1U, "Transpose or reflect a matrix along the selected axis.")
 };
 static const ReaperCapabilityFunction KALI[] = {
     FN("verify_capability", 3U, 3U, "Authorize an actor against a resource and requested action."),
@@ -402,6 +402,10 @@ ReaperCapabilityStatus reaper_capability_retry_delay_ms(
     unsigned long long delay = (unsigned long long)base_delay_ms;
     if (delay_ms == NULL || max_delay_ms < base_delay_ms)
         return REAPER_CAPABILITY_INVALID_ARGUMENT;
+    if (delay == 0ULL || delay == (unsigned long long)max_delay_ms || attempt == 0U) {
+        *delay_ms = (unsigned)delay;
+        return REAPER_CAPABILITY_OK;
+    }
     for (unsigned i = 0U; i < attempt && delay < (unsigned long long)max_delay_ms; ++i) {
         delay *= 2ULL;
         if (delay > (unsigned long long)max_delay_ms)
