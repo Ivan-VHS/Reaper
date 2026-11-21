@@ -21,7 +21,8 @@ Reaper is an expression-oriented language: `::` passes a value into the next ope
 | QCS 1.0 | separate hardware-domain parser and JSON AST; no hardware execution |
 | THESIS | typed evidence graph; claims are not auto-verified |
 | Registries | 813 feature proposals; 666 API contracts; 666 reserved token lexemes |
-| Internal products | 18 in-process services; Operandu + Doopraul workflow/data layer; Python reference only |\n| Federation | OPlague snapshots, VentuSample pack v1, optional Pytyliki C ABI |
+| Internal products | 18 in-process services; Operandu + Dropaul workflow/data layer; Python reference only |
+| Federation | OPlague snapshots, VentuSample pack v1, optional Pytyliki C ABI |
 
 ## Run and test
 
