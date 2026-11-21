@@ -1,62 +1,73 @@
 # Reaper internal product ecosystem
 
-**Registry:** `reaper.internal-products.v1` · **Products:** 18 · **Execution boundary:** in-process, explicit registration.
+**Registry:** `reaper.internal-products.v1` · **Products:** 18 · **Runtime:** shared Reaper process.
 
-The ecosystem is a set of native Reaper modules sharing one runtime and common contracts—not 18 separately installed applications or independent runtimes. The product names identify responsibility boundaries; typed payloads and explicit handlers define executable behavior.
+The products are native internal modules and services within Reaper—not 18 separate applications or competing runtimes. They share the existing language/runtime, project model and repository contracts.
 
 ## Product map
 
-| Product | Responsibility |
-|---|---|
-| Operandu | Typed data operations, expressions and logic composition |
-| Dropaul | Workflow orchestration, process routing and controlled task execution |
-| Zdoro | Integrity, diagnostics, consistency and health |
-| Pyemont | Development lifecycle, build coordination and developer workflows |
-| Dilly | Interface composition, interaction contracts and accessibility |
-| Baplap | Data structures, schemas, serialization and storage adapters |
-| Sretuo | Test contracts, regression evidence and test adapters |
-| Kali | Capability policy, permission checks and security audit |
-| Zalam | Typed connectors, events and external-system adapters |
-| Liur | Resource budgets, scheduling hints and performance telemetry |
-| Keel Koh | Knowledge indexing, reference resolution and provenance |
-| Vorof | Read-only reverse engineering and structural inspection |
-| Vprof | Profiling, measurements and execution analytics |
-| Profe | Standards, conventions and quality rules |
-| Prossee | Project state, dependency intelligence and delivery visibility |
-| Vprossee | Evidence validation, traceability and release verification |
-| Professiya | Learning paths, guided reference and progression |
-| Profevo | Architecture models, evolution proposals and compatibility review |
+| Product | Responsibility | Executable service |
+|---|---|---|
+| Operandu | Data, values and logic | Safe value/schema inspection |
+| Dropaul | Actions, workflows and process routing | Dependency graph validation and dry-run ordering |
+| Zdoro | Integrity and diagnostics | Workspace baseline inspection |
+| Pyemont | Development and project construction | Source/project inventory |
+| Dilly | Interface and UX | Design-token lint |
+| Baplap | Data infrastructure | Deterministic file catalog and SHA-256 fingerprints |
+| Sretuo | Quality engineering | Test discovery and planning |
+| Kali | Security | Static secret-pattern scan |
+| Zalam | Connectivity and integration | Versioned contract validation |
+| Liur | Resource management | Repository size and largest-file metrics |
+| Keel Koh | Knowledge | Documentation headings and link index |
+| Vorof | Reverse engineering | Read-only Python AST structure inspection |
+| Vprof | Profiling | Static source and complexity metrics |
+| Profe | Standards | Python syntax/convention baseline |
+| Prossee | Project intelligence | Task dependency planning |
+| Vprossee | Verification | Evidence completeness checks |
+| Professiya | Learning | Structured contributor learning paths |
+| Profevo | Architecture evolution | Compatibility-aware migration proposals |
 
 ## Shared architecture
 
-- **Reaper Core:** one process/runtime; modules do not create competing interpreters.
-- **Contracts:** stable product IDs, JSON-compatible bounded payloads, explicit action names and deterministic registry metadata.
-- **Dropaul:** coordinates workflows; it does not bypass Kali policy or invent capabilities.
-- **Baplap:** owns schema/data-adapter boundaries; Zalam handles external connector boundaries.
-- **Kali:** permissions remain explicit and fail closed; registration does not grant operating-system privileges.
-- **Sretuo / Vprossee:** distinguish test execution from evidence verification.
-- **Liur / Vprof / Zdoro:** resource observations, profiling and health checks remain separate concerns.
-- **Audit:** each successful or failed dispatched handler is recorded in an append-only SHA-256 hash chain.
+- **One Reaper Core:** products execute as internal services in the existing Reaper process.
+- **Explicit contracts:** stable product names, bounded input validation and named operations.
+- **Dropaul:** validates workflow dependencies and returns a deterministic dry-run order. It does not execute arbitrary commands.
+- **Kali:** static pattern checks only; no claim of complete security certification.
+- **Baplap / Zalam:** local metadata indexing and integration-contract validation remain separate.
+- **Sretuo / Vprossee:** test discovery and evidence completeness are separate from actually executing or certifying tests.
+- **Liur / Vprof / Zdoro:** repository metrics, static profiling and workspace health are distinct services.
+- **Vorof:** parses source into an AST; imported code is never executed.
 
-## Executable API
+## Usage
 
 ```python
-from reaper.products import ProductRuntime, get_product, list_products
+from reaper.products import get_product, list_products, run_product
 
+assert len(list_products()) == 18
 print(get_product("Dropaul"))
-print([product.name for product in list_products()])
 
-runtime = ProductRuntime()
-runtime.register("dropaul", "plan", lambda payload: {"steps": payload["steps"]})
-result = runtime.dispatch("Dropaul", "plan", {"steps": ["check", "build"]})
-assert result["steps"] == ["check", "build"]
-assert runtime.verify_audit()
+plan = run_product(
+    "Dropaul",
+    "plan_workflow",
+    steps=[
+        {"id": "compile", "depends_on": []},
+        {"id": "test", "depends_on": ["compile"]},
+        {"id": "package", "depends_on": ["test"]},
+    ],
+)
+assert plan["execution_order"] == ["compile", "test", "package"]
+assert plan["dry_run"] is True
 ```
 
-CLI: `python -m reaper.products --list`, `--describe Dropaul`, `--health`, or `--json`.
+CLI:
 
-## Maturity and safety
+- `python -m reaper.products --list`
+- `python -m reaper.products --describe Dropaul`
+- `python -m reaper.products --run Dropaul plan_workflow --input '{"steps":[]}'`
+- Installed command: `reaper-products --list`
 
-This release implements the shared registry, bounded dispatcher, explicit handler registration, deterministic metadata, and hash-chained dispatch audit. Product capability labels are responsibility contracts—not claims that every domain-specific subsystem is complete. A product action without a registered handler fails closed. Payloads are finite JSON data limited to 1 MiB. No external process, network call, package manager, filesystem mutation, privileged operation, or dynamic plugin loading is performed by the dispatcher.
+## Safety and maturity
 
-Further product work should land behind each product's contract and tests, using Reaper's existing runtime, IR, effect, capability, resource and federation interfaces rather than duplicating them.
+The current implementation supplies 18 product contracts and one bounded local service per product. These services are real, callable foundations, not claims that every future domain capability is complete. Filesystem-oriented services inspect project data and do not modify it; source inspection does not execute imported code; workflow planning is dry-run only; external integrations and privileged operations are not performed. Static security scanning is heuristic and must not be treated as a full audit.
+
+Future extensions must reuse Reaper's existing IR, effect, capability, resource, federation and audit interfaces. Product-specific work must remain behind tested contracts and preserve Reaper's language semantics.
