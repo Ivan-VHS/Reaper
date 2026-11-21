@@ -267,7 +267,8 @@
         "server",
         "deterministic",
         "code-generation",
-        "cross-compilation"
+        "cross-compilation",
+        "e2k"
       ]
     },
     {
