@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import math
-import re
 from typing import Callable, Literal, Sequence
 
 LoadStatus = Literal["normal", "watch", "pause"]
@@ -44,6 +43,8 @@ class LanguageFinding:
     suggestion: str
 
 _STIGMA_PHRASES = {
+    "weakness": "a request for support",
+    "lazy": "a person may need support",
     "weakness": "a request for support",
     "lazy": "a person may need support",
     "слабость": "запрос о поддержке",
