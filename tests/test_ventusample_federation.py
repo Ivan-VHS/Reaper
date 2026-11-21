@@ -6,6 +6,7 @@ import unittest
 from pathlib import Path
 
 from reaper import Interpreter
+import reaper.ventusample as ventusample_adapter
 from reaper.ventusample import (
     REAPER_VENTUSAMPLE_COMPARISON_SCHEMA,
     compare_ventusample_packs,
@@ -59,6 +60,17 @@ def make_pack() -> dict[str, object]:
 
 
 class VentuSampleFederationTests(unittest.TestCase):
+    def test_billionaire_golden_era_profile_and_schema_stay_in_sync(self) -> None:
+        pack = make_pack()
+        pack["parameters"]["style"] = "Billionaire Golden Era"
+        metrics = ventusample_metrics(pack)
+        self.assertEqual(metrics["bpm_normalized"], 93 / 190)
+
+        schema_path = Path(__file__).resolve().parents[1] / "schemas" / "ventusample.pack.v1.schema.json"
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        schema_styles = set(schema["properties"]["parameters"]["properties"]["style"]["enum"])
+        self.assertEqual(schema_styles, ventusample_adapter._STYLES)
+
     def test_metrics_validate_pack_and_normalize_audio_metadata(self) -> None:
         metrics = ventusample_metrics(make_pack())
         self.assertAlmostEqual(metrics["bpm_normalized"], 93 / 190)
