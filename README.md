@@ -15,7 +15,7 @@ Reaper is an expression-oriented language: `::` passes a value into the next ope
 |---|---|
 | Python runtime | lexer, parser, interpreter, CLI, REPL, modules, closures, quotas and audit |
 | Division/allocation | checked Euclidean division, balanced partition and proportional allocation |
-| Reaper Studio | Windows editor: check/run/debug, breakpoints, variables, call stack |
+| Reaper Studio | Windows IDE foundation: project tree, syntax coloring, line numbers, search, check/run, debugger, breakpoints, variables, call stack; semantic LSP/Git panels remain planned |
 | Native C17 | lexer, expression parser, owned AST, checked IR and limited lowering |
 | МОСТ | 54 exact aliases: 21 executable in reference subset, 33 lexically reserved |
 | QCS 1.0 | separate hardware-domain parser and JSON AST; no hardware execution |
@@ -41,6 +41,6 @@ make result := [1, 2, 3] :: map(double) :: sum()
 emit "result = " ++ text(result)
 ```
 
-[Features](docs/FEATURES.md) · [Language](LANGUAGE.md) · [Division](docs/DIVISION_ENGINE.md) · [Architecture](docs/ARCHITECTURE.md) · [813 registry](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [Federation](docs/PROJECT_FEDERATION_MATRIX.md) · [Docs index](docs/README.md)
+[IDE 666 contract](docs/IDE_666_IMPLEMENTATION.md) · [Features](docs/FEATURES.md) · [Language](LANGUAGE.md) · [Division](docs/DIVISION_ENGINE.md) · [Architecture](docs/ARCHITECTURE.md) · [813 registry](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [Federation](docs/PROJECT_FEDERATION_MATRIX.md) · [Docs index](docs/README.md)
 
 [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md) · [Releases](https://github.com/Ivan-VHS/Reaper/releases) · [Apache-2.0](LICENSE)
