@@ -93,9 +93,9 @@ def window(xs,n):
  if n<1:raise KoraError("size must be positive")
  return [list(xs[i:i+n]) for i in range(max(0,len(xs)-n+1))]
 def compact(xs):return [x for x in xs if x is not None and x!=""]
-def dedup_by(xs,key_fn):
+def dedup_by(list,key_fn):
  seen=_builtins.set();out=[]
- for x in xs:
+ for x in list:
   k=key_fn(x)
   if k not in seen:seen.add(k);out.append(x)
  return out

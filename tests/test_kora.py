@@ -6,19 +6,19 @@ class KoraTests(unittest.TestCase):
   h=KoraPluginManager();self.assertEqual(sum(p["function_count"] for p in h.list_plugins()),66)
   self.assertEqual(len(h.list_plugins()),7);self.assertEqual(h.call("num.clamp",12,0,10),10);h.set_enabled("zdoro",False);self.assertRaises(RuntimeError,lambda:h.call("num.clamp",12,0,10))
  def test_num(self):
-  self.assertEqual(k.num.clamp(12,0,10),10);self.assertEqual(k.num.lerp(0,10,.5),5);self.assertEqual(k.num.map_range(5,0,10,0,100),50);self.assertEqual(k.num.round_to(1.234,2),1.23);self.assertEqual(k.num.sign(-4),-1)
+  self.assertEqual(k.num.clamp(12,0,10),10);self.assertEqual(k.num.clamp(x=12,min=0,max=10),10);self.assertEqual(k.num.lerp(0,10,.5),5);self.assertEqual(k.num.map_range(5,0,10,0,100),50);self.assertEqual(k.num.round_to(1.234,2),1.23);self.assertEqual(k.num.sign(-4),-1)
   self.assertTrue(k.num.approx_eq(.3,.3001,.001));self.assertEqual(k.num.gcd(12,18),6)
   self.assertEqual(k.num.lcm(4,6),12);self.assertTrue(k.num.is_prime(97));self.assertFalse(k.num.is_prime(1))
   self.assertIn(k.num.rand_int(1,2),(1,2));self.assertIsInstance(k.num.rand_normal(0,1),float)
  def test_str(self):
-  self.assertEqual(k.str.slugify("Hello World"),"hello-world");self.assertEqual(k.str.pad_both("x",5,"-"),"--x--")
+  self.assertEqual(k.str.slugify("Hello World"),"hello-world");self.assertEqual(k.str.slugify(text="Hello World"),"hello-world");self.assertEqual(k.str.pad_both("x",5,"-"),"--x--")
   self.assertEqual(k.str.truncate("abcdef",4),"a...");self.assertEqual(k.str.between("[x]","[","]"),"x")
   self.assertEqual(k.str.count_sub("aaaa","aa"),2);self.assertEqual(k.str.words("one, two"),["one","two"])
   self.assertEqual(k.str.to_camel("hello_world"),"helloWorld");self.assertEqual(k.str.to_snake("HTTPServer"),"http_server")
   self.assertEqual(k.str.levenshtein("kitten","sitting"),3);self.assertEqual(k.str.template("Hi {{x}}",{"x":"Kora"}),"Hi Kora")
   self.assertEqual(k.str.wrap("one two three",7),"one two\nthree")
  def test_arr(self):
-  self.assertEqual(k.arr.chunk([1,2,3],2),[[1,2],[3]]);self.assertEqual(k.arr.window([1,2,3],2),[[1,2],[2,3]])
+  self.assertEqual(k.arr.chunk([1,2,3],2),[[1,2],[3]]);self.assertEqual(k.arr.chunk(list=[1,2],size=1),[[1],[2]]);self.assertEqual(k.arr.window([1,2,3],2),[[1,2],[2,3]])
   self.assertEqual(k.arr.compact([0,None,"",1]),[0,1]);self.assertEqual(k.arr.dedup_by([1,2,3],lambda x:x%2),[1,2])
   self.assertEqual(k.arr.group_by([1,2,3],lambda x:x%2),{1:[1,3],0:[2]})
   self.assertEqual(k.arr.partition([1,2,3],lambda x:x>1),([2,3],[1]))
@@ -44,7 +44,7 @@ class KoraTests(unittest.TestCase):
   with tempfile.TemporaryDirectory() as td:
    p=Path(td)/"a.txt";k.io.write_atomic(p,"hello");self.assertEqual(k.io.read_text(p),"hello")
    w=k.io.watch_dir(td,lambda e:None);w.close()
-  self.assertEqual(k.json.parse_safe('{"a":1}').value,{"a":1});self.assertIsInstance(k.json.parse_safe("{"),k.Err)
+  self.assertEqual(k.json.parse_safe('{"a":1}').value,{"a":1});self.assertEqual(k.json.parse_safe(raw_str='{"b":2}').value,{"b":2});self.assertIsInstance(k.json.parse_safe("{"),k.Err)
   self.assertIn('"a": 1',k.json.stringify_pretty({"a":1}));self.assertIsInstance(k.time.now_ms(),int)
   self.assertIn("2024",k.time.format_iso(1704067200000));self.assertEqual(k.sys.env_get("KORA_MISSING","fallback"),"fallback")
   self.assertIsInstance(k.sys.args(),list);self.assertEqual(k.meta.type_of(None),"null")
