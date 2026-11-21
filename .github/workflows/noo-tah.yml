@@ -26,7 +26,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
-          cache: npm
       - name: Compile NOO TAH integration
         run: python -m compileall -q reaper/noo_tah.py reaper/desktop.py tests/test_noo_tah.py
       - name: Run NOO TAH unit and runtime tests
