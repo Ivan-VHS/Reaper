@@ -13,13 +13,13 @@ class Ok: value: object
 @dataclass(frozen=True)
 class Err: error: Exception
 # ZDORO (11)
-def clamp(x,lo,hi):
- if lo>hi: raise KoraError("min must not exceed max")
- return max(lo,min(hi,x))
+def clamp(x,min,max):
+ if min>max: raise KoraError("min must not exceed max")
+ return _builtins.max(min,_builtins.min(max,x))
 def lerp(a,b,t): return a+(b-a)*t
-def map_range(x,imin,imax,omin,omax):
- if imin==imax: raise KoraError("input range must not have zero width")
- return omin+(x-imin)*(omax-omin)/(imax-imin)
+def map_range(x,in_min,in_max,out_min,out_max):
+ if in_min==in_max: raise KoraError("input range must not have zero width")
+ return out_min+(x-in_min)*(out_max-out_min)/(in_max-in_min)
 def round_to(x,decimals): return round(x,decimals)
 def approx_eq(a,b,eps):
  if eps<0: raise KoraError("eps must be non-negative")
@@ -47,31 +47,31 @@ def rand_normal(mean,std):
  if std<0:raise KoraError("std must be non-negative")
  return random.gauss(mean,std)
 # DILLY (11)
-def slugify(s):return re.sub(r"[^a-z0-9]+","-",unicodedata.normalize("NFKD",_builtins.str(s)).encode("ascii","ignore").decode().lower()).strip("-")
-def pad_both(s,n,fill=" "):
- s,fill=_builtins.str(s),_builtins.str(fill)
+def slugify(text):return re.sub(r"[^a-z0-9]+","-",unicodedata.normalize("NFKD",_builtins.str(text)).encode("ascii","ignore").decode().lower()).strip("-")
+def pad_both(text,length,fill=" "):
+ text,fill=_builtins.str(text),_builtins.str(fill)
  if not fill:raise KoraError("fill must not be empty")
- m=max(0,n-len(s));l=m//2;r=m-l
- return (fill*((l+len(fill)-1)//len(fill)))[:l]+s+(fill*((r+len(fill)-1)//len(fill)))[:r]
-def truncate(s,n,suffix="..."):
- s=_builtins.str(s)
- if n<0:raise KoraError("max_len must be non-negative")
- return s if len(s)<=n else suffix[:n] if len(suffix)>=n else s[:n-len(suffix)]+suffix
-def between(s,left,right):
- s=_builtins.str(s);i=s.find(left)
+ m=max(0,length-len(text));l=m//2;r=m-l
+ return (fill*((l+len(fill)-1)//len(fill)))[:l]+text+(fill*((r+len(fill)-1)//len(fill)))[:r]
+def truncate(text,max_len,suffix="..."):
+ text=_builtins.str(text)
+ if max_len<0:raise KoraError("max_len must be non-negative")
+ return text if len(text)<=max_len else suffix[:max_len] if len(suffix)>=max_len else text[:max_len-len(suffix)]+suffix
+def between(text,left,right):
+ text=_builtins.str(text);i=text.find(left)
  if i<0:return ""
- i+=len(left);j=s.find(right,i)
- return "" if j<0 else s[i:j]
-def count_sub(s,sub):
+ i+=len(left);j=text.find(right,i)
+ return "" if j<0 else text[i:j]
+def count_sub(text,sub):
  if not sub:raise KoraError("sub must not be empty")
- return _builtins.str(s).count(_builtins.str(sub))
-def words(s):return re.findall(r"[^\W_]+(?:['’][^\W_]+)?",_builtins.str(s),re.UNICODE)
-def to_camel(s):
- p=re.findall(r"[A-Za-z0-9]+",_builtins.str(s))
+ return _builtins.str(text).count(_builtins.str(sub))
+def words(text):return re.findall(r"[^\W_]+(?:['’][^\W_]+)?",_builtins.str(text),re.UNICODE)
+def to_camel(text):
+ p=re.findall(r"[A-Za-z0-9]+",_builtins.str(text))
  return (p[0].lower() if p else "")+"".join(x[:1].upper()+x[1:] for x in p[1:])
-def to_snake(s):
- s=re.sub(r"([a-z0-9])([A-Z])",r"\1_\2",_builtins.str(s));s=re.sub(r"([A-Z])([A-Z][a-z])",r"\1_\2",s)
- return re.sub(r"[^A-Za-z0-9]+","_",s).strip("_").lower()
+def to_snake(text):
+ text=re.sub(r"([a-z0-9])([A-Z])",r"\1_\2",_builtins.str(text));text=re.sub(r"([A-Z])([A-Z][a-z])",r"\1_\2",text)
+ return re.sub(r"[^A-Za-z0-9]+","_",text).strip("_").lower()
 def levenshtein(a,b):
  a,b=_builtins.str(a),_builtins.str(b)
  if len(a)<len(b):a,b=b,a
@@ -81,53 +81,53 @@ def levenshtein(a,b):
   for j,y in enumerate(b,1):nxt.append(min(nxt[-1]+1,row[j]+1,row[j-1]+(x!=y)))
   row=nxt
  return row[-1]
-def template(tpl,values):return re.sub(r"\{\{\s*([^{}]+?)\s*\}\}",lambda m:_builtins.str(values.get(m.group(1).strip(),m.group(0))),_builtins.str(tpl))
-def wrap(s,width):
+def template(tpl,vars_map):return re.sub(r"\{\{\s*([^{}]+?)\s*\}\}",lambda m:_builtins.str(vars_map.get(m.group(1).strip(),m.group(0))),_builtins.str(tpl))
+def wrap(text,width):
  if width<1:raise KoraError("width must be positive")
- return "\n".join(textwrap.wrap(_builtins.str(s),width,break_long_words=False))
+ return "\n".join(textwrap.wrap(_builtins.str(text),width,break_long_words=False))
 # BAPLAP (11)
-def chunk(xs,n):
- if n<1:raise KoraError("size must be positive")
- return [list(xs[i:i+n]) for i in range(0,len(xs),n)]
-def window(xs,n):
- if n<1:raise KoraError("size must be positive")
- return [list(xs[i:i+n]) for i in range(max(0,len(xs)-n+1))]
-def compact(xs):return [x for x in xs if x is not None and x!=""]
+def chunk(list,size):
+ if size<1:raise KoraError("size must be positive")
+ return [list[i:i+size] for i in range(0,len(list),size)]
+def window(list,size):
+ if size<1:raise KoraError("size must be positive")
+ return [list[i:i+size] for i in range(max(0,len(list)-size+1))]
+def compact(list):return [x for x in list if x is not None and x!=""]
 def dedup_by(list,key_fn):
  seen=_builtins.set();out=[]
  for x in list:
   k=key_fn(x)
   if k not in seen:seen.add(k);out.append(x)
  return out
-def group_by(xs,key_fn):
+def group_by(list,key_fn):
  out=defaultdict(list)
- for x in xs:out[key_fn(x)].append(x)
+ for x in list:out[key_fn(x)].append(x)
  return dict(out)
-def partition(xs,pred_fn):
+def partition(list,pred_fn):
  a,b=[],[]
- for x in xs:(a if pred_fn(x) else b).append(x)
+ for x in list:(a if pred_fn(x) else b).append(x)
  return a,b
 def zip_with(a,b,fn):return [fn(x,y) for x,y in zip(a,b)]
-def flatten_depth(xs,depth):
+def flatten_depth(list,depth):
  if depth<0:raise KoraError("depth must be non-negative")
- out=list(xs)
+ out=_builtins.list(list)
  for _ in range(depth):out=[y for x in out for y in (x if isinstance(x,(_builtins.list,tuple)) else [x])]
  return out
-def sample(xs,k):
- if k<0 or k>len(xs):raise KoraError("k outside list bounds")
- return random.sample(list(xs),k)
-def rotate(xs,shift):
- xs=list(xs)
- if not xs:return xs
- n=shift%len(xs)
- return xs[-n:]+xs[:-n] if n else xs
-def binary_search(xs,target):
- lo,hi=0,len(xs)
+def sample(list,k):
+ if k<0 or k>len(list):raise KoraError("k outside list bounds")
+ return random.sample(_builtins.list(list),k)
+def rotate(list,shift):
+ list=_builtins.list(list)
+ if not list:return list
+ n=shift%len(list)
+ return list[-n:]+list[:-n] if n else list
+def binary_search(sorted_list,target):
+ lo,hi=0,len(sorted_list)
  while lo<hi:
   m=(lo+hi)//2
-  if xs[m]<target:lo=m+1
+  if sorted_list[m]<target:lo=m+1
   else:hi=m
- return lo if lo<len(xs) and xs[lo]==target else -1
+ return lo if lo<len(sorted_list) and sorted_list[lo]==target else -1
 # KALI (11)
 def get_path(obj,path,default_val=None):
  cur=obj
@@ -273,19 +273,19 @@ class DirectoryWatcher:
 def watch_dir(path,on_event):return DirectoryWatcher(path,on_event)
 def env_get(name,default_val=None):return os.environ.get(name,default_val)
 def args():return list(_sys.argv[1:])
-def type_of(v):
- if v is None:return "null"
- if isinstance(v,bool):return "boolean"
- if isinstance(v,int):return "integer"
- if isinstance(v,float):return "number"
- if isinstance(v,_builtins.str):return "string"
- if isinstance(v,list):return "array"
- if isinstance(v,dict):return "object"
- if callable(v):return "function"
- return type(v).__name__
+def type_of(value):
+ if value is None:return "null"
+ if isinstance(value,bool):return "boolean"
+ if isinstance(value,int):return "integer"
+ if isinstance(value,float):return "number"
+ if isinstance(value,_builtins.str):return "string"
+ if isinstance(value,_builtins.list):return "array"
+ if isinstance(value,dict):return "object"
+ if callable(value):return "function"
+ return type(value).__name__
 # SRETUO (5)
-def parse_safe(raw):
- try:return Ok(_json.loads(raw))
+def parse_safe(raw_str):
+ try:return Ok(_json.loads(raw_str))
  except (ValueError,TypeError) as e:return Err(e)
 def stringify_pretty(value,indent=2):return _json.dumps(value,ensure_ascii=False,indent=indent,allow_nan=False)
 def now_ms():return int(_time.time()*1000)
