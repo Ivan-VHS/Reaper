@@ -18,9 +18,10 @@ REPOSITORIES = {
     "pytyliki": "Ivan-VHS/Pytyliki",
     "reaper": "Ivan-VHS/Reaper",
     "oplague": "Ivan-VHS/OPlague",
+    "ventusample": "Ivan-VHS/VentuSample",
 }
 STATUSES = {"implemented", "partial"}
-INTEGRATION_STATUSES = STATUSES | {"optional", "planned"}
+INTEGRATION_STATUSES = STATUSES | {"optional", "planned", "not_applicable"}
 ID_PATTERN = re.compile(r"^[a-z0-9]+(?:[.-][a-z0-9]+)*$")
 
 
