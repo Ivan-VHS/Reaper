@@ -19,6 +19,7 @@
 | [REAPER_813_FEATURE_ARCHITECTURE.md](REAPER_813_FEATURE_ARCHITECTURE.md) | proposal ID ranges and registry boundaries |
 | [REAPER_PARSER_M1.md](REAPER_PARSER_M1.md) | native parser acceptance |
 | [RUNTIME_PLATFORM.md](RUNTIME_PLATFORM.md) | Python runtime boundaries |
+| [IMMORTALITY_CAPSULE.md](IMMORTALITY_CAPSULE.md) | bounded snapshots, SHA-256 integrity checks, recovery and CLI/REPL configuration |
 | [REAPER_UNIFIED_ARCHITECTURE.md](REAPER_UNIFIED_ARCHITECTURE.md) | native destination and language invariants |
 | [MOST_LANGUAGE_SPEC.md](MOST_LANGUAGE_SPEC.md) | exact Russian aliases |
 | [PROJECT_FEDERATION_MATRIX.md](PROJECT_FEDERATION_MATRIX.md) | peer-project boundaries and integrations |
