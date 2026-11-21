@@ -27,10 +27,10 @@ KEYWORDS = frozenset({
     "продолжить", "отложить",
 })
 _TOKEN_PATTERN = re.compile(
-    r'(?P<comment>//[^\\n]*|/\\*[\\s\\S]*?\\*/)'
-    r'|(?P<string>"(?:\\\\.|[^"\\\\])*")'
-    r'|(?P<number>\\b(?:0x[0-9A-Fa-f]+|[0-9]+(?:\\.[0-9]+)?)\\b)'
-    r'|(?P<identifier>[^\\W\\d]\\w*)',
+    r'(?P<comment>//[^\n]*|/\*[\s\S]*?\*/)'
+    r'|(?P<string>"(?:\\.|[^"\\])*")'
+    r'|(?P<number>\b(?:0x[0-9A-Fa-f]+|[0-9]+(?:\.[0-9]+)?)\b)'
+    r'|(?P<identifier>[^\W\d]\w*)',
     re.UNICODE,
 )
 
