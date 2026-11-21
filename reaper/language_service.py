@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from difflib import SequenceMatcher
 from pathlib import Path
 import re, threading
-from urllib.parse import unquote, urlparse
 from .errors import ReaperError
 from .lexer import KEYWORD_ALIASES
 from .parser import parse
@@ -98,7 +97,7 @@ def _scan(snapshot):
     try:
         parse(snapshot.text, snapshot.uri)
     except (ReaperError, ValueError) as error:
-        match = re.search(r":(\\d+):(\\d+):\\s*(.*)$", str(error))
+        match = re.search(r":(\\d+):(\\d+):\s*(.*)$", str(error))
         if match:
             row, column, message = int(match.group(1)) - 1, int(match.group(2)) - 1, match.group(3)
         else:
