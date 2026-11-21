@@ -148,6 +148,7 @@ def _validate_pack(pack: Any) -> tuple[dict[str, float], dict[str, Any]]:
     rms_values: list[float] = []
     crest_values: list[float] = []
     seen_variations: set[int] = set()
+    variation_counts = {number: 0 for number in range(1, variations + 1)}
     files_per_variation = 8 if target == "One-Shot Kit" else 1
     expected_count = variations * files_per_variation
     if len(files) != expected_count:
@@ -172,8 +173,13 @@ def _validate_pack(pack: Any) -> tuple[dict[str, float], dict[str, Any]]:
         crest_values.append(_real(item["crest_db"], f"{label}.files[{index}].crest_db", 0.0, 100.0))
         variation = _integer(item["variation"], f"{label}.files[{index}].variation", 1, variations)
         seen_variations.add(variation)
+        variation_counts[variation] += 1
     if seen_variations != set(range(1, variations + 1)):
         raise ValueError(f"{label}.files must contain every declared variation")
+    if any(count != files_per_variation for count in variation_counts.values()):
+        raise ValueError(
+            f"{label}.files must contain exactly {files_per_variation} file(s) per variation"
+        )
 
     mean = lambda values: math.fsum(values) / len(values)
     metrics = {
@@ -270,6 +276,8 @@ def compare_ventusample_packs(
         "same_key_and_scale": (
             left_meta["key"] == right_meta["key"] and left_meta["scale"] == right_meta["scale"]
         ),
+        "same_sampler": left_meta["sampler"] == right_meta["sampler"],
+        "same_timbre": left_meta["timbre"] == right_meta["timbre"],
         "same_seed": left_meta["seed"] == right_meta["seed"],
         "dimensions": dimensions,
         "dimension_count": len(dimensions),
