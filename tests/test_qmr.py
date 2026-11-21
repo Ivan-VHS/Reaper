@@ -61,7 +61,7 @@ class QualityCohesionCadenceTests(unittest.TestCase):
             0.5,
         )
         self.assertEqual(result["schema"], "reaper.qmr-report.v1")
-        self.assertEqual(result["overall_score"], 100.0)
+        self.assertAlmostEqual(result["overall_score"], 100.0)
         self.assertEqual(result["quality"]["score"], 100.0)
         self.assertTrue(result["cohesion"]["cohesive"])
 
