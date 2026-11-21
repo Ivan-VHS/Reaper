@@ -1,0 +1,163 @@
+{
+  "schema": "anatidae.quality-repeatability-native.v1",
+  "project": {
+    "id": "reaper",
+    "name": "Reaper",
+    "runtime": "C11 front end + Python 3.10+ runtime",
+    "native_surfaces": [
+      "C11 lexer/parser/IR and optimizer",
+      "Python interpreter and CLI",
+      "native FFI, editor and embedded contracts"
+    ]
+  },
+  "pillars": {
+    "quality": {
+      "intent": "Language correctness, diagnostics, state isolation and regression evidence.",
+      "criteria": [
+        {
+          "id": "lexer-diagnostics",
+          "status": "implemented",
+          "requirement": "Lexical errors identify invalid input and preserve actionable source context.",
+          "verification": "Language tests cover tokenization and lexical failure behavior.",
+          "evidence": {
+            "implementation": [
+              "reaper/lexer.py"
+            ],
+            "verification": [
+              "tests/test_language.py",
+              "tests/test_lexer.c"
+            ]
+          }
+        },
+        {
+          "id": "parser-contract",
+          "status": "implemented",
+          "requirement": "Parser failures remain explicit and valid syntax produces a stable program structure.",
+          "verification": "Parser and language tests exercise valid and invalid programs.",
+          "evidence": {
+            "implementation": [
+              "reaper/parser.py"
+            ],
+            "verification": [
+              "tests/test_language.py",
+              "tests/test_parser.c"
+            ]
+          }
+        },
+        {
+          "id": "runtime-governance",
+          "status": "implemented",
+          "requirement": "Runtime governance and execution boundaries remain explicit and testable.",
+          "verification": "Governance tests cover the runtime policy boundary.",
+          "evidence": {
+            "implementation": [
+              "reaper/governance.py"
+            ],
+            "verification": [
+              "tests/test_governance.py"
+            ]
+          }
+        }
+      ]
+    },
+    "multiplicity": {
+      "intent": "Repeated compilations and executions are predictable, replayable and isolated.",
+      "criteria": [
+        {
+          "id": "optimizer-repeatability",
+          "status": "implemented",
+          "requirement": "Optimizer passes preserve semantic behavior and stable output for equivalent input.",
+          "verification": "Native optimizer tests protect the transformation boundary.",
+          "evidence": {
+            "implementation": [
+              "src/optimizer.c"
+            ],
+            "verification": [
+              "tests/test_optimizer.c"
+            ]
+          }
+        },
+        {
+          "id": "ir-stage-consistency",
+          "status": "implemented",
+          "requirement": "Intermediate representation remains consistent across repeated front-end and lowering stages.",
+          "verification": "Language and IR tests guard stage-level invariants.",
+          "evidence": {
+            "implementation": [
+              "reaper/ir.py",
+              "reaper/lower.py"
+            ],
+            "verification": [
+              "tests/test_language.py",
+              "tests/test_ir.c"
+            ]
+          }
+        },
+        {
+          "id": "federation-replay",
+          "status": "planned",
+          "requirement": "Federated or bulk operations define idempotent replay, bounded inputs and per-item failure reporting.",
+          "verification": "The federation module and its tests form the extension point; explicit replay guarantees remain a release criterion.",
+          "evidence": {
+            "implementation": [
+              "reaper/federation.py"
+            ],
+            "verification": [
+              "tests/test_federation.py"
+            ]
+          }
+        }
+      ]
+    },
+    "native": {
+      "intent": "The C11 front end, Python runtime and FFI remain direct, aligned and independently verifiable.",
+      "criteria": [
+        {
+          "id": "native-c-front-end",
+          "status": "implemented",
+          "requirement": "The C11 lexer and parser remain independently buildable and tested.",
+          "verification": "Native C lexer tests exercise the front-end boundary.",
+          "evidence": {
+            "implementation": [
+              "src/lexer.c",
+              "src/parser.c"
+            ],
+            "verification": [
+              "tests/test_lexer.c",
+              "tests/test_parser.c"
+            ]
+          }
+        },
+        {
+          "id": "python-runtime-api",
+          "status": "implemented",
+          "requirement": "The Python runtime preserves the primary package API and documented CLI behavior.",
+          "verification": "Runtime tests cover extended execution paths.",
+          "evidence": {
+            "implementation": [
+              "reaper/runtime.py",
+              "reaper/cli.py"
+            ],
+            "verification": [
+              "tests/test_extended_runtime.py"
+            ]
+          }
+        },
+        {
+          "id": "native-ffi-ownership",
+          "status": "implemented",
+          "requirement": "Embedded/native interoperability uses an explicit FFI boundary and ownership model.",
+          "verification": "Embedded FFI tests cover boundary behavior.",
+          "evidence": {
+            "implementation": [
+              "reaper/ffi.py"
+            ],
+            "verification": [
+              "tests/test_embedded_ffi.py"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}\n
