@@ -19,6 +19,10 @@ class MotionTests(unittest.TestCase):
         values = [ease_out(i / 20) for i in range(21)]
         self.assertEqual(values, sorted(values))
 
+    def test_shared_paddle_and_water_motion_tokens_are_stable(self):
+        self.assertEqual(PADDLE_EASING, "cubic-bezier(0.22, 1.18, 0.36, 1)")
+        self.assertEqual(WATER_EASING, "cubic-bezier(0.37, 0, 0.63, 1)")
+
     def test_duration_tokens_follow_motion_budget(self):
         with patch("reaper.ui_motion.reduced_motion_enabled", return_value=False):
             self.assertEqual(DURATIONS_MS["instant"], 0)
