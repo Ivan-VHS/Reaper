@@ -26,7 +26,7 @@ class MotionTests(unittest.TestCase):
             self.assertLessEqual(duration_for("emphasis", MotionPreferences(eco_visuals=True)), 80)
 
     def test_expressive_mode_scales_but_bounds_motion(self):
-        with patch("ui_motion.reduced_motion_enabled", return_value=False):
+        with patch("reaper.ui_motion.reduced_motion_enabled", return_value=False):
             normal = duration_for("spatial", MotionPreferences())
             expressive = duration_for("spatial", MotionPreferences(expressive_motion=True))
             reduced = duration_for("spatial", MotionPreferences(True, False, False, True))
