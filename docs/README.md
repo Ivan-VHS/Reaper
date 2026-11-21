@@ -26,6 +26,7 @@
 | [ATOMIC_QUANTUM_133.md](ATOMIC_QUANTUM_133.md) | 133 stable operation IDs, eight tested classical simulation kernels and hardware boundary |
 | [../LANGUAGE.md](../LANGUAGE.md) | syntax quick reference |
 | [../editors/vscode/README.md](../editors/vscode/README.md) | editor grammar and external protocol-service notes |
+| [SECURITY_ASSURANCE_V2.md](SECURITY_ASSURANCE_V2.md) | federated source audit, parser fuzz-smoke, privacy regressions, dependency review and shared scoring |
 
 Only tested behavior is labelled implemented. Registry counts are catalogued items, not feature-completion claims. Python remains the current compatibility reference; C17 parity requires separate conformance evidence.
 
