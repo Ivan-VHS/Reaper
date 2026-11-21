@@ -150,3 +150,7 @@ emit "result = " ++ text(result)
 An illustrative 500 UAH budget model with a versioned JSON contract and an offline simulator. This is a documentation example, not a feature of the host runtime.
 
 [Multilingual guide](docs/RESOURCE_ALLOCATION_500_UAH.md) · [Interactive simulator](docs/resource-allocation-500-uah.html) · [JSON example](examples/resource-allocation-500-uah.json) · [JSON Schema](schemas/resource-allocation.v1.schema.json)
+
+## Elbrus E2K
+
+The Python reference runtime, C17 native track, LCC cross-build and platform boundaries are covered in the [Elbrus E2K guide](docs/ELBRUS_E2K.md).
