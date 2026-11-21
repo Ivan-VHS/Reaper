@@ -19,10 +19,13 @@ static char *read_file(const char *path) {
 static void usage(FILE *f) {
     fprintf(f,"Reaper %s — native C17 development runtime\n"
       "Usage: reaper-c [--version] [--evolution-status] [--tokens|--ast-json] <source.rpr>\n"
+      "       reaper-c [--capabilities|--capability MODULE]\n"
       "  --version           Show native runtime version\n"
       "  --evolution-status  Show native evolution gates and safety boundary\n"
       "  --tokens            Print lexical tokens\n"
-      "  --ast-json          Parse one expression and print deterministic AST JSON\n",REAPER_VERSION);
+      "  --ast-json          Parse one expression and print deterministic AST JSON\n"
+      "  --capabilities      List the native capability registry\n"
+      "  --capability NAME   Inspect one native capability module\n",REAPER_VERSION);
 }
 int main(int argc,char **argv) {
     int dump=0,ast_json=0,catalog_dump=0,capability_dump=0; const char *catalog_lookup=NULL; const char *capability_lookup=NULL; const char *path=NULL;
