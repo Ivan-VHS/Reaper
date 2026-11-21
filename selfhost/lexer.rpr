@@ -33,7 +33,13 @@ craft keyword_kind(word) {
                                                                 when word == "and" { yield "AND" } otherwise {
                                                                     when word == "or" { yield "OR" } otherwise {
                                                                         when word == "not" { yield "NOT" } otherwise {
-                                                                            yield "IDENT"
+                                                                            when word == "import" { yield "IMPORT" } otherwise {
+                                                                                when word == "export" { yield "EXPORT" } otherwise {
+                                                                                    when word == "as" { yield "AS" } otherwise {
+                                                                                        yield "IDENT"
+                                                                                    }
+                                                                                }
+                                                                            }
                                                                         }
                                                                     }
                                                                 }
@@ -258,5 +264,13 @@ assert(pipeline == [
     ["IDENT", "transform", 1, 15],
     ["EOF", "", 1, 24]
 ], "pipeline operator tokenization mismatch")
+
+# Import/export keywords are part of the reference grammar and must tokenize natively.
+make module_tokens := tokenize("import \"module.rpr\" as mod\nexport make value := true")
+assert(module_tokens[0][0] == "IMPORT", "import keyword classification mismatch")
+assert(module_tokens[2][0] == "AS", "as keyword classification mismatch")
+assert(module_tokens[5][0] == "EXPORT", "export keyword classification mismatch")
+assert(module_tokens[6][0] == "MAKE", "export declaration keyword mismatch")
+assert(module_tokens[9][0] == "TRUE", "boolean keyword classification mismatch")
 
 emit "SELFHOST_LEXER_OK"
