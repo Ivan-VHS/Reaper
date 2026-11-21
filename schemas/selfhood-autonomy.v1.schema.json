@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Reaper selfhood and autonomy vocabulary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "description",
+    "runtime_contract",
+    "items"
+  ],
+  "properties": {
+    "schema": {
+      "const": "reaper.selfhood-autonomy.v1"
+    },
+    "version": {
+      "const": 1
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "runtime_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "native_engine",
+        "python_role",
+        "source_mutation",
+        "exact_lookup"
+      ],
+      "properties": {
+        "native_engine": {
+          "const": "C17"
+        },
+        "python_role": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_mutation": {
+          "const": false
+        },
+        "exact_lookup": {
+          "const": true
+        }
+      }
+    },
+    "items": {
+      "type": "array",
+      "minItems": 20,
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ordinal",
+          "identity",
+          "transformation",
+          "autonomy"
+        ],
+        "properties": {
+          "ordinal": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20
+          },
+          "identity": {
+            "type": "string",
+            "minLength": 1
+          },
+          "transformation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "autonomy": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}
