@@ -50,6 +50,9 @@ static void function_signatures_validate_arity(void) {
     assert(reaper_capability_validate_arity(
         module, "fold_series", 2U, NULL) == REAPER_CAPABILITY_ARITY_MISMATCH);
     assert(reaper_capability_validate_arity(
+        reaper_capability_module_find("sretuo"), "flip_axis", 1U, NULL) ==
+        REAPER_CAPABILITY_OK);
+    assert(reaper_capability_validate_arity(
         module, "not_registered", 1U, NULL) == REAPER_CAPABILITY_NOT_FOUND);
     assert(reaper_capability_validate_arity(
         NULL, "fold_series", 3U, NULL) == REAPER_CAPABILITY_INVALID_ARGUMENT);
@@ -151,6 +154,8 @@ static void drift_and_retry_are_saturating(void) {
         4U, 10U, 100U, &delay) == REAPER_CAPABILITY_OK && delay == 100U);
     assert(reaper_capability_retry_delay_ms(
         1U, 101U, 100U, &delay) == REAPER_CAPABILITY_INVALID_ARGUMENT);
+    assert(reaper_capability_retry_delay_ms(
+        UINT32_MAX, 0U, UINT32_MAX, &delay) == REAPER_CAPABILITY_OK && delay == 0U);
 }
 
 int main(void) {
