@@ -36,6 +36,12 @@ Reaper is an expression-oriented language: `::` passes a value into the next ope
 
 Reaper Studio persists **Reduce Motion** and **Eco / Low-CPU Visuals** preferences separately from theme settings. Enabled preferences cap retained transitions at 80 ms and suppress spatial or nonessential visual effects. **Sync to Transport / BPM** remains disabled because Studio has no audio transport or live tempo source. See the [UI motion contract](docs/UI_MOTION.md) and [Anatidae motion constitution](docs/ANATIDAE_MOTION_CONSTITUTION.md).
 
+## CODEX-66 IDE workspace
+
+Reaper Studio includes a native **CODEX-66** capability browser with six groups of eleven entries, searchable by feature ID, name, category and maturity. Use **Ctrl+Space** for local REAPER completion, **F12** for a current-document definition, **Find references** for lexical occurrences and **Ctrl+Shift+R** for current-document rename. **Ctrl+K** opens the command palette.
+
+The catalogue labels each item as implemented, partial, planned or unsupported. Local completion is based on the canonical language service; it is not cloud AI. Rename and references are document-local, and the interpreter is not an OS sandbox. See [CODEX-66 implementation and boundaries](docs/CODEX_66_SHOWCASE.md).
+
 ## REAPER language and debug services
 
 The editor/tooling layer exposes stdio protocol services:

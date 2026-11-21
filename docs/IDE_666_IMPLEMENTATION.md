@@ -41,6 +41,7 @@ The branch adds or strengthens the following usable foundations:
 
 | Capability | State | Evidence / boundary |
 |---|---|---|
+| CODEX-66 capability browser | implemented | `reaper/codex66.py`, `reaper/codex66_ui.py`; 66 searchable items, explicit maturity states, JSON export and native editor command links |
 | Native desktop entry point | implemented | reaper.desktop:main, already exposed as reaper-studio |
 | Open, save, save as, new file | implemented | UTF-8 source files; unsaved-change confirmation |
 | Project explorer | implemented | bounded depth and entry count; hidden/build folders excluded; symlinks not followed |
@@ -59,6 +60,8 @@ The branch adds or strengthens the following usable foundations:
 | Integrated Git workflow | deferred | must use existing safe patch pipeline and explicit review |
 | Plugin SDK and AI actions | deferred | requires permission model, sandbox and auditable proposals |
 | DAP interoperability | implemented baseline | RuntimeDebugger bridge: launch, line breakpoints, statement stepping, stack and locals; no eval/step-out |
+
+CODEX-66 is a metadata catalogue with implemented, partial, planned and unsupported states; it does not turn roadmap entries into features. The editor now exposes local LanguageService completion, current-document definition lookup, lexical references and current-document rename. It does not provide cross-file type inference, AST-safe refactoring or cloud AI.
 
 The existing editor is a single-document workbench. Multi-tab sessions, cross-file semantic intelligence, integrated Git review and plugin execution are not claimed as complete.
 

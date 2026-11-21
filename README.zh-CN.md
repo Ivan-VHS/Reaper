@@ -34,6 +34,12 @@ Reaper 是表达式导向的数据流语言；操作符 `::` 将值传递给下�
 
 Reaper Studio 将 **Reduce Motion** 与 **Eco / Low-CPU Visuals** 偏好设置独立于主题设置保存。启用后，保留的过渡不超过 80 ms，并抑制空间移动和非必要视觉效果。由于 Studio 目前没有音频传输或节拍源，**Sync to Transport / BPM** 保持禁用。详见 [界面动效规范](docs/UI_MOTION.md)。
 
+## CODEX-66 IDE 工作台
+
+Reaper Studio 新增原生 **CODEX-66** 功能目录，包含六组、每组十一项，可按 ID、名称、类别和成熟度搜索。按 **Ctrl+Space** 打开本地 REAPER 补全，按 **F12** 跳转到当前文档中的定义，使用 **Find references** 查找词法引用，按 **Ctrl+Shift+R** 在当前文档中重命名。**Ctrl+K** 打开命令面板。
+
+目录会明确区分已实现、部分实现、计划中和不支持的项目。本地补全复用语言服务，并非云端 AI；引用查找和重命名仅作用于当前文档；解释器也不是操作系统级沙箱。详见 [CODEX-66 实现与能力边界](docs/CODEX_66_SHOWCASE.md)。
+
 ## REAPER 语言与调试服务
 
 编辑器工具层提供 stdio 协议服务：
