@@ -39,4 +39,5 @@ jobs:
           path: |
             dist/*.whl
             dist/kora-reascripts.zip
+            dist/clife-reascripts.zip
           if-no-files-found: error
