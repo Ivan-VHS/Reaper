@@ -106,3 +106,7 @@ The doctrine guides engineering decisions; it does not turn roadmap items into i
 ## Anatidae design layer
 
 The shared [Anatidae naming canon](federation/ANATIDAE_NAMING_CANON.md) governs friendly UI vocabulary across the four-project family. The [Reaper Studio desktop design contract](docs/ANATIDAE_DESKTOP_DESIGN_SYSTEM.md) defines its use without changing language syntax, commands or diagnostics.
+
+## Correction and defect coverage
+
+The **20 × 3 correction / coverage / defect matrix** preserves all supplied terms and maps them to project-specific targets, acceptance criteria and repository-local evidence. Run `python tools/quality_remediation.py` or add `--format json`; the focused regression suite runs in CI. Evidence-path presence is a traceability check, not proof that behavior is correct or that all defects are gone. See [the remediation standard](docs/QUALITY_REMEDIATION_STANDARD.md).
