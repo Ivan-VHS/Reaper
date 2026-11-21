@@ -23,7 +23,7 @@ Reaper — мова виразів з явним потоком даних: оп
 
 Запуск: `python -m reaper examples/flow.rpr` · Перевірка: `python -m reaper --check examples/flow.rpr` · VM: `python -m reaper --engine vm examples/flow.rpr` · REPL: `python -m reaper --repl` · Тести: `python -m unittest discover -s tests -v`.
 
-NOO TAH потребує встановленого офіційного Node.js LTS: `reaper-noo-tah version`, `reaper-noo-tah run app.mjs`, `reaper-noo-tah check app.js`, `reaper-noo-tah npm run build`. Див. [архітектуру NOO TAH](docs/NOO_TAH.md).
+NOO TAH інтегрує офіційний кросплатформний Node.js: V8, libuv, системні API, ESM/CommonJS, streams, workers, child processes, npm/npx, N-API та Inspector. У Reaper Studio додано запуск, перевірку й зупинку JavaScript, а також діагностику runtime. Команди: `reaper-noo-tah doctor`, `reaper-noo-tah run app.mjs`, `reaper-noo-tah npm run build`. Див. [архітектуру NOO TAH](docs/NOO_TAH.md).
 
 Studio: `python reaper_desktop.py` (Windows). Native: CMake configure → build → CTest.
 
