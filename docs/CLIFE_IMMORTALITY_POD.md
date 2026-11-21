@@ -8,9 +8,9 @@ size, project binding and checksum verification; four recovery branches; bounded
 transition interpolation.
 
 Commands:
-python -m reaper.clife capture project.rpr .clife/project.json --project-id my-project --generation 1
-python -m reaper.clife verify .clife/project.json
-python -m reaper.clife restore .clife/project.json recovered/project.rpr --project-id my-project
+python -m reaper clife capture project.rpr .clife/project.json --project-id my-project --generation 1
+python -m reaper clife verify .clife/project.json
+python -m reaper clife restore .clife/project.json recovered/project.rpr --project-id my-project
 python -m unittest tests.test_clife -v
 
 Restore exports bytes to a selected path; it does not execute recovered Reaper source.
