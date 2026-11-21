@@ -11,7 +11,6 @@ import { Readable, Transform, Writable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { Worker } from "node:worker_threads";
 import { spawnSync } from "node:child_process";
-import { setImmediate as immediate } from "node:timers/promises";
 
 test("Node runtime exposes versioned V8, libuv and N-API metadata", () => {
   assert.match(process.version, /^v\d+\./);
