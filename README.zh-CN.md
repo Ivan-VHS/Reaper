@@ -1,5 +1,7 @@
 # Reaper — 流式组合编程语言
 
+[English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
+
 [CI](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml) · [Windows Studio 构建](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml) · Python 3.10+ 参考运行时 · C17 原生开发线 · Windows Studio · Apache-2.0
 **开发者：** [Ivan-VHS](https://github.com/Ivan-VHS)
 
