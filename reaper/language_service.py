@@ -97,12 +97,14 @@ def _scan(snapshot):
     try:
         parse(snapshot.text, snapshot.uri)
     except (ReaperError, ValueError) as error:
-        match = re.search(r":(\\d+):(\\d+):\s*(.*)$", str(error))
-        if match:
-            row, column, message = int(match.group(1)) - 1, int(match.group(2)) - 1, match.group(3)
-        else:
+        parts = str(error).rsplit(":", 3)
+        try:
+            row, column, message = int(parts[-3]) - 1, int(parts[-2]) - 1, parts[-1].strip()
+        except (ValueError, IndexError):
             row, column, message = 0, 0, str(error)
-        diagnostics.append(Diagnostic(message, "error", Span(max(0,row), max(0,column), max(0,column)+1), "parser-error"))
+        diagnostics.append(Diagnostic(message, "error",
+                                      Span(max(0, row), max(0, column), max(0, column) + 1),
+                                      "parser-error"))
     return Analysis(snapshot, tuple(symbols), tuple(identifiers), tuple(diagnostics))
 
 class LanguageService:
