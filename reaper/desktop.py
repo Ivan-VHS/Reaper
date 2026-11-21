@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import queue
 import re
+import subprocess
 import threading
 from pathlib import Path
 import tkinter as tk
@@ -16,6 +17,7 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 from tkinter.scrolledtext import ScrolledText
 from typing import Any
 
+from reaper.noo_tah import Runtime as NooTahRuntime
 from reaper.embedded import (
     EmbeddedError,
     build_project as embedded_build_project,
@@ -28,10 +30,10 @@ from reaper.runtime import Interpreter
 from reaper.debugger import DebuggerStopped, RuntimeDebugger
 from reaper.plugins import PluginError, PluginManager
 from reaper.ide_support import SOURCE_EXTENSIONS, highlight_spans, iter_project_entries
-from reaper.ui_motion import MotionController
+from reaper.ui_motion import MotionController, MotionPreferences
 from reaper.ui_theme import apply_theme, apply_ui_theme, set_dpi_awareness, toggle_theme
 
-APP_TITLE = "Reaper Studio"
+APP_TITLE = "Reaper Studio · Ivan-VHS"
 STARTER = """craft double(value) {
     yield value * 2
 }
@@ -58,6 +60,7 @@ class ReaperStudio(tk.Tk):
         self._debug_signal = tk.BooleanVar(value=False)
         self._run_queue: queue.Queue[tuple[str, object]] = queue.Queue()
         self._running = False
+        self._node_process: subprocess.Popen[str] | None = None
         self._closing = False
         self._dirty = False
         self._highlight_job: str | None = None
@@ -67,7 +70,7 @@ class ReaperStudio(tk.Tk):
         self._build_toolbar()
         self._build_workspace()
         self._build_statusbar()
-        self._motion = MotionController(self)
+        self._motion = MotionController(self, app_key="reaper-studio")
         self._motion.fade_in()
         self._bind_shortcuts()
         self._insert_starter()
@@ -115,6 +118,14 @@ class ReaperStudio(tk.Tk):
         run_menu.add_command(label="Остановить отладку", command=self.stop_debug)
         run_menu.add_command(label="Очистить вывод", command=self.clear_output)
         menu.add_cascade(label="Выполнение", menu=run_menu)
+        node_menu = tk.Menu(menu, tearoff=False)
+        node_menu.add_command(label="Run JavaScript (NOO TAH)", command=self.run_node_source)
+        node_menu.add_command(label="Check JavaScript", command=self.check_node_source)
+        node_menu.add_command(label="Debug JavaScript (Node Inspector)", command=lambda: self.run_node_source(inspect=True))
+        node_menu.add_command(label="Run npm command…", command=self.run_noo_tah_npm)
+        node_menu.add_command(label="Node.js Runtime Diagnostics", command=self.noo_tah_doctor)
+        node_menu.add_command(label="Stop Node.js Process", command=self.stop_node_source)
+        menu.add_cascade(label="NOO TAH / Node.js", menu=node_menu)
 
         embedded_menu = tk.Menu(menu, tearoff=False)
         embedded_menu.add_command(label="Создать проект встроенной C…", command=self.embedded_new_project)
@@ -128,8 +139,37 @@ class ReaperStudio(tk.Tk):
         view_menu = tk.Menu(menu, tearoff=False)
         for mode, label in (("system", "Системная"), ("light", "Светлая"), ("dark", "Тёмная")):
             view_menu.add_radiobutton(label=label, variable=self._theme_mode, value=mode, command=self.apply_visual_theme)
+        view_menu.add_separator()
+        view_menu.add_command(label="Настройки движения…", command=self.show_motion_settings)
         menu.add_cascade(label="Вид", menu=view_menu)
         self.configure(menu=menu)
+
+    def show_motion_settings(self) -> None:
+        """Configure persisted motion and low-CPU visual preferences."""
+        window = tk.Toplevel(self)
+        window.title("Настройки движения интерфейса")
+        window.resizable(False, False)
+        window.transient(self)
+        current = self._motion.preferences
+        reduce_var = tk.BooleanVar(value=current.reduce_motion)
+        eco_var = tk.BooleanVar(value=current.eco_visuals)
+        frame = ttk.Frame(window, padding=16)
+        frame.pack(fill="both", expand=True)
+        ttk.Label(frame, text="Кинетика интерфейса", style="PaneTitle.TLabel").pack(anchor="w", pady=(0, 8))
+        ttk.Checkbutton(frame, text="Reduce Motion — убрать пространственное движение", variable=reduce_var).pack(anchor="w", pady=4)
+        ttk.Checkbutton(frame, text="Eco / Low-CPU Visuals — отключить необязательные эффекты", variable=eco_var).pack(anchor="w", pady=4)
+        ttk.Checkbutton(frame, text="Sync to Transport / BPM", state="disabled").pack(anchor="w", pady=4)
+        ttk.Label(frame, text="REAPER Studio сейчас не содержит аудиотранспорта или мастер-BPM. Синхронизация станет доступна после подключения транспортного API.", wraplength=460).pack(anchor="w", pady=(4, 12))
+        buttons = ttk.Frame(frame)
+        buttons.pack(fill="x")
+        def apply() -> None:
+            self._motion.update_preferences(MotionPreferences(reduce_var.get(), eco_var.get(), False))
+            window.destroy()
+        ttk.Button(buttons, text="Сохранить", style="Primary.TButton", command=apply).pack(side="right")
+        ttk.Button(buttons, text="Отмена", command=window.destroy).pack(side="right", padx=(0, 8))
+        window.grab_set()
+        window.update_idletasks()
+        window.geometry(f"+{self.winfo_rootx() + 120}+{self.winfo_rooty() + 100}")
 
     def show_plugins(self) -> None:
         """Manage and run built-in plugins provided by the REAPER host."""
@@ -230,6 +270,10 @@ class ReaperStudio(tk.Tk):
         ttk.Separator(bar, orient="vertical").pack(side="left", fill="y", padx=7)
         ttk.Button(bar, text="Проверить", command=self.check_source, style="Toolbar.TButton").pack(side="left", padx=3)
         ttk.Button(bar, text="▶ Запустить", command=self.run_source, style="Toolbar.TButton").pack(side="left", padx=3)
+        ttk.Button(bar, text="JS Run", command=self.run_node_source, style="Toolbar.TButton").pack(side="left", padx=3)
+        ttk.Button(bar, text="JS Check", command=self.check_node_source, style="Toolbar.TButton").pack(side="left", padx=3)
+        ttk.Button(bar, text="JS Debug", command=lambda: self.run_node_source(inspect=True), style="Toolbar.TButton").pack(side="left", padx=3)
+        ttk.Button(bar, text="JS Stop", command=self.stop_node_source, style="Toolbar.TButton").pack(side="left", padx=3)
         ttk.Button(bar, text="Отладка", command=self.debug_source, style="Toolbar.TButton").pack(side="left", padx=3)
         ttk.Button(bar, text="Точка останова", command=self.toggle_breakpoint, style="Toolbar.TButton").pack(side="left", padx=3)
         ttk.Button(bar, text="Тёмная тема", command=self.toggle_ui_theme, style="Toolbar.TButton").pack(side="left", padx=3)
@@ -386,7 +430,7 @@ class ReaperStudio(tk.Tk):
         if not self._confirm_discard():
             return
         filename = filedialog.askopenfilename(
-            parent=self, filetypes=[("Reaper / MOST", "*.rpr *.most"), ("Все файлы", "*.*")]
+            parent=self, filetypes=[("Reaper / JavaScript", "*.rpr *.most *.js *.mjs *.cjs"), ("Reaper / MOST", "*.rpr *.most"), ("JavaScript", "*.js *.mjs *.cjs"), ("Все файлы", "*.*")]
         )
         if filename:
             self._load_file(Path(filename))
@@ -417,7 +461,7 @@ class ReaperStudio(tk.Tk):
         if not filename:
             return False
         path = Path(filename)
-        if path.suffix.lower() not in SOURCE_EXTENSIONS:
+        if path.suffix.lower() not in SOURCE_EXTENSIONS and path.suffix.lower() not in {".js", ".mjs", ".cjs"}:
             path = path.with_suffix(".rpr")
         if not self._write_file(path):
             return False
@@ -489,6 +533,9 @@ class ReaperStudio(tk.Tk):
         self.output.configure(state="disabled")
 
     def check_source(self) -> None:
+        if self.current_file and self.current_file.suffix.lower() in {".js", ".mjs", ".cjs"}:
+            self.check_node_source()
+            return
         try:
             parse(self._source(), self._source_name())
         except ReaperError as error:
@@ -499,6 +546,9 @@ class ReaperStudio(tk.Tk):
         self.status.set("Проверка пройдена")
 
     def run_source(self) -> None:
+        if self.current_file and self.current_file.suffix.lower() in {".js", ".mjs", ".cjs"}:
+            self.run_node_source()
+            return
         if self._running:
             self.status.set("Программа уже выполняется")
             return
@@ -531,6 +581,11 @@ class ReaperStudio(tk.Tk):
                 elif kind == "done":
                     self._running = False
                     self.status.set(str(payload))
+                elif kind == "node-error":
+                    self._running = False
+                    self._node_process = None
+                    self._append_output(f"NOO TAH ERROR: {payload}")
+                    self.status.set("Node.js process failed")
                 elif kind == "embedded":
                     self._finish_embedded_build(payload if isinstance(payload, dict) else None, None)
                 elif kind == "embedded-error":
@@ -612,7 +667,146 @@ class ReaperStudio(tk.Tk):
             self.status.set("Выполнение завершено")
 
     def debug_source(self) -> None:
+        if self.current_file and self.current_file.suffix.lower() in {".js", ".mjs", ".cjs"}:
+            self.run_node_source(inspect=True)
+            return
         self._run_with_debugger(first_step=True)
+
+
+    def _node_file(self) -> Path | None:
+        if self.current_file and self.current_file.suffix.lower() in {".js", ".mjs", ".cjs"}:
+            return self.current_file
+        filename = filedialog.askopenfilename(
+            parent=self, filetypes=[("JavaScript", "*.js *.mjs *.cjs"), ("All files", "*.*")]
+        )
+        return Path(filename) if filename else None
+
+    def check_node_source(self) -> None:
+        file = self._node_file()
+        if file is None:
+            return
+        if self._dirty and self.current_file == file and not self.save_file():
+            return
+        try:
+            runtime = NooTahRuntime.discover()
+            result = runtime.command(["--check", str(file)], cwd=file.parent)
+        except (RuntimeError, OSError) as error:
+            self._append_output(f"NOO TAH: {error}")
+            self.status.set("Node.js runtime unavailable")
+            return
+        if result.stdout:
+            self._append_output(result.stdout.rstrip())
+        if result.stderr:
+            self._append_output(result.stderr.rstrip())
+        self._append_output("NOO TAH CHECK: passed" if result.returncode == 0 else f"NOO TAH CHECK: failed ({result.returncode})")
+        self.status.set("JavaScript syntax check passed" if result.returncode == 0 else "JavaScript syntax check failed")
+
+    def run_node_source(self, inspect: bool = False) -> None:
+        file = self._node_file()
+        if file is None:
+            return
+        if self._running:
+            self.status.set("Другая программа уже выполняется")
+            return
+        if self._dirty and self.current_file == file and not self.save_file():
+            return
+        try:
+            runtime = NooTahRuntime.discover()
+            command = [runtime.node]
+            if inspect:
+                command.append("--inspect-brk=127.0.0.1:9229")
+            command.append(str(file))
+            process = subprocess.Popen(
+                command, cwd=str(file.parent),
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                text=True, encoding="utf-8", errors="replace", bufsize=1,
+            )
+        except (RuntimeError, OSError) as error:
+            self._append_output(f"NOO TAH: {error}")
+            self.status.set("Node.js process could not start")
+            return
+        self._node_process = process
+        self._running = True
+        self.clear_output()
+        self.status.set(f"NOO TAH running: {file.name}")
+        self._append_output(f"NOO TAH START: {file}")
+        if inspect:
+            self._append_output("Node Inspector: open chrome://inspect and attach to 127.0.0.1:9229")
+        def pump() -> None:
+            try:
+                assert process.stdout is not None
+                for line in process.stdout:
+                    self._run_queue.put(("line", line.rstrip("\r\n")))
+                code = process.wait()
+                self._run_queue.put(("done", f"Node.js process exited ({code})"))
+            except Exception as error:
+                self._run_queue.put(("node-error", f"{type(error).__name__}: {error}"))
+        threading.Thread(target=pump, name="noo-tah-process", daemon=True).start()
+
+
+    def run_noo_tah_npm(self) -> None:
+        command_text = simpledialog.askstring(
+            "NOO TAH / npm", "npm arguments (example: run build):",
+            initialvalue="run build", parent=self,
+        )
+        if not command_text:
+            return
+        if self._running:
+            self.status.set("Другая программа уже выполняется")
+            return
+        import shlex
+        try:
+            runtime = NooTahRuntime.discover()
+            if not runtime.npm_cli:
+                raise RuntimeError("npm CLI was not found in this Node.js installation")
+            cwd = self.project_root or (self.current_file.parent if self.current_file else Path.cwd())
+            process = subprocess.Popen(
+                [runtime.node, runtime.npm_cli, *shlex.split(command_text)],
+                cwd=str(cwd), stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                text=True, encoding="utf-8", errors="replace", bufsize=1,
+            )
+        except (RuntimeError, OSError, ValueError) as error:
+            self._append_output(f"NOO TAH npm: {error}")
+            self.status.set("npm command could not start")
+            return
+        self._node_process = process
+        self._running = True
+        self.status.set(f"npm: {command_text}")
+        self._append_output(f"NOO TAH npm START: {command_text} ({cwd})")
+        def pump() -> None:
+            try:
+                assert process.stdout is not None
+                for line in process.stdout:
+                    self._run_queue.put(("line", line.rstrip()))
+                code = process.wait()
+                self._run_queue.put(("done", f"npm exited ({code})"))
+            except Exception as error:
+                self._run_queue.put(("node-error", f"{type(error).__name__}: {error}"))
+        threading.Thread(target=pump, name="noo-tah-npm", daemon=True).start()
+
+    def stop_node_source(self) -> None:
+        process = self._node_process
+        if process is None or process.poll() is not None:
+            self.status.set("No active NOO TAH process")
+            return
+        process.terminate()
+        self._append_output("NOO TAH: termination requested")
+        self.status.set("Stopping Node.js process")
+
+    def noo_tah_doctor(self) -> None:
+        def worker() -> None:
+            try:
+                report = NooTahRuntime.discover().doctor()
+                import json
+                self._run_queue.put(("line", json.dumps(report, indent=2)))
+                self._run_queue.put(("done", "NOO TAH runtime diagnostics completed"))
+            except Exception as error:
+                self._run_queue.put(("node-error", str(error)))
+        if self._running:
+            self.status.set("Другая программа уже выполняется")
+            return
+        self._running = True
+        threading.Thread(target=worker, name="noo-tah-doctor", daemon=True).start()
 
     def find_text(self) -> None:
         needle = simpledialog.askstring("Найти", "Текст для поиска:", parent=self)
@@ -756,6 +950,8 @@ class ReaperStudio(tk.Tk):
             return
         if self._debug_wait:
             self.stop_debug()
+        if self._node_process and self._node_process.poll() is None:
+            self._node_process.terminate()
         self._closing = True
         self.destroy()
 

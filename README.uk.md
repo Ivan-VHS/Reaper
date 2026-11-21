@@ -1,6 +1,7 @@
 # Reaper — мова програмування з потоковою композицією
 
 Python 3.10+ · C17 native track · Windows Studio · Apache-2.0 · [CI](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml)
+**Розробник:** [Ivan-VHS](https://github.com/Ivan-VHS)
 
 Reaper — мова виразів з явним потоком даних: оператор `::` передає значення наступній операції. Python — поточна еталонна реалізація; C17 — нативний напрям у розробці, ще не повна заміна runtime.
 
@@ -12,6 +13,7 @@ Reaper — мова виразів з явним потоком даних: оп
 | Область | Поточна межа |
 |---|---|
 | Python runtime | lexer, parser, інтерпретатор, CLI, REPL, модулі, closures, quotas, audit |
+| NOO TAH | інтеграція офіційного Node.js: V8/libuv, ESM/CommonJS, системні API, streams, workers, npm/npx, N-API та Inspector; JS run/check/debug/stop у Studio |
 | Reaper Studio | Windows editor: check/run/debug, breakpoints, variables, call stack |
 | Native C17 | lexer, expression parser, owned AST, checked IR, limited lowering |
 | МОСТ | 54 точні аліаси: 21 виконуваний у reference subset, 33 зарезервовані |

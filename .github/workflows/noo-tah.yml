@@ -1,0 +1,46 @@
+name: NOO TAH Node.js compatibility
+
+on:
+  push:
+    branches: [main, "feat/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  node-compatibility:
+    name: Node ${{ matrix.node }} / ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: ["22", "24"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Compile NOO TAH integration
+        run: python -m compileall -q reaper/noo_tah.py reaper/desktop.py tests/test_noo_tah.py
+      - name: Run NOO TAH unit tests
+        run: python -m unittest discover -s tests -p test_noo_tah.py -v
+      - name: Verify runtime versions and ABI
+        run: python -m reaper.noo_tah version
+      - name: Probe Node core, ESM, workers and streams
+        run: python -m reaper.noo_tah doctor
+      - name: Run Node.js runtime conformance suite
+        run: node --test tests/noo_tah/conformance.test.mjs
+      - name: Verify ESM and CommonJS execution through NOO TAH
+        shell: bash
+        run: |
+          printf "console.log('NOO_TAH_ESM_OK')\n" > noo-tah-check.mjs
+          printf "console.log('NOO_TAH_CJS_OK')\n" > noo-tah-check.cjs
+          python -m reaper.noo_tah check noo-tah-check.mjs
+          python -m reaper.noo_tah run noo-tah-check.mjs
+          python -m reaper.noo_tah run noo-tah-check.cjs

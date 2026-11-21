@@ -4,6 +4,7 @@
 |---|---|
 | [IDE_666_IMPLEMENTATION.md](IDE_666_IMPLEMENTATION.md) | Reaper Studio IDE contract, canonical 666-rule numbering and acceptance gates |
 | [REAPER_IDE.md](REAPER_IDE.md) | LSP/DAP protocol architecture and current capability boundaries |
+| [NOO_TAH.md](NOO_TAH.md) | Node.js runtime, V8/libuv integration, npm, Inspector and Studio bridge |
 | [FEATURES.md](FEATURES.md) | shipped/reference/specification matrix |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | runtime and compiler stages |
 | [INTERNAL_PRODUCTS.md](INTERNAL_PRODUCTS.md) | integrated 18-product architecture and service contracts |
