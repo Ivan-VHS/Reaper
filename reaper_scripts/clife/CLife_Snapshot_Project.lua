@@ -24,7 +24,7 @@ end
 local function ensure_snapshot_dir(directory, separator)
   local folder = directory .. separator .. ".clife" .. separator .. "snapshots"
   local ok = reaper.RecursiveCreateDirectory(folder, 0)
-  if type(ok) ~= "number" or ok < 0 then return nil, "Could not create the CLife snapshot directory: " .. folder end
+  if type(ok) ~= "number" or ok <= 0 then return nil, "Could not create the CLife snapshot directory: " .. folder end
   return folder, nil
 end
 
@@ -152,6 +152,8 @@ if not folder then fail(folder_error); return end
 local stamp = os.date("!%Y%m%dT%H%M%S") .. string.format("%03d", math.floor((os.clock() % 1) * 1000)) .. "Z"
 local snapshot_name = stamp .. "_" .. filename
 local snapshot_path = folder .. separator .. snapshot_name
+local existing = io.open(snapshot_path, "rb")
+if existing then existing:close(); fail("A snapshot with this timestamp already exists; retry the action."); return end
 local temp_path = snapshot_path .. ".tmp"
 local bytes, checksum, copy_error = copy_and_fingerprint(project_file, temp_path)
 if copy_error then fail(copy_error); return end
