@@ -48,6 +48,7 @@ flowchart LR
 | Область | Реализованные функции и границы |
 |---|---|
 | Python runtime | lexer, parser, интерпретатор, CLI, REPL, модули, closures, quotas и audit |
+| Immortality Capsule | контрольные точки JSON с ограниченной историей, SHA-256-проверкой и восстановлением; только Python runtime |
 | Reaper Studio | основа Windows IDE: дерево проекта, редактор, подсветка, номера строк, поиск, check/run и отладчик |
 | LSP | stdio-сервис: инкрементальные UTF-16-документы, диагностика parser/structure, completion, hover, symbols и лексическая навигация; анализ в пределах открытого файла |
 | DAP | stdio debug adapter: запуск, построчные breakpoints, пошаговое выполнение операторов, stack и локальные переменные |
@@ -141,7 +142,7 @@ make result := [1, 2, 3] :: map(double) :: sum()
 emit "result = " ++ text(result)
 ```
 
-[Контракт IDE 666](docs/IDE_666_IMPLEMENTATION.md) · [LSP/DAP](docs/REAPER_IDE.md) · [Node.js](docs/NOO_TAH.md) · [Kora для REAPER](docs/KORA_REAPER.md) · [Плагины](docs/PLUGINS.md) · [Внутренние продукты](docs/INTERNAL_PRODUCTS.md) · [Функции](docs/FEATURES.md) · [Язык](LANGUAGE.md) · [Архитектура](docs/ARCHITECTURE.md) · [Реестр 813](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [Федерация](docs/PROJECT_FEDERATION_MATRIX.md) · [Индекс](docs/README.md)
+[Immortality Capsule](docs/IMMORTALITY_CAPSULE.md) · [Контракт IDE 666](docs/IDE_666_IMPLEMENTATION.md) · [LSP/DAP](docs/REAPER_IDE.md) · [Node.js](docs/NOO_TAH.md) · [Kora для REAPER](docs/KORA_REAPER.md) · [Плагины](docs/PLUGINS.md) · [Внутренние продукты](docs/INTERNAL_PRODUCTS.md) · [Функции](docs/FEATURES.md) · [Язык](LANGUAGE.md) · [Архитектура](docs/ARCHITECTURE.md) · [Реестр 813](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [Федерация](docs/PROJECT_FEDERATION_MATRIX.md) · [Индекс](docs/README.md)
 
 [English](README.md) · [Українська](README.uk.md) · [简体中文](README.zh-CN.md) · [Релизы](https://github.com/Ivan-VHS/Reaper/releases) · [Apache-2.0](LICENSE)
 
