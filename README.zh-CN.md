@@ -115,3 +115,13 @@ emit "result = " ++ text(result)
 [IDE 666 合同](docs/IDE_666_IMPLEMENTATION.md) · [LSP/DAP](docs/REAPER_IDE.md) · [Node.js 集成](docs/NOO_TAH.md) · [Kora for REAPER](docs/KORA_REAPER.md) · [插件宿主](docs/PLUGINS.md) · [内部产品](docs/INTERNAL_PRODUCTS.md) · [功能](docs/FEATURES.md) · [语言](LANGUAGE.md) · [架构](docs/ARCHITECTURE.md) · [813 注册表](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [联邦](docs/PROJECT_FEDERATION_MATRIX.md) · [文档索引](docs/README.md)
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [Releases](https://github.com/Ivan-VHS/Reaper/releases) · [Apache-2.0](LICENSE)
+
+## DUCK CORE // README 与 Motion Suite
+
+交互式演示和 UI 文档采用统一视觉参考，包含三套配色：**Pond Noir**（默认深色画布）、**Golden Reed**（暖色高对比强调色）和 **Arctic Glacier**（冷色青蓝强调色）。应使用画布、表面、边框、文本、强调色和焦点等语义令牌，避免组件随意硬编码互相冲突的颜色。
+
+动效遵循明确层级：有目的的进入和反馈使用克制的 spring 缓动，常规过渡使用平滑缓动；Zen / Hyper 强度预设仅在应用确实提供时启用。视差、漂浮图形和 ripple 波纹属于非必要装饰，不得承载关键信息或阻挡输入。 `reduced-motion` 优先于所有动效模式，并关闭装饰性运动。
+
+**无障碍与响应式：**保持清晰的文本对比度、可见的键盘焦点、适合触控的控件尺寸、明确的 active/disabled 状态，并确保窄屏布局自然折叠。动效不得造成布局跳动或妨碍操作。
+
+本节是 DUCK CORE 视觉参考，**不代表**每个应用都已实现所有主题、动画或控件。实际发布的实现和项目专属规范才是最终依据：[界面动效规范](docs/UI_MOTION.md).
