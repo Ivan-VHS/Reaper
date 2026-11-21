@@ -386,12 +386,14 @@ class ReaperStudio(tk.Tk):
         if self.project_root is None:
             return
         root_id = self.project_tree.insert("", "end", text=self.project_root.name, values=(str(self.project_root),), open=True)
+        self._project_entries_remaining = 2000
         self._add_project_children(root_id, self.project_root, 0)
 
     def _add_project_children(self, parent: str, folder: Path, depth: int) -> None:
-        if depth >= 4:
+        if depth >= 4 or self._project_entries_remaining <= 0:
             return
-        for entry in iter_project_entries(folder, max_depth=1):
+        for entry in iter_project_entries(folder, max_depth=1, max_entries=self._project_entries_remaining):
+            self._project_entries_remaining -= 1
             item = self.project_tree.insert(
                 parent, "end",
                 text=("▸ " if entry.is_directory else "  ") + entry.path.name,
