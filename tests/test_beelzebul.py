@@ -134,7 +134,9 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
 """)
         report = self.report()
-        self.assertIn("Y-04", {item["rule_id"] for item in report["findings"]})
+        finding = next(item for item in report["findings"] if item["rule_id"] == "Y-04")
+        self.assertEqual(finding["enforcement"], "block")
+        self.assertEqual(report["verdict"], "blocked")
 
     def test_context_managed_path_open_is_not_flagged(self):
         self.write("src/managed.py", """from pathlib import Path
