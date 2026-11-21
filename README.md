@@ -127,7 +127,7 @@ python -m unittest discover -s tests -v
 
 Launch the Windows Studio with `python reaper_desktop.py`.
 
-Build and run the native C17 expression runtime without Python:
+Build and run the standalone native C17 expression runtime without installing Python:
 
 ```sh
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
