@@ -10,6 +10,10 @@ from .decomposition import (
     DivisionResult, decompose_sequence, distribute_weighted, divide_fraction,
     euclidean_divmod, factor_pairs, recombine, split_evenly,
 )
+from .gift_planner import (
+    Candy, CandyLine, GiftPlan, GreetingEdge, allocate_equal, allocate_weighted,
+    build_candy_basket, build_greeting_graph, combination_count, percent_of, plan_gift,
+)
 from .errors import ExecutionLimitError, LexError, ParseError, ReaperError, ReaperRuntimeError
 from .evolution import EvolutionEngine, EvolutionReport
 from .runtime import Interpreter, run
@@ -31,6 +35,9 @@ __all__ = [
     "accumulate", "aggregate", "amplify", "cartesianize", "combine", "compute",
     "compound", "convolve", "couple", "cross_multiply", "expand", "exponentiate",
     "factor", "fuse", "multiply", "pair", "product", "scale",
+    "Candy", "CandyLine", "GiftPlan", "GreetingEdge", "allocate_equal",
+    "allocate_weighted", "build_candy_basket", "build_greeting_graph",
+    "combination_count", "percent_of", "plan_gift",
     "compose", "concat", "concat_text", "merge_mappings", "pipe",
     "Interpreter", "LexError", "ParseError", "ReaperError", "ReaperRuntimeError",
     "decompose_sequence", "distribute_weighted", "divide_fraction",
