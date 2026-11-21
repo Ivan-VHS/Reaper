@@ -3,7 +3,8 @@
 | File | Purpose |
 |---|---|
 | [FEATURES.md](FEATURES.md) | shipped/reference/specification matrix |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | runtime and compiler stages |\n| [INTERNAL_PRODUCTS.md](INTERNAL_PRODUCTS.md) | integrated 18-product architecture and service contracts |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | runtime and compiler stages |
+| [INTERNAL_PRODUCTS.md](INTERNAL_PRODUCTS.md) | integrated 18-product architecture and service contracts |
 | [ENGINEERING.md](ENGINEERING.md) | quality, effects and release gates |
 | [DIVISION_ENGINE.md](DIVISION_ENGINE.md) | checked division and allocation |
 | [REAPER_813_FEATURE_ARCHITECTURE.md](REAPER_813_FEATURE_ARCHITECTURE.md) | proposal ID ranges |
