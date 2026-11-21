@@ -16,7 +16,7 @@ static char *read_file(const char *path) {
     {
         vee_guard guard;
         vee_guard_init(&guard, REAPER_SOURCE_MAX_BYTES, 4096u, 128u, 1024u, NULL, NULL);
-        if (vee_guard_check_payload(&guard, 112u, "A-13", "reaper-source",
+        if (vee_guard_check_payload(&guard, 112u, "A-09", "reaper-source",
                                     (size_t)n) != VEEELZEVUL_ALLOW) {
             fclose(f);
             return NULL;
