@@ -1,18 +1,22 @@
 # REAPER / MOST editor support
 
-This starter extension provides .most / .rpr language registration, bracket
-matching, comments, strings, indentation and TextMate syntax coloring.
+This folder provides .most / .rpr language registration, bracket matching,
+comments, strings, indentation and TextMate syntax coloring.
 
-Open this directory as a VS Code extension project and use
-Developer: Install Extension from Location... or package it with vsce.
+## Language tooling
 
-## Capability boundary
+The repository now includes dependency-free stdio protocol services:
 
-This is syntax support, not yet a language server or full IDE. Semantic
-completion, diagnostics, rename, AST/IR visualization, debugger, profiler,
-project explorer and integrated terminal require compiler protocols and
-debug/runtime APIs that are not yet implemented. They are not advertised as
-working features.
+- `python -m reaper lsp` — LSP completion, hover, parser diagnostics,
+  declaration symbols and basic lexical navigation/refactoring.
+- `python -m reaper dap` — DAP launch, line breakpoints, statement-boundary
+  stepping, stack and local-variable inspection.
+
+These are protocol services, not yet a packaged VS Code extension client.
+See [REAPER IDE architecture](../../docs/REAPER_IDE.md) for exact capabilities
+and maturity boundaries. Do not advertise type inference, incremental semantic
+indexing, conditional breakpoints, expression evaluation, step-out, profiling
+UI or native C17 language-service parity as implemented.
 
 ## Anatidae editor contract
 

@@ -24,6 +24,16 @@ Reaper is an expression-oriented language: `::` passes a value into the next ope
 | Internal products | 18 in-process services; Operandu + Dropaul workflow/data layer; Python reference only |
 | Federation | OPlague snapshots, VentuSample pack v1, optional Pytyliki C ABI |
 
+## REAPER IDE services
+
+The editor/tooling layer exposes stdio language and debug protocols:
+
+- `python -m reaper lsp` — parser diagnostics, completion, hover, symbols and basic navigation/refactoring.
+- `python -m reaper dap` — launch, line breakpoints, statement stepping, stack and local variables.
+- Installed entry points: `reaper-lsp` and `reaper-dap`.
+
+See [REAPER IDE architecture](docs/REAPER_IDE.md) for supported capabilities and explicit limitations. The protocol services reuse the canonical Python parser/runtime; they do not imply full native C17 parity.
+
 ## Run and test
 
 ```sh
