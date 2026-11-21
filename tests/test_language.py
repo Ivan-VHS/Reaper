@@ -198,8 +198,8 @@ class RuntimeTests(unittest.TestCase):
     def test_euclidean_division_for_all_sign_combinations(self) -> None:
         self.assertEqual(
             self.capture(
-                "emit divmod_euclidean(-7, 3)\\n"
-                "emit divmod_euclidean(7, -3)\\n"
+                "emit divmod_euclidean(-7, 3)\n"
+                "emit divmod_euclidean(7, -3)\n"
                 "emit divmod_euclidean(-7, -3)"
             ),
             ["[-3, 2]", "[-2, 1]", "[3, 2]"],
@@ -208,9 +208,9 @@ class RuntimeTests(unittest.TestCase):
     def test_division_helpers_and_exactness(self) -> None:
         self.assertEqual(
             self.capture(
-                "emit quotient(-17, 5)\\n"
-                "emit remainder(-17, 5)\\n"
-                "emit is_divisible(42, 7)\\n"
+                "emit quotient(-17, 5)\n"
+                "emit remainder(-17, 5)\n"
+                "emit is_divisible(42, 7)\n"
                 "emit is_divisible(43, 7)"
             ),
             ["-4", "3", "true", "false"],
@@ -227,8 +227,8 @@ class RuntimeTests(unittest.TestCase):
     def test_balanced_partition_and_existing_text_split(self) -> None:
         self.assertEqual(
             self.capture(
-                "emit partition([1, 2, 3, 4, 5, 6, 7], 3)\\n"
-                'emit partition("abcdef", 4)\\n'
+                "emit partition([1, 2, 3, 4, 5, 6, 7], 3)\n"
+                'emit partition("abcdef", 4)\n'
                 'emit split("a,b", ",")'
             ),
             [
@@ -241,8 +241,8 @@ class RuntimeTests(unittest.TestCase):
     def test_equal_and_proportional_distribution(self) -> None:
         self.assertEqual(
             self.capture(
-                "emit distribute(10, 3)\\n"
-                "emit distribute(-7, 3)\\n"
+                "emit distribute(10, 3)\n"
+                "emit distribute(-7, 3)\n"
                 "emit proportional_split(10, [1, 2, 3])"
             ),
             ["[4, 3, 3]", "[-2, -2, -3]", "[2, 3, 5]"],
