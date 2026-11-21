@@ -115,3 +115,11 @@ emit "result = " ++ text(result)
 [Контракт IDE 666](docs/IDE_666_IMPLEMENTATION.md) · [LSP/DAP](docs/REAPER_IDE.md) · [Node.js](docs/NOO_TAH.md) · [Kora для REAPER](docs/KORA_REAPER.md) · [Плагіни](docs/PLUGINS.md) · [Внутрішні продукти](docs/INTERNAL_PRODUCTS.md) · [Можливості](docs/FEATURES.md) · [Мова](LANGUAGE.md) · [Архітектура](docs/ARCHITECTURE.md) · [Реєстр 813](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [Федерація](docs/PROJECT_FEDERATION_MATRIX.md) · [Індекс](docs/README.md)
 
 [English](README.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md) · [Релізи](https://github.com/Ivan-VHS/Reaper/releases) · [Apache-2.0](LICENSE)
+
+<!-- VISUAL-DOCS:BEGIN -->
+## Візуальна мапа архітектури
+
+![Мапа Reaper: вихідний код, Python runtime, IDE-сервіси та неповна гілка C17](assets/visual-documentation-map.svg)
+
+Це статична архітектурна ілюстрація, а не знімок Studio і не твердження про повну сумісність C17. Справжній знімок Windows вище показує наявний desktop UI. Див. [візуальний стандарт документації](docs/VISUAL_DOCUMENTATION.md).
+<!-- VISUAL-DOCS:END -->
