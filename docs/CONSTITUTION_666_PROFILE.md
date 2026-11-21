@@ -1,6 +1,6 @@
 # 666-rule implementation profile
 
-The six ranges are a requirements crosswalk, not a claim that 666 capabilities are implemented.
+This profile does not claim the full constitution is shipped; it maps the six ranges to evidence-backed implementation states.
 
 | Range | Domain | Current interpretation |
 |---|---|---|
