@@ -79,3 +79,6 @@ VentuSample → Reaper pack exchange is implemented. Reaper → VentuSample rend
 - [Pytyliki repository](https://github.com/Ivan-VHS/Pytyliki) · [public ABI header](https://github.com/Ivan-VHS/Pytyliki/blob/main/src/interop.h)
 - [VentuSample repository](https://github.com/Ivan-VHS/VentuSample) · [pack schema](https://github.com/Ivan-VHS/VentuSample/blob/main/schemas/ventusample.pack.v1.schema.json) · [Reaper pack audit](https://github.com/Ivan-VHS/VentuSample/blob/main/docs/REAPER_PACK_AUDIT.md)
 - [Shared project contracts](https://github.com/Ivan-VHS/Reaper/blob/main/docs/PROJECT_FEDERATION_MATRIX.md)
+
+
+Publication and privacy requirements follow [Documentation Control](DOCUMENTATION_CONTROL.md).
