@@ -163,7 +163,11 @@ def main(argv: list[str] | None = None) -> int:
             parser.error("--repl cannot be combined with a source, --check or --evolve")
         if args.json:
             parser.error("--repl does not support --json")
-        return _repl(capsule_root=args.capsule_root)
+        return _repl(
+            capsule_root=args.capsule_root,
+            max_capsule_bytes=args.capsule_max_bytes,
+            max_capsule_snapshots=args.capsule_snapshots,
+        )
     if args.verify_audit_log:
         if args.source or args.audit_log:
             parser.error("--verify-audit-log cannot be combined with a source or --audit-log")
@@ -323,9 +327,18 @@ def main(argv: list[str] | None = None) -> int:
 
 
 
-def _repl(*, capsule_root: str | None = None) -> int:
+def _repl(
+    *,
+    capsule_root: str | None = None,
+    max_capsule_bytes: int = 8 * 1024 * 1024,
+    max_capsule_snapshots: int = 16,
+) -> int:
     """Run a persistent, line-oriented prompt over one complete statement at a time."""
-    interpreter = Interpreter(capsule_root=capsule_root)
+    interpreter = Interpreter(
+        capsule_root=capsule_root,
+        max_capsule_bytes=max_capsule_bytes,
+        max_capsule_snapshots=max_capsule_snapshots,
+    )
     print("Reaper REPL 0.1 — enter :quit to exit, :help for help")
     while True:
         try:
