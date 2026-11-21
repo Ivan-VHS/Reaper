@@ -111,7 +111,7 @@ def zip_with(a,b,fn):return [fn(x,y) for x,y in zip(a,b)]
 def flatten_depth(xs,depth):
  if depth<0:raise KoraError("depth must be non-negative")
  out=list(xs)
- for _ in range(depth):out=[y for x in out for y in (x if isinstance(x,(list,tuple)) else [x])]
+ for _ in range(depth):out=[y for x in out for y in (x if isinstance(x,(_builtins.list,tuple)) else [x])]
  return out
 def sample(xs,k):
  if k<0 or k>len(xs):raise KoraError("k outside list bounds")
