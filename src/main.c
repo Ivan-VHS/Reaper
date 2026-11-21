@@ -3,14 +3,25 @@
 #include "reaper/evolution.h"
 #include "reaper/token_catalog.h"
 #include "reaper/capability_suite.h"
+#include "appguard.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #define REAPER_VERSION "0.2.0-dev"
+#define REAPER_SOURCE_MAX_BYTES (4u * 1024u * 1024u)
 static char *read_file(const char *path) {
     FILE *f=fopen(path,"rb"); if(!f)return NULL;
     if(fseek(f,0,SEEK_END)!=0){fclose(f);return NULL;}
     long n=ftell(f); if(n<0||fseek(f,0,SEEK_SET)!=0){fclose(f);return NULL;}
+    {
+        vee_guard guard;
+        vee_guard_init(&guard, REAPER_SOURCE_MAX_BYTES, 4096u, 128u, 1024u, NULL, NULL);
+        if (vee_guard_check_payload(&guard, 112u, "A-13", "reaper-source",
+                                    (size_t)n) != VEEELZEVUL_ALLOW) {
+            fclose(f);
+            return NULL;
+        }
+    }
     char *b=malloc((size_t)n+1U); if(!b){fclose(f);return NULL;}
     size_t got=fread(b,1U,(size_t)n,f);
     if(got!=(size_t)n||ferror(f)){free(b);fclose(f);return NULL;}
