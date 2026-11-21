@@ -74,7 +74,6 @@ class ReaperStudio(tk.Tk):
         self._motion.fade_in()
         self._bind_shortcuts()
         self.bind_all("<Control-k>", self._command_palette_shortcut, add="+")
-        self.bind_all("<Control-K>", self._command_palette_shortcut, add="+")
         self._insert_starter()
         self.after(50, self._drain_run_queue)
         self.protocol("WM_DELETE_WINDOW", self._on_close)
@@ -387,7 +386,7 @@ class ReaperStudio(tk.Tk):
         ttk.Button(bar, text="JS Stop", command=self.stop_node_source, style="Toolbar.TButton").pack(side="left", padx=3)
         ttk.Button(bar, text="Отладка", command=self.debug_source, style="Toolbar.TButton").pack(side="left", padx=3)
         ttk.Button(bar, text="Точка останова", command=self.toggle_breakpoint, style="Toolbar.TButton").pack(side="left", padx=3)
-        ttk.Button(bar, text="Тёмная тема", command=self.toggle_ui_theme, style="Toolbar.TButton").pack(side="left", padx=3)
+        ttk.Button(bar, text="Атмосфера", command=self.toggle_ui_theme, style="Toolbar.TButton").pack(side="left", padx=3)
         self.file_label = tk.StringVar(value="Untitled.rpr")
         ttk.Label(bar, textvariable=self.file_label, foreground="#64748b").pack(side="right", padx=8)
 
