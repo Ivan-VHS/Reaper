@@ -27,3 +27,7 @@
 | [../editors/vscode/README.md](../editors/vscode/README.md) | editor grammar and external protocol-service notes |
 
 Only tested behavior is labelled implemented. Registry counts are catalogued items, not feature-completion claims. Python remains the current compatibility reference; C17 parity requires separate conformance evidence.
+
+## Publishing standard
+
+[README and visual documentation standard](README_VISUAL_STANDARD.md) — information architecture, Markdown/MDX, diagrams, screenshots, image formats, accessibility, localization and quality gates.
