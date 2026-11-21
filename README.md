@@ -32,6 +32,7 @@ emit "answer = " ++ text(answer)
 - **THESIS assertion graph:** versioned claims, source-linked evidence relations, exact time/scope comparability, review states and append-only revisions. It never auto-verifies a claim ([design](docs/THESIS_ASSERTION_GRAPH.md)).
 - **MOST Function Registry 666:** 666 traceable API contracts (147 existing specifications + 519 proposals), with source inventory and validator. This is a specification catalogue, not 666 implemented functions.
 - **Systems and interop:** Embedded C, MCU profiles and memory budgets; opt-in Pytyliki C ABI v1; 66 language/toolchain entries, 14 architecture profiles and the validated MOST 20×20 matrix.
+- **VentuSample federation:** validates ventusample.pack.v1, derives 22 normalized pack descriptors and compares two manifests through ventusample_metrics() / ventusample_compare(); optional explicit-path Pytyliki ABI v1 distance cross-check. WAV assets remain untouched.
 
 ## Run
 
@@ -66,6 +67,8 @@ ctest --test-dir build --output-on-failure
 Python remains the executable compatibility reference until native parity is demonstrated. The managed heap is accounting over Python's allocator, not a physical allocator or RSS cap. Native FFI runs trusted ABI-compatible code in-process. Toolchain discovery checks `PATH`; it does not install compilers. MOST aliases resolve to canonical REAPER symbols; QCS parsing does not prove hardware contracts.
 
 ## Documentation
+
+[Four-project federation matrix](docs/PROJECT_FEDERATION_MATRIX.md) · [Federated integration](docs/FEDERATED_INTEGRATION.md) · [OCTA-8 topology](docs/OCTA_PYRAMID_FEDERATION.md)
 
 [THESIS assertion provenance graph](docs/THESIS_ASSERTION_GRAPH.md)
 
