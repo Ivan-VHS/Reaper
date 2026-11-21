@@ -37,10 +37,10 @@ flowchart LR
     B --> C[Full-language execution]
     D[Native integer expression] --> E[C17 evaluator]
     E --> F[Checked i64 result]
-    D[Open source document] --> E[LSP requests]
-    E --> F[Diagnostics, completion and symbols]
-    G[Debug request] --> H[DAP]
-    H --> I[Breakpoints, stack and locals]
+    G[Open source document] --> H[LSP requests]
+    H --> I[Diagnostics, completion and symbols]
+    J[Debug request] --> K[DAP]
+    K --> L[Breakpoints, stack and locals]
 ```
 
 <sub>Actual application capture · 1920×1080 source image · original pixels retained; no artificial upscaling.</sub>
