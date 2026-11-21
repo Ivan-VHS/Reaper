@@ -74,6 +74,7 @@ class ReaperStudio(tk.Tk):
         self._motion.fade_in()
         self._bind_shortcuts()
         self.bind_all("<Control-k>", self._command_palette_shortcut, add="+")
+        self.editor.bind("<Control-k>", self._command_palette_shortcut, add="+")
         self._insert_starter()
         self.after(50, self._drain_run_queue)
         self.protocol("WM_DELETE_WINDOW", self._on_close)
