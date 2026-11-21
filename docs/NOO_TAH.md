@@ -1,65 +1,85 @@
-# NOO TAH — Node.js compatibility system
+# NOO TAH — Node.js runtime and ecosystem for Reaper
 
-NOO TAH is Reaper's managed integration layer for the Node.js runtime and its
-tooling. Its compatibility target is the official Node.js distribution, not a
-partial JavaScript interpreter implemented inside Reaper.
+NOO TAH is Reaper's cross-platform Node.js integration. JavaScript semantics and
+system behavior are supplied by the official Node.js distribution, not by a
+partial Python imitation.
 
-## Runtime contract
+## Architecture
 
-| Surface | Provider | Contract |
-|---|---|---|
-| JavaScript language | V8 via Node.js | ECMAScript supported by selected Node release |
-| Event loop and async I/O | libuv via Node.js | Native Node scheduling and I/O behavior |
-| Core modules | Node.js | \`node:*\` modules and documented Node APIs |
-| Modules | Node.js | CommonJS, ESM, package exports and resolution |
-| Packages | npm | package.json, lockfiles, npm install / ci |
-| Native extensions | Node.js toolchain | ABI and platform constraints of selected Node version |
-| Debugging | Node inspector | Chrome DevTools Protocol endpoint |
-| Reaper integration | NOO TAH | Discovery, CLI, project launch, diagnostics and future Studio adapter |
+```text
+Reaper Studio / CLI -> NOO TAH project + process manager
+  -> Node discovery, npm/npx, diagnostics, inspector
+  -> Official Node.js
+       V8: parsing, JIT tiers, heap and garbage collection
+       Node C/C++ bindings and core modules
+       libuv: event loop, async I/O, OS pollers, worker pool
+       Worker Threads: isolated V8 isolates
+       N-API / node-gyp: native addon compatibility
+  -> Windows IOCP | Linux epoll | macOS kqueue
+```
 
-## Commands
+## Compatibility surfaces
 
-\`\`\`sh
+| Area | Provider |
+|---|---|
+| Language engine | V8, JIT, heap, garbage collection |
+| Event loop and async I/O | libuv phases, timers, poll/check/close, OS pollers and thread pool |
+| Core modules | fs, http, https, net, tls, dns, stream, buffer, crypto, path, os, events, zlib, timers, readline |
+| Concurrency | worker_threads, child_process, cluster and libuv worker pool |
+| Data pipelines | Readable, Writable, Duplex, Transform, pipeline and backpressure |
+| Modules | CommonJS, ESM, exports/imports maps, dynamic import |
+| Packages | npm, npx, package.json, lockfiles, lifecycle scripts |
+| Native extensions | N-API, node-gyp and supported platform ABI |
+| Diagnostics | Inspector / Chrome DevTools Protocol, profiling and heap snapshots |
+| Networking | HTTP/1, HTTP/2, HTTPS, TCP, TLS, UDP, DNS; WebSocket through ecosystem packages |
+| System | filesystem, process, environment, signals, paths and OS metadata |
+
+These features come from the selected upstream Node binary. NOO TAH does not
+claim a separately reimplemented engine or ABI.
+
+## CLI
+
+```sh
 reaper-noo-tah version
-reaper-noo-tah run app.mjs
+reaper-noo-tah doctor
+reaper-noo-tah run app.mjs -- --port 3000
 reaper-noo-tah check app.js
-reaper-noo-tah inspect app.mjs
+reaper-noo-tah eval "console.log(process.versions)"
+reaper-noo-tah repl
 reaper-noo-tah npm run build
+reaper-noo-tah npx eslint .
 reaper-noo-tah install
 reaper-noo-tah install --ci
-\`\`\`
+reaper-noo-tah inspect server.mjs --port 9229
+reaper-noo-tah project
+```
 
-Install an official Node.js LTS distribution and npm. NOO TAH discovers
-\`node\` and \`npm\` on PATH; \`NOO_TAH_NODE\` and \`NOO_TAH_NPM\` override
-discovery. An explicit executable can also be supplied with \`--node\`.
+Environment: NOO_TAH_NODE, NOO_TAH_NPM_CLI, NOO_TAH_NPX_CLI.
+The npm JavaScript CLI is launched through Node instead of Windows batch shims.
 
-## Compatibility policy
+## Project semantics
 
-1. Delegate JavaScript semantics and Node APIs to the upstream Node runtime.
-2. Do not silently translate JavaScript into Reaper syntax.
-3. Preserve Node exit codes, stdout, stderr, working directory and argument order.
-4. Never invoke commands through a shell; pass arguments as an argv array.
-5. Keep Node version selection explicit and reproducible in project metadata.
-6. Treat npm lifecycle scripts and third-party packages as executable, untrusted code.
-7. Run package installation only when explicitly requested by the developer.
-8. Record the Node version, platform, architecture and lockfile in build diagnostics.
+A Node project contains package.json. `.mjs` means ESM, `.cjs` means
+CommonJS, and package.json `type` controls `.js`. Module resolution,
+conditional exports, top-level await and dynamic import are delegated to Node.
+Package installation and npm lifecycle scripts execute third-party code.
 
-## Project integration roadmap
+## Studio integration contract
 
-- **Bridge (this release):** runtime discovery, version reporting, run, syntax
-  check, npm forwarding, dependency installation and inspector launch.
-- **Studio:** JavaScript project detection, run configurations, diagnostics,
-  process lifecycle, terminal output and inspector protocol adapter.
-- **Conformance:** version-pinned Node test corpus covering ESM/CJS, built-ins,
-  streams, buffers, timers, workers, child processes, filesystem, networking,
-  errors and package resolution.
-- **Distribution:** signed, platform-specific Node runtime provisioning with
-  checksums, update channel, rollback and license notices.
+Detect .js/.mjs/.cjs and package.json; launch Node as a managed child process;
+stream stdout/stderr; expose stop/restart; preserve cwd and environment; surface
+exit codes and diagnostics; attach the inspector protocol. CLI support alone
+does not mean Studio integration is complete.
 
-## What “full compatibility” means
+## Conformance gates
 
-NOO TAH can provide Node.js behavior by executing the official Node.js runtime.
-A standalone Reaper-owned reimplementation of V8, libuv, Node's native bindings,
-the full core-module surface and npm is a separate multi-year runtime project.
-The bridge is therefore the compatibility foundation, not a claim that every
-Studio workflow or every Node release has already been certified.
+Test ESM/CJS, built-ins, module resolution, streams/backpressure, event-loop
+ordering, timers/promises, async filesystem and network I/O, workers, child
+processes, HTTP/TLS/TCP/UDP/DNS, npm lockfile reproducibility, N-API addons,
+and process signals on Windows, Linux and macOS. Pin LTS versions and verify
+signed checksums before managed installation. Report Node, V8, libuv, platform,
+architecture, modules ABI and N-API versions.
+
+An independent implementation of V8, libuv, bindings and npm is a separate
+runtime-scale project. NOO TAH achieves compatibility by embedding/managing the
+upstream Node runtime; certification is gated on the cross-platform test matrix.
