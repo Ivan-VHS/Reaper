@@ -14,7 +14,7 @@ class NooTahTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError,"Node.js not found"): Runtime.discover()
     def test_run_arguments(self):
         a=build_parser().parse_args(["run","app.mjs","--","--port","3000"])
-        self.assertEqual(a.args,["--","--port","3000"])
+        self.assertEqual(a.args,["--port","3000"])
     def test_inspector_options(self):
         a=build_parser().parse_args(["inspect","--host","0.0.0.0","--port","9333","--brk","server.mjs"])
         self.assertTrue(a.brk); self.assertEqual(a.port,"9333")
