@@ -11,6 +11,8 @@
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
+See [four-project federation](docs/PROJECT_FEDERATION_MATRIX.md), [OCTA-8 topology](docs/OCTA_PYRAMID_FEDERATION.md), and [consolidated project-thread ledger](docs/THREADS_AND_FEDERATION.md).
+
 ## Example
 
 ```reaper

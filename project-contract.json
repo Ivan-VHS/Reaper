@@ -4,7 +4,7 @@
     "id": "reaper",
     "name": "Reaper",
     "repository": "Ivan-VHS/Reaper",
-    "summary": "Flow-first programming language with a Python reference runtime, selectable Canonical IR VM, developing native C17 frontend, explicit modules, bounded resources and opt-in interoperability.",
+    "summary": "Flow-first programming language with a Python reference runtime, developing native C17 core and explicit integrations in a four-project desktop/tooling federation.",
     "documentation": "docs/UNIFIED_PROJECT_CONTRACT.md"
   },
   "implementation": {
@@ -114,7 +114,7 @@
     {
       "id": "federation.octa-8-horizontal-peer-mesh",
       "status": "implemented",
-      "summary": "Validates the complete three-project directed peer product, eight octagonal pyramid facets and local self-loops without introducing a central runtime dependency.",
+      "summary": "Validates the complete four-project directed peer product, twelve status-labelled links, eight pyramid facets and four independent self-loops without a central runtime dependency.",
       "evidence": [
         "federation/octa-pyramid.v1.json",
         "tools/validate_octa_pyramid.py",
@@ -187,6 +187,22 @@
       "status": "implemented",
       "opt_in": false,
       "summary": "Participates in the OCTA-8 peer mesh through explicit synchronous Pytyliki ABI request/response."
+    },
+    {
+      "project": "ventusample",
+      "interface": "ventusample.pack.v1",
+      "mode": "json-file",
+      "status": "planned",
+      "opt_in": true,
+      "summary": "VentuSample exports WAV assets and a v1 pack manifest; a Reaper-side pack consumer and round-trip adapter remain planned."
+    },
+    {
+      "project": "ventusample",
+      "interface": "octa.pyramid.peer-mesh.v1",
+      "mode": "shared-contract",
+      "status": "implemented",
+      "opt_in": false,
+      "summary": "Records membership in the shared four-project OCTA-8 topology without introducing a runtime dependency."
     }
   ],
   "safety_boundaries": [
