@@ -7,7 +7,8 @@
 | Division | Euclidean divmod, quotient/remainder, divisibility | implemented |
 | Allocation | partition/split, distribute, weighted allocation | implemented |
 | Audit/governance | explicit grants, HMAC scope, TTL/revocation | reference runtime |
-| Studio | Windows editor, debug and call stack | desktop app |
+| Studio | Windows editor, debug, call stack, local completion and current-document symbol navigation | desktop app |
+| CODEX-66 | searchable 66-item native feature catalogue with JSON export and maturity labels | implemented metadata/UI; feature statuses remain evidence-based |
 | Native C17 | lexer, expression Pratt parser, owned AST, checked IR | partial |
 | МОСТ | 54 aliases: 21 executable, 33 reserved | mixed |
 | QCS | separate lexer/parser/JSON AST | validation tool |

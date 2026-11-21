@@ -2,6 +2,7 @@
 
 | File | Purpose |
 |---|---|
+| [CODEX_66_SHOWCASE.md](CODEX_66_SHOWCASE.md) | native CODEX-66 browser, local completion/navigation and honest feature status |
 | [IDE_666_IMPLEMENTATION.md](IDE_666_IMPLEMENTATION.md) | Studio IDE contract, canonical rule numbering and acceptance gates |
 | [REAPER_IDE.md](REAPER_IDE.md) | LSP/DAP protocol services, shipped editor capabilities and limitations |
 | [NOO_TAH.md](NOO_TAH.md) | official Node.js runtime management, V8/libuv, npm, Inspector and Studio bridge |
