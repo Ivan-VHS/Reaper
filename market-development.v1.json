@@ -1,0 +1,181 @@
+{
+  "schema": "anatidae.market-development.v1",
+  "version": 1,
+  "project": {
+    "id": "reaper",
+    "name": "Reaper",
+    "repository": "Ivan-VHS/Reaper"
+  },
+  "product": {
+    "category": "Flow-first programming language and developer toolchain",
+    "summary": "An expression-oriented language with explicit data flow, a Python reference runtime, a developing native C17 track and a Windows desktop studio.",
+    "proof_points": [
+      "Readable expression-oriented syntax with explicit value flow.",
+      "Python reference interpreter, CLI and language tests.",
+      "A developing native C17 core and Reaper Studio desktop surface."
+    ],
+    "non_claims": [
+      "The native C17 track must not be presented as complete where project contracts mark it as developing.",
+      "Do not claim production readiness, performance superiority or ecosystem scale without comparative evidence.",
+      "Market demand, paid conversion and profitability are not established."
+    ]
+  },
+  "audiences": [
+    {
+      "id": "language-learners",
+      "audience": "Developers exploring programming-language design",
+      "need": "Understand a compact flow-first model with visible execution semantics.",
+      "value": "A reference runtime, examples and inspectable language documentation."
+    },
+    {
+      "id": "toolchain-builders",
+      "audience": "Compiler, runtime and editor-tooling developers",
+      "need": "Study and extend a language implementation with explicit contracts.",
+      "value": "A Python reference path and a separately described native-development track."
+    },
+    {
+      "id": "technical-educators",
+      "audience": "Educators and technical experimenters",
+      "need": "Demonstrate expression flow, parsing and execution boundaries.",
+      "value": "Runnable examples and precise distinctions between implemented and planned surfaces."
+    }
+  ],
+  "positioning": {
+    "statement": "Reaper is a flow-first language and toolchain for developers who want readable expressions and explicit data flow.",
+    "differentiators": [
+      "Python reference runtime and CLI provide an inspectable implementation path.",
+      "The native C17 development track is distinguished from the reference runtime.",
+      "Language behaviour, resource limits and integrations are documented as explicit contracts."
+    ]
+  },
+  "brand": {
+    "promise": "Make program flow explicit and language behaviour inspectable.",
+    "voice": [
+      "clear",
+      "technical",
+      "experimental but disciplined",
+      "evidence-led"
+    ],
+    "message_pillars": [
+      "Readable flow",
+      "Explicit semantics",
+      "Inspectable runtime",
+      "Honest implementation maturity"
+    ]
+  },
+  "go_to_market": {
+    "stages": [
+      {
+        "name": "Problem discovery",
+        "status": "not_assessed",
+        "success_criteria": "Collect concrete tasks from language learners and toolchain builders."
+      },
+      {
+        "name": "Message and documentation",
+        "status": "implemented",
+        "success_criteria": "README, language documentation and examples describe current implementation surfaces."
+      },
+      {
+        "name": "Distribution",
+        "status": "implemented",
+        "success_criteria": "Public source repository provides the inspectable project and build instructions."
+      },
+      {
+        "name": "User validation",
+        "status": "not_assessed",
+        "success_criteria": "Evaluate examples and first-run experience with target developers."
+      },
+      {
+        "name": "Retention and support",
+        "status": "planned",
+        "success_criteria": "Maintain versioned language docs, diagnostics guidance and issue triage."
+      }
+    ]
+  },
+  "channels": [
+    {
+      "name": "GitHub repository and documentation",
+      "kind": "owned documentation",
+      "status": "implemented",
+      "purpose": "Explain syntax, runtime choice, architecture and maturity boundaries.",
+      "guardrail": "Never imply that a developing backend is a finished stable compiler."
+    },
+    {
+      "name": "Runnable examples and tutorials",
+      "kind": "developer education",
+      "status": "planned",
+      "purpose": "Help users reach a first successful program quickly.",
+      "guardrail": "Examples must run on the documented runtime and version."
+    },
+    {
+      "name": "Technical demonstrations",
+      "kind": "technical media",
+      "status": "planned",
+      "purpose": "Show real language programs, diagnostics and explicit data flow.",
+      "guardrail": "Use reproducible source and publish environment details."
+    },
+    {
+      "name": "Programming-language communities",
+      "kind": "community",
+      "status": "planned",
+      "purpose": "Collect structured feedback on syntax, semantics and tooling.",
+      "guardrail": "Avoid inflated ecosystem, adoption or benchmark claims."
+    }
+  ],
+  "commercial_gates": {
+    "market_validation": {
+      "status": "not_assessed",
+      "notes": "No structured adoption or user-demand evidence is asserted."
+    },
+    "pricing": {
+      "status": "not_set",
+      "notes": "No pricing model or paid edition is defined."
+    },
+    "unit_economics": {
+      "status": "not_assessed",
+      "notes": "Maintenance and distribution costs require measurement."
+    },
+    "licensing": {
+      "status": "manual_review_required",
+      "notes": "Review Apache-2.0 obligations and dependency notices for every distribution bundle."
+    },
+    "support": {
+      "status": "planned",
+      "notes": "Define language-version support, bug triage and compatibility policy."
+    },
+    "distribution": {
+      "status": "implemented",
+      "notes": "The public source repository and build documentation are available; packaged release status is release-specific."
+    }
+  },
+  "metrics": [
+    {
+      "name": "First successful program",
+      "definition": "Share of evaluators who run a documented example successfully.",
+      "status": "not_assessed",
+      "source": "Consent-based usability sessions or explicit issue reports.",
+      "privacy_note": "Do not introduce hidden editor telemetry."
+    },
+    {
+      "name": "Example completion",
+      "definition": "Pass rate of documented examples against the supported reference runtime.",
+      "status": "not_assessed",
+      "source": "Automated example checks and CI results.",
+      "privacy_note": "Report the exact runtime/backend used."
+    },
+    {
+      "name": "Issue resolution",
+      "definition": "Time from reproducible language issue to verified fix or documented decision.",
+      "status": "not_assessed",
+      "source": "Public issue and commit history.",
+      "privacy_note": "Avoid inferring adoption from repository stars alone."
+    }
+  ],
+  "governance": {
+    "claims": "Distinguish the Python reference runtime, native C17 development track and desktop editor maturity in every product message.",
+    "promotion": "Use runnable examples and source-linked demonstrations; no unsupported claims of speed, production-readiness or ecosystem adoption.",
+    "privacy": "Do not add undisclosed usage telemetry or collect source code from users.",
+    "rights": "Preserve license notices and review bundled dependencies, fonts, icons and sample code."
+  },
+  "vocabulary_alignment": "docs/MARKET_DEVELOPMENT_STANDARD.md — 20-term Russian vocabulary-to-control crosswalk."
+}
