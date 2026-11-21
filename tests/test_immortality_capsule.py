@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import io
 import json
 import math
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 from pathlib import Path
 
 from reaper import Interpreter
@@ -109,6 +111,29 @@ class CapsuleStoreTests(unittest.TestCase):
             [item["capsule_id"] for item in self.store.list_capsules()],
             ["also-valid", "valid"],
         )
+
+
+class CapsuleCliTests(unittest.TestCase):
+    def test_cli_can_persist_and_restore_across_process_invocations(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "capsule.rpr"
+            source.write_text(
+                'emit capsule_checkpoint("cli-session", {"value": 7})\n',
+                encoding="utf-8",
+            )
+            first_output = io.StringIO()
+            with redirect_stdout(first_output):
+                first_code = main(["--capsule-root", str(Path(directory) / "store"), str(source)])
+            self.assertEqual(first_code, 0)
+            self.assertIn("revision", first_output.getvalue())
+
+            source.write_text('emit capsule_restore("cli-session")\n', encoding="utf-8")
+            second_output = io.StringIO()
+            with redirect_stdout(second_output):
+                second_code = main(["--capsule-root", str(Path(directory) / "store"), str(source)])
+            self.assertEqual(second_code, 0)
+            self.assertIn("value", second_output.getvalue())
+            self.assertIn("7", second_output.getvalue())
 
 
 class CapsuleRuntimeTests(unittest.TestCase):
