@@ -59,6 +59,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--plugin-info", metavar="NAME", help="show one built-in plugin contract")
     parser.add_argument("--run-plugin", metavar="NAME", help="run the primary operation of an enabled built-in plugin")
     parser.add_argument("--plugin-args", default="{}", metavar="JSON", help="object of plugin arguments for --run-plugin")
+    parser.add_argument("--plugin-dir", action="append", default=[], metavar="PATH", help="discover plugin.json manifests in a local directory (metadata only)")
+    parser.add_argument("--trust-plugin", action="store_true", help="explicitly trust and execute the selected local Python extension")
     parser.add_argument("--evolve", action="store_true", help="run bounded syntax, test and improvement-proposal cycles")
     parser.add_argument("--iterations", type=int, default=1, help="number of evolution quality cycles (1-20)")
     return parser
@@ -83,13 +85,15 @@ def main(argv: list[str] | None = None) -> int:
         return polyglot_code_main(arguments[1:])
     parser = build_parser()
     args = parser.parse_args(arguments)
-    if args.plugins or args.plugin_info or args.run_plugin:
+    if args.plugins or args.plugin_info or args.run_plugin or args.plugin_dir or args.trust_plugin:
         if args.source or args.audit_log or args.verify_audit_log:
             parser.error("plugin host commands cannot be combined with a source or audit-log option")
         if sum(bool(value) for value in (args.plugins, args.plugin_info, args.run_plugin)) != 1:
             parser.error("--plugins, --plugin-info and --run-plugin are mutually exclusive")
-        manager = PluginManager()
+        manager = PluginManager(plugin_dirs=args.plugin_dir)
         try:
+            if args.trust_plugin and not args.run_plugin:
+                raise PluginError("--trust-plugin is only valid with --run-plugin")
             if args.plugin_info:
                 selected = manager.get_plugin(args.plugin_info)
                 from dataclasses import asdict
@@ -101,10 +105,16 @@ def main(argv: list[str] | None = None) -> int:
                 plugin_arguments = json.loads(args.plugin_args)
                 if not isinstance(plugin_arguments, dict):
                     raise PluginError("--plugin-args must decode to a JSON object")
-                result = {"plugin": manager.get_plugin(args.run_plugin).plugin_id,
+                selected = manager.get_plugin(args.run_plugin)
+                if selected.source == "external":
+                    if args.trust_plugin:
+                        manager.set_enabled(selected.plugin_id, True)
+                    manager.load(selected.plugin_id, trusted=args.trust_plugin)
+                result = {"plugin": selected.plugin_id,
                           "result": manager.run(args.run_plugin, **plugin_arguments)}
             else:
-                result = {"count": len(manager.list_plugins()), "plugins": manager.list_plugins()}
+                result = {"count": len(manager.list_plugins()), "plugins": manager.list_plugins(),
+                          "discovery_errors": manager.discovery_errors}
         except (PluginError, ProductError, json.JSONDecodeError, TypeError) as error:
             print(f"reaper: plugin host failed: {error}", file=sys.stderr)
             return 2

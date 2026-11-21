@@ -1,55 +1,69 @@
-# REAPER plugin host
+# Reaper plugin platform
 
-REAPER exposes all 18 internal products as built-in plugins through reaper.plugins.PluginManager. Each plugin has a stable kebab-case ID, display name, version, domain, declared capabilities and an approved service entry point. Existing product services remain the execution layer, so metadata is not misrepresented as a new implementation.
+Reaper exposes its 18 first-party products as built-in plugins and supports discovery of local third-party Python extensions through the versioned `ivan-vhs.plugin.v1` manifest contract.
 
-## Built-in plugins
+## Host capabilities
 
-| Plugin ID | Display name | Main responsibility |
-|---|---|---|
-| operandu | Operandu | Typed values and data inspection |
-| dropaul | Dropaul | Deterministic workflow planning |
-| zdoro | Zdoro | Workspace integrity |
-| pyemont | Pyemont | Project and source inventory |
-| dilly | Dilly | Interface and design-token checks |
-| baplap | Baplap | Local file catalog and fingerprints |
-| sretuo | Sretuo | Test discovery and quality planning |
-| kali | Kali | Static security hygiene scan |
-| zalam | Zalam | Contract and integration validation |
-| liur | Liur | Resource measurements |
-| keel-koh | Keel Koh | Documentation index |
-| vorof | Vorof | Static source reconstruction |
-| vprof | Vprof | Static code-shape metrics |
-| profe | Profe | Engineering standards |
-| prossee | Prossee | Project planning |
-| vprossee | Vprossee | Evidence verification |
-| professiya | Professiya | Repository-grounded learning paths |
-| profevo | Profevo | Compatibility-aware evolution planning |
+| Capability | Implementation |
+|---|---|
+| Built-in registry | 18 first-party plugins backed by approved product services |
+| Stable identity | lowercase kebab-case IDs, semantic plugin versions |
+| Manifest discovery | `plugin.json` discovery; metadata only, no code execution |
+| Compatibility | plugin API version 1 and host ID `reaper` |
+| Lifecycle | explicit load, `on_load`, `run`, `on_event` and `on_unload` hooks |
+| Trust boundary | external Python modules require an explicit `trusted=True` decision |
+| Validation | bounded manifest size, package-local entrypoint paths, unique IDs, JSON-compatible results |
+| Host surface | small `PluginHostAPI` with context and structured logging |
+| Diagnostics | enabled/loaded status and manifest discovery errors |
 
-## CLI
+## Quick start
+
+List built-ins:
 
 ```sh
 python -m reaper --plugins
-python -m reaper --plugin-info Dropaul
-python -m reaper --run-plugin Dropaul --plugin-args '{"steps":[{"id":"build","depends_on":[]},{"id":"test","depends_on":["build"]}]}'
 ```
 
-The older --products and --product-info commands remain available.
+Discover a directory without executing extension code:
 
-## Python API
+```sh
+python -m reaper --plugins --plugin-dir ./extensions
+```
+
+Run a reviewed extension. The trust switch is intentionally explicit:
+
+```sh
+python -m reaper --run-plugin hello-world --plugin-dir ./examples/plugins --trust-plugin --plugin-args '{"message":"Hello"}'
+```
+
+Programmatic usage:
 
 ```python
 from reaper.plugins import PluginManager
 
-host = PluginManager()
-host.set_enabled("Kali", False)
-result = host.run("Dropaul", steps=[
-    {"id": "build", "depends_on": []},
-    {"id": "test", "depends_on": ["build"]},
-])
+host = PluginManager(plugin_dirs=["./extensions"])
+plugin = host.get_plugin("hello-world")
+host.set_enabled(plugin.plugin_id, True)
+host.load(plugin.plugin_id, trusted=True)  # imports reviewed local Python code
+result = host.run(plugin.plugin_id, message="Hello")
+host.emit("project_saved", {"project": "demo"})
+host.unload(plugin.plugin_id)
 ```
 
-The host ships built-in plugins only. It does not import arbitrary workspace Python files, download extensions, execute shell commands, or silently mutate projects. Disabling a plugin blocks dispatch without removing its metadata. Plugin state is local to its PluginManager instance.
+An extension module exports `create_plugin(host_api)`; the factory returns an object with `run(operation, arguments)`. Optional `on_load(context)`, `on_event(event, payload)` and `on_unload(context)` methods implement lifecycle and event hooks. Results and event payloads must be JSON serializable.
 
-## Runtime boundary
+## Manifest contract
 
-Handlers retain their documented safety limits. Dropaul only validates a DAG and returns a dry-run order; Kali is a static pattern scan and not a full security audit; static metrics are not runtime profiling. Python is the current reference host. The native C17 language track does not claim plugin parity.
+The canonical JSON Schema is `schemas/ivan-vhs.plugin.v1.schema.json`. The minimal working package is `examples/plugins/hello-world/`. The schema requires a stable ID, SemVer version, host ID, API version, declared capabilities and a package-relative entrypoint.
+
+## Security model
+
+Discovery never imports code. External Python extensions are trusted code: once loaded, they execute in the Reaper process with the user's normal operating-system privileges. `trusted=True` is an explicit acknowledgement, not a sandbox. Do not load unknown or unreviewed packages. The current host does not claim cryptographic publisher verification, permission-enforced filesystem/network isolation, out-of-process crash containment, native C ABI loading, or automatic marketplace installation.
+
+The host rejects path traversal in entrypoints and oversized manifests, but package review and operating-system security remain necessary. Built-in product handlers keep their existing bounded service contracts.
+
+## Compatibility and migration
+
+Plugin IDs are stable. Plugin API major version 1 is the current contract. Additive manifest fields require a schema revision before becoming mandatory; incompatible host API changes require a new major API version and migration notes. Unknown API versions are rejected rather than guessed.
+
+The Python runtime is the reference implementation. The native C17 track does not claim plugin-host parity.

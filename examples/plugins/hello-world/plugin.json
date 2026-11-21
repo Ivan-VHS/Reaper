@@ -1,0 +1,12 @@
+{
+  "schema": "ivan-vhs.plugin.v1",
+  "id": "hello-world",
+  "name": "Hello World",
+  "version": "1.0.0",
+  "api_version": 1,
+  "host": { "id": "reaper", "min_version": "0.1.0" },
+  "domain": "examples",
+  "description": "Example extension demonstrating the Reaper plugin SDK lifecycle.",
+  "capabilities": ["commands", "events"],
+  "entrypoint": "plugin.py:create_plugin"
+}
