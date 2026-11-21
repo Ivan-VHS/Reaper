@@ -23,7 +23,7 @@ class BudgetPlannerTests(unittest.TestCase):
         result = calculate_budget(500, "weekly", {"food": 350, "transport": 200})
         self.assertEqual(result["planned_uah"], 650)
         self.assertEqual(result["remaining_uah"], -150)
-        self.assertEqual(result["over_budget_uah"], 170)
+        self.assertEqual(result["over_budget_uah"], 150)
         self.assertFalse(result["within_budget"])
 
     def test_invalid_amounts_are_rejected(self):
