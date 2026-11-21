@@ -144,3 +144,9 @@ emit "result = " ++ text(result)
 [Контракт IDE 666](docs/IDE_666_IMPLEMENTATION.md) · [LSP/DAP](docs/REAPER_IDE.md) · [Node.js](docs/NOO_TAH.md) · [Kora для REAPER](docs/KORA_REAPER.md) · [Плагіни](docs/PLUGINS.md) · [Внутрішні продукти](docs/INTERNAL_PRODUCTS.md) · [Можливості](docs/FEATURES.md) · [Мова](LANGUAGE.md) · [Архітектура](docs/ARCHITECTURE.md) · [Реєстр 813](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [Федерація](docs/PROJECT_FEDERATION_MATRIX.md) · [Індекс](docs/README.md)
 
 [English](README.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md) · [Релізи](https://github.com/Ivan-VHS/Reaper/releases) · [Apache-2.0](LICENSE)
+
+
+## Довідник розподілу бюджету
+Приклад моделі бюджету 500 грн із JSON-контрактом та автономним симулятором. Це документаційний приклад, а не функція runtime самого застосунку.
+
+[Багатомовний довідник](docs/RESOURCE_ALLOCATION_500_UAH.md) · [Інтерактивний симулятор](docs/resource-allocation-500-uah.html) · [Приклад JSON](examples/resource-allocation-500-uah.json) · [JSON Schema](schemas/resource-allocation.v1.schema.json)
