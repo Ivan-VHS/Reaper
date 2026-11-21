@@ -99,6 +99,10 @@ The doctrine guides engineering decisions; it does not turn roadmap items into i
 
 [Documentation control](docs/DOCUMENTATION_CONTROL.md) defines the normative rules for public claims, evidence, privacy and integrations.
 
+## Low-level language and backend catalog
+
+See the [66-entry low-level language and systems-tooling encyclopedia](docs/LOW_LEVEL_LANGUAGES.ru.md) for verified integration patterns and the Reaper-specific C17/IR roadmap. This is an architecture reference: it does not claim that native code generation, external FFI modules, GPU execution or the WASM backend are already implemented.
+
 ## License
 
 [Apache License 2.0](LICENSE)
