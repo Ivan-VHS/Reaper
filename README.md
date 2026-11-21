@@ -1,112 +1,67 @@
-# Reaper — a flow-first programming language
+# Reaper — flow-first programming language
 
 <p align="center">
-  <img alt="Reaper 0.1.0" src="https://img.shields.io/badge/Reaper-0.1.0-16A6A1?style=flat-square">
-  <img alt="Python 3.10+" src="https://img.shields.io/badge/runtime-Python%203.10%2B-3776AB?style=flat-square">
-  <img alt="No third-party runtime dependencies" src="https://img.shields.io/badge/runtime%20dependencies-none-16A34A?style=flat-square">
-  <img alt="Apache 2.0" src="https://img.shields.io/badge/license-Apache--2.0-111827?style=flat-square">
   <a href="https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml/badge.svg"></a>
+  <img alt="Python 3.10+" src="https://img.shields.io/badge/reference-runtime-Python%203.10%2B-2563EB?style=flat-square">
+  <img alt="C17" src="https://img.shields.io/badge/native-track-C17-DC2626?style=flat-square">
+  <img alt="Apache 2.0" src="https://img.shields.io/badge/license-Apache--2.0-334155?style=flat-square">
 </p>
 
-<p align="center"><strong>WRITE CLEARLY. COMPOSE FLOWS. MAKE EFFECTS EXPLICIT.</strong></p>
+**Reaper is an expression-oriented language built around readable syntax and explicit data flow.** Its `::` operator passes a value into the next operation. The repository contains a Python reference interpreter, a developing native C17 core, and Reaper Studio for Windows.
 
-<p align="center"><img src="assets/reaper-hero.svg" alt="Reaper — a clear, flow-first programming language" width="100%"></p>
+[English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
+## Live Reaper Studio screenshot
 
-**Reaper is an independent, expression-oriented programming language built around readable syntax and explicit data flow.** Its central operator, `~>`, passes a value into the next operation, making transformations read like a sequence instead of a nested expression.
+<p align="center"><img src="assets/screenshots/reaper-studio.png" alt="Reaper Studio running desktop application" width="100%"></p>
 
-Version **0.1.0** is an executable first milestone: a Python 3.10+ tree-walking interpreter with a lexer, parser, runtime, command-line runner, examples and tests. It uses only the Python standard library.
+<sub>Actual live Windows 11 capture from the Reaper Studio process, 1920×1080. The screenshot shows the default starter document and empty output pane; no user project data is included.</sub>
 
-**Read this in:** [English](README.md) · [Русский](README.ru.md) · [Українська](README.uk.md) · [简体中文](README.zh-CN.md)
 
-## A language you can read at a glance
+See [four-project federation](docs/PROJECT_FEDERATION_MATRIX.md), [OCTA-8 topology](docs/OCTA_PYRAMID_FEDERATION.md), [federated integration](docs/FEDERATED_INTEGRATION.md), and [consolidated project-thread ledger](docs/THREADS_AND_FEDERATION.md).
+
+## Example
 
 ```reaper
 craft double(value) {
     yield value * 2
 }
-
 make numbers := [1, 2, 3, 4]
-make answer := numbers ~> map(double) ~> sum()
+make answer := numbers :: map(double) :: sum()
 emit "answer = " ++ text(answer)
 ```
 
-The flow operator passes the left-hand value as the first argument to the operation on its right. `make` creates an immutable binding; `vary` declares a mutable one; `change` performs reassignment.
+## Capabilities
 
-## What is in 0.1
+- **Python reference runtime:** lexer, parser, interpreter, CLI, REPL, modules, closures, collections, resource tracking, quotas, optional bytecode VM, profiling and hash-chained audit. Host-injected consent grants add HMAC-authenticated scope checks, finite TTL and revocation.
+- **Reaper Studio:** Windows editor with check/run/debug, breakpoints, variables and call-stack inspection.
+- **Native C17:** lexer, expression parser, owned AST, checked integer IR operations and limited lowering. Not yet a complete interpreter; Python remains the compatibility reference.
+- **МОСТ:** Russian-first source surface with 54 exact keyword aliases (21 executable in the REAPER 0.1 reference subset; 33 lexically reserved for future grammar work), UTF-8-aware source columns, and one canonical semantic core. See the [20-principle Russian-native profile](docs/MOST_RUSSIAN_NATIVE_PROFILE.md).
+- **QCS 1.0:** independent hardware-domain frontend with source locations, frame parser, Pratt expressions and JSON AST. It does not replace `.rpr` or execute hardware operations. Run: `reaper-qcs check examples/qcs_irq.qcs`.
+- **THESIS assertion graph:** versioned claims, typed evidence references, exact time/scope comparability, review states and append-only revisions. It never auto-verifies a claim ([design](docs/THESIS_ASSERTION_GRAPH.md)).
+- **MOST Function Registry 666:** 666 traceable API contracts (147 existing specifications + 519 proposals), with a traceability index and validator. This is a specification catalogue, not 666 implemented functions.
+- **Systems and interop:** Embedded C, MCU profiles and memory budgets; opt-in Pytyliki C ABI v1; 66 language/toolchain entries, 14 architecture profiles and the validated MOST 20×20 matrix.
+- **VentuSample federation:** validates `ventusample.pack.v1`, derives 22 normalized pack descriptors and compares two manifests with `ventusample_metrics()` / `ventusample_compare()`; an explicit trusted Pytyliki ABI v1 path is optional for distance cross-checks. WAV assets remain untouched.
 
-| Language feature | Current implementation |
-|---|---|
-| **Readable source** | Unicode identifiers, comments and escaped text literals |
-| **Functions** | `craft`, lexical closures, recursion and `yield` |
-| **Explicit state** | Immutable `make`; mutable `vary` with explicit `change` |
-| **Control flow** | `when / otherwise`, `each` and `loop while` |
-| **Data flow** | `~>` composition with `map`, `keep`, `fold` and related built-ins |
-| **Diagnostics** | Source-aware lexer, parser and runtime errors |
-| **Execution limits** | Step budget, call-depth, collection-item and text-length limits |
-| **Developer workflow** | CLI, check-only mode, examples and standard-library tests |
+## Run
 
-## Try the checked-in examples
-
-<p align="center"><img src="assets/reaper-terminal-preview.svg" alt="Illustrative terminal preview showing the checked-in Reaper hello example and parser check" width="100%"></p>
-
-<sub>Illustrative terminal preview. The displayed lines are the expected output of the checked-in example and CLI check mode; this image is not a capture from a live terminal session.</sub>
-
-### Requirements
-
-- Python 3.10 or newer
-- No third-party runtime dependencies
-
-### Run from the repository
+Requires Python 3.10+; no third-party runtime dependencies.
 
 ```bash
 git clone https://github.com/Ivan-VHS/Reaper.git
 cd Reaper
-
-python -m reaper examples/hello.rpr
 python -m reaper examples/flow.rpr
 python -m reaper --check examples/flow.rpr
-```
-
-Install the command-line entry point in editable mode:
-
-```bash
+python -m reaper --engine vm examples/flow.rpr
+python -m reaper --repl
 python -m pip install -e .
-reaper examples/hello.rpr
-```
-
-Run the complete test suite:
-
-```bash
 python -m unittest discover -s tests -v
 ```
 
-## How Reaper runs a program
+Run Studio on Windows with `python reaper_desktop.py`.
 
-<p align="center"><img src="assets/reaper-architecture.svg" alt="Reaper source-to-runtime pipeline and explicit effects boundary" width="100%"></p>
+## Build C17
 
-Source text is tokenized, parsed into an AST and evaluated by a bounded tree-walking interpreter. Console interaction is explicit through language operations such as `emit`, `say` and `ask`. Ordinary expressions do not silently gain filesystem, network, clock, process, shell or hardware access.
-
-## A small core with visible rules
-
-- **Immutability by default:** use `make` for fixed bindings; opt into mutation with `vary` and `change`.
-- **Left-to-right composition:** `values ~> map(double) ~> keep(is_large)` makes the data path visible.
-- **Explicit conversion:** arithmetic is numeric; `++` concatenates text. Convert with `text()` or `number()` rather than relying on silent coercion.
-- **Bounded execution:** the default limits are 1,000,000 execution steps, 256 nested function calls, 100,000 collection items and 1,000,000 characters produced by text concatenation.
-- **Useful errors:** diagnostics retain source locations where a source token is available.
-- **Portable implementation:** the current interpreter runs on Python 3.10+ and uses the standard library only.
-
-> [!NOTE]
-> These limits are resource guardrails, not a security sandbox. Do not run untrusted programs under the assumption that the interpreter isolates them from the host process.
-
-## MOST language track
-
-The native C17 line now includes the MOST lexical vocabulary, expression parser/AST, a small verified Canonical IR, checked constant folding and a deliberately limited integer-expression AST-to-IR lowering slice. The full 66-rule language contract is in [docs/MOST_LANGUAGE_SPEC.md](docs/MOST_LANGUAGE_SPEC.md); the integrated cross-thread architecture is in [docs/REAPER_UNIFIED_ARCHITECTURE.md](docs/REAPER_UNIFIED_ARCHITECTURE.md). Full declarations/blocks, type checking, MOST intent resolution, ownership analysis, native code generation and WASM are not yet implemented.
-
-## Native C migration
-
-A parallel C17 implementation is being developed in [docs/C_MIGRATION.md](docs/C_MIGRATION.md). The native build currently contains the source-aware lexer, expression parser and owned AST, verified integer IR, checked constant folding, limited AST-to-IR lowering, native CLI bring-up mode, and C unit tests. The Python interpreter remains the compatibility reference until complete parser/runtime/CLI parity is demonstrated; the C executable is not yet a full language interpreter.
-
-Inspect the native evolution gates with `./build/reaper-c --evolution-status`. The controller reports evidence requirements and deliberately does not self-approve or merge changes.\n\nBuild the native core:
+Requires CMake and a C17-capable compiler.
 
 ```sh
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
@@ -115,25 +70,60 @@ ctest --test-dir build --output-on-failure
 ./build/reaper-c --tokens examples/hello.rpr
 ```
 
-## Documentation and engineering programme
+## Architecture and boundaries
 
-- [Language reference](LANGUAGE.md) — syntax, expressions, built-ins and runtime limits.
-- [Unified REAPER/MOST architecture](docs/REAPER_UNIFIED_ARCHITECTURE.md) — consolidated decisions from the earlier design threads and current delivery gates.
-- [Architecture](docs/ARCHITECTURE.md) — implementation layers and product boundaries.
-- [Architecture requirements](docs/ARCHITECTURE_66.md) — enforceable modularity and safety requirements.
-- [AETHER-ANAS roadmap](docs/AETHER_ANAS_ROADMAP.md) — staged integration plan and acceptance gates.
-- [20-system engineering programme](docs/20_SYSTEM_ENHANCEMENTS.md) — engineering contracts and acceptance focus.
-- [Constitution profile](docs/CONSTITUTION_666_PROFILE.md) — project-specific rules and conformance states.
-- [Runnable examples](examples/) and [tests](tests/).
+Python remains the executable compatibility reference until native parity is demonstrated. The managed heap is accounting over Python's allocator, not a physical allocator or RSS cap. Native FFI runs trusted ABI-compatible code in-process. Toolchain discovery checks `PATH`; it does not install compilers. MOST aliases resolve to canonical REAPER symbols; QCS parsing does not prove hardware contracts.
 
-The 20 engineering tracks are **contracts and planned work**, not twenty completed runtime subsystems. Static type checking, effect types, native compilation, GPU execution, distributed scheduling, package management, formal verification and self-hosting remain future milestones. They will be claimed as implemented only after real backends and conformance tests exist.
+## Documentation
 
-## CI and current boundary
+[THESIS assertion provenance graph](docs/THESIS_ASSERTION_GRAPH.md)
 
-GitHub Actions tests Python **3.10, 3.11 and 3.12**. The workflow compiles the package and tests, runs the unit suite, checks an example without executing it, and runs the flow example.
+[Governance and consent controls](docs/HUMAN_FIRST_GOVERNANCE.md) · [Anatidae UI/UX](docs/UI_UX_SYSTEM.md) · [12-principle motion](docs/DISNEY_MOTION_SYSTEM.md) · [Language](LANGUAGE.md) · [QCS frontend](docs/QCS_FRONTEND.md) · [MOST 666 registry](docs/MOST_FUNCTIONS_666.md) · [МОСТ specification](docs/MOST_LANGUAGE_SPEC.md) · [Russian-native profile](docs/MOST_RUSSIAN_NATIVE_PROFILE.md) · [Runtime](docs/RUNTIME_PLATFORM.md) · [Engineering standard](docs/UNIFIED_ENGINEERING_STANDARD.md)
 
-Reaper 0.1 is an interpreter — **not** a native-code compiler, operating system, package registry, plugin host or autonomous agent. Resource quotas are not an isolation boundary.
+
+[Governance and consent](docs/HUMAN_FIRST_GOVERNANCE.md) · [Anatidae constitution](docs/ANATIDAE_CONSTITUTION.md) · [Desktop design system](docs/ANATIDAE_DESKTOP_DESIGN_SYSTEM.md) · [UI/UX architecture](docs/UI_UX_ARCHITECTURE.md) · [12 animation principles](docs/DISNEY_MOTION_SYSTEM.md) · [Clinical Systems Reliability CSR-120](docs/CLINICAL_SYSTEMS_CSR120.md) · [MOST implementation status](docs/MOST_IMPLEMENTATION_STATUS.md) · [Project contract](docs/UNIFIED_PROJECT_CONTRACT.md)
+[Windows releases](https://github.com/Ivan-VHS/Reaper/releases) · [Desktop build](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml)
+
+## Anatidae doctrine and language guarantees
+
+- **Consent and accountability:** host-injected grants are HMAC-authenticated, scope-checked, time-bounded and revocable; audit records make execution decisions inspectable.
+- **Bounded execution:** quotas, resource accounting and input validation define runtime limits. Python remains the compatibility reference until native C17 parity is demonstrated.
+- **One canonical language contract:** МОСТ aliases share canonical REAPER symbols, parser and runtime; QCS is a separate validation frontend, not a hardware executor.
+- **Honest implementation status:** MOST 666 contains 147 existing specifications and 519 proposals; it does not mean 666 functions are implemented. Native C17 lowering remains partial.
+- **Trusted-code boundary:** in-process native FFI executes trusted ABI-compatible code; it is not a sandbox for untrusted extensions.
+- **Accessible tools and purposeful motion:** Studio/editor UX should have clear keyboard and focus behavior, readable diagnostics, localization and reduced-motion support. Animation clarifies feedback; it must not obscure state.
+
+The doctrine guides engineering decisions; it does not turn roadmap items into implemented runtime features.
+
+## Documentation governance
+
+[Documentation control](docs/DOCUMENTATION_CONTROL.md) defines the normative rules for public claims, evidence, privacy and integrations.
 
 ## License
 
-Reaper is distributed under the [Apache License 2.0](LICENSE).
+[Apache License 2.0](LICENSE)
+
+## Reaper Studio design
+
+Studio adopts the **Duck Sovereign Canon** while retaining an editor-first layout: document and editing commands above the source workspace, with diagnostics, variables, call stack and execution state in distinct panes. The Tk/ttk theme uses the six approved color values, local system fonts, serif headings, compact geometry, visible keyboard focus and reduced-motion behavior.
+
+The normative specification is [docs/DUCK_SOVEREIGN_CANON.md](docs/DUCK_SOVEREIGN_CANON.md). Existing language and interface contracts remain authoritative; the visual standard does not alter runtime semantics or imply native C17 parity.
+
+## Anatidae design layer
+
+The shared [Anatidae naming canon](federation/ANATIDAE_NAMING_CANON.md) governs friendly UI vocabulary across the four-project family. The [Reaper Studio desktop design contract](docs/ANATIDAE_DESKTOP_DESIGN_SYSTEM.md) defines its use without changing language syntax, commands or diagnostics.
+
+## Quality and commercial readiness
+
+The 20 × 3 evidence matrix covers correctness, operational cohesion and commercial governance. Run **python tools/quality_commercial.py** or add **--format json**; the report includes prioritized actions for licensing, support, distribution, demand validation, unit economics and pricing. The status model does not imply sales, revenue, profit or investment readiness. See [the quality-commercial standard](docs/QUALITY_COMMERCIAL_STANDARD.md).
+
+## Improvement and conflict resolution
+
+The [20-control improvement, dissonance, and conflict standard](docs/IMPROVEMENT_CONFLICT_STANDARD.md) turns inconsistencies into evidence-led, testable changes while preserving Reaper's Python-reference/native-C17 parity boundary and runtime controls. Run `python tools/improvement_conflict.py` to validate the machine-readable register. This validates the governance contract; it is not a source-code scanner and does not claim unassessed controls are resolved.
+## Correction and defect coverage
+
+The **20 × 3 correction / coverage / defect matrix** preserves all supplied terms and maps them to project-specific targets, acceptance criteria and repository-local evidence. Run `python tools/quality_remediation.py` or add `--format json`; the focused regression suite runs in CI. Evidence-path presence is a traceability check, not proof that behavior is correct or that all defects are gone. See [the remediation standard](docs/QUALITY_REMEDIATION_STANDARD.md).
+
+The repeated term «Исчерпывающесть» is intentionally retained in rows 5 and 18 as supplied; the matrix preserves the original vocabulary rather than silently normalizing it.
+
+

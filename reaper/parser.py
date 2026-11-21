@@ -18,7 +18,7 @@ class Node:
 
 
 _PRECEDENCE = {
-    "~>": 1,
+    "::": 1,
     "OR": 2,
     "AND": 3,
     "==": 4, "!=": 4, "<": 4, "<=": 4, ">": 4, ">=": 4,
@@ -44,6 +44,22 @@ class Parser:
         return Node("program", self._peek(), children=statements)
 
     def _statement(self) -> Node:
+        if self._match("IMPORT"):
+            token = self._previous()
+            specifier = self._consume("STRING", "expected a quoted .rpr path after 'import'")
+            alias = None
+            if self._match("AS"):
+                alias = self._consume("IDENT", "expected an import alias after 'as'").value
+            return Node("import", token, value=(specifier.value, alias))
+        if self._match("EXPORT"):
+            token = self._previous()
+            if self._check("MAKE") or self._check("VARY") or self._check("CRAFT"):
+                declaration = self._statement()
+                if declaration.kind not in {"declare", "function"}:
+                    raise self._error(token, "inline export must declare a name or craft")
+                return Node("export", token, children=[declaration])
+            name = self._consume("IDENT", "expected a name after 'export'")
+            return Node("export", token, value=name.value)
         if self._match("MAKE", "VARY"):
             declaration = self._previous()
             name = self._consume("IDENT", "expected a name after declaration")
@@ -135,6 +151,8 @@ class Parser:
                 self._consume("]", "expected ']' after index")
                 left = Node("index", token, children=[left, index])
                 continue
+            if self._check("CATALOG_OPERATOR"):
+                raise self._error(self._peek(), "catalogue operator is reserved; executable semantics are not registered")
             operator = self._peek().kind
             precedence = _PRECEDENCE.get(operator, 0)
             if precedence < minimum:
@@ -160,6 +178,8 @@ class Parser:
         return Node("call", token, children=[callee, *arguments])
 
     def _prefix(self) -> Node:
+        if self._check("CATALOG_OPERATOR"):
+            raise self._error(self._peek(), "catalogue operator is reserved; executable semantics are not registered")
         if self._match("NUMBER"):
             token = self._previous()
             return Node("literal", token, value=float(token.value) if "." in token.value else int(token.value))

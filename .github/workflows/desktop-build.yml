@@ -1,0 +1,57 @@
+name: Reaper Desktop Build
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+    paths-ignore: ["README*", "docs/**"]
+  pull_request:
+    paths: ["reaper/**", "tests/**", "reaper_desktop.py", "pyproject.toml", ".github/workflows/desktop-build.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build-windows:
+    name: Windows x64 Reaper Studio
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install packaging tool
+        run: python -m pip install --upgrade pip pyinstaller
+      - name: Compile and test runtime
+        run: |
+          python -m compileall -q reaper tests reaper_desktop.py
+          python -m unittest discover -s tests -v
+          python -m reaper --check examples/flow.rpr
+          python -m reaper examples/flow.rpr
+      - name: Build standalone desktop application
+        run: python -m PyInstaller --noconfirm --clean --onefile --windowed --name Reaper-Studio reaper_desktop.py
+      - name: Prepare distributable archive
+        shell: pwsh
+        run: |
+          Copy-Item README.md dist/README.md
+          Copy-Item LICENSE dist/LICENSE
+          Compress-Archive -Path dist/Reaper-Studio.exe, dist/README.md, dist/LICENSE -DestinationPath Reaper-Studio-windows-x64.zip -Force
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Reaper-Studio-windows-x64
+          path: Reaper-Studio-windows-x64.zip
+          if-no-files-found: error
+          retention-days: 30
+  publish-release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build-windows
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: Reaper-Studio-windows-x64
+          path: release-assets
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: release-assets/Reaper-Studio-windows-x64.zip

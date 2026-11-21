@@ -1,0 +1,11 @@
+# Reaper's orthogonal metric primitives
+make coordinates := [3, 4]
+emit "Euclidean norm: " ++ text(vector_norm(coordinates))
+emit "Distance from origin: " ++ text(euclidean_distance(coordinates, [0, 0]))
+emit "Orthogonal axes: " ++ text(is_orthogonal([1, 0], [0, 1]))
+emit "Quadratic form: " ++ text(quadratic_form(coordinates, [[2, 0], [0, 3]]))
+emit "Parseval energy: " ++ text(parseval_energy([1, 2, 2]))
+emit "de Gua face area: " ++ text(de_gua_area(3, 4, 12))
+emit "Minkowski interval: " ++ text(minkowski_interval(10, [3, 4, 0]))
+emit "Combined uncorrelated variance: " ++ text(combine_variances([4, 9, 3]))
+emit "Right-triangle altitude: " ++ text(reciprocal_altitude(3, 4))
