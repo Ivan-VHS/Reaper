@@ -19,6 +19,7 @@ from .systems import format_tracks
 from .systems_languages import main as systems_languages_main
 from .systems_architectures import main as systems_architectures_main
 from .token_catalog import CATALOG_GROUPS, catalog_summary, token_catalog, token_info
+from .products import ProductError, get_product, list_products
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -51,6 +52,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--catalog", action="store_true", help="print all 666 reserved symbolic tokens as JSON")
     parser.add_argument("--catalog-group", choices=CATALOG_GROUPS, help="filter --catalog by domain")
     parser.add_argument("--catalog-token", metavar="LEXEME", help="show metadata for one token lexeme")
+    parser.add_argument("--products", action="store_true", help="list integrated internal Reaper products")
+    parser.add_argument("--product-info", metavar="NAME", help="show one integrated internal product contract")
     parser.add_argument("--evolve", action="store_true", help="run bounded syntax, test and improvement-proposal cycles")
     parser.add_argument("--iterations", type=int, default=1, help="number of evolution quality cycles (1-20)")
     return parser
@@ -75,6 +78,22 @@ def main(argv: list[str] | None = None) -> int:
         return polyglot_code_main(arguments[1:])
     parser = build_parser()
     args = parser.parse_args(arguments)
+    if args.products or args.product_info:
+        if args.source or args.audit_log or args.verify_audit_log:
+            parser.error("product registry inspection cannot be combined with a source or audit-log option")
+        if args.products and args.product_info:
+            parser.error("--products and --product-info are mutually exclusive")
+        if args.product_info:
+            try:
+                from dataclasses import asdict
+                result = asdict(get_product(args.product_info))
+            except ProductError as error:
+                print(f"reaper: {error}", file=sys.stderr)
+                return 2
+        else:
+            result = {"count": len(list_products()), "products": list_products()}
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0
     if args.module_graph:
         if not args.source:
             parser.error("--module-graph requires a .rpr entry file")
