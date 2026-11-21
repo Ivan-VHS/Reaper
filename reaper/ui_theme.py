@@ -27,7 +27,7 @@ PALETTES: dict[str, dict[str, str]] = {
         "heading": "#FFFFFF", "blue": "#0039A6", "blue_hover": "#0A1E46", "on_blue": "#FFFFFF",
         "red": "#B51A10", "red_hover": "#D52B1E", "on_red": "#FFFFFF",
         "border": "#FFFFFF", "focus": "#D52B1E",
-        "selection": "#B51A10", "selection_fg": "#FFFFFF", "disabled": "#FFFFFF",
+        "selection": "#0039A6", "selection_fg": "#FFFFFF", "disabled": "#FFFFFF",
     },
 }
 
@@ -201,8 +201,8 @@ def apply_theme(root: tk.Misc, app_key: str, theme: str | None = None) -> str:
     style.configure("TFrame", background=palette["bg"])
     style.configure("Pane.TFrame", background=palette["surface"])
     style.configure("TLabel", background=palette["bg"], foreground=palette["fg"])
-    style.configure("Title.TLabel", background=palette["bg"], foreground=palette["blue"], font=("Georgia", 18, "bold"))
-    style.configure("Section.TLabel", background=palette["bg"], foreground=palette["blue"], font=("Georgia", 11, "bold"), padding=(4, 5))
+    style.configure("Title.TLabel", background=palette["bg"], foreground=palette["heading"], font=("Georgia", 18, "bold"))
+    style.configure("Section.TLabel", background=palette["bg"], foreground=palette["heading"], font=("Georgia", 11, "bold"), padding=(4, 5))
     style.configure("Muted.TLabel", background=palette["bg"], foreground=palette["muted"])
     style.configure(
         "TButton", background=palette["surface"], foreground=palette["fg"],
@@ -226,14 +226,14 @@ def apply_theme(root: tk.Misc, app_key: str, theme: str | None = None) -> str:
         foreground=[("disabled", palette["disabled"]), ("!disabled", palette["on_blue"])],
     )
     style.configure(
-        "Danger.TButton", background=palette["red"], foreground=palette["on_red"],
-        bordercolor=palette["red"], lightcolor=palette["red"], darkcolor=palette["red"],
+        "Danger.TButton", background=palette["surface"], foreground=palette["fg"],
+        bordercolor=palette["red"], lightcolor=palette["surface"], darkcolor=palette["red"],
         padding=(14, 13),
     )
     style.map(
         "Danger.TButton",
-        background=[("disabled", palette["elevated"]), ("pressed", palette["red"]), ("active", palette["red_hover"])],
-        foreground=[("disabled", palette["disabled"]), ("!disabled", palette["on_red"])],
+        background=[("disabled", palette["elevated"]), ("pressed", palette["selection"]), ("active", palette["surface"])],
+        foreground=[("disabled", palette["disabled"]), ("!disabled", palette["fg"])],
     )
     style.configure("TEntry", fieldbackground=palette["surface"], foreground=palette["fg"], bordercolor=palette["border"], padding=(8, 7))
     style.map("TEntry", fieldbackground=[("focus", palette["surface"])], bordercolor=[("focus", palette["focus"])])
@@ -242,7 +242,7 @@ def apply_theme(root: tk.Misc, app_key: str, theme: str | None = None) -> str:
     style.map(
         "TNotebook.Tab",
         background=[("selected", palette["surface"]), ("active", palette["selection"])],
-        foreground=[("selected", palette["blue"]), ("active", palette["blue"])],
+        foreground=[("selected", palette["fg"]), ("active", palette["fg"])],
     )
     style.configure(
         "Treeview", background=palette["surface"], fieldbackground=palette["surface"],
@@ -251,7 +251,7 @@ def apply_theme(root: tk.Misc, app_key: str, theme: str | None = None) -> str:
     style.configure("Treeview.Heading", background=palette["elevated"], foreground=palette["fg"], font=("Georgia", 10, "bold"), padding=(9, 9))
     style.map("Treeview", background=[("selected", palette["selection"])], foreground=[("selected", palette["selection_fg"])])
     style.configure("TLabelFrame", background=palette["bg"], foreground=palette["fg"], bordercolor=palette["border"])
-    style.configure("TLabelFrame.Label", background=palette["bg"], foreground=palette["blue"], font=("Segoe UI Semibold", 10))
+    style.configure("TLabelFrame.Label", background=palette["bg"], foreground=palette["heading"], font=("Georgia", 10, "bold"))
     style.configure("TSeparator", background=palette["border"])
     style.configure("Horizontal.TProgressbar", background=palette["blue"], troughcolor=palette["elevated"])
     _paint_native_widgets(root, palette)
