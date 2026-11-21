@@ -112,7 +112,7 @@ class VentuSampleFederationTests(unittest.TestCase):
             (root / "pack.json").write_text(json.dumps(make_pack()), encoding="utf-8")
             script = root / "audit.rpr"
             source = (
-                'make pack := read_json("pack.json")\n'
+                f"make pack := read_json({json.dumps(str(root / 'pack.json'))})\n"
                 "make metrics := ventusample_metrics(pack)\n"
                 "make report := ventusample_compare(pack, pack)\n"
                 'emit report["schema"]\n'
