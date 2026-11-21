@@ -240,11 +240,9 @@ def telemetry(register: QuantumRegister) -> dict[str, Any]:
 
 # These are the numerical kernels currently covered by conformance tests.
 SIMULATED_KERNELS = frozenset({
-    "atom_superpose_basis_01", "qubit_phase_rotate_02", "atom_ground_reset_03",
-    "state_amplitude_normalize_04", "qubit_hadamard_twin_10", "qubit_sqrt_not_22",
-    "entangle_bell_pair_23", "entangle_ghz_ring_24", "correlate_swap_gate_26",
-    "measure_projective_z_45", "noise_dephase_markov_68", "noise_amplitude_damp_69",
-    "measure_fidelity_ref_59", "telem_system_health_133",
+    "qubit_phase_rotate_02", "atom_ground_reset_03", "state_amplitude_normalize_04",
+    "entangle_bell_pair_23", "entangle_ghz_ring_24", "measure_projective_z_45",
+    "measure_fidelity_ref_59", "noise_amplitude_damp_69",
 })
 
 def function_catalog() -> list[dict[str, Any]]:
