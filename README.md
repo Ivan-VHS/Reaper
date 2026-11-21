@@ -7,6 +7,8 @@
 
 Reaper is an expression-oriented language: `::` passes a value into the next operation. The Python runtime is the current executable compatibility reference. The C17 implementation is an active native track, not yet a complete replacement.
 
+**Language slice 0.2:** the reference grammar now includes `let/const/mut`, `fn/return`, `if/else`, `for/while`, `break/continue`, map literals and field access, membership and lazy `??`. These features are exercised in both the tree-walk interpreter and the stack VM. See the [Reaper Language Reference 0.2](docs/LANGUAGE_REFERENCE_0.2.md) for implemented syntax and explicit non-goals.
+
 ## Live Reaper Studio
 
 <p align="center"><img src="assets/screenshots/reaper-studio.png" alt="Reaper Studio running on Windows 11" width="100%"></p>
