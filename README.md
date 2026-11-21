@@ -154,3 +154,10 @@ An illustrative 500 UAH budget model with a versioned JSON contract and an offli
 ## Beelzebul repository protection
 
 This repository uses the versioned [Beelzebul 66-rule security policy](SECURITY.md), machine-readable [policy](security/beelzebul.v1.json), and read-only [scanner](tools/beelzebul.py). Run `python tools/beelzebul.py` locally; GitHub Actions runs the same gate for pull requests and protected-branch updates.
+
+
+## CLife — REAPER savepoints and recovery
+
+CLife adds a portable SHA-256 project archive plus three native Lua ReaScripts: **Snapshot Project**, **Verify Latest**, and **Restore Latest as New Project**. Restore creates a separate verified .RPP copy and leaves the active session untouched.
+
+[CLife documentation](docs/CLIFE.md) · [REAPER actions](reaper_scripts/clife/)
