@@ -4,7 +4,8 @@ import unittest
 from unittest.mock import patch
 
 from reaper.ui_motion import (
-    DURATIONS_MS, MotionPreferences, Spring1D, duration_for, ease_out,
+    DURATIONS_MS, MotionPreferences, Spring1D, PADDLE_EASING, WATER_EASING,
+    duration_for, ease_out,
     load_preferences, reduced_motion_enabled, save_preferences,
 )
 
@@ -17,6 +18,10 @@ class MotionTests(unittest.TestCase):
         self.assertEqual(ease_out(2), 1.0)
         values = [ease_out(i / 20) for i in range(21)]
         self.assertEqual(values, sorted(values))
+
+    def test_shared_paddle_and_water_motion_tokens_are_stable(self):
+        self.assertEqual(PADDLE_EASING, "cubic-bezier(0.22, 1.18, 0.36, 1)")
+        self.assertEqual(WATER_EASING, "cubic-bezier(0.37, 0, 0.63, 1)")
 
     def test_duration_tokens_follow_motion_budget(self):
         with patch("reaper.ui_motion.reduced_motion_enabled", return_value=False):
