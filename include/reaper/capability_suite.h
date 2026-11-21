@@ -49,7 +49,9 @@ ReaperCapabilityStatus reaper_capability_validate_arity(
     const ReaperCapabilityModule *module, const char *function_name,
     size_t argument_count, const ReaperCapabilityFunction **function_out);
 
-/* Native, allocation-free primitives shared by the registered capabilities. */
+/* Native, allocation-free primitives shared by the registered capabilities.
+ * map_i64 requires disjoint input/output storage; reverse_i64 permits exact
+ * in-place operation or disjoint storage, but not partial overlap. */
 ReaperCapabilityStatus reaper_capability_fold_i64(
     const int64_t *items, size_t count, ReaperI64Reducer reducer,
     void *context, int64_t initial, int64_t *result);
