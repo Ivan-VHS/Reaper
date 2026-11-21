@@ -17,6 +17,15 @@ class ProductRegistryTests(unittest.TestCase):
         with self.assertRaises(ProductError):
             get_product("Patakee")
 
+    def test_legacy_workflow_names_are_not_aliases(self):
+        for legacy_name in ("Pataki", "Patakee", "Doopraul"):
+            with self.assertRaises(ProductError):
+                get_product(legacy_name)
+
+    def test_operandu_rejects_non_finite_numbers(self):
+        with self.assertRaisesRegex(ProductError, "non-finite"):
+            inspect_value(float("nan"))
+
     def test_dropaul_workflow_is_deterministic_and_dry_run(self):
         result = run_product("Dropaul", "plan_workflow", steps=[
             {"id": "compile", "depends_on": []},
