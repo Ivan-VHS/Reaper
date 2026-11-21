@@ -70,7 +70,8 @@ class GiftPlan:
 
     def verify(self) -> bool:
         return (
-            sum(self.allocations) == self.budget
+            len(self.allocations) == len(self.baskets)
+            and sum(self.allocations) == self.budget
             and self.spent + self.remaining == self.budget
             and 0 <= self.spent <= self.budget
             and all(
