@@ -73,6 +73,8 @@ class ReaperStudio(tk.Tk):
         self._motion = MotionController(self, app_key="reaper-studio")
         self._motion.fade_in()
         self._bind_shortcuts()
+        self.bind_all("<Control-k>", self._command_palette_shortcut, add="+")
+        self.bind_all("<Control-K>", self._command_palette_shortcut, add="+")
         self._insert_starter()
         self.after(50, self._drain_run_queue)
         self.protocol("WM_DELETE_WINDOW", self._on_close)
@@ -102,6 +104,7 @@ class ReaperStudio(tk.Tk):
         edit_menu = tk.Menu(menu, tearoff=False)
         edit_menu.add_command(label="Найти…", command=self.find_text, accelerator="Ctrl+F")
         edit_menu.add_command(label="Перейти к строке…", command=self.goto_line, accelerator="Ctrl+G")
+        edit_menu.add_command(label="Палитра команд…", command=self.show_command_palette, accelerator="Ctrl+K")
         edit_menu.add_separator()
         edit_menu.add_command(label="Выделить всё", command=lambda: self.editor.tag_add("sel", "1.0", "end-1c"))
         edit_menu.add_command(label="Отменить", command=lambda: self.editor.edit_undo(), accelerator="Ctrl+Z")
@@ -137,12 +140,116 @@ class ReaperStudio(tk.Tk):
         plugin_menu.add_command(label="Менеджер плагинов…", command=self.show_plugins)
         menu.add_cascade(label="Плагины", menu=plugin_menu)
         view_menu = tk.Menu(menu, tearoff=False)
-        for mode, label in (("system", "Системная"), ("light", "Светлая"), ("dark", "Тёмная")):
+        for mode, label in (
+            ("system", "Системная"), ("light", "Светлая"), ("dark", "Тёмная"),
+            ("dawn", "Рассвет"), ("sunset", "Закат"), ("night", "Ночь"),
+        ):
             view_menu.add_radiobutton(label=label, variable=self._theme_mode, value=mode, command=self.apply_visual_theme)
         view_menu.add_separator()
         view_menu.add_command(label="Настройки движения…", command=self.show_motion_settings)
         menu.add_cascade(label="Вид", menu=view_menu)
         self.configure(menu=menu)
+
+    def _command_palette_shortcut(self, _event: tk.Event | None = None) -> str:
+        self.show_command_palette()
+        return "break"
+
+    def show_command_palette(self) -> None:
+        """Open a searchable, keyboard-first palette for frequent Studio actions."""
+        existing = getattr(self, "_command_palette", None)
+        if existing is not None and existing.winfo_exists():
+            existing.lift()
+            existing.focus_force()
+            return
+        window = tk.Toplevel(self)
+        self._command_palette = window
+        window.title("Палитра команд · Reaper Studio")
+        window.transient(self)
+        window.resizable(False, False)
+        frame = ttk.Frame(window, padding=14)
+        frame.pack(fill="both", expand=True)
+        ttk.Label(frame, text="Быстрые команды", style="PaneTitle.TLabel").pack(anchor="w", pady=(0, 8))
+        query_var = tk.StringVar()
+        search = ttk.Entry(frame, textvariable=query_var, width=62)
+        search.pack(fill="x", pady=(0, 8))
+        results = tk.Listbox(frame, height=10, activestyle="none", exportselection=False)
+        results.pack(fill="both", expand=True)
+        empty = ttk.Label(frame, text="Команды не найдены. Измените поисковый запрос.")
+        empty.pack(anchor="w", pady=(6, 0))
+        commands = [
+            ("Создать файл", self.new_file),
+            ("Открыть файл", self.open_file),
+            ("Открыть папку проекта", self.open_folder),
+            ("Сохранить файл", self.save_file),
+            ("Проверить исходный код", self.check_source),
+            ("Запустить программу", self.run_source),
+            ("Запустить отладку", self.debug_source),
+            ("Менеджер плагинов", self.show_plugins),
+            ("Настройки движения", self.show_motion_settings),
+            ("Переключить атмосферу", self.toggle_ui_theme),
+        ]
+        visible: list[tuple[str, Any]] = []
+
+        def refresh(*_args: object) -> None:
+            query = query_var.get().strip().casefold()
+            visible.clear()
+            visible.extend(item for item in commands if not query or query in item[0].casefold())
+            results.delete(0, "end")
+            for label, _action in visible:
+                results.insert("end", label)
+            if visible:
+                results.selection_set(0)
+                results.activate(0)
+            empty.configure(text="" if visible else "Команды не найдены. Измените поисковый запрос.")
+
+        def close() -> None:
+            if window.winfo_exists():
+                window.destroy()
+            self._command_palette = None
+            try:
+                self.editor.focus_set()
+            except tk.TclError:
+                pass
+
+        def execute(_event: tk.Event | None = None) -> str:
+            selection = results.curselection()
+            if not selection or selection[0] >= len(visible):
+                return "break"
+            action = visible[selection[0]][1]
+            close()
+            self.after_idle(action)
+            return "break"
+
+        def move_selection(delta: int) -> str:
+            if not visible:
+                return "break"
+            current = results.curselection()
+            index = current[0] if current else 0
+            next_index = max(0, min(len(visible) - 1, index + delta))
+            results.selection_clear(0, "end")
+            results.selection_set(next_index)
+            results.activate(next_index)
+            results.see(next_index)
+            return "break"
+
+        query_var.trace_add("write", refresh)
+        results.bind("<Double-Button-1>", execute)
+        search.bind("<Return>", execute)
+        results.bind("<Return>", execute)
+        search.bind("<Down>", lambda _event: move_selection(1))
+        search.bind("<Up>", lambda _event: move_selection(-1))
+        results.bind("<Up>", lambda _event: move_selection(-1))
+        results.bind("<Down>", lambda _event: move_selection(1))
+        window.bind("<Escape>", lambda _event: (close(), "break")[1])
+        window.protocol("WM_DELETE_WINDOW", close)
+        refresh()
+        window.update_idletasks()
+        width, height = 560, 390
+        x = self.winfo_rootx() + max(20, (self.winfo_width() - width) // 2)
+        y = self.winfo_rooty() + 70
+        window.geometry(f"{width}x{height}+{x}+{y}")
+        window.grab_set()
+        search.focus_set()
 
     def show_motion_settings(self) -> None:
         """Configure persisted motion and low-CPU visual preferences."""
