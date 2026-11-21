@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
 
 static int reject(ReaperIrError *error, size_t index, const char *message) {
     if (error != NULL) {
@@ -33,13 +34,16 @@ int reaper_ir_verify(const ReaperIrModule *module, ReaperIrError *error) {
                 return reject(error, i, "CONST_I64 cannot have operands");
             break;
         case REAPER_IR_OP_ADD_I64:
+        case REAPER_IR_OP_SUB_I64:
+        case REAPER_IR_OP_MUL_I64:
+        case REAPER_IR_OP_DIV_I64:
             if (node->type != REAPER_IR_TYPE_I64)
-                return reject(error, i, "ADD_I64 must produce i64");
+                return reject(error, i, "integer arithmetic must produce i64");
             if (!valid_ref(node->lhs, i) || !valid_ref(node->rhs, i))
-                return reject(error, i, "ADD_I64 operands must reference earlier nodes");
+                return reject(error, i, "integer arithmetic operands must reference earlier nodes");
             if (module->nodes[node->lhs].type != REAPER_IR_TYPE_I64 ||
                 module->nodes[node->rhs].type != REAPER_IR_TYPE_I64)
-                return reject(error, i, "ADD_I64 operands must both be i64");
+                return reject(error, i, "integer arithmetic operands must both be i64");
             break;
         case REAPER_IR_OP_RETURN:
             if (node->type != REAPER_IR_TYPE_UNIT)
@@ -54,6 +58,98 @@ int reaper_ir_verify(const ReaperIrModule *module, ReaperIrError *error) {
     return 1;
 }
 
+static int execute_error(ReaperIrError *error, size_t index, const char *message) {
+    if (error != NULL) {
+        error->node_index = index;
+        (void)snprintf(error->message, sizeof error->message, "%s", message);
+    }
+    return 0;
+}
+
+static int add_i64_checked(int64_t left, int64_t right, int64_t *out) {
+    if ((right > 0 && left > INT64_MAX - right) ||
+        (right < 0 && left < INT64_MIN - right)) return 0;
+    *out = left + right;
+    return 1;
+}
+
+static int sub_i64_checked(int64_t left, int64_t right, int64_t *out) {
+    if ((right < 0 && left > INT64_MAX + right) ||
+        (right > 0 && left < INT64_MIN + right)) return 0;
+    *out = left - right;
+    return 1;
+}
+
+static int mul_i64_checked(int64_t left, int64_t right, int64_t *out) {
+    if (left == 0 || right == 0) { *out = 0; return 1; }
+    if ((left == -1 && right == INT64_MIN) ||
+        (right == -1 && left == INT64_MIN)) return 0;
+    if (left > 0) {
+        if ((right > 0 && left > INT64_MAX / right) ||
+            (right < 0 && right < INT64_MIN / left)) return 0;
+    } else {
+        if ((right > 0 && left < INT64_MIN / right) ||
+            (right < 0 && left < INT64_MAX / right)) return 0;
+    }
+    *out = left * right;
+    return 1;
+}
+
+int reaper_ir_execute_i64(const ReaperIrModule *module, int64_t *values,
+                          size_t value_capacity, int64_t *result,
+                          ReaperIrError *error) {
+    if (error != NULL) { error->node_index = 0; error->message[0] = '\0'; }
+    if (!reaper_ir_verify(module, error)) return 0;
+    if (module->length == 0u)
+        return execute_error(error, 0u, "executable IR must contain a RETURN");
+    if (values == NULL || result == NULL)
+        return execute_error(error, 0u, "scratch storage and result output are required");
+    if (value_capacity < module->length)
+        return execute_error(error, 0u, "scratch capacity is smaller than IR length");
+
+    size_t return_count = 0u, return_index = 0u;
+    for (size_t i = 0u; i < module->length; ++i) {
+        if (module->nodes[i].opcode == REAPER_IR_OP_RETURN) {
+            ++return_count; return_index = i;
+        }
+    }
+    if (return_count != 1u || return_index != module->length - 1u)
+        return execute_error(error, return_index, "IR must end with exactly one RETURN");
+
+    for (size_t i = 0u; i < module->length; ++i) {
+        const ReaperIrNode *node = &module->nodes[i];
+        int64_t value = 0;
+        switch (node->opcode) {
+        case REAPER_IR_OP_CONST_I64: value = node->immediate; break;
+        case REAPER_IR_OP_ADD_I64:
+            if (!add_i64_checked(values[node->lhs], values[node->rhs], &value))
+                return execute_error(error, i, "signed i64 addition overflow");
+            break;
+        case REAPER_IR_OP_SUB_I64:
+            if (!sub_i64_checked(values[node->lhs], values[node->rhs], &value))
+                return execute_error(error, i, "signed i64 subtraction overflow");
+            break;
+        case REAPER_IR_OP_MUL_I64:
+            if (!mul_i64_checked(values[node->lhs], values[node->rhs], &value))
+                return execute_error(error, i, "signed i64 multiplication overflow");
+            break;
+        case REAPER_IR_OP_DIV_I64:
+            if (values[node->rhs] == 0)
+                return execute_error(error, i, "integer division by zero");
+            if (values[node->lhs] == INT64_MIN && values[node->rhs] == -1)
+                return execute_error(error, i, "signed i64 division overflow");
+            value = values[node->lhs] / values[node->rhs];
+            break;
+        case REAPER_IR_OP_RETURN:
+            *result = values[node->lhs];
+            return 1;
+        default:
+            return execute_error(error, i, "unsupported executable IR opcode");
+        }
+        values[i] = value;
+    }
+    return execute_error(error, module->length - 1u, "IR execution reached no RETURN");
+}
 const char *reaper_ir_type_name(ReaperIrType type) {
     switch (type) {
     case REAPER_IR_TYPE_I64: return "i64";
@@ -68,6 +164,9 @@ const char *reaper_ir_opcode_name(ReaperIrOpcode opcode) {
     case REAPER_IR_OP_CONST_I64: return "const.i64";
     case REAPER_IR_OP_ADD_I64: return "add.i64";
     case REAPER_IR_OP_RETURN: return "return";
+    case REAPER_IR_OP_SUB_I64: return "sub.i64";
+    case REAPER_IR_OP_MUL_I64: return "mul.i64";
+    case REAPER_IR_OP_DIV_I64: return "div.i64";
     default: return "invalid";
     }
 }

@@ -1,0 +1,46 @@
+name: Unified project contract
+
+on:
+  push:
+    branches: [main, "feat/**", "integration/**"]
+    paths:
+      - "project-contract.json"
+      - "schemas/unified-project-contract.v1.schema.json"
+      - "tools/validate_project_contract.py"
+      - "docs/UNIFIED_PROJECT_CONTRACT.md"
+      - "federation/octa-pyramid.v1.json"
+      - "schemas/octa-pyramid.v1.schema.json"
+      - "tools/validate_octa_pyramid.py"
+      - "docs/OCTA_PYRAMID_FEDERATION.md"
+      - ".github/workflows/project-contract.yml"
+  pull_request:
+    paths:
+      - "project-contract.json"
+      - "schemas/unified-project-contract.v1.schema.json"
+      - "tools/validate_project_contract.py"
+      - "docs/UNIFIED_PROJECT_CONTRACT.md"
+      - "federation/octa-pyramid.v1.json"
+      - "schemas/octa-pyramid.v1.schema.json"
+      - "tools/validate_octa_pyramid.py"
+      - "docs/OCTA_PYRAMID_FEDERATION.md"
+      - ".github/workflows/project-contract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate unified project contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Validate manifest, schema declaration and evidence paths
+        run: python tools/validate_project_contract.py
+      - name: Validate OCTA-8 horizontal peer mesh and eight facets
+        run: python tools/validate_octa_pyramid.py
+      - name: Emit machine-readable manifest check
+        run: python tools/validate_project_contract.py --json

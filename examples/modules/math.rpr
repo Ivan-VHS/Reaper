@@ -1,0 +1,6 @@
+# Public module API
+export craft double(value) {
+    yield value * 2
+}
+
+export make multiplier := 3

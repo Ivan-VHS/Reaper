@@ -7,7 +7,16 @@ validator = importlib.util.module_from_spec(SPEC); SPEC.loader.exec_module(valid
 class FeatureRegistryTests(unittest.TestCase):
     def test_repository_registry_is_valid(self):
         data = json.loads((ROOT / "language" / "features.json").read_text(encoding="utf-8"))
-        self.assertEqual(validator.validate(data), 7)
+        self.assertEqual(validator.validate(data), len(data["features"]))
+    def test_registry_is_reaper_owned(self):
+        data = json.loads((ROOT / "language" / "features.json").read_text(encoding="utf-8"))
+        self.assertEqual(data["language"], "REAPER")
+        self.assertIn("Russian keyword aliases", data["profile"])
+        by_id = {feature["id"]: feature for feature in data["features"]}
+        self.assertEqual(by_id["MOST-RU-MOR-001"]["status"], "deprecated")
+        self.assertEqual(by_id["MOST-RU-RES-001"]["status"], "deprecated")
+        self.assertEqual(by_id["MOST-RU-COMPAT-001"]["status"], "implemented")
+
     def test_cycle_is_rejected(self):
         data = {"features":[{"id":"A","status":"planned","depends_on":["B"]},{"id":"B","status":"planned","depends_on":["A"]}]}
         with self.assertRaisesRegex(ValueError, "cycle"): validator.validate(data)

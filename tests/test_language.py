@@ -8,6 +8,67 @@ from reaper.parser import parse
 
 
 class LexerTests(unittest.TestCase):
+    def test_russian_keyword_aliases(self) -> None:
+        tokens = tokenize("""пусть число := истина
+переменная сумма := 0
+если не ложь и число { вывести сумма }""")
+        self.assertEqual(
+            [token.kind for token in tokens[:15]],
+            ["MAKE", "IDENT", ":=", "TRUE", "NEWLINE", "VARY", "IDENT", ":=", "NUMBER", "NEWLINE", "WHEN", "NOT", "FALSE", "AND", "IDENT"],
+        )
+
+    def test_extended_russian_keywords_are_reserved_and_exact(self) -> None:
+        aliases = [
+            ("модуль", "module"),
+            ("публичный", "pub"),
+            ("процедура", "fn"),
+            ("структура", "struct"),
+            ("перечисление", "enum"),
+            ("типаж", "trait"),
+            ("реализация", "impl"),
+            ("тип", "type"),
+            ("константа", "const"),
+            ("связать", "let"),
+            ("изменяемый", "mut"),
+            ("возврат", "return"),
+            ("условие", "if"),
+            ("альтернатива", "else"),
+            ("выбор", "match"),
+            ("область", "region"),
+            ("сырой", "raw"),
+            ("арена", "arena"),
+            ("сигнал", "signal"),
+            ("асинхронно", "async"),
+            ("ожидать", "await"),
+            ("тест", "test"),
+            ("вычислить_при_сборке", "comptime"),
+            ("требует", "requires"),
+            ("гарантирует", "ensures"),
+            ("небезопасно", "unsafe"),
+            ("внешний", "extern"),
+            ("где", "where"),
+            ("уничтожить", "drop"),
+            ("для_каждого", "for"),
+            ("прервать", "break"),
+            ("продолжить", "continue"),
+            ("отложить", "defer"),
+        ]
+        words = [alias for alias, _canonical in aliases]
+        expected = [canonical.upper() for _alias, canonical in aliases]
+        tokens = tokenize(" ".join(words))
+        self.assertEqual([token.kind for token in tokens[:-1]], expected)
+        self.assertEqual([token.value for token in tokens[:-1]], words)
+
+        # No stemming or automatic case/inflection guessing is performed.
+        unknown = tokenize("структуры модулем")
+        self.assertEqual([token.kind for token in unknown], ["IDENT", "IDENT", "EOF"])
+
+    def test_reserved_native_vocabulary_has_no_false_runtime_claim(self) -> None:
+        # These words are lexed as reserved tokens, but declaration grammar is
+        # still acceptance-gated in the native compiler track.
+        tokens = tokenize("модуль структура асинхронно вычислить_при_сборке")
+        self.assertEqual([token.kind for token in tokens[:-1]], ["MODULE", "STRUCT", "ASYNC", "COMPTIME"])
+
     def test_keywords_and_unicode_identifiers(self) -> None:
         tokens = tokenize("make утка := true # comment\nemit утка")
         self.assertEqual(
@@ -34,6 +95,25 @@ class RuntimeTests(unittest.TestCase):
         output: list[str] = []
         Interpreter(output=output.append, max_steps=max_steps).run(source)
         return output
+
+
+    def test_russian_program_subset_executes(self) -> None:
+        source = """
+        функция удвоить(значение) {
+            вернуть значение * 2
+        }
+        пусть значение := 5
+        переменная итог := 0
+        для элемент в range(1, 4) {
+            изменить итог := итог + удвоить(элемент)
+        }
+        если итог == 12 {
+            вывести "готово"
+        } иначе {
+            вывести "ошибка"
+        }
+        """
+        self.assertEqual(self.capture(source), ["готово"])
 
     def test_hello_and_string_join(self) -> None:
         self.assertEqual(
@@ -97,12 +177,16 @@ class RuntimeTests(unittest.TestCase):
         craft double(x) { yield x * 2 }
         craft large(x) { yield x >= 6 }
         craft add(a, b) { yield a + b }
-        emit [1, 2, 3, 4] ~> map(double) ~> keep(large) ~> fold(0, add)
+        emit [1, 2, 3, 4] :: map(double) :: keep(large) :: fold(0, add)
         """
         self.assertEqual(self.capture(source), ["14"])
 
+    def test_old_flow_operator_is_rejected(self) -> None:
+        with self.assertRaises(LexError):
+            tokenize("emit [1, 2] |> size()")
+
     def test_pipeline_accepts_single_argument_call(self) -> None:
-        self.assertEqual(self.capture("emit [1, 2, 3] ~> size()"), ["3"])
+        self.assertEqual(self.capture("emit [1, 2, 3] :: size()"), ["3"])
 
     def test_indexing(self) -> None:
         self.assertEqual(self.capture("make xs := [10, 20]\nemit xs[1]"), ["20"])
@@ -140,7 +224,7 @@ class RuntimeTests(unittest.TestCase):
     def test_push_cannot_exceed_collection_limit(self) -> None:
         interpreter = Interpreter(output=lambda _line: None, max_collection_items=2)
         with self.assertRaisesRegex(ReaperRuntimeError, "collection item limit"):
-            interpreter.run("emit [1, 2] ~> push(3)")
+            interpreter.run("emit [1, 2] :: push(3)")
 
     def test_text_concatenation_limit(self) -> None:
         interpreter = Interpreter(output=lambda _line: None, max_text_length=4)

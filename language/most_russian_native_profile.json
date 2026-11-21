@@ -1,0 +1,229 @@
+{
+  "schema": "most-russian-native-profile/v1",
+  "language": "МОСТ",
+  "canonical_core": "REAPER",
+  "version": "0.2.0",
+  "principle_count": 20,
+  "status_legend": {
+    "implemented": "Executable behavior and tests exist.",
+    "partial": "A working subset exists; remaining scope is explicit.",
+    "specified": "A written contract exists; executable implementation is not claimed."
+  },
+  "principles": [
+    {
+      "id": "01",
+      "axis": "Язык программирования — русскоязычный",
+      "contract": "Русский исходный текст является первичным пользовательским интерфейсом; английские REAPER-написания остаются совместимым каноническим слоем.",
+      "status": "partial",
+      "acceptance": [
+        "54 exact aliases are tokenized",
+        "21 aliases execute through the REAPER 0.1 reference grammar"
+      ]
+    },
+    {
+      "id": "02",
+      "axis": "Программный язык — русский",
+      "contract": "Ключевые конструкции имеют устойчивые русские написания; пользовательские имена могут быть русскими Unicode-идентификаторами.",
+      "status": "partial",
+      "acceptance": [
+        "Exact alias manifest is versioned",
+        "No automatic translation of arbitrary identifiers"
+      ]
+    },
+    {
+      "id": "03",
+      "axis": "Кодовый язык — отечественный",
+      "contract": "UTF-8 сохраняет авторский текст; диагностика использует позиции символов, а не количество байтов.",
+      "status": "partial",
+      "acceptance": [
+        "Python and C lexers count Unicode code points in valid UTF-8 input",
+        "Unicode normalization and malformed UTF-8 rejection remain separate gates"
+      ]
+    },
+    {
+      "id": "04",
+      "axis": "Алгоритмический язык — национальный",
+      "contract": "Разбор ключевых слов детерминирован и воспроизводим; одинаковый исходный текст даёт одинаковые токены.",
+      "status": "implemented",
+      "acceptance": [
+        "Alias lookup is exact and table-driven",
+        "Unknown inflections remain ordinary identifiers"
+      ]
+    },
+    {
+      "id": "05",
+      "axis": "Машинный язык — родной",
+      "contract": "Русские формы сводятся к каноническим токенам REAPER до общей грамматики и семантического ядра.",
+      "status": "implemented",
+      "acceptance": [
+        "Python token kinds and C17 canonical spellings are covered by parity tests",
+        "No second runtime is introduced"
+      ]
+    },
+    {
+      "id": "06",
+      "axis": "Формальный язык — исконный",
+      "contract": "Формальная грамматика одна; новые формы принимаются только после описания соответствия и тестов.",
+      "status": "partial",
+      "acceptance": [
+        "21 base aliases are accepted by the 0.1 reference grammar",
+        "33 extended aliases are reserved lexically only"
+      ]
+    },
+    {
+      "id": "07",
+      "axis": "Компьютерный язык — самобытный",
+      "contract": "Удобочитаемость, диагностика и редакторская поддержка строятся вокруг русских имён и единых правил оформления.",
+      "status": "specified",
+      "acceptance": [
+        "Russian syntax highlighting is included in the editor grammar",
+        "Localized diagnostics and formatter parity remain roadmap work"
+      ]
+    },
+    {
+      "id": "08",
+      "axis": "Вычислительный язык — славянский",
+      "contract": "Числовые типы, арифметика, ошибки и ограничения наследуются от REAPER; язык не вводит скрытых преобразований.",
+      "status": "implemented",
+      "acceptance": [
+        "Existing REAPER arithmetic and resource limits remain authoritative",
+        "No locale-dependent decimal or numeric parsing is introduced"
+      ]
+    },
+    {
+      "id": "09",
+      "axis": "Системный язык — восточнославянский",
+      "contract": "Доступ к файлам, FFI, устройствам и небезопасным операциям остаётся явным и ограничивается моделью возможностей REAPER.",
+      "status": "specified",
+      "acceptance": [
+        "No capability is granted by a Russian keyword alias",
+        "Unsafe and external declarations remain acceptance-gated"
+      ]
+    },
+    {
+      "id": "10",
+      "axis": "Инструкционный язык — литературный",
+      "contract": "Справочник, примеры и диагностики должны объяснять конструкции ясным современным русским языком.",
+      "status": "specified",
+      "acceptance": [
+        "Examples distinguish executable and lexical-only constructs",
+        "Localized diagnostic catalogue is a future acceptance gate"
+      ]
+    },
+    {
+      "id": "11",
+      "axis": "Командный язык — народный",
+      "contract": "Частые действия выражаются короткими однозначными глаголами: объявить, изменить, вернуть, вывести.",
+      "status": "partial",
+      "acceptance": [
+        "The base verbs execute through the reference runtime",
+        "Additional verbs are reserved only when their canonical token exists"
+      ]
+    },
+    {
+      "id": "12",
+      "axis": "Синтаксический язык — общенародный",
+      "contract": "Порядок операторов, блоков и выражений един для всех языковых написаний.",
+      "status": "partial",
+      "acceptance": [
+        "МОСТ reuses REAPER parser and AST",
+        "Full declaration grammar remains in the native compiler roadmap"
+      ]
+    },
+    {
+      "id": "13",
+      "axis": "Семантический язык — коренной",
+      "contract": "Смысл задаётся каноническим токеном, типом и контекстом; эвристические синонимы не меняют программу.",
+      "status": "implemented",
+      "acceptance": [
+        "No stemming or probabilistic intent resolution",
+        "Alias table is exact-match and versioned"
+      ]
+    },
+    {
+      "id": "14",
+      "axis": "Декларативный язык — традиционный",
+      "contract": "Неизменяемость и объявления по умолчанию сохраняются; права и эффекты выражаются явно.",
+      "status": "partial",
+      "acceptance": [
+        "пусть maps to make; change respects REAPER mutability rules",
+        "Extended const/type forms are not yet executable"
+      ]
+    },
+    {
+      "id": "15",
+      "axis": "Императивный язык — аутентичный",
+      "contract": "Изменения состояния записываются явно и проверяются правилами REAPER.",
+      "status": "implemented",
+      "acceptance": [
+        "переменная and изменить map to vary/change",
+        "No hidden mutation is introduced by localization"
+      ]
+    },
+    {
+      "id": "16",
+      "axis": "Процедурный язык — нативный",
+      "contract": "Функции и возврат результата используют существующую модель функций REAPER.",
+      "status": "partial",
+      "acceptance": [
+        "функция/вернуть are executable aliases",
+        "процедура maps to lexical-only fn until declaration grammar is accepted"
+      ]
+    },
+    {
+      "id": "17",
+      "axis": "Объектный язык — местный",
+      "contract": "Структуры и типы выражаются формально; владение и время жизни не выводятся из лексических названий.",
+      "status": "specified",
+      "acceptance": [
+        "struct/type/trait aliases are lexical only",
+        "Ownership and borrow analysis require separate semantic acceptance tests"
+      ]
+    },
+    {
+      "id": "18",
+      "axis": "Модульный язык — русскоговорящий",
+      "contract": "Модули, импорты и экспорты сохраняют границы видимости, API и авторства.",
+      "status": "partial",
+      "acceptance": [
+        "Base import/export aliases use REAPER module behavior",
+        "module/pub declarations are lexical-only where grammar is not implemented"
+      ]
+    },
+    {
+      "id": "19",
+      "axis": "Универсальный язык — защита чужих прав",
+      "contract": "Совместимость с внешними API не отменяет лицензии, атрибуцию, авторство и права третьих лиц.",
+      "status": "specified",
+      "acceptance": [
+        "Preserve Apache-2.0 and third-party notices",
+        "No copying of proprietary code or removal of attribution"
+      ]
+    },
+    {
+      "id": "20",
+      "axis": "Исполняемый язык — русская по происхождению среда",
+      "contract": "Русскоязычная запись должна давать практичный и приятный рабочий процесс; «вайб» влияет на стиль, но не на смысл вычислений.",
+      "status": "partial",
+      "acceptance": [
+        "Executable base examples are tested in the Python reference runtime",
+        "Native compilation and self-hosting are not claimed"
+      ]
+    }
+  ],
+  "rights": {
+    "project_license": "Apache-2.0",
+    "author_and_contributor_rights": "Preserve existing copyright notices, contributor attribution, source provenance and license files.",
+    "third_party_rights": "Respect third-party copyright, license conditions, trademarks, attribution and data-use terms; do not remove notices or incorporate proprietary code without permission.",
+    "ownership_boundary": "The Russian-language profile does not claim exclusive ownership over Russian, Slavic languages, programming concepts or third-party contributions."
+  },
+  "architecture_invariants": [
+    "One REAPER parser, AST, semantic model, runtime, ABI and canonical IR.",
+    "МОСТ aliases are exact lexical mappings to existing canonical keywords.",
+    "A lexical reservation never implies grammar, type-checker, code-generation or runtime support.",
+    "No automatic inflection, stemming, transliteration, synonym guessing or probabilistic meaning resolution.",
+    "A feature is marked implemented only after code, tests and CI evidence."
+  ],
+  "keyword_registry": "most_keyword_aliases.json",
+  "specification": "../docs/MOST_RUSSIAN_NATIVE_PROFILE.md"
+}

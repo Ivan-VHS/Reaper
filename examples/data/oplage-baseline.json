@@ -1,0 +1,25 @@
+{
+  "schema": "oplage.device-snapshot.v1",
+  "captured_utc": "2026-11-19T10:00:00Z",
+  "source": {"provider": "fixture", "mode": "read_only"},
+  "identity_protection": {"algorithm": "HMAC-SHA-256", "key_scope": "snapshot_ephemeral"},
+  "summary": {
+    "total_devices": 5, "ok_devices": 4, "problem_devices": 0,
+    "other_status_devices": 1, "devices_with_class": 5,
+    "devices_with_identity": 5, "audited_packages": 0, "valid_packages": 0
+  },
+  "metrics": {
+    "device_ok_ratio": 0.8, "device_problem_free_ratio": 1.0,
+    "device_class_coverage_ratio": 1.0, "device_identity_coverage_ratio": 1.0,
+    "package_integrity_ratio": 0.0, "package_audit_coverage_ratio": 0.0
+  },
+  "devices": [
+    {"identity_sha256":"a088e15d711c3905dc7d234f125521aa11268991ce5393c50fde31d04f028c1f","friendly_name":"Fixture device 01","class":"Test","status":"OK","problem_code":null,"problem_reported":false},
+    {"identity_sha256":"2a533074d639343fc5172ca95a4f25c0cb60fca4a70fc8cd6dc911924c6c71de","friendly_name":"Fixture device 02","class":"Test","status":"OK","problem_code":null,"problem_reported":false},
+    {"identity_sha256":"93e54665c2d3f62b9e2632c1c9af11cad965fccb1c84a665f015da76682c7324","friendly_name":"Fixture device 03","class":"Test","status":"OK","problem_code":null,"problem_reported":false},
+    {"identity_sha256":"e6892238f92f9b51e21c2a0416d10e316ee1e23f420c8f666ba59c7ae0e00fd8","friendly_name":"Fixture device 04","class":"Test","status":"OK","problem_code":null,"problem_reported":false},
+    {"identity_sha256":"026b951e3189fcf41b087611e1746c4ae19573e6684b104439044916e3997f85","friendly_name":"Fixture device 05","class":"Test","status":"Unknown","problem_code":null,"problem_reported":false}
+  ],
+  "packages": [],
+  "snapshot_sha256": "bd2e2eb7c1ae0d9fb083d8cdb89932e86f3d02fcf2b546927b6ed8add228c666"
+}

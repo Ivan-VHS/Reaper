@@ -1,0 +1,1141 @@
+{
+  "schema": "systems-language-matrix/v1",
+  "count": 66,
+  "canonical_entries": 64,
+  "source_note": "Preserves all 66 supplied list positions. The repeated Clay entry and Nimrod-as-early-Nim entry are explicit aliases. This catalogue discovers candidate toolchains and maps capabilities; it does not implement 66 compilers.",
+  "profiles": {
+    "pytyliki": [
+      "native",
+      "manual-memory",
+      "data-oriented",
+      "simd",
+      "gpu",
+      "embedded",
+      "formal-verification",
+      "deterministic",
+      "no-runtime"
+    ],
+    "reaper": [
+      "native",
+      "static-types",
+      "ownership",
+      "linear-types",
+      "regions",
+      "compile-time",
+      "macros",
+      "ffi",
+      "concurrency",
+      "channels",
+      "wasm",
+      "formal-verification",
+      "memory-safety",
+      "simd"
+    ],
+    "oplague": [
+      "native",
+      "ownership",
+      "linear-types",
+      "regions",
+      "formal-verification",
+      "embedded",
+      "bare-metal",
+      "ffi",
+      "deterministic",
+      "memory-safety",
+      "static-types",
+      "no-runtime"
+    ]
+  },
+  "languages": [
+    {
+      "index": 1,
+      "id": "lang-01",
+      "name": "Odin",
+      "family": "modern-alternative",
+      "status": "modern",
+      "commands": [
+        "odin"
+      ],
+      "tags": [
+        "native",
+        "manual-memory",
+        "data-oriented",
+        "simd",
+        "game-dev",
+        "c-abi"
+      ]
+    },
+    {
+      "index": 2,
+      "id": "lang-02",
+      "name": "Jai",
+      "family": "modern-alternative",
+      "status": "experimental",
+      "commands": [
+        "jai"
+      ],
+      "tags": [
+        "native",
+        "manual-memory",
+        "data-oriented",
+        "compile-time",
+        "metaprogramming",
+        "no-runtime",
+        "game-dev"
+      ]
+    },
+    {
+      "index": 3,
+      "id": "lang-03",
+      "name": "C3",
+      "family": "modern-alternative",
+      "status": "modern",
+      "commands": [
+        "c3c"
+      ],
+      "tags": [
+        "native",
+        "manual-memory",
+        "static-types",
+        "c-abi",
+        "modules",
+        "no-runtime"
+      ]
+    },
+    {
+      "index": 4,
+      "id": "lang-04",
+      "name": "Hare",
+      "family": "modern-alternative",
+      "status": "modern",
+      "commands": [
+        "hare"
+      ],
+      "tags": [
+        "native",
+        "manual-memory",
+        "static-types",
+        "qbe",
+        "no-runtime",
+        "deterministic"
+      ]
+    },
+    {
+      "index": 5,
+      "id": "lang-05",
+      "name": "Myrddin",
+      "family": "modern-alternative",
+      "status": "specialized",
+      "commands": [
+        "myr"
+      ],
+      "tags": [
+        "native",
+        "manual-memory",
+        "static-types",
+        "algebraic-types",
+        "no-runtime"
+      ]
+    },
+    {
+      "index": 6,
+      "id": "lang-06",
+      "name": "V",
+      "family": "modern-alternative",
+      "status": "modern",
+      "commands": [
+        "v"
+      ],
+      "tags": [
+        "native",
+        "manual-memory",
+        "static-types",
+        "automatic-memory",
+        "no-runtime"
+      ]
+    },
+    {
+      "index": 7,
+      "id": "lang-07",
+      "name": "Vale",
+      "family": "modern-alternative",
+      "status": "experimental",
+      "commands": [
+        "vale"
+      ],
+      "tags": [
+        "native",
+        "generational-references",
+        "memory-safety",
+        "static-types"
+      ]
+    },
+    {
+      "index": 8,
+      "id": "lang-08",
+      "name": "Austral",
+      "family": "modern-alternative",
+      "status": "experimental",
+      "commands": [
+        "austral"
+      ],
+      "tags": [
+        "native",
+        "linear-types",
+        "memory-safety",
+        "static-types",
+        "no-runtime"
+      ]
+    },
+    {
+      "index": 9,
+      "id": "lang-09",
+      "name": "Cone",
+      "family": "modern-alternative",
+      "status": "experimental",
+      "commands": [
+        "cone"
+      ],
+      "tags": [
+        "native",
+        "gradual-types",
+        "memory-strategies",
+        "memory-safety"
+      ]
+    },
+    {
+      "index": 10,
+      "id": "lang-10",
+      "name": "Kit",
+      "family": "modern-alternative",
+      "status": "experimental",
+      "commands": [
+        "kit"
+      ],
+      "tags": [
+        "native",
+        "manual-memory",
+        "static-types",
+        "game-dev",
+        "c-abi"
+      ]
+    },
+    {
+      "index": 11,
+      "id": "lang-11",
+      "name": "Carp",
+      "family": "modern-alternative",
+      "status": "experimental",
+      "commands": [
+        "carp"
+      ],
+      "tags": [
+        "native",
+        "linear-types",
+        "ownership",
+        "memory-safety",
+        "compile-time"
+      ]
+    },
+    {
+      "index": 12,
+      "id": "lang-12",
+      "name": "Dale",
+      "family": "modern-alternative",
+      "status": "research",
+      "commands": [
+        "dale"
+      ],
+      "tags": [
+        "native",
+        "manual-memory",
+        "static-types",
+        "macros",
+        "llvm"
+      ]
+    },
+    {
+      "index": 13,
+      "id": "lang-13",
+      "name": "Zed",
+      "family": "modern-alternative",
+      "status": "experimental",
+      "commands": [],
+      "tags": [
+        "native",
+        "manual-memory",
+        "abi-layout",
+        "deterministic-codegen"
+      ]
+    },
+    {
+      "index": 14,
+      "id": "lang-14",
+      "name": "Biscuit",
+      "family": "modern-alternative",
+      "status": "experimental",
+      "commands": [],
+      "tags": [
+        "native",
+        "manual-memory",
+        "transparent-codegen",
+        "no-runtime"
+      ]
+    },
+    {
+      "index": 15,
+      "id": "lang-15",
+      "name": "Carbon",
+      "family": "cpp-llvm",
+      "status": "experimental",
+      "commands": [
+        "carbon"
+      ],
+      "tags": [
+        "native",
+        "static-types",
+        "c-abi",
+        "cpp-interop",
+        "memory-safety",
+        "llvm"
+      ]
+    },
+    {
+      "index": 16,
+      "id": "lang-16",
+      "name": "Cpp2 / cppfront",
+      "family": "cpp-llvm",
+      "status": "experimental",
+      "commands": [
+        "cppfront"
+      ],
+      "tags": [
+        "native",
+        "static-types",
+        "cpp-interop",
+        "code-generation"
+      ]
+    },
+    {
+      "index": 17,
+      "id": "lang-17",
+      "name": "Lobster",
+      "family": "cpp-llvm",
+      "status": "specialized",
+      "commands": [
+        "lobster"
+      ],
+      "tags": [
+        "native",
+        "static-types",
+        "compile-time",
+        "automatic-memory",
+        "simd"
+      ]
+    },
+    {
+      "index": 18,
+      "id": "lang-18",
+      "name": "Nim",
+      "family": "cpp-llvm",
+      "status": "modern",
+      "commands": [
+        "nim"
+      ],
+      "tags": [
+        "native",
+        "static-types",
+        "arc-orc",
+        "macros",
+        "compile-time",
+        "c-abi",
+        "wasm"
+      ]
+    },
+    {
+      "index": 19,
+      "id": "lang-19",
+      "name": "Crystal",
+      "family": "cpp-llvm",
+      "status": "specialized",
+      "commands": [
+        "crystal"
+      ],
+      "tags": [
+        "native",
+        "static-types",
+        "llvm",
+        "gc",
+        "c-abi"
+      ]
+    },
+    {
+      "index": 20,
+      "id": "lang-20",
+      "name": "D (BetterC)",
+      "family": "cpp-llvm",
+      "status": "modern",
+      "commands": [
+        "dmd",
+        "ldc2"
+      ],
+      "tags": [
+        "native",
+        "manual-memory",
+        "static-types",
+        "compile-time",
+        "metaprogramming",
+        "no-runtime",
+        "c-abi"
+      ]
+    },
+    {
+      "index": 21,
+      "id": "lang-21",
+      "name": "Terra",
+      "family": "cpp-llvm",
+      "status": "research",
+      "commands": [
+        "terra"
+      ],
+      "tags": [
+        "native",
+        "manual-memory",
+        "llvm",
+        "compile-time",
+        "metaprogramming",
+        "c-abi"
+      ]
+    },
+    {
+      "index": 22,
+      "id": "lang-22",
+      "name": "Clay (compile-time DSL)",
+      "family": "cpp-llvm",
+      "status": "research",
+      "commands": [
+        "clay"
+      ],
+      "tags": [
+        "native",
+        "static-types",
+        "compile-time",
+        "metaprogramming",
+        "zero-cost"
+      ]
+    },
+    {
+      "index": 23,
+      "id": "lang-23",
+      "name": "Felix",
+      "family": "cpp-llvm",
+      "status": "specialized",
+      "commands": [
+        "flx"
+      ],
+      "tags": [
+        "native",
+        "static-types",
+        "fibers",
+        "concurrency",
+        "code-generation"
+      ]
+    },
+    {
+      "index": 24,
+      "id": "lang-24",
+      "name": "Volt",
+      "family": "cpp-llvm",
+      "status": "experimental",
+      "commands": [
+        "volt"
+      ],
+      "tags": [
+        "native",
+        "manual-memory",
+        "static-types",
+        "c-abi"
+      ]
+    },
+    {
+      "index": 25,
+      "id": "lang-25",
+      "name": "ATS",
+      "family": "formal-verification",
+      "status": "research",
+      "commands": [
+        "patscc",
+        "atscc"
+      ],
+      "tags": [
+        "native",
+        "formal-verification",
+        "proofs",
+        "linear-types",
+        "memory-safety",
+        "static-types",
+        "c-abi"
+      ]
+    },
+    {
+      "index": 26,
+      "id": "lang-26",
+      "name": "F*",
+      "family": "formal-verification",
+      "status": "specialized",
+      "commands": [
+        "fstar",
+        "fstar.exe"
+      ],
+      "tags": [
+        "formal-verification",
+        "proofs",
+        "static-types",
+        "cryptography",
+        "code-generation",
+        "c-abi"
+      ]
+    },
+    {
+      "index": 27,
+      "id": "lang-27",
+      "name": "Cogent",
+      "family": "formal-verification",
+      "status": "research",
+      "commands": [
+        "cogent"
+      ],
+      "tags": [
+        "formal-verification",
+        "proofs",
+        "linear-types",
+        "memory-safety",
+        "static-types"
+      ]
+    },
+    {
+      "index": 28,
+      "id": "lang-28",
+      "name": "BitC",
+      "family": "formal-verification",
+      "status": "historical",
+      "commands": [
+        "bitc"
+      ],
+      "tags": [
+        "formal-verification",
+        "static-types",
+        "native",
+        "manual-memory"
+      ]
+    },
+    {
+      "index": 29,
+      "id": "lang-29",
+      "name": "Habit",
+      "family": "formal-verification",
+      "status": "research",
+      "commands": [
+        "habit"
+      ],
+      "tags": [
+        "formal-verification",
+        "static-types",
+        "memory-mapped-io",
+        "embedded"
+      ]
+    },
+    {
+      "index": 30,
+      "id": "lang-30",
+      "name": "Ivory",
+      "family": "formal-verification",
+      "status": "specialized",
+      "commands": [
+        "ivory"
+      ],
+      "tags": [
+        "formal-verification",
+        "embedded",
+        "c-abi",
+        "static-types",
+        "no-runtime"
+      ]
+    },
+    {
+      "index": 31,
+      "id": "lang-31",
+      "name": "ParaSail",
+      "family": "formal-verification",
+      "status": "specialized",
+      "commands": [
+        "parasail"
+      ],
+      "tags": [
+        "formal-verification",
+        "parallel",
+        "concurrency",
+        "memory-safety",
+        "static-types"
+      ]
+    },
+    {
+      "index": 32,
+      "id": "lang-32",
+      "name": "SPARK",
+      "family": "formal-verification",
+      "status": "specialized",
+      "commands": [
+        "gnatprove"
+      ],
+      "tags": [
+        "formal-verification",
+        "proofs",
+        "static-types",
+        "deterministic",
+        "embedded",
+        "memory-safety"
+      ]
+    },
+    {
+      "index": 33,
+      "id": "lang-33",
+      "name": "nesC",
+      "family": "embedded",
+      "status": "historical",
+      "commands": [
+        "nescc"
+      ],
+      "tags": [
+        "embedded",
+        "bare-metal",
+        "concurrency",
+        "static-types",
+        "c-abi"
+      ]
+    },
+    {
+      "index": 34,
+      "id": "lang-34",
+      "name": "eC (Ecere C)",
+      "family": "embedded",
+      "status": "specialized",
+      "commands": [
+        "ec"
+      ],
+      "tags": [
+        "native",
+        "manual-memory",
+        "static-types",
+        "modules",
+        "c-abi"
+      ]
+    },
+    {
+      "index": 35,
+      "id": "lang-35",
+      "name": "XC (XMOS C)",
+      "family": "embedded",
+      "status": "specialized",
+      "commands": [
+        "xcc"
+      ],
+      "tags": [
+        "embedded",
+        "bare-metal",
+        "realtime",
+        "channels",
+        "concurrency",
+        "c-abi"
+      ]
+    },
+    {
+      "index": 36,
+      "id": "lang-36",
+      "name": "Forth",
+      "family": "embedded",
+      "status": "specialized",
+      "commands": [
+        "gforth",
+        "forth"
+      ],
+      "tags": [
+        "embedded",
+        "bare-metal",
+        "stack-machine",
+        "manual-memory",
+        "no-runtime"
+      ]
+    },
+    {
+      "index": 37,
+      "id": "lang-37",
+      "name": "Factor",
+      "family": "embedded",
+      "status": "specialized",
+      "commands": [
+        "factor"
+      ],
+      "tags": [
+        "stack-machine",
+        "native",
+        "compile-time",
+        "metaprogramming",
+        "ffi"
+      ]
+    },
+    {
+      "index": 38,
+      "id": "lang-38",
+      "name": "MicroC / Jal",
+      "family": "embedded",
+      "status": "specialized",
+      "commands": [
+        "jalv2",
+        "jal"
+      ],
+      "tags": [
+        "embedded",
+        "bare-metal",
+        "realtime",
+        "manual-memory",
+        "no-runtime"
+      ]
+    },
+    {
+      "index": 39,
+      "id": "lang-39",
+      "name": "Plankalkül",
+      "family": "historical",
+      "status": "historical",
+      "commands": [],
+      "tags": [
+        "historical",
+        "static-types",
+        "bit-fields",
+        "data-structures"
+      ]
+    },
+    {
+      "index": 40,
+      "id": "lang-40",
+      "name": "C--",
+      "family": "historical",
+      "status": "historical",
+      "commands": [],
+      "tags": [
+        "historical",
+        "native",
+        "compiler-backend",
+        "c-abi"
+      ]
+    },
+    {
+      "index": 41,
+      "id": "lang-41",
+      "name": "BLISS",
+      "family": "historical",
+      "status": "historical",
+      "commands": [],
+      "tags": [
+        "historical",
+        "native",
+        "manual-memory",
+        "low-level"
+      ]
+    },
+    {
+      "index": 42,
+      "id": "lang-42",
+      "name": "BCPL",
+      "family": "historical",
+      "status": "historical",
+      "commands": [
+        "bcpl"
+      ],
+      "tags": [
+        "historical",
+        "native",
+        "manual-memory",
+        "no-runtime"
+      ]
+    },
+    {
+      "index": 43,
+      "id": "lang-43",
+      "name": "B",
+      "family": "historical",
+      "status": "historical",
+      "commands": [],
+      "tags": [
+        "historical",
+        "native",
+        "manual-memory",
+        "no-runtime"
+      ]
+    },
+    {
+      "index": 44,
+      "id": "lang-44",
+      "name": "PL/M",
+      "family": "historical",
+      "status": "historical",
+      "commands": [],
+      "tags": [
+        "historical",
+        "embedded",
+        "bare-metal",
+        "manual-memory"
+      ]
+    },
+    {
+      "index": 45,
+      "id": "lang-45",
+      "name": "PL/S",
+      "family": "historical",
+      "status": "proprietary",
+      "commands": [],
+      "tags": [
+        "historical",
+        "native",
+        "manual-memory",
+        "operating-systems"
+      ]
+    },
+    {
+      "index": 46,
+      "id": "lang-46",
+      "name": "ESP",
+      "family": "historical",
+      "status": "historical",
+      "commands": [],
+      "tags": [
+        "historical",
+        "native",
+        "operating-systems",
+        "system-runtime"
+      ]
+    },
+    {
+      "index": 47,
+      "id": "lang-47",
+      "name": "Mesa",
+      "family": "historical",
+      "status": "historical",
+      "commands": [],
+      "tags": [
+        "historical",
+        "static-types",
+        "component-modules",
+        "concurrency"
+      ]
+    },
+    {
+      "index": 48,
+      "id": "lang-48",
+      "name": "Modula-2",
+      "family": "historical",
+      "status": "specialized",
+      "commands": [
+        "gm2",
+        "m2c"
+      ],
+      "tags": [
+        "native",
+        "static-types",
+        "manual-memory",
+        "concurrency",
+        "embedded",
+        "c-abi"
+      ]
+    },
+    {
+      "index": 49,
+      "id": "lang-49",
+      "name": "Oberon",
+      "family": "historical",
+      "status": "specialized",
+      "commands": [
+        "obc",
+        "oo2c"
+      ],
+      "tags": [
+        "native",
+        "static-types",
+        "manual-memory",
+        "modules",
+        "operating-systems"
+      ]
+    },
+    {
+      "index": 50,
+      "id": "lang-50",
+      "name": "Active Oberon",
+      "family": "historical",
+      "status": "research",
+      "commands": [
+        "aos"
+      ],
+      "tags": [
+        "native",
+        "static-types",
+        "actor-model",
+        "concurrency",
+        "operating-systems"
+      ]
+    },
+    {
+      "index": 51,
+      "id": "lang-51",
+      "name": "Component Pascal",
+      "family": "historical",
+      "status": "specialized",
+      "commands": [
+        "cp"
+      ],
+      "tags": [
+        "native",
+        "static-types",
+        "component-modules",
+        "c-abi"
+      ]
+    },
+    {
+      "index": 52,
+      "id": "lang-52",
+      "name": "Sather",
+      "family": "historical",
+      "status": "historical",
+      "commands": [
+        "sather"
+      ],
+      "tags": [
+        "native",
+        "static-types",
+        "code-generation",
+        "c-abi"
+      ]
+    },
+    {
+      "index": 53,
+      "id": "lang-53",
+      "name": "Alef",
+      "family": "historical",
+      "status": "historical",
+      "commands": [],
+      "tags": [
+        "historical",
+        "native",
+        "channels",
+        "concurrency",
+        "operating-systems"
+      ]
+    },
+    {
+      "index": 54,
+      "id": "lang-54",
+      "name": "Limbo",
+      "family": "historical",
+      "status": "specialized",
+      "commands": [
+        "limbo"
+      ],
+      "tags": [
+        "native",
+        "channels",
+        "concurrency",
+        "distributed",
+        "static-types"
+      ]
+    },
+    {
+      "index": 55,
+      "id": "lang-55",
+      "name": "Newsqueak",
+      "family": "historical",
+      "status": "research",
+      "commands": [],
+      "tags": [
+        "historical",
+        "channels",
+        "concurrency",
+        "actor-model"
+      ]
+    },
+    {
+      "index": 56,
+      "id": "lang-56",
+      "name": "Cyclone",
+      "family": "experimental-research",
+      "status": "historical",
+      "commands": [],
+      "tags": [
+        "native",
+        "regions",
+        "memory-safety",
+        "static-types",
+        "c-abi"
+      ]
+    },
+    {
+      "index": 57,
+      "id": "lang-57",
+      "name": "Vault",
+      "family": "experimental-research",
+      "status": "historical",
+      "commands": [],
+      "tags": [
+        "linear-types",
+        "resource-protocols",
+        "memory-safety",
+        "static-types"
+      ]
+    },
+    {
+      "index": 58,
+      "id": "lang-58",
+      "name": "Sing#",
+      "family": "experimental-research",
+      "status": "historical",
+      "commands": [],
+      "tags": [
+        "managed-memory",
+        "memory-safety",
+        "contracts",
+        "concurrency",
+        "operating-systems"
+      ]
+    },
+    {
+      "index": 59,
+      "id": "lang-59",
+      "name": "Midori C#",
+      "family": "experimental-research",
+      "status": "proprietary",
+      "commands": [],
+      "tags": [
+        "managed-memory",
+        "ownership",
+        "concurrency",
+        "operating-systems",
+        "memory-safety"
+      ]
+    },
+    {
+      "index": 60,
+      "id": "lang-60",
+      "name": "Pre-Scheme",
+      "family": "experimental-research",
+      "status": "historical",
+      "commands": [],
+      "tags": [
+        "native",
+        "static-types",
+        "no-runtime",
+        "code-generation",
+        "c-abi"
+      ]
+    },
+    {
+      "index": 61,
+      "id": "lang-61",
+      "name": "Linear Lisp",
+      "family": "experimental-research",
+      "status": "research",
+      "commands": [],
+      "tags": [
+        "linear-types",
+        "ownership",
+        "memory-safety",
+        "no-runtime"
+      ]
+    },
+    {
+      "index": 62,
+      "id": "lang-62",
+      "name": "Clay (generic programming model)",
+      "family": "experimental-research",
+      "status": "research",
+      "commands": [],
+      "tags": [
+        "native",
+        "static-types",
+        "compile-time",
+        "metaprogramming",
+        "zero-cost"
+      ],
+      "alias_of": "lang-22"
+    },
+    {
+      "index": 63,
+      "id": "lang-63",
+      "name": "Nimrod (early Nim)",
+      "family": "experimental-research",
+      "status": "legacy-alias",
+      "commands": [
+        "nim"
+      ],
+      "tags": [
+        "native",
+        "static-types",
+        "arc-orc",
+        "compile-time",
+        "metaprogramming"
+      ],
+      "alias_of": "lang-18"
+    },
+    {
+      "index": 64,
+      "id": "lang-64",
+      "name": "Slang (shader language)",
+      "family": "experimental-research",
+      "status": "specialized",
+      "commands": [
+        "slangc"
+      ],
+      "tags": [
+        "gpu",
+        "shader",
+        "simd",
+        "cross-compilation",
+        "static-types"
+      ]
+    },
+    {
+      "index": 65,
+      "id": "lang-65",
+      "name": "Mojo",
+      "family": "experimental-research",
+      "status": "experimental",
+      "commands": [
+        "mojo"
+      ],
+      "tags": [
+        "native",
+        "ownership",
+        "static-types",
+        "simd",
+        "gpu",
+        "compile-time",
+        "metaprogramming"
+      ]
+    },
+    {
+      "index": 66,
+      "id": "lang-66",
+      "name": "High Level Assembly (HLA)",
+      "family": "experimental-research",
+      "status": "specialized",
+      "commands": [
+        "hla"
+      ],
+      "tags": [
+        "native",
+        "assembly",
+        "manual-memory",
+        "low-level",
+        "no-runtime"
+      ]
+    }
+  ]
+}

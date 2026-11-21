@@ -5,12 +5,73 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .errors import LexError
+from .token_catalog import token_is_reserved
 
 
 KEYWORDS = {
     "make", "vary", "change", "craft", "yield", "emit", "when",
     "otherwise", "each", "in", "loop", "while", "true", "false",
-    "nothing", "and", "or", "not",
+    "nothing", "and", "or", "not", "import", "export", "as",
+}
+
+# Exact Russian spellings map to canonical REAPER keyword spellings.
+# "runtime" aliases are accepted by the 0.1 reference grammar; additional words
+# are reserved lexically for the evolving native grammar and do not imply parsing.
+KEYWORD_ALIASES = {
+    "пусть": "make",
+    "переменная": "vary",
+    "изменить": "change",
+    "функция": "craft",
+    "вернуть": "yield",
+    "вывести": "emit",
+    "если": "when",
+    "иначе": "otherwise",
+    "для": "each",
+    "в": "in",
+    "цикл": "loop",
+    "пока": "while",
+    "истина": "true",
+    "ложь": "false",
+    "ничего": "nothing",
+    "и": "and",
+    "или": "or",
+    "не": "not",
+    "импорт": "import",
+    "экспорт": "export",
+    "как": "as",
+    "модуль": "module",
+    "публичный": "pub",
+    "процедура": "fn",
+    "структура": "struct",
+    "перечисление": "enum",
+    "типаж": "trait",
+    "реализация": "impl",
+    "тип": "type",
+    "константа": "const",
+    "связать": "let",
+    "изменяемый": "mut",
+    "возврат": "return",
+    "условие": "if",
+    "альтернатива": "else",
+    "выбор": "match",
+    "область": "region",
+    "сырой": "raw",
+    "арена": "arena",
+    "сигнал": "signal",
+    "асинхронно": "async",
+    "ожидать": "await",
+    "тест": "test",
+    "вычислить_при_сборке": "comptime",
+    "требует": "requires",
+    "гарантирует": "ensures",
+    "небезопасно": "unsafe",
+    "внешний": "extern",
+    "где": "where",
+    "уничтожить": "drop",
+    "для_каждого": "for",
+    "прервать": "break",
+    "продолжить": "continue",
+    "отложить": "defer",
 }
 
 
@@ -25,7 +86,7 @@ class Token:
 class Lexer:
     """Convert source text into a position-aware token stream."""
 
-    _TWO_CHAR = {":=", "==", "!=", "<=", ">=", "//", "**", "++", "~>"}
+    _TWO_CHAR = {":=", "==", "!=", "<=", ">=", "//", "**", "++", "::"}
     _ONE_CHAR = set("+-*/%<>(){}[],")
 
     def __init__(self, source: str, filename: str = "<memory>") -> None:
@@ -123,11 +184,20 @@ class Lexer:
         while self._peek().isalnum() or self._peek() == "_":
             self._advance()
         value = self.source[start:self.index]
-        kind = value.upper() if value in KEYWORDS else "IDENT"
+        canonical = KEYWORD_ALIASES.get(value)
+        kind = canonical.upper() if canonical is not None else (
+            value.upper() if value in KEYWORDS else "IDENT"
+        )
         self.tokens.append(Token(kind, value, start_line, start_column))
 
     def _operator_or_punctuation(self) -> None:
         start_line, start_column = self.line, self.column
+        triplet = self.source[self.index:self.index + 3]
+        if token_is_reserved(triplet):
+            for _ in range(3):
+                self._advance()
+            self.tokens.append(Token("CATALOG_OPERATOR", triplet, start_line, start_column))
+            return
         pair = self._peek() + self._peek(1)
         if pair in self._TWO_CHAR:
             self._advance()

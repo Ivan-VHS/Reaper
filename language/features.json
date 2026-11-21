@@ -1,14 +1,291 @@
 {
-  "schema": "most.feature-registry/v1",
-  "language": "MOST",
+  "schema": "reaper.feature-registry/v1",
+  "language": "REAPER",
   "edition": "0.1",
   "features": [
-    {"id":"MOST-SYN-001","name":"module declarations","area":"syntax","status":"specified","depends_on":[],"acceptance":["parser-positive","parser-negative","source-span"]},
-    {"id":"MOST-SYN-002","name":"function declarations","area":"syntax","status":"planned","depends_on":["MOST-SYN-001"],"acceptance":["parser-positive","parser-negative","ast-shape"]},
-    {"id":"MOST-TYP-001","name":"fixed-width integer types","area":"types","status":"specified","depends_on":["MOST-SYN-002"],"acceptance":["type-positive","type-negative","ir-verifier"]},
-    {"id":"MOST-TYP-002","name":"option and result types","area":"types","status":"planned","depends_on":["MOST-TYP-001"],"acceptance":["type-positive","type-negative","layout-tests"]},
-    {"id":"MOST-EFF-001","name":"explicit effect declarations","area":"effects","status":"specified","depends_on":["MOST-TYP-001"],"acceptance":["effect-allow","effect-deny","capability-boundary"]},
-    {"id":"MOST-MEM-001","name":"lexical regions","area":"memory","status":"specified","depends_on":["MOST-TYP-001"],"acceptance":["region-lifetime","escape-negative","allocator-tests"]},
-    {"id":"MOST-STD-001","name":"deterministic core library","area":"stdlib","status":"planned","depends_on":["MOST-TYP-001"],"acceptance":["api-contract","unit-tests","cross-target-vectors"]}
-  ]
+    {
+      "id": "MOST-SYN-001",
+      "name": "module declarations",
+      "area": "syntax",
+      "status": "specified",
+      "depends_on": [],
+      "acceptance": [
+        "parser-positive",
+        "parser-negative",
+        "source-span"
+      ]
+    },
+    {
+      "id": "MOST-SYN-002",
+      "name": "function declarations",
+      "area": "syntax",
+      "status": "planned",
+      "depends_on": [
+        "MOST-SYN-001"
+      ],
+      "acceptance": [
+        "parser-positive",
+        "parser-negative",
+        "ast-shape"
+      ]
+    },
+    {
+      "id": "MOST-TYP-001",
+      "name": "fixed-width integer types",
+      "area": "types",
+      "status": "specified",
+      "depends_on": [
+        "MOST-SYN-002"
+      ],
+      "acceptance": [
+        "type-positive",
+        "type-negative",
+        "ir-verifier"
+      ]
+    },
+    {
+      "id": "MOST-TYP-002",
+      "name": "option and result types",
+      "area": "types",
+      "status": "planned",
+      "depends_on": [
+        "MOST-TYP-001"
+      ],
+      "acceptance": [
+        "type-positive",
+        "type-negative",
+        "layout-tests"
+      ]
+    },
+    {
+      "id": "MOST-EFF-001",
+      "name": "explicit effect declarations",
+      "area": "effects",
+      "status": "specified",
+      "depends_on": [
+        "MOST-TYP-001"
+      ],
+      "acceptance": [
+        "effect-allow",
+        "effect-deny",
+        "capability-boundary"
+      ]
+    },
+    {
+      "id": "MOST-MEM-001",
+      "name": "lexical regions",
+      "area": "memory",
+      "status": "specified",
+      "depends_on": [
+        "MOST-TYP-001"
+      ],
+      "acceptance": [
+        "region-lifetime",
+        "escape-negative",
+        "allocator-tests"
+      ]
+    },
+    {
+      "id": "MOST-STD-001",
+      "name": "deterministic core library",
+      "area": "stdlib",
+      "status": "planned",
+      "depends_on": [
+        "MOST-TYP-001"
+      ],
+      "acceptance": [
+        "api-contract",
+        "unit-tests",
+        "cross-target-vectors"
+      ]
+    },
+    {
+      "id": "MOST-MAT-001",
+      "name": "20-element combinatorial architecture basis",
+      "area": "architecture",
+      "status": "specified",
+      "depends_on": [
+        "MOST-SYN-001"
+      ],
+      "acceptance": [
+        "basis-cardinality",
+        "basis-id-uniqueness"
+      ]
+    },
+    {
+      "id": "MOST-MAT-002",
+      "name": "directed 20×20 projection registry",
+      "area": "architecture",
+      "status": "specified",
+      "depends_on": [
+        "MOST-MAT-001"
+      ],
+      "acceptance": [
+        "matrix-cardinality",
+        "complete-pair-coverage",
+        "stable-projection-ids"
+      ]
+    },
+    {
+      "id": "MOST-MAT-003",
+      "name": "source-to-target projection traceability",
+      "area": "architecture",
+      "status": "specified",
+      "depends_on": [
+        "MOST-MAT-002"
+      ],
+      "acceptance": [
+        "action-vector-consistency",
+        "domain-path-consistency"
+      ]
+    },
+    {
+      "id": "MOST-MAT-004",
+      "name": "language profile and action-vector taxonomy",
+      "area": "architecture",
+      "status": "specified",
+      "depends_on": [
+        "MOST-MAT-001"
+      ],
+      "acceptance": [
+        "canonical-action-kinds",
+        "explicit-profile-metadata"
+      ]
+    },
+    {
+      "id": "MOST-MAT-005",
+      "name": "combinatorial matrix integrity validator",
+      "area": "tooling",
+      "status": "implemented",
+      "depends_on": [
+        "MOST-MAT-002",
+        "MOST-MAT-003"
+      ],
+      "acceptance": [
+        "matrix-positive",
+        "matrix-negative",
+        "duplicate-pair-rejection",
+        "execution-claim-rejection"
+      ]
+    },
+    {
+      "id": "MOST-RU-LEX-001",
+      "name": "Russian canonical keyword vocabulary",
+      "area": "syntax",
+      "status": "implemented",
+      "depends_on": [],
+      "acceptance": [
+        "native-lexer-positive",
+        "russian-identifiers-remain-identifiers",
+        "ci"
+      ]
+    },
+    {
+      "id": "MOST-RU-UTF8-001",
+      "name": "Validated UTF-8 and NFC source normalization",
+      "area": "syntax",
+      "status": "planned",
+      "depends_on": [
+        "MOST-RU-LEX-001"
+      ],
+      "acceptance": [
+        "utf8-negative",
+        "nfc-equivalence",
+        "unicode-source-spans"
+      ]
+    },
+    {
+      "id": "MOST-RU-GRM-001",
+      "name": "Shared REAPER declaration and block grammar for Russian aliases",
+      "area": "syntax",
+      "status": "planned",
+      "depends_on": [
+        "MOST-RU-LEX-001"
+      ],
+      "acceptance": [
+        "parser-positive",
+        "parser-negative",
+        "source-span"
+      ]
+    },
+    {
+      "id": "MOST-RU-MOR-001",
+      "name": "Separate Russian morphology resolver (excluded; exact aliases only)",
+      "area": "resolver",
+      "status": "deprecated",
+      "depends_on": [],
+      "acceptance": [
+        "paradigm-positive",
+        "unknown-form-negative",
+        "collision-negative"
+      ]
+    },
+    {
+      "id": "MOST-RU-RES-001",
+      "name": "Separate MOST intent resolver (excluded; use REAPER name resolution)",
+      "area": "resolver",
+      "status": "deprecated",
+      "depends_on": [],
+      "acceptance": [
+        "unique-resolution",
+        "ambiguous-resolution-negative",
+        "source-map"
+      ]
+    },
+    {
+      "id": "MOST-RU-DIA-001",
+      "name": "Separate MOST dialect grammar (excluded; use REAPER modules and namespaces)",
+      "area": "modules",
+      "status": "deprecated",
+      "depends_on": [],
+      "acceptance": [
+        "scope-isolation",
+        "import-compatibility",
+        "edition-migration"
+      ]
+    },
+    {
+      "id": "MOST-RU-PRO-001",
+      "name": "Optional speech input remains an external REAPER IDE/host adapter",
+      "area": "host",
+      "status": "planned",
+      "depends_on": [
+        "MOST-RU-GRM-001"
+      ],
+      "acceptance": [
+        "transcript-confirmation",
+        "ambiguity-rejection",
+        "semantic-independence"
+      ]
+    },
+    {
+      "id": "MOST-RU-META-001",
+      "name": "Shared REAPER token/source mapping for Russian aliases",
+      "area": "tooling",
+      "status": "planned",
+      "depends_on": [
+        "MOST-RU-LEX-001"
+      ],
+      "acceptance": [
+        "deterministic-symbol-table",
+        "typed-metadata",
+        "source-map"
+      ]
+    },
+    {
+      "id": "MOST-RU-COMPAT-001",
+      "name": "Executable Russian aliases for the reference interpreter subset",
+      "area": "syntax",
+      "status": "implemented",
+      "depends_on": [
+        "MOST-RU-LEX-001"
+      ],
+      "acceptance": [
+        "russian-lexer-aliases",
+        "russian-program-executes",
+        "runtime-regression"
+      ]
+    }
+  ],
+  "profile": "МОСТ — exact Russian keyword aliases; no separate parser, semantics, runtime or backend"
 }

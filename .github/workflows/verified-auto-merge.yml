@@ -1,0 +1,98 @@
+name: Verified Mainline Auto-Merge
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verified-mainline-auto-merge-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  python-tests:
+    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository)
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    permissions:
+      contents: read
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Compile package and tests
+        run: python -m compileall -q reaper tests
+      - name: Validate localized README links
+        run: python .github/scripts/check_readme_links.py
+      - name: Validate MOST 666 function registry
+        run: python tools/validate_most_functions.py
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
+      - name: Validate example
+        run: python -m reaper --check examples/flow.rpr
+      - name: Run example
+        run: python -m reaper examples/flow.rpr
+
+  native-c:
+    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository)
+    name: Native C build and tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install C and Python toolchains
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake python3
+      - name: Configure native build
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+      - name: Build native core
+        run: cmake --build build --parallel
+      - name: Run native and toolchain tests
+        run: ctest --test-dir build --output-on-failure
+      - name: Smoke-test native CLI
+        run: |
+          ./build/reaper-c --version
+          ./build/reaper-c --evolution-status
+          ./build/reaper-c --tokens examples/hello.rpr
+
+  auto-merge:
+    name: Enable native GitHub auto-merge
+    needs: [python-tests, native-c]
+    if: github.event_name != 'workflow_dispatch' && github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Confirm validated PR head is unchanged
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          current_head="$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" --jq '.head.sha')"
+          if [ "${current_head}" != "${PR_HEAD_SHA}" ]; then
+            echo "Auto-merge blocked: PR head changed while validation was running."
+            exit 1
+          fi
+      - name: Enable squash auto-merge
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge "${PR_URL}" --auto --squash --delete-branch

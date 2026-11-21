@@ -24,9 +24,21 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Compile package and tests
         run: python -m compileall -q reaper tests
+      - name: Validate localized README links
+        run: python .github/scripts/check_readme_links.py
+      - name: Validate Duck Sovereign Canon palette
+        run: python tools/validate_visual_canon.py reaper/ui_theme.py
+      - name: Validate MOST 666 function registry
+        run: python tools/validate_most_functions.py
       - name: Run unit tests
         run: python -m unittest discover -s tests -v
       - name: Validate example
         run: python -m reaper --check examples/flow.rpr
+      - name: Validate federated audit program
+        run: python -m reaper --check examples/device_audit.rpr
       - name: Run example
         run: python -m reaper examples/flow.rpr
+      - name: Run end-to-end read-only device audit example
+        run: |
+          python -m reaper examples/device_audit.rpr
+          python -c "import json; report=json.load(open('device-audit-report.json', encoding='utf-8')); assert report['schema'] == 'reaper.oplage-comparison.v1'; assert report['mode'] == 'read_only'"

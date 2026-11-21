@@ -1,0 +1,38 @@
+name: README live desktop screenshot
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/readme-screenshots.yml"
+      - ".github/scripts/capture_desktop_screenshot.ps1"
+      - "reaper/**"
+      - "README*"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  capture-live-studio:
+    name: Reaper Studio live Windows capture
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate reference runtime and starter example
+        run: |
+          python -m compileall -q reaper
+          python -m reaper --check examples/flow.rpr
+      - name: Capture running Reaper Studio
+        shell: pwsh
+        run: |
+          $python = (Get-Command python).Source
+          $pythonw = $python -replace 'python.exe$', 'pythonw.exe'
+          if (-not (Test-Path $pythonw)) { throw "pythonw.exe was not found beside the configured Python runtime." }
+          .github/scripts/capture_desktop_screenshot.ps1 -FilePath $pythonw -Arguments @("reaper_desktop.py") -OutputPath "assets/screenshots/reaper-studio.png" -StartupSeconds 15
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: readme-screenshot-reaper
+          path: assets/screenshots/reaper-studio.png
+          if-no-files-found: error
+          retention-days: 30
