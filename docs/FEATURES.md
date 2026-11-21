@@ -2,7 +2,7 @@
 
 | Component | Current scope | Status |
 |---|---|---|
-| Python runtime | lexer, parser, interpreter, CLI, REPL, modules | available |
+| Python runtime 0.2 | modern declarations, functions, if/else, for/while, break/continue, map literals, field access, membership and null coalescing; tree-walk + VM parity tests | implemented in reference runtime |
 | Quotas/resources | steps, calls, collections, text, heap, open handles | reference runtime |
 | Division | Euclidean divmod, quotient/remainder, divisibility | implemented |
 | Allocation | partition/split, distribute, weighted allocation | implemented |
