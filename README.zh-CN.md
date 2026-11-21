@@ -8,7 +8,38 @@ Reaper 是表达式导向的数据流语言；操作符 `::` 将值传递给下�
 ## Reaper Studio 实际运行截图
 
 <p align="center"><img src="assets/screenshots/reaper-studio.png" alt="Windows 11 中运行的 Reaper Studio" width="100%"></p>
-<sub>启用 Node.js 的 Studio 构建在 Windows 11 上的真实截图，1920×1080。</sub>
+
+## 功能数据流
+
+该图概述项目输入来源、处理阶段和生成结果之间已经实现的数据流转。
+
+```mermaid
+flowchart TD
+    A[Reaper 源代码] --> B[词法分析与解析]
+    B --> C[Python 参考运行时]
+    C --> D[CLI 和 REPL]
+    B --> E[LSP 语言服务]
+    C --> F[DAP 调试服务]
+    G[JavaScript 项目] --> H[官方 Node.js 发行版]
+    H --> I[V8、Node API、npm 和 Inspector]
+    J[C17 原生分支] --> K[部分解析与 lowering]
+```
+
+## 执行路径与输出
+
+第二张图将当前可执行路径和受支持输出与仅登记在目录中或尚不可用的行为区分开。
+
+```mermaid
+flowchart LR
+    A[Reaper 程序] --> B[Python 运行时]
+    B --> C[执行结果]
+    D[已打开的源文件] --> E[LSP 请求]
+    E --> F[诊断、补全和符号]
+    G[调试请求] --> H[DAP]
+    H --> I[断点、调用栈和局部变量]
+```
+
+<sub>应用实际截屏 · 原始图像为 1920×1080 · 保留原始像素，不进行人为放大。</sub>
 
 ## 当前能力矩阵
 
@@ -29,10 +60,6 @@ Reaper 是表达式导向的数据流语言；操作符 `::` 将值传递给下�
 | THESIS | 类型化证据图；不会自动验证其中的声明 |
 | 注册表 | 813 项功能提案、666 个 API 合同和 666 个保留词素；注册表条目不代表功能已完成 |
 | 联邦集成 | OPlague snapshots、VentuSample manifests 和可选 Pytyliki C ABI |
-
-## 界面动效与无障碍
-
-Reaper Studio 将 **Reduce Motion** 与 **Eco / Low-CPU Visuals** 偏好设置独立于主题设置保存。启用后，保留的过渡不超过 80 ms，并抑制空间移动和非必要视觉效果。由于 Studio 目前没有音频传输或节拍源，**Sync to Transport / BPM** 保持禁用。详见 [界面动效规范](docs/UI_MOTION.md)。
 
 ## CODEX-66 IDE 工作台
 
@@ -115,22 +142,3 @@ emit "result = " ++ text(result)
 [IDE 666 合同](docs/IDE_666_IMPLEMENTATION.md) · [LSP/DAP](docs/REAPER_IDE.md) · [Node.js 集成](docs/NOO_TAH.md) · [Kora for REAPER](docs/KORA_REAPER.md) · [插件宿主](docs/PLUGINS.md) · [内部产品](docs/INTERNAL_PRODUCTS.md) · [功能](docs/FEATURES.md) · [语言](LANGUAGE.md) · [架构](docs/ARCHITECTURE.md) · [813 注册表](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [联邦](docs/PROJECT_FEDERATION_MATRIX.md) · [文档索引](docs/README.md)
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [Releases](https://github.com/Ivan-VHS/Reaper/releases) · [Apache-2.0](LICENSE)
-
-<!-- VISUAL-DOCS:BEGIN -->
-## 架构可视化图
-
-![Reaper 架构图：源代码、Python 兼容运行时、IDE 服务和仍在开发中的 C17 路线](assets/visual-documentation-map.svg)
-
-此图为静态架构示意，并非 Studio 截图，也不代表 C17 已完全兼容。上方真实 Windows 截图才是当前桌面界面的依据。请参阅[视觉文档规范](docs/VISUAL_DOCUMENTATION.md)。
-<!-- VISUAL-DOCS:END -->
-
-
-## Motion Constitution v2026
-
-跨项目界面规范见 [Motion Constitution v2026](docs/MOTION_CONSTITUTION_V2026.md)。它统一弹簧/快速缓动、0.4×–2.2× 动效缩放范围、Reduce Motion 优先级、主题一致性、2×2/焦点场景展示及真实 SVG/Canvas 遥测规则。[原生界面动效规范](docs/UI_MOTION.md)说明 Reaper Studio 当前提供的功能：有界 Tk 弹簧过渡、持久化无障碍偏好，以及本地 IDE/LSP/DAP 工具。CODEX-66 和本地语言服务不是云端 AI Agent，也不提供流式 AI Diff；规划中的展示面板不得描述为已交付功能。
-
-## 统一动效架构图
-
-<p align="center"><img src="assets/motion-constitution-v2026.svg" alt="Motion Constitution v2026 四领域架构图" width="100%"></p>
-
-这是共享的 2×2 架构示意图，并非应用运行截图。图中明确区分各产品已交付的功能与不可用/规划中的能力。

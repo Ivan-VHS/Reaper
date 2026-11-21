@@ -1,7 +1,5 @@
 # Reaper — flow-first programming language
 
-[UI/UX Atlas 2026](docs/UI_UX_ATLAS_2026.md) · Dawn / Sunset / Night appearance profiles · accessibility-first native interaction
-
 [CI](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml) · [Windows Studio build](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml) · Python 3.10+ reference runtime · C17 native track · Windows Studio · Apache-2.0
 **Developer:** [Ivan-VHS](https://github.com/Ivan-VHS)
 
@@ -10,7 +8,38 @@ Reaper is an expression-oriented language: `::` passes a value into the next ope
 ## Live Reaper Studio
 
 <p align="center"><img src="assets/screenshots/reaper-studio.png" alt="Reaper Studio running on Windows 11" width="100%"></p>
-<sub>Actual Windows 11 desktop capture from the Node.js-enabled Studio build, 1920×1080.</sub>
+
+## Functional data flow
+
+The diagram summarizes implemented data movement between the project's input sources, processing stages and generated outputs.
+
+```mermaid
+flowchart TD
+    A[Reaper source] --> B[Lexer and parser]
+    B --> C[Python reference runtime]
+    C --> D[CLI and REPL]
+    B --> E[LSP language service]
+    C --> F[DAP debugging service]
+    G[JavaScript project] --> H[Official Node.js distribution]
+    H --> I[V8, Node APIs, npm and Inspector]
+    J[C17 native track] --> K[Partial parser and lowering]
+```
+
+## Runtime and output paths
+
+This second view separates execution paths and supported outputs from catalogue-only or unavailable behavior.
+
+```mermaid
+flowchart LR
+    A[Reaper program] --> B[Python runtime]
+    B --> C[Execution result]
+    D[Open source document] --> E[LSP requests]
+    E --> F[Diagnostics, completion and symbols]
+    G[Debug request] --> H[DAP]
+    H --> I[Breakpoints, stack and locals]
+```
+
+<sub>Actual application capture · 1920×1080 source image · original pixels retained; no artificial upscaling.</sub>
 
 ## Current capability matrix
 
@@ -31,10 +60,6 @@ Reaper is an expression-oriented language: `::` passes a value into the next ope
 | THESIS | typed evidence graph; claims are not automatically verified |
 | Registries | 813 feature proposals, 666 API contracts and 666 reserved token lexemes; registry entries are not completion claims |
 | Federation | OPlague snapshots, VentuSample pack manifests and optional Pytyliki C ABI |
-
-## UI motion and accessibility
-
-Reaper Studio persists **Reduce Motion** and **Eco / Low-CPU Visuals** preferences separately from theme settings. Enabled preferences cap retained transitions at 80 ms and suppress spatial or nonessential visual effects. **Sync to Transport / BPM** remains disabled because Studio has no audio transport or live tempo source. See the [UI motion contract](docs/UI_MOTION.md) and [Anatidae motion constitution](docs/ANATIDAE_MOTION_CONSTITUTION.md).
 
 ## CODEX-66 IDE workspace
 
@@ -117,22 +142,3 @@ emit "result = " ++ text(result)
 [IDE 666 contract](docs/IDE_666_IMPLEMENTATION.md) · [LSP/DAP](docs/REAPER_IDE.md) · [Node.js integration](docs/NOO_TAH.md) · [Kora for REAPER](docs/KORA_REAPER.md) · [Plugin host](docs/PLUGINS.md) · [Internal products](docs/INTERNAL_PRODUCTS.md) · [Features](docs/FEATURES.md) · [Language](LANGUAGE.md) · [Division](docs/DIVISION_ENGINE.md) · [Architecture](docs/ARCHITECTURE.md) · [813 registry](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [Federation](docs/PROJECT_FEDERATION_MATRIX.md) · [Docs index](docs/README.md)
 
 [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md) · [Releases](https://github.com/Ivan-VHS/Reaper/releases) · [Apache-2.0](LICENSE)
-
-<!-- VISUAL-DOCS:BEGIN -->
-## Visual architecture map
-
-![Reaper implementation map: source, Python compatibility runtime, IDE services and the partial C17 track](assets/visual-documentation-map.svg)
-
-This is a static architecture illustration, not a Studio screenshot or a claim of complete C17 parity. The live Windows capture above remains the evidence for the shipped desktop UI. See [Visual documentation and graphics contract](docs/VISUAL_DOCUMENTATION.md).
-<!-- VISUAL-DOCS:END -->
-
-
-## Motion Constitution v2026
-
-The cross-project interface contract is [Motion Constitution v2026](docs/MOTION_CONSTITUTION_V2026.md). It standardizes spring/snappy easing, the 0.4×–2.2× motion-scale envelope, reduced-motion precedence, theme parity, the 2×2/focus-scene showcase and truthful SVG/Canvas telemetry. The [native UI motion contract](docs/UI_MOTION.md) defines what Reaper Studio currently ships: bounded Tk spring presentation, persisted accessibility preferences, and local IDE/LSP/DAP tooling. CODEX-66 and local language services are not a cloud AI agent or streamed AI Diff; planned showcase panels must not be described as shipped features.
-
-## Shared motion architecture map
-
-<p align="center"><img src="assets/motion-constitution-v2026.svg" alt="Motion Constitution v2026: four-domain architecture map" width="100%"></p>
-
-This is the shared 2×2 architecture reference, not a live application screenshot. It distinguishes each product's shipped scope from unavailable or planned capabilities.
