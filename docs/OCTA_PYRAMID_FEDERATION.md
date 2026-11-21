@@ -61,3 +61,6 @@ The validator checks all twelve directed edges, unique facet identifiers, four s
 ## Change policy
 
 A shared topology change must update the topology, schema, validator, tests and each affected project contract together. Interface changes must also update producer/consumer documentation. New edges remain planned until working code and tests exist.
+
+
+Publication and privacy requirements follow [Documentation Control](DOCUMENTATION_CONTROL.md).
