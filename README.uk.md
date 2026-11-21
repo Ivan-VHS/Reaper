@@ -150,3 +150,7 @@ emit "result = " ++ text(result)
 Приклад моделі бюджету 500 грн із JSON-контрактом та автономним симулятором. Це документаційний приклад, а не функція runtime самого застосунку.
 
 [Багатомовний довідник](docs/RESOURCE_ALLOCATION_500_UAH.md) · [Інтерактивний симулятор](docs/resource-allocation-500-uah.html) · [Приклад JSON](examples/resource-allocation-500-uah.json) · [JSON Schema](schemas/resource-allocation.v1.schema.json)
+
+## Підтримка Elbrus E2K
+
+Python-еталон, нативна гілка C17, кросскладання LCC та межі сумісності описані в [посібнику з Elbrus E2K](docs/ELBRUS_E2K.md).
