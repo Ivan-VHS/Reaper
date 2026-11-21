@@ -1,6 +1,7 @@
 import os
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from ui_motion import (
     DURATIONS_MS, MotionPreferences, Spring1D, duration_for, ease_out,
@@ -18,18 +19,20 @@ class MotionTests(unittest.TestCase):
         self.assertEqual(values, sorted(values))
 
     def test_duration_tokens_follow_motion_budget(self):
-        self.assertEqual(DURATIONS_MS["instant"], 0)
-        self.assertEqual(DURATIONS_MS["micro"], 100)
-        self.assertLessEqual(duration_for("spatial", MotionPreferences(reduce_motion=True)), 80)
-        self.assertLessEqual(duration_for("emphasis", MotionPreferences(eco_visuals=True)), 80)
+        with patch("ui_motion.reduced_motion_enabled", return_value=False):
+            self.assertEqual(DURATIONS_MS["instant"], 0)
+            self.assertEqual(DURATIONS_MS["micro"], 100)
+            self.assertLessEqual(duration_for("spatial", MotionPreferences(reduce_motion=True)), 80)
+            self.assertLessEqual(duration_for("emphasis", MotionPreferences(eco_visuals=True)), 80)
 
     def test_expressive_mode_scales_but_bounds_motion(self):
-        normal = duration_for("spatial", MotionPreferences())
-        expressive = duration_for("spatial", MotionPreferences(expressive_motion=True))
-        reduced = duration_for("spatial", MotionPreferences(True, False, False, True))
-        self.assertGreater(expressive, normal)
-        self.assertLessEqual(expressive, 380)
-        self.assertLessEqual(reduced, 80)
+        with patch("ui_motion.reduced_motion_enabled", return_value=False):
+            normal = duration_for("spatial", MotionPreferences())
+            expressive = duration_for("spatial", MotionPreferences(expressive_motion=True))
+            reduced = duration_for("spatial", MotionPreferences(True, False, False, True))
+            self.assertGreater(expressive, normal)
+            self.assertLessEqual(expressive, 380)
+            self.assertLessEqual(reduced, 80)
 
     def test_spring_converges_and_rejects_non_finite_targets(self):
         spring = Spring1D(0.0, 240.0, 22.0, 1.0)
