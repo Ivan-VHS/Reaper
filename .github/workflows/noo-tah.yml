@@ -30,7 +30,7 @@ jobs:
       - name: Compile NOO TAH integration
         run: python -m compileall -q reaper/noo_tah.py reaper/desktop.py tests/test_noo_tah.py
       - name: Run NOO TAH unit and runtime tests
-        run: python -m unittest tests.test_noo_tah -v
+        run: python -m unittest discover -s tests -p test_noo_tah.py -v
       - name: Verify runtime versions and ABI
         run: python -m reaper.noo_tah version
       - name: Probe Node core, ESM, workers and streams
