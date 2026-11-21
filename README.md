@@ -101,3 +101,8 @@ The doctrine guides engineering decisions; it does not turn roadmap items into i
 ## License
 
 [Apache License 2.0](LICENSE)
+
+
+## Quality and commercial readiness
+
+The 20 × 3 evidence matrix covers correctness, operational cohesion and commercial governance. Run **python tools/quality_commercial.py** or add **--format json**; the report includes prioritized actions for licensing, support, distribution, demand validation, unit economics and pricing. The status model does not imply sales, revenue, profit or investment readiness. See [the quality-commercial standard](docs/QUALITY_COMMERCIAL_STANDARD.md).
