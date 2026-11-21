@@ -72,3 +72,6 @@ All peer links share eight invariants: identity, contracts, transport, provenanc
 ## Change rule
 
 When changing a shared interface, update the provider and consumer contracts, the relevant tests, the topology/schema/validator and affected federation docs in the same PR. Keep the four project manifests truthful about implemented, partial, optional, planned and not_applicable states. A catalogue entry or topology edge is not implementation evidence by itself.
+
+
+Publication and privacy requirements follow [Documentation Control](DOCUMENTATION_CONTROL.md).
