@@ -360,7 +360,9 @@ class ReaperStudio(tk.Tk):
         self._add_project_children(root_id, self.project_root, 0)
 
     def _add_project_children(self, parent: str, folder: Path, depth: int) -> None:
-        for entry in iter_project_entries(folder, max_depth=max(1, 5 - depth)):
+        if depth >= 4:
+            return
+        for entry in iter_project_entries(folder, max_depth=1):
             item = self.project_tree.insert(
                 parent, "end",
                 text=("▸ " if entry.is_directory else "  ") + entry.path.name,
