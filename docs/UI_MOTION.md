@@ -1,30 +1,25 @@
-# Desktop UI motion contract
+# Desktop UI Motion System — 2026
 
-The desktop UI follows the AETHER-ANAS white/blue/red motion contract. Motion is functional feedback, not ambient decoration.
+The desktop UI uses one accessible motion contract, implemented with native toolkit primitives. The reference motion lab is translated into native behavior instead of shipping its Tailwind/Google Fonts demo dependencies inside desktop applications.
 
-## Timing and curves
+## Motion modes
 
-| Interaction | Budget |
-| --- | ---: |
-| Direct control acknowledgement | 0–40 ms |
-| Hover, focus and state changes | 80–140 ms |
-| Pane and graph reflow | 160–240 ms |
-| Scene/preset transitions | 260–380 ms |
-| Reduced-motion replacement | no more than 80 ms |
+| Mode | Behavior |
+| --- | --- |
+| Normal | Restrained spring feedback, short pane transitions and dismissible status toasts |
+| Expressive | Slightly longer emphasis transitions and a livelier, damped spring response |
+| Reduced Motion | No spatial entrance; retained feedback is capped at 80 ms |
+| Eco / Low-CPU | Suppresses decorative refresh and spatial motion; retained feedback is capped at 80 ms |
 
-The default easing is `cubic-bezier(0.2, 0.8, 0.2, 1)`; click/transient feedback uses `cubic-bezier(0.05, 0.9, 0.2, 1)`. Linear motion is reserved for time/phase indicators. No large-area strobing, uncontrolled parallax or decorative rainbow cycling is permitted.
+The spring uses a semi-implicit Euler step with a 32 ms frame clamp and two substeps. Stiffness, damping and stagger are bounded user preferences. The defaults are 240 / 22 / 55 ms; Expressive uses 340 / 14 / 75 ms.
 
-## Semantic colour
+## Interaction model
 
-- Blue `#0039A6` / navy `#0B1F3A`: navigation, focus paths and calm state.
-- Red `#D52B1E` / `#B51A10`: generation, mutation, clipping and safety events only.
-- Signal animations must encode a measured value or state.
+- Hover and press feedback stays on native controls. It must not move focus targets or change hit-area geometry.
+- Notifications are native, dismissible toast surfaces; their entrance uses the spring solver and becomes static under Reduced Motion / Eco.
+- Panel depth is expressed through spacing, border hierarchy and restrained elevation. Native Tk/Win32/Qt surfaces do not pretend to provide browser backdrop blur.
+- Blue #0039A6 / navy #0B1F3A are used for navigation and calm feedback. Red #D52B1E / #B51A10 remains reserved for warnings, mutation and safety feedback. Decorative rainbow cycling, large-area flashing and uncontrolled parallax are not used.
 
 ## Accessibility and performance
 
-Preferences are persisted separately from theme settings:
-- **Reduce Motion** caps any retained transition at 80 ms and removes spatial/window movement.
-- **Eco / Low-CPU Visuals** suppresses nonessential visual effects and secondary refresh work.
-- **Sync to Transport / BPM** is enabled only when a real project transport/tempo source exists. It must not pretend to sync when the host has no transport.
-
-All animation work stays on the UI thread and must never block audio/DSP, generation, worker, keyboard or drag operations. This application has no audio transport; BPM sync is therefore intentionally unavailable in this UI.
+Preferences are persisted across sessions. The system honors UI_REDUCED_MOTION and the native Windows preference. Animation is scheduled on the UI thread only; it must never block file operations, device inspection, generation, audio/DSP, worker threads, keyboard navigation or drag operations. BPM sync is only enabled when the application has a real tempo/transport source.

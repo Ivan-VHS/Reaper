@@ -145,7 +145,7 @@ class ReaperStudio(tk.Tk):
         self.configure(menu=menu)
 
     def show_motion_settings(self) -> None:
-        """Configure persisted motion and low-CPU visual preferences."""
+        """Configure motion intensity, spring response and accessible fallbacks."""
         window = tk.Toplevel(self)
         window.title("Настройки движения интерфейса")
         window.resizable(False, False)
@@ -153,18 +153,76 @@ class ReaperStudio(tk.Tk):
         current = self._motion.preferences
         reduce_var = tk.BooleanVar(value=current.reduce_motion)
         eco_var = tk.BooleanVar(value=current.eco_visuals)
+        mode_var = tk.StringVar(value=current.motion_mode)
+        stiffness_var = tk.IntVar(value=current.stiffness)
+        damping_var = tk.IntVar(value=current.damping)
+        stagger_var = tk.IntVar(value=current.stagger_ms)
+
         frame = ttk.Frame(window, padding=16)
         frame.pack(fill="both", expand=True)
-        ttk.Label(frame, text="Кинетика интерфейса", style="PaneTitle.TLabel").pack(anchor="w", pady=(0, 8))
-        ttk.Checkbutton(frame, text="Reduce Motion — убрать пространственное движение", variable=reduce_var).pack(anchor="w", pady=4)
-        ttk.Checkbutton(frame, text="Eco / Low-CPU Visuals — отключить необязательные эффекты", variable=eco_var).pack(anchor="w", pady=4)
-        ttk.Checkbutton(frame, text="Sync to Transport / BPM", state="disabled").pack(anchor="w", pady=4)
-        ttk.Label(frame, text="REAPER Studio сейчас не содержит аудиотранспорта или мастер-BPM. Синхронизация станет доступна после подключения транспортного API.", wraplength=460).pack(anchor="w", pady=(4, 12))
+        ttk.Label(frame, text="Кинетика интерфейса · Motion 2026", style="PaneTitle.TLabel").pack(anchor="w", pady=(0, 8))
+        ttk.Label(frame, text="Интенсивность движения").pack(anchor="w")
+        mode_box = ttk.Combobox(
+            frame, textvariable=mode_var,
+            values=("normal", "expressive", "reduced"),
+            state="readonly",
+        )
+        mode_box.pack(fill="x", pady=(3, 7))
+
+        def select_motion_preset(_event: object = None) -> None:
+            selected = mode_var.get()
+            if selected == "expressive":
+                stiffness_var.set(340)
+                damping_var.set(14)
+                stagger_var.set(75)
+                reduce_var.set(False)
+            elif selected == "reduced":
+                stiffness_var.set(460)
+                damping_var.set(42)
+                stagger_var.set(0)
+                reduce_var.set(True)
+            else:
+                stiffness_var.set(240)
+                damping_var.set(22)
+                stagger_var.set(55)
+                reduce_var.set(False)
+
+        mode_box.bind("<<ComboboxSelected>>", select_motion_preset)
+
+        def add_scale(label: str, variable: tk.IntVar, low: int, high: int) -> None:
+            row = ttk.Frame(frame)
+            row.pack(fill="x", pady=3)
+            ttk.Label(row, text=label, width=24).pack(side="left")
+            tk.Scale(
+                row, from_=low, to=high, orient="horizontal",
+                variable=variable, showvalue=True, resolution=1,
+                length=250, highlightthickness=0,
+            ).pack(side="right", fill="x", expand=True)
+
+        add_scale("Stiffness", stiffness_var, 80, 520)
+        add_scale("Damping", damping_var, 6, 50)
+        add_scale("Stagger (ms)", stagger_var, 0, 180)
+        ttk.Checkbutton(frame, text="Reduce Motion — убрать пространственное движение", variable=reduce_var).pack(anchor="w", pady=(7, 2))
+        ttk.Checkbutton(frame, text="Eco / Low-CPU Visuals — отключить необязательные эффекты", variable=eco_var).pack(anchor="w", pady=2)
+        ttk.Checkbutton(frame, text="Sync to Transport / BPM", state="disabled").pack(anchor="w", pady=2)
+        ttk.Label(frame, text="REAPER Studio не содержит аудиотранспорта или мастер-BPM; синхронизация останется отключённой до появления реального transport API.", wraplength=480).pack(anchor="w", pady=(4, 10))
         buttons = ttk.Frame(frame)
         buttons.pack(fill="x")
+
         def apply() -> None:
-            self._motion.update_preferences(MotionPreferences(reduce_var.get(), eco_var.get(), False))
+            selected_mode = mode_var.get()
+            self._motion.update_preferences(MotionPreferences(
+                reduce_motion=reduce_var.get() or selected_mode == "reduced",
+                eco_visuals=eco_var.get(),
+                sync_to_bpm=False,
+                motion_mode=selected_mode,
+                stiffness=int(stiffness_var.get()),
+                damping=int(damping_var.get()),
+                stagger_ms=int(stagger_var.get()),
+            ))
+            self._motion.show_toast("Настройки движения сохранены", "success")
             window.destroy()
+
         ttk.Button(buttons, text="Сохранить", style="Primary.TButton", command=apply).pack(side="right")
         ttk.Button(buttons, text="Отмена", command=window.destroy).pack(side="right", padx=(0, 8))
         window.grab_set()
