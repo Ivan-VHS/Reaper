@@ -24,7 +24,7 @@ from .token_catalog import TOKEN_CATALOG_SIZE, token_catalog, token_info, token_
 from .thesis import ThesisLedger, ThesisLedgerError
 from .embedded import EmbeddedError, McuProfile, RegisterBank, build_project as build_embedded_project, init_project as init_embedded_project
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __all__ = [
     "DivisionResult", "ExecutionLimitError", "EvolutionEngine", "EvolutionReport",
     "ThesisLedger", "ThesisLedgerError",
