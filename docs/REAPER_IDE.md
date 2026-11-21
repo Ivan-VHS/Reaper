@@ -4,7 +4,7 @@
 
 Two dependency-free stdio services are included:
 
-- **LSP:** initialize/shutdown, full-document open/change/close, parser-backed diagnostics, completion, hover, definition/reference lookup, rename edits and top-level declaration symbols.
+- **LSP:** initialize/shutdown, UTF-16 incremental document changes, version checks, parser and tolerant-structure diagnostics, background symbol indexing, fuzzy completion, hover, definition/reference lookup, rename edits and document symbols.
 - **DAP:** launch a trusted local .rpr file, line breakpoints, continue/next/step-in, stack frame, local-variable inspection and termination. It reuses the existing RuntimeDebugger statement-boundary hook.
 
 Run from the repository root:
@@ -25,14 +25,14 @@ Both services use Content-Length framed JSON-RPC over stdin/stdout. Stdout is re
 | Parser diagnostics | Implemented | Existing REAPER lexer/parser; no second grammar |
 | Completion / hover | Implemented | Canonical keywords, aliases and bounded built-ins |
 | Definition / references / rename | Basic | Lexical identifier matching, not semantic resolution |
-| Document symbols | Basic | Top-level make, vary, craft declarations |
+| Document symbols | Basic | Indexed make, vary, craft and supported type declarations |
 | DAP transport | Implemented | Framed request/response/events |
 | Breakpoints and stepping | Implemented | Statement-boundary debugger; next and step-in share granularity |
 | Stack and locals | Implemented | Existing runtime debugger snapshots |
 | Conditional breakpoints / evaluate / step-out | Not implemented | Not advertised as supported |
 | Type inference, semantic graph, incremental AST | Planned | Requires canonical type/IR APIs |
 | Native C17 language service | Planned | Python remains the compatibility reference |
-| Coverage, profiler UI, project explorer | Planned | Requires stable data contracts |
+| Coverage, profiler UI, test explorer, integrated Git UI | Planned | Requires stable data contracts |
 
 ## Architecture
 
@@ -50,7 +50,7 @@ parser diagnostics                Interpreter
              REAPER language core
 ```
 
-LSP advertises only implemented handlers. It uses full-document synchronization; ranged incremental edits, semantic tokens, type-aware completion and workspace indexing remain future work. DAP does not evaluate arbitrary host-language expressions or create an OS sandbox. Launch only trusted local programs.
+LSP advertises only implemented handlers. Document edits use UTF-16 positions and monotonically increasing versions; stale edits are rejected. A cancellable background index publishes only results for the current snapshot. The index is per open document and lexical: cross-file semantic resolution, type inference, semantic tokens and AST refactoring remain future work. DAP does not evaluate arbitrary host-language expressions or create an OS sandbox. Launch only trusted local programs.
 
 ## Design constraints
 

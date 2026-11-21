@@ -7,12 +7,12 @@ comments, strings, indentation and TextMate syntax coloring.
 
 The repository now includes dependency-free stdio protocol services:
 
-- `python -m reaper lsp` — LSP completion, hover, parser diagnostics,
-  declaration symbols and basic lexical navigation/refactoring.
+- `python -m reaper lsp` — UTF-16 incremental LSP, versioned documents,
+  parser/structure diagnostics, completion, hover, symbols and lexical navigation.
 - `python -m reaper dap` — DAP launch, line breakpoints, statement-boundary
   stepping, stack and local-variable inspection.
 
-These are protocol services, not yet a packaged VS Code extension client.
+These are protocol services, not yet a packaged VS Code extension client. LSP indexing is per open document; it does not claim cross-file type inference or AST refactoring.
 See [REAPER IDE architecture](../../docs/REAPER_IDE.md) for exact capabilities
 and maturity boundaries. Do not advertise type inference, incremental semantic
 indexing, conditional breakpoints, expression evaluation, step-out, profiling

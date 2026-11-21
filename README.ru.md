@@ -12,7 +12,7 @@ Reaper — язык выражений с явным потоком данных
 | Область | Текущая граница |
 |---|---|
 | Python runtime | lexer, parser, интерпретатор, CLI, REPL, модули, closures, quotas, audit |
-| Reaper Studio | Основа Windows IDE: дерево проекта, подсветка синтаксиса, номера строк, поиск, проверка/запуск, отладчик, точки останова, переменные и стек; LSP и Git-панели пока в плане |
+| Reaper Studio | Основа Windows IDE: дерево проекта, подсветка, номера строк, поиск, проверка/запуск и отладчик; LSP уже поддерживает диагностику и навигацию по открытым файлам, межфайловая семантика и Git UI пока в плане |
 | Native C17 | lexer, expression parser, owned AST, checked IR, limited lowering |
 | МОСТ | 54 точных алиаса: 21 исполняемый в reference subset, 33 зарезервированы |
 | QCS 1.0 | отдельный hardware-domain parser и JSON AST; без управления hardware |
