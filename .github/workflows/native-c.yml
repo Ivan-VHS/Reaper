@@ -25,3 +25,7 @@ jobs:
           ./build/reaper-c --version
           ./build/reaper-c --evolution-status
           ./build/reaper-c --tokens examples/hello.rpr
+          ./build/reaper-c --eval "6 * 7"
+          ./build/reaper-c --run examples/native_expression.rpr
+          ./build/reaper-c --selfhood
+          ./build/reaper-c --selfhood-token "Сам"
