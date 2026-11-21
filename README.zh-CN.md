@@ -115,3 +115,8 @@ emit "result = " ++ text(result)
 [IDE 666 合同](docs/IDE_666_IMPLEMENTATION.md) · [LSP/DAP](docs/REAPER_IDE.md) · [Node.js 集成](docs/NOO_TAH.md) · [Kora for REAPER](docs/KORA_REAPER.md) · [插件宿主](docs/PLUGINS.md) · [内部产品](docs/INTERNAL_PRODUCTS.md) · [功能](docs/FEATURES.md) · [语言](LANGUAGE.md) · [架构](docs/ARCHITECTURE.md) · [813 注册表](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [联邦](docs/PROJECT_FEDERATION_MATRIX.md) · [文档索引](docs/README.md)
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [Releases](https://github.com/Ivan-VHS/Reaper/releases) · [Apache-2.0](LICENSE)
+
+
+## Motion Constitution v2026
+
+跨项目界面规范见 [Motion Constitution v2026](docs/MOTION_CONSTITUTION_V2026.md)。它统一弹簧/快速缓动、0.4×–2.2× 动效缩放范围、Reduce Motion 优先级、主题一致性、2×2/焦点场景展示及真实 SVG/Canvas 遥测规则。[原生界面动效规范](docs/UI_MOTION.md)说明 Reaper Studio 当前提供的功能：有界 Tk 弹簧过渡、持久化无障碍偏好，以及本地 IDE/LSP/DAP 工具。CODEX-66 和本地语言服务不是云端 AI Agent，也不提供流式 AI Diff；规划中的展示面板不得描述为已交付功能。
