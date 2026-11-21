@@ -132,6 +132,8 @@ class ReflashPlan:
             encoded = raw.get("content_base64")
             if not isinstance(encoded, str):
                 raise CLifeError(f"missing content for {path}")
+            if len(encoded) > (( _MAX_FILE_BYTES + 2) // 3) * 4:
+                raise CLifeError(f"encoded content exceeds the 16 MiB limit: {path}")
             try:
                 decoded = base64.b64decode(encoded, validate=True)
             except (ValueError, base64.binascii.Error) as error:
@@ -322,6 +324,7 @@ def _secure_directory(path: Path) -> None:
 
 
 def _atomic_write(path: Path, content: bytes, mode: int = 0o644) -> None:
+    _secure_directory(path.parent)
     path.parent.mkdir(parents=True, exist_ok=True)
     _secure_directory(path.parent)
     descriptor, temporary = tempfile.mkstemp(prefix=".reaper-clife-", dir=path.parent)
@@ -456,7 +459,9 @@ def verify_checkpoint(checkpoint: str | Path) -> CheckpointVerification:
             errors.append("manifest totals do not match verified files")
         actual_paths: set[str] = set()
         files_root = directory / "files"
-        if files_root.exists():
+        if files_root.is_symlink():
+            errors.append("checkpoint files root must not be a symlink")
+        if files_root.exists() and not files_root.is_symlink():
             for current, directories, filenames in os.walk(files_root, followlinks=False):
                 for name in directories:
                     if (Path(current) / name).is_symlink():
@@ -485,6 +490,7 @@ def restore_checkpoint(checkpoint: str | Path, destination: str | Path) -> Path:
         raise CLifeError("restore destination must differ from the checkpoint")
     _secure_directory(target.parent)
     target.parent.mkdir(parents=True, exist_ok=True)
+    _secure_directory(target.parent)
     if target.is_symlink():
         raise CLifeError("restore destination must not be a symlink")
     if target.exists() and (not target.is_dir() or any(target.iterdir())):
@@ -595,7 +601,7 @@ def apply_reflash_plan(
                     target.unlink(missing_ok=True)
                 else:
                     _atomic_write(target, previous, mode)
-            except OSError as rollback_error:
+            except Exception as rollback_error:
                 rollback_errors.append(f"{target}: {rollback_error}")
         if rollback_errors:
             raise CLifeError(
