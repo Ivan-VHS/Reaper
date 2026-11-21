@@ -1,48 +1,63 @@
-# OCTA-8 — Horizontal Peer Product and Octagonal Pyramid
+# OCTA-8 — Four-Project Horizontal Peer Product
 
-**Status:** shared, validated topology for Reaper, Pytyliki and OPlague. It maps explicit interfaces; it is not a central runtime bus.
+**Status:** shared four-project topology with twelve directed peer links, four independent self-loops and eight octagonal-pyramid facets.
 
-## Geometry
+## Geometry and mesh
 
-OCTA-8 has an octagonal base, eight triangular side facets and one coordination apex. The base plane is the horizontal peer layer: all three projects remain independent and each keeps a local self-loop.
+The base is a complete directed mesh of four independent products:
 
-The apex `octa-hub` is protocol/topology metadata only. It is non-executable, not a runtime gateway and not a single point of failure. Peers communicate directly.
+- Reaper — language and orchestration.
+- Pytyliki — processor, memory, metric and DSP systems core.
+- OPlague — read-only Windows device and driver-package diagnostics.
+- VentuSample — offline procedural audio and sample-pack generation.
 
-## Horizontal multiplication
+For n=4, the mesh contains n(n-1)=12 directed links. Each project retains its own local self-loop. The apex octa-hub carries protocol metadata only; it is non-executable, is not a runtime gateway and is not a single point of failure.
 
-For three projects, the complete directed pairwise product is `n × (n − 1) = 3 × 2 = 6` directed peer links, plus three self-loops.
+## Pairwise feature product
 
-| Direction | Transport | Contract | Behavior |
-|---|---|---|---|
-| OPlague → Reaper | bounded JSON | `oplage.device-snapshot.v1` | read-only snapshot consumed by Reaper |
-| Reaper → OPlague | bounded JSON | `reaper.oplage-comparison.v1` | OPlague validates Reaper's report |
-| Reaper → Pytyliki | explicit native FFI request | `pytyliki.c-abi.v1` | bounded float64 metric call |
-| Pytyliki → Reaper | synchronous ABI response | `pytyliki.c-abi.v1` | status/result returned through the call |
-| OPlague → Pytyliki | explicit native FFI request | `pytyliki.c-abi.v1` | optional native distance cross-check |
-| Pytyliki → OPlague | synchronous ABI response | `pytyliki.c-abi.v1` | bounded numeric result returned through the call |
+| Pair | Interface | State |
+|---|---|---|
+| Reaper ↔ OPlague | oplage.device-snapshot.v1, reaper.oplage-comparison.v1 | Implemented, bounded JSON, read-only |
+| Reaper ↔ Pytyliki | pytyliki.c-abi.v1 | Optional explicit-path native metric calls |
+| OPlague ↔ Pytyliki | pytyliki.c-abi.v1 | Optional explicit-path numerical cross-check |
+| VentuSample → Reaper | ventusample.pack.v1 | Implemented pack-manifest audit and comparison |
+| Reaper → VentuSample | ventusample.render-request.v1 | Planned |
+| VentuSample ↔ Pytyliki | pytyliki.c-abi.v1 | Planned direct native adapter |
+| VentuSample ↔ OPlague | not-applicable.v1 | Not applicable; no driver/audio coupling |
 
-FFI responses are synchronous returns to caller-initiated requests, not autonomous callbacks or peer-launched processes.
+The Reaper pack consumer validates v1 metadata, derives 22 normalized descriptors, and produces a read-only comparison report. It does not inspect waveform data or alter generated files. Its default metric engine is Reaper Python; an explicit Pytyliki library path enables a native distance cross-check.
 
-## Eight pyramid facets
+## Eight facets
 
-1. **Identity and namespaces** — stable project/interface IDs and opaque person/device references.
-2. **Contracts and versioning** — explicit schemas and ABI versions; breaking changes require a new version.
-3. **Transport and bounded envelopes** — bounded JSON or synchronous ABI; malformed and oversized input is rejected.
-4. **Provenance and integrity** — source digests and artifact lineage; a hash does not authenticate a publisher.
-5. **Validation and normalization** — exact dimensions, units, ranges and finite-number checks.
-6. **Privacy and consent** — pseudonymous device references; explicit opt-in for native loading and exports.
-7. **Execution and safety** — read-only hardware evidence flow; no driver mutation through the mesh.
-8. **Audit and reproducibility** — deterministic fingerprints, inspectable results and discrepancy states.
+1. **Identity:** stable project and interface identifiers.
+2. **Contracts:** versioned schemas and compatibility rules.
+3. **Transport:** bounded JSON artifacts and explicit synchronous native calls.
+4. **Provenance:** source lineage and content fingerprints.
+5. **Validation:** strict types, dimensions, units, value ranges and finite numbers.
+6. **Privacy:** no unnecessary personal/device identity in sample-pack artifacts.
+7. **Safety:** read-only hardware flow and explicit native-loading boundaries.
+8. **Audit:** deterministic outputs, testable invariants and visible implementation status.
 
-Topology JSON and JSON Schema: `federation/octa-pyramid.v1.json`, `schemas/octa-pyramid.v1.schema.json`. Validate with `python tools/validate_octa_pyramid.py` and `python -m unittest tests.test_octa_pyramid -v`.
+## Protocol rules
 
-## Project boundaries
+- No shared monolithic runtime and no central executable gateway.
+- Native libraries are caller-selected by explicit trusted path; no implicit DLL/SO discovery.
+- Device and driver evidence stays read-only across the mesh.
+- Audio generation and sample asset storage remain owned by VentuSample.
+- Manifest comparisons use declared settings and stored measurements, not waveform-level listening or quality judgments.
+- Planned and not-applicable edges remain explicit and are never described as implemented.
 
-Reaper owns orchestration/reports; Pytyliki owns the C11 numerical core/ABI; OPlague owns PnP inventory, package inspection and driver evidence. Native libraries are explicitly selected. Driver installation, removal, enable/disable and privileged operations are not added. This is a federation contract, not a monolithic merge.
+## Validation
 
-## Cross-repository references
+Each repository contains the same topology JSON/schema and a local validator:
 
-- [Reaper](https://github.com/Ivan-VHS/Reaper)
-- [Pytyliki](https://github.com/Ivan-VHS/Pytyliki)
-- [OPlague](https://github.com/Ivan-VHS/OPlague)
-- [Reaper federation matrix](https://github.com/Ivan-VHS/Reaper/blob/main/docs/PROJECT_FEDERATION_MATRIX.md)
+~~~bash
+python tools/validate_octa_pyramid.py
+python -m unittest tests.test_octa_pyramid -v
+~~~
+
+The validator checks all twelve directed edges, unique facet identifiers, four self-loops, declared project membership and the non-executable apex. Project-specific contracts validate implementation evidence independently.
+
+## Change policy
+
+A shared topology change must update the topology, schema, validator, tests and each affected project contract together. Interface changes must also update producer/consumer documentation. New edges remain planned until working code and tests exist.
