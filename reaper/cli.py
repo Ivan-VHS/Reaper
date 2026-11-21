@@ -78,6 +78,9 @@ def main(argv: list[str] | None = None) -> int:
     if arguments and arguments[0] == "polyglot":
         from .polyglot import main as polyglot_main
         return polyglot_main(arguments[1:])
+    if arguments and arguments[0] == "budget":
+        from .budget import main as budget_main
+        return budget_main(arguments[1:])
     if arguments and arguments[0] == "polyglot-code":
         from .polyglot_code import main as polyglot_code_main
         return polyglot_code_main(arguments[1:])
