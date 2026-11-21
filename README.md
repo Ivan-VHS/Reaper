@@ -99,6 +99,10 @@ The doctrine guides engineering decisions; it does not turn roadmap items into i
 
 [Documentation control](docs/DOCUMENTATION_CONTROL.md) defines the normative rules for public claims, evidence, privacy and integrations.
 
+## Project stewardship
+
+The [project stewardship standard](docs/PROJECT_STEWARDSHIP_STANDARD.md) defines an anonymized, role-neutral approach to decision records, delivery cadence, feedback, incident response and sustainable maintenance. It complements the existing safety and quality contracts without expanding product permissions or overstating implementation status.
+
 ## License
 
 [Apache License 2.0](LICENSE)
