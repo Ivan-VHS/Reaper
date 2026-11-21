@@ -24,7 +24,7 @@ end
 local function ensure_snapshot_dir(directory, separator)
   local folder = directory .. separator .. ".clife" .. separator .. "snapshots"
   local ok = reaper.RecursiveCreateDirectory(folder, 0)
-  if not ok then return nil, "Could not create the CLife snapshot directory: " .. folder end
+  if type(ok) ~= "number" or ok < 0 then return nil, "Could not create the CLife snapshot directory: " .. folder end
   return folder, nil
 end
 
@@ -42,6 +42,7 @@ local function copy_and_fingerprint(source_path, destination_path)
       local chunk = input:read(1024 * 1024)
       if not chunk then break end
       bytes = bytes + #chunk
+      if bytes > 268435456 then error("RPP snapshot exceeds the 256 MiB safety limit") end
       for i = 1, #chunk do
         a = (a + chunk:byte(i)) % 65521
         b = (b + a) % 65521
@@ -95,7 +96,7 @@ local function read_manifest(path)
   local fields = {}
   for key, value in content:gmatch("([%w_]+)=([^\r\n]*)") do fields[key] = value end
   if fields.schema ~= "clife.reaper.v1" then return nil, "Unsupported or invalid CLife manifest." end
-  if not fields.snapshot_file or fields.snapshot_file:find("[/\\]") or fields.snapshot_file:find("%.%.", 1, true) then
+  if not fields.snapshot_file or fields.snapshot_file:find("[/\\]") or fields.snapshot_file:find("..", 1, true) then
     return nil, "Manifest contains an unsafe snapshot filename."
   end
   if not fields.size_bytes or not fields.size_bytes:match("^%d+$") then
@@ -148,7 +149,7 @@ input:close()
 local folder, folder_error = ensure_snapshot_dir(directory, separator)
 if not folder then fail(folder_error); return end
 
-local stamp = os.date("!%Y%m%dT%H%M%SZ")
+local stamp = os.date("!%Y%m%dT%H%M%S") .. string.format("%03d", math.floor((os.clock() % 1) * 1000)) .. "Z"
 local snapshot_name = stamp .. "_" .. filename
 local snapshot_path = folder .. separator .. snapshot_name
 local temp_path = snapshot_path .. ".tmp"
