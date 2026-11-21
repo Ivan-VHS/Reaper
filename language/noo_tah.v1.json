@@ -1,36 +1,61 @@
 {
   "id": "noo-tah",
   "name": "NOO TAH",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "product": "Reaper",
-  "purpose": "Node.js runtime and ecosystem compatibility bridge",
-  "provider": "official-nodejs-runtime",
-  "engines": [
-    "V8",
-    "libuv"
-  ],
+  "purpose": "Cross-platform Node.js runtime and ecosystem integration",
+  "provider": "official-nodejs-distribution",
+  "architecture": {
+    "engine": "V8",
+    "io": "libuv",
+    "bindings": "Node.js C/C++",
+    "nativeAddons": "N-API"
+  },
   "surfaces": [
-    "ecmascript",
-    "node-core-modules",
-    "commonjs",
-    "esm",
+    "ECMAScript",
+    "event-loop",
+    "async-io",
+    "fs",
+    "http",
+    "https",
+    "net",
+    "tls",
+    "dns",
+    "stream",
+    "buffer",
+    "crypto",
+    "path",
+    "os",
+    "events",
+    "worker_threads",
+    "child_process",
+    "cluster",
+    "zlib",
+    "CommonJS",
+    "ESM",
     "npm",
+    "npx",
+    "N-API",
     "node-inspector"
+  ],
+  "platforms": [
+    "windows",
+    "linux",
+    "macos"
   ],
   "commands": [
     "version",
+    "doctor",
     "run",
     "check",
+    "eval",
+    "repl",
     "npm",
+    "npx",
     "install",
-    "inspect"
+    "inspect",
+    "project"
   ],
-  "compatibilityPolicy": "delegate-to-upstream-node",
-  "status": "integration-foundation",
-  "certification": "not-yet-certified",
-  "security": [
-    "no-shell-execution",
-    "explicit-installation",
-    "untrusted-lifecycle-scripts"
-  ]
+  "status": "runtime-bridge-expanded",
+  "certification": "pending-cross-platform-conformance"
 }
