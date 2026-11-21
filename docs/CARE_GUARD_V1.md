@@ -2,19 +2,22 @@
 
 CareGuard adapts ideas from mental-wellbeing awareness into software-maintenance safeguards. It is an engineering-support layer, **not a mental-health product**.
 
-## Active runtime surface
+## Shared runtime surface (all four repositories)
 
 | API | Purpose | Safety boundary |
 |---|---|---|
-| \`careguard_assess_project_load\` | Score queue depth, failed checks, alert rate and worker-capacity pressure | Technical project metrics only |
-| \`careguard_review_language\` | Flag stigmatizing wording and suggest neutral alternatives | Advisory; never silently rewrites text |
-| \`careguard_probe_sensitive_handler\` | Smoke-test caller-provided text handlers against sensitive-topic probes | No user-state inference or data retention |
-| \`careguard_accept_help_request\` | Accept a non-empty request for support | Help-seeking is valid input, not a weakness signal |
-| \`careguard_select_support_path\` | Return a user-selected human-support route | Manual selection only; no contact or escalation is executed |
-| \`careguard_review_contextual_claim\` | Require an evidence reference for evidence-backed claims | Missing evidence remains unverified |
-| \`careguard_check_clinical_boundary\` | Block diagnosis and prescribing actions in this non-clinical application | No diagnosis, prescription, dosage or medication workflow |
-| \`careguard_allocate_resilience_buffer\` | Reserve a bounded share of project capacity for recovery/maintenance | 0–50% reserve; deterministic calculation |
-| \`careguard_record_context_event\` | Record a small allowlisted engineering event | Actor, event type and timestamp only |
+| `careguard_assess_project_load` | Score queue depth, failed checks, alert rate and worker-capacity pressure | Technical project metrics only |
+| `careguard_review_language` | Flag stigmatizing wording and suggest neutral alternatives | Advisory; never silently rewrites text |
+| `careguard_accept_help_request` | Accept a non-empty request for support | Help-seeking is valid input, not a weakness signal |
+| `careguard_select_support_path` | Return a user-selected human-support route | Manual selection only; no contact or escalation is executed |
+| `careguard_review_contextual_claim` | Require an evidence reference for evidence-backed claims | Missing evidence remains unverified |
+| `careguard_check_clinical_boundary` | Block diagnosis and prescribing actions in this non-clinical application | No diagnosis, prescription, dosage or medication workflow |
+| `careguard_allocate_resilience_buffer` | Reserve a bounded share of project capacity for recovery/maintenance | 0–50% reserve; deterministic calculation |
+
+### Additional Python helpers (Reaper and OPlague)
+
+- `careguard_probe_sensitive_handler` runs a caller-supplied text handler against a small sensitive-topic probe set and reports exceptions without retaining payloads.
+- `careguard_record_context_event` records only an allowlisted engineering event, actor label and timestamp. Use role labels rather than contributor names.
 
 ## Renamed concept migration
 
@@ -52,4 +55,4 @@ CareGuard adapts ideas from mental-wellbeing awareness into software-maintenance
 
 ## Verification
 
-The repository test suite covers empty and overloaded project snapshots, language review, sensitive-topic handler stability, help-request acceptance, manual routing, clinical-action blocking, evidence requirements, bounded capacity reserves and allowlisted event records.
+The repository test suite covers empty and overloaded project snapshots, language review, sensitive-topic handler stability, help-request acceptance, manual routing, clinical-action blocking, evidence requirements, bounded capacity reserves and allowlisted event records. The C11 and C++20 variants implement the shared seven-function surface.
