@@ -44,6 +44,7 @@ class ClifeReaScriptTests(unittest.TestCase):
         source = (SCRIPTS / "CLife_Verify_Latest.lua").read_text(encoding="utf-8")
         self.assertIn("adler32", source)
         self.assertIn("65521", source)
+        self.assertIn("ok <= 0", source)
 
 
 if __name__ == "__main__":
