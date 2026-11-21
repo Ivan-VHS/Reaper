@@ -118,10 +118,8 @@ class CLifeReflashTests(unittest.TestCase):
     def test_plan_rejects_tampered_embedded_content(self) -> None:
         payload = json.loads(plan_reflash(self.root, {"app.rpr": "next"}).to_json())
         payload["changes"][0]["content_base64"] = "bm90LXRoZS1wbGFubmVkLWNvbnRlbnQ="
-        plan = ReflashPlan.from_json(json.dumps(payload))
-
-        with self.assertRaisesRegex(CLifeError, "content checksum mismatch"):
-            apply_reflash_plan(self.root, plan)
+        with self.assertRaisesRegex(CLifeError, "content size or checksum is invalid"):
+            ReflashPlan.from_json(json.dumps(payload))
 
 
 class CLifeNetworkTests(unittest.TestCase):
@@ -149,8 +147,12 @@ class CLifeNetworkTests(unittest.TestCase):
                 'emit "source"\n',
             )
             self.assertEqual(result.changed_paths, ("shared.rpr",))
-            self.assertFalse(network.audit_all()["repositories"][0]["changed_since_registration"]
-                             and network.audit_all()["repositories"][1]["changed_since_registration"])
+            statuses = {
+                item["name"]: item["changed_since_registration"]
+                for item in network.audit_all()["repositories"]
+            }
+            self.assertTrue(statuses["destination"])
+            self.assertFalse(statuses["source"])
 
 
 if __name__ == "__main__":
