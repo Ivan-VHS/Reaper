@@ -8,7 +8,38 @@ Reaper — мова виразів із явним потоком даних: о
 ## Реальний знімок Reaper Studio
 
 <p align="center"><img src="assets/screenshots/reaper-studio.png" alt="Reaper Studio у Windows 11" width="100%"></p>
-<sub>Справжній знімок Windows 11 зі збірки Studio з Node.js, 1920×1080.</sub>
+
+## Потік функціональних даних
+
+Схема показує реалізований рух даних між джерелами, етапами обробки та сформованими результатами проєкту.
+
+```mermaid
+flowchart TD
+    A[Вихідний код Reaper] --> B[Lexer і parser]
+    B --> C[Еталонне середовище Python]
+    C --> D[CLI та REPL]
+    B --> E[Мовний сервіс LSP]
+    C --> F[Сервіс налагодження DAP]
+    G[Проєкт JavaScript] --> H[Офіційний дистрибутив Node.js]
+    H --> I[V8, API Node.js, npm та Inspector]
+    J[Нативний напрям C17] --> K[Частковий parser і lowering]
+```
+
+## Шляхи виконання та результатів
+
+Друга схема відокремлює чинні шляхи виконання й підтримувані результати від каталожних або недоступних функцій.
+
+```mermaid
+flowchart LR
+    A[Програма Reaper] --> B[Середовище Python]
+    B --> C[Результат виконання]
+    D[Відкритий вихідний документ] --> E[Запити LSP]
+    E --> F[Діагностика, completion і symbols]
+    G[Запит налагодження] --> H[DAP]
+    H --> I[Точки зупинки, стек і локальні змінні]
+```
+
+<sub>Фактичний знімок програми · вихідне зображення 1920×1080 · початкові пікселі збережено, штучне збільшення не застосовується.</sub>
 
 ## Актуальна матриця можливостей
 
@@ -29,10 +60,6 @@ Reaper — мова виразів із явним потоком даних: о
 | THESIS | типізований граф доказів; твердження не підтверджуються автоматично |
 | Реєстри | 813 пропозицій функцій, 666 API-контрактів і 666 зарезервованих лексем; запис у реєстрі не означає готової реалізації |
 | Федерація | snapshots OPlague, manifests VentuSample та опційний Pytyliki C ABI |
-
-## Рух інтерфейсу та доступність
-
-Reaper Studio зберігає налаштування **Reduce Motion** та **Eco / Low-CPU Visuals** окремо від теми оформлення. Увімкнені параметри обмежують переходи до 80 мс і вимикають просторові та необов’язкові ефекти. **Sync to Transport / BPM** недоступний: Studio наразі не має аудіотранспорту чи джерела темпу. Докладніше: [контракт руху інтерфейсу](docs/UI_MOTION.md).
 
 ## CODEX-66 — робоче середовище IDE
 
@@ -115,22 +142,3 @@ emit "result = " ++ text(result)
 [Контракт IDE 666](docs/IDE_666_IMPLEMENTATION.md) · [LSP/DAP](docs/REAPER_IDE.md) · [Node.js](docs/NOO_TAH.md) · [Kora для REAPER](docs/KORA_REAPER.md) · [Плагіни](docs/PLUGINS.md) · [Внутрішні продукти](docs/INTERNAL_PRODUCTS.md) · [Можливості](docs/FEATURES.md) · [Мова](LANGUAGE.md) · [Архітектура](docs/ARCHITECTURE.md) · [Реєстр 813](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [Федерація](docs/PROJECT_FEDERATION_MATRIX.md) · [Індекс](docs/README.md)
 
 [English](README.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md) · [Релізи](https://github.com/Ivan-VHS/Reaper/releases) · [Apache-2.0](LICENSE)
-
-<!-- VISUAL-DOCS:BEGIN -->
-## Візуальна мапа архітектури
-
-![Мапа Reaper: вихідний код, Python runtime, IDE-сервіси та неповна гілка C17](assets/visual-documentation-map.svg)
-
-Це статична архітектурна ілюстрація, а не знімок Studio і не твердження про повну сумісність C17. Справжній знімок Windows вище показує наявний desktop UI. Див. [візуальний стандарт документації](docs/VISUAL_DOCUMENTATION.md).
-<!-- VISUAL-DOCS:END -->
-
-
-## Motion Constitution v2026
-
-Спільний міжпроєктний контракт інтерфейсу — [Motion Constitution v2026](docs/MOTION_CONSTITUTION_V2026.md). Він уніфікує пружинні/швидкі криві, діапазон масштабу 0,4×–2,2×, пріоритет Reduce Motion, теми, стенд 2×2/фокус-сцену та достовірну SVG/Canvas-телеметрію. [Нативний контракт руху](docs/UI_MOTION.md) описує наявні функції Reaper Studio: обмежену Tk-пружину, збережувані налаштування доступності та локальні IDE/LSP/DAP-інструменти. CODEX-66 і локальні мовні сервіси не є хмарним AI-агентом або потоковим AI Diff; заплановані панелі не слід подавати як готові.
-
-## Спільна мапа motion-архітектури
-
-<p align="center"><img src="assets/motion-constitution-v2026.svg" alt="Motion Constitution v2026 — мапа чотирьох доменів" width="100%"></p>
-
-Це спільна архітектурна схема 2×2, а не знімок запущеного застосунку. Вона розділяє наявні функції продуктів і недоступні/заплановані можливості.
