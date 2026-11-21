@@ -12,8 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install C and Python toolchains
-        run: sudo apt-get update && sudo apt-get install -y build-essential cmake python3
+      - name: Install native C toolchain
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake
       - name: Configure C17 build
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
       - name: Build native core
