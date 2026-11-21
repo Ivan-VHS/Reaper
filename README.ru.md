@@ -12,7 +12,7 @@ Reaper — язык выражений с явным потоком данных
 | Область | Текущая граница |
 |---|---|
 | Python runtime | lexer, parser, интерпретатор, CLI, REPL, модули, closures, quotas, audit |
-| Reaper Studio | Windows editor: check/run/debug, breakpoints, variables, call stack |
+| Reaper Studio | Основа Windows IDE: дерево проекта, подсветка синтаксиса, номера строк, поиск, проверка/запуск, отладчик, точки останова, переменные и стек; LSP и Git-панели пока в плане |
 | Native C17 | lexer, expression parser, owned AST, checked IR, limited lowering |
 | МОСТ | 54 точных алиаса: 21 исполняемый в reference subset, 33 зарезервированы |
 | QCS 1.0 | отдельный hardware-domain parser и JSON AST; без управления hardware |
@@ -31,6 +31,6 @@ make result := [1, 2, 3] :: map(double) :: sum()
 emit "result = " ++ text(result)
 ```
 
-[Внутренние продукты](docs/INTERNAL_PRODUCTS.md) · [Функции](docs/FEATURES.md) · [Язык](LANGUAGE.md) · [Архитектура](docs/ARCHITECTURE.md) · [Реестр 813](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [Федерация](docs/PROJECT_FEDERATION_MATRIX.md) · [Индекс](docs/README.md)
+[Контракт IDE 666](docs/IDE_666_IMPLEMENTATION.md) · [Внутренние продукты](docs/INTERNAL_PRODUCTS.md) · [Функции](docs/FEATURES.md) · [Язык](LANGUAGE.md) · [Архитектура](docs/ARCHITECTURE.md) · [Реестр 813](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [Федерация](docs/PROJECT_FEDERATION_MATRIX.md) · [Индекс](docs/README.md)
 
 [English](README.md) · [Українська](README.uk.md) · [简体中文](README.zh-CN.md) · [Релизы](https://github.com/Ivan-VHS/Reaper/releases) · [Apache-2.0](LICENSE)
