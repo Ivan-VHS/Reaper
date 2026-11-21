@@ -15,6 +15,7 @@ ALLOWED = {
     "#F5EFE8", "#FFF9F2", "#EDE2D5", "#322B2A", "#68564F", "#78685F", "#D8C5B5", "#887D74",
     "#081522", "#10263B", "#17344D", "#EDF4FA", "#C4D5E4", "#A9C0D4", "#73B7FF",
     "#9ACBFF", "#FF7D78", "#FFA39B", "#31536B", "#FF8E86", "#174C7D", "#71899B", "#190B0B",
+    "#EAF3FF",
 }
 HEX = re.compile(r"#[0-9A-Fa-f]{6}\b")
 RGB = re.compile(r"\bRGB\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)", re.IGNORECASE)
