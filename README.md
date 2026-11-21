@@ -102,3 +102,7 @@ The doctrine guides engineering decisions; it does not turn roadmap items into i
 ## License
 
 [Apache License 2.0](LICENSE)
+
+## Market development and positioning
+
+The [market-development standard](docs/MARKET_DEVELOPMENT_STANDARD.md) and [versioned profile](market-development.v1.json) define audience segments, evidence-backed positioning, promotion channels, commercialization gates and privacy-respecting measurement. They do not imply market demand, sales or profitability.
