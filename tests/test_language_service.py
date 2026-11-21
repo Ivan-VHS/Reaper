@@ -77,7 +77,7 @@ class LspAdapterTests(unittest.TestCase):
         self.server.dispatch({"method": "textDocument/didChange", "params": {
             "textDocument": {"uri": uri, "version": 2},
             "contentChanges": [{"range": {
-                "start": {"line": 1, "character": 8}, "end": {"line": 1, "character": 11}
+                "start": {"line": 1, "character": 5}, "end": {"line": 1, "character": 8}
             }, "text": "total"}],
         }})
         notification = self.server.drain_notifications()[0]
