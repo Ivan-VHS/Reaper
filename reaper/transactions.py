@@ -101,7 +101,6 @@ class RuntimeTransaction:
         staged, digest = _canonical(value, self._max_bytes)
         self._staged = staged
         self._staged_checksum = digest
-        self._failed = None
 
     def patch(self, path: Iterable[str | int], value: Any = _MISSING) -> RuntimeTransaction:
         """Replace (or delete) a nested mapping/list value without mutating the source."""
