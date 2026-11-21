@@ -2,7 +2,7 @@
 from __future__ import annotations
 import json,sys,threading
 from pathlib import Path
-from .debugger import DebugSnapshot,RuntimeDebugger
+from .debugger import DebuggerStopped,DebugSnapshot,RuntimeDebugger
 from .runtime import Interpreter
 
 class DebugSession:
@@ -26,9 +26,7 @@ class DebugSession:
    self.snapshot=snapshot; self.event("stopped",{"reason":"breakpoint","threadId":1,"allThreadsStopped":True})
    self.waiting=True
    while self.waiting and not self.terminated: self.condition.wait()
-   if self.terminated:
-    from .debugger import DebuggerStopped
-    raise DebuggerStopped()
+   if self.terminated: raise DebuggerStopped()
  def handle(self,req):
   cmd=req.get("command"); args=req.get("arguments") or {}
   if cmd=="initialize":
@@ -66,6 +64,7 @@ class DebugSession:
   elif cmd=="pause": self.response(req,success=False,message="pause is available only at statement boundaries")
   elif cmd in ("terminate","disconnect"):
    self.terminated=True
+   if self.debugger: self.debugger.stop()
    with self.condition: self.waiting=False; self.condition.notify_all()
    self.response(req); return cmd!="disconnect"
   elif cmd=="evaluate": self.response(req,success=False,message="expression evaluation is not implemented; inspect Locals instead")
