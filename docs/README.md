@@ -42,3 +42,5 @@ Only tested behavior is labelled implemented. Registry counts are catalogued ite
 - [Example JSON](../examples/resource-allocation-500-uah.json) and [JSON Schema](../schemas/resource-allocation.v1.schema.json).
 
 This is an illustrative personal-budgeting reference, not a claim that the host project manages payments or live retail prices.
+
+| [FEDERATED_SELF_HOSTING.md](FEDERATED_SELF_HOSTING.md) | staged self-hosting and safe adoption across sibling repositories |
