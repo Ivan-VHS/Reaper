@@ -13,3 +13,7 @@
 | 9 | Release | tests, examples, packaging, screenshot/link checks and license |
 
 Python remains the current compatibility reference. Native code executes in-process and is not a sandbox for untrusted extensions.
+
+## Shared evolution matrix
+
+This repository adopts the shared [Engineering Evolution Framework](ENGINEERING_EVOLUTION_FRAMEWORK.md): 20 domains, 40 practices, a versioned JSON contract and negative tests. The framework complements existing engineering, project and safety contracts; it does not assert that every technique is applicable or already implemented. Claims of implementation must remain backed by local code, tests or operational evidence.
