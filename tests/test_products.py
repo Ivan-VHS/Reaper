@@ -1,5 +1,7 @@
 import unittest
 
+from reaper.products import main
+
 from reaper.products import (
     ProductError, get_product, inspect_value, list_products, plan_workflow,
     run_product, verify_evidence,
@@ -12,19 +14,27 @@ class ProductRegistryTests(unittest.TestCase):
         self.assertEqual(len(products), 18)
         self.assertEqual(len({item["name"].casefold() for item in products}), 18)
 
-    def test_doopraul_is_canonical_workflow_product_name(self):
-        self.assertEqual(get_product("Doopraul").name, "Doopraul")
+    def test_dropaul_is_canonical_workflow_product_name(self):
+        self.assertEqual(get_product("Dropaul").name, "Dropaul")
         with self.assertRaises(ProductError):
             get_product("Patakee")
 
-    def test_doopraul_workflow_is_deterministic_and_dry_run(self):
-        result = run_product("Doopraul", "plan_workflow", steps=[
+    def test_dropaul_workflow_is_deterministic_and_dry_run(self):
+        result = run_product("Dropaul", "plan_workflow", steps=[
             {"id": "compile", "depends_on": []},
             {"id": "test", "depends_on": ["compile"]},
             {"id": "package", "depends_on": ["test"]},
         ])
         self.assertEqual(result["execution_order"], ["compile", "test", "package"])
         self.assertTrue(result["dry_run"])
+
+    def test_cli_lists_products(self):
+        from contextlib import redirect_stdout
+        from io import StringIO
+        output = StringIO()
+        with redirect_stdout(output):
+            self.assertEqual(main(["--list"]), 0)
+        self.assertIn("Dropaul", output.getvalue())
 
     def test_workflow_rejects_cycles_and_unknown_dependencies(self):
         with self.assertRaisesRegex(ProductError, "cycle"):
