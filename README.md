@@ -150,3 +150,10 @@ emit "result = " ++ text(result)
 An illustrative 500 UAH budget model with a versioned JSON contract and an offline simulator. This is a documentation example, not a feature of the host runtime.
 
 [Multilingual guide](docs/RESOURCE_ALLOCATION_500_UAH.md) · [Interactive simulator](docs/resource-allocation-500-uah.html) · [JSON example](examples/resource-allocation-500-uah.json) · [JSON Schema](schemas/resource-allocation.v1.schema.json)
+
+
+## CareGuard v1 — engineering support and language safety
+
+The native/runtime layer adds bounded project-load assessment, non-destructive language review, valid help-request handling, manual support-path selection, evidence references, clinical-action boundaries and a deterministic maintenance reserve. It does not monitor or diagnose people.
+
+See [CareGuard v1 contract and safety boundaries](docs/CARE_GUARD_V1.md).
