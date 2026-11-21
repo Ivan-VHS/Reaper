@@ -1,4 +1,4 @@
-"""Tree-walk runtime for Reaper's first stable language slice."""
+"""Tree-walk reference runtime for the Reaper 0.2 language slice."""
 
 from __future__ import annotations
 
