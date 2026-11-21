@@ -39,6 +39,13 @@ class LanguageServiceTests(unittest.TestCase):
     def test_utf16_position_maps_to_python_index(self):
         self.assertEqual(_offset('emit "😀"', {"line": 0, "character": 8}), 7)
 
+    def test_most_function_alias_is_indexed_as_function(self):
+        uri = "file:///most.most"
+        self.service.open(uri, "функция привет(имя) {\n вернуть имя\n}")
+        analysis = self.service.analyze(uri)
+        self.assertEqual([(item.name, item.kind) for item in analysis.symbols],
+                         [("привет", "function")])
+
     def test_lazy_plugin_activation(self):
         registry = LanguagePluginRegistry()
         created = []
@@ -52,6 +59,13 @@ class LspAdapterTests(unittest.TestCase):
     def setUp(self):
         self.server = LspServer()
         self.addCleanup(self.server.service.shutdown)
+
+    def test_ranges_use_utf16_columns(self):
+        from reaper.language_service import Span
+        self.assertEqual(self.server._range('emit "😀"', Span(0, 6, 7)), {
+            "start": {"line": 0, "character": 6},
+            "end": {"line": 0, "character": 8},
+        })
 
     def test_initialize_advertises_incremental_sync(self):
         result = self.server.dispatch({"jsonrpc": "2.0", "id": 1, "method": "initialize"})
