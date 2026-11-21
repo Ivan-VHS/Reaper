@@ -72,10 +72,10 @@ def validate(root: Path = ROOT) -> list[str]:
         errors.append("unsupported alias manifest schema")
     if len(entries) != 54:
         errors.append(f"expected 54 aliases, found {len(entries)}")
-    if sum(entry.get("support") == "runtime" for entry in entries) != 21:
-        errors.append("expected exactly 21 runtime-supported aliases")
-    if sum(entry.get("support") == "lexical_reserved" for entry in entries) != 33:
-        errors.append("expected exactly 33 lexically reserved aliases")
+    if sum(entry.get("support") == "runtime" for entry in entries) != 31:
+        errors.append("expected exactly 31 runtime-supported aliases")
+    if sum(entry.get("support") == "lexical_reserved" for entry in entries) != 23:
+        errors.append("expected exactly 23 lexically reserved aliases")
 
     principles = profile.get("principles")
     if profile.get("principle_count") != 20 or not isinstance(principles, list) or len(principles) != 20:
@@ -97,7 +97,7 @@ def main() -> int:
         for error in errors:
             print(f"ERROR: {error}")
         return 1
-    print("МОСТ contract valid: 54 exact aliases, 21 runtime aliases, 33 lexical reservations, 20 principles.")
+    print("МОСТ contract valid: 54 exact aliases, 31 runtime aliases, 23 lexical reservations, 20 principles.")
     return 0
 
 
