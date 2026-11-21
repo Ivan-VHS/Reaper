@@ -59,7 +59,7 @@ flowchart LR
 | Internal plugin host | 18 built-in services with lifecycle state and bounded dispatch; Python reference runtime |
 | Kora | 66 standard utility functions in seven manifest-backed modules; three Lua ReaScripts for Cockos REAPER |
 | Native C17 | lexer, expression parser, owned AST, checked IR and limited lowering; not full Python-runtime parity |
-| МОСТ | 54 exact aliases: 21 executable in the current reference subset, 33 lexically reserved |
+| МОСТ | 54 exact aliases: 31 executable in the 0.2 reference grammar, 23 lexically reserved |
 | QCS 1.0 | separate hardware-domain parser and JSON AST; no hardware execution |
 | THESIS | typed evidence graph; claims are not automatically verified |
 | Registries | 813 feature proposals, 666 API contracts and 666 reserved token lexemes; registry entries are not completion claims |
