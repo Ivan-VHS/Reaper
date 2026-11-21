@@ -2,7 +2,7 @@ name: NOO TAH Node.js compatibility
 
 on:
   push:
-    branches: [main, "feat/**"]
+    branches: [main, "feat/**", "docs/**"]
   pull_request:
   workflow_dispatch:
 

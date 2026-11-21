@@ -157,7 +157,7 @@ test("event loop drains nextTick and promise microtasks before immediate callbac
     "process.nextTick(() => order.push('nextTick'));",
     "Promise.resolve().then(() => order.push('promise'));",
     "setImmediate(() => { order.push('immediate'); process.stdout.write(order.join(',')); });",
-  ].join("\\n")], { encoding: "utf8", timeout: 5000 });
+  ].join("\n")], { encoding: "utf8", timeout: 5000 });
   assert.equal(child.status, 0, child.stderr);
   assert.equal(child.stdout, "nextTick,promise,immediate");
 });
