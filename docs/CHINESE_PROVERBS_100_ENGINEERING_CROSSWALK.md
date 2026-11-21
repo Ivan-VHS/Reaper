@@ -1,6 +1,6 @@
 # 100 Chinese proverbs — compact engineering crosswalk
 
-Each source idiom remains a separate traceability item. Interpretations are review prompts, not implementation evidence.
+Each source idiom remains a separate traceability item. Interpret each item not as a technical proof; treat it as a review prompt, not implementation evidence. Use isolated defensive test environments, apply least privilege, record the exact CI run and commit SHA, and do not claim sandboxing where isolation is incomplete.
 
 | ID | Source idiom | Domain | Status |
 |---:|---|---|---|

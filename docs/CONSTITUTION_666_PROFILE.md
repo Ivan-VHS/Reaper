@@ -11,4 +11,4 @@ This profile does not claim the full constitution is shipped; it maps the six ra
 | 445–555 | concurrency | sequential reference runtime |
 | 556–666 | ergonomics | docs, tests and reproducible delivery |
 
-Statuses: implemented, partial, planned, not applicable. Promotion requires exact PR head and test evidence.
+Statuses: implemented, partial, planned, not applicable. Promotion requires exact PR head, tests and CI evidence.
