@@ -33,6 +33,7 @@ emit "answer = " ++ text(answer)
 ## Capabilities
 
 - **Python reference runtime:** lexer, parser, interpreter, CLI, REPL, modules, closures, collections, resource tracking, quotas, optional bytecode VM, profiling and hash-chained audit. Host-injected consent grants add HMAC-authenticated scope checks, finite TTL and revocation.
+- **Division and allocation:** checked Euclidean quotient/remainder, exact divisibility, balanced sequence partitioning, equal signed distribution and deterministic largest-remainder allocation; collection outputs respect interpreter quotas.
 - **Reaper Studio:** Windows editor with check/run/debug, breakpoints, variables and call-stack inspection.
 - **Native C17:** lexer, expression parser, owned AST, checked integer IR operations and limited lowering. Not yet a complete interpreter; Python remains the compatibility reference.
 - **МОСТ:** Russian-first source surface with 54 exact keyword aliases (21 executable in the REAPER 0.1 reference subset; 33 lexically reserved for future grammar work), UTF-8-aware source columns, and one canonical semantic core. See the [20-principle Russian-native profile](docs/MOST_RUSSIAN_NATIVE_PROFILE.md).
@@ -77,6 +78,7 @@ Python remains the executable compatibility reference until native parity is dem
 ## Documentation
 
 [THESIS assertion provenance graph](docs/THESIS_ASSERTION_GRAPH.md)
+[Division and partitioning engine](docs/DIVISION_ENGINE.md)
 
 [Governance and consent controls](docs/HUMAN_FIRST_GOVERNANCE.md) · [Anatidae UI/UX](docs/UI_UX_SYSTEM.md) · [12-principle motion](docs/DISNEY_MOTION_SYSTEM.md) · [Language](LANGUAGE.md) · [QCS frontend](docs/QCS_FRONTEND.md) · [MOST 666 registry](docs/MOST_FUNCTIONS_666.md) · [МОСТ specification](docs/MOST_LANGUAGE_SPEC.md) · [Russian-native profile](docs/MOST_RUSSIAN_NATIVE_PROFILE.md) · [Runtime](docs/RUNTIME_PLATFORM.md) · [Engineering standard](docs/UNIFIED_ENGINEERING_STANDARD.md)
 

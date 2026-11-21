@@ -195,6 +195,70 @@ class RuntimeTests(unittest.TestCase):
         with self.assertRaisesRegex(ReaperRuntimeError, "division by zero"):
             self.capture("emit 4 / 0")
 
+    def test_euclidean_division_for_all_sign_combinations(self) -> None:
+        self.assertEqual(
+            self.capture(
+                "emit divmod_euclidean(-7, 3)\n"
+                "emit divmod_euclidean(7, -3)\n"
+                "emit divmod_euclidean(-7, -3)"
+            ),
+            ["[-3, 2]", "[-2, 1]", "[3, 2]"],
+        )
+
+    def test_division_helpers_and_exactness(self) -> None:
+        self.assertEqual(
+            self.capture(
+                "emit quotient(-17, 5)\n"
+                "emit remainder(-17, 5)\n"
+                "emit is_divisible(42, 7)\n"
+                "emit is_divisible(43, 7)"
+            ),
+            ["-4", "3", "true", "false"],
+        )
+
+    def test_division_helpers_reject_zero_and_non_integer_inputs(self) -> None:
+        with self.assertRaisesRegex(ReaperRuntimeError, "division by zero"):
+            self.capture("emit remainder(5, 0)")
+        with self.assertRaisesRegex(ReaperRuntimeError, "whole number"):
+            self.capture("emit quotient(5.5, 2)")
+        with self.assertRaisesRegex(ReaperRuntimeError, "whole number"):
+            self.capture("emit quotient(true, 2)")
+
+    def test_balanced_partition_and_existing_text_split(self) -> None:
+        self.assertEqual(
+            self.capture(
+                "emit partition([1, 2, 3, 4, 5, 6, 7], 3)\n"
+                'emit partition("abcdef", 4)\n'
+                'emit split("a,b", ",")'
+            ),
+            [
+                "[[1, 2, 3], [4, 5], [6, 7]]",
+                "[ab, cd, e, f]",
+                "[a, b]",
+            ],
+        )
+
+    def test_equal_and_proportional_distribution(self) -> None:
+        self.assertEqual(
+            self.capture(
+                "emit distribute(10, 3)\n"
+                "emit distribute(-7, 3)\n"
+                "emit proportional_split(10, [1, 2, 3])"
+            ),
+            ["[4, 3, 3]", "[-2, -2, -3]", "[2, 3, 5]"],
+        )
+
+    def test_distribution_limits_and_invalid_weights(self) -> None:
+        interpreter = Interpreter(output=lambda _line: None, max_collection_items=2)
+        with self.assertRaisesRegex(ReaperRuntimeError, "collection item limit"):
+            interpreter.run("emit partition([1, 2], 3)")
+        with self.assertRaisesRegex(ReaperRuntimeError, "positive"):
+            self.capture("emit distribute(10, 0)")
+        with self.assertRaisesRegex(ReaperRuntimeError, "positive"):
+            self.capture("emit proportional_split(10, [0, 0])")
+        with self.assertRaisesRegex(ReaperRuntimeError, "non-negative"):
+            self.capture("emit proportional_split(10, [1, -1])")
+
     def test_zero_to_negative_power_is_a_language_error(self) -> None:
         with self.assertRaisesRegex(ReaperRuntimeError, "numeric operation failed"):
             self.capture("emit 0 ** -1")

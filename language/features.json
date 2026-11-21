@@ -285,6 +285,22 @@
         "russian-program-executes",
         "runtime-regression"
       ]
+    },
+    {
+      "id": "MOST-STD-002",
+      "name": "checked Euclidean division and balanced partitioning",
+      "area": "stdlib",
+      "status": "implemented",
+      "depends_on": [
+        "MOST-STD-001"
+      ],
+      "acceptance": [
+        "sign-matrix",
+        "zero-divisor-negative",
+        "overflow-negative",
+        "partition-conservation",
+        "proportional-conservation"
+      ]
     }
   ],
   "profile": "МОСТ — exact Russian keyword aliases; no separate parser, semantics, runtime or backend"
