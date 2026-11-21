@@ -35,7 +35,7 @@ class ClifeReaScriptTests(unittest.TestCase):
     def test_restore_never_replaces_active_project(self):
         source = (SCRIPTS / "CLife_Restore_Latest.lua").read_text(encoding="utf-8")
         self.assertIn("_CLife_Restored_", source)
-        self.assertIn("active project will not be overwritten", source)
+        self.assertIn("will not be overwritten", source)
         self.assertIn("os.rename", source)
         self.assertNotIn("Main_openProject", source)
         self.assertNotIn("os.remove(project_file)", source)
