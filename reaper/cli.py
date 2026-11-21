@@ -20,6 +20,7 @@ from .systems_languages import main as systems_languages_main
 from .systems_architectures import main as systems_architectures_main
 from .token_catalog import CATALOG_GROUPS, catalog_summary, token_catalog, token_info
 from .products import ProductError, get_product, list_products
+from .plugins import PluginError, PluginManager
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -54,6 +55,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--catalog-token", metavar="LEXEME", help="show metadata for one token lexeme")
     parser.add_argument("--products", action="store_true", help="list integrated internal Reaper products")
     parser.add_argument("--product-info", metavar="NAME", help="show one integrated internal product contract")
+    parser.add_argument("--plugins", action="store_true", help="list built-in Reaper plugins")
+    parser.add_argument("--plugin-info", metavar="NAME", help="show one built-in plugin contract")
+    parser.add_argument("--run-plugin", metavar="NAME", help="run the primary operation of an enabled built-in plugin")
+    parser.add_argument("--plugin-args", default="{}", metavar="JSON", help="object of plugin arguments for --run-plugin")
     parser.add_argument("--evolve", action="store_true", help="run bounded syntax, test and improvement-proposal cycles")
     parser.add_argument("--iterations", type=int, default=1, help="number of evolution quality cycles (1-20)")
     return parser
@@ -78,6 +83,33 @@ def main(argv: list[str] | None = None) -> int:
         return polyglot_code_main(arguments[1:])
     parser = build_parser()
     args = parser.parse_args(arguments)
+    if args.plugins or args.plugin_info or args.run_plugin:
+        if args.source or args.audit_log or args.verify_audit_log:
+            parser.error("plugin host commands cannot be combined with a source or audit-log option")
+        if sum(bool(value) for value in (args.plugins, args.plugin_info, args.run_plugin)) != 1:
+            parser.error("--plugins, --plugin-info and --run-plugin are mutually exclusive")
+        manager = PluginManager()
+        try:
+            if args.plugin_info:
+                selected = manager.get_plugin(args.plugin_info)
+                from dataclasses import asdict
+                result = asdict(selected)
+                result["enabled"] = manager.is_enabled(selected.plugin_id)
+                result["host"] = "reaper-python"
+                result["status"] = "enabled" if result["enabled"] else "disabled"
+            elif args.run_plugin:
+                plugin_arguments = json.loads(args.plugin_args)
+                if not isinstance(plugin_arguments, dict):
+                    raise PluginError("--plugin-args must decode to a JSON object")
+                result = {"plugin": manager.get_plugin(args.run_plugin).plugin_id,
+                          "result": manager.run(args.run_plugin, **plugin_arguments)}
+            else:
+                result = {"count": len(manager.list_plugins()), "plugins": manager.list_plugins()}
+        except (PluginError, ProductError, json.JSONDecodeError, TypeError) as error:
+            print(f"reaper: plugin host failed: {error}", file=sys.stderr)
+            return 2
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0
     if args.products or args.product_info:
         if args.source or args.audit_log or args.verify_audit_log:
             parser.error("product registry inspection cannot be combined with a source or audit-log option")

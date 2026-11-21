@@ -21,7 +21,7 @@ Reaper is an expression-oriented language: `::` passes a value into the next ope
 | QCS 1.0 | separate hardware-domain parser and JSON AST; no hardware execution |
 | THESIS | typed evidence graph; claims are not auto-verified |
 | Registries | 813 feature proposals; 666 API contracts; 666 reserved token lexemes |
-| Internal products | 18 in-process services; Operandu + Dropaul workflow/data layer; Python reference only |
+| Internal plugins | 18 built-in plugins with lifecycle host, enable/disable state and bounded service dispatch; Python reference only |
 | Federation | OPlague snapshots, VentuSample pack v1, optional Pytyliki C ABI |
 
 ## REAPER IDE services
@@ -52,6 +52,6 @@ make result := [1, 2, 3] :: map(double) :: sum()
 emit "result = " ++ text(result)
 ```
 
-[IDE 666 contract](docs/IDE_666_IMPLEMENTATION.md) · [Internal products](docs/INTERNAL_PRODUCTS.md) · [Features](docs/FEATURES.md) · [Language](LANGUAGE.md) · [Division](docs/DIVISION_ENGINE.md) · [Architecture](docs/ARCHITECTURE.md) · [813 registry](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [Federation](docs/PROJECT_FEDERATION_MATRIX.md) · [Docs index](docs/README.md)
+[IDE 666 contract](docs/IDE_666_IMPLEMENTATION.md) · [Plugin host](docs/PLUGINS.md) · [Internal products](docs/INTERNAL_PRODUCTS.md) · [Features](docs/FEATURES.md) · [Language](LANGUAGE.md) · [Division](docs/DIVISION_ENGINE.md) · [Architecture](docs/ARCHITECTURE.md) · [813 registry](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [Federation](docs/PROJECT_FEDERATION_MATRIX.md) · [Docs index](docs/README.md)
 
 [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md) · [Releases](https://github.com/Ivan-VHS/Reaper/releases) · [Apache-2.0](LICENSE)

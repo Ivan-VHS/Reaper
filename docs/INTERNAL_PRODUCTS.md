@@ -1,10 +1,10 @@
 # REAPER Internal Product Ecosystem
 
-**Status:** integrated Python reference services; desktop navigation and CLI entry points are available. The C17 track is not claimed to implement these services.
+**Status:** 18 built-in plugins are registered by the Python REAPER plugin host; desktop enable/disable and JSON-argument dispatch are available. The C17 track is not claimed to implement these services.
 
 All products are modules inside the existing `reaper` package. They share the host process, project root, Python reference runtime and test infrastructure; none is a separate application or repository.
 
-## Product registry
+## Built-in plugin registry
 
 | Product | Responsibility | Initial executable service |
 |---|---|---|
@@ -26,6 +26,10 @@ All products are modules inside the existing `reaper` package. They share the ho
 | Vprossee | Verification | Requirement/evidence completeness matrix |
 | Professiya | Learning | Repository-grounded learning paths |
 | Profevo | Evolution | Compatibility-aware migration proposals |
+
+## Compatibility and use
+
+The product registry remains the implementation catalogue. Stable plugin IDs and host lifecycle are documented in [PLUGINS.md](PLUGINS.md). Existing --products, --product-info, list_products() and run_product() entry points remain supported.
 
 ## Use
 
