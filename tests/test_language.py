@@ -233,8 +233,8 @@ class RuntimeTests(unittest.TestCase):
             ),
             [
                 "[[1, 2, 3], [4, 5], [6, 7]]",
-                '["ab", "cd", "e", "f"]',
-                '["a", "b"]',
+                "[ab, cd, e, f]",
+                "[a, b]",
             ],
         )
 
