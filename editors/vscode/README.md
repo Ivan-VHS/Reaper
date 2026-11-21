@@ -13,6 +13,11 @@ These are Reaper runtime services, not a packaged VS Code extension client. They
 
 See [REAPER IDE architecture](../../docs/REAPER_IDE.md) for exact capabilities and maturity boundaries.
 
+
+## Desktop motion contract
+
+The syntax package remains presentation-only. For the native Studio application's persisted Reduce Motion / Eco preferences and the explicit absence of BPM transport integration, see the [desktop UI motion contract](../../docs/UI_MOTION.md).
+
 ## Extension boundary
 
 - This package owns editor presentation only. It does not implement a separate language grammar or runtime.
