@@ -12,6 +12,11 @@ from .decomposition import (
 )
 from .errors import ExecutionLimitError, LexError, ParseError, ReaperError, ReaperRuntimeError
 from .evolution import EvolutionEngine, EvolutionReport
+from .clife import (
+    CLifeError, CheckpointReport, CheckpointVerification, ReflashPlan, ReflashResult,
+    RepositoryNetwork, apply_reflash_plan, create_checkpoint, plan_reflash,
+    restore_checkpoint, verify_checkpoint,
+)
 from .runtime import Interpreter, run
 from .ir import CanonicalIR, IRVerificationError, lower as lower_to_ir
 from .vm import BytecodeProgram, VirtualMachine, assemble as assemble_bytecode
@@ -27,6 +32,9 @@ from .embedded import EmbeddedError, McuProfile, RegisterBank, build_project as 
 __version__ = "0.1.0"
 __all__ = [
     "DivisionResult", "ExecutionLimitError", "EvolutionEngine", "EvolutionReport",
+    "CLifeError", "CheckpointReport", "CheckpointVerification", "ReflashPlan",
+    "ReflashResult", "RepositoryNetwork", "apply_reflash_plan", "create_checkpoint",
+    "plan_reflash", "restore_checkpoint", "verify_checkpoint",
     "ThesisLedger", "ThesisLedgerError",
     "accumulate", "aggregate", "amplify", "cartesianize", "combine", "compute",
     "compound", "convolve", "couple", "cross_multiply", "expand", "exponentiate",
