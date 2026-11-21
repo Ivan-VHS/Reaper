@@ -12,6 +12,7 @@ Reaper — язык выражений с явным потоком данных
 | Область | Текущая граница |
 |---|---|
 | Python runtime | lexer, parser, интерпретатор, CLI, REPL, модули, closures, quotas, audit |
+| NOO TAH | интеграция официального Node.js: V8/libuv, ESM/CommonJS, системные API, streams, workers, npm/npx, N-API и Inspector; JS run/check/stop в Studio |
 | Reaper Studio | Основа Windows IDE: дерево проекта, подсветка, номера строк, поиск, проверка/запуск и отладчик; LSP уже поддерживает диагностику и навигацию по открытым файлам, межфайловая семантика и Git UI пока в плане |
 | Native C17 | lexer, expression parser, owned AST, checked IR, limited lowering |
 | МОСТ | 54 точных алиаса: 21 исполняемый в reference subset, 33 зарезервированы |
@@ -22,6 +23,8 @@ Reaper — язык выражений с явным потоком данных
 | Федерация | OPlague snapshots, VentuSample manifests, optional Pytyliki C ABI |
 
 Запуск: `python -m reaper examples/flow.rpr` · Проверка: `python -m reaper --check examples/flow.rpr` · VM: `python -m reaper --engine vm examples/flow.rpr` · REPL: `python -m reaper --repl` · Продукты: `python -m reaper --products` · Dropaul: `python -m reaper --product-info Dropaul` · Тесты: `python -m unittest discover -s tests -v`.
+
+NOO TAH интегрирует официальный кроссплатформенный Node.js: V8, libuv, системные API, ESM/CommonJS, streams, workers, child processes, npm/npx, N-API и Inspector. В Reaper Studio добавлены запуск, проверка и остановка JavaScript, а также диагностика runtime. Команды: `reaper-noo-tah doctor`, `reaper-noo-tah run app.mjs`, `reaper-noo-tah npm run build`. См. [архитектуру NOO TAH](docs/NOO_TAH.md).
 
 Studio: `python reaper_desktop.py` (Windows). Native: `cmake -S . -B build -DCMAKE_BUILD_TYPE=Release`, затем build и CTest.
 
