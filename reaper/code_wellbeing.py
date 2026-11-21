@@ -51,7 +51,10 @@ def _is_test_file(relative: Path) -> bool:
 
 def scan_project(root: str | Path = ".") -> dict[str, Any]:
     charter = load_charter()
-    project = Path(root).expanduser().resolve()
+    requested_root = Path(root).expanduser()
+    if requested_root.is_symlink():
+        raise CodeWellbeingError("project root must not be a symbolic link")
+    project = requested_root.resolve()
     if not project.is_dir():
         raise CodeWellbeingError(f"project root is not a directory: {project}")
 
@@ -62,7 +65,7 @@ def scan_project(root: str | Path = ".") -> dict[str, Any]:
         depth = len(current_path.relative_to(project).parts)
         dirs[:] = sorted(
             name for name in dirs
-            if name not in SKIP_DIRS and not (current_path / name).is_symlink()
+            if name.casefold() not in SKIP_DIRS and not (current_path / name).is_symlink()
         )
         if depth >= MAX_DEPTH:
             dirs[:] = []
