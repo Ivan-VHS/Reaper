@@ -6,12 +6,12 @@ CLife adapts the supplied stasis / snapshot / awakening model to real project li
 
 The portable tool snapshots a source tree into a compressed archive with a SHA-256 manifest:
 
-\`\`\`sh
+```sh
 python tools/clife.py snapshot .
 python tools/clife.py verify .clife/snapshots/<snapshot>.clife
 python tools/clife.py restore .clife/snapshots/<snapshot>.clife --to ../reaper-recovered
 python -m unittest discover -s tests -p "test_clife.py" -v
-\`\`\`
+```
 
 Restore always creates a new directory; it never overwrites the source tree.
 
