@@ -32,7 +32,7 @@ _FILE_FIELDS = {"file", "peak", "rms", "crest_db", "variation"}
 _STYLES = {
     "Boom Bap", "East Coast", "Harlem Dip-Trap", "G-Unit", "Modern Trap",
     "Atlanta Trap", "UK Drill", "UK Grime", "Memphis", "Jazz Rap",
-    "G-Funk", "Boom Trap", "Cripple Trill",
+    "G-Funk", "Boom Trap", "Cripple Trill", "Billionaire Golden Era",
 }
 _TARGETS = {"Full Loop", "Melody", "Drums", "Bass", "One-Shot Kit"}
 _KEYS = {"C", "Csharp", "D", "Dsharp", "E", "F", "Fsharp", "G", "Gsharp", "A", "Asharp", "B"}
