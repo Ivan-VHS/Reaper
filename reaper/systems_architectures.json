@@ -17,6 +17,7 @@
       "windows-driver"
     ],
     "reaper": [
+      "e2k",
       "cross-compilation",
       "native",
       "llvm",
@@ -251,8 +252,8 @@
       "vendor": "MCST ecosystem",
       "class": "VLIW desktop / server",
       "word_bits": 64,
-      "pointer_model": "platform-specific 64-bit model",
-      "endianness": "platform-defined",
+      "pointer_model": "MCST E2K ABI; 64-bit default with additional addressing modes",
+      "endianness": "little",
       "execution_model": "VLIW with compiler-managed instruction scheduling",
       "abi": [
         "MCST E2K ABI"
@@ -266,7 +267,8 @@
         "server",
         "deterministic",
         "code-generation",
-        "cross-compilation"
+        "cross-compilation",
+        "e2k"
       ]
     },
     {
