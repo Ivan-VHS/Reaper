@@ -58,6 +58,12 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     arguments = sys.argv[1:] if argv is None else argv
+    if arguments and arguments[0] == "lsp":
+        from .lsp import serve as lsp_serve
+        return lsp_serve()
+    if arguments and arguments[0] == "dap":
+        from .dap import serve as dap_serve
+        return dap_serve()
     if arguments and arguments[0] == "embedded":
         from .embedded import main as embedded_main
         return embedded_main(arguments[1:])
