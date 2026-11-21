@@ -180,7 +180,7 @@ def careguard_record_context_event(actor: str, event_type: str, occurred_at: str
         if not isinstance(value, str) or not value.strip() or len(value) > 128:
             raise ValueError(f"{field} must be non-empty text of at most 128 characters")
     if actor.strip() not in _ROLE_LABELS:
-        raise ValueError(f"actor must be one of: {\", \".join(sorted(_ROLE_LABELS))}")
+        raise ValueError("actor must be a predefined role label")
     if event_type not in _CONTEXT_EVENTS:
         raise ValueError("event_type is not in the CareGuard allowlist")
     return {"actor": actor.strip(), "event_type": event_type, "occurred_at": occurred_at.strip()}
