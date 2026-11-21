@@ -110,3 +110,7 @@ The shared [Anatidae naming canon](federation/ANATIDAE_NAMING_CANON.md) governs 
 ## Quality and commercial readiness
 
 The 20 × 3 evidence matrix covers correctness, operational cohesion and commercial governance. Run **python tools/quality_commercial.py** or add **--format json**; the report includes prioritized actions for licensing, support, distribution, demand validation, unit economics and pricing. The status model does not imply sales, revenue, profit or investment readiness. See [the quality-commercial standard](docs/QUALITY_COMMERCIAL_STANDARD.md).
+
+## Improvement and conflict resolution
+
+The [20-control improvement, dissonance, and conflict standard](docs/IMPROVEMENT_CONFLICT_STANDARD.md) turns inconsistencies into evidence-led, testable changes while preserving Reaper's Python-reference/native-C17 parity boundary and runtime controls. Run `python tools/improvement_conflict.py` to validate the machine-readable register. This validates the governance contract; it is not a source-code scanner and does not claim unassessed controls are resolved.
