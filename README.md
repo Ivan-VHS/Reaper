@@ -154,3 +154,11 @@ An illustrative 500 UAH budget model with a versioned JSON contract and an offli
 ## Beelzebul repository protection
 
 This repository uses the versioned [Beelzebul 66-rule security policy](SECURITY.md), machine-readable [policy](security/beelzebul.v1.json), and read-only [scanner](tools/beelzebul.py). Run `python tools/beelzebul.py` locally; GitHub Actions runs the same gate for pull requests and protected-branch updates.
+
+
+## CLife — project checkpoint and recovery
+
+Reaper provides a Python CLife adapter with SHA-256 snapshots, atomic local checkpoint writes,
+project-bound restore, fault handling and bounded recovery branching. Recovered source is
+exported but never executed by the restore command. See [CLife contract](clife/contract.v1.json)
+and [adapter guide](docs/CLIFE_IMMORTALITY_POD.md).
