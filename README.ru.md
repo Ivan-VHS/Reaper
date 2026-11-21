@@ -34,3 +34,8 @@ emit "result = " ++ text(result)
 [Контракт IDE 666](docs/IDE_666_IMPLEMENTATION.md) · [Внутренние продукты](docs/INTERNAL_PRODUCTS.md) · [Функции](docs/FEATURES.md) · [Язык](LANGUAGE.md) · [Архитектура](docs/ARCHITECTURE.md) · [Реестр 813](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [Федерация](docs/PROJECT_FEDERATION_MATRIX.md) · [Индекс](docs/README.md)
 
 [English](README.md) · [Українська](README.uk.md) · [简体中文](README.zh-CN.md) · [Релизы](https://github.com/Ivan-VHS/Reaper/releases) · [Apache-2.0](LICENSE)
+
+
+## Плагины Kora и приложения для Cockos REAPER
+
+Kora предоставляет 66 стандартных функций в семи модулях с манифестами: ZDORO, DILLY, BAPLAP, KALI, PYEMONT, LIUR и SRETUO. Три готовых Lua ReaScript запускаются внутри Cockos REAPER: **Track Health Dashboard** (диагностика без изменений), **Prefix Selected Tracks** (переименование выбранных дорожек с Undo) и **Marker and Region Report** (индекс аранжировки в консоли ReaScript). В REAPER откройте **Actions → Show action list → ReaScript → Load** и выберите файл из \`reaper_scripts/kora/\`. Отдельный процесс Node.js не запускается. Документация: [Kora для REAPER](docs/KORA_REAPER.md). Это ReaScript, а не скомпилированные VST/AU/CLAP-эффекты.

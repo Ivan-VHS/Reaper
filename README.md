@@ -55,3 +55,8 @@ emit "result = " ++ text(result)
 [IDE 666 contract](docs/IDE_666_IMPLEMENTATION.md) · [Plugin host](docs/PLUGINS.md) · [Internal products](docs/INTERNAL_PRODUCTS.md) · [Features](docs/FEATURES.md) · [Language](LANGUAGE.md) · [Division](docs/DIVISION_ENGINE.md) · [Architecture](docs/ARCHITECTURE.md) · [813 registry](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [Federation](docs/PROJECT_FEDERATION_MATRIX.md) · [Docs index](docs/README.md)
 
 [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md) · [Releases](https://github.com/Ivan-VHS/Reaper/releases) · [Apache-2.0](LICENSE)
+
+
+## Kora plugins and Cockos REAPER applications
+
+Kora provides 66 standard functions in seven manifest-backed modules: ZDORO, DILLY, BAPLAP, KALI, PYEMONT, LIUR and SRETUO. Three ready-to-load Lua ReaScripts run inside Cockos REAPER: **Track Health Dashboard** (read-only project diagnostics), **Prefix Selected Tracks** (undoable selected-track renaming), and **Marker and Region Report** (arrangement index in the ReaScript console). In REAPER use **Actions → Show action list → ReaScript → Load** and select a script from \`reaper_scripts/kora/\`. No standalone Node.js process is launched. See [Kora for REAPER](docs/KORA_REAPER.md). These are ReaScripts, not compiled VST/AU/CLAP effects.

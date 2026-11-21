@@ -1,0 +1,185 @@
+{
+  "schema": "reaper.kora.plugin-manifest.v1",
+  "api_version": "1.0.0",
+  "runtime": "reaper-python",
+  "plugins": [
+    {
+      "id": "zdoro",
+      "name": "ZDORO",
+      "version": "1.0.0",
+      "domain": "Mathematics and numbers",
+      "host": "reaper-python",
+      "entrypoint": "reaper.kora.runtime:call",
+      "function_count": 11,
+      "functions": [
+        "num.clamp",
+        "num.lerp",
+        "num.map_range",
+        "num.round_to",
+        "num.approx_eq",
+        "num.sign",
+        "num.gcd",
+        "num.lcm",
+        "num.is_prime",
+        "num.rand_int",
+        "num.rand_normal"
+      ],
+      "capabilities": [
+        "in-process",
+        "manifest-backed",
+        "unit-tested"
+      ]
+    },
+    {
+      "id": "dilly",
+      "name": "DILLY",
+      "version": "1.0.0",
+      "domain": "Strings and text",
+      "host": "reaper-python",
+      "entrypoint": "reaper.kora.runtime:call",
+      "function_count": 11,
+      "functions": [
+        "str.slugify",
+        "str.pad_both",
+        "str.truncate",
+        "str.between",
+        "str.count_sub",
+        "str.words",
+        "str.to_camel",
+        "str.to_snake",
+        "str.levenshtein",
+        "str.template",
+        "str.wrap"
+      ],
+      "capabilities": [
+        "in-process",
+        "manifest-backed",
+        "unit-tested"
+      ]
+    },
+    {
+      "id": "baplap",
+      "name": "BAPLAP",
+      "version": "1.0.0",
+      "domain": "Arrays and sequences",
+      "host": "reaper-python",
+      "entrypoint": "reaper.kora.runtime:call",
+      "function_count": 11,
+      "functions": [
+        "arr.chunk",
+        "arr.window",
+        "arr.compact",
+        "arr.dedup_by",
+        "arr.group_by",
+        "arr.partition",
+        "arr.zip_with",
+        "arr.flatten_depth",
+        "arr.sample",
+        "arr.rotate",
+        "arr.binary_search"
+      ],
+      "capabilities": [
+        "in-process",
+        "manifest-backed",
+        "unit-tested"
+      ]
+    },
+    {
+      "id": "kali",
+      "name": "KALI",
+      "version": "1.0.0",
+      "domain": "Maps, sets and structures",
+      "host": "reaper-python",
+      "entrypoint": "reaper.kora.runtime:call",
+      "function_count": 11,
+      "functions": [
+        "map.get_path",
+        "map.set_path",
+        "map.pick",
+        "map.omit",
+        "map.deep_merge",
+        "map.invert",
+        "map.filter_entries",
+        "set.union",
+        "set.intersect",
+        "set.diff",
+        "heap.push_pop"
+      ],
+      "capabilities": [
+        "in-process",
+        "manifest-backed",
+        "unit-tested"
+      ]
+    },
+    {
+      "id": "pyemont",
+      "name": "PYEMONT",
+      "version": "1.0.0",
+      "domain": "Functional flow, async and errors",
+      "host": "reaper-python",
+      "entrypoint": "reaper.kora.runtime:call",
+      "function_count": 11,
+      "functions": [
+        "fn.pipe",
+        "fn.compose",
+        "fn.memoize",
+        "fn.once",
+        "fn.debounce",
+        "fn.throttle",
+        "err.try_run",
+        "err.retry",
+        "err.ensure",
+        "async.all_settled",
+        "async.race_timeout"
+      ],
+      "capabilities": [
+        "in-process",
+        "manifest-backed",
+        "unit-tested"
+      ]
+    },
+    {
+      "id": "liur",
+      "name": "LIUR",
+      "version": "1.0.0",
+      "domain": "File system, environment and reflection",
+      "host": "reaper-python",
+      "entrypoint": "reaper.kora.runtime:call",
+      "function_count": 6,
+      "functions": [
+        "io.read_text",
+        "io.write_atomic",
+        "io.watch_dir",
+        "sys.env_get",
+        "sys.args",
+        "meta.type_of"
+      ],
+      "capabilities": [
+        "in-process",
+        "manifest-backed",
+        "unit-tested"
+      ]
+    },
+    {
+      "id": "sretuo",
+      "name": "SRETUO",
+      "version": "1.0.0",
+      "domain": "JSON and time",
+      "host": "reaper-python",
+      "entrypoint": "reaper.kora.runtime:call",
+      "function_count": 5,
+      "functions": [
+        "json.parse_safe",
+        "json.stringify_pretty",
+        "time.now_ms",
+        "time.format_iso",
+        "time.sleep"
+      ],
+      "capabilities": [
+        "in-process",
+        "manifest-backed",
+        "unit-tested"
+      ]
+    }
+  ]
+}
