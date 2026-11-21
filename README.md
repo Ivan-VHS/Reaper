@@ -14,6 +14,7 @@ Reaper is an expression-oriented language: `::` passes a value into the next ope
 | Area | Scope / state |
 |---|---|
 | Python runtime | lexer, parser, interpreter, CLI, REPL, modules, closures, quotas and audit |
+| NOO TAH | Node.js bridge: V8/libuv-backed execution via official Node, ESM/CJS, npm forwarding, syntax check and inspector launch |
 | Division/allocation | checked Euclidean division, balanced partition and proportional allocation |
 | Reaper Studio | Windows editor: check/run/debug, breakpoints, variables, call stack |
 | Native C17 | lexer, expression parser, owned AST, checked IR and limited lowering |
@@ -21,6 +22,7 @@ Reaper is an expression-oriented language: `::` passes a value into the next ope
 | QCS 1.0 | separate hardware-domain parser and JSON AST; no hardware execution |
 | THESIS | typed evidence graph; claims are not auto-verified |
 | Registries | 813 feature proposals; 666 API contracts; 666 reserved token lexemes |
+| Internal products | 18 in-process services; Operandu + Dropaul workflow/data layer; Python reference only |
 | Federation | OPlague snapshots, VentuSample pack v1, optional Pytyliki C ABI |
 
 ## Run and test
@@ -33,6 +35,8 @@ python -m reaper --repl
 python -m unittest discover -s tests -v
 ```
 
+NOO TAH requires an official Node.js LTS installation: `reaper-noo-tah version`, `reaper-noo-tah run app.mjs`, `reaper-noo-tah check app.js`, `reaper-noo-tah npm run build`. See [NOO TAH architecture](docs/NOO_TAH.md).
+
 Studio: `python reaper_desktop.py` (Windows). Native: `cmake -S . -B build -DCMAKE_BUILD_TYPE=Release`, then `cmake --build build --parallel` and `ctest --test-dir build --output-on-failure`.
 
 ```reaper
@@ -41,6 +45,6 @@ make result := [1, 2, 3] :: map(double) :: sum()
 emit "result = " ++ text(result)
 ```
 
-[Features](docs/FEATURES.md) · [Language](LANGUAGE.md) · [Division](docs/DIVISION_ENGINE.md) · [Architecture](docs/ARCHITECTURE.md) · [813 registry](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [Federation](docs/PROJECT_FEDERATION_MATRIX.md) · [Docs index](docs/README.md)
+[Internal products](docs/INTERNAL_PRODUCTS.md) · [Features](docs/FEATURES.md) · [Language](LANGUAGE.md) · [Division](docs/DIVISION_ENGINE.md) · [Architecture](docs/ARCHITECTURE.md) · [813 registry](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [Federation](docs/PROJECT_FEDERATION_MATRIX.md) · [Docs index](docs/README.md)
 
 [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md) · [Releases](https://github.com/Ivan-VHS/Reaper/releases) · [Apache-2.0](LICENSE)
