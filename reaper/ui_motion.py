@@ -14,6 +14,8 @@ DURATIONS_MS = {
 }
 EASING = "cubic-bezier(0.2, 0.8, 0.2, 1)"
 INSTRUMENTAL_EASING = "cubic-bezier(0.05, 0.9, 0.2, 1)"
+PADDLE_EASING = "cubic-bezier(0.22, 1.18, 0.36, 1)"
+WATER_EASING = "cubic-bezier(0.37, 0, 0.63, 1)"
 
 
 @dataclass(frozen=True)
