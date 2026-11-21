@@ -6,7 +6,7 @@ Reaper is being moved toward an implementation that can execute its own language
 
 `source → lexer → Pratt expression parser → owned AST → checked IR lowering → fixed-point optimizer → checked i64 execution`.
 
-The native command is built by CMake and has no Python startup or interpreter dependency:
+The native command is built by CMake and has no Python startup or interpreter dependency. The native-only workflow configures, builds and runs C tests without installing Python; Python is only required for the separate full-language compatibility and developer-tooling suite:
 
 ```sh
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
