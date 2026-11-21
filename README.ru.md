@@ -12,6 +12,7 @@ Reaper — язык выражений с явным потоком данных
 | Область | Текущая граница |
 |---|---|
 | Python runtime | lexer, parser, интерпретатор, CLI, REPL, модули, closures, quotas, audit |
+| NOO TAH | интеграция официального Node.js: V8/libuv, ESM/CommonJS, системные API, streams, workers, npm/npx, N-API и Inspector; JS run/check/debug/stop в Studio |
 | Reaper Studio | Основа Windows IDE: дерево проекта, подсветка, номера строк, поиск, проверка/запуск и отладчик; LSP уже поддерживает диагностику и навигацию по открытым файлам, межфайловая семантика и Git UI пока в плане |
 | Native C17 | lexer, expression parser, owned AST, checked IR, limited lowering |
 | МОСТ | 54 точных алиаса: 21 исполняемый в reference subset, 33 зарезервированы |
