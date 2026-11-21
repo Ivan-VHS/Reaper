@@ -12,6 +12,7 @@ Reaper — мова виразів з явним потоком даних: оп
 | Область | Поточна межа |
 |---|---|
 | Python runtime | lexer, parser, інтерпретатор, CLI, REPL, модулі, closures, quotas, audit |
+| NOO TAH | міст до Node.js: виконання через офіційний Node (V8/libuv), ESM/CJS, npm, syntax check, inspector |
 | Reaper Studio | Windows editor: check/run/debug, breakpoints, variables, call stack |
 | Native C17 | lexer, expression parser, owned AST, checked IR, limited lowering |
 | МОСТ | 54 точні аліаси: 21 виконуваний у reference subset, 33 зарезервовані |
@@ -21,6 +22,8 @@ Reaper — мова виразів з явним потоком даних: оп
 | Федерація | OPlague snapshots, VentuSample manifests, optional Pytyliki C ABI |
 
 Запуск: `python -m reaper examples/flow.rpr` · Перевірка: `python -m reaper --check examples/flow.rpr` · VM: `python -m reaper --engine vm examples/flow.rpr` · REPL: `python -m reaper --repl` · Тести: `python -m unittest discover -s tests -v`.
+
+NOO TAH потребує встановленого офіційного Node.js LTS: `reaper-noo-tah version`, `reaper-noo-tah run app.mjs`, `reaper-noo-tah check app.js`, `reaper-noo-tah npm run build`. Див. [архітектуру NOO TAH](docs/NOO_TAH.md).
 
 Studio: `python reaper_desktop.py` (Windows). Native: CMake configure → build → CTest.
 
