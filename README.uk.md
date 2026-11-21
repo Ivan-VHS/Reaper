@@ -1,5 +1,7 @@
 # Reaper — мова програмування з потоковою композицією
 
+[English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
+
 [CI](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml) · [Збирання Windows Studio](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml) · Python 3.10+ reference runtime · нативний напрям C17 · Windows Studio · Apache-2.0
 **Розробник:** [Ivan-VHS](https://github.com/Ivan-VHS)
 
