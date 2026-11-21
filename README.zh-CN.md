@@ -150,3 +150,7 @@ emit "result = " ++ text(result)
 这是一个 500 UAH 预算模型示例，包含 JSON 契约和离线模拟器。它属于文档示例，并非宿主应用运行时功能。
 
 [多语言指南](docs/RESOURCE_ALLOCATION_500_UAH.md) · [交互式模拟器](docs/resource-allocation-500-uah.html) · [JSON 示例](examples/resource-allocation-500-uah.json) · [JSON Schema](schemas/resource-allocation.v1.schema.json)
+
+## Elbrus E2K 支持
+
+Python 参考运行时、C17 原生实现、LCC 交叉构建及兼容边界见 [Elbrus E2K 指南](docs/ELBRUS_E2K.md)。
