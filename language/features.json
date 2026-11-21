@@ -1,7 +1,7 @@
 {
   "schema": "reaper.feature-registry/v1",
   "language": "REAPER",
-  "edition": "0.1",
+  "edition": "0.2",
   "features": [
     {
       "id": "MOST-SYN-001",
@@ -19,14 +19,13 @@
       "id": "MOST-SYN-002",
       "name": "function declarations",
       "area": "syntax",
-      "status": "planned",
-      "depends_on": [
-        "MOST-SYN-001"
-      ],
+      "status": "implemented",
+      "depends_on": [],
       "acceptance": [
         "parser-positive",
         "parser-negative",
-        "ast-shape"
+        "closure-and-recursion",
+        "treewalk-vm-parity"
       ]
     },
     {
@@ -300,6 +299,81 @@
         "overflow-negative",
         "partition-conservation",
         "proportional-conservation"
+      ]
+    },
+    {
+      "id": "MOST-SYN-003",
+      "name": "modern let, const and mut declarations with assignment",
+      "area": "syntax",
+      "status": "implemented",
+      "depends_on": [
+        "MOST-SYN-002"
+      ],
+      "acceptance": [
+        "immutable-binding-negative",
+        "mutable-assignment-positive",
+        "parser-positive",
+        "treewalk-vm-parity"
+      ]
+    },
+    {
+      "id": "MOST-SYN-004",
+      "name": "if/else, for and direct while statements",
+      "area": "syntax",
+      "status": "implemented",
+      "depends_on": [
+        "MOST-SYN-002"
+      ],
+      "acceptance": [
+        "branch-positive",
+        "loop-positive",
+        "source-span",
+        "treewalk-vm-parity"
+      ]
+    },
+    {
+      "id": "MOST-SYN-005",
+      "name": "structured break and continue with nearest-loop semantics",
+      "area": "control-flow",
+      "status": "implemented",
+      "depends_on": [
+        "MOST-SYN-004"
+      ],
+      "acceptance": [
+        "nested-loop-break",
+        "continue-iteration",
+        "function-boundary-guard",
+        "treewalk-vm-parity"
+      ]
+    },
+    {
+      "id": "MOST-EXP-001",
+      "name": "map literals and checked field access",
+      "area": "expressions",
+      "status": "implemented",
+      "depends_on": [
+        "MOST-SYN-002"
+      ],
+      "acceptance": [
+        "map-positive",
+        "unhashable-key-negative",
+        "missing-field-negative",
+        "treewalk-vm-parity"
+      ]
+    },
+    {
+      "id": "MOST-EXP-002",
+      "name": "membership and lazy null-coalescing expressions",
+      "area": "expressions",
+      "status": "implemented",
+      "depends_on": [
+        "MOST-EXP-001"
+      ],
+      "acceptance": [
+        "membership-positive",
+        "null-coalescing-lazy",
+        "falsey-left-preserved",
+        "treewalk-vm-parity"
       ]
     }
   ],
