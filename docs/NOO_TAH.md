@@ -79,14 +79,23 @@ variable handles into Reaper's native DAP debugger panes remains a separate
 integration milestone. JavaScript syntax coloring is currently the shared
 lightweight editor highlighter, not a complete TypeScript/JavaScript LSP.
 
-## Conformance gates
+## Conformance suite
 
-Test ESM/CJS, built-ins, module resolution, streams/backpressure, event-loop
-ordering, timers/promises, async filesystem and network I/O, workers, child
-processes, HTTP/TLS/TCP/UDP/DNS, npm lockfile reproducibility, N-API addons,
-and process signals on Windows, Linux and macOS. Pin LTS versions and verify
-signed checksums before managed installation. Report Node, V8, libuv, platform,
-architecture, modules ABI and N-API versions.
+Run `node --test tests/noo_tah/conformance.test.mjs`. The suite exercises
+runtime metadata, ESM and CommonJS, binary filesystem I/O, crypto, bounded
+stream pipelines/backpressure, loopback HTTP and TCP, worker_threads,
+child_process exit propagation, localhost DNS and event-loop microtask ordering.
+The GitHub Actions matrix runs it on Node 22 and 24 across Windows, Linux and
+macOS. It uses only Node built-ins and loopback networking; it does not depend
+on third-party packages or public network access.
+
+## Remaining conformance gates
+
+Add version-pinned coverage for TLS certificates and HTTPS, UDP, cluster,
+N-API native addon compilation, npm lockfile reproducibility, lifecycle-script
+policy, process signals and platform-specific filesystem semantics. Managed
+Node provisioning must verify signed checksums and support rollback. Report Node,
+V8, libuv, platform, architecture, modules ABI and N-API versions.
 
 An independent implementation of V8, libuv, bindings and npm is a separate
 runtime-scale project. NOO TAH achieves compatibility by embedding/managing the
