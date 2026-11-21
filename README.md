@@ -146,16 +146,18 @@ emit "result = " ++ text(result)
 [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md) · [Releases](https://github.com/Ivan-VHS/Reaper/releases) · [Apache-2.0](LICENSE)
 
 
-## Mental wellbeing awareness reference
+## Code Mental Health / Codebase Wellbeing
 
-The offline catalogue is available through the Reaper CLI. It reports only transcript-attributed information and explicitly marks unavailable material.
+Reaper includes a bounded, read-only repository inventory. It exposes visible maintenance evidence and review prompts without assigning a health score or ranking contributors.
 
 ```sh
-python -m reaper wellbeing --catalog
-python -m reaper wellbeing --topic antidepressant-myths --json
+python -m reaper code-wellbeing .
+python -m reaper code-wellbeing . --json
 ```
 
-[Source, data contract and safety boundaries](docs/MENTAL_WELLBEING_AWARENESS.md) · [JSON bundle](data/wellbeing/depression-awareness.v1.json)
+The command inventories source, tests, docs, CI, ownership and recovery notes, and counts contextual maintenance markers. It does not change source code or claim to prove correctness.
+
+[Engineering charter and measurement limits](docs/CODE_MENTAL_HEALTH.md) · [Versioned contract](data/code-wellbeing/codebase-wellbeing.v1.json)
 
 ## Bounded resource-allocation reference
 An illustrative 500 UAH budget model with a versioned JSON contract and an offline simulator. This is a documentation example, not a feature of the host runtime.
