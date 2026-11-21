@@ -4,7 +4,8 @@ import unittest
 from unittest.mock import patch
 
 from reaper.ui_motion import (
-    DURATIONS_MS, MotionPreferences, Spring1D, duration_for, ease_out,
+    DURATIONS_MS, MotionPreferences, Spring1D, PADDLE_EASING, WATER_EASING,
+    duration_for, ease_out,
     load_preferences, reduced_motion_enabled, save_preferences,
 )
 
