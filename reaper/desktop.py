@@ -25,6 +25,7 @@ from reaper.errors import ReaperError
 from reaper.parser import parse
 from reaper.runtime import Interpreter
 from reaper.debugger import DebuggerStopped, RuntimeDebugger
+from reaper.ide_support import SOURCE_EXTENSIONS, highlight_spans, iter_project_entries
 from reaper.ui_motion import MotionController
 from reaper.ui_theme import apply_theme, apply_ui_theme, set_dpi_awareness, toggle_theme
 
@@ -36,33 +37,6 @@ STARTER = """craft double(value) {
 make values := [1, 2, 3, 4]
 emit values :: map(double)
 """
-SOURCE_EXTENSIONS = {".rpr", ".most"}
-KEYWORDS = {
-    "make", "vary", "change", "craft", "yield", "emit", "when", "otherwise",
-    "each", "in", "loop", "while", "true", "false", "nothing", "and", "or",
-    "not", "module", "import", "as", "pub", "export", "fn", "struct", "enum",
-    "trait", "impl", "type", "const", "let", "mut", "return", "if", "else",
-    "match", "region", "raw", "arena", "signal", "async", "await", "test",
-    "comptime", "requires", "ensures", "unsafe", "extern", "drop", "where",
-    "for", "break", "continue", "defer", "пусть", "переменная", "изменить",
-    "функция", "вернуть", "вывести", "если", "иначе", "для", "в", "цикл",
-    "пока", "истина", "ложь", "ничего", "и", "или", "не", "импорт",
-    "экспорт", "как", "модуль", "публичный", "процедура", "структура",
-    "перечисление", "типаж", "реализация", "тип", "константа", "связать",
-    "изменяемый", "возврат", "условие", "альтернатива", "выбор", "область",
-    "сырой", "арена", "сигнал", "асинхронно", "ожидать", "тест",
-    "вычислить_при_сборке", "требует", "гарантирует", "небезопасно",
-    "внешний", "где", "уничтожить", "для_каждого", "прервать",
-    "продолжить", "отложить",
-}
-TOKEN_PATTERN = re.compile(
-    r'(?P<comment>//[^\\n]*|/\\*[\\s\\S]*?\\*/)'
-    r'|(?P<string>"(?:\\\\.|[^"\\\\])*")'
-    r'|(?P<number>\\b(?:0x[0-9A-Fa-f]+|[0-9]+(?:\\.[0-9]+)?)\\b)'
-    r'|(?P<identifier>[^\\W\\d]\\w*)',
-    re.UNICODE,
-)
-
 
 class ReaperStudio(tk.Tk):
     def __init__(self) -> None:
@@ -386,21 +360,14 @@ class ReaperStudio(tk.Tk):
         self._add_project_children(root_id, self.project_root, 0)
 
     def _add_project_children(self, parent: str, folder: Path, depth: int) -> None:
-        if depth >= 5:
-            return
-        try:
-            children = sorted(folder.iterdir(), key=lambda p: (p.is_file(), p.name.casefold()))
-        except OSError:
-            return
-        for path in children:
-            if path.name.startswith(".") or path.name in {"__pycache__", "node_modules", "build", "dist", ".venv"}:
-                continue
-            is_dir = path.is_dir() and not path.is_symlink()
-            if not is_dir and path.suffix.lower() not in SOURCE_EXTENSIONS:
-                continue
-            item = self.project_tree.insert(parent, "end", text=("▸ " if is_dir else "  ") + path.name, values=(str(path),))
-            if is_dir:
-                self._add_project_children(item, path, depth + 1)
+        for entry in iter_project_entries(folder, max_depth=max(1, 5 - depth)):
+            item = self.project_tree.insert(
+                parent, "end",
+                text=("▸ " if entry.is_directory else "  ") + entry.path.name,
+                values=(str(entry.path),),
+            )
+            if entry.is_directory:
+                self._add_project_children(item, entry.path, depth + 1)
 
     def _open_tree_selection(self, _event: tk.Event | None = None) -> None:
         selected = self.project_tree.selection()
@@ -589,12 +556,12 @@ class ReaperStudio(tk.Tk):
         for tag in ("keyword", "string", "number", "comment"):
             self.editor.tag_remove(tag, "1.0", "end")
         source = self._source()
-        for match in TOKEN_PATTERN.finditer(source):
-            kind = match.lastgroup
-            if kind == "identifier" and match.group() in KEYWORDS:
-                kind = "keyword"
-            if kind in {"keyword", "string", "number", "comment"}:
-                self.editor.tag_add(kind, f"1.0+{match.start()}c", f"1.0+{match.end()}c")
+        for span in highlight_spans(source):
+            self.editor.tag_add(
+                span.kind,
+                f"1.0+{span.start}c",
+                f"1.0+{span.end}c",
+            )
         self._redraw_line_numbers()
 
     def _redraw_line_numbers(self, _event: tk.Event | None = None) -> None:
