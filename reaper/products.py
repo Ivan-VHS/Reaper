@@ -160,7 +160,7 @@ def inspect_workspace(path: str | Path) -> dict[str, Any]:
     root = _root(path)
     required = ("README.md", "pyproject.toml", "tests")
     missing = [name for name in required if not (root / name).exists()]
-    return {"root": str(root), "python_files": len(_files(root, (".py",))), "test_files": len(list((root / "tests").rglob("test_*.py"))) if (root / "tests").is_dir() else 0, "missing_baseline": missing, "healthy_baseline": not missing}
+    return {"root": str(root), "python_files": len(_files(root, (".py",))), "test_files": len(_files(root / "tests", (".py",))) if (root / "tests").is_dir() else 0, "missing_baseline": missing, "healthy_baseline": not missing}
 
 
 def inspect_project(path: str | Path) -> dict[str, Any]:
