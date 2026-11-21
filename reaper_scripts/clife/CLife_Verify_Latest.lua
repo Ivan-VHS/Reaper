@@ -24,7 +24,7 @@ end
 local function ensure_snapshot_dir(directory, separator)
   local folder = directory .. separator .. ".clife" .. separator .. "snapshots"
   local ok = reaper.RecursiveCreateDirectory(folder, 0)
-  if type(ok) ~= "number" or ok < 0 then return nil, "Could not create the CLife snapshot directory: " .. folder end
+  if type(ok) ~= "number" or ok <= 0 then return nil, "Could not create the CLife snapshot directory: " .. folder end
   return folder, nil
 end
 
