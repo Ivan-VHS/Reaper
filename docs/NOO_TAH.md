@@ -50,7 +50,7 @@ reaper-noo-tah npm run build
 reaper-noo-tah npx eslint .
 reaper-noo-tah install
 reaper-noo-tah install --ci
-reaper-noo-tah inspect server.mjs --port 9229
+reaper-noo-tah inspect --port 9229 server.mjs
 reaper-noo-tah project
 ```
 
