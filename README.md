@@ -146,6 +146,19 @@ emit "result = " ++ text(result)
 [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md) · [Releases](https://github.com/Ivan-VHS/Reaper/releases) · [Apache-2.0](LICENSE)
 
 
+## Code Mental Health / Codebase Wellbeing
+
+Reaper includes a bounded, read-only repository inventory. It exposes visible maintenance evidence and review prompts without assigning a health score or ranking contributors.
+
+```sh
+python -m reaper code-wellbeing .
+python -m reaper code-wellbeing . --json
+```
+
+The command inventories source, tests, docs, CI, ownership and recovery notes, and counts contextual maintenance markers. It does not change source code or claim to prove correctness.
+
+[Engineering charter and measurement limits](docs/CODE_MENTAL_HEALTH.md) · [Versioned contract](data/code-wellbeing/codebase-wellbeing.v1.json)
+
 ## Bounded resource-allocation reference
 An illustrative 500 UAH budget model with a versioned JSON contract and an offline simulator. This is a documentation example, not a feature of the host runtime.
 
