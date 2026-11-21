@@ -30,7 +30,7 @@ from reaper.runtime import Interpreter
 from reaper.debugger import DebuggerStopped, RuntimeDebugger
 from reaper.plugins import PluginError, PluginManager
 from reaper.ide_support import SOURCE_EXTENSIONS, highlight_spans, iter_project_entries
-from reaper.ui_motion import MotionController, MotionPreferences
+from reaper.ui_motion import MotionController, MotionPreferences, fade_in_window
 from reaper.ui_theme import apply_theme, apply_ui_theme, set_dpi_awareness, toggle_theme
 
 APP_TITLE = "Reaper Studio · Ivan-VHS"
@@ -151,19 +151,22 @@ class ReaperStudio(tk.Tk):
         window.resizable(False, False)
         window.transient(self)
         current = self._motion.preferences
+        fade_in_window(window, current, app_key="reaper-studio")
         reduce_var = tk.BooleanVar(value=current.reduce_motion)
         eco_var = tk.BooleanVar(value=current.eco_visuals)
+        expressive_var = tk.BooleanVar(value=current.expressive_motion)
         frame = ttk.Frame(window, padding=16)
         frame.pack(fill="both", expand=True)
         ttk.Label(frame, text="Кинетика интерфейса", style="PaneTitle.TLabel").pack(anchor="w", pady=(0, 8))
         ttk.Checkbutton(frame, text="Reduce Motion — убрать пространственное движение", variable=reduce_var).pack(anchor="w", pady=4)
         ttk.Checkbutton(frame, text="Eco / Low-CPU Visuals — отключить необязательные эффекты", variable=eco_var).pack(anchor="w", pady=4)
+        ttk.Checkbutton(frame, text="Expressive Motion — усиленная пружинная кинетика", variable=expressive_var).pack(anchor="w", pady=4)
         ttk.Checkbutton(frame, text="Sync to Transport / BPM", state="disabled").pack(anchor="w", pady=4)
         ttk.Label(frame, text="REAPER Studio сейчас не содержит аудиотранспорта или мастер-BPM. Синхронизация станет доступна после подключения транспортного API.", wraplength=460).pack(anchor="w", pady=(4, 12))
         buttons = ttk.Frame(frame)
         buttons.pack(fill="x")
         def apply() -> None:
-            self._motion.update_preferences(MotionPreferences(reduce_var.get(), eco_var.get(), False))
+            self._motion.update_preferences(MotionPreferences(reduce_var.get(), eco_var.get(), False, expressive_var.get()))
             window.destroy()
         ttk.Button(buttons, text="Сохранить", style="Primary.TButton", command=apply).pack(side="right")
         ttk.Button(buttons, text="Отмена", command=window.destroy).pack(side="right", padx=(0, 8))
@@ -178,6 +181,7 @@ class ReaperStudio(tk.Tk):
         window.geometry("1040x620")
         window.minsize(760, 460)
         window.transient(self)
+        fade_in_window(window, self._motion.preferences, app_key="reaper-studio")
         frame = ttk.Frame(window, padding=12)
         frame.pack(fill="both", expand=True)
         ttk.Label(frame, text="Плагины REAPER", style="PaneTitle.TLabel").pack(anchor="w")

@@ -1,6 +1,6 @@
 # Desktop UI motion contract
 
-The desktop UI follows the AETHER-ANAS white/blue/red motion contract. Motion is functional feedback, not ambient decoration.
+The Reaper Studio desktop UI follows the AETHER-ANAS white/blue/red contract. Motion is functional feedback, not ambient decoration. The 2026 Motion Lab concepts are implemented as native Tk transitions; browser-only CSS effects are not copied into the desktop IDE.
 
 ## Timing and curves
 
@@ -12,19 +12,24 @@ The desktop UI follows the AETHER-ANAS white/blue/red motion contract. Motion is
 | Scene/preset transitions | 260–380 ms |
 | Reduced-motion replacement | no more than 80 ms |
 
-The default easing is `cubic-bezier(0.2, 0.8, 0.2, 1)`; click/transient feedback uses `cubic-bezier(0.05, 0.9, 0.2, 1)`. Linear motion is reserved for time/phase indicators. No large-area strobing, uncontrolled parallax or decorative rainbow cycling is permitted.
+The default easing is `cubic-bezier(0.2, 0.8, 0.2, 1)`; click/transient feedback uses `cubic-bezier(0.05, 0.9, 0.2, 1)`. Window presentation uses a bounded mass-spring-damper solver (semi-implicit Euler, capped 32 ms delta, two substeps). Expressive Motion increases the spring response and duration by 1.35x, capped at 380 ms.
 
-## Semantic colour
+## Modes and visual language
 
-- Blue `#0039A6` / navy `#0B1F3A`: navigation, focus paths and calm state.
-- Red `#D52B1E` / `#B51A10`: generation, mutation, clipping and safety events only.
-- Signal animations must encode a measured value or state.
+- **Normal** uses restrained spring feedback and the default duration tokens.
+- **Expressive Motion** uses a stronger spring response for window/panel presentation.
+- **Reduce Motion** removes spatial movement and caps any retained transition at 80 ms.
+- **Eco / Low-CPU Visuals** suppresses nonessential effects and applies the same 80 ms ceiling.
+- Reduce Motion and Eco always override Expressive Motion.
+
+Blue `#0039A6` / navy `#0B1F3A` mark navigation, focus paths and calm state. Red `#D52B1E` / `#B51A10` is reserved for generation, mutation, clipping and safety events. The Liquid Glass / portal reference is translated into restrained solid surfaces, border highlights and clear focus states. Cursor magnets, uncontrolled 3D tilt, full-screen mesh animation and scroll parallax are intentionally excluded from the code editor and precision tool panes.
 
 ## Accessibility and performance
 
-Preferences are persisted separately from theme settings:
-- **Reduce Motion** caps any retained transition at 80 ms and removes spatial/window movement.
-- **Eco / Low-CPU Visuals** suppresses nonessential visual effects and secondary refresh work.
-- **Sync to Transport / BPM** is enabled only when a real project transport/tempo source exists. It must not pretend to sync when the host has no transport.
+Preferences are persisted separately from theme settings, and old preference files remain valid (the new Expressive Motion flag defaults to off).
 
-All animation work stays on the UI thread and must never block audio/DSP, generation, worker, keyboard or drag operations. This application has no audio transport; BPM sync is therefore intentionally unavailable in this UI.
+- **Reduce Motion** also respects the native operating-system setting and `UI_REDUCED_MOTION`.
+- **Eco / Low-CPU Visuals** suppresses nonessential visual effects and secondary refresh work.
+- **Sync to Transport / BPM** is enabled only when a real project transport/tempo source exists. Reaper Studio has no audio transport, so BPM sync remains unavailable.
+
+All animation work stays on the Tk UI thread and must never block execution, embedded builds, debug pauses, worker, keyboard or drag operations.
