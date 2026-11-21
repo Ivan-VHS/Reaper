@@ -30,7 +30,7 @@ from reaper.runtime import Interpreter
 from reaper.debugger import DebuggerStopped, RuntimeDebugger
 from reaper.plugins import PluginError, PluginManager
 from reaper.ide_support import SOURCE_EXTENSIONS, highlight_spans, iter_project_entries
-from reaper.ui_motion import MotionController
+from reaper.ui_motion import MotionController, MotionPreferences
 from reaper.ui_theme import apply_theme, apply_ui_theme, set_dpi_awareness, toggle_theme
 
 APP_TITLE = "Reaper Studio · Ivan-VHS"
@@ -70,7 +70,7 @@ class ReaperStudio(tk.Tk):
         self._build_toolbar()
         self._build_workspace()
         self._build_statusbar()
-        self._motion = MotionController(self)
+        self._motion = MotionController(self, app_key="reaper-studio")
         self._motion.fade_in()
         self._bind_shortcuts()
         self._insert_starter()
@@ -139,8 +139,37 @@ class ReaperStudio(tk.Tk):
         view_menu = tk.Menu(menu, tearoff=False)
         for mode, label in (("system", "Системная"), ("light", "Светлая"), ("dark", "Тёмная")):
             view_menu.add_radiobutton(label=label, variable=self._theme_mode, value=mode, command=self.apply_visual_theme)
+        view_menu.add_separator()
+        view_menu.add_command(label="Настройки движения…", command=self.show_motion_settings)
         menu.add_cascade(label="Вид", menu=view_menu)
         self.configure(menu=menu)
+
+    def show_motion_settings(self) -> None:
+        """Configure persisted motion and low-CPU visual preferences."""
+        window = tk.Toplevel(self)
+        window.title("Настройки движения интерфейса")
+        window.resizable(False, False)
+        window.transient(self)
+        current = self._motion.preferences
+        reduce_var = tk.BooleanVar(value=current.reduce_motion)
+        eco_var = tk.BooleanVar(value=current.eco_visuals)
+        frame = ttk.Frame(window, padding=16)
+        frame.pack(fill="both", expand=True)
+        ttk.Label(frame, text="Кинетика интерфейса", style="PaneTitle.TLabel").pack(anchor="w", pady=(0, 8))
+        ttk.Checkbutton(frame, text="Reduce Motion — убрать пространственное движение", variable=reduce_var).pack(anchor="w", pady=4)
+        ttk.Checkbutton(frame, text="Eco / Low-CPU Visuals — отключить необязательные эффекты", variable=eco_var).pack(anchor="w", pady=4)
+        ttk.Checkbutton(frame, text="Sync to Transport / BPM", state="disabled").pack(anchor="w", pady=4)
+        ttk.Label(frame, text="REAPER Studio сейчас не содержит аудиотранспорта или мастер-BPM. Синхронизация станет доступна после подключения транспортного API.", wraplength=460).pack(anchor="w", pady=(4, 12))
+        buttons = ttk.Frame(frame)
+        buttons.pack(fill="x")
+        def apply() -> None:
+            self._motion.update_preferences(MotionPreferences(reduce_var.get(), eco_var.get(), False))
+            window.destroy()
+        ttk.Button(buttons, text="Сохранить", style="Primary.TButton", command=apply).pack(side="right")
+        ttk.Button(buttons, text="Отмена", command=window.destroy).pack(side="right", padx=(0, 8))
+        window.grab_set()
+        window.update_idletasks()
+        window.geometry(f"+{self.winfo_rootx() + 120}+{self.winfo_rooty() + 100}")
 
     def show_plugins(self) -> None:
         """Manage and run built-in plugins provided by the REAPER host."""
