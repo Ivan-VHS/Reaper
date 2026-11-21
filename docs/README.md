@@ -2,6 +2,7 @@
 
 | File | Purpose |
 |---|---|
+| [INTERNAL_PRODUCT_ECOSYSTEM.md](INTERNAL_PRODUCT_ECOSYSTEM.md) | 18 internal Reaper products and executable service contracts |
 | [FEATURES.md](FEATURES.md) | shipped/reference/specification matrix |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | runtime and compiler stages |
 | [ENGINEERING.md](ENGINEERING.md) | quality, effects and release gates |
