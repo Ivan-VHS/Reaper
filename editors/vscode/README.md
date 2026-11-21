@@ -6,6 +6,13 @@ matching, comments, strings, indentation and TextMate syntax coloring.
 Open this directory as a VS Code extension project and use
 Developer: Install Extension from Location... or package it with vsce.
 
+## Protocol services
+
+- `python -m reaper.lsp` — LSP language workbench with versioned UTF-16 edits and background symbol indexing.
+- `python -m reaper.dap` — DAP launch, line breakpoints, statement-boundary stepping, stack and locals.
+
+The protocol services are available for editor-client integration; this folder remains the syntax extension until the VS Code client adapter is wired.
+
 ## Capability boundary
 
 This is syntax support, not yet a language server or full IDE. Semantic
