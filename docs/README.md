@@ -2,7 +2,7 @@
 
 | File | Purpose |
 |---|---|
-| [FEATURES.md](FEATURES.md) | shipped/reference/specification matrix |
+| [IDE_666_IMPLEMENTATION.md](IDE_666_IMPLEMENTATION.md) | Reaper Studio IDE contract, canonical 666-rule numbering and acceptance gates |\n| [FEATURES.md](FEATURES.md) | shipped/reference/specification matrix |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | runtime and compiler stages |
 | [INTERNAL_PRODUCTS.md](INTERNAL_PRODUCTS.md) | integrated 18-product architecture and service contracts |
 | [ENGINEERING.md](ENGINEERING.md) | quality, effects and release gates |
