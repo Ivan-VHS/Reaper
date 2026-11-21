@@ -1,0 +1,67 @@
+{
+  "schema": "mental-wellbeing-code-safety.v1",
+  "version": "1.0.0",
+  "source": {
+    "title": "Mental Wellbeing & Depression Awareness v1",
+    "video_id": "brNbnipJ-i8",
+    "channel": "ебаут",
+    "published_at": "2025-11-23",
+    "duration": "PT1H20M1S",
+    "transcript_coverage": "partial_head_and_tail",
+    "missing_middle": "not_reconstructed",
+    "clinical_authority": false,
+    "used_for": "non-stigmatizing communication, help-seeking without shame, personal autonomy and supportive engineering practices only"
+  },
+  "policy": {
+    "not_a_clinical_protocol": true,
+    "no_diagnosis_or_screening": true,
+    "no_medication_or_treatment_advice": true,
+    "no_crisis_triage_automation": true,
+    "no_mental_health_inference": true,
+    "no_health_or_productivity_surveillance": true,
+    "no_background_collection_of_wellbeing_data": true,
+    "no_unconsented_remote_telemetry": true,
+    "no_raw_sensitive_content_logging": true,
+    "data_minimization_required": true,
+    "bounded_untrusted_input_required": true,
+    "respectful_non_stigmatizing_language_required": true,
+    "accessible_user_control_required": true,
+    "blameless_incident_response_required": true,
+    "evidence_and_uncertainty_required": true
+  },
+  "enforcement": {
+    "contract_path": "mental-wellbeing-code-safety.v1.json",
+    "validator_path": "scripts/check_mental_wellbeing_guardrails.py",
+    "workflow_path": ".github/workflows/mental-wellbeing-guardrails.yml",
+    "fail_closed": true,
+    "standard_library_only": true
+  },
+  "project": {
+    "id": "reaper",
+    "repository": "Ivan-VHS/Reaper",
+    "language": "Python 3.10+ / C17",
+    "surfaces": [
+      "lexer_parser_ast_ir_vm",
+      "runtime_and_modules",
+      "lsp_dap_protocols",
+      "plugin_host",
+      "python_c17_ffi",
+      "studio_editor"
+    ]
+  },
+  "boundaries": {
+    "inspection_triggers_execution": false,
+    "untrusted_runtime_input_bounded": true,
+    "plugin_discovery_executes_code": false,
+    "native_ffi_explicit_opt_in": true,
+    "interpreter_claimed_as_os_sandbox": false,
+    "sensitive_lsp_dap_logging": false
+  },
+  "verification": [
+    "python_unit_tests",
+    "malformed_and_oversized_protocol_input",
+    "runtime_quotas",
+    "cleanup",
+    "explicit_native_library_path"
+  ]
+}
