@@ -9,13 +9,24 @@
 #include <string.h>
 #define REAPER_VERSION "0.2.0-dev"
 #define REAPER_SOURCE_MAX_BYTES (4u * 1024u * 1024u)
+static void appguard_audit(const vee_finding *finding, void *context) {
+    const char *decision;
+    (void)context;
+    if (finding == NULL || finding->decision == VEEELZEVUL_ALLOW) return;
+    decision = finding->decision == VEEELZEVUL_DENY ? "deny" :
+               finding->decision == VEEELZEVUL_QUARANTINE ? "quarantine" : "degrade";
+    fprintf(stderr, "[AppGuard] %s L%03u rule=%s object=%s reason=%s\\n",
+            decision, finding->level_id, finding->rule_id,
+            finding->object_id, finding->reason);
+}
+
 static char *read_file(const char *path) {
     FILE *f=fopen(path,"rb"); if(!f)return NULL;
     if(fseek(f,0,SEEK_END)!=0){fclose(f);return NULL;}
     long n=ftell(f); if(n<0||fseek(f,0,SEEK_SET)!=0){fclose(f);return NULL;}
     {
         vee_guard guard;
-        vee_guard_init(&guard, REAPER_SOURCE_MAX_BYTES, 4096u, 128u, 1024u, NULL, NULL);
+        vee_guard_init(&guard, REAPER_SOURCE_MAX_BYTES, 4096u, 128u, 1024u, appguard_audit, NULL);
         if (vee_guard_check_payload(&guard, 112u, "A-09", "reaper-source",
                                     (size_t)n) != VEEELZEVUL_ALLOW) {
             fclose(f);
