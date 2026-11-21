@@ -84,11 +84,11 @@ class PluginManager:
     def __init__(self, enabled: Iterable[str] | None = None,
                  plugin_dirs: Iterable[str | Path] | None = None) -> None:
         self._enabled = set(_BY_ID) if enabled is None else set()
+        self._external: dict[str, PluginSpec] = {}
+        self._loaded: dict[str, tuple[Any, str, PluginHostAPI]] = {}
         if enabled is not None:
             for name in enabled:
                 self._enabled.add(self._resolve(name).plugin_id)
-        self._external: dict[str, PluginSpec] = {}
-        self._loaded: dict[str, tuple[Any, str, PluginHostAPI]] = {}
         self.discovery_errors: list[str] = []
         if plugin_dirs:
             self.discover(plugin_dirs)
