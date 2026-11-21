@@ -26,7 +26,9 @@
 
 ## Запуск
 
-__USAGE__
+```text
+python -m reaper budget --amount 500 --scenario weekly --set food=300 --json
+```
 
 ## Формула
 
