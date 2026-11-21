@@ -35,7 +35,7 @@ python -m reaper --repl
 python -m unittest discover -s tests -v
 ```
 
-NOO TAH requires an official Node.js LTS installation: `reaper-noo-tah version`, `reaper-noo-tah run app.mjs`, `reaper-noo-tah check app.js`, `reaper-noo-tah npm run build`. See [NOO TAH architecture](docs/NOO_TAH.md).
+NOO TAH integrates the official cross-platform Node.js runtime: V8, libuv, core APIs, ESM/CommonJS, streams, workers, child processes, npm/npx, N-API and Inspector. Reaper Studio includes JavaScript run/check/stop and runtime diagnostics. Commands: `reaper-noo-tah doctor`, `reaper-noo-tah run app.mjs`, `reaper-noo-tah npm run build`. See [NOO TAH architecture](docs/NOO_TAH.md).
 
 Studio: `python reaper_desktop.py` (Windows). Native: `cmake -S . -B build -DCMAKE_BUILD_TYPE=Release`, then `cmake --build build --parallel` and `ctest --test-dir build --output-on-failure`.
 
