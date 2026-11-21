@@ -31,8 +31,8 @@ emit "answer = " ++ text(answer)
 - **Native C17:** lexer, expression parser, owned AST, checked integer IR operations and limited lowering. Not yet a complete interpreter; Python remains the compatibility reference.
 - **МОСТ:** Russian-first source surface with 54 exact keyword aliases (21 executable in the REAPER 0.1 reference subset; 33 lexically reserved for future grammar work), UTF-8-aware source columns, and one canonical semantic core. See the [20-principle Russian-native profile](docs/MOST_RUSSIAN_NATIVE_PROFILE.md).
 - **QCS 1.0:** independent hardware-domain frontend with source locations, frame parser, Pratt expressions and JSON AST. It does not replace `.rpr` or execute hardware operations. Run: `reaper-qcs check examples/qcs_irq.qcs`.
-- **THESIS assertion graph:** versioned claims, source-linked evidence relations, exact time/scope comparability, review states and append-only revisions. It never auto-verifies a claim ([design](docs/THESIS_ASSERTION_GRAPH.md)).
-- **MOST Function Registry 666:** 666 traceable API contracts (147 existing specifications + 519 proposals), with source inventory and validator. This is a specification catalogue, not 666 implemented functions.
+- **THESIS assertion graph:** versioned claims, typed evidence references, exact time/scope comparability, review states and append-only revisions. It never auto-verifies a claim ([design](docs/THESIS_ASSERTION_GRAPH.md)).
+- **MOST Function Registry 666:** 666 traceable API contracts (147 existing specifications + 519 proposals), with a traceability index and validator. This is a specification catalogue, not 666 implemented functions.
 - **Systems and interop:** Embedded C, MCU profiles and memory budgets; opt-in Pytyliki C ABI v1; 66 language/toolchain entries, 14 architecture profiles and the validated MOST 20×20 matrix.
 
 ## Run
@@ -87,6 +87,10 @@ Python remains the executable compatibility reference until native parity is dem
 - **Accessible tools and purposeful motion:** Studio/editor UX should have clear keyboard and focus behavior, readable diagnostics, localization and reduced-motion support. Animation clarifies feedback; it must not obscure state.
 
 The doctrine guides engineering decisions; it does not turn roadmap items into implemented runtime features.
+
+## Documentation governance
+
+[Documentation control](docs/DOCUMENTATION_CONTROL.md) defines the normative rules for public claims, evidence, privacy and integrations.
 
 ## License
 
