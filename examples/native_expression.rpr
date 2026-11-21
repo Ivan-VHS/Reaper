@@ -1,0 +1,2 @@
+# One native integer expression; executable without Python.
+(20 - 2) * 3 / 2
