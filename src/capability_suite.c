@@ -250,7 +250,8 @@ ReaperCapabilityStatus reaper_capability_map_i64(
     const int64_t *items, size_t count, ReaperI64Transform transform,
     void *context, int64_t *output, size_t output_capacity
 ) {
-    if ((count > 0U && (items == NULL || output == NULL)) || transform == NULL)
+    if ((count > 0U && (items == NULL || output == NULL || items == output)) ||
+        transform == NULL)
         return REAPER_CAPABILITY_INVALID_ARGUMENT;
     if (output_capacity < count) return REAPER_CAPABILITY_OUT_OF_RANGE;
     for (size_t i = 0U; i < count; ++i)
@@ -303,6 +304,7 @@ ReaperCapabilityStatus reaper_capability_calc_delta_f64(
     double *relative_delta
 ) {
     double absolute_value;
+    double relative_value;
     if (absolute_delta == NULL || relative_delta == NULL)
         return REAPER_CAPABILITY_INVALID_ARGUMENT;
     if (!isfinite(current) || !isfinite(baseline))
@@ -310,9 +312,10 @@ ReaperCapabilityStatus reaper_capability_calc_delta_f64(
     absolute_value = current - baseline;
     if (!isfinite(absolute_value) || baseline == 0.0)
         return REAPER_CAPABILITY_NUMERIC_ERROR;
+    relative_value = absolute_value / baseline;
+    if (!isfinite(relative_value)) return REAPER_CAPABILITY_NUMERIC_ERROR;
     *absolute_delta = absolute_value;
-    *relative_delta = absolute_value / baseline;
-    if (!isfinite(*relative_delta)) return REAPER_CAPABILITY_NUMERIC_ERROR;
+    *relative_delta = relative_value;
     return REAPER_CAPABILITY_OK;
 }
 
