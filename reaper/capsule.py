@@ -249,6 +249,9 @@ class CapsuleStore:
         revision = value.get("revision")
         if isinstance(revision, bool) or not isinstance(revision, int) or revision < 1:
             raise CapsuleIntegrityError("snapshot revision is invalid")
+        filename_match = _SNAPSHOT_NAME.fullmatch(path.name)
+        if filename_match is None or int(filename_match.group(1)) != revision:
+            raise CapsuleIntegrityError("snapshot filename and revision do not match")
         created_at = value.get("created_at")
         if not isinstance(created_at, str) or not created_at:
             raise CapsuleIntegrityError("snapshot timestamp is invalid")
@@ -294,7 +297,15 @@ class CapsuleStore:
             return None
         filename = head.get("file")
         digest = head.get("snapshot_sha256")
-        if not isinstance(filename, str) or not _SNAPSHOT_NAME.fullmatch(filename):
+        revision = head.get("revision")
+        filename_match = _SNAPSHOT_NAME.fullmatch(filename) if isinstance(filename, str) else None
+        if filename_match is None:
+            return None
+        if (
+            isinstance(revision, bool)
+            or not isinstance(revision, int)
+            or revision != int(filename_match.group(1))
+        ):
             return None
         if not isinstance(digest, str) or not re.fullmatch(r"[a-f0-9]{64}", digest):
             return None
@@ -339,6 +350,8 @@ class CapsuleStore:
                 (int(_SNAPSHOT_NAME.fullmatch(path.name).group(1)) for path in existing),
                 default=0,
             ) + 1
+            if revision > 99_999_999:
+                raise CapsuleStoreError("capsule revision limit (99,999,999) reached")
             created_at = datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
             body = {
                 "format": SNAPSHOT_FORMAT,
