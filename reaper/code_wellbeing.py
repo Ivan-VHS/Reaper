@@ -15,6 +15,7 @@ CHARTER_PATH = Path(__file__).resolve().parents[1] / "data" / "code-wellbeing" /
 MAX_FILES = 5000
 MAX_DEPTH = 16
 MAX_FILE_BYTES = 1024 * 1024
+MAX_TOTAL_SOURCE_BYTES = 32 * 1024 * 1024
 SKIP_DIRS = {".git", "build", "dist", "target", "vendor", "node_modules", ".venv", "venv", "__pycache__", ".pytest_cache"}
 SOURCE_EXTENSIONS = {".c", ".h", ".cc", ".cpp", ".cxx", ".hpp", ".hxx", ".py", ".js", ".jsx", ".ts", ".tsx", ".rs", ".go", ".java", ".cs", ".rpr", ".qcs", ".lua"}
 DOC_EXTENSIONS = {".md", ".mdx", ".rst", ".adoc"}
@@ -110,14 +111,22 @@ def scan_project(root: str | Path = ".") -> dict[str, Any]:
     marker_counts = {marker: 0 for marker in MARKERS}
     large_sources: list[str] = []
     scanned_text = 0
+    source_bytes_scanned = 0
+    source_scan_truncated = False
     for relative in source_files:
         absolute = project / relative
         try:
-            if absolute.stat().st_size > MAX_FILE_BYTES:
+            file_size = absolute.stat().st_size
+            if file_size > MAX_FILE_BYTES:
+                source_scan_truncated = True
+                continue
+            if source_bytes_scanned + file_size > MAX_TOTAL_SOURCE_BYTES:
+                source_scan_truncated = True
                 continue
             text = absolute.read_text(encoding="utf-8", errors="replace")
         except OSError:
             continue
+        source_bytes_scanned += file_size
         scanned_text += 1
         lines = text.splitlines()
         if len(lines) > 1000 and len(large_sources) < 100:
@@ -155,12 +164,12 @@ def scan_project(root: str | Path = ".") -> dict[str, Any]:
         "concept": charter["concept"]["name"],
         "project": project.name,
         "scan": {"read_only": True, "truncated_at_file_limit": truncated, "file_limit": MAX_FILES,
-                 "depth_limit": MAX_DEPTH, "max_source_file_bytes_scanned": MAX_FILE_BYTES},
+                 "depth_limit": MAX_DEPTH, "max_source_file_bytes_scanned": MAX_FILE_BYTES, "max_total_source_bytes": MAX_TOTAL_SOURCE_BYTES, "source_text_scan_truncated": source_scan_truncated},
         "inventory": {
             "total_files": len(files), "source_files": len(source_files), "test_files": len(test_files),
             "documentation_files": len(documentation_files), "readme_files": len(readme_files),
             "ci_workflow_files": len(workflow_files), "ownership_files": len(ownership_files),
-            "dependency_manifest_files": len(dependency_files), "recovery_guides": len(recovery_files),
+            "dependency_manifest_files": len(dependency_files), "source_bytes_scanned": source_bytes_scanned, "recovery_guides": len(recovery_files),
             "incident_or_decision_records": len(learning_files), "source_files_text_scanned": scanned_text,
             "maintenance_markers": marker_counts, "large_source_units_over_1000_lines": large_sources
         },
