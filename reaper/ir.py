@@ -75,7 +75,7 @@ class _Lowerer:
             self.emit("RETURN", None, node.token)
         elif node.kind in {"break", "continue"}:
             if not self.loop_stack:
-                raise IRVerificationError(f"{node.kind} used outside a loop")
+                raise IRVerificationError(f"{node.kind} can only be used inside a loop")
             loop = self.loop_stack[-1]
             unwind = self.scope_depth - loop["scope_depth"]
             for _ in range(unwind):
