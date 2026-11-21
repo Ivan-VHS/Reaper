@@ -5,8 +5,8 @@
 | Item | Count | State |
 |---|---:|---|
 | Total aliases | 54 | exact mapping |
-| Executable in reference subset | 21 | runtime |
-| Reserved for future grammar | 33 | lexer only |
+| Executable in reference subset | 31 | runtime |
+| Reserved for future grammar | 23 | lexer only |
 | Parser/AST/runtime | 1 | canonical Reaper implementation |
 | Morphology/synonym inference | 0 | unsupported |
 
