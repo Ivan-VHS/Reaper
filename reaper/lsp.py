@@ -84,9 +84,11 @@ class LanguageService:
   uri=p.get("textDocument",{}).get("uri",""); src=self.documents.get(uri,{}).get("text","")
   row=p.get("position",{}).get("line",0); col=p.get("position",{}).get("character",0); lines=src.splitlines()
   if row>=len(lines): return ""
-  line=lines[row]; match=re.search(r"[\wА-Яа-яЁё]+|~>|::",line[max(0,col-1):col+1])
-  if not match: match=re.search(r"[\wА-Яа-яЁё]+",line[max(0,col-32):col+32])
-  return match.group(0) if match else ""
+  line=lines[row]
+  for match in re.finditer(r"[\wА-Яа-яЁё]+|~>|::",line):
+   if match.start()<=col<=match.end(): return match.group(0)
+  previous=[m for m in re.finditer(r"[\wА-Яа-яЁё]+|~>|::",line) if m.end()<=col]
+  return previous[-1].group(0) if previous else ""
  def locations(self,uri,src,word):
   if not word: return []
   out=[]
