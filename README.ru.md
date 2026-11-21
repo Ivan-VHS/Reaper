@@ -12,17 +12,21 @@ Reaper — язык выражений с явным потоком данных
 | Область | Текущая граница |
 |---|---|
 | Python runtime | lexer, parser, интерпретатор, CLI, REPL, модули, closures, quotas, audit |
+| NOO TAH | мост к Node.js: исполнение через официальный Node (V8/libuv), ESM/CJS, npm, syntax check, inspector |
 | Reaper Studio | Windows editor: check/run/debug, breakpoints, variables, call stack |
 | Native C17 | lexer, expression parser, owned AST, checked IR, limited lowering |
 | МОСТ | 54 точных алиаса: 21 исполняемый в reference subset, 33 зарезервированы |
 | QCS 1.0 | отдельный hardware-domain parser и JSON AST; без управления hardware |
 | THESIS | граф доказательств; утверждения не проверяются автоматически |
 | Реестры | 813 предложений; 666 API-контрактов; запись каталога не равна готовой функции |
+| Внутренние продукты | 18 встроенных сервисов; Operandu + Dropaul; Python reference runtime |
 | Федерация | OPlague snapshots, VentuSample manifests, optional Pytyliki C ABI |
 
 Запуск: `python -m reaper examples/flow.rpr` · Проверка: `python -m reaper --check examples/flow.rpr` · VM: `python -m reaper --engine vm examples/flow.rpr` · REPL: `python -m reaper --repl` · Тесты: `python -m unittest discover -s tests -v`.
 
-Studio: `python reaper_desktop.py` (Windows). Native: `cmake -S . -B build -DCMAKE_BUILD_TYPE=Release`, затем build и CTest.
+NOO TAH требует установленный официальный Node.js LTS: `reaper-noo-tah version`, `reaper-noo-tah run app.mjs`, `reaper-noo-tah check app.js`, `reaper-noo-tah npm run build`. См. [архитектуру NOO TAH](docs/NOO_TAH.md).
+
+Studio: `python reaper_desktop.py` (Windows). Native: CMake configure → build → CTest.
 
 ```reaper
 craft double(value) { yield value * 2 }
@@ -30,6 +34,6 @@ make result := [1, 2, 3] :: map(double) :: sum()
 emit "result = " ++ text(result)
 ```
 
-[Функции](docs/FEATURES.md) · [Язык](LANGUAGE.md) · [Архитектура](docs/ARCHITECTURE.md) · [Реестр 813](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [Федерация](docs/PROJECT_FEDERATION_MATRIX.md) · [Индекс](docs/README.md)
+[Внутренние продукты](docs/INTERNAL_PRODUCTS.md) · [Функции](docs/FEATURES.md) · [Язык](LANGUAGE.md) · [Архитектура](docs/ARCHITECTURE.md) · [Реестр 813](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [Федерация](docs/PROJECT_FEDERATION_MATRIX.md) · [Индекс](docs/README.md)
 
 [English](README.md) · [Українська](README.uk.md) · [简体中文](README.zh-CN.md) · [Релизы](https://github.com/Ivan-VHS/Reaper/releases) · [Apache-2.0](LICENSE)
