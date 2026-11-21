@@ -144,9 +144,12 @@ class Interpreter:
         root = self.module_loader.begin_root(filename)
         try:
             if engine == "vm":
-                from .ir import lower
+                from .ir import IRVerificationError, lower
                 from .vm import VirtualMachine, assemble
-                program = assemble(lower(tree, filename))
+                try:
+                    program = assemble(lower(tree, filename))
+                except IRVerificationError as error:
+                    raise ReaperRuntimeError(f"{filename}: {error}") from error
                 machine = VirtualMachine(self, program)
                 self._active_vm = machine
                 try:
