@@ -285,7 +285,7 @@ class ReaperStudio(tk.Tk):
             line = self.editor.get(f"{row}.0", f"{row}.end")
         except (tk.TclError, ValueError):
             return None
-        matches = list(re.finditer(r"[\\wА-Яа-яЁё]+", line, re.UNICODE))
+        matches = list(re.finditer(r"[\wА-Яа-яЁё]+", line, re.UNICODE))
         match = next((item for item in matches if item.start() <= column <= item.end()), None)
         if match is None:
             match = next((item for item in reversed(matches) if item.end() <= column), None)
@@ -307,7 +307,7 @@ class ReaperStudio(tk.Tk):
         except (tk.TclError, ValueError, KeyError) as error:
             self.status.set(f"Автодополнение недоступно: {error}")
             return
-        prefix_match = re.search(r"[\\wА-Яа-яЁё]+$", line[:column], re.UNICODE)
+        prefix_match = re.search(r"[\wА-Яа-яЁё]+$", line[:column], re.UNICODE)
         prefix = prefix_match.group() if prefix_match else ""
         try:
             candidates = self._language_service.completion(uri, prefix)
