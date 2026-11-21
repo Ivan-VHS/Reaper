@@ -12,6 +12,7 @@ KEYWORDS = {
     "make", "vary", "change", "craft", "yield", "emit", "when",
     "otherwise", "each", "in", "loop", "while", "true", "false",
     "nothing", "and", "or", "not", "import", "export", "as",
+    "let", "mut", "fn", "return", "if", "else", "for", "break", "continue", "const", "in", "while",
 }
 
 # Exact Russian spellings map to canonical REAPER keyword spellings.
@@ -86,8 +87,8 @@ class Token:
 class Lexer:
     """Convert source text into a position-aware token stream."""
 
-    _TWO_CHAR = {":=", "==", "!=", "<=", ">=", "//", "**", "++", "::"}
-    _ONE_CHAR = set("+-*/%<>(){}[],")
+    _TWO_CHAR = {":=", "==", "!=", "<=", ">=", "//", "**", "++", "::", "??"}
+    _ONE_CHAR = set("+-*/%<>(){}[],:.")
 
     def __init__(self, source: str, filename: str = "<memory>") -> None:
         self.source = source
