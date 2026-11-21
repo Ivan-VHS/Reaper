@@ -2,6 +2,7 @@
 #define REAPER_CAPABILITY_SUITE_H
 
 #include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
