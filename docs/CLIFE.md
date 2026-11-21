@@ -73,8 +73,8 @@ repository-relative paths to UTF-8 text:
 
 ```json
 {
-  "src/app.rpr": "emit \\"updated\\"\\n",
-  "config/clife.json": "{\\"enabled\\": true}\\n"
+  "src/app.rpr": "emit 7\\n",
+  "config/clife.txt": "enabled=true\\n"
 }
 ```
 
