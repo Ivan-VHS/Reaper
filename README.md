@@ -146,6 +146,17 @@ emit "result = " ++ text(result)
 [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md) · [Releases](https://github.com/Ivan-VHS/Reaper/releases) · [Apache-2.0](LICENSE)
 
 
+## Mental wellbeing awareness reference
+
+The offline catalogue is available through the Reaper CLI. It reports only transcript-attributed information and explicitly marks unavailable material.
+
+```sh
+python -m reaper wellbeing --catalog
+python -m reaper wellbeing --topic antidepressant-myths --json
+```
+
+[Source, data contract and safety boundaries](docs/MENTAL_WELLBEING_AWARENESS.md) · [JSON bundle](data/wellbeing/depression-awareness.v1.json)
+
 ## Bounded resource-allocation reference
 An illustrative 500 UAH budget model with a versioned JSON contract and an offline simulator. This is a documentation example, not a feature of the host runtime.
 
