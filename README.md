@@ -48,6 +48,7 @@ flowchart LR
 | Area | Implemented scope and boundary |
 |---|---|
 | Python runtime | lexer, parser, interpreter, CLI, REPL, modules, closures, quotas and audit |
+| Immortality Capsule | host-gated, bounded JSON checkpoints, SHA-256 integrity verification and fallback recovery; Python reference runtime only |
 | Reaper Studio | Windows IDE foundation: project tree, editor, syntax coloring, line numbers, search, check/run and debugger |
 | LSP | stdio service with incremental UTF-16 documents, parser/structure diagnostics, completion, hover, symbols and lexical navigation; per-open-file, not cross-file type inference |
 | DAP | stdio debug adapter with launch, line breakpoints, statement stepping, stack and local variables |
@@ -141,7 +142,7 @@ make result := [1, 2, 3] :: map(double) :: sum()
 emit "result = " ++ text(result)
 ```
 
-[IDE 666 contract](docs/IDE_666_IMPLEMENTATION.md) · [LSP/DAP](docs/REAPER_IDE.md) · [Node.js integration](docs/NOO_TAH.md) · [Kora for REAPER](docs/KORA_REAPER.md) · [Plugin host](docs/PLUGINS.md) · [Internal products](docs/INTERNAL_PRODUCTS.md) · [Features](docs/FEATURES.md) · [Language](LANGUAGE.md) · [Division](docs/DIVISION_ENGINE.md) · [Architecture](docs/ARCHITECTURE.md) · [813 registry](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [Federation](docs/PROJECT_FEDERATION_MATRIX.md) · [Docs index](docs/README.md)
+[Immortality Capsule](docs/IMMORTALITY_CAPSULE.md) · [IDE 666 contract](docs/IDE_666_IMPLEMENTATION.md) · [LSP/DAP](docs/REAPER_IDE.md) · [Node.js integration](docs/NOO_TAH.md) · [Kora for REAPER](docs/KORA_REAPER.md) · [Plugin host](docs/PLUGINS.md) · [Internal products](docs/INTERNAL_PRODUCTS.md) · [Features](docs/FEATURES.md) · [Language](LANGUAGE.md) · [Division](docs/DIVISION_ENGINE.md) · [Architecture](docs/ARCHITECTURE.md) · [813 registry](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [Federation](docs/PROJECT_FEDERATION_MATRIX.md) · [Docs index](docs/README.md)
 
 [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md) · [Releases](https://github.com/Ivan-VHS/Reaper/releases) · [Apache-2.0](LICENSE)
 

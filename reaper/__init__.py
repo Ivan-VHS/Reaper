@@ -17,6 +17,7 @@ from .ir import CanonicalIR, IRVerificationError, lower as lower_to_ir
 from .vm import BytecodeProgram, VirtualMachine, assemble as assemble_bytecode
 from .modules import ModuleCycleError, ModuleError, ModuleLoader
 from .memory import MemoryManager, HeapLimitError, RegionError
+from .capsule import CapsuleIntegrityError, CapsuleNotFoundError, CapsuleSnapshot, CapsuleStore, CapsuleStoreError
 from .resources import ResourceManager, ResourceHandle
 from .ffi import CAbiLibrary, NativeFunction, PytylikiBridge, FfiError
 from .debugger import RuntimeDebugger, DebugSnapshot, DebuggerStopped
@@ -39,6 +40,7 @@ __all__ = [
     "CanonicalIR", "IRVerificationError", "lower_to_ir", "BytecodeProgram",
     "VirtualMachine", "assemble_bytecode", "ModuleCycleError", "ModuleError",
     "ModuleLoader", "MemoryManager", "HeapLimitError", "RegionError",
+    "CapsuleIntegrityError", "CapsuleNotFoundError", "CapsuleSnapshot", "CapsuleStore", "CapsuleStoreError",
     "ResourceManager", "ResourceHandle", "CAbiLibrary", "NativeFunction",
     "PytylikiBridge", "FfiError", "RuntimeDebugger", "DebugSnapshot",
     "DebuggerStopped", "EmbeddedError", "McuProfile", "RegisterBank",

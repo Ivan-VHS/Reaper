@@ -41,6 +41,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--module-graph", action="store_true", help="print the transitive .rpr dependency graph as JSON without executing code")
     parser.add_argument("--heap-bytes", type=int, default=64 * 1024 * 1024, help="managed heap ceiling in bytes")
     parser.add_argument("--open-resources", type=int, default=64, help="maximum simultaneously open managed files")
+    parser.add_argument("--capsule-root", metavar="PATH", help="enable explicit local snapshot storage for capsule_* builtins")
+    parser.add_argument("--capsule-max-bytes", type=int, default=8 * 1024 * 1024, help="maximum bytes per capsule snapshot (default: 8388608)")
+    parser.add_argument("--capsule-snapshots", type=int, default=16, help="maximum retained snapshots per capsule (default: 16)")
     parser.add_argument("--systems", action="store_true", help="list the 20 engineering system contracts")
     parser.add_argument("--systems-languages", action="store_true", help="list the 66 systems-language capability profiles")
     parser.add_argument("--language-profile", choices=("pytyliki", "reaper", "oplague"), help="rank systems languages for a project profile")
@@ -160,7 +163,11 @@ def main(argv: list[str] | None = None) -> int:
             parser.error("--repl cannot be combined with a source, --check or --evolve")
         if args.json:
             parser.error("--repl does not support --json")
-        return _repl()
+        return _repl(
+            capsule_root=args.capsule_root,
+            max_capsule_bytes=args.capsule_max_bytes,
+            max_capsule_snapshots=args.capsule_snapshots,
+        )
     if args.verify_audit_log:
         if args.source or args.audit_log:
             parser.error("--verify-audit-log cannot be combined with a source or --audit-log")
@@ -213,6 +220,10 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--heap-bytes must be a positive integer")
     if args.open_resources < 1:
         parser.error("--open-resources must be a positive integer")
+    if args.capsule_max_bytes < 256:
+        parser.error("--capsule-max-bytes must be at least 256")
+    if args.capsule_snapshots < 2:
+        parser.error("--capsule-snapshots must be at least 2")
     path = Path(args.source)
     output_lines: list[str] = []
     profile_data: dict[str, float | int] | None = None
@@ -256,6 +267,9 @@ def main(argv: list[str] | None = None) -> int:
             allow_native_ffi=args.allow_native_ffi,
             max_heap_bytes=args.heap_bytes,
             max_open_resources=args.open_resources,
+            capsule_root=args.capsule_root,
+            max_capsule_bytes=args.capsule_max_bytes,
+            max_capsule_snapshots=args.capsule_snapshots,
         )
         try:
             interpreter.run(source, str(path), engine=args.engine)
@@ -313,9 +327,18 @@ def main(argv: list[str] | None = None) -> int:
 
 
 
-def _repl() -> int:
+def _repl(
+    *,
+    capsule_root: str | None = None,
+    max_capsule_bytes: int = 8 * 1024 * 1024,
+    max_capsule_snapshots: int = 16,
+) -> int:
     """Run a persistent, line-oriented prompt over one complete statement at a time."""
-    interpreter = Interpreter()
+    interpreter = Interpreter(
+        capsule_root=capsule_root,
+        max_capsule_bytes=max_capsule_bytes,
+        max_capsule_snapshots=max_capsule_snapshots,
+    )
     print("Reaper REPL 0.1 — enter :quit to exit, :help for help")
     while True:
         try:

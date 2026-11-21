@@ -17,6 +17,7 @@ from pathlib import Path
 from .debugger import RuntimeDebugger
 from .ffi import CAbiLibrary, NativeFunction, PytylikiBridge
 from .memory import HeapLimitError, MemoryManager, RegionError
+from .capsule import CapsuleStore
 from .modules import ModuleError, ModuleLoader
 from .resources import ResourceError, ResourceHandle, ResourceManager
 from .token_catalog import token_catalog, token_info, token_is_reserved
@@ -93,6 +94,9 @@ class Interpreter:
         max_open_resources: int = 64,
         debugger: RuntimeDebugger | None = None,
         consent_authority: ConsentAuthority | None = None,
+        capsule_root: str | Path | None = None,
+        max_capsule_bytes: int = 8 * 1024 * 1024,
+        max_capsule_snapshots: int = 16,
     ) -> None:
         if (
             max_steps < 1
@@ -116,6 +120,14 @@ class Interpreter:
         self.module_loader = ModuleLoader(self)
         self.debugger = debugger
         self.consent_authority = consent_authority
+        self.capsules = (
+            CapsuleStore(
+                capsule_root,
+                max_snapshot_bytes=max_capsule_bytes,
+                max_snapshots=max_capsule_snapshots,
+            )
+            if capsule_root is not None else None
+        )
         self.call_stack: list[str] = []
         self._active_vm: Any = None
         self._current_environment: Environment | None = None
@@ -666,6 +678,26 @@ class Interpreter:
         register("heap_collect", lambda: self.memory.collect(self._memory_roots()), 0, 0)
         register("region_begin", self.memory.begin_region, 0, 0)
         register("region_end", lambda token: self.memory.end_region(token, self._memory_roots()), 1, 1)
+
+        def capsule_storage() -> CapsuleStore:
+            if self.capsules is None:
+                raise ReaperRuntimeError(
+                    "capsule persistence is disabled; pass capsule_root=... to Interpreter"
+                )
+            return self.capsules
+
+        def capsule_checkpoint(capsule_id: Any, payload: Any) -> dict[str, Any]:
+            return capsule_storage().save(capsule_id, payload).to_dict()
+
+        def capsule_restore(capsule_id: Any) -> Any:
+            return capsule_storage().load(capsule_id).payload
+
+        register("capsule_checkpoint", capsule_checkpoint, 2, 2)
+        register("capsule_save", capsule_checkpoint, 2, 2)
+        register("capsule_restore", capsule_restore, 1, 1)
+        register("capsule_load", capsule_restore, 1, 1)
+        register("capsule_verify", lambda capsule_id: capsule_storage().verify(capsule_id), 1, 1)
+        register("capsule_list", lambda: capsule_storage().list_capsules(), 0, 0)
         register("ffi_open", ffi_open, 1, 1)
         register("ffi_bind", ffi_bind, 3, 4)
         register("ffi_close", ffi_close, 1, 1)
