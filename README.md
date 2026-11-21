@@ -103,6 +103,12 @@ The doctrine guides engineering decisions; it does not turn roadmap items into i
 
 [Apache License 2.0](LICENSE)
 
+## Reaper Studio design
+
+Studio adopts the **Duck Sovereign Canon** while retaining an editor-first layout: document and editing commands above the source workspace, with diagnostics, variables, call stack and execution state in distinct panes. The Tk/ttk theme uses the six approved color values, local system fonts, serif headings, compact geometry, visible keyboard focus and reduced-motion behavior.
+
+The normative specification is [docs/DUCK_SOVEREIGN_CANON.md](docs/DUCK_SOVEREIGN_CANON.md). Existing language and interface contracts remain authoritative; the visual standard does not alter runtime semantics or imply native C17 parity.
+
 ## Anatidae design layer
 
 The shared [Anatidae naming canon](federation/ANATIDAE_NAMING_CANON.md) governs friendly UI vocabulary across the four-project family. The [Reaper Studio desktop design contract](docs/ANATIDAE_DESKTOP_DESIGN_SYSTEM.md) defines its use without changing language syntax, commands or diagnostics.
