@@ -3,14 +3,36 @@
 #include "reaper/evolution.h"
 #include "reaper/token_catalog.h"
 #include "reaper/capability_suite.h"
+#include "appguard.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #define REAPER_VERSION "0.2.0-dev"
+#define REAPER_SOURCE_MAX_BYTES (4u * 1024u * 1024u)
+static void appguard_audit(const vee_finding *finding, void *context) {
+    const char *decision;
+    (void)context;
+    if (finding == NULL || finding->decision == VEEELZEVUL_ALLOW) return;
+    decision = finding->decision == VEEELZEVUL_DENY ? "deny" :
+               finding->decision == VEEELZEVUL_QUARANTINE ? "quarantine" : "degrade";
+    fprintf(stderr, "[AppGuard] %s L%03u rule=%s object=%s reason=%s\n",
+            decision, finding->level_id, finding->rule_id,
+            finding->object_id, finding->reason);
+}
+
 static char *read_file(const char *path) {
     FILE *f=fopen(path,"rb"); if(!f)return NULL;
     if(fseek(f,0,SEEK_END)!=0){fclose(f);return NULL;}
     long n=ftell(f); if(n<0||fseek(f,0,SEEK_SET)!=0){fclose(f);return NULL;}
+    {
+        vee_guard guard;
+        vee_guard_init(&guard, REAPER_SOURCE_MAX_BYTES, 4096u, 128u, 1024u, appguard_audit, NULL);
+        if (vee_guard_check_payload(&guard, 112u, "A-09", "reaper-source",
+                                    (size_t)n) != VEEELZEVUL_ALLOW) {
+            fclose(f);
+            return NULL;
+        }
+    }
     char *b=malloc((size_t)n+1U); if(!b){fclose(f);return NULL;}
     size_t got=fread(b,1U,(size_t)n,f);
     if(got!=(size_t)n||ferror(f)){free(b);fclose(f);return NULL;}
@@ -73,16 +95,16 @@ int main(int argc,char **argv) {
     }
     if(catalog_dump||catalog_lookup){
         if(path||dump||ast_json||(catalog_dump&&catalog_lookup)){usage(stderr);return 2;}
-        if(!reaper_token_catalog_validate()){fprintf(stderr,"reaper-c: token catalogue integrity failure\\n");return 1;}
+        if(!reaper_token_catalog_validate()){fprintf(stderr,"reaper-c: token catalogue integrity failure\n");return 1;}
         if(catalog_lookup){
             const ReaperCatalogEntry *entry=reaper_token_catalog_lookup(catalog_lookup);
-            if(!entry){fprintf(stderr,"reaper-c: unknown catalogue token %s\\n",catalog_lookup);return 1;}
-            printf("%03zu\\t%s\\t%s\\t%s\\n",entry->ordinal,entry->lexeme,entry->group,entry->name);
+            if(!entry){fprintf(stderr,"reaper-c: unknown catalogue token %s\n",catalog_lookup);return 1;}
+            printf("%03zu\\t%s\\t%s\\t%s\n",entry->ordinal,entry->lexeme,entry->group,entry->name);
             return 0;
         }
         for(size_t i=0;i<reaper_token_catalog_count();++i){
             const ReaperCatalogEntry *entry=reaper_token_catalog_at(i);
-            printf("%03zu\\t%s\\t%s\\t%s\\n",entry->ordinal,entry->lexeme,entry->group,entry->name);
+            printf("%03zu\\t%s\\t%s\\t%s\n",entry->ordinal,entry->lexeme,entry->group,entry->name);
         }
         return 0;
     }
