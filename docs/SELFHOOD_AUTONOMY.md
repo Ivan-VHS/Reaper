@@ -29,11 +29,11 @@ The versioned Reaper catalogue contains 20 exact identity/transformation/outcome
 
 The table is immutable and available through the native C17 API. Lookups are exact UTF-8 matches; ordinal positions are stable within schema version 1. No fuzzy matching, inferred identity, automatic rewrite or external mutation is performed.
 
-Canonical machine-readable source: [\`language/selfhood.v1.json\`](../language/selfhood.v1.json). Schema: [\`schemas/selfhood-autonomy.v1.schema.json\`](../schemas/selfhood-autonomy.v1.schema.json).
+Canonical machine-readable source: [`language/selfhood.v1.json`](../language/selfhood.v1.json). Schema: [`schemas/selfhood-autonomy.v1.schema.json`](../schemas/selfhood-autonomy.v1.schema.json).
 
 CLI:
 
-\`\`\`sh
+```sh
 reaper-c --selfhood
 reaper-c --selfhood-token "Самостоятельный"
-\`\`\`
+```
