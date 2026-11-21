@@ -25,6 +25,8 @@ classifiers = [
 
 [project.scripts]
 reaper = "reaper.cli:main"
+reaper-lsp = "reaper.lsp:serve"
+reaper-dap = "reaper.dap:serve"
 reaper-qcs = "reaper.qcs:main"
 reaper-polyglot = "reaper.polyglot:main"
 reaper-polyglot-code = "reaper.polyglot_code:main"
