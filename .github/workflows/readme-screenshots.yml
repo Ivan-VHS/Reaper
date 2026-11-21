@@ -16,6 +16,8 @@ jobs:
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -30,6 +32,8 @@ jobs:
           $pythonw = $python -replace 'python.exe$', 'pythonw.exe'
           if (-not (Test-Path $pythonw)) { throw "pythonw.exe was not found beside the configured Python runtime." }
           .github/scripts/capture_desktop_screenshot.ps1 -FilePath $pythonw -Arguments @("reaper_desktop.py") -OutputPath "assets/screenshots/reaper-studio.png" -StartupSeconds 15
+      - name: Keep repository screenshot as a reviewed snapshot
+        run: echo "The live capture is uploaded as an artifact; this workflow does not push commits to the PR head."
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: readme-screenshot-reaper
