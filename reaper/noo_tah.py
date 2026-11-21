@@ -67,7 +67,7 @@ class Runtime:
         probes={
           "core_modules":"for(const m of ['node:fs','node:http','node:https','node:net','node:tls','node:stream','node:buffer','node:crypto','node:path','node:os','node:events','node:worker_threads','node:child_process','node:dns','node:zlib'])require(m);console.log('ok')",
           "esm":"import('node:fs').then(()=>console.log('ok'))",
-          "worker_threads":"const {Worker}=require('node:worker_threads');const w=new Worker('require(\\\"node:worker_threads\\\").parentPort.postMessage(1)',{eval:true});w.once('message',v=>console.log(v))",
+          "worker_threads":"const {Worker}=require('node:worker_threads');const w=new Worker(String.fromCharCode(99,111,110,115,116,32,123,112,97,114,101,110,116,80,111,114,116,125,61,114,101,113,117,105,114,101,40,39,110,111,100,101,58,119,111,114,107,101,114,95,116,104,114,101,97,100,115,39,41,59,112,97,114,101,110,116,80,111,114,116,46,112,111,115,116,77,101,115,115,97,103,101,40,49,41),{eval:true});w.once('message',v=>console.log(v))",
           "streams":"const {Readable,Writable}=require('node:stream');Readable.from(['ok']).pipe(new Writable({write(c,e,cb){cb()}}))"
         }
         caps={}
