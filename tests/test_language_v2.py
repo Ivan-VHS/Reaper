@@ -122,6 +122,28 @@ class ModernSyntaxTests(unittest.TestCase):
             with self.subTest(engine=engine):
                 self.assertEqual(self.capture(source, engine), ["42"])
 
+    def test_new_russian_aliases_execute_in_both_engines(self) -> None:
+        source = """
+        связать base = 10
+        процедура scale(value) {
+            возврат value * base
+        }
+        изменяемый total = 0
+        для_каждого item в [1, 2, 3, 4] {
+            условие item == 2 {
+                продолжить
+            }
+            total = total + scale(item)
+            условие total >= 40 {
+                прервать
+            }
+        }
+        вывести total
+        """
+        for engine in ("treewalk", "vm"):
+            with self.subTest(engine=engine):
+                self.assertEqual(self.capture(source, engine), ["40"])
+
     def test_modern_declaration_is_immutable_or_mutable_as_declared(self) -> None:
         with self.assertRaisesRegex(ReaperRuntimeError, "cannot be changed"):
             self.capture("let fixed = 1\nfixed = 2")
