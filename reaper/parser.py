@@ -233,6 +233,8 @@ class Parser:
                     if not self._match(","):
                         break
                     self._skip_newlines()
+                    if self._check("}"):
+                        break
             self._consume("}", "expected '}' after map literal")
             return Node("map", token, children=entries)
         if self._match("["):
