@@ -4,7 +4,7 @@ on:
     branches: [main, "feat/**"]
     paths: ["reaper/kora/**", "reaper_scripts/kora/**", "reaper_scripts/clife/**", "tests/test_kora.py", "tests/test_kora_reascripts.py", "tests/test_clife.py", "tests/test_clife_reascripts.py", "tools/clife.py", "docs/KORA_REAPER.md", "docs/CLIFE.md", ".github/workflows/kora-reaper-build.yml"]
   pull_request:
-    paths: ["reaper/kora/**", "reaper_scripts/kora/**", "tests/test_kora.py", "tests/test_kora_reascripts.py", "docs/KORA_REAPER.md", ".github/workflows/kora-reaper-build.yml"]
+    paths: ["reaper/kora/**", "reaper_scripts/kora/**", "reaper_scripts/clife/**", "tests/test_kora.py", "tests/test_kora_reascripts.py", "tests/test_clife.py", "tests/test_clife_reascripts.py", "tools/clife.py", "docs/KORA_REAPER.md", "docs/CLIFE.md", ".github/workflows/kora-reaper-build.yml"]
   workflow_dispatch:
 permissions:
   contents: read
