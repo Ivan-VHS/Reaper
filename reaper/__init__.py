@@ -10,10 +10,6 @@ from .decomposition import (
     DivisionResult, decompose_sequence, distribute_weighted, divide_fraction,
     euclidean_divmod, factor_pairs, recombine, split_evenly,
 )
-from .gift_planner import (
-    Candy, CandyLine, GiftPlan, GreetingEdge, allocate_equal, allocate_weighted,
-    build_candy_basket, build_greeting_graph, combination_count, percent_of, plan_gift,
-)
 from .errors import ExecutionLimitError, LexError, ParseError, ReaperError, ReaperRuntimeError
 from .evolution import EvolutionEngine, EvolutionReport
 from .runtime import Interpreter, run
@@ -51,3 +47,17 @@ __all__ = [
     "DebuggerStopped", "EmbeddedError", "McuProfile", "RegisterBank",
     "build_embedded_project", "init_embedded_project", "__version__",
 ]
+
+
+_GIFT_PLANNER_EXPORTS = {
+    "Candy", "CandyLine", "GiftPlan", "GreetingEdge", "allocate_equal",
+    "allocate_weighted", "build_candy_basket", "build_greeting_graph",
+    "combination_count", "percent_of", "plan_gift",
+}
+
+
+def __getattr__(name: str):
+    if name in _GIFT_PLANNER_EXPORTS:
+        from . import gift_planner
+        return getattr(gift_planner, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
