@@ -56,14 +56,15 @@ class PluginHostTests(unittest.TestCase):
                 "entrypoint": "plugin.py:create_plugin",
             }), encoding="utf-8")
             (package / "plugin.py").write_text(
-                "class Extension:\\n"
-                "    def __init__(self, api): self.api = api\\n"
-                "    def on_load(self, context): self.api.log('loaded')\\n"
-                "    def run(self, operation, arguments):\\n"
-                "        return {'host': self.api.context.host_id, 'value': arguments.get('value')}\\n"
-                "    def on_event(self, event, payload): return {'event': event, **payload}\\n"
-                "    def on_unload(self, context): pass\\n"
-                "def create_plugin(api): return Extension(api)\\n",
+                """class Extension:
+    def __init__(self, api): self.api = api
+    def on_load(self, context): self.api.log('loaded')
+    def run(self, operation, arguments):
+        return {'host': self.api.context.host_id, 'value': arguments.get('value')}
+    def on_event(self, event, payload): return {'event': event, **payload}
+    def on_unload(self, context): pass
+def create_plugin(api): return Extension(api)
+""",
                 encoding="utf-8",
             )
 
