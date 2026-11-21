@@ -115,3 +115,8 @@ emit "result = " ++ text(result)
 [Контракт IDE 666](docs/IDE_666_IMPLEMENTATION.md) · [LSP/DAP](docs/REAPER_IDE.md) · [Node.js](docs/NOO_TAH.md) · [Kora для REAPER](docs/KORA_REAPER.md) · [Плагины](docs/PLUGINS.md) · [Внутренние продукты](docs/INTERNAL_PRODUCTS.md) · [Функции](docs/FEATURES.md) · [Язык](LANGUAGE.md) · [Архитектура](docs/ARCHITECTURE.md) · [Реестр 813](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [Федерация](docs/PROJECT_FEDERATION_MATRIX.md) · [Индекс](docs/README.md)
 
 [English](README.md) · [Українська](README.uk.md) · [简体中文](README.zh-CN.md) · [Релизы](https://github.com/Ivan-VHS/Reaper/releases) · [Apache-2.0](LICENSE)
+
+
+## Motion Constitution v2026
+
+Общий межпроектный контракт интерфейса — [Motion Constitution v2026](docs/MOTION_CONSTITUTION_V2026.md). Он унифицирует пружинные/быстрые кривые, диапазон масштаба 0,4×–2,2×, приоритет Reduce Motion, темы, стенд 2×2/фокус-сцену и достоверную SVG/Canvas-телеметрию. [Нативный контракт движения](docs/UI_MOTION.md) описывает реально поставляемые функции Reaper Studio: ограниченную Tk-пружину, сохраняемые настройки доступности и локальные IDE/LSP/DAP-инструменты. CODEX-66 и локальные языковые сервисы не являются облачным AI-агентом или потоковым AI Diff; планируемые панели нельзя выдавать за готовые.
