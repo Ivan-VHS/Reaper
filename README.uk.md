@@ -1,29 +1,93 @@
 # Reaper — мова програмування з потоковою композицією
 
-Python 3.10+ · C17 native track · Windows Studio · Apache-2.0 · [CI](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml)
+[CI](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml) · [Збирання Windows Studio](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml) · Python 3.10+ reference runtime · нативний напрям C17 · Windows Studio · Apache-2.0
 
-Reaper — мова виразів з явним потоком даних: оператор `::` передає значення наступній операції. Python — поточна еталонна реалізація; C17 — нативний напрям у розробці, ще не повна заміна runtime.
+Reaper — мова виразів із явним потоком даних: оператор `::` передає значення наступній операції. Python runtime залишається поточною еталонною виконуваною реалізацією. Реалізація C17 розвивається окремо й поки не є повною заміною runtime.
 
-## Живий знімок Studio
+## Реальний знімок Reaper Studio
 
-<p align="center"><img src="assets/screenshots/reaper-studio.png" alt="Reaper Studio у Windows" width="100%"></p>
-<sub>Знімок запущеного Windows 11 застосунку, 1920×1080.</sub>
+<p align="center"><img src="assets/screenshots/reaper-studio.png" alt="Reaper Studio у Windows 11" width="100%"></p>
+<sub>Справжній знімок Windows 11 зі збірки Studio з Node.js, 1920×1080.</sub>
 
-| Область | Поточна межа |
+## Актуальна матриця можливостей
+
+| Область | Реалізовані функції та межі |
 |---|---|
-| Python runtime | lexer, parser, інтерпретатор, CLI, REPL, модулі, closures, quotas, audit |
-| NOO TAH | інтеграція офіційного Node.js: V8/libuv, ESM/CommonJS, системні API, streams, workers, npm/npx, N-API та Inspector; JS run/check/debug/stop у Studio |
-| Reaper Studio | Windows editor: check/run/debug, breakpoints, variables, call stack |
-| Native C17 | lexer, expression parser, owned AST, checked IR, limited lowering |
-| МОСТ | 54 точні аліаси: 21 виконуваний у reference subset, 33 зарезервовані |
-| QCS 1.0 | окремий hardware-domain parser та JSON AST; без керування hardware |
-| THESIS | граф доказів; твердження не перевіряються автоматично |
-| Реєстри | 813 пропозицій; 666 API-контрактів; запис каталогу не дорівнює готовій функції |
-| Федерація | OPlague snapshots, VentuSample manifests, optional Pytyliki C ABI |
+| Python runtime | lexer, parser, інтерпретатор, CLI, REPL, модулі, closures, quotas та audit |
+| Reaper Studio | основа Windows IDE: дерево проєкту, редактор, підсвічування, номери рядків, пошук, check/run та налагоджувач |
+| LSP | stdio-сервіс: інкрементальні UTF-16-документи, parser/structure діагностика, completion, hover, symbols і лексична навігація; аналіз у межах відкритого файла |
+| DAP | stdio debug adapter: запуск, построкові breakpoints, покрокове виконання операторів, stack і локальні змінні |
+| NOO TAH | інтеграція офіційного Node.js: V8/libuv, ESM/CommonJS, core APIs, streams, workers, npm/npx, N-API та Inspector; JS Run/Check/Debug/Stop у Studio |
+| Внутрішні плагіни | 18 вбудованих сервісів із lifecycle-станом та обмеженим dispatch; Python reference runtime |
+| Kora | 66 стандартних utility-функцій у семи модулях із маніфестами; три Lua ReaScript для Cockos REAPER |
+| Native C17 | lexer, expression parser, owned AST, checked IR і обмежений lowering; без повного паритету з Python runtime |
+| МОСТ | 54 точні аліаси: 21 виконується в поточному reference subset, 33 зарезервовані лексично |
+| QCS 1.0 | окремий hardware-domain parser та JSON AST; без керування обладнанням |
+| THESIS | типізований граф доказів; твердження не підтверджуються автоматично |
+| Реєстри | 813 пропозицій функцій, 666 API-контрактів і 666 зарезервованих лексем; запис у реєстрі не означає готової реалізації |
+| Федерація | snapshots OPlague, manifests VentuSample та опційний Pytyliki C ABI |
 
-Запуск: `python -m reaper examples/flow.rpr` · Перевірка: `python -m reaper --check examples/flow.rpr` · VM: `python -m reaper --engine vm examples/flow.rpr` · REPL: `python -m reaper --repl` · Тести: `python -m unittest discover -s tests -v`.
+## Сервіси мови та налагодження
 
-Studio: `python reaper_desktop.py` (Windows). Native: CMake configure → build → CTest.
+Інструменти редактора надають stdio-протоколи:
+
+```sh
+python -m reaper lsp
+python -m reaper dap
+```
+
+Встановлені entry points: `reaper-lsp` і `reaper-dap`. LSP надає інкрементальні мовні функції на рівні документа. DAP налагоджує програми Reaper. Сервіси використовують канонічний Python parser/runtime; це не означає повного паритету C17, міжфайлового семантичного аналізу чи готового VS Code-клієнта.
+
+Точні можливості та межі: [архітектура REAPER IDE](docs/REAPER_IDE.md).
+
+## NOO TAH — середовище Node.js
+
+NOO TAH керує офіційним кросплатформним дистрибутивом Node.js, а не відтворює його рушій. V8, libuv, системні модулі, ESM/CommonJS, streams, workers, child processes, npm/npx, N-API та Inspector надає вибраний дистрибутив Node.
+
+Reaper Studio розпізнає проєкти `.js`, `.mjs` і `.cjs`; доступні JS Run, JS Check, JS Debug через Node Inspector, JS Stop, npm-команди й діагностика runtime. Node Inspector поки не інтегровано в панелі нативного DAP-налагоджувача.
+
+```sh
+reaper-noo-tah version
+reaper-noo-tah doctor
+reaper-noo-tah run app.mjs
+reaper-noo-tah check app.js
+reaper-noo-tah npm run build
+node --test tests/noo_tah/conformance.test.mjs
+```
+
+Тести сумісності перевіряють метадані runtime, ESM/CommonJS, файлове введення-виведення, crypto, streams/backpressure, loopback HTTP/TCP, workers, child processes, DNS і порядок event loop. CI-матриця використовує Node 22 та 24 на Windows, Linux і macOS. Документація: [NOO TAH](docs/NOO_TAH.md).
+
+## Kora та застосунки для Cockos REAPER
+
+Kora містить 66 стандартних utility-функцій у модулях ZDORO, DILLY, BAPLAP, KALI, PYEMONT, LIUR і SRETUO. Також доступні три Lua ReaScript:
+
+- **Track Health Dashboard** — діагностика проєкту й доріжок без змін.
+- **Prefix Selected Tracks** — перейменування вибраних доріжок однією undoable-операцією.
+- **Marker and Region Report** — список маркерів і регіонів у ReaScript console.
+
+У Cockos REAPER відкрийте **Actions → Show action list → ReaScript → Load** і виберіть скрипт із `reaper_scripts/kora/`. Це скрипти для вбудованого хоста REAPER, а не скомпільовані VST/AU/CLAP-ефекти. Окремий процес Node.js їм не потрібен. Документація: [Kora для REAPER](docs/KORA_REAPER.md).
+
+## Запуск, тести та збирання
+
+```sh
+python -m reaper examples/flow.rpr
+python -m reaper --check examples/flow.rpr
+python -m reaper --engine vm examples/flow.rpr
+python -m reaper --repl
+python -m unittest discover -s tests -v
+```
+
+Windows Studio: `python reaper_desktop.py`.
+
+Нативний напрям C17:
+
+```sh
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --parallel
+ctest --test-dir build --output-on-failure
+```
+
+Приклад:
 
 ```reaper
 craft double(value) { yield value * 2 }
@@ -31,11 +95,6 @@ make result := [1, 2, 3] :: map(double) :: sum()
 emit "result = " ++ text(result)
 ```
 
-[Функції](docs/FEATURES.md) · [Мова](LANGUAGE.md) · [Архітектура](docs/ARCHITECTURE.md) · [Реєстр 813](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [Федерація](docs/PROJECT_FEDERATION_MATRIX.md) · [Індекс](docs/README.md)
+[Контракт IDE 666](docs/IDE_666_IMPLEMENTATION.md) · [LSP/DAP](docs/REAPER_IDE.md) · [Node.js](docs/NOO_TAH.md) · [Kora для REAPER](docs/KORA_REAPER.md) · [Плагіни](docs/PLUGINS.md) · [Внутрішні продукти](docs/INTERNAL_PRODUCTS.md) · [Можливості](docs/FEATURES.md) · [Мова](LANGUAGE.md) · [Архітектура](docs/ARCHITECTURE.md) · [Реєстр 813](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [Федерація](docs/PROJECT_FEDERATION_MATRIX.md) · [Індекс](docs/README.md)
 
 [English](README.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md) · [Релізи](https://github.com/Ivan-VHS/Reaper/releases) · [Apache-2.0](LICENSE)
-
-
-## Плагіни Kora та програми для Cockos REAPER
-
-Kora надає 66 стандартних функцій у семи модулях із маніфестами: ZDORO, DILLY, BAPLAP, KALI, PYEMONT, LIUR і SRETUO. Три готові Lua ReaScript запускаються всередині Cockos REAPER: **Track Health Dashboard** (діагностика без змін), **Prefix Selected Tracks** (перейменування вибраних доріжок із Undo) та **Marker and Region Report** (індекс аранжування в консолі ReaScript). У REAPER відкрийте **Actions → Show action list → ReaScript → Load** і виберіть файл із `reaper_scripts/kora/`. Окремий процес Node.js не запускається. Документація: [Kora для REAPER](docs/KORA_REAPER.md). Це ReaScript, а не скомпільовані VST/AU/CLAP-ефекти.
