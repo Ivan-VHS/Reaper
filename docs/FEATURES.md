@@ -7,6 +7,7 @@
 | Division | Euclidean divmod, quotient/remainder, divisibility | implemented |
 | Allocation | partition/split, distribute, weighted allocation | implemented |
 | Audit/governance | explicit grants, HMAC scope, TTL/revocation | reference runtime |
+| CLife lifecycle | verified local checkpoints, restore to a new directory, hash-guarded reflash plans, rollback, read-only local repository registry | Python reference runtime; explicit local operations |
 | Studio | Windows editor, debug, call stack, local completion and current-document symbol navigation | desktop app |
 | CODEX-66 | searchable 66-item native feature catalogue with JSON export and maturity labels | implemented metadata/UI; feature statuses remain evidence-based |
 | Native C17 | lexer, expression Pratt parser, owned AST, checked IR | partial |
