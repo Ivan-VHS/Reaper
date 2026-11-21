@@ -10,6 +10,14 @@
 **Reaper is an expression-oriented language built around readable syntax and explicit data flow.** Its `::` operator passes a value into the next operation. The repository contains a Python reference interpreter, a developing native C17 core, and Reaper Studio for Windows.
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
+## Live Reaper Studio screenshot
+
+<p align="center"><img src="assets/screenshots/reaper-studio.png" alt="Reaper Studio running desktop application" width="100%"></p>
+
+<sub>Actual live Windows 11 capture from the Reaper Studio process, 1920×1080. The screenshot shows the default starter document and empty output pane; no user project data is included.</sub>
+
+
+See [four-project federation](docs/PROJECT_FEDERATION_MATRIX.md), [OCTA-8 topology](docs/OCTA_PYRAMID_FEDERATION.md), [federated integration](docs/FEDERATED_INTEGRATION.md), and [consolidated project-thread ledger](docs/THREADS_AND_FEDERATION.md).
 
 ## Example
 
@@ -29,10 +37,10 @@ emit "answer = " ++ text(answer)
 - **Native C17:** lexer, expression parser, owned AST, checked integer IR operations and limited lowering. Not yet a complete interpreter; Python remains the compatibility reference.
 - **МОСТ:** Russian-first source surface with 54 exact keyword aliases (21 executable in the REAPER 0.1 reference subset; 33 lexically reserved for future grammar work), UTF-8-aware source columns, and one canonical semantic core. See the [20-principle Russian-native profile](docs/MOST_RUSSIAN_NATIVE_PROFILE.md).
 - **QCS 1.0:** independent hardware-domain frontend with source locations, frame parser, Pratt expressions and JSON AST. It does not replace `.rpr` or execute hardware operations. Run: `reaper-qcs check examples/qcs_irq.qcs`.
-- **THESIS assertion graph:** versioned claims, source-linked evidence relations, exact time/scope comparability, review states and append-only revisions. It never auto-verifies a claim ([design](docs/THESIS_ASSERTION_GRAPH.md)).
-- **MOST Function Registry 666:** 666 traceable API contracts (147 existing specifications + 519 proposals), with source inventory and validator. This is a specification catalogue, not 666 implemented functions.
+- **THESIS assertion graph:** versioned claims, typed evidence references, exact time/scope comparability, review states and append-only revisions. It never auto-verifies a claim ([design](docs/THESIS_ASSERTION_GRAPH.md)).
+- **MOST Function Registry 666:** 666 traceable API contracts (147 existing specifications + 519 proposals), with a traceability index and validator. This is a specification catalogue, not 666 implemented functions.
 - **Systems and interop:** Embedded C, MCU profiles and memory budgets; opt-in Pytyliki C ABI v1; 66 language/toolchain entries, 14 architecture profiles and the validated MOST 20×20 matrix.
-- **VentuSample federation:** validates ventusample.pack.v1, derives 22 normalized pack descriptors and compares two manifests through ventusample_metrics() / ventusample_compare(); optional explicit-path Pytyliki ABI v1 distance cross-check. WAV assets remain untouched.
+- **VentuSample federation:** validates `ventusample.pack.v1`, derives 22 normalized pack descriptors and compares two manifests with `ventusample_metrics()` / `ventusample_compare()`; an explicit trusted Pytyliki ABI v1 path is optional for distance cross-checks. WAV assets remain untouched.
 
 ## Run
 
@@ -68,8 +76,6 @@ Python remains the executable compatibility reference until native parity is dem
 
 ## Documentation
 
-[Four-project federation matrix](docs/PROJECT_FEDERATION_MATRIX.md) · [Federated integration](docs/FEDERATED_INTEGRATION.md) · [OCTA-8 topology](docs/OCTA_PYRAMID_FEDERATION.md)
-
 [THESIS assertion provenance graph](docs/THESIS_ASSERTION_GRAPH.md)
 
 [Governance and consent controls](docs/HUMAN_FIRST_GOVERNANCE.md) · [Anatidae UI/UX](docs/UI_UX_SYSTEM.md) · [12-principle motion](docs/DISNEY_MOTION_SYSTEM.md) · [Language](LANGUAGE.md) · [QCS frontend](docs/QCS_FRONTEND.md) · [MOST 666 registry](docs/MOST_FUNCTIONS_666.md) · [МОСТ specification](docs/MOST_LANGUAGE_SPEC.md) · [Russian-native profile](docs/MOST_RUSSIAN_NATIVE_PROFILE.md) · [Runtime](docs/RUNTIME_PLATFORM.md) · [Engineering standard](docs/UNIFIED_ENGINEERING_STANDARD.md)
@@ -88,6 +94,10 @@ Python remains the executable compatibility reference until native parity is dem
 - **Accessible tools and purposeful motion:** Studio/editor UX should have clear keyboard and focus behavior, readable diagnostics, localization and reduced-motion support. Animation clarifies feedback; it must not obscure state.
 
 The doctrine guides engineering decisions; it does not turn roadmap items into implemented runtime features.
+
+## Documentation governance
+
+[Documentation control](docs/DOCUMENTATION_CONTROL.md) defines the normative rules for public claims, evidence, privacy and integrations.
 
 ## License
 
