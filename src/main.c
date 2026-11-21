@@ -15,7 +15,7 @@ static void appguard_audit(const vee_finding *finding, void *context) {
     if (finding == NULL || finding->decision == VEEELZEVUL_ALLOW) return;
     decision = finding->decision == VEEELZEVUL_DENY ? "deny" :
                finding->decision == VEEELZEVUL_QUARANTINE ? "quarantine" : "degrade";
-    fprintf(stderr, "[AppGuard] %s L%03u rule=%s object=%s reason=%s\\n",
+    fprintf(stderr, "[AppGuard] %s L%03u rule=%s object=%s reason=%s\n",
             decision, finding->level_id, finding->rule_id,
             finding->object_id, finding->reason);
 }
@@ -95,16 +95,16 @@ int main(int argc,char **argv) {
     }
     if(catalog_dump||catalog_lookup){
         if(path||dump||ast_json||(catalog_dump&&catalog_lookup)){usage(stderr);return 2;}
-        if(!reaper_token_catalog_validate()){fprintf(stderr,"reaper-c: token catalogue integrity failure\\n");return 1;}
+        if(!reaper_token_catalog_validate()){fprintf(stderr,"reaper-c: token catalogue integrity failure\n");return 1;}
         if(catalog_lookup){
             const ReaperCatalogEntry *entry=reaper_token_catalog_lookup(catalog_lookup);
-            if(!entry){fprintf(stderr,"reaper-c: unknown catalogue token %s\\n",catalog_lookup);return 1;}
-            printf("%03zu\\t%s\\t%s\\t%s\\n",entry->ordinal,entry->lexeme,entry->group,entry->name);
+            if(!entry){fprintf(stderr,"reaper-c: unknown catalogue token %s\n",catalog_lookup);return 1;}
+            printf("%03zu\\t%s\\t%s\\t%s\n",entry->ordinal,entry->lexeme,entry->group,entry->name);
             return 0;
         }
         for(size_t i=0;i<reaper_token_catalog_count();++i){
             const ReaperCatalogEntry *entry=reaper_token_catalog_at(i);
-            printf("%03zu\\t%s\\t%s\\t%s\\n",entry->ordinal,entry->lexeme,entry->group,entry->name);
+            printf("%03zu\\t%s\\t%s\\t%s\n",entry->ordinal,entry->lexeme,entry->group,entry->name);
         }
         return 0;
     }
