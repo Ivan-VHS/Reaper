@@ -62,6 +62,14 @@ class CodeWellbeingTests(unittest.TestCase):
         self.assertIn("not automatic defects", finding["note"])
         self.assertEqual(report["inventory"]["maintenance_markers"]["FIXME"], 1)
 
+    def test_large_source_file_is_reported_as_partial_scan(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "large.py").write_text("x" * (1024 * 1024 + 16), encoding="utf-8")
+            report = scan_project(root)
+        self.assertTrue(report["scan"]["source_text_scan_truncated"])
+        self.assertLessEqual(report["inventory"]["source_bytes_scanned"], 32 * 1024 * 1024)
+
     def test_json_report_is_serializable(self):
         with tempfile.TemporaryDirectory() as directory:
             report = scan_project(directory)
