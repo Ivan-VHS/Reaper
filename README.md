@@ -125,3 +125,14 @@ emit "result = " ++ text(result)
 
 This is a static architecture illustration, not a Studio screenshot or a claim of complete C17 parity. The live Windows capture above remains the evidence for the shipped desktop UI. See [Visual documentation and graphics contract](docs/VISUAL_DOCUMENTATION.md).
 <!-- VISUAL-DOCS:END -->
+
+
+## Motion Constitution v2026
+
+The cross-project interface contract is [Motion Constitution v2026](docs/MOTION_CONSTITUTION_V2026.md). It standardizes spring/snappy easing, the 0.4×–2.2× motion-scale envelope, reduced-motion precedence, theme parity, the 2×2/focus-scene showcase and truthful SVG/Canvas telemetry. The [native UI motion contract](docs/UI_MOTION.md) defines what Reaper Studio currently ships: bounded Tk spring presentation, persisted accessibility preferences, and local IDE/LSP/DAP tooling. CODEX-66 and local language services are not a cloud AI agent or streamed AI Diff; planned showcase panels must not be described as shipped features.
+
+## Shared motion architecture map
+
+<p align="center"><img src="assets/motion-constitution-v2026.svg" alt="Motion Constitution v2026: four-domain architecture map" width="100%"></p>
+
+This is the shared 2×2 architecture reference, not a live application screenshot. It distinguishes each product's shipped scope from unavailable or planned capabilities.
