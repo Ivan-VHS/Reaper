@@ -22,6 +22,7 @@ from pathlib import Path, PurePosixPath
 import re
 import shutil
 import stat
+import sys
 import tempfile
 from typing import Any, Mapping, Sequence
 import uuid
@@ -580,6 +581,10 @@ def apply_reflash_plan(
     applied: list[tuple[Path, bytes | None, int]] = []
     try:
         for change, target, content, previous, mode in prepared:
+            current = target.read_bytes() if target.exists() else None
+            current_hash = _sha256(current) if current is not None else None
+            if current_hash != change.base_sha256:
+                raise CLifeError(f"stale reflash plan during apply: {change.path}")
             _atomic_write(target, content, mode)
             applied.append((target, previous, mode))
     except Exception as error:
@@ -680,5 +685,5 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(network.audit_all(), ensure_ascii=False, indent=2))
         return 0
     except (CLifeError, OSError, UnicodeError, json.JSONDecodeError) as error:
-        print(f"reaper clife: {error}", file=__import__("sys").stderr)
+        print(f"reaper clife: {error}", file=sys.stderr)
         return 2
