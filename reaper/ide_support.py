@@ -6,7 +6,7 @@ from pathlib import Path
 import re
 from typing import Iterator
 
-SOURCE_EXTENSIONS = frozenset({".rpr", ".most"})
+SOURCE_EXTENSIONS = frozenset({".rpr", ".most", ".js", ".mjs", ".cjs"})
 IGNORED_DIRECTORIES = frozenset({"__pycache__", "node_modules", "build", "dist", ".venv"})
 KEYWORDS = frozenset({
     "make", "vary", "change", "craft", "yield", "emit", "when", "otherwise",
