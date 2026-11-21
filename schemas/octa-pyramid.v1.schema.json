@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/Ivan-VHS/Reaper/blob/main/schemas/octa-pyramid.v1.schema.json",
-  "title": "OCTA-8 Federation Pyramid v1",
+  "$id": "urn:ivan-vhs:octa-federation-pyramid:v1",
+  "title": "OCTA-8 Four-Project Federation Pyramid v1",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -160,8 +160,7 @@
         ],
         "properties": {
           "id": {
-            "type": "string",
-            "minLength": 1
+            "type": "string"
           },
           "from": {
             "enum": [
@@ -187,8 +186,7 @@
             ]
           },
           "interface": {
-            "type": "string",
-            "minLength": 1
+            "type": "string"
           },
           "flow": {
             "enum": [
@@ -201,6 +199,7 @@
           "status": {
             "enum": [
               "implemented",
+              "partial",
               "planned",
               "not_applicable"
             ]
@@ -230,12 +229,10 @@
             ]
           },
           "contract": {
-            "type": "string",
-            "minLength": 1
+            "type": "string"
           },
           "surface": {
-            "type": "string",
-            "minLength": 1
+            "type": "string"
           }
         }
       }
@@ -249,7 +246,9 @@
         "hub_is_not_a_runtime_gateway",
         "request_response_edges_are_synchronous",
         "no_implicit_native_loading",
-        "no_driver_mutation_through_mesh"
+        "no_driver_mutation_through_mesh",
+        "producer_export_does_not_imply_consumer_integration",
+        "reaper_pack_consumer_implemented"
       ],
       "properties": {
         "complete_pairwise_product": {
@@ -268,6 +267,12 @@
           "const": true
         },
         "no_driver_mutation_through_mesh": {
+          "const": true
+        },
+        "producer_export_does_not_imply_consumer_integration": {
+          "const": true
+        },
+        "reaper_pack_consumer_implemented": {
           "const": true
         }
       }
