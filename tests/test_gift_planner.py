@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+from dataclasses import replace
 
 from reaper.gift_planner import (
     Candy, allocate_equal, allocate_weighted, build_candy_basket,
@@ -44,6 +45,7 @@ class GiftPlannerTests(unittest.TestCase):
         self.assertEqual(len(plan.baskets), 5)
         self.assertEqual(len(plan.greeting_edges), 10)
         self.assertEqual(plan.greeting_edges[-1].template_index, 2)
+        self.assertFalse(replace(plan, baskets=()).verify())
 
     def test_invalid_values_rejected(self) -> None:
         calls = (
