@@ -52,22 +52,22 @@ The branch adds or strengthens the following usable foundations:
 | Runtime debugger | implemented | existing breakpoints, step, continue, variables and call stack |
 | Embedded C workflows | implemented | existing project init, inspect and build actions retained |
 | Light/dark/system theme | implemented | existing Reaper theme services retained |
-| Language server (LSP) | deferred | requires versioned JSON-RPC protocol and compiler-owned semantic data |
-| Semantic completion, hover, rename, references | deferred | requires symbol/type index and LSP |
+| Language server (LSP) | implemented | versioned UTF-16 JSON-RPC, parser/structure diagnostics, background per-document symbol index |
+| Completion, hover, rename, references | partial | keyword/symbol completion and lexical navigation/refactoring; no cross-file type resolution |
 | AST/IR visual explorer | deferred | requires stable public AST/IR inspection API |
 | Test explorer and coverage | deferred | requires test discovery and machine-readable test events |
 | Integrated Git workflow | deferred | must use existing safe patch pipeline and explicit review |
 | Plugin SDK and AI actions | deferred | requires permission model, sandbox and auditable proposals |
-| DAP interoperability | deferred | requires stable source mapping and debug adapter contract |
+| DAP interoperability | implemented baseline | RuntimeDebugger bridge: launch, line breakpoints, statement stepping, stack and locals; no eval/step-out |
 
-The existing editor is a single-document workbench. Multi-tab sessions, semantic language intelligence, integrated Git review and plugin execution are not claimed as complete.
+The existing editor is a single-document workbench. Multi-tab sessions, cross-file semantic intelligence, integrated Git review and plugin execution are not claimed as complete.
 
 ## 4. Architecture boundaries
 
 1. **The editor owns presentation, not language semantics.** Syntax highlighting consumes pure lexical spans. Parsing and diagnostics come from the canonical Reaper frontend.
 2. **The runtime remains authoritative.** The IDE must not duplicate evaluation, type rules, or effect policy.
 3. **The UI thread never runs user programs or builds.** Work is delegated to a worker; results return through a queue and the Tk event loop.
-4. **Debugging is cooperative.** The IDE uses the runtime's debugger hook. A future DAP adapter must wrap that contract rather than inventing a second debugger.
+4. **Debugging is cooperative.** The IDE uses the runtime's debugger hook. The DAP adapter wraps that contract rather than inventing a second debugger; stepping is statement-boundary only.
 5. **Project browsing is bounded.** The explorer limits depth and entries, skips hidden/generated folders, and never follows symlinks.
 6. **No hidden authority.** Opening a project does not execute code. AI/plugin proposals do not run automatically. Build and patch application remain explicit user actions.
 7. **No false sandbox claim.** Interpreter quotas are resource controls, not host-process isolation.
@@ -112,8 +112,8 @@ The existing editor is a single-document workbench. Multi-tab sessions, semantic
 
 1. **Stabilize editor core:** add UI-level smoke tests, scroll-synchronized line numbers, robust error-to-source navigation and multi-tab document state.
 2. **Diagnostics service:** expose parser diagnostics as structured records with file, range, severity and stable code.
-3. **Semantic protocol:** define versioned JSON-RPC/LSP transport backed by compiler-owned AST and typed-IR.
-4. **Completion and navigation:** implement completion, hover, definition, references, rename and semantic tokens against the shared symbol model.
+3. **Semantic protocol:** extend the implemented versioned JSON-RPC/LSP service with compiler-owned AST and typed-IR data.
+4. **Completion and navigation:** replace lexical-only resolution with scope-aware symbols, type-aware completion, semantic tokens and AST-safe refactoring.
 5. **Test and build panels:** machine-readable task events, cancellable subprocesses, progress, logs and artifact links.
 6. **Git panel:** status/diff/branch views using the repository's verified patch proposal/apply/rollback workflow; no implicit commits or merges.
 7. **Plugin and AI layer:** signed/declared capabilities, explicit permissions, proposal-first edits, audit trail and sandboxed execution.
