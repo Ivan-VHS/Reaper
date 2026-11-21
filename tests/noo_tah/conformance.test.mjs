@@ -152,10 +152,13 @@ test("DNS resolver resolves localhost without external network access", async ()
   assert.ok(result.address === "127.0.0.1" || result.address === "::1");
 });
 
-test("event loop drains nextTick and promise microtasks before immediate callbacks", async () => {
-  const order = [];
-  process.nextTick(() => order.push("nextTick"));
-  Promise.resolve().then(() => order.push("promise"));
-  await immediate();
-  assert.deepEqual(order, ["nextTick", "promise"]);
+test("event loop drains nextTick and promise microtasks before immediate callbacks", () => {
+  const child = spawnSync(process.execPath, ["-e", [
+    "const order = [];",
+    "process.nextTick(() => order.push('nextTick'));",
+    "Promise.resolve().then(() => order.push('promise'));",
+    "setImmediate(() => { order.push('immediate'); process.stdout.write(order.join(',')); });",
+  ].join("\\n")], { encoding: "utf8", timeout: 5000 });
+  assert.equal(child.status, 0, child.stderr);
+  assert.equal(child.stdout, "nextTick,promise,immediate");
 });
