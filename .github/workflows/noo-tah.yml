@@ -28,13 +28,15 @@ jobs:
           node-version: ${{ matrix.node }}
       - name: Compile NOO TAH integration
         run: python -m compileall -q reaper/noo_tah.py reaper/desktop.py tests/test_noo_tah.py
-      - name: Run NOO TAH unit and runtime tests
+      - name: Run NOO TAH unit tests
         run: python -m unittest discover -s tests -p test_noo_tah.py -v
       - name: Verify runtime versions and ABI
         run: python -m reaper.noo_tah version
       - name: Probe Node core, ESM, workers and streams
         run: python -m reaper.noo_tah doctor
-      - name: Verify ESM and CommonJS execution
+      - name: Run Node.js runtime conformance suite
+        run: node --test tests/noo_tah/conformance.test.mjs
+      - name: Verify ESM and CommonJS execution through NOO TAH
         shell: bash
         run: |
           printf "console.log('NOO_TAH_ESM_OK')\n" > noo-tah-check.mjs
