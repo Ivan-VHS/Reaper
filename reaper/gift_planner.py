@@ -69,16 +69,19 @@ class GiftPlan:
     greeting_edges: tuple[GreetingEdge, ...]
 
     def verify(self) -> bool:
-        return (
-            len(self.allocations) == len(self.baskets)
-            and sum(self.allocations) == self.budget
-            and self.spent + self.remaining == self.budget
-            and 0 <= self.spent <= self.budget
-            and all(
-                sum(line.line_total for line in basket) <= allocation
-                for basket, allocation in zip(self.baskets, self.allocations)
-            )
-        )
+        if len(self.allocations) != len(self.baskets):
+            return False
+        if sum(self.allocations) != self.budget:
+            return False
+        if self.spent + self.remaining != self.budget or not 0 <= self.spent <= self.budget:
+            return False
+        basket_spent = 0
+        for basket, allocation in zip(self.baskets, self.allocations):
+            basket_total = sum(line.line_total for line in basket)
+            if basket_total > allocation:
+                return False
+            basket_spent += basket_total
+        return basket_spent == self.spent
 
 
 def allocate_equal(total: int, recipients: int) -> tuple[int, ...]:
