@@ -294,7 +294,11 @@ craft parse_program(tokens) {
                         yield ["yield", nothing, keyword[2], keyword[3]]
                     } otherwise {
                         make value := parse_expression_bp(1)
-                        yield [keyword[0] == "EMIT" ? "emit" : "yield", value, keyword[2], keyword[3]]
+                        when keyword[0] == "EMIT" {
+                            yield ["emit", value, keyword[2], keyword[3]]
+                        } otherwise {
+                            yield ["yield", value, keyword[2], keyword[3]]
+                        }
                     }
                 } otherwise {
                     when first[0] == "CRAFT" {
