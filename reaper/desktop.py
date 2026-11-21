@@ -6,6 +6,7 @@ existing runtime debugger's cooperative hook.
 """
 from __future__ import annotations
 
+import json
 import queue
 import re
 import threading
@@ -25,7 +26,7 @@ from reaper.errors import ReaperError
 from reaper.parser import parse
 from reaper.runtime import Interpreter
 from reaper.debugger import DebuggerStopped, RuntimeDebugger
-from reaper.products import list_products
+from reaper.plugins import PluginError, PluginManager
 from reaper.ide_support import SOURCE_EXTENSIONS, highlight_spans, iter_project_entries
 from reaper.ui_motion import MotionController
 from reaper.ui_theme import apply_theme, apply_ui_theme, set_dpi_awareness, toggle_theme
@@ -47,6 +48,7 @@ class ReaperStudio(tk.Tk):
         self.geometry("1320x860")
         self.minsize(920, 640)
         self._theme_name = apply_theme(self, "reaper-studio")
+        self.plugin_manager = PluginManager()
         self._theme_mode = tk.StringVar(value=self._theme_name)
         self.current_file: Path | None = None
         self.project_root: Path | None = None
@@ -120,39 +122,102 @@ class ReaperStudio(tk.Tk):
         embedded_menu.add_command(label="Собрать прошивку…", command=self.embedded_build)
         menu.add_cascade(label="Встроенная C", menu=embedded_menu)
 
-        product_menu = tk.Menu(menu, tearoff=False)
-        product_menu.add_command(label="Обзор внутренних продуктов…", command=self.show_internal_products)
-        menu.add_cascade(label="Внутренние продукты", menu=product_menu)
+        plugin_menu = tk.Menu(menu, tearoff=False)
+        plugin_menu.add_command(label="Менеджер плагинов…", command=self.show_plugins)
+        menu.add_cascade(label="Плагины", menu=plugin_menu)
         view_menu = tk.Menu(menu, tearoff=False)
         for mode, label in (("system", "Системная"), ("light", "Светлая"), ("dark", "Тёмная")):
             view_menu.add_radiobutton(label=label, variable=self._theme_mode, value=mode, command=self.apply_visual_theme)
         menu.add_cascade(label="Вид", menu=view_menu)
         self.configure(menu=menu)
 
-    def show_internal_products(self) -> None:
-        """Show the integrated product registry inside Reaper Studio."""
+    def show_plugins(self) -> None:
+        """Manage and run built-in plugins provided by the REAPER host."""
         window = tk.Toplevel(self)
-        window.title("REAPER — внутренние продукты")
-        window.geometry("820x560")
-        window.minsize(640, 420)
+        window.title("REAPER — менеджер плагинов")
+        window.geometry("1040x620")
+        window.minsize(760, 460)
         window.transient(self)
         frame = ttk.Frame(window, padding=12)
         frame.pack(fill="both", expand=True)
-        ttk.Label(frame, text="Внутренние продукты REAPER", style="PaneTitle.TLabel").pack(anchor="w")
-        ttk.Label(frame, text="Единая среда · общие API · отдельные зоны ответственности").pack(anchor="w", pady=(2, 10))
-        table = ttk.Treeview(frame, columns=("domain", "purpose", "service"), show="tree headings")
-        table.heading("#0", text="Продукт")
+        ttk.Label(frame, text="Плагины REAPER", style="PaneTitle.TLabel").pack(anchor="w")
+        ttk.Label(frame, text="18 встроенных модулей · единый host API · явное включение и запуск").pack(anchor="w", pady=(2, 10))
+
+        table = ttk.Treeview(frame, columns=("domain", "operation", "status"),
+                             show="tree headings", selectmode="browse")
+        table.heading("#0", text="Плагин")
         table.heading("domain", text="Направление")
-        table.heading("purpose", text="Назначение")
-        table.heading("service", text="Основная операция")
-        table.column("#0", width=130, stretch=False)
-        table.column("domain", width=150, stretch=False)
-        table.column("purpose", width=330, stretch=True)
-        table.column("service", width=170, stretch=False)
-        for item in list_products():
-            table.insert("", "end", text=item["name"], values=(item["domain"], item["purpose"], item["primary_service"]))
+        table.heading("operation", text="Основная операция")
+        table.heading("status", text="Состояние")
+        table.column("#0", width=145, stretch=False)
+        table.column("domain", width=175, stretch=False)
+        table.column("operation", width=200, stretch=False)
+        table.column("status", width=100, stretch=False)
+        for item in self.plugin_manager.list_plugins():
+            table.insert("", "end", iid=item["plugin_id"], text=item["name"],
+                         values=(item["domain"], item["operation"], item["status"]))
         table.pack(fill="both", expand=True)
-        ttk.Label(frame, text="Сервисы работают в Python reference runtime; нативная C17-паритетность не заявляется.").pack(anchor="w", pady=(8, 0))
+
+        footer = ttk.Frame(frame)
+        footer.pack(fill="x", pady=(10, 0))
+        description = tk.StringVar(value="Выберите плагин, чтобы увидеть его назначение и возможности.")
+        ttk.Label(footer, textvariable=description, wraplength=700).pack(side="left", fill="x", expand=True)
+
+        def selected_id() -> str | None:
+            selection = table.selection()
+            return selection[0] if selection else None
+
+        def update_description(_event: object = None) -> None:
+            plugin_id = selected_id()
+            if plugin_id is None:
+                description.set("Выберите плагин.")
+                return
+            plugin = self.plugin_manager.get_plugin(plugin_id)
+            description.set(f"{plugin.name} · {plugin.version} · {plugin.description} "
+                             f"Возможности: {', '.join(plugin.capabilities)}")
+
+        def toggle_plugin() -> None:
+            plugin_id = selected_id()
+            if plugin_id is None:
+                messagebox.showinfo("Плагины", "Сначала выберите плагин.", parent=window)
+                return
+            enabled = not self.plugin_manager.is_enabled(plugin_id)
+            self.plugin_manager.set_enabled(plugin_id, enabled)
+            values = list(table.item(plugin_id)["values"])
+            values[-1] = "enabled" if enabled else "disabled"
+            table.item(plugin_id, values=values)
+            update_description()
+
+        def run_plugin() -> None:
+            plugin_id = selected_id()
+            if plugin_id is None:
+                messagebox.showinfo("Плагины", "Сначала выберите плагин.", parent=window)
+                return
+            raw = simpledialog.askstring(
+                "Запуск плагина",
+                "Аргументы операции в формате JSON object (для операции без аргументов — {}):",
+                initialvalue="{}",
+                parent=window,
+            )
+            if raw is None:
+                return
+            try:
+                arguments = json.loads(raw)
+                if not isinstance(arguments, dict):
+                    raise PluginError("Аргументы должны быть JSON-объектом.")
+                result = self.plugin_manager.run(plugin_id, **arguments)
+            except (json.JSONDecodeError, PluginError, ValueError, TypeError) as error:
+                messagebox.showerror("Ошибка плагина", str(error), parent=window)
+                return
+            messagebox.showinfo(f"Плагин {self.plugin_manager.get_plugin(plugin_id).name}",
+                                json.dumps(result, ensure_ascii=False, indent=2, default=str),
+                                parent=window)
+
+        table.bind("<<TreeviewSelect>>", update_description)
+        ttk.Button(footer, text="Включить / отключить", command=toggle_plugin).pack(side="right", padx=(6, 0))
+        ttk.Button(footer, text="Запустить…", command=run_plugin).pack(side="right")
+        table.selection_set("operandu")
+        update_description()
 
     def _build_toolbar(self) -> None:
         bar = ttk.Frame(self, padding=(10, 8))
