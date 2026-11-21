@@ -107,6 +107,8 @@ def main(argv: list[str] | None = None) -> int:
                     raise PluginError("--plugin-args must decode to a JSON object")
                 selected = manager.get_plugin(args.run_plugin)
                 if selected.source == "external":
+                    if args.trust_plugin:
+                        manager.set_enabled(selected.plugin_id, True)
                     manager.load(selected.plugin_id, trusted=args.trust_plugin)
                 result = {"plugin": selected.plugin_id,
                           "result": manager.run(args.run_plugin, **plugin_arguments)}
