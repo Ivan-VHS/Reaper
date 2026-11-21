@@ -46,6 +46,7 @@ class GiftPlannerTests(unittest.TestCase):
         self.assertEqual(len(plan.greeting_edges), 10)
         self.assertEqual(plan.greeting_edges[-1].template_index, 2)
         self.assertFalse(replace(plan, baskets=()).verify())
+        self.assertFalse(replace(plan, spent=plan.spent + 1).verify())
 
     def test_invalid_values_rejected(self) -> None:
         calls = (
