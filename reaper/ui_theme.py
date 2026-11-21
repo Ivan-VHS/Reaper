@@ -14,20 +14,20 @@ from typing import Iterator
 THEME_ENV = "REAPER_UI_THEME"
 PALETTES: dict[str, dict[str, str]] = {
     "light": {
-        "bg": "#F4F8FD", "surface": "#FFFFFF", "elevated": "#EAF1FA",
-        "fg": "#122C45", "secondary": "#314B66", "muted": "#4D6177",
-        "blue": "#004E98", "blue_hover": "#1A5FDB", "on_blue": "#FFFFFF",
-        "red": "#B5122D", "red_hover": "#9C1026", "on_red": "#FFFFFF",
-        "border": "#CAD8E8", "focus": "#1A5FDB",
-        "selection": "#D9E8FF", "selection_fg": "#003366", "disabled": "#71849A",
+        "bg": "#F4F6FA", "surface": "#FFFFFF", "elevated": "#F4F6FA",
+        "fg": "#0A1E46", "secondary": "#0039A6", "muted": "#0039A6",
+        "heading": "#0039A6", "blue": "#0039A6", "blue_hover": "#0A1E46", "on_blue": "#FFFFFF",
+        "red": "#B51A10", "red_hover": "#D52B1E", "on_red": "#FFFFFF",
+        "border": "#0039A6", "focus": "#D52B1E",
+        "selection": "#0039A6", "selection_fg": "#FFFFFF", "disabled": "#0039A6",
     },
     "dark": {
-        "bg": "#071A2D", "surface": "#0F2A45", "elevated": "#173A5E",
-        "fg": "#E8EDF2", "secondary": "#D0DCE8", "muted": "#B3C4D6",
-        "blue": "#70A5FF", "blue_hover": "#8AB6FF", "on_blue": "#061A30",
-        "red": "#FF7B86", "red_hover": "#FF9AA2", "on_red": "#2B0610",
-        "border": "#31516F", "focus": "#8AB6FF",
-        "selection": "#244F82", "selection_fg": "#FFFFFF", "disabled": "#8096AC",
+        "bg": "#0A1E46", "surface": "#0039A6", "elevated": "#0039A6",
+        "fg": "#FFFFFF", "secondary": "#FFFFFF", "muted": "#FFFFFF",
+        "heading": "#FFFFFF", "blue": "#0039A6", "blue_hover": "#0A1E46", "on_blue": "#FFFFFF",
+        "red": "#B51A10", "red_hover": "#D52B1E", "on_red": "#FFFFFF",
+        "border": "#FFFFFF", "focus": "#D52B1E",
+        "selection": "#B51A10", "selection_fg": "#FFFFFF", "disabled": "#FFFFFF",
     },
 }
 
@@ -178,7 +178,7 @@ def apply_theme(root: tk.Misc, app_key: str, theme: str | None = None) -> str:
     root._anatidae_palette = dict(palette)  # type: ignore[attr-defined]
     try:
         root.configure(background=palette["bg"])
-        root.option_add("*Font", ("Segoe UI", 11))
+        root.option_add("*Font", ("Segoe UI", 10))
         for key, value in {
             "*Text.background": palette["surface"], "*Text.foreground": palette["fg"],
             "*Text.insertBackground": palette["fg"], "*Text.selectBackground": palette["selection"],
@@ -197,15 +197,15 @@ def apply_theme(root: tk.Misc, app_key: str, theme: str | None = None) -> str:
             style.theme_use("clam")
     except tk.TclError:
         pass
-    style.configure(".", font=("Segoe UI", 11), background=palette["bg"], foreground=palette["fg"])
+    style.configure(".", font=("Segoe UI", 10), background=palette["bg"], foreground=palette["fg"])
     style.configure("TFrame", background=palette["bg"])
     style.configure("Pane.TFrame", background=palette["surface"])
     style.configure("TLabel", background=palette["bg"], foreground=palette["fg"])
-    style.configure("Title.TLabel", background=palette["bg"], foreground=palette["blue"], font=("Segoe UI Semibold", 19))
-    style.configure("Section.TLabel", background=palette["bg"], foreground=palette["blue"], font=("Segoe UI Semibold", 11), padding=(4, 5))
+    style.configure("Title.TLabel", background=palette["bg"], foreground=palette["blue"], font=("Georgia", 18, "bold"))
+    style.configure("Section.TLabel", background=palette["bg"], foreground=palette["blue"], font=("Georgia", 11, "bold"), padding=(4, 5))
     style.configure("Muted.TLabel", background=palette["bg"], foreground=palette["muted"])
     style.configure(
-        "TButton", background=palette["surface"], foreground=palette["blue"],
+        "TButton", background=palette["surface"], foreground=palette["fg"],
         bordercolor=palette["border"], lightcolor=palette["surface"], darkcolor=palette["border"],
         borderwidth=1, relief="flat", focusthickness=2, focuscolor=palette["focus"],
         padding=(14, 13),
@@ -213,7 +213,7 @@ def apply_theme(root: tk.Misc, app_key: str, theme: str | None = None) -> str:
     style.map(
         "TButton",
         background=[("disabled", palette["elevated"]), ("pressed", palette["selection"]), ("active", palette["elevated"])],
-        foreground=[("disabled", palette["disabled"]), ("pressed", palette["selection_fg"]), ("active", palette["blue"])],
+        foreground=[("disabled", palette["disabled"]), ("pressed", palette["selection_fg"]), ("active", palette["fg"])],
     )
     style.configure(
         "Primary.TButton", background=palette["blue"], foreground=palette["on_blue"],
@@ -248,7 +248,7 @@ def apply_theme(root: tk.Misc, app_key: str, theme: str | None = None) -> str:
         "Treeview", background=palette["surface"], fieldbackground=palette["surface"],
         foreground=palette["fg"], rowheight=42, bordercolor=palette["border"], relief="flat",
     )
-    style.configure("Treeview.Heading", background=palette["elevated"], foreground=palette["fg"], font=("Segoe UI Semibold", 10), padding=(9, 9))
+    style.configure("Treeview.Heading", background=palette["elevated"], foreground=palette["fg"], font=("Georgia", 10, "bold"), padding=(9, 9))
     style.map("Treeview", background=[("selected", palette["selection"])], foreground=[("selected", palette["selection_fg"])])
     style.configure("TLabelFrame", background=palette["bg"], foreground=palette["fg"], bordercolor=palette["border"])
     style.configure("TLabelFrame.Label", background=palette["bg"], foreground=palette["blue"], font=("Segoe UI Semibold", 10))
