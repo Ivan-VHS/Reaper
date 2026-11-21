@@ -22,6 +22,7 @@ from .ffi import CAbiLibrary, NativeFunction, PytylikiBridge, FfiError
 from .debugger import RuntimeDebugger, DebugSnapshot, DebuggerStopped
 from .token_catalog import TOKEN_CATALOG_SIZE, token_catalog, token_info, token_is_reserved
 from .thesis import ThesisLedger, ThesisLedgerError
+from .clife import Snapshot as ClifeSnapshot, RuntimeState as ClifeRuntimeState, FaultEvent as ClifeFaultEvent, FaultType as ClifeFaultType, AwakeningBranch as ClifeAwakeningBranch, branch_awakening as clife_branch_awakening, handle_fault as clife_handle_fault
 from .embedded import EmbeddedError, McuProfile, RegisterBank, build_project as build_embedded_project, init_project as init_embedded_project
 
 __version__ = "0.1.0"
@@ -42,5 +43,5 @@ __all__ = [
     "ResourceManager", "ResourceHandle", "CAbiLibrary", "NativeFunction",
     "PytylikiBridge", "FfiError", "RuntimeDebugger", "DebugSnapshot",
     "DebuggerStopped", "EmbeddedError", "McuProfile", "RegisterBank",
-    "build_embedded_project", "init_embedded_project", "__version__",
+    "build_embedded_project", "init_embedded_project", "ClifeSnapshot", "ClifeRuntimeState", "ClifeFaultEvent", "ClifeFaultType", "ClifeAwakeningBranch", "clife_branch_awakening", "clife_handle_fault", "__version__",
 ]
