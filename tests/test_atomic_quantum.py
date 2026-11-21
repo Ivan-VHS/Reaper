@@ -20,7 +20,8 @@ class AtomicQuantumTests(unittest.TestCase):
     def test_hadamard_and_phase_preserve_norm(self):
         state = zero_state(1)
         hadamard(state, 0)
-        self.assertEqual(probabilities(state), [0.4999999999999999, 0.4999999999999999])
+        self.assertAlmostEqual(probabilities(state)[0], 0.5, places=12)
+        self.assertAlmostEqual(probabilities(state)[1], 0.5, places=12)
         phase_rotate(state, 0, math.pi / 2)
         self.assertAlmostEqual(sum(probabilities(state)), 1.0, places=12)
 
