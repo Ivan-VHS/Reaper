@@ -1,7 +1,6 @@
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
-
 [project]
 name = "reaper-lang"
 version = "0.1.0"
@@ -11,18 +10,7 @@ requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
 authors = [{ name = "Reaper contributors" }]
 keywords = ["programming-language", "interpreter", "dataflow", "qcs"]
-classifiers = [
-  "Development Status :: 3 - Alpha",
-  "Environment :: Console",
-  "Intended Audience :: Developers",
-  "License :: OSI Approved :: Apache Software License",
-  "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
-  "Topic :: Software Development :: Interpreters",
-]
-
+classifiers = ["Development Status :: 3 - Alpha","Environment :: Console","Intended Audience :: Developers","License :: OSI Approved :: Apache Software License","Programming Language :: Python :: 3","Programming Language :: Python :: 3.10","Programming Language :: Python :: 3.11","Programming Language :: Python :: 3.12","Topic :: Software Development :: Interpreters"]
 [project.scripts]
 reaper = "reaper.cli:main"
 reaper-lsp = "reaper.lsp:serve"
@@ -31,12 +19,10 @@ reaper-qcs = "reaper.qcs:main"
 reaper-polyglot = "reaper.polyglot:main"
 reaper-polyglot-code = "reaper.polyglot_code:main"
 reaper-embedded = "reaper.embedded:main"
-
 [project.gui-scripts]
 reaper-studio = "reaper.desktop:main"
-
 [tool.setuptools]
-packages = ["reaper"]
-
+packages = ["reaper", "reaper.kora"]
 [tool.setuptools.package-data]
-reaper = ["systems_architectures.json", "systems_languages.json", "token_catalog.json"]
+"reaper" = ["systems_architectures.json", "systems_languages.json", "token_catalog.json"]
+"reaper.kora" = ["manifest.json"]
