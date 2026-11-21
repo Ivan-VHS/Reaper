@@ -207,6 +207,8 @@ class RuntimeTransaction:
 
     def _commit(self, expected_generation: int | None, event: str) -> Snapshot:
         with self._lock:
+            if self._failed is not None:
+                raise TransactionError(f"transaction is in a failed state: {self._failed}; rollback is required")
             expected = self._generation if expected_generation is None else expected_generation
             if expected != self._generation:
                 raise TransactionConflict(
