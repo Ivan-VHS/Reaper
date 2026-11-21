@@ -49,6 +49,11 @@ class SystemsArchitectureMatrixTests(unittest.TestCase):
         self.assertEqual(e2k["endianness"], "little")
         self.assertIn("lcc", e2k["commands"])
         self.assertIn("e2k", data["profiles"]["reaper"])
+        selected = select_architectures(
+            data, profile="reaper",
+            which=lambda command: "/mock/mcst/bin/lcc" if command == "lcc" else None,
+        )
+        self.assertIn("e2k", {item["name"] for item in selected})
         state, found = describe_toolchains(
             e2k, which=lambda command: "/mock/mcst/bin/lcc" if command == "lcc" else None
         )
