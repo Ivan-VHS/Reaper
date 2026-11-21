@@ -1,6 +1,7 @@
 # Reaper — язык программирования с потоковой композицией
 
 Python 3.10+ · C17 native track · Windows Studio · Apache-2.0 · [CI](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml)
+**Разработчик:** [Ivan-VHS](https://github.com/Ivan-VHS)
 
 Reaper — язык выражений с явным потоком данных: оператор `::` передаёт значение следующей операции. Python — текущая исполняемая эталонная реализация; C17 — развиваемый нативный путь, пока не полная замена runtime.
 
