@@ -14,6 +14,7 @@ Reaper is an expression-oriented language: `::` passes a value into the next ope
 | Area | Scope / state |
 |---|---|
 | Python runtime | lexer, parser, interpreter, CLI, REPL, modules, closures, quotas and audit |
+| NOO TAH | official Node.js integration: V8/libuv, ESM/CommonJS, core APIs, streams, workers, npm/npx, N-API and Inspector; Studio JS run/check/debug/stop |
 | Division/allocation | checked Euclidean division, balanced partition and proportional allocation |
 | Reaper Studio | Windows IDE foundation: project tree, syntax coloring, line numbers, search, check/run and debugger; LSP supports versioned per-file diagnostics/navigation, while cross-file semantics and Git UI remain planned |
 | Native C17 | lexer, expression parser, owned AST, checked IR and limited lowering |
@@ -43,6 +44,8 @@ python -m reaper --engine vm examples/flow.rpr
 python -m reaper --repl
 python -m unittest discover -s tests -v
 ```
+
+NOO TAH integrates the official cross-platform Node.js runtime: V8, libuv, core APIs, ESM/CommonJS, streams, workers, child processes, npm/npx, N-API and Inspector. Reaper Studio provides JavaScript run/check/debug/stop, npm commands and runtime diagnostics. Commands: `reaper-noo-tah doctor`, `reaper-noo-tah run app.mjs`, `reaper-noo-tah npm run build`. See [NOO TAH architecture](docs/NOO_TAH.md).
 
 Studio: `python reaper_desktop.py` (Windows). Native: `cmake -S . -B build -DCMAKE_BUILD_TYPE=Release`, then `cmake --build build --parallel` and `ctest --test-dir build --output-on-failure`.
 
