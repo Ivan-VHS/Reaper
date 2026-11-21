@@ -72,3 +72,52 @@ Capture the running Studio in both themes; the two-row command bar at 780px and 
 - [ ] Focus, keyboard shortcuts and reduced-motion baseline work.
 - [ ] UI does not misrepresent planned/native language features as implemented.
 - [ ] Real-device 8K screenshots and per-monitor movement checks are completed before certification.
+
+
+## 9. Anatidae identity grammar — lexical and visual expansion
+
+### 9.1 Design intent
+
+The supplied Anatidae word family is a design vocabulary for approachability, recognition, movement and coherent surfaces. It is **not** an instruction to turn technical software into a children's product. Do not scatter duck illustrations, quack jokes or diminutive words through command names, diagnostics, settings, reports or safety notices. Product copy stays precise and professional.
+
+### 9.2 Consolidated lexical matrix
+
+Repeated forms are normalized; spelling variants are retained here as creative source terms rather than duplicated interface labels.
+
+| Design role | Source vocabulary | Product interpretation |
+|---|---|---|
+| First contact and guidance | Утёнок, Утёныш, Утеныш, Уточёнок, Утёночек, Утеночек, Утёнушка, Утюша, Утя, Утюня, Утюняш, Утюняшка, Утяшка, Кряквёнок, Крякушонок, Крякалыш, Птенчик, Птенец, Птеныш, Пухляш, Пушистик, Пернатик, Крылыш, Водоплавчик | Welcoming first-run flow, plain-language empty states, clear defaults, progressive disclosure and compact help |
+| Product identity and recognition | Утка, Уточка, Крякуша, Кряква, Кряквашка, Птица, Пташка, Пернатая, Крылатая | A recognizable abstract brand mark and consistent navigation language; never a mascot-heavy UI |
+| Shape, surface and motion | Пуховичок, Пёрышко, Лапчатая, Прудовая, Озерная, Водоплавающая, Водяная птица | Softly layered surfaces, fine feather-like separators, stable touch targets, subtle waterline/ripple cues and responsive flow |
+| Experimental vocabulary only | Крякозябра, Крякальщица | Internal creative references only; do not expose them as production feature names or status labels |
+
+### 9.3 Shared visual grammar
+
+- **Water:** use calm, continuous page-to-panel hierarchy and subtle progress/wave cues. Water is a compositional metaphor, not a translucent effect.
+- **Plumage:** use restrained fine-line dividers, compact grouped metadata and consistent icon strokes. Never add noisy feather textures behind text or data.
+- **Wing:** use directional alignment, clear action grouping and predictable focus travel. Do not use decorative flight animations.
+- **Webbed-foot tactility:** preserve generous hit targets, stable controls and visible pressed/focused states.
+- **Young-bird vocabulary:** translate it into a first-run/quick-start experience, progressive disclosure and helpful empty states—not infantilized copy.
+- **Pond and lake:** retain the established semantic white/blue/red palette and opaque light/dark surfaces. No teal, amber, green or violet accent palette is introduced by this metaphor.
+- Keep the shared 8pt spacing rhythm, 44 logical px preferred action targets, readable text measure, keyboard operation and reduced-motion behavior.
+
+### 9.4 Cross-product expression
+
+The shared identity is deliberately quiet; each product expresses it through its own work:
+
+- **Pytyliki:** contained instrument panels, stable measurement surfaces and clearly separated processor, source-review and DSP workbenches.
+- **Reaper Studio:** a source-first flow surface, directional command grouping and inspectable output/debug panes that never displace the editor.
+- **OPlague:** layered evidence from concise summary to exact identifiers and package details; provenance and read-only boundaries remain more visible than decorative status.
+- **VentuSample:** rhythmic grid and phrase-oriented grouping, with waveform/sample-chop cues and deterministic progress. Do not imply live playback, real-time rendering or hardware monitoring that the application does not provide.
+
+### 9.5 Acceptance
+
+- The brand is recognizable without a cartoon duck or a background illustration.
+- The lexical source remains a design metaphor; all production labels stay technically meaningful.
+- Existing light/dark tokens, accessibility, safety limits, data contracts and keyboard behavior remain authoritative.
+- Motion is state-led, nonessential and disabled or minimized under reduced-motion settings.
+- A visual refresh cannot promote a planned capability to implemented status.
+
+
+### Reaper Studio application profile
+The editor is the stable centre of the flock: keep source text dominant, and arrange Check / Run / Debug as a short directional command group. Output, Variables and Call Stack are supporting wings that can be inspected without covering source context. A first-run path should lead from Open → Check → Run → Inspect, while preserving the truth that Python is the compatibility reference and the native C17 path is partial.
