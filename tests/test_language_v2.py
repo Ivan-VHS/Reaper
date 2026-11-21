@@ -159,6 +159,13 @@ class ModernSyntaxTests(unittest.TestCase):
         with self.assertRaisesRegex(ReaperRuntimeError, "break cannot cross a function boundary"):
             self.capture(source)
 
+    def test_break_and_continue_outside_loops_are_language_errors_in_both_engines(self) -> None:
+        for keyword in ("break", "continue"):
+            for engine in ("treewalk", "vm"):
+                with self.subTest(keyword=keyword, engine=engine):
+                    with self.assertRaisesRegex(ReaperRuntimeError, f"{keyword} can only be used inside a loop"):
+                        self.capture(keyword, engine)
+
     def test_parse_errors_keep_source_locations_for_new_syntax(self) -> None:
         with self.assertRaisesRegex(ParseError, r"<memory>:1:"):
             self.capture("fn broken( { return 1 }")
