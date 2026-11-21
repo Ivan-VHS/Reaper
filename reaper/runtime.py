@@ -155,7 +155,7 @@ class Interpreter:
                     self._active_vm = None
             return self._execute_block(tree, self.globals, create_scope=False)
         except _ReturnSignal as signal:
-            raise ReaperRuntimeError(f"{filename}: return/yield can only be used inside a function") from signal
+            raise ReaperRuntimeError(f"{filename}: yield/return can only be used inside a craft function") from signal
         except _BreakSignal as signal:
             raise ReaperRuntimeError(f"{filename}: break can only be used inside a loop") from signal
         except _ContinueSignal as signal:
