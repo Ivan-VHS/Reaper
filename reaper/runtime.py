@@ -506,7 +506,7 @@ class Interpreter:
                 raise TypeError("weights must be a non-empty list of whole numbers")
             normalized = [integer(weight, "weight") for weight in weights]
             if any(weight < 0 for weight in normalized):
-                raise ValueError("weights cannot be negative")
+                raise ValueError("weights must be non-negative")
             weight_sum = sum(normalized)
             if weight_sum == 0:
                 raise ValueError("at least one weight must be positive")
