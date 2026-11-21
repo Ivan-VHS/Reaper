@@ -1,6 +1,7 @@
 # Reaper — flow-first programming language
 
 [CI](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml) · Python 3.10+ reference runtime · C17 native track · Windows Studio · Apache-2.0
+**Developer:** [Ivan-VHS](https://github.com/Ivan-VHS)
 
 Reaper is an expression-oriented language: `::` passes a value into the next operation. Python remains the executable compatibility reference; C17 is a developing native track, not yet a full replacement.
 
