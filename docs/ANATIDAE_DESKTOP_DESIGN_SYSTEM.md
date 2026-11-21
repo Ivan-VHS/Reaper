@@ -72,3 +72,11 @@ Capture the running Studio in both themes; the two-row command bar at 780px and 
 - [ ] Focus, keyboard shortcuts and reduced-motion baseline work.
 - [ ] UI does not misrepresent planned/native language features as implemented.
 - [ ] Real-device 8K screenshots and per-monitor movement checks are completed before certification.
+
+## 9. Anatidae naming and companion layer
+
+The shared vocabulary and guardrails are defined in [the federation naming canon](../federation/ANATIDAE_NAMING_CANON.md). For Reaper Studio, **Крылыш** is an internal visual-grouping metaphor for the existing command-bar groups; it does not replace the literal Check, Run, Debug, Save or Open labels. **Птенчик** may be used for optional first-run guidance. The metaphor must not enter the Reaper grammar, syntax, diagnostics or runtime vocabulary.
+
+Keep all language keywords, CLI flags, interpreter output, audit records, source locations and reference/native capability distinctions exact. No playful copy belongs in parser errors, execution failures, permission prompts or data-loss confirmations.
+
+A small feather/wing outline may appear beside a non-critical onboarding surface, using the existing white-blue-red palette. The editor remains the primary surface, command targets remain explicit, keyboard navigation remains complete, and reduced-motion behavior remains the default. The optional motif must never imply that a planned native feature is implemented.
