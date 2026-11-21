@@ -10,6 +10,7 @@ import ast
 from collections import defaultdict, deque
 import hashlib
 import json
+import math
 import re
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -27,7 +28,7 @@ class ProductSpec:
 
 PRODUCTS: tuple[ProductSpec, ...] = (
     ProductSpec("Operandu", "Data & logic", "Typed values, expressions and transformations.", ("value validation", "schema inspection", "expression metadata"), "inspect_value"),
-    ProductSpec("Doopraul", "Actions & workflows", "Action composition, event routing and bounded workflow planning.", ("workflow graph validation", "dependency ordering", "dry-run planning"), "plan_workflow"),
+    ProductSpec("Dropaul", "Actions & workflows", "Action composition, event routing and bounded workflow planning.", ("workflow graph validation", "dependency ordering", "dry-run planning"), "plan_workflow"),
     ProductSpec("Zdoro", "Integrity & diagnostics", "Workspace health, consistency and diagnostic reporting.", ("workspace inspection", "missing-file detection", "integrity summary"), "inspect_workspace"),
     ProductSpec("Pyemont", "Development", "Project structure, source inventory and module construction support.", ("source inventory", "module discovery", "project manifest"), "inspect_project"),
     ProductSpec("Dilly", "Interface & experience", "UI token and interface-contract consistency.", ("design token lint", "label inventory", "theme contract checks"), "lint_design_tokens"),
@@ -47,6 +48,9 @@ PRODUCTS: tuple[ProductSpec, ...] = (
 )
 
 _BY_NAME = {item.name.casefold(): item for item in PRODUCTS}
+MAX_INDEX_FILES = 20_000
+MAX_FILE_BYTES = 2 * 1024 * 1024
+MAX_TOTAL_BYTES = 50 * 1024 * 1024
 
 
 class ProductError(ValueError):
@@ -77,8 +81,10 @@ def _files(root: Path, suffixes: tuple[str, ...] | None = None) -> list[Path]:
     for path in root.rglob("*"):
         if any(part in ignored for part in path.parts):
             continue
-        if path.is_file() and (suffixes is None or path.suffix.lower() in suffixes):
+        if not path.is_symlink() and path.is_file() and (suffixes is None or path.suffix.lower() in suffixes):
             result.append(path)
+            if len(result) > MAX_INDEX_FILES:
+                raise ProductError(f"workspace exceeds {MAX_INDEX_FILES} indexed files")
     return sorted(result)
 
 
@@ -95,6 +101,8 @@ def inspect_value(value: Any, *, max_depth: int = 32, max_items: int = 100_000) 
         if item is None or isinstance(item, (bool, int, float, str)):
             if isinstance(item, str) and len(item) > 1_000_000:
                 raise ProductError("string exceeds 1000000 characters")
+            if isinstance(item, float) and not math.isfinite(item):
+                raise ProductError("non-finite numbers are not supported")
             return {"type": type(item).__name__, "value": item if isinstance(item, (str, bool, int, float)) or item is None else None}
         if isinstance(item, list):
             return {"type": "list", "length": len(item), "items": [walk(child, depth + 1) for child in item]}
@@ -170,12 +178,24 @@ def lint_design_tokens(tokens: dict[str, str]) -> dict[str, Any]:
     return {"token_count": len(tokens), "empty_tokens": sorted(k for k, v in tokens.items() if not v.strip()), "duplicate_values": [names for names in duplicates.values() if len(names) > 1]}
 
 
+def _read_bounded(file: Path) -> bytes:
+    size = file.stat().st_size
+    if size > MAX_FILE_BYTES:
+        raise ProductError(f"file exceeds {MAX_FILE_BYTES} byte inspection limit: {file.name}")
+    return file.read_bytes()
+
+
 def index_files(path: str | Path, *, suffixes: tuple[str, ...] = (".py", ".md", ".json", ".toml", ".rpr")) -> dict[str, Any]:
     root = _root(path)
     entries = []
+    total_bytes = 0
     for file in _files(root, suffixes):
-        digest = hashlib.sha256(file.read_bytes()).hexdigest()
-        entries.append({"path": file.relative_to(root).as_posix(), "size_bytes": file.stat().st_size, "sha256": digest})
+        content = _read_bounded(file)
+        total_bytes += len(content)
+        if total_bytes > MAX_TOTAL_BYTES:
+            raise ProductError(f"index exceeds {MAX_TOTAL_BYTES} total bytes")
+        digest = hashlib.sha256(content).hexdigest()
+        entries.append({"path": file.relative_to(root).as_posix(), "size_bytes": len(content), "sha256": digest})
     return {"root": str(root), "count": len(entries), "entries": entries}
 
 
@@ -197,7 +217,7 @@ def scan_security(path: str | Path) -> dict[str, Any]:
     findings = []
     for file in _files(root, (".py", ".toml", ".yml", ".yaml", ".json", ".env")):
         try:
-            content = file.read_text(encoding="utf-8")
+            content = _read_bounded(file).decode("utf-8")
         except (OSError, UnicodeError):
             continue
         for label, pattern in _SECRET_PATTERNS:
@@ -238,7 +258,7 @@ def index_knowledge(path: str | Path) -> dict[str, Any]:
     docs = _files(root, (".md",))
     entries = []
     for file in docs:
-        text = file.read_text(encoding="utf-8", errors="replace")
+        text = _read_bounded(file).decode("utf-8", errors="replace")
         entries.append({"path": file.relative_to(root).as_posix(), "title": next((line.lstrip("# ").strip() for line in text.splitlines() if line.startswith("#")), file.stem), "headings": [line.strip("# ").strip() for line in text.splitlines() if line.startswith("#")], "links": len(re.findall(r"\[[^\]]+\]\([^)]+\)", text))})
     return {"document_count": len(entries), "documents": entries}
 
@@ -272,7 +292,7 @@ def check_standards(path: str | Path) -> dict[str, Any]:
     findings = []
     for file in _files(root, (".py",)):
         try:
-            source = file.read_text(encoding="utf-8")
+            source = _read_bounded(file).decode("utf-8")
             ast.parse(source)
         except (OSError, UnicodeError, SyntaxError) as error:
             findings.append({"path": file.relative_to(root).as_posix(), "issue": f"Python source is not parseable: {error}"})
@@ -318,7 +338,7 @@ def run_product(name: str, operation: str, **kwargs: Any) -> Any:
     get_product(name)
     handlers: dict[tuple[str, str], Any] = {
         ("Operandu", "inspect_value"): inspect_value,
-        ("Doopraul", "plan_workflow"): plan_workflow,
+        ("Dropaul", "plan_workflow"): plan_workflow,
         ("Zdoro", "inspect_workspace"): inspect_workspace,
         ("Pyemont", "inspect_project"): inspect_project,
         ("Dilly", "lint_design_tokens"): lint_design_tokens,
