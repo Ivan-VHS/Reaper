@@ -106,6 +106,23 @@ class VentuSampleFederationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "exactly 2 records"):
             ventusample_metrics(pack)
 
+    def test_one_shot_kit_requires_eight_files_for_each_variation(self) -> None:
+        pack = make_pack()
+        pack["parameters"]["target"] = "One-Shot Kit"
+        pack["parameters"]["variations"] = 2
+        pack["files"] = [
+            {
+                "file": f"kit_{index}.wav",
+                "peak": 0.6,
+                "rms": 0.2,
+                "crest_db": 9.5,
+                "variation": 1 if index < 9 else 2,
+            }
+            for index in range(16)
+        ]
+        with self.assertRaisesRegex(ValueError, "exactly 8 file"):
+            ventusample_metrics(pack)
+
     def test_reaper_language_builtins_can_audit_a_manifest_file(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
