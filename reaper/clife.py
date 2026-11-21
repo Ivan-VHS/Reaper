@@ -284,7 +284,10 @@ def _walk_files(
         for name in sorted(directories):
             directory = current_path / name
             relative_dir = directory.relative_to(root).as_posix()
-            if name in _EXCLUDED_DIRS or directory.resolve() in excluded:
+            if (name in _EXCLUDED_DIRS
+                    or relative_dir == ".reaper/checkpoints"
+                    or relative_dir.startswith(".reaper/checkpoints/")
+                    or directory.resolve() in excluded):
                 continue
             if directory.is_symlink():
                 raise CLifeError(f"repository contains a symlink directory: {relative_dir}")
@@ -480,6 +483,7 @@ def restore_checkpoint(checkpoint: str | Path, destination: str | Path) -> Path:
     if target == source or target == source / "files":
         raise CLifeError("restore destination must differ from the checkpoint")
     _secure_directory(target.parent)
+    target.parent.mkdir(parents=True, exist_ok=True)
     if target.is_symlink():
         raise CLifeError("restore destination must not be a symlink")
     if target.exists() and (not target.is_dir() or any(target.iterdir())):
