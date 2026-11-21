@@ -11,12 +11,13 @@
 - Error-tolerant delimiter diagnostics for unfinished buffers.
 - Symbol index, fuzzy completion ranking, definition, references and identifier-validated rename edits.
 - Minimal stdio JSON-RPC language server: initialize, open/change/close, completion, definition, references, rename and document symbols.
+- DAP adapter backed by the existing RuntimeDebugger: launch, line breakpoints, continue/next/step-in, stack frames and local-variable snapshots.
 
 ## IDE integration
-Launch with python -m reaper.lsp as a subprocess. Use UTF-8 Content-Length framing; stdout is protocol-only and logs belong on stderr. Register .rpr as language id reaper. Send monotonically increasing document versions. Compiler/type diagnostics are a slower separate phase.
+Launch the language server with python -m reaper.lsp and the debug adapter with python -m reaper.dap as separate subprocesses. Use UTF-8 Content-Length framing; stdout is protocol-only and logs belong on stderr. Register .rpr as language id reaper. Send monotonically increasing document versions. Compiler/type diagnostics are a slower separate phase.
 
 ## Explicit scope
-This is a working integration foundation, not a full semantic compiler. Current indexing is per open document: no cross-file import graph, Git-branch workspace index, type inference, full AST selection, code actions, DAP, test discovery, or hot reload is claimed. Rename is limited to identifier tokens in the open document. DAP must later map VM source spans to the same zero-based UTF-16 positions. Native compiler interfaces remain unchanged.
+This is a working integration foundation, not a full semantic compiler. Current indexing is per open document: no cross-file import graph, Git-branch workspace index, type inference, full AST selection, code actions, test discovery, or hot reload is claimed. Rename is limited to identifier tokens in the open document. DAP currently supports statement-boundary breakpoints and stepping, stack/local inspection and termination; conditional breakpoints, expression evaluation, step-out and pause-anywhere are not implemented. Native compiler interfaces remain unchanged.
 
 ## Validation
 Run python -m unittest tests.test_language_service and the existing test suite.
