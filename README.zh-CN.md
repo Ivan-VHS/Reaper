@@ -115,3 +115,7 @@ emit "result = " ++ text(result)
 [IDE 666 合同](docs/IDE_666_IMPLEMENTATION.md) · [LSP/DAP](docs/REAPER_IDE.md) · [Node.js 集成](docs/NOO_TAH.md) · [Kora for REAPER](docs/KORA_REAPER.md) · [插件宿主](docs/PLUGINS.md) · [内部产品](docs/INTERNAL_PRODUCTS.md) · [功能](docs/FEATURES.md) · [语言](LANGUAGE.md) · [架构](docs/ARCHITECTURE.md) · [813 注册表](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [联邦](docs/PROJECT_FEDERATION_MATRIX.md) · [文档索引](docs/README.md)
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [Releases](https://github.com/Ivan-VHS/Reaper/releases) · [Apache-2.0](LICENSE)
+
+## 文档体系与视觉素材
+
+Markdown/MDX、图表、截图、SVG 与栅格素材、无障碍、语言同步和链接检查统一遵循 [README 与视觉文档规范](docs/README_VISUAL_STANDARD.md)。
