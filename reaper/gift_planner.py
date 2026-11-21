@@ -119,7 +119,10 @@ def combination_count(n: int, k: int) -> int:
             raise ValueError(f"{label} must be a non-negative integer")
     if n > 1_000_000 or k > n:
         raise ValueError("require 0 <= k <= n <= 1000000")
-    return math.comb(n, k)
+    result = math.comb(n, k)
+    if result.bit_length() > 4096:
+        raise ValueError("combination count exceeds the 4096-bit result limit")
+    return result
 
 
 def build_candy_basket(
