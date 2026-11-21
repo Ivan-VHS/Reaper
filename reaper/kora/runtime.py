@@ -1,6 +1,6 @@
 """Kora standard library: 66 utility functions, standard-library-only."""
 from __future__ import annotations
-import asyncio, heapq, json, math, os, random, re, tempfile, threading, time, unicodedata, textwrap, sys
+import asyncio, heapq, builtins as _builtins, json as _json, math, os, random, re, tempfile, threading, time as _time, unicodedata, textwrap, sys as _sys
 from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -47,33 +47,33 @@ def rand_normal(mean,std):
  if std<0:raise KoraError("std must be non-negative")
  return random.gauss(mean,std)
 # DILLY (11)
-def slugify(s):return re.sub(r"[^a-z0-9]+","-",unicodedata.normalize("NFKD",str(s)).encode("ascii","ignore").decode().lower()).strip("-")
+def slugify(s):return re.sub(r"[^a-z0-9]+","-",unicodedata.normalize("NFKD",_builtins.str(s)).encode("ascii","ignore").decode().lower()).strip("-")
 def pad_both(s,n,fill=" "):
- s,fill=str(s),str(fill)
+ s,fill=_builtins.str(s),_builtins.str(fill)
  if not fill:raise KoraError("fill must not be empty")
  m=max(0,n-len(s));l=m//2;r=m-l
  return (fill*((l+len(fill)-1)//len(fill)))[:l]+s+(fill*((r+len(fill)-1)//len(fill)))[:r]
 def truncate(s,n,suffix="..."):
- s=str(s)
+ s=_builtins.str(s)
  if n<0:raise KoraError("max_len must be non-negative")
  return s if len(s)<=n else suffix[:n] if len(suffix)>=n else s[:n-len(suffix)]+suffix
 def between(s,left,right):
- s=str(s);i=s.find(left)
+ s=_builtins.str(s);i=s.find(left)
  if i<0:return ""
  i+=len(left);j=s.find(right,i)
  return "" if j<0 else s[i:j]
 def count_sub(s,sub):
  if not sub:raise KoraError("sub must not be empty")
- return str(s).count(str(sub))
-def words(s):return re.findall(r"[^\W_]+(?:['’][^\W_]+)?",str(s),re.UNICODE)
+ return _builtins.str(s).count(_builtins.str(sub))
+def words(s):return re.findall(r"[^\W_]+(?:['’][^\W_]+)?",_builtins.str(s),re.UNICODE)
 def to_camel(s):
- p=re.findall(r"[A-Za-z0-9]+",str(s))
+ p=re.findall(r"[A-Za-z0-9]+",_builtins.str(s))
  return (p[0].lower() if p else "")+"".join(x[:1].upper()+x[1:] for x in p[1:])
 def to_snake(s):
- s=re.sub(r"([a-z0-9])([A-Z])",r"\1_\2",str(s));s=re.sub(r"([A-Z])([A-Z][a-z])",r"\1_\2",s)
+ s=re.sub(r"([a-z0-9])([A-Z])",r"\1_\2",_builtins.str(s));s=re.sub(r"([A-Z])([A-Z][a-z])",r"\1_\2",s)
  return re.sub(r"[^A-Za-z0-9]+","_",s).strip("_").lower()
 def levenshtein(a,b):
- a,b=str(a),str(b)
+ a,b=_builtins.str(a),_builtins.str(b)
  if len(a)<len(b):a,b=b,a
  row=list(range(len(b)+1))
  for i,x in enumerate(a,1):
@@ -81,10 +81,10 @@ def levenshtein(a,b):
   for j,y in enumerate(b,1):nxt.append(min(nxt[-1]+1,row[j]+1,row[j-1]+(x!=y)))
   row=nxt
  return row[-1]
-def template(tpl,values):return re.sub(r"\{\{\s*([^{}]+?)\s*\}\}",lambda m:str(values.get(m.group(1).strip(),m.group(0))),str(tpl))
+def template(tpl,values):return re.sub(r"\{\{\s*([^{}]+?)\s*\}\}",lambda m:_builtins.str(values.get(m.group(1).strip(),m.group(0))),_builtins.str(tpl))
 def wrap(s,width):
  if width<1:raise KoraError("width must be positive")
- return "\n".join(textwrap.wrap(str(s),width,break_long_words=False))
+ return "\n".join(textwrap.wrap(_builtins.str(s),width,break_long_words=False))
 # BAPLAP (11)
 def chunk(xs,n):
  if n<1:raise KoraError("size must be positive")
@@ -94,7 +94,7 @@ def window(xs,n):
  return [list(xs[i:i+n]) for i in range(max(0,len(xs)-n+1))]
 def compact(xs):return [x for x in xs if x is not None and x!=""]
 def dedup_by(xs,key_fn):
- seen=set();out=[]
+ seen=_builtins.set();out=[]
  for x in xs:
   k=key_fn(x)
   if k not in seen:seen.add(k);out.append(x)
@@ -131,20 +131,20 @@ def binary_search(xs,target):
 # KALI (11)
 def get_path(obj,path,default_val=None):
  cur=obj
- for key in str(path).split("."):
+ for key in _builtins.str(path).split("."):
   if isinstance(cur,Mapping) and key in cur:cur=cur[key]
   elif isinstance(cur,(list,tuple)) and key.isdigit() and int(key)<len(cur):cur=cur[int(key)]
   else:return default_val
  return cur
 def set_path(obj,path,value):
- out=dict(obj);cur=out;parts=str(path).split(".")
+ out=dict(obj);cur=out;parts=_builtins.str(path).split(".")
  for key in parts[:-1]:
   child=cur.get(key,{});child=dict(child) if isinstance(child,dict) else {};cur[key]=child;cur=child
  cur[parts[-1]]=value
  return out
 def pick(obj,keys):return {k:obj[k] for k in keys if k in obj}
 def omit(obj,keys):
- keys=set(keys);return {k:v for k,v in obj.items() if k not in keys}
+ keys=_builtins.set(keys);return {k:v for k,v in obj.items() if k not in keys}
 def deep_merge(base,override):
  out=dict(base)
  for k,v in override.items():out[k]=deep_merge(out[k],v) if isinstance(out.get(k),dict) and isinstance(v,dict) else v
@@ -156,9 +156,9 @@ def invert(obj):
   out[v]=k
  return out
 def filter_entries(obj,pred_fn):return {k:v for k,v in obj.items() if pred_fn(k,v)}
-def set_union(a,b):return set(a)|set(b)
-def set_intersect(a,b):return set(a)&set(b)
-def set_diff(a,b):return set(a)-set(b)
+def set_union(a,b):return _builtins.set(a)|_builtins.set(b)
+def set_intersect(a,b):return _builtins.set(a)&_builtins.set(b)
+def set_diff(a,b):return _builtins.set(a)-_builtins.set(b)
 def heap_push_pop(heap_ref,item,cmp_fn=None):
  if cmp_fn is None:return heapq.heappushpop(heap_ref,item)
  heap_ref.append(item);i=len(heap_ref)-1
@@ -189,7 +189,7 @@ def compose(fns):
 def memoize(fn,ttl_ms):
  cache={};lock=threading.RLock()
  def call(*a,**kw):
-  key=(a,tuple(sorted(kw.items())));now=time.monotonic()*1000
+  key=(a,tuple(sorted(kw.items())));now=_time.monotonic()*1000
   with lock:
    if key in cache and (ttl_ms is None or now-cache[key][0]<ttl_ms):return cache[key][1]
   value=fn(*a,**kw)
@@ -216,7 +216,7 @@ def debounce(fn,wait_ms):
 def throttle(fn,interval_ms):
  lock=threading.Lock();state={"last":-float("inf")}
  def call(*a,**kw):
-  now=time.monotonic()*1000
+  now=_time.monotonic()*1000
   with lock:
    if now-state["last"]<interval_ms:return None
    state["last"]=now
@@ -231,9 +231,9 @@ def retry(fn,attempts,backoff_ms,*a,**kw):
   try:return fn(*a,**kw)
   except Exception:
    if i==attempts-1:raise
-   time.sleep(max(0,backoff_ms)*2**i/1000)
+   _time.sleep(max(0,backoff_ms)*2**i/1000)
 def ensure(cond,message):
- if not cond:raise KoraError(str(message))
+ if not cond:raise KoraError(_builtins.str(message))
  return cond
 async def all_settled(tasks):
  async def one(task):
@@ -246,13 +246,13 @@ def read_text(path,encoding="utf-8"):return Path(path).read_text(encoding=encodi
 def write_atomic(path,content):
  target=Path(path);target.parent.mkdir(parents=True,exist_ok=True);fd,tmp=tempfile.mkstemp(prefix="."+target.name+".",dir=target.parent)
  try:
-  with os.fdopen(fd,"w",encoding="utf-8",newline="") as f:f.write(str(content));f.flush();os.fsync(f.fileno())
+  with os.fdopen(fd,"w",encoding="utf-8",newline="") as f:f.write(_builtins.str(content));f.flush();os.fsync(f.fileno())
   os.replace(tmp,target)
  except BaseException:
   try:os.unlink(tmp)
   except OSError:pass
   raise
- return str(target)
+ return _builtins.str(target)
 class DirectoryWatcher:
  def __init__(self,path,on_event,interval=.25):
   self.path=Path(path);self.callback=on_event;self.interval=interval;self.stopped=threading.Event()
@@ -263,32 +263,32 @@ class DirectoryWatcher:
   while not self.stopped.wait(self.interval):
    try:
     now=self.scan()
-    for n in now.keys()-self.snapshot.keys():self.callback({"event":"created","path":str(self.path/n)})
-    for n in self.snapshot.keys()-now.keys():self.callback({"event":"deleted","path":str(self.path/n)})
+    for n in now.keys()-self.snapshot.keys():self.callback({"event":"created","path":_builtins.str(self.path/n)})
+    for n in self.snapshot.keys()-now.keys():self.callback({"event":"deleted","path":_builtins.str(self.path/n)})
     for n in now.keys()&self.snapshot.keys():
-     if now[n]!=self.snapshot[n]:self.callback({"event":"modified","path":str(self.path/n)})
+     if now[n]!=self.snapshot[n]:self.callback({"event":"modified","path":_builtins.str(self.path/n)})
     self.snapshot=now
    except Exception as e:self.callback({"event":"error","error":e})
  def close(self):self.stopped.set();self.thread.join(timeout=max(1,self.interval*4))
 def watch_dir(path,on_event):return DirectoryWatcher(path,on_event)
 def env_get(name,default_val=None):return os.environ.get(name,default_val)
-def args():return list(sys.argv[1:])
+def args():return list(_sys.argv[1:])
 def type_of(v):
  if v is None:return "null"
  if isinstance(v,bool):return "boolean"
  if isinstance(v,int):return "integer"
  if isinstance(v,float):return "number"
- if isinstance(v,str):return "string"
+ if isinstance(v,_builtins.str):return "string"
  if isinstance(v,list):return "array"
  if isinstance(v,dict):return "object"
  if callable(v):return "function"
  return type(v).__name__
 # SRETUO (5)
 def parse_safe(raw):
- try:return Ok(json.loads(raw))
+ try:return Ok(_json.loads(raw))
  except (ValueError,TypeError) as e:return Err(e)
-def stringify_pretty(value,indent=2):return json.dumps(value,ensure_ascii=False,indent=indent,allow_nan=False)
-def now_ms():return int(time.time()*1000)
+def stringify_pretty(value,indent=2):return _json.dumps(value,ensure_ascii=False,indent=indent,allow_nan=False)
+def now_ms():return int(_time.time()*1000)
 def format_iso(ms,tz="UTC"):
  from zoneinfo import ZoneInfo
  return datetime.fromtimestamp(ms/1000,tz=timezone.utc if tz in ("UTC","Z") else ZoneInfo(tz)).isoformat()
@@ -301,10 +301,10 @@ set=SimpleNamespace(union=set_union,intersect=set_intersect,diff=set_diff);heap=
 fn=SimpleNamespace(pipe=pipe,compose=compose,memoize=memoize,once=once,debounce=debounce,throttle=throttle)
 err=SimpleNamespace(try_run=try_run,retry=retry,ensure=ensure);async_=SimpleNamespace(all_settled=all_settled,race_timeout=race_timeout)
 io=SimpleNamespace(read_text=read_text,write_atomic=write_atomic,watch_dir=watch_dir)
-json_api=SimpleNamespace(parse_safe=parse_safe,stringify_pretty=stringify_pretty)
-time_api=SimpleNamespace(now_ms=now_ms,format_iso=format_iso,sleep=sleep)
-sys_api=SimpleNamespace(env_get=env_get,args=args);meta=SimpleNamespace(type_of=type_of)
-API={"num":num,"str":str,"arr":arr,"map":map,"set":set,"heap":heap,"fn":fn,"err":err,"async":async_,"io":io,"json":json_api,"time":time_api,"sys":sys_api,"meta":meta}
+json=SimpleNamespace(parse_safe=parse_safe,stringify_pretty=stringify_pretty)
+time=SimpleNamespace(now_ms=now_ms,format_iso=format_iso,sleep=sleep)
+sys=SimpleNamespace(env_get=env_get,args=args);meta=SimpleNamespace(type_of=type_of)
+API={"num":num,"str":str,"arr":arr,"map":map,"set":set,"heap":heap,"fn":fn,"err":err,"async":async_,"io":io,"json":json,"time":time,"sys":sys,"meta":meta}
 def call(module,function,*args,**kwargs):
  try:func=getattr(API[module],function)
  except (KeyError,AttributeError) as e:raise KoraError(f"unknown Kora function: {module}.{function}") from e
