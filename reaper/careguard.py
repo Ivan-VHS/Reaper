@@ -44,6 +44,8 @@ class LanguageFinding:
     suggestion: str
 
 _STIGMA_PHRASES = {
+    "weakness": "a request for support",
+    "lazy": "a person may need support",
     "слабость": "запрос о поддержке",
     "слабкість": "запит про підтримку",
     "ленивый": "человеку может требоваться помощь",
