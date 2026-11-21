@@ -7,11 +7,11 @@ distributed coordinator, or an automatic code-rewriting agent.
 ## Safety contract
 
 - Checkpoint creation reads regular files and writes a separate snapshot.
-- Checkpoints exclude \`.git\`, virtual environments, dependency folders, Python
+- Checkpoints exclude `.git`, virtual environments, dependency folders, Python
   caches and the CLife checkpoint store itself.
 - Symbolic links are rejected rather than followed.
 - Each copied file has a SHA-256 digest, size and portable permission mode.
-  \`manifest.sha256\` detects accidental manifest corruption; it is not a
+  `manifest.sha256` detects accidental manifest corruption; it is not a
   cryptographic signature or proof of who created the snapshot.
 - Restore first verifies the complete checkpoint and writes into a new or
   empty destination. It never overlays a populated working tree.
@@ -29,9 +29,8 @@ Default limits are 100,000 files, 16 MiB per file, 512 MiB per checkpoint and
 
 ## Python API
 
-\`\`\`python
+```python
 from reaper.clife import (
-    RepositoryNetwork,
     apply_reflash_plan,
     create_checkpoint,
     plan_reflash,
@@ -53,46 +52,46 @@ result = apply_reflash_plan("./my-project", plan)
 
 # Recovery always targets a separate directory.
 restore_checkpoint(result.checkpoint, "./my-project-recovered")
-\`\`\`
+```
 
-Plans can be serialized with \`ReflashPlan.to_json()\` and loaded with
-\`ReflashPlan.from_json()\`. The loader checks the schema, paths, size limits and
+Plans can be serialized with `ReflashPlan.to_json()` and loaded with
+`ReflashPlan.from_json()`. The loader checks the schema, paths, size limits and
 embedded content hashes before the plan can be applied.
 
 ## CLI
 
 Create and verify a checkpoint:
 
-\`\`\`sh
+```sh
 reaper clife checkpoint ./my-project
 reaper clife verify ./.reaper/checkpoints/CHECKPOINT_ID
 reaper clife restore ./.reaper/checkpoints/CHECKPOINT_ID ./recovered-copy
-\`\`\`
+```
 
 Prepare an explicit set of changed files. The input JSON is a mapping from
 repository-relative paths to UTF-8 text:
 
-\`\`\`json
+```json
 {
-  "src/app.rpr": "emit \\"updated\\"\\\\n",
-  "config/clife.json": "{\\"enabled\\": true}\\\\n"
+  "src/app.rpr": "emit \\"updated\\"\\n",
+  "config/clife.json": "{\\"enabled\\": true}\\n"
 }
-\`\`\`
+```
 
 Create the plan, review it, then apply it deliberately:
 
-\`\`\`sh
+```sh
 reaper clife plan ./my-project updates.json --output change.plan.json
 reaper clife apply ./my-project change.plan.json
-\`\`\`
+```
 
 Fingerprint multiple local repositories without modifying them:
 
-\`\`\`sh
+```sh
 reaper clife audit ./repo-a ./repo-b ./repo-c
-\`\`\`
+```
 
-The Python \`RepositoryNetwork\` API additionally supports registering two or
+The Python `RepositoryNetwork` API additionally supports registering two or
 more local repositories and building a guarded propagation plan for selected
 files. It does not automatically copy or apply that plan.
 
@@ -106,7 +105,7 @@ files. It does not automatically copy or apply that plan.
 | Stale-base rejection and rollback after a write failure | implemented in Python |
 | Read-only local repository registry and fingerprints | implemented in Python |
 | Selected-file propagation as a reviewable plan | implemented in Python |
-| New Reaper source-language statements such as \`checkpoint {}\` or \`reflash {}\` | not implemented |
+| New Reaper source-language statements such as `checkpoint {}` or `reflash {}` | not implemented |
 | Native C17 parity | not implemented |
 | Remote synchronization, automatic patch approval, background repair | intentionally not implemented |
 
