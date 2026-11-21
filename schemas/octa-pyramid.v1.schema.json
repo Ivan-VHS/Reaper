@@ -98,14 +98,15 @@
           "const": [
             "reaper",
             "pytyliki",
-            "oplague"
+            "oplague",
+            "ventusample"
           ]
         },
         "directed_peer_links": {
-          "const": 6
+          "const": 12
         },
         "self_loops": {
-          "const": 3
+          "const": 4
         }
       }
     },
@@ -143,8 +144,8 @@
     },
     "peer_links": {
       "type": "array",
-      "minItems": 6,
-      "maxItems": 6,
+      "minItems": 12,
+      "maxItems": 12,
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -159,48 +160,58 @@
         ],
         "properties": {
           "id": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1
           },
           "from": {
             "enum": [
               "reaper",
               "pytyliki",
-              "oplague"
+              "oplague",
+              "ventusample"
             ]
           },
           "to": {
             "enum": [
               "reaper",
               "pytyliki",
-              "oplague"
+              "oplague",
+              "ventusample"
             ]
           },
           "transport": {
             "enum": [
               "json-file",
-              "native-ffi"
+              "native-ffi",
+              "none"
             ]
           },
           "interface": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1
           },
           "flow": {
             "enum": [
               "artifact",
               "request",
-              "response"
+              "response",
+              "none"
             ]
           },
           "status": {
-            "const": "implemented"
+            "enum": [
+              "implemented",
+              "planned",
+              "not_applicable"
+            ]
           }
         }
       }
     },
     "self_loops": {
       "type": "array",
-      "minItems": 3,
-      "maxItems": 3,
+      "minItems": 4,
+      "maxItems": 4,
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -214,14 +225,17 @@
             "enum": [
               "reaper",
               "pytyliki",
-              "oplague"
+              "oplague",
+              "ventusample"
             ]
           },
           "contract": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1
           },
           "surface": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1
           }
         }
       }
