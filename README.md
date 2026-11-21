@@ -32,7 +32,7 @@ Reaper is an expression-oriented language: `::` passes a value into the next ope
 
 ## UI motion and accessibility
 
-Reaper Studio persists **Reduce Motion** and **Eco / Low-CPU Visuals** preferences separately from theme settings. Enabled preferences cap retained transitions at 80 ms and suppress spatial or nonessential visual effects. **Sync to Transport / BPM** remains disabled because Studio has no audio transport or live tempo source. See the [UI motion contract](docs/UI_MOTION.md).
+Reaper Studio persists **Reduce Motion** and **Eco / Low-CPU Visuals** preferences separately from theme settings. Enabled preferences cap retained transitions at 80 ms and suppress spatial or nonessential visual effects. **Sync to Transport / BPM** remains disabled because Studio has no audio transport or live tempo source. See the [UI motion contract](docs/UI_MOTION.md) and [Anatidae motion constitution](docs/ANATIDAE_MOTION_CONSTITUTION.md).
 
 ## REAPER language and debug services
 
