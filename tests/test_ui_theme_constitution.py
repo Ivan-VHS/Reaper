@@ -32,6 +32,12 @@ class UiThemeConstitutionTests(unittest.TestCase):
         self.assertEqual(palette_for("system", system_dark=True)["mode"], "dark")
         self.assertEqual(palette_for("system", system_dark=False)["mode"], "light")
 
+    def test_focus_and_supporting_text_have_semantic_contrast(self) -> None:
+        for palette in PALETTES.values():
+            self.assertGreaterEqual(contrast_ratio(palette["focus"], palette["bg"]), 3.0)
+            self.assertGreaterEqual(contrast_ratio(palette["muted"], palette["bg"]), 4.5)
+
+
 
 if __name__ == "__main__":
     unittest.main()
