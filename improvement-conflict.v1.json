@@ -1,0 +1,243 @@
+{
+  "schema": "anatidae.improvement-conflict.v1",
+  "version": "1.0.0",
+  "project": {
+    "id": "reaper",
+    "name": "Reaper",
+    "scope": "Flow-first programming language with a Python reference interpreter, developing native C17 core, editor integration, package support, and developer tooling.",
+    "safety_boundary": "Python remains the compatibility reference where native C17 parity is incomplete. Native capabilities are claimed only for tested features. Existing runtime quotas, consent grants, audit behavior, and explicit language/API compatibility boundaries remain authoritative."
+  },
+  "status_model": {
+    "initial": "not_assessed",
+    "allowed": [
+      "not_assessed",
+      "detected",
+      "root_cause_confirmed",
+      "remediated",
+      "verified",
+      "deferred"
+    ]
+  },
+  "controls": [
+    {
+      "id": "IC-01",
+      "improvement_term": "Совершенствование",
+      "dissonance_term": "Дисгармония",
+      "conflict_term": "Конфликты",
+      "intent": "Align acceptance criteria and observed outcomes.",
+      "remediation": "Choose one authoritative contract; reconcile source, tests, and documentation; add a regression test for the corrected behavior.",
+      "verification": "Run focused tests and compare observable output with the written acceptance criteria.",
+      "state": "not_assessed",
+      "evidence": []
+    },
+    {
+      "id": "IC-02",
+      "improvement_term": "Преображение",
+      "dissonance_term": "Разлад",
+      "conflict_term": "Противоречия",
+      "intent": "Restore reliability when recovery, state, or error handling is inconsistent.",
+      "remediation": "Trace the failure to its root cause, add explicit bounds and failure handling, and preserve recoverable state.",
+      "verification": "Exercise boundary, timeout, failure, and recovery paths with deterministic tests.",
+      "state": "not_assessed",
+      "evidence": []
+    },
+    {
+      "id": "IC-03",
+      "improvement_term": "Оптимизация",
+      "dissonance_term": "Несозвучие",
+      "conflict_term": "Столкновения",
+      "intent": "Close unsafe or ambiguous input and permission paths.",
+      "remediation": "Reject malformed or untrusted input early; require explicit consent for sensitive actions; retain least privilege.",
+      "verification": "Add negative tests for malformed input, unauthorized operations, path traversal, and unintended side effects.",
+      "state": "not_assessed",
+      "evidence": []
+    },
+    {
+      "id": "IC-04",
+      "improvement_term": "Модернизация",
+      "dissonance_term": "Дисбаланс",
+      "conflict_term": "Несовместимости",
+      "intent": "Modernize stale interfaces without breaking supported consumers.",
+      "remediation": "Introduce versioned contracts and migration notes; preserve promised compatibility; remove obsolete paths only after evidence.",
+      "verification": "Run compatibility tests against supported versions and build targets.",
+      "state": "not_assessed",
+      "evidence": []
+    },
+    {
+      "id": "IC-05",
+      "improvement_term": "Улучшение",
+      "dissonance_term": "Диспропорция",
+      "conflict_term": "Разногласия",
+      "intent": "Prioritize high-value work and remove accidental complexity.",
+      "remediation": "Rank changes by impact, risk, and frequency; simplify duplicated steps without removing safeguards.",
+      "verification": "Compare task flow, measurable outcomes, and regression results before and after the change.",
+      "state": "not_assessed",
+      "evidence": []
+    },
+    {
+      "id": "IC-06",
+      "improvement_term": "Развитие",
+      "dissonance_term": "Несогласованность",
+      "conflict_term": "Расхождения",
+      "intent": "Align modules and dependencies around clear ownership.",
+      "remediation": "Define module boundaries and sources of truth; remove duplicate ownership and hidden cycles.",
+      "verification": "Run integration tests and verify each public contract has one authoritative owner.",
+      "state": "not_assessed",
+      "evidence": []
+    },
+    {
+      "id": "IC-07",
+      "improvement_term": "Преимущественное развитие",
+      "dissonance_term": "Разноречие",
+      "conflict_term": "Коллизии",
+      "intent": "Direct effort toward the project's primary outcomes.",
+      "remediation": "Prioritize the language and reference-runtime critical path; keep unrelated integrations explicitly out of scope until supported by evidence.",
+      "verification": "Review roadmap items against the lexer, parser, interpreter, editor, package, and native-core workflows that are actually implemented.",
+      "state": "not_assessed",
+      "evidence": []
+    },
+    {
+      "id": "IC-08",
+      "improvement_term": "Усовершенствование",
+      "dissonance_term": "Противоречивость",
+      "conflict_term": "Споры",
+      "intent": "Make disputed design decisions explicit and evidence-led.",
+      "remediation": "Record options, trade-offs, decision ownership, and the selected contract instead of hiding disagreement in implementation.",
+      "verification": "Verify the documented decision against code and add tests for the selected behavior.",
+      "state": "not_assessed",
+      "evidence": []
+    },
+    {
+      "id": "IC-09",
+      "improvement_term": "Реконструкция",
+      "dissonance_term": "Какофония",
+      "conflict_term": "Несогласованности",
+      "intent": "Rebuild fragile structures at a stable boundary when local patches accumulate.",
+      "remediation": "Consolidate duplicate logic behind a narrow module interface; avoid broad rewrites without characterization tests.",
+      "verification": "Run end-to-end and regression tests across every migrated path.",
+      "state": "not_assessed",
+      "evidence": []
+    },
+    {
+      "id": "IC-10",
+      "improvement_term": "Рефакторинг",
+      "dissonance_term": "Дискретность",
+      "conflict_term": "Противоборства",
+      "intent": "Refactor for clarity while preserving externally observable behavior.",
+      "remediation": "Use small changes, retain language/API/data contracts, and pair each refactor with focused tests.",
+      "verification": "Compare behavior and public interfaces before and after; run the relevant test suite.",
+      "state": "not_assessed",
+      "evidence": []
+    },
+    {
+      "id": "IC-11",
+      "improvement_term": "Переосмысление",
+      "dissonance_term": "Разобщённость",
+      "conflict_term": "Соперничества",
+      "intent": "Re-evaluate assumptions when the current design no longer serves supported workflows.",
+      "remediation": "Document the assumption, validate it against source and actual use, and change only what the evidence disproves.",
+      "verification": "Add tests for the revised behavior and document any changed defaults or migration steps.",
+      "state": "not_assessed",
+      "evidence": []
+    },
+    {
+      "id": "IC-12",
+      "improvement_term": "Обновление",
+      "dissonance_term": "Неоднородность",
+      "conflict_term": "Раздвоения",
+      "intent": "Keep versions, schemas, documentation, and configuration synchronized.",
+      "remediation": "Use explicit versioned migrations and reject unsupported inputs with actionable errors.",
+      "verification": "Test current and supported legacy formats, including migration and round-trip behavior.",
+      "state": "not_assessed",
+      "evidence": []
+    },
+    {
+      "id": "IC-13",
+      "improvement_term": "Преобразование",
+      "dissonance_term": "Несоответствие",
+      "conflict_term": "Пересечения",
+      "intent": "Transform data and workflows without losing provenance or meaning.",
+      "remediation": "Preserve source identity, units, ordering, bounds, and error context; make lossy conversion explicit.",
+      "verification": "Use integrity, round-trip, unit, and provenance tests.",
+      "state": "not_assessed",
+      "evidence": []
+    },
+    {
+      "id": "IC-14",
+      "improvement_term": "Обогащение",
+      "dissonance_term": "Расхождение",
+      "conflict_term": "Накладки",
+      "intent": "Combine complementary capabilities without hidden coupling.",
+      "remediation": "Keep optional integrations behind explicit adapters and compatibility gates.",
+      "verification": "Test with optional integrations enabled and absent; the reference runtime and core language behavior must remain stable.",
+      "state": "not_assessed",
+      "evidence": []
+    },
+    {
+      "id": "IC-15",
+      "improvement_term": "Усиление",
+      "dissonance_term": "Разноголосица",
+      "conflict_term": "Неувязки",
+      "intent": "Strengthen weak points revealed by repeated failures.",
+      "remediation": "Fix the highest-leverage root cause rather than repeatedly patching symptoms; add diagnostics where they improve evidence.",
+      "verification": "Reproduce the old failure and prove the regression test fails before and passes after the fix.",
+      "state": "not_assessed",
+      "evidence": []
+    },
+    {
+      "id": "IC-16",
+      "improvement_term": "Доработка",
+      "dissonance_term": "Дисгармоничность",
+      "conflict_term": "Диссонансы",
+      "intent": "Finish edge cases before marking a capability complete.",
+      "remediation": "Close parser/runtime error paths, cancellation, cleanup, resource limits, editor states, and documentation gaps.",
+      "verification": "Run boundary, cancellation, malformed-source, empty-state, cleanup, and platform-specific checks.",
+      "state": "not_assessed",
+      "evidence": []
+    },
+    {
+      "id": "IC-17",
+      "improvement_term": "Возвышение",
+      "dissonance_term": "Конфликтность",
+      "conflict_term": "Антагонизмы",
+      "intent": "Improve clarity and accessibility without changing task semantics.",
+      "remediation": "Use clear hierarchy, labels, focus states, reduced motion, and understandable diagnostics.",
+      "verification": "Check keyboard navigation and accessibility; confirm editor state matches interpreter and debugger state.",
+      "state": "not_assessed",
+      "evidence": []
+    },
+    {
+      "id": "IC-18",
+      "improvement_term": "Прогрессирование",
+      "dissonance_term": "Неслаженность",
+      "conflict_term": "Несоответствия",
+      "intent": "Tune performance and precision using measured evidence.",
+      "remediation": "Profile representative interpreter/compiler workloads, optimize demonstrated bottlenecks, and preserve language semantics.",
+      "verification": "Record reproducible measurements and correctness comparisons; do not infer native parity from isolated benchmarks.",
+      "state": "not_assessed",
+      "evidence": []
+    },
+    {
+      "id": "IC-19",
+      "improvement_term": "Эволюционирование",
+      "dissonance_term": "Раздвоенность",
+      "conflict_term": "Разобщённости",
+      "intent": "Evolve architecture incrementally while retaining supported compatibility.",
+      "remediation": "Version syntax, runtime, and package interface changes; provide migration paths and explicit deprecation policy.",
+      "verification": "Test supported old and new source/manifest versions and migration paths where applicable.",
+      "state": "not_assessed",
+      "evidence": []
+    },
+    {
+      "id": "IC-20",
+      "improvement_term": "Комплексное совершенствование",
+      "dissonance_term": "Поляризация",
+      "conflict_term": "Раздоры",
+      "intent": "Review emergent issues across modules, builds, tests, security, documentation, and repositories.",
+      "remediation": "Reconcile language, interpreter, native-core, editor, and federation contracts; prioritize by risk and retain evidence.",
+      "verification": "Run all relevant CI gates and inspect cross-repository integration evidence before promotion.",
+      "state": "not_assessed",
+      "evidence": []
+    }
+  ]
+}
