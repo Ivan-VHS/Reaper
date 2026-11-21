@@ -40,6 +40,22 @@ emit capsule_list()
 
 Без capsule_root функции капсулы отключены. Это не позволяет программе без разрешения хоста самостоятельно выбирать каталог для записи данных.
 
+## Запуск через CLI и REPL
+
+Хранилище можно разрешить явно при запуске скрипта:
+
+```sh
+reaper --capsule-root .reaper/capsules --capsule-max-bytes 8388608 --capsule-snapshots 16 project.rpr
+```
+
+Те же параметры применяются к интерактивной сессии:
+
+```sh
+reaper --repl --capsule-root .reaper/capsules
+```
+
+Если параметр `--capsule-root` не передан, капсула остаётся выключенной. Ограничения CLI: `--capsule-max-bytes` должен быть не меньше 256, `--capsule-snapshots` — не меньше 2.
+
 ## Встроенные функции Reaper
 
 | Функция | Аргументы | Результат |
