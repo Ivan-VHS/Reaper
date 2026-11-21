@@ -15,7 +15,7 @@ Reaper is an expression-oriented language: `::` passes a value into the next ope
 |---|---|
 | Python runtime | lexer, parser, interpreter, CLI, REPL, modules, closures, quotas and audit |
 | Division/allocation | checked Euclidean division, balanced partition and proportional allocation |
-| Reaper Studio | Windows IDE foundation: project tree, syntax coloring, line numbers, search, check/run, debugger, breakpoints, variables, call stack; semantic LSP/Git panels remain planned |
+| Reaper Studio | Windows IDE foundation: project tree, syntax coloring, line numbers, search, check/run and debugger; LSP supports versioned per-file diagnostics/navigation, while cross-file semantics and Git UI remain planned |
 | Native C17 | lexer, expression parser, owned AST, checked IR and limited lowering |
 | МОСТ | 54 exact aliases: 21 executable in reference subset, 33 lexically reserved |
 | QCS 1.0 | separate hardware-domain parser and JSON AST; no hardware execution |
@@ -28,7 +28,7 @@ Reaper is an expression-oriented language: `::` passes a value into the next ope
 
 The editor/tooling layer exposes stdio language and debug protocols:
 
-- `python -m reaper lsp` — parser diagnostics, completion, hover, symbols and basic navigation/refactoring.
+- `python -m reaper lsp` — UTF-16 incremental LSP, parser/structure diagnostics, background symbols, completion, hover and lexical navigation.
 - `python -m reaper dap` — launch, line breakpoints, statement stepping, stack and local variables.
 - Installed entry points: `reaper-lsp` and `reaper-dap`.
 
