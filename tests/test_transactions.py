@@ -56,7 +56,8 @@ class RuntimeTransactionTests(unittest.TestCase):
 
     def test_control_flow_helpers_and_guarded_panic(self) -> None:
         self.assertEqual(RuntimeTransaction.return_value(7), 7)
-        self.assertEqual(RuntimeTransaction.yield_value if False else 1, 1)
+        tx = RuntimeTransaction({"checkpoint": 1})
+        self.assertEqual(tx.yield_value("safe"), "safe")
         _, error = RuntimeTransaction.catch(RuntimeTransaction.throw, "recoverable")
         self.assertEqual(error, "recoverable")
         with self.assertRaises(TransactionError):
