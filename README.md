@@ -106,3 +106,7 @@ The doctrine guides engineering decisions; it does not turn roadmap items into i
 ## Anatidae design layer
 
 The shared [Anatidae naming canon](federation/ANATIDAE_NAMING_CANON.md) governs friendly UI vocabulary across the four-project family. The [Reaper Studio desktop design contract](docs/ANATIDAE_DESKTOP_DESIGN_SYSTEM.md) defines its use without changing language syntax, commands or diagnostics.
+
+## Quality and commercial readiness
+
+The 20 × 3 evidence matrix covers correctness, operational cohesion and commercial governance. Run **python tools/quality_commercial.py** or add **--format json**; the report includes prioritized actions for licensing, support, distribution, demand validation, unit economics and pricing. The status model does not imply sales, revenue, profit or investment readiness. See [the quality-commercial standard](docs/QUALITY_COMMERCIAL_STANDARD.md).

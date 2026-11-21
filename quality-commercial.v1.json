@@ -1,0 +1,625 @@
+{
+  "schema": "anatidae.quality-commercial.v1",
+  "project": {
+    "id": "reaper",
+    "name": "Reaper",
+    "scope": "Flow-first programming language with Python reference runtime, developing native C17 track, explicit interop and Windows Studio."
+  },
+  "scoring": {
+    "implemented": 1,
+    "planned": 0.25,
+    "not_assessed": 0,
+    "not_applicable": null
+  },
+  "commercial_operations": {
+    "market_validation": "not_assessed",
+    "pricing": "not_set",
+    "unit_economics": "not_assessed",
+    "license_review": "manual_required",
+    "support_model": "planned",
+    "distribution": "implemented",
+    "boundary": "Open-source language and developer tooling are documented; customer demand, paid support, costs and profitability are not measured. Python remains the reference runtime until native parity is demonstrated."
+  },
+  "criteria": [
+    {
+      "id": "acceptance-evidence",
+      "terms": {
+        "quality": "Качественность",
+        "execution": "Качество",
+        "commercial": "Коммерческий"
+      },
+      "intent": "Every implemented language capability has an explicit acceptance condition and source/test evidence.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "reaper/runtime.py"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_language.py"
+          ]
+        },
+        "commercial": {
+          "status": "planned",
+          "evidence": [
+            "README.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "durable-delivery",
+      "terms": {
+        "quality": "Добротность",
+        "execution": "Добротность",
+        "commercial": "Торговый"
+      },
+      "intent": "Runtime resource accounting and deterministic cleanup bound program execution.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "reaper/resources.py"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_runtime_platform.py"
+          ]
+        },
+        "commercial": {
+          "status": "planned",
+          "evidence": [
+            "pyproject.toml"
+          ]
+        }
+      }
+    },
+    {
+      "id": "defect-prevention",
+      "terms": {
+        "quality": "Безупречность",
+        "execution": "Безупречность",
+        "commercial": "Предпринимательский"
+      },
+      "intent": "Invalid language inputs and denied effects fail with controlled diagnostics.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "reaper/runtime.py"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_extended_runtime.py"
+          ]
+        },
+        "commercial": {
+          "status": "planned",
+          "evidence": [
+            "docs/HUMAN_FIRST_GOVERNANCE.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "release-excellence",
+      "terms": {
+        "quality": "Совершенство",
+        "execution": "Совершенство",
+        "commercial": "Рыночный"
+      },
+      "intent": "Release claims reflect the tested reference runtime and explicitly bounded native implementation.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "reaper/cli.py"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            ".github/workflows/ci.yml"
+          ]
+        },
+        "commercial": {
+          "status": "not_assessed",
+          "evidence": [
+            "docs/UNIFIED_ENGINEERING_STANDARD.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "product-cohesion",
+      "terms": {
+        "quality": "Цельность",
+        "execution": "Мастерство",
+        "commercial": "Деловой"
+      },
+      "intent": "Lexer, parser, runtime, modules and developer tools form one coherent language workflow.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "reaper/modules.py"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_language.py"
+          ]
+        },
+        "commercial": {
+          "status": "planned",
+          "evidence": [
+            "README.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "trust-governance",
+      "terms": {
+        "quality": "Целостность",
+        "execution": "Профессионализм",
+        "commercial": "Финансовый"
+      },
+      "intent": "Federated inputs and trusted native-library calls preserve explicit evidence and trust boundaries.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "reaper/federation.py"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_federation.py"
+          ]
+        },
+        "commercial": {
+          "status": "not_assessed",
+          "evidence": [
+            "docs/FEDERATED_INTEGRATION.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "operational-reliability",
+      "terms": {
+        "quality": "Монолитность",
+        "execution": "Надёжность",
+        "commercial": "Прибыльный"
+      },
+      "intent": "Execution quotas, resource tracking and diagnostics keep supported workloads bounded.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "reaper/resources.py"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_runtime_platform.py"
+          ]
+        },
+        "commercial": {
+          "status": "not_assessed",
+          "evidence": [
+            "docs/RUNTIME_PLATFORM.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "decision-foundation",
+      "terms": {
+        "quality": "Согласованность",
+        "execution": "Основательность",
+        "commercial": "Доходный"
+      },
+      "intent": "Runtime decisions and integrations remain traceable to the documented language and project contracts.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "reaper/cli.py"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_extended_runtime.py"
+          ]
+        },
+        "commercial": {
+          "status": "not_assessed",
+          "evidence": [
+            "docs/UNIFIED_PROJECT_CONTRACT.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repeatable-efficiency",
+      "terms": {
+        "quality": "Последовательность",
+        "execution": "Гармоничность",
+        "commercial": "Экономический"
+      },
+      "intent": "The same program, engine selection and inputs have deterministic documented behavior within the runtime contract.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "reaper/vm.py"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_language.py"
+          ]
+        },
+        "commercial": {
+          "status": "not_assessed",
+          "evidence": [
+            "pyproject.toml"
+          ]
+        }
+      }
+    },
+    {
+      "id": "system-control",
+      "terms": {
+        "quality": "Системность",
+        "execution": "Согласованность",
+        "commercial": "Хозяйственный"
+      },
+      "intent": "FFI, process and filesystem boundaries are explicit and are not presented as an untrusted-code sandbox.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "reaper/ffi.py"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_federation.py"
+          ]
+        },
+        "commercial": {
+          "status": "planned",
+          "evidence": [
+            ".github/workflows/ci.yml"
+          ]
+        }
+      }
+    },
+    {
+      "id": "product-structure",
+      "terms": {
+        "quality": "Структурированность",
+        "execution": "Цельность",
+        "commercial": "Бизнесовый"
+      },
+      "intent": "Public modules and developer workflows have clear ownership and integration surfaces.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "docs/ARCHITECTURE_66.md"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_language.py"
+          ]
+        },
+        "commercial": {
+          "status": "planned",
+          "evidence": [
+            "README.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "market-presentation",
+      "terms": {
+        "quality": "Упорядоченность",
+        "execution": "Целостность",
+        "commercial": "Маркетинговый"
+      },
+      "intent": "Public documentation explains the language audience, supported workflow and current implementation limits.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "README.md"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            ".github/scripts/check_readme_links.py"
+          ]
+        },
+        "commercial": {
+          "status": "planned",
+          "evidence": [
+            "README.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "contract-consistency",
+      "terms": {
+        "quality": "Непротиворечивость",
+        "execution": "Монолитность",
+        "commercial": "Клиентский"
+      },
+      "intent": "Language specification, examples, runtime and diagnostics share one canonical semantic contract.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "docs/MOST_LANGUAGE_SPEC.md"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_language.py"
+          ]
+        },
+        "commercial": {
+          "status": "planned",
+          "evidence": [
+            "docs/UNIFIED_PROJECT_CONTRACT.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "customer-continuity",
+      "terms": {
+        "quality": "Однородность",
+        "execution": "Нераздельность",
+        "commercial": "Сбытовой"
+      },
+      "intent": "Installation, CLI execution, checks and the Studio entry point are documented as a consistent first-run path.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "reaper/cli.py"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_extended_runtime.py"
+          ]
+        },
+        "commercial": {
+          "status": "planned",
+          "evidence": [
+            "pyproject.toml"
+          ]
+        }
+      }
+    },
+    {
+      "id": "standardized-integration",
+      "terms": {
+        "quality": "Унификация",
+        "execution": "Единство",
+        "commercial": "Промышленный"
+      },
+      "intent": "Cross-project exchange uses versioned JSON and explicit FFI contracts rather than private runtime layouts.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "reaper/federation.py"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_federation.py"
+          ]
+        },
+        "commercial": {
+          "status": "planned",
+          "evidence": [
+            "docs/FEDERATED_INTEGRATION.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "release-governance",
+      "terms": {
+        "quality": "Стандартизация",
+        "execution": "Слаженность",
+        "commercial": "Корпоративный"
+      },
+      "intent": "Source, Windows desktop packaging and CI use documented build and verification steps.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "pyproject.toml"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            ".github/workflows/ci.yml"
+          ]
+        },
+        "commercial": {
+          "status": "planned",
+          "evidence": [
+            ".github/workflows/desktop-build.yml"
+          ]
+        }
+      }
+    },
+    {
+      "id": "evidence-completeness",
+      "terms": {
+        "quality": "Полнота",
+        "execution": "Ритмичность",
+        "commercial": "Инвестиционный"
+      },
+      "intent": "Capability status distinguishes implemented features, partial native work and future proposals.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "project-contract.json"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tools/validate_project_contract.py"
+          ]
+        },
+        "commercial": {
+          "status": "not_assessed",
+          "evidence": [
+            "README.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "cost-precision",
+      "terms": {
+        "quality": "Точность",
+        "execution": "Размеренность",
+        "commercial": "Монетизируемый"
+      },
+      "intent": "Runtime limits and supported toolchain requirements are published without unsupported performance or cost promises.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "reaper/resources.py"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_runtime_platform.py"
+          ]
+        },
+        "commercial": {
+          "status": "not_assessed",
+          "evidence": [
+            "docs/RUNTIME_PLATFORM.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "documentation-synchrony",
+      "terms": {
+        "quality": "Выверенность",
+        "execution": "Синхронность",
+        "commercial": "Рентабельный"
+      },
+      "intent": "Specification, tests, packaging metadata and release documentation are updated consistently.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "docs/UNIFIED_ENGINEERING_STANDARD.md"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_language.py"
+          ]
+        },
+        "commercial": {
+          "status": "not_assessed",
+          "evidence": [
+            "pyproject.toml"
+          ]
+        }
+      }
+    },
+    {
+      "id": "asset-governance",
+      "terms": {
+        "quality": "Профессионализм",
+        "execution": "Упорядоченность",
+        "commercial": "Капитализированный"
+      },
+      "intent": "License, package metadata, source contents and release assets have an identifiable distribution boundary.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "LICENSE"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "pyproject.toml"
+          ]
+        },
+        "commercial": {
+          "status": "planned",
+          "evidence": [
+            "README.md"
+          ]
+        }
+      }
+    }
+  ]
+}
