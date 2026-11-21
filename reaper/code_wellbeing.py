@@ -69,6 +69,8 @@ def scan_project(root: str | Path = ".") -> dict[str, Any]:
             if name.casefold() not in SKIP_DIRS and not (current_path / name).is_symlink()
         )
         if depth >= MAX_DEPTH:
+            if dirs:
+                truncated = True
             dirs[:] = []
         for filename in sorted(filenames):
             item = current_path / filename
@@ -163,7 +165,7 @@ def scan_project(root: str | Path = ".") -> dict[str, Any]:
         "schema_version": 1,
         "concept": charter["concept"]["name"],
         "project": project.name,
-        "scan": {"read_only": True, "truncated_at_file_limit": truncated, "file_limit": MAX_FILES,
+        "scan": {"read_only": True, "inventory_truncated": truncated, "file_limit": MAX_FILES,
                  "depth_limit": MAX_DEPTH, "max_source_file_bytes_scanned": MAX_FILE_BYTES, "max_total_source_bytes": MAX_TOTAL_SOURCE_BYTES, "source_text_scan_truncated": source_scan_truncated},
         "inventory": {
             "total_files": len(files), "source_files": len(source_files), "test_files": len(test_files),
