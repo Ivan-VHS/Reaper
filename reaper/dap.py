@@ -8,7 +8,7 @@ from .runtime import Interpreter
 class DebugSession:
  def __init__(self,output):
   self.output=output; self.seq=1; self.lock=threading.RLock(); self.condition=threading.Condition()
-  self.breakpoints=set(); self.snapshot=None; self.running=False; self.terminated=False
+  self.breakpoints=set(); self.snapshot=None; self.running=False; self.waiting=False; self.terminated=False
   self.worker=None; self.debugger=None; self.program=""
  def send(self,payload):
   with self.lock:
@@ -24,7 +24,8 @@ class DebugSession:
  def pause_hook(self,snapshot:DebugSnapshot):
   with self.condition:
    self.snapshot=snapshot; self.event("stopped",{"reason":"breakpoint","threadId":1,"allThreadsStopped":True})
-   while self.running and not self.terminated: self.condition.wait()
+   self.waiting=True
+   while self.waiting and not self.terminated: self.condition.wait()
    if self.terminated:
     from .debugger import DebuggerStopped
     raise DebuggerStopped()
@@ -60,12 +61,12 @@ class DebugSession:
    if not self.debugger: self.response(req,success=False,message="no active debug session")
    else:
     if cmd!="continue": self.debugger.step()
-    with self.condition: self.running=False; self.condition.notify_all()
+    with self.condition: self.waiting=False; self.condition.notify_all()
     self.response(req,{"allThreadsContinued":True})
   elif cmd=="pause": self.response(req,success=False,message="pause is available only at statement boundaries")
   elif cmd in ("terminate","disconnect"):
    self.terminated=True
-   with self.condition: self.running=False; self.condition.notify_all()
+   with self.condition: self.waiting=False; self.condition.notify_all()
    self.response(req); return cmd!="disconnect"
   elif cmd=="evaluate": self.response(req,success=False,message="expression evaluation is not implemented; inspect Locals instead")
   else: self.response(req,success=False,message=f"unsupported DAP request: {cmd}")
