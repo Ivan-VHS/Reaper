@@ -748,7 +748,7 @@ class ReaperStudio(tk.Tk):
             try:
                 assert process.stdout is not None
                 for line in process.stdout:
-                    self._run_queue.put(("line", line.rstrip("\\r\\n")))
+                    self._run_queue.put(("line", line.rstrip()))
                 code = process.wait()
                 self._run_queue.put(("done", f"npm exited ({code})"))
             except Exception as error:
