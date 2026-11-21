@@ -1,0 +1,627 @@
+{
+  "schema": "anatidae.quality-commercial.v1",
+  "project": {
+    "id": "reaper",
+    "name": "Reaper",
+    "scope": "Flow-first programming language, Python reference runtime, developing native C17 core and developer tooling."
+  },
+  "scoring": {
+    "implemented": 1,
+    "planned": 0.25,
+    "not_assessed": 0,
+    "not_applicable": null
+  },
+  "commercial_operations": {
+    "market_validation": "not_assessed",
+    "pricing": "not_set",
+    "unit_economics": "not_assessed",
+    "license_review": "manual_required",
+    "support_model": "planned",
+    "distribution": "implemented",
+    "boundary": "Source, language and release assets exist; paid adoption, revenue, cost structure and profitability have not been measured."
+  },
+  "criteria": [
+    {
+      "id": "acceptance-evidence",
+      "terms": {
+        "quality": "Качественность",
+        "execution": "Качество",
+        "commercial": "Коммерческий"
+      },
+      "intent": "Приёмка каждой языковой функции опирается на критерии и проверяемые результаты.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "reaper/runtime.py"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_extended_runtime.py",
+            ".github/workflows/ci.yml"
+          ]
+        },
+        "commercial": {
+          "status": "planned",
+          "evidence": [
+            "README.md",
+            "LICENSE"
+          ]
+        }
+      }
+    },
+    {
+      "id": "durable-delivery",
+      "terms": {
+        "quality": "Добротность",
+        "execution": "Добротность",
+        "commercial": "Торговый"
+      },
+      "intent": "Долговечность обеспечивается квотами, управлением ресурсами и безопасным отказом.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "reaper/resources.py"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_runtime_platform.py"
+          ]
+        },
+        "commercial": {
+          "status": "planned",
+          "evidence": [
+            "docs/RUNTIME_PLATFORM.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "defect-prevention",
+      "terms": {
+        "quality": "Безупречность",
+        "execution": "Безупречность",
+        "commercial": "Предпринимательский"
+      },
+      "intent": "Опасные и неоднозначные действия ограничиваются явными полномочиями и контрактами.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "reaper/governance.py"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_governance.py"
+          ]
+        },
+        "commercial": {
+          "status": "planned",
+          "evidence": [
+            "docs/HUMAN_FIRST_GOVERNANCE.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "release-excellence",
+      "terms": {
+        "quality": "Совершенство",
+        "execution": "Совершенство",
+        "commercial": "Рыночный"
+      },
+      "intent": "Изменения воспроизводимы, регрессионно проверяемы и пригодны к выпуску.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "reaper/evolution.py"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_evolution.py"
+          ]
+        },
+        "commercial": {
+          "status": "implemented",
+          "evidence": [
+            "docs/REAPER_EVOLUTION_ENGINE.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "product-cohesion",
+      "terms": {
+        "quality": "Цельность",
+        "execution": "Мастерство",
+        "commercial": "Деловой"
+      },
+      "intent": "Парсер, IR, runtime, VM и инструменты образуют цельную систему.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "reaper/semantic_graph.py"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_semantic_graph.py"
+          ]
+        },
+        "commercial": {
+          "status": "planned",
+          "evidence": [
+            "docs/ARCHITECTURE.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "trust-governance",
+      "terms": {
+        "quality": "Целостность",
+        "execution": "Профессионализм",
+        "commercial": "Финансовый"
+      },
+      "intent": "Доверие обеспечивают аудит, provenance, управление полномочиями и границы FFI.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "reaper/audit.py"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_audit.py"
+          ]
+        },
+        "commercial": {
+          "status": "not_assessed",
+          "evidence": [
+            "docs/EXECUTION_AUDIT.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "operational-reliability",
+      "terms": {
+        "quality": "Монолитность",
+        "execution": "Надёжность",
+        "commercial": "Прибыльный"
+      },
+      "intent": "Исполнение остаётся предсказуемым в заявленных лимитах.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "reaper/runtime.py"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_runtime_platform.py"
+          ]
+        },
+        "commercial": {
+          "status": "not_assessed",
+          "evidence": [
+            "docs/RUNTIME_PLATFORM.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "decision-foundation",
+      "terms": {
+        "quality": "Согласованность",
+        "execution": "Основательность",
+        "commercial": "Доходный"
+      },
+      "intent": "Диагностика и отчёты опираются на источники, версии и проверяемые факты.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "reaper/thesis.py"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_thesis.py"
+          ]
+        },
+        "commercial": {
+          "status": "not_assessed",
+          "evidence": [
+            "docs/THESIS_ASSERTION_GRAPH.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repeatable-efficiency",
+      "terms": {
+        "quality": "Последовательность",
+        "execution": "Гармоничность",
+        "commercial": "Экономический"
+      },
+      "intent": "Повторяемые сборки и проверки имеют единый порядок.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "reaper/impact.py"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_impact_profiles.py"
+          ]
+        },
+        "commercial": {
+          "status": "not_assessed",
+          "evidence": [
+            "docs/REAPER_AUTONOMOUS_EVOLUTION.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "system-control",
+      "terms": {
+        "quality": "Системность",
+        "execution": "Согласованность",
+        "commercial": "Хозяйственный"
+      },
+      "intent": "Политики языка, runtime, toolchain и модулей согласованы.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "reaper/federation.py"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_federation.py"
+          ]
+        },
+        "commercial": {
+          "status": "planned",
+          "evidence": [
+            "docs/FEDERATED_INTEGRATION.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "product-structure",
+      "terms": {
+        "quality": "Структурированность",
+        "execution": "Цельность",
+        "commercial": "Бизнесовый"
+      },
+      "intent": "Схемы, API и контракты позволяют независимую интеграцию.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "reaper/modules.py"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_language.py"
+          ]
+        },
+        "commercial": {
+          "status": "planned",
+          "evidence": [
+            "docs/REAPER_UNIFIED_ARCHITECTURE.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "market-presentation",
+      "terms": {
+        "quality": "Упорядоченность",
+        "execution": "Целостность",
+        "commercial": "Маркетинговый"
+      },
+      "intent": "Документация и редактор ясно объясняют назначение и ограничения языка.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "editors/vscode/README.md"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_ui_theme.py"
+          ]
+        },
+        "commercial": {
+          "status": "planned",
+          "evidence": [
+            "README.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "contract-consistency",
+      "terms": {
+        "quality": "Непротиворечивость",
+        "execution": "Монолитность",
+        "commercial": "Клиентский"
+      },
+      "intent": "Синтаксис, спецификация, runtime и тесты не расходятся.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "tools/validate_project_contract.py"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_feature_registry.py"
+          ]
+        },
+        "commercial": {
+          "status": "planned",
+          "evidence": [
+            "docs/UNIFIED_PROJECT_CONTRACT.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "customer-continuity",
+      "terms": {
+        "quality": "Однородность",
+        "execution": "Нераздельность",
+        "commercial": "Сбытовой"
+      },
+      "intent": "Путь разработчика от диагностики к исправлению остаётся последовательным.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "reaper/polyglot.py"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_polyglot.py"
+          ]
+        },
+        "commercial": {
+          "status": "planned",
+          "evidence": [
+            "docs/POLYGLOT_IMMERSION.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "standardized-integration",
+      "terms": {
+        "quality": "Унификация",
+        "execution": "Единство",
+        "commercial": "Промышленный"
+      },
+      "intent": "Алиасы, IR и интерфейсы используют стабильные канонические контракты.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "include/reaper/lexer.h"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_lexer.c"
+          ]
+        },
+        "commercial": {
+          "status": "planned",
+          "evidence": [
+            "docs/C_MIGRATION.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "release-governance",
+      "terms": {
+        "quality": "Стандартизация",
+        "execution": "Слаженность",
+        "commercial": "Корпоративный"
+      },
+      "intent": "Релизы, миграции и управление изменениями проходят повторяемые проверки.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            ".github/workflows/ci.yml"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_governance.py"
+          ]
+        },
+        "commercial": {
+          "status": "planned",
+          "evidence": [
+            "docs/UNIFIED_PROJECT_CONTRACT.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "investment-diligence",
+      "terms": {
+        "quality": "Полнота",
+        "execution": "Ритмичность",
+        "commercial": "Инвестиционный"
+      },
+      "intent": "Доказательств достаточно для независимого технического и финансового due diligence.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "reaper/thesis.py"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_thesis.py"
+          ]
+        },
+        "commercial": {
+          "status": "not_assessed",
+          "evidence": [
+            "docs/THESIS_ASSERTION_GRAPH.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "monetization-readiness",
+      "terms": {
+        "quality": "Точность",
+        "execution": "Размеренность",
+        "commercial": "Монетизируемый"
+      },
+      "intent": "Монетизация требует отдельного подтверждения ценности, прав и затрат.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "reaper/self_product.py"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_self_product.py"
+          ]
+        },
+        "commercial": {
+          "status": "not_assessed",
+          "evidence": [
+            "docs/SELF_PRODUCT_COMPOSITION.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "unit-economics",
+      "terms": {
+        "quality": "Выверенность",
+        "execution": "Синхронность",
+        "commercial": "Рентабельный"
+      },
+      "intent": "Рентабельность требует измерения сопровождения, поддержки и стоимости поставки.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "reaper/resources.py"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_runtime_platform.py"
+          ]
+        },
+        "commercial": {
+          "status": "not_assessed",
+          "evidence": [
+            "docs/RUNTIME_PLATFORM.md"
+          ]
+        }
+      }
+    },
+    {
+      "id": "asset-capitalization",
+      "terms": {
+        "quality": "Профессионализм",
+        "execution": "Упорядоченность",
+        "commercial": "Капитализированный"
+      },
+      "intent": "Языковые спецификации, код, документация и лицензии сохраняют прослеживаемость.",
+      "weight": 1,
+      "controls": {
+        "quality": {
+          "status": "implemented",
+          "evidence": [
+            "reaper/cli.py"
+          ]
+        },
+        "execution": {
+          "status": "implemented",
+          "evidence": [
+            "tests/test_audit.py"
+          ]
+        },
+        "commercial": {
+          "status": "not_assessed",
+          "evidence": [
+            "LICENSE"
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -101,3 +101,8 @@ The doctrine guides engineering decisions; it does not turn roadmap items into i
 ## License
 
 [Apache License 2.0](LICENSE)
+
+
+## Quality and commercial readiness
+
+Reaper now carries an evidence-linked 20 × 3 matrix for product quality, operational execution and commercial governance. Run **python tools/quality_commercial.py** or add **--format json**. It does not treat native C17 parity, market demand, revenue or profitability as established without separate evidence. See [the quality-commercial standard](docs/QUALITY_COMMERCIAL_STANDARD.md).
