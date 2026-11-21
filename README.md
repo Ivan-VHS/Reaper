@@ -1,5 +1,7 @@
 # Reaper — flow-first programming language
 
+[UI/UX Atlas 2026](docs/UI_UX_ATLAS_2026.md) · Dawn / Sunset / Night appearance profiles · accessibility-first native interaction
+
 [CI](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml) · [Windows Studio build](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml) · Python 3.10+ reference runtime · C17 native track · Windows Studio · Apache-2.0
 **Developer:** [Ivan-VHS](https://github.com/Ivan-VHS)
 

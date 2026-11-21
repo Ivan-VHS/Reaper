@@ -32,6 +32,34 @@ PALETTES: dict[str, dict[str, str]] = {
 }
 
 
+PALETTES.update({
+    "dawn": {
+        "bg": "#F3F6FA", "surface": "#FFFFFF", "elevated": "#EAF0F8",
+        "fg": "#10243A", "secondary": "#365A83", "muted": "#526A82",
+        "heading": "#0039A6", "blue": "#0039A6", "blue_hover": "#0A1E46", "on_blue": "#FFFFFF",
+        "red": "#B51A10", "red_hover": "#D52B1E", "on_red": "#FFFFFF",
+        "border": "#CBD6E4", "focus": "#D52B1E", "selection": "#0039A6",
+        "selection_fg": "#FFFFFF", "disabled": "#74849A",
+    },
+    "sunset": {
+        "bg": "#F5EFE8", "surface": "#FFF9F2", "elevated": "#EDE2D5",
+        "fg": "#322B2A", "secondary": "#68564F", "muted": "#78685F",
+        "heading": "#0039A6", "blue": "#0039A6", "blue_hover": "#0A1E46", "on_blue": "#FFFFFF",
+        "red": "#B51A10", "red_hover": "#D52B1E", "on_red": "#FFFFFF",
+        "border": "#D8C5B5", "focus": "#D52B1E", "selection": "#0039A6",
+        "selection_fg": "#FFFFFF", "disabled": "#887D74",
+    },
+    "night": {
+        "bg": "#081522", "surface": "#10263B", "elevated": "#17344D",
+        "fg": "#EDF4FA", "secondary": "#C4D5E4", "muted": "#A9C0D4",
+        "heading": "#EAF3FF", "blue": "#73B7FF", "blue_hover": "#9ACBFF", "on_blue": "#081522",
+        "red": "#FF7D78", "red_hover": "#FFA39B", "on_red": "#190B0B",
+        "border": "#31536B", "focus": "#FF8E86", "selection": "#174C7D",
+        "selection_fg": "#FFFFFF", "disabled": "#71899B",
+    },
+})
+
+
 def contrast_ratio(foreground: str, background: str) -> float:
     """Return WCAG contrast ratio for two #RRGGBB colors."""
     def luminance(value: str) -> float:
@@ -128,7 +156,7 @@ def palette_for(mode: str = "system", *, system_dark: bool | None = None) -> dic
     if requested == "system":
         requested = "dark" if (_system_dark() if system_dark is None else system_dark) else "light"
     if requested not in PALETTES:
-        raise ValueError("Theme must be 'system', 'light' or 'dark'")
+        raise ValueError("Theme must be 'system', 'light', 'dark', 'dawn', 'sunset' or 'night'")
     result = dict(PALETTES[requested])
     result.update({
         "mode": requested, "page": result["bg"], "surface_alt": result["elevated"],
@@ -261,7 +289,11 @@ def apply_theme(root: tk.Misc, app_key: str, theme: str | None = None) -> str:
 
 def toggle_theme(root: tk.Misc, app_key: str) -> str:
     current = getattr(root, "_anatidae_theme", _load_theme(app_key))
-    return apply_theme(root, app_key, "dark" if current == "light" else "light")
+    order = ("dawn", "sunset", "night")
+    if current in {"light", "dark"}:
+        current = "night" if current == "dark" else "dawn"
+    next_mode = order[(order.index(current) + 1) % len(order)] if current in order else order[0]
+    return apply_theme(root, app_key, next_mode)
 
 
 def apply_ui_theme(root: tk.Misc, mode: str = "system") -> dict[str, str]:
