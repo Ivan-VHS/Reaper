@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from ui_motion import (
+from reaper.ui_motion import (
     DURATIONS_MS, MotionPreferences, Spring1D, duration_for, ease_out,
     load_preferences, reduced_motion_enabled, save_preferences,
 )
@@ -19,7 +19,7 @@ class MotionTests(unittest.TestCase):
         self.assertEqual(values, sorted(values))
 
     def test_duration_tokens_follow_motion_budget(self):
-        with patch("ui_motion.reduced_motion_enabled", return_value=False):
+        with patch("reaper.ui_motion.reduced_motion_enabled", return_value=False):
             self.assertEqual(DURATIONS_MS["instant"], 0)
             self.assertEqual(DURATIONS_MS["micro"], 100)
             self.assertLessEqual(duration_for("spatial", MotionPreferences(reduce_motion=True)), 80)
