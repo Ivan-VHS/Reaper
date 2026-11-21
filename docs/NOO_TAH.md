@@ -64,12 +64,14 @@ CommonJS, and package.json `type` controls `.js`. Module resolution,
 conditional exports, top-level await and dynamic import are delegated to Node.
 Package installation and npm lifecycle scripts execute third-party code.
 
-## Studio integration contract
+## Reaper Studio integration
 
-Detect .js/.mjs/.cjs and package.json; launch Node as a managed child process;
-stream stdout/stderr; expose stop/restart; preserve cwd and environment; surface
-exit codes and diagnostics; attach the inspector protocol. CLI support alone
-does not mean Studio integration is complete.
+Implemented baseline: Studio recognizes .js/.mjs/.cjs files, provides JS Run,
+JS Check and JS Stop actions, streams child-process output into the IDE, preserves
+the script directory as cwd, reports exit codes and exposes runtime diagnostics.
+The Node Inspector protocol is available from the CLI; mapping inspector
+breakpoints, scopes, call frames and variable handles into Studio's native
+debugger UI remains a separate integration milestone.
 
 ## Conformance gates
 
