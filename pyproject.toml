@@ -29,6 +29,7 @@ reaper-qcs = "reaper.qcs:main"
 reaper-polyglot = "reaper.polyglot:main"
 reaper-polyglot-code = "reaper.polyglot_code:main"
 reaper-embedded = "reaper.embedded:main"
+reaper-products = "reaper.products:main"
 
 [project.gui-scripts]
 reaper-studio = "reaper.desktop:main"
