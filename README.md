@@ -10,6 +10,12 @@
 **Reaper is an expression-oriented language built around readable syntax and explicit data flow.** Its `::` operator passes a value into the next operation. The repository contains a Python reference interpreter, a developing native C17 core, and Reaper Studio for Windows.
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
+## Live Reaper Studio screenshot
+
+<p align="center"><img src="assets/screenshots/reaper-studio.png" alt="Reaper Studio running desktop application" width="100%"></p>
+
+<sub>Actual live Windows 11 capture from the Reaper Studio process, 1920×1080. The screenshot shows the default starter document and empty output pane; no user project data is included.</sub>
+
 
 See [four-project federation](docs/PROJECT_FEDERATION_MATRIX.md), [OCTA-8 topology](docs/OCTA_PYRAMID_FEDERATION.md), and [consolidated project-thread ledger](docs/THREADS_AND_FEDERATION.md).
 
