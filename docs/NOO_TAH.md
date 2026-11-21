@@ -66,12 +66,18 @@ Package installation and npm lifecycle scripts execute third-party code.
 
 ## Reaper Studio integration
 
-Implemented baseline: Studio recognizes .js/.mjs/.cjs files, provides JS Run,
-JS Check and JS Stop actions, streams child-process output into the IDE, preserves
-the script directory as cwd, reports exit codes and exposes runtime diagnostics.
-The Node Inspector protocol is available from the CLI; mapping inspector
-breakpoints, scopes, call frames and variable handles into Studio's native
-debugger UI remains a separate integration milestone.
+Studio recognizes .js/.mjs/.cjs in the project tree and file dialogs. It provides
+JS Run, JS Check, JS Debug (Node Inspector), JS Stop, npm command execution and
+runtime diagnostics. Managed child-process output is streamed into the IDE,
+the project/script directory is used as cwd, unsaved editor buffers are saved
+before execution, and exit codes are reported.
+
+JS Debug launches Node with `--inspect-brk` and prints the attach endpoint for
+Chrome DevTools (`chrome://inspect`). The Inspector protocol is real Node
+functionality, but translating Inspector breakpoints, scopes, call frames and
+variable handles into Reaper's native DAP debugger panes remains a separate
+integration milestone. JavaScript syntax coloring is currently the shared
+lightweight editor highlighter, not a complete TypeScript/JavaScript LSP.
 
 ## Conformance gates
 
