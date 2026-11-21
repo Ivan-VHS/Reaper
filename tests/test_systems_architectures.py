@@ -42,6 +42,24 @@ class SystemsArchitectureMatrixTests(unittest.TestCase):
         self.assertIn("x86_64", {item["name"] for item in oplague})
         self.assertNotIn("riscv64", {item["name"] for item in oplague})
 
+    def test_elbrus_target_is_first_class_for_reaper(self):
+        data = load_matrix()
+        e2k = next(item for item in data["architectures"] if item["name"] == "e2k")
+        self.assertEqual(e2k["family"], "Elbrus")
+        self.assertEqual(e2k["endianness"], "little")
+        self.assertIn("lcc", e2k["commands"])
+        self.assertIn("e2k", data["profiles"]["reaper"])
+        selected = select_architectures(
+            data, profile="reaper",
+            which=lambda command: "/mock/mcst/bin/lcc" if command == "lcc" else None,
+        )
+        self.assertIn("e2k", {item["name"] for item in selected})
+        state, found = describe_toolchains(
+            e2k, which=lambda command: "/mock/mcst/bin/lcc" if command == "lcc" else None
+        )
+        self.assertEqual(state, "available")
+        self.assertEqual(found, {"lcc": "/mock/mcst/bin/lcc"})
+
     def test_toolchain_probe_is_injectable_and_path_only(self):
         data = load_matrix()
         target = next(item for item in data["architectures"] if item["name"] == "x86_64")
