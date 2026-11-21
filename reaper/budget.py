@@ -43,6 +43,8 @@ REFERENCE_PRICES: tuple[dict[str, Any], ...] = (
     {"item": "Рис", "unit": "кг", "min_uah": 52, "max_uah": 61},
     {"item": "Макароны", "unit": "кг", "min_uah": 40, "max_uah": 43},
     {"item": "Мука", "unit": "кг", "min_uah": 23, "max_uah": 24},
+    {"item": "Хлеб", "unit": "кг", "min_uah": 50, "max_uah": 68},
+    {"item": "Капучино или латте", "unit": "чашка, расчётный ориентир", "min_uah": 64, "max_uah": 74, "derived_from_espresso": True},
     {"item": "Батон", "unit": "500 г", "min_uah": 33, "max_uah": 35},
     {"item": "Молоко", "unit": "л", "min_uah": 50, "max_uah": 54},
     {"item": "Яйца", "unit": "10 шт.", "min_uah": 40, "max_uah": 61},
