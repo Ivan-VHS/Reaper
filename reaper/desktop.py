@@ -148,7 +148,7 @@ class ReaperStudio(tk.Tk):
             self._theme_name = colors["mode"]
         else:
             self._theme_name = apply_theme(self, "reaper-studio", mode)
-        self.theme_button.configure(text="Light theme" if self._theme_name == "dark" else "Dark theme")
+        self.theme_button.configure(text="Светлая тема" if self._theme_name == "dark" else "Тёмная тема")
 
     def embedded_new_project(self) -> None:
         directory = filedialog.askdirectory(parent=self, title="Создать проект встроенной C")
