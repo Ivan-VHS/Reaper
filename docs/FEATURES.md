@@ -10,7 +10,7 @@
 | Studio | Windows editor, debug, call stack, local completion and current-document symbol navigation | desktop app |
 | CODEX-66 | searchable 66-item native feature catalogue with JSON export and maturity labels | implemented metadata/UI; feature statuses remain evidence-based |
 | Native C17 | lexer, expression Pratt parser, owned AST, checked IR | partial |
-| МОСТ | 54 aliases: 21 executable, 33 reserved | mixed |
+| МОСТ | 54 exact aliases: 31 executable, 23 lexically reserved | mixed |
 | QCS | separate lexer/parser/JSON AST | validation tool |
 | THESIS | versioned assertion/evidence graph | no auto-verification |
 | VentuSample | pack v1 manifest, 22 descriptors, pair comparison | implemented consumer |
