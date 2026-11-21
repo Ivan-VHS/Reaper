@@ -100,7 +100,7 @@ def dedup_by(list,key_fn):
   if k not in seen:seen.add(k);out.append(x)
  return out
 def group_by(list,key_fn):
- out=defaultdict(list)
+ out=defaultdict(_builtins.list)
  for x in list:out[key_fn(x)].append(x)
  return dict(out)
 def partition(list,pred_fn):
