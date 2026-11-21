@@ -120,3 +120,10 @@ emit "result = " ++ text(result)
 ## Motion Constitution v2026
 
 跨项目界面规范见 [Motion Constitution v2026](docs/MOTION_CONSTITUTION_V2026.md)。它统一弹簧/快速缓动、0.4×–2.2× 动效缩放范围、Reduce Motion 优先级、主题一致性、2×2/焦点场景展示及真实 SVG/Canvas 遥测规则。[原生界面动效规范](docs/UI_MOTION.md)说明 Reaper Studio 当前提供的功能：有界 Tk 弹簧过渡、持久化无障碍偏好，以及本地 IDE/LSP/DAP 工具。CODEX-66 和本地语言服务不是云端 AI Agent，也不提供流式 AI Diff；规划中的展示面板不得描述为已交付功能。
+
+
+## 统一动效架构图
+
+<p align="center"><img src="assets/motion-constitution-v2026.svg" alt="Motion Constitution v2026 四领域架构图" width="100%"></p>
+
+这是共享的 2×2 架构示意图，并非应用运行截图。图中明确区分各产品已交付的功能与不可用/规划中的能力。
