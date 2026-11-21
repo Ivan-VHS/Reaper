@@ -25,3 +25,5 @@ jobs:
           ./build/reaper-c --version
           ./build/reaper-c --evolution-status
           ./build/reaper-c --tokens examples/hello.rpr
+          ./build/reaper-c --capabilities
+          ./build/reaper-c --capability operandu
