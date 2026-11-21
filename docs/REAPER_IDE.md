@@ -34,6 +34,18 @@ Both services use Content-Length framed JSON-RPC over stdin/stdout. Stdout is re
 | Native C17 language service | Planned | Python remains the compatibility reference |
 | Coverage, profiler UI, test explorer, integrated Git UI | Planned | Requires stable data contracts |
 
+## Reaper Studio editor integration
+
+The Windows Studio editor also reuses the canonical `LanguageService` directly:
+
+- **Ctrl+Space** opens local completion for REAPER keywords, built-ins and symbols in the current document.
+- **F12** navigates to a declaration in that document.
+- **Find references** highlights lexical occurrences and lists their line/column positions.
+- **Ctrl+Shift+R** renames lexical occurrences in the current document after a confirmation prompt.
+- **Ctrl+K** opens the existing command palette; **Ctrl+Alt+K** opens the CODEX-66 capability browser.
+
+These actions are document-local. They do not provide cross-file type resolution, AST-safe refactoring, cloud AI generation, or an automatic code execution step. JavaScript files continue to use NOO TAH rather than the REAPER language completion service. The CODEX-66 catalogue labels each feature as implemented, partial, planned or unsupported and exports a versioned JSON snapshot; exporting does not activate any feature.
+
 ## Architecture
 
 ```text

@@ -30,6 +30,9 @@ from reaper.runtime import Interpreter
 from reaper.debugger import DebuggerStopped, RuntimeDebugger
 from reaper.plugins import PluginError, PluginManager
 from reaper.ide_support import SOURCE_EXTENSIONS, highlight_spans, iter_project_entries
+from reaper.language_service import LanguageService
+from reaper.codex66 import export_json as export_codex66_json
+from reaper.codex66_ui import Codex66Window
 from reaper.ui_motion import MotionController, MotionPreferences, fade_in_window
 from reaper.ui_theme import apply_theme, apply_ui_theme, set_dpi_awareness, toggle_theme
 
@@ -64,6 +67,12 @@ class ReaperStudio(tk.Tk):
         self._closing = False
         self._dirty = False
         self._highlight_job: str | None = None
+        self._language_service = LanguageService(workers=1)
+        self._language_version = 0
+        self._completion_window: tk.Toplevel | None = None
+        self._completion_list: tk.Listbox | None = None
+        self._completion_items: list[dict[str, str]] = []
+        self._completion_prefix = ""
 
         self._configure_styles()
         self._build_menu()
@@ -104,6 +113,10 @@ class ReaperStudio(tk.Tk):
         edit_menu = tk.Menu(menu, tearoff=False)
         edit_menu.add_command(label="Найти…", command=self.find_text, accelerator="Ctrl+F")
         edit_menu.add_command(label="Перейти к строке…", command=self.goto_line, accelerator="Ctrl+G")
+        edit_menu.add_command(label="Автодополнение…", command=self.show_completion, accelerator="Ctrl+Space")
+        edit_menu.add_command(label="Перейти к определению", command=self.go_to_definition, accelerator="F12")
+        edit_menu.add_command(label="Найти ссылки на символ", command=self.find_references)
+        edit_menu.add_command(label="Переименовать символ…", command=self.rename_symbol, accelerator="Ctrl+Shift+R")
         edit_menu.add_command(label="Палитра команд…", command=self.show_command_palette, accelerator="Ctrl+K")
         edit_menu.add_separator()
         edit_menu.add_command(label="Выделить всё", command=lambda: self.editor.tag_add("sel", "1.0", "end-1c"))
@@ -147,6 +160,8 @@ class ReaperStudio(tk.Tk):
             view_menu.add_radiobutton(label=label, variable=self._theme_mode, value=mode, command=self.apply_visual_theme)
         view_menu.add_separator()
         view_menu.add_command(label="Настройки движения…", command=self.show_motion_settings)
+        view_menu.add_separator()
+        view_menu.add_command(label="CODEX-66 — каталог возможностей…", command=self.show_codex66, accelerator="Ctrl+Alt+K")
         menu.add_cascade(label="Вид", menu=view_menu)
         self.configure(menu=menu)
 
@@ -186,6 +201,11 @@ class ReaperStudio(tk.Tk):
             ("Запустить отладку", self.debug_source),
             ("Менеджер плагинов", self.show_plugins),
             ("Настройки движения", self.show_motion_settings),
+            ("CODEX-66 — каталог возможностей", self.show_codex66),
+            ("Автодополнение REAPER", self.show_completion),
+            ("Перейти к определению", self.go_to_definition),
+            ("Найти ссылки на символ", self.find_references),
+            ("Переименовать символ", self.rename_symbol),
             ("Переключить атмосферу", self.toggle_ui_theme),
         ]
         visible: list[tuple[str, Any]] = []
@@ -250,6 +270,246 @@ class ReaperStudio(tk.Tk):
         window.geometry(f"{width}x{height}+{x}+{y}")
         window.grab_set()
         search.focus_set()
+
+    def _language_snapshot(self) -> tuple[str, object]:
+        """Refresh the local, single-document language-service snapshot."""
+        uri = self._source_name()
+        self._language_version += 1
+        self._language_service.open(uri, self._source(), self._language_version)
+        return uri, self._language_service.analyze(uri)
+
+    def _symbol_at_cursor(self) -> str | None:
+        """Return the identifier touching the caret, without parsing editor markup."""
+        try:
+            row, column = map(int, self.editor.index("insert").split("."))
+            line = self.editor.get(f"{row}.0", f"{row}.end")
+        except (tk.TclError, ValueError):
+            return None
+        matches = list(re.finditer(r"[\wА-Яа-яЁё]+", line, re.UNICODE))
+        match = next((item for item in matches if item.start() <= column <= item.end()), None)
+        if match is None:
+            match = next((item for item in reversed(matches) if item.end() <= column), None)
+        return match.group() if match else None
+
+    def _completion_shortcut(self, _event: tk.Event | None = None) -> str:
+        self.show_completion()
+        return "break"
+
+    def show_completion(self) -> None:
+        """Show local REAPER keyword/symbol completion; this is not a cloud AI feature."""
+        if self.current_file and self.current_file.suffix.lower() in {".js", ".mjs", ".cjs"}:
+            self.status.set("Для JavaScript используйте NOO TAH / Node.js")
+            return
+        try:
+            uri, _analysis = self._language_snapshot()
+            row, column = map(int, self.editor.index("insert").split("."))
+            line = self.editor.get(f"{row}.0", f"{row}.end")
+        except (tk.TclError, ValueError, KeyError) as error:
+            self.status.set(f"Автодополнение недоступно: {error}")
+            return
+        prefix_match = re.search(r"[\wА-Яа-яЁё]+$", line[:column], re.UNICODE)
+        prefix = prefix_match.group() if prefix_match else ""
+        try:
+            candidates = self._language_service.completion(uri, prefix)
+        except (KeyError, ValueError) as error:
+            self.status.set(f"Автодополнение недоступно: {error}")
+            return
+        if prefix:
+            candidates = [item for item in candidates if item["label"].casefold().startswith(prefix.casefold())]
+        candidates = candidates[:24]
+        if not candidates:
+            self.status.set(f"Нет локальных подсказок для: {prefix or 'текущей позиции'}")
+            self._close_completion()
+            return
+
+        self._close_completion()
+        window = tk.Toplevel(self)
+        self._completion_window = window
+        window.title("REAPER IntelliSense")
+        window.transient(self)
+        window.resizable(False, False)
+        panel = ttk.Frame(window, padding=8)
+        panel.pack(fill="both", expand=True)
+        ttk.Label(panel, text="Локальные подсказки REAPER · ↑ ↓ · Enter / Tab · Esc",
+                  style="PaneTitle.TLabel").pack(anchor="w", pady=(0, 5))
+        items = tk.Listbox(panel, height=min(12, len(candidates)), width=48,
+                           activestyle="none", exportselection=False)
+        items.pack(fill="both", expand=True)
+        for candidate in candidates:
+            items.insert("end", f"{candidate['label']}    ·    {candidate['kind']}")
+        items.selection_set(0)
+        items.activate(0)
+        self._completion_list = items
+        self._completion_items = candidates
+        self._completion_prefix = prefix
+        items.bind("<Return>", self._accept_completion)
+        items.bind("<Tab>", self._accept_completion)
+        items.bind("<Double-Button-1>", self._accept_completion)
+        window.bind("<Escape>", lambda _event: (self._close_completion(), "break")[1])
+        window.protocol("WM_DELETE_WINDOW", self._close_completion)
+        box = self.editor.bbox("insert")
+        window.update_idletasks()
+        if box:
+            x = self.editor.winfo_rootx() + box[0]
+            y = self.editor.winfo_rooty() + box[1] + box[3] + 3
+        else:
+            x = self.winfo_rootx() + 180
+            y = self.winfo_rooty() + 120
+        window.geometry(f"+{x}+{y}")
+        window.grab_set()
+        items.focus_set()
+        self.status.set(f"IntelliSense: {len(candidates)} локальных кандидатов")
+
+    def _accept_completion(self, _event: tk.Event | None = None) -> str:
+        if self._completion_list is None:
+            return "break"
+        selection = self._completion_list.curselection()
+        index = selection[0] if selection else 0
+        if index >= len(self._completion_items):
+            return "break"
+        label = self._completion_items[index]["label"]
+        prefix = self._completion_prefix
+        try:
+            start = self.editor.index(f"insert - {len(prefix)} chars")
+            self.editor.edit_separator()
+            self.editor.delete(start, "insert")
+            self.editor.insert(start, label)
+            self.editor.edit_separator()
+            self.editor.mark_set("insert", f"{start}+{len(label)}c")
+            self.editor.see("insert")
+            self.editor.focus_set()
+            self._schedule_highlight()
+            self._update_cursor_status()
+            self.status.set(f"Вставлено: {label}")
+        except tk.TclError as error:
+            self.status.set(f"Не удалось вставить подсказку: {error}")
+        self._close_completion()
+        return "break"
+
+    def _close_completion(self) -> None:
+        window = self._completion_window
+        self._completion_window = None
+        self._completion_list = None
+        self._completion_items = []
+        self._completion_prefix = ""
+        if window is not None:
+            try:
+                if window.winfo_exists():
+                    window.grab_release()
+                    window.destroy()
+            except tk.TclError:
+                pass
+
+    def go_to_definition(self) -> None:
+        name = self._symbol_at_cursor()
+        if not name:
+            self.status.set("Поставьте курсор на имя символа")
+            return
+        uri, _analysis = self._language_snapshot()
+        symbol = self._language_service.definition(uri, name)
+        if symbol is None:
+            self.status.set(f"Определение не найдено в текущем документе: {name}")
+            return
+        target = f"{symbol.span.line + 1}.{symbol.span.start}"
+        self.editor.mark_set("insert", target)
+        self.editor.see("insert")
+        self.editor.focus_set()
+        self._update_cursor_status()
+        self.status.set(f"Определение {name}: строка {symbol.span.line + 1}")
+
+    def find_references(self) -> None:
+        name = self._symbol_at_cursor()
+        if not name:
+            self.status.set("Поставьте курсор на имя символа")
+            return
+        uri, _analysis = self._language_snapshot()
+        spans = self._language_service.references(uri, name)
+        self.editor.tag_remove("reference", "1.0", "end")
+        self.output_tabs.select(0)
+        self._append_output(f"REFERENCES · {name} · текущий документ: {len(spans)}")
+        for span in spans:
+            self.editor.tag_add("reference", f"{span.line + 1}.{span.start}", f"{span.line + 1}.{span.end}")
+            self._append_output(f"  {span.line + 1}:{span.start + 1}")
+        if spans:
+            self.editor.see(f"{spans[0].line + 1}.{spans[0].start}")
+        self.status.set(f"Найдено ссылок: {len(spans)} · {name}")
+
+    def rename_symbol(self) -> None:
+        name = self._symbol_at_cursor()
+        if not name:
+            self.status.set("Поставьте курсор на имя символа")
+            return
+        replacement = simpledialog.askstring(
+            "Переименование символа",
+            f"Новое имя для {name} (только текущий документ):",
+            initialvalue=name,
+            parent=self,
+        )
+        if not replacement or replacement == name:
+            return
+        uri, _analysis = self._language_snapshot()
+        try:
+            edits = self._language_service.rename(uri, name, replacement)
+        except ValueError as error:
+            messagebox.showerror("Переименование символа", str(error), parent=self)
+            return
+        self.editor.edit_separator()
+        for span, value in reversed(edits):
+            start = f"{span.line + 1}.{span.start}"
+            end = f"{span.line + 1}.{span.end}"
+            self.editor.delete(start, end)
+            self.editor.insert(start, value)
+        self.editor.edit_separator()
+        self._schedule_highlight()
+        self._update_cursor_status()
+        self.status.set(f"Переименовано в текущем документе: {len(edits)} вхождений · {replacement}")
+
+    def show_codex66(self) -> None:
+        """Open the native CODEX-66 evidence catalogue."""
+        existing = getattr(self, "_codex66_window", None)
+        if existing is not None:
+            try:
+                if existing.winfo_exists():
+                    existing.lift()
+                    existing.focus_force()
+                    return
+            except tk.TclError:
+                self._codex66_window = None
+        commands = {
+            "completion": self.show_completion,
+            "command_palette": self.show_command_palette,
+            "go_to_definition": self.go_to_definition,
+            "find_references": self.find_references,
+            "rename_symbol": self.rename_symbol,
+            "check_source": self.check_source,
+            "debug_source": self.debug_source,
+            "show_variables": lambda: self.output_tabs.select(1),
+            "show_call_stack": lambda: self.output_tabs.select(2),
+            "show_plugins": self.show_plugins,
+            "run_noo_tah_npm": self.run_noo_tah_npm,
+            "show_motion_settings": self.show_motion_settings,
+            "toggle_ui_theme": self.toggle_ui_theme,
+            "open_folder": self.open_folder,
+            "export_catalog": self.export_codex66,
+            "show_codex66": self.show_codex66,
+        }
+        window = Codex66Window(self, commands)
+        self._codex66_window = window
+
+    def export_codex66(self) -> None:
+        filename = filedialog.asksaveasfilename(
+            parent=self, title="Экспорт CODEX-66", defaultextension=".json",
+            initialfile="reaper-codex-66.json",
+            filetypes=[("JSON", "*.json"), ("Все файлы", "*.*")],
+        )
+        if not filename:
+            return
+        try:
+            Path(filename).write_text(export_codex66_json(), encoding="utf-8", newline="\n")
+        except OSError as error:
+            messagebox.showerror("Экспорт CODEX-66", str(error), parent=self)
+            return
+        self.status.set(f"Экспорт CODEX-66: {filename}")
 
     def show_motion_settings(self) -> None:
         """Configure persisted motion and low-CPU visual preferences."""
@@ -388,6 +648,7 @@ class ReaperStudio(tk.Tk):
         ttk.Button(bar, text="Отладка", command=self.debug_source, style="Toolbar.TButton").pack(side="left", padx=3)
         ttk.Button(bar, text="Точка останова", command=self.toggle_breakpoint, style="Toolbar.TButton").pack(side="left", padx=3)
         ttk.Button(bar, text="Атмосфера", command=self.toggle_ui_theme, style="Toolbar.TButton").pack(side="left", padx=3)
+        ttk.Button(bar, text="CODEX-66", command=self.show_codex66, style="Toolbar.TButton").pack(side="left", padx=(7, 3))
         self.file_label = tk.StringVar(value="Untitled.rpr")
         ttk.Label(bar, textvariable=self.file_label, foreground="#64748b").pack(side="right", padx=8)
 
@@ -426,11 +687,13 @@ class ReaperStudio(tk.Tk):
         self.editor.tag_configure("string", foreground="#0f766e")
         self.editor.tag_configure("number", foreground="#b45309")
         self.editor.tag_configure("comment", foreground="#64748b", font=("Cascadia Code", 10, "italic"))
+        self.editor.tag_configure("reference", background="#FDE68A", foreground="#0A1E46")
         self.editor.bind("<<Modified>>", self._on_modified)
         self.editor.bind("<KeyRelease>", self._on_editor_key)
         self.editor.bind("<MouseWheel>", self._redraw_line_numbers)
         self.editor.bind("<ButtonRelease-1>", self._update_cursor_status)
         self.editor.bind("<Configure>", self._redraw_line_numbers)
+        self.editor.bind("<Control-space>", self._completion_shortcut)
 
         header = ttk.Frame(output_frame)
         header.pack(fill="x")
@@ -470,7 +733,9 @@ class ReaperStudio(tk.Tk):
             "<Control-s>": self.save_file, "<Control-Shift-S>": self.save_as,
             "<Control-f>": self.find_text, "<Control-g>": self.goto_line,
             "<F5>": self.run_source, "<Shift-F5>": self.check_source,
-            "<F9>": self.toggle_breakpoint,
+            "<F9>": self.toggle_breakpoint, "<F12>": self.go_to_definition,
+            "<Control-Shift-R>": self.rename_symbol,
+            "<Control-Alt-k>": self.show_codex66,
         }
         for sequence, callback in bindings.items():
             self.bind_all(sequence, lambda _event, fn=callback: (fn(), "break")[1])
@@ -1064,6 +1329,8 @@ class ReaperStudio(tk.Tk):
         if self._node_process and self._node_process.poll() is None:
             self._node_process.terminate()
         self._closing = True
+        self._close_completion()
+        self._language_service.shutdown()
         self.destroy()
 
 
