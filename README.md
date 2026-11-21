@@ -102,3 +102,7 @@ The doctrine guides engineering decisions; it does not turn roadmap items into i
 ## License
 
 [Apache License 2.0](LICENSE)
+
+## Anatidae design layer
+
+The shared [Anatidae naming canon](federation/ANATIDAE_NAMING_CANON.md) governs friendly UI vocabulary across the four-project family. The [Reaper Studio desktop design contract](docs/ANATIDAE_DESKTOP_DESIGN_SYSTEM.md) defines its use without changing language syntax, commands or diagnostics.
