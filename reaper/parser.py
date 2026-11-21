@@ -77,7 +77,7 @@ class Parser:
         if self._match("EMIT"):
             token = self._previous()
             return Node("emit", token, children=[self._expression()])
-        if self._match("YIELD"):
+        if self._match("YIELD", "RETURN"):
             token = self._previous()
             if self._check("NEWLINE") or self._check("}") or self._check("EOF"):
                 return Node("yield", token)
@@ -130,7 +130,7 @@ class Parser:
         newline_position = self.current
         self._skip_newlines()
         no = None
-        if self._match("OTHERWISE"):
+        if self._match("OTHERWISE", "ELSE"):
             no = self._block()
         else:
             self.current = newline_position
