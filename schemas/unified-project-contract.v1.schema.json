@@ -43,7 +43,7 @@
         },
         "repository": {
           "type": "string",
-          "pattern": "^Ivan-VHS/(Pytyliki|Reaper|OPlague)$"
+          "pattern": "^Ivan-VHS/(Pytyliki|Reaper|OPlague|VentuSample)$"
         },
         "summary": {
           "type": "string",
@@ -214,7 +214,8 @@
             "enum": [
               "implemented",
               "optional",
-              "planned"
+              "planned",
+              "not_applicable"
             ]
           },
           "opt_in": {

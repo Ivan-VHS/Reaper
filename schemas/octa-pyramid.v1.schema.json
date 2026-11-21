@@ -247,7 +247,8 @@
         "request_response_edges_are_synchronous",
         "no_implicit_native_loading",
         "no_driver_mutation_through_mesh",
-        "producer_export_does_not_imply_consumer_integration"
+        "producer_export_does_not_imply_consumer_integration",
+        "reaper_pack_consumer_implemented"
       ],
       "properties": {
         "complete_pairwise_product": {
@@ -269,6 +270,9 @@
           "const": true
         },
         "producer_export_does_not_imply_consumer_integration": {
+          "const": true
+        },
+        "reaper_pack_consumer_implemented": {
           "const": true
         }
       }
