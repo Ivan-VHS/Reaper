@@ -154,3 +154,7 @@ An illustrative 500 UAH budget model with a versioned JSON contract and an offli
 ## Beelzebul repository protection
 
 This repository uses the versioned [Beelzebul 66-rule security policy](SECURITY.md), machine-readable [policy](security/beelzebul.v1.json), and read-only [scanner](tools/beelzebul.py). Run `python tools/beelzebul.py` locally; GitHub Actions runs the same gate for pull requests and protected-branch updates.
+
+## CLife — code recovery and lifecycle
+
+[CLife guide](docs/CLIFE.md) · Savepoints, integrity verification, targeted restitching and safe source revival.
