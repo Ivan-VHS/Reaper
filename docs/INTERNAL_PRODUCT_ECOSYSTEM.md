@@ -1,5 +1,5 @@
-# REAPER Internal Product Ecosystem
+# Internal product ecosystem
 
-This document is the compact architecture overview. The canonical product registry, implemented Python services, CLI and Studio entry points, tests, and maturity boundaries are maintained in [INTERNAL_PRODUCTS.md](INTERNAL_PRODUCTS.md).
+The canonical product registry, all 18 internal service contracts, implementation status, CLI and Reaper Studio entry points, tests, and safety boundaries are documented in [INTERNAL_PRODUCTS.md](INTERNAL_PRODUCTS.md).
 
-The workflow product's canonical name is **Doopraul**. Earlier draft spellings, including **Patakee** and **Dropaul**, are retired and are not accepted as aliases. All 18 products are in-process REAPER capabilities; none is a separate application.
+The workflow/orchestration product's only canonical name is **Dropaul**. Pataki, Patakee and Doopraul are not supported names or aliases.
