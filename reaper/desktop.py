@@ -505,7 +505,7 @@ class ReaperStudio(tk.Tk):
         if not filename:
             return
         try:
-            Path(filename).write_text(export_codex66_json(), encoding="utf-8", newline="\\n")
+            Path(filename).write_text(export_codex66_json(), encoding="utf-8", newline="\n")
         except OSError as error:
             messagebox.showerror("Экспорт CODEX-66", str(error), parent=self)
             return
