@@ -47,3 +47,8 @@ The runtime library does not independently configure OS sandboxes, TLS, identity
 ## Exceptions
 
 No exceptions are pre-authorized. Each exception requires an owner, reason, approver, exact rule scope, creation date and expiry within 30 days. Expired or malformed exceptions fail validation.
+
+## Wired application boundaries
+
+- `src/main.c::read_file` invokes `AppGuard L112` / `A-09` before allocating or loading source text. Source input is capped at 4 MiB; rejected inputs produce a redacted stderr event before lexing.
+- The C11 runtime is compiled into `reaper_core`; all downstream native targets link through that library.
