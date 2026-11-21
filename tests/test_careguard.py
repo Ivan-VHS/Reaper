@@ -67,6 +67,8 @@ class CareGuardTests(unittest.TestCase):
         self.assertEqual(set(event), {"actor", "event_type", "occurred_at"})
         with self.assertRaises(ValueError):
             careguard_record_context_event("maintainer", "symptom_recorded", "2026-11-21T20:00:00Z")
+        with self.assertRaises(ValueError):
+            careguard_record_context_event("named person", "human_review_requested", "2026-11-21T20:00:00Z")
 
 if __name__ == "__main__":
     unittest.main()
