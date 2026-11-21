@@ -82,7 +82,7 @@ def _scan(snapshot):
             identifiers.append((match.group(), Span(row, match.start(), match.end())))
         for match in DECL.finditer(clean):
             name = match.group(2)
-            symbols.append(Symbol(name, "function" if match.group(1) in {"craft","fn"} else "variable",
+            symbols.append(Symbol(name, "function" if match.group(1) in {"craft","fn","функция","процедура"} else "variable",
                                   snapshot.uri, Span(row, match.start(2), match.end(2))))
         for col, char in enumerate(clean):
             if char in "([{": stack.append((char, row, col))
