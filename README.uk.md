@@ -12,6 +12,7 @@ Reaper — мова виразів з явним потоком даних: оп
 | Область | Поточна межа |
 |---|---|
 | Python runtime | lexer, parser, інтерпретатор, CLI, REPL, модулі, closures, quotas, audit |
+| NOO TAH | інтеграція офіційного Node.js: V8/libuv, ESM/CommonJS, системні API, streams, workers, npm/npx, N-API та Inspector; JS run/check/debug/stop у Studio |
 | Reaper Studio | Windows editor: check/run/debug, breakpoints, variables, call stack |
 | Native C17 | lexer, expression parser, owned AST, checked IR, limited lowering |
 | МОСТ | 54 точні аліаси: 21 виконуваний у reference subset, 33 зарезервовані |
