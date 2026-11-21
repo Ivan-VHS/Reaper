@@ -1,0 +1,36 @@
+{
+  "id": "noo-tah",
+  "name": "NOO TAH",
+  "version": "0.1.0",
+  "product": "Reaper",
+  "purpose": "Node.js runtime and ecosystem compatibility bridge",
+  "provider": "official-nodejs-runtime",
+  "engines": [
+    "V8",
+    "libuv"
+  ],
+  "surfaces": [
+    "ecmascript",
+    "node-core-modules",
+    "commonjs",
+    "esm",
+    "npm",
+    "node-inspector"
+  ],
+  "commands": [
+    "version",
+    "run",
+    "check",
+    "npm",
+    "install",
+    "inspect"
+  ],
+  "compatibilityPolicy": "delegate-to-upstream-node",
+  "status": "integration-foundation",
+  "certification": "not-yet-certified",
+  "security": [
+    "no-shell-execution",
+    "explicit-installation",
+    "untrusted-lifecycle-scripts"
+  ]
+}
