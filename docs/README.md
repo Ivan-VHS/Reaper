@@ -11,6 +11,7 @@
 | [REAPER_PARSER_M1.md](REAPER_PARSER_M1.md) | native parser acceptance |
 | [RUNTIME_PLATFORM.md](RUNTIME_PLATFORM.md) | Python runtime limits |
 | [REAPER_UNIFIED_ARCHITECTURE.md](REAPER_UNIFIED_ARCHITECTURE.md) | native destination and language invariants |
+| [EXPERIMENTAL_LANGUAGE_WORKBENCH.md](EXPERIMENTAL_LANGUAGE_WORKBENCH.md) | versioned LSP workbench and DAP integration |
 | [MOST_LANGUAGE_SPEC.md](MOST_LANGUAGE_SPEC.md) | exact Russian aliases |
 | [PROJECT_FEDERATION_MATRIX.md](PROJECT_FEDERATION_MATRIX.md) | peer boundaries and pairings |
 | [THREADS_AND_FEDERATION.md](THREADS_AND_FEDERATION.md) | implementation/integration evidence |
