@@ -1,65 +1,66 @@
-# OCTA-8 — four-project peer federation
+# OCTA-8 — Four-Project Horizontal Peer Product
 
-**Status:** shared, validated topology for Reaper, Pytyliki, OPlague and VentuSample. The apex is protocol metadata only; it is not a central runtime bus.
+**Status:** shared four-project topology with twelve directed peer links, four independent self-loops and eight octagonal-pyramid facets.
 
-## Geometry and multiplication
+## Geometry and mesh
 
-The topology has an octagonal base, eight triangular facets and a non-executable coordination apex. The four independent products form a complete directed peer mesh:
+The base is a complete directed mesh of four independent products:
 
-`n × (n − 1) = 4 × 3 = 12`
+- Reaper — language and orchestration.
+- Pytyliki — processor, memory, metric and DSP systems core.
+- OPlague — read-only Windows device and driver-package diagnostics.
+- VentuSample — offline procedural audio and sample-pack generation.
 
-That means **12 directed links and four independent self-loops**. It does not mean every pair has a runtime adapter. Each link records its transport, interface, direction and honest implementation status.
+For n=4, the mesh contains n(n-1)=12 directed links. Each project retains its own local self-loop. The apex octa-hub carries protocol metadata only; it is non-executable, is not a runtime gateway and is not a single point of failure.
 
-## Verified peer links
+## Pairwise feature product
 
-| Direction | Transport | Contract | Status | Meaning |
-|---|---|---|---|---|
-| OPlague → Reaper | Bounded JSON | `oplage.device-snapshot.v1` | Implemented | Reaper validates and compares read-only device snapshots |
-| Reaper → OPlague | Bounded JSON | `reaper.oplage-comparison.v1` | Implemented | OPlague validates the generated report |
-| Reaper → Pytyliki | Explicit native FFI | `pytyliki.c-abi.v1` | Implemented | Caller-requested synchronous metric call |
-| Pytyliki → Reaper | Synchronous ABI response | `pytyliki.c-abi.v1` | Implemented | Result returned inside caller's invocation |
-| OPlague → Pytyliki | Explicit native FFI | `pytyliki.c-abi.v1` | Implemented | Optional native metric cross-check |
-| Pytyliki → OPlague | Synchronous ABI response | `pytyliki.c-abi.v1` | Implemented | Result returned inside caller's invocation |
-| VentuSample → Reaper | JSON artifact | `ventusample.pack.v1` | Partial | WAV + manifest export exists; Reaper consumer is not implemented |
-| Reaper → VentuSample | JSON artifact | `ventusample.render-request.v1` | Planned | Future validated render-request adapter |
-| VentuSample → Pytyliki | Explicit native FFI | `pytyliki.c-abi.v1` | Planned | VentuSample does not load the Pytyliki library yet |
-| Pytyliki → VentuSample | Synchronous ABI response | `pytyliki.c-abi.v1` | Planned | Future result path after explicit ABI adoption |
-| VentuSample → OPlague | None | `not-applicable.v1` | Not applicable | No shared domain operation |
-| OPlague → VentuSample | None | `not-applicable.v1` | Not applicable | No shared domain operation |
+| Pair | Interface | State |
+|---|---|---|
+| Reaper ↔ OPlague | oplage.device-snapshot.v1, reaper.oplage-comparison.v1 | Implemented, bounded JSON, read-only |
+| Reaper ↔ Pytyliki | pytyliki.c-abi.v1 | Optional explicit-path native metric calls |
+| OPlague ↔ Pytyliki | pytyliki.c-abi.v1 | Optional explicit-path numerical cross-check |
+| VentuSample → Reaper | ventusample.pack.v1 | Implemented pack-manifest audit and comparison |
+| Reaper → VentuSample | ventusample.render-request.v1 | Planned |
+| VentuSample ↔ Pytyliki | pytyliki.c-abi.v1 | Planned direct native adapter |
+| VentuSample ↔ OPlague | not-applicable.v1 | Not applicable; no driver/audio coupling |
 
-An exported file is not evidence that the receiving application consumes it. Planned interfaces are not implemented features.
+The Reaper pack consumer validates v1 metadata, derives 22 normalized descriptors, and produces a read-only comparison report. It does not inspect waveform data or alter generated files. Its default metric engine is Reaper Python; an explicit Pytyliki library path enables a native distance cross-check.
 
 ## Eight facets
 
-1. **Identity and namespaces** — stable project/interface IDs; no personal or host identity required in interchange.
-2. **Contracts and versioning** — versioned schemas and ABI contracts.
-3. **Transport and bounded envelopes** — bounded JSON or explicit synchronous calls.
-4. **Provenance and integrity** — byte digests and artifact lineage; hashes do not authenticate publishers.
-5. **Validation and normalization** — explicit units, dimensions, ranges and finite-number checks.
-6. **Privacy and consent** — explicit export/native-load operations and data minimization.
-7. **Execution and safety** — read-only hardware work; offline audio processing; no privileged operations through the mesh.
-8. **Audit and reproducibility** — deterministic outputs, inspectable manifests and discrepancy states.
+1. **Identity:** stable project and interface identifiers.
+2. **Contracts:** versioned schemas and compatibility rules.
+3. **Transport:** bounded JSON artifacts and explicit synchronous native calls.
+4. **Provenance:** source lineage and content fingerprints.
+5. **Validation:** strict types, dimensions, units, value ranges and finite numbers.
+6. **Privacy:** no unnecessary personal/device identity in sample-pack artifacts.
+7. **Safety:** read-only hardware flow and explicit native-loading boundaries.
+8. **Audit:** deterministic outputs, testable invariants and visible implementation status.
 
-## Independent self-loops
+## Protocol rules
 
-| Project | Internal contract | Owns |
-|---|---|---|
-| Reaper | `reaper.internal-runtime.v1` | Language frontend, reference runtime, VM, modules, resources and audit |
-| Pytyliki | `pytyliki.internal-core.v1` | C11 processor systems, memory, DSP, metrics, TRACE and ABI |
-| OPlague | `oplage.internal-workbench.v1` | Read-only PnP inventory, package inspection, evidence and reports |
-| VentuSample | `ventusample.internal-audio.v1` | Hip-hop pattern engine, sampler DSP, WAV I/O and sample-pack generation |
+- No shared monolithic runtime and no central executable gateway.
+- Native libraries are caller-selected by explicit trusted path; no implicit DLL/SO discovery.
+- Device and driver evidence stays read-only across the mesh.
+- Audio generation and sample asset storage remain owned by VentuSample.
+- Manifest comparisons use declared settings and stored measurements, not waveform-level listening or quality judgments.
+- Planned and not-applicable edges remain explicit and are never described as implemented.
 
 ## Validation
 
-```bash
+Each repository contains the same topology JSON/schema and a local validator:
+
+~~~bash
 python tools/validate_octa_pyramid.py
 python -m unittest tests.test_octa_pyramid -v
-```
+~~~
 
-## Safety boundary
+The validator checks all twelve directed edges, unique facet identifiers, four self-loops, declared project membership and the non-executable apex. Project-specific contracts validate implementation evidence independently.
 
-Native libraries are never loaded implicitly. Reaper and OPlague require an explicit trusted Pytyliki library path. OPlague remains read-only. VentuSample remains offline and does not control system audio. OCTA-8 is a versioned peer map, not a privileged executor or monolithic application.
+## Change policy
 
-## Repositories
+A shared topology change must update the topology, schema, validator, tests and each affected project contract together. Interface changes must also update producer/consumer documentation. New edges remain planned until working code and tests exist.
 
-[Reaper](https://github.com/Ivan-VHS/Reaper) · [Pytyliki](https://github.com/Ivan-VHS/Pytyliki) · [OPlague](https://github.com/Ivan-VHS/OPlague) · [VentuSample](https://github.com/Ivan-VHS/VentuSample)
+
+Publication and privacy requirements follow [Documentation Control](DOCUMENTATION_CONTROL.md).

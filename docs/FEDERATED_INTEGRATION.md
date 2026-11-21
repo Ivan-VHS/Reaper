@@ -1,99 +1,84 @@
-# Federated integration: Reaper, OPlague and Pytyliki
+# Federated integration: Reaper, OPlague, Pytyliki and VentuSample
 
-Reaper remains the language and orchestration layer. It consumes versioned JSON
-files from OPlague, applies Reaper-native operations, and may call the
-Pytyliki C ABI v1 for selected numerical hot paths.
+Reaper owns language execution and orchestration. It consumes versioned JSON artifacts from OPlague and VentuSample, and can route selected numerical operations through Pytyliki's native C ABI v1. All product boundaries remain independent.
 
-## Reaper standard-library contract
+## OPlague device snapshot contract
 
-The following built-ins are available in .rpr programs:
+- Producer: OPlague.
+- Consumer: Reaper.
+- Contract: oplage.device-snapshot.v1.
+- Transport: caller-selected UTF-8 JSON file.
+- Report: reaper.oplage-comparison.v1.
+
+Reaper checks the full snapshot envelope, read-only source declaration, identity-protection metadata, device/package record shapes, derived counters, normalized finite metric dimensions and canonical SHA-256 fingerprint. Reference and candidate dimensions must match exactly. The fingerprint detects content drift; it does not authenticate a publisher.
+
+JSON reads reject duplicate object keys, NaN/Infinity, symbolic-link inputs, non-UTF-8 data and files above 16 MiB. JSON writes reject non-finite/non-JSON values, enforce the same limit and atomically replace only the explicitly named output file.
+
+## Pytyliki C ABI v1
+
+Native numerical calls load only from a caller-supplied explicit absolute library path. Reaper verifies pytyliki_abi_version() == 1 and the exported pytyliki_v1_* metric functions. Float64 vectors are finite, bounded to 1..4096 items, contiguous and synchronously passed through caller-owned buffers.
+
+Available operations include norm, dot product, Euclidean distance and orthogonality. The Python metric backend remains the default. Selecting a native library executes trusted native code with Reaper's process permissions; it is not a sandbox.
+
+## VentuSample pack v1
+
+- Producer: VentuSample.
+- Consumer: Reaper.
+- Contract: ventusample.pack.v1.
+- Transport: JSON manifest plus WAV assets retained in the export folder.
+- Comparison report: reaper.ventusample-comparison.v1.
+
+The consumer schema is pinned at schemas/ventusample.pack.v1.schema.json. The validator enforces the exact v1 field set, supported style/target/key/scale/sampler/timbre values, BPM and DSP parameter ranges, Nyquist-safe filter bounds, expected output count, per-variation coverage, unique safe WAV filenames and finite peak/RMS/crest measurements.
+
+Reaper provides these built-ins to .rpr programs:
 
 | Built-in | Signature | Result |
 |---|---|---|
-| read_json | read_json(path) | JSON value (map/list/scalar) |
-| write_json | write_json(path, value) | written path |
-| oplage_metrics | oplage_metrics(snapshot) | validated metric map |
-| oplage_compare | oplage_compare(reference, candidate[, library_path]) | read-only audit report |
-| pytyliki_norm | pytyliki_norm(vector, library_path) | native float64 norm |
-| pytyliki_dot | pytyliki_dot(left, right, library_path) | native float64 dot product |
-| pytyliki_distance | pytyliki_distance(left, right, library_path) | native float64 distance |
-| pytyliki_orthogonal | pytyliki_orthogonal(left, right, tolerance, library_path) | native boolean |
+| ventusample_metrics | ventusample_metrics(pack) | Validated map of 22 normalized musical, processing and audio-measurement descriptors |
+| ventusample_compare | ventusample_compare(reference, candidate[, library_path]) | Read-only comparison report with per-field deltas, distance backend and deterministic report hash |
 
-JSON reads reject duplicate object keys, NaN and Infinity, symbolic-link
-inputs, non-UTF-8 data and files larger than 16 MiB. JSON writes reject
-non-finite and non-JSON values, enforce the same size limit, and atomically
-replace only the explicitly named output file. Parent directories are not
-created implicitly.
+The report describes descriptor shift, not whether one pack sounds better. The numerical distance is computed by Reaper's Python metric engine by default. A third argument may select a trusted Pytyliki ABI v1 library by explicit absolute path for the distance calculation.
 
-OPlague snapshots must use the complete oplage.device-snapshot.v1 contract;
-the consumer-side schema copy is
-[../schemas/oplage.device-snapshot.v1.schema.json](../schemas/oplage.device-snapshot.v1.schema.json).
-Before exposing metrics, Reaper validates the complete top-level envelope,
-timestamp and read-only source declaration, identity-protection metadata,
-device/package record shapes, summary counters derived from those records,
-and 6..128 finite normalized metrics in [0, 1]. It recomputes the canonical
-SHA-256 fingerprint and rejects a mismatch. The fingerprint detects content
-drift; it is not a vendor signature or authenticity proof. Reference and
-candidate snapshots must expose identical metric dimensions. A dimension
-change is an explicit error, not an implicit zero fill.
+Only the manifest is read. Reaper does not open, rewrite, execute, copy or upload WAV assets; it does not send generation commands to VentuSample and it does not act as a DAW or plugin host.
 
-## Pytyliki FFI bridge
+### Example workflow
 
-Native functions load only from an explicit absolute file path supplied by
-the .rpr program. Reaper checks pytyliki_abi_version() == 1 and verifies the
-public pytyliki_v1_* ABI symbols from src/interop.h before use. Direct built-ins
-accept finite vectors with 1..4096 float64 values. The typed handle returned by
-pytyliki_open(path) exposes pytyliki_bridge_norm(values, bridge),
-pytyliki_bridge_dot(left, right, bridge),
-pytyliki_bridge_distance(left, right, bridge), and
-pytyliki_bridge_orthogonal(left, right, tolerance, bridge). Buffers are owned
-by Reaper for the duration of each synchronous call and are never retained by
-Pytyliki. The obsolete pl_* CPU-profile/benchmark/source-scan adapter is not
-part of the current public ABI and is no longer exposed.
+1. Export two sample packs from VentuSample into separate folders.
+2. Copy or reference their ventusample_manifest.json files from the Reaper script directory.
+3. Run examples/ventusample_pack_audit.rpr.
+4. Inspect ventusample-comparison-report.json; provide an explicit Pytyliki DLL/SO path only when a native metric cross-check is intended.
 
-Examples of explicit native library paths:
+Example script:
 
-- Windows: C:/path/to/Pytyliki/build/Release/pytyliki_ffi.dll
-- Linux: /path/to/Pytyliki/build/libpytyliki_ffi.so
-- macOS: /path/to/Pytyliki/build/libpytyliki_ffi.dylib
+~~~reaper
+make reference := read_json("packs/reference/ventusample_manifest.json")
+make candidate := read_json("packs/candidate/ventusample_manifest.json")
+make report := ventusample_compare(reference, candidate)
+write_json("ventusample-comparison-report.json", report)
+~~~
 
-Loading a shared library executes native code with the permissions of Reaper.
-Only use a library built from a trusted Pytyliki source tree. The bridge never
-searches PATH, the current directory, environment variables or implicit DLL
-locations and never loads an optional backend unless a script explicitly asks.
+The optional native form is:
 
-## End-to-end device audit
+~~~reaper
+make report := ventusample_compare(
+    reference,
+    candidate,
+    "C:/trusted/Pytyliki/build/Release/pytyliki_ffi.dll"
+)
+~~~
 
-1. Run OPlague's read-only snapshot command on Windows:
-   python -m tools.federation snapshot --output baseline.json
-2. Capture a second snapshot later as current.json.
-3. Run the .rpr script:
-   reaper examples/device_audit.rpr
-4. Inspect device-audit-report.json or use it as an automation artifact.
+## Shared OCTA-8 topology
 
-The included example uses Reaper's own numerical implementation by default.
-To route the distance calculation through Pytyliki, change its comparison
-call to include an explicit absolute DLL/SO path:
+The shared four-project federation matrix and OCTA-8 contract define four projects, twelve directed peer links, four self-loops and eight protocol facets. The apex is metadata-only.
 
-```reaper
-make report := oplage_compare(baseline, current, "C:/trusted/Pytyliki/build/Release/pytyliki_ffi.dll")
-```
-
-The JSON and native bridge do not expose device mutation. Reaper cannot install,
-remove, enable, disable or roll back drivers through these built-ins. OPlague's
-driver-management safety gates remain independent.
-
+VentuSample → Reaper pack exchange is implemented. Reaper → VentuSample render requests and direct VentuSample ↔ Pytyliki native calls remain planned. VentuSample ↔ OPlague is explicitly not applicable.
 
 ## Cross-repository references
 
-- **Shared 3 × 3 map:** [Project federation matrix](https://github.com/Ivan-VHS/Reaper/blob/main/docs/PROJECT_FEDERATION_MATRIX.md).
-- **OPlague:** [repository](https://github.com/Ivan-VHS/OPlague), [federation contract](https://github.com/Ivan-VHS/OPlague/blob/main/docs/FEDERATED_INTEGRATION.md), [device snapshot producer](https://github.com/Ivan-VHS/OPlague/blob/main/tools/federation.py), [project manifest](https://github.com/Ivan-VHS/OPlague/blob/main/project-contract.json).
-- **Pytyliki:** [repository](https://github.com/Ivan-VHS/Pytyliki), [federation contract](https://github.com/Ivan-VHS/Pytyliki/blob/main/docs/FEDERATED_INTEGRATION.md), [public ABI header](https://github.com/Ivan-VHS/Pytyliki/blob/main/src/interop.h), [project manifest](https://github.com/Ivan-VHS/Pytyliki/blob/main/project-contract.json).
-- **Reaper evidence:** [snapshot and comparison bridge](../reaper/federation.py), [native FFI bridge](../reaper/ffi.py), [project manifest](../project-contract.json).
+- [OPlague repository](https://github.com/Ivan-VHS/OPlague) · [federation contract](https://github.com/Ivan-VHS/OPlague/blob/main/docs/FEDERATED_INTEGRATION.md)
+- [Pytyliki repository](https://github.com/Ivan-VHS/Pytyliki) · [public ABI header](https://github.com/Ivan-VHS/Pytyliki/blob/main/src/interop.h)
+- [VentuSample repository](https://github.com/Ivan-VHS/VentuSample) · [pack schema](https://github.com/Ivan-VHS/VentuSample/blob/main/schemas/ventusample.pack.v1.schema.json) · [Reaper pack audit](https://github.com/Ivan-VHS/VentuSample/blob/main/docs/REAPER_PACK_AUDIT.md)
+- [Shared project contracts](https://github.com/Ivan-VHS/Reaper/blob/main/docs/PROJECT_FEDERATION_MATRIX.md)
 
 
-## OCTA-8 four-project topology
-
-The shared [OCTA-8 peer map](OCTA_PYRAMID_FEDERATION.md) records twelve status-labelled directed links and four independent self-loops. Reaper consumes OPlague snapshots and exports read-only comparison reports; Reaper and OPlague may request numerical operations from Pytyliki only through an explicitly selected trusted ABI v1 library. VentuSample currently exports WAV assets and a versioned `ventusample.pack.v1` manifest, but a Reaper-side consumer is still planned. Reaper render requests to VentuSample and VentuSample's Pytyliki FFI bridge are also planned, not implemented. OPlague and VentuSample have no direct shared domain interface.
-
-The apex remains non-executable metadata. The topology does not add an implicit runtime gateway or grant driver mutation.
+Publication and privacy requirements follow [Documentation Control](DOCUMENTATION_CONTROL.md).

@@ -146,7 +146,7 @@
       "transport": "json-file",
       "interface": "ventusample.pack.v1",
       "flow": "artifact",
-      "status": "partial"
+      "status": "implemented"
     },
     {
       "id": "reaper-to-ventusample",
@@ -223,6 +223,7 @@
     "request_response_edges_are_synchronous": true,
     "no_implicit_native_loading": true,
     "no_driver_mutation_through_mesh": true,
-    "producer_export_does_not_imply_consumer_integration": true
+    "producer_export_does_not_imply_consumer_integration": true,
+    "reaper_pack_consumer_implemented": true
   }
 }

@@ -697,10 +697,13 @@ class Interpreter:
         register("cartesianize", lambda left, right: arithmetic.cartesianize(sequence(left), sequence(right)), 2, 2)
         from .federation import read_json, write_json, oplage_metrics, compare_oplage_snapshots
         from .native import pytyliki_norm, pytyliki_dot, pytyliki_distance, pytyliki_orthogonal
+        from .ventusample import ventusample_metrics, compare_ventusample_packs
         register("read_json", read_json, 1, 1)
         register("write_json", write_json, 2, 2)
         register("oplage_metrics", oplage_metrics, 1, 1)
         register("oplage_compare", compare_oplage_snapshots, 2, 3)
+        register("ventusample_metrics", ventusample_metrics, 1, 1)
+        register("ventusample_compare", compare_ventusample_packs, 2, 3)
         register("pytyliki_norm", pytyliki_norm, 2, 2)
         register("pytyliki_dot", pytyliki_dot, 3, 3)
         register("pytyliki_distance", pytyliki_distance, 3, 3)

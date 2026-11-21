@@ -17,7 +17,7 @@
 <sub>Actual live Windows 11 capture from the Reaper Studio process, 1920×1080. The screenshot shows the default starter document and empty output pane; no user project data is included.</sub>
 
 
-See [four-project federation](docs/PROJECT_FEDERATION_MATRIX.md), [OCTA-8 topology](docs/OCTA_PYRAMID_FEDERATION.md), and [consolidated project-thread ledger](docs/THREADS_AND_FEDERATION.md).
+See [four-project federation](docs/PROJECT_FEDERATION_MATRIX.md), [OCTA-8 topology](docs/OCTA_PYRAMID_FEDERATION.md), [federated integration](docs/FEDERATED_INTEGRATION.md), and [consolidated project-thread ledger](docs/THREADS_AND_FEDERATION.md).
 
 ## Example
 
@@ -40,6 +40,7 @@ emit "answer = " ++ text(answer)
 - **THESIS assertion graph:** versioned claims, typed evidence references, exact time/scope comparability, review states and append-only revisions. It never auto-verifies a claim ([design](docs/THESIS_ASSERTION_GRAPH.md)).
 - **MOST Function Registry 666:** 666 traceable API contracts (147 existing specifications + 519 proposals), with a traceability index and validator. This is a specification catalogue, not 666 implemented functions.
 - **Systems and interop:** Embedded C, MCU profiles and memory budgets; opt-in Pytyliki C ABI v1; 66 language/toolchain entries, 14 architecture profiles and the validated MOST 20×20 matrix.
+- **VentuSample federation:** validates `ventusample.pack.v1`, derives 22 normalized pack descriptors and compares two manifests with `ventusample_metrics()` / `ventusample_compare()`; an explicit trusted Pytyliki ABI v1 path is optional for distance cross-checks. WAV assets remain untouched.
 
 ## Run
 
