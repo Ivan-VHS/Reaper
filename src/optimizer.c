@@ -60,7 +60,17 @@ int reaper_ir_fold_constants(
 
     for (size_t i = 0; i < input->length; ++i) {
         ReaperIrNode node = input->nodes[i];
-        if (node.opcode == REAPER_IR_OP_ADD_I64 ||
+        if (node.opcode == REAPER_IR_OP_NEG_I64) {
+            const ReaperIrNode *operand = &output[node.lhs];
+            if (operand->opcode == REAPER_IR_OP_CONST_I64) {
+                if (operand->immediate == INT64_MIN)
+                    return fail(error, i, "constant negation overflows signed i64");
+                node.opcode = REAPER_IR_OP_CONST_I64;
+                node.lhs = REAPER_IR_NO_VALUE;
+                node.rhs = REAPER_IR_NO_VALUE;
+                node.immediate = -operand->immediate;
+            }
+        } else if (node.opcode == REAPER_IR_OP_ADD_I64 ||
             node.opcode == REAPER_IR_OP_SUB_I64 ||
             node.opcode == REAPER_IR_OP_MUL_I64 ||
             node.opcode == REAPER_IR_OP_DIV_I64) {

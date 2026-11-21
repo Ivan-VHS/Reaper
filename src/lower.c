@@ -80,8 +80,39 @@ static int lower_node(
         return append_node(output, capacity, length, constant, result, error, ast_index);
     }
 
-    if (node->kind == REAPER_AST_BINARY && node->text != NULL &&
-        strcmp(node->text, "+") == 0) {
+    if (node->kind == REAPER_AST_UNARY && node->text != NULL) {
+        if (node->left >= ast_index) {
+            return lower_fail(error, ast_index, "unary AST child must precede its parent");
+        }
+        if (strcmp(node->text, "+") == 0 || strcmp(node->text, "-") == 0) {
+            uint32_t operand = 0;
+            if (!lower_node(ast, node->left, output, capacity, length,
+                            &operand, depth + 1, error)) {
+                return 0;
+            }
+            if (strcmp(node->text, "+") == 0) {
+                *result = operand;
+                return 1;
+            }
+            ReaperIrNode negate = {
+                REAPER_IR_OP_NEG_I64, REAPER_IR_TYPE_I64, operand,
+                REAPER_IR_NO_VALUE, 0, line, column
+            };
+            return append_node(output, capacity, length, negate,
+                               result, error, ast_index);
+        }
+    }
+
+    if (node->kind == REAPER_AST_BINARY && node->text != NULL) {
+        ReaperIrOpcode opcode = REAPER_IR_OP_INVALID;
+        if (strcmp(node->text, "+") == 0) opcode = REAPER_IR_OP_ADD_I64;
+        else if (strcmp(node->text, "-") == 0) opcode = REAPER_IR_OP_SUB_I64;
+        else if (strcmp(node->text, "*") == 0) opcode = REAPER_IR_OP_MUL_I64;
+        else if (strcmp(node->text, "/") == 0) opcode = REAPER_IR_OP_DIV_I64;
+        if (opcode == REAPER_IR_OP_INVALID) {
+            return lower_fail(error, ast_index,
+                              "binary operator is not supported by the integer IR lowering slice");
+        }
         if (node->left >= ast_index || node->right >= ast_index) {
             return lower_fail(error, ast_index, "AST children must precede their parent");
         }
@@ -90,10 +121,11 @@ static int lower_node(
             !lower_node(ast, node->right, output, capacity, length, &rhs, depth + 1, error)) {
             return 0;
         }
-        ReaperIrNode add = {
-            REAPER_IR_OP_ADD_I64, REAPER_IR_TYPE_I64, lhs, rhs, 0, line, column
+        ReaperIrNode operation = {
+            opcode, REAPER_IR_TYPE_I64, lhs, rhs, 0, line, column
         };
-        return append_node(output, capacity, length, add, result, error, ast_index);
+        return append_node(output, capacity, length, operation,
+                           result, error, ast_index);
     }
 
     return lower_fail(error, ast_index, "AST node is not supported by the integer IR lowering slice");

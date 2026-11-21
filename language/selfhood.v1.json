@@ -1,0 +1,133 @@
+{
+  "schema": "reaper.selfhood-autonomy.v1",
+  "version": 1,
+  "description": "Canonical identity, transformation and autonomy vocabulary shared by the native Reaper runtime.",
+  "runtime_contract": {
+    "native_engine": "C17",
+    "python_role": "optional compatibility, IDE and orchestration tooling",
+    "source_mutation": false,
+    "exact_lookup": true
+  },
+  "items": [
+    {
+      "ordinal": 1,
+      "identity": "Себя",
+      "transformation": "Переформулировать",
+      "autonomy": "Самостоятельность"
+    },
+    {
+      "ordinal": 2,
+      "identity": "Сам",
+      "transformation": "Переписать",
+      "autonomy": "Автономность"
+    },
+    {
+      "ordinal": 3,
+      "identity": "Самого",
+      "transformation": "Пересоставить",
+      "autonomy": "Независимость"
+    },
+    {
+      "ordinal": 4,
+      "identity": "Собственный",
+      "transformation": "Переизложить",
+      "autonomy": "Самодостаточность"
+    },
+    {
+      "ordinal": 5,
+      "identity": "Личный",
+      "transformation": "Переработать",
+      "autonomy": "Самообеспечение"
+    },
+    {
+      "ordinal": 6,
+      "identity": "Персональный",
+      "transformation": "Редактировать",
+      "autonomy": "Самоуправление"
+    },
+    {
+      "ordinal": 7,
+      "identity": "Индивидуальный",
+      "transformation": "Отредактировать",
+      "autonomy": "Самоорганизация"
+    },
+    {
+      "ordinal": 8,
+      "identity": "Автономный",
+      "transformation": "Скорректировать",
+      "autonomy": "Самоконтроль"
+    },
+    {
+      "ordinal": 9,
+      "identity": "Самостоятельный",
+      "transformation": "Актуализировать",
+      "autonomy": "Саморегуляция"
+    },
+    {
+      "ordinal": 10,
+      "identity": "Самобытный",
+      "transformation": "Обновить",
+      "autonomy": "Самодисциплина"
+    },
+    {
+      "ordinal": 11,
+      "identity": "Самоидентичный",
+      "transformation": "Модифицировать",
+      "autonomy": "Инициативность"
+    },
+    {
+      "ordinal": 12,
+      "identity": "Самотождественный",
+      "transformation": "Преобразовать",
+      "autonomy": "Ответственность"
+    },
+    {
+      "ordinal": 13,
+      "identity": "Эго",
+      "transformation": "Трансформировать",
+      "autonomy": "Решительность"
+    },
+    {
+      "ordinal": 14,
+      "identity": "Личность",
+      "transformation": "Реструктурировать",
+      "autonomy": "Независимое мышление"
+    },
+    {
+      "ordinal": 15,
+      "identity": "Индивидуальность",
+      "transformation": "Реконструировать",
+      "autonomy": "Личная свобода"
+    },
+    {
+      "ordinal": 16,
+      "identity": "Самость",
+      "transformation": "Пересмотреть",
+      "autonomy": "Автономия"
+    },
+    {
+      "ordinal": 17,
+      "identity": "Субъект",
+      "transformation": "Усовершенствовать",
+      "autonomy": "Субъектность"
+    },
+    {
+      "ordinal": 18,
+      "identity": "Персона",
+      "transformation": "Оптимизировать",
+      "autonomy": "Самостоятельное действие"
+    },
+    {
+      "ordinal": 19,
+      "identity": "Ипостась",
+      "transformation": "Адаптировать",
+      "autonomy": "Независимое функционирование"
+    },
+    {
+      "ordinal": 20,
+      "identity": "Я-концепция",
+      "transformation": "Рефакторить",
+      "autonomy": "Самоопределение"
+    }
+  ]
+}

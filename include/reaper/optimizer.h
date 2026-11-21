@@ -34,11 +34,11 @@ int reaper_ir_optimize_fixed_point(
 );
 
 /*
- * Fold ADD_I64 nodes whose operands are both CONST_I64.
+ * Fold checked ADD/SUB/MUL/DIV and NEG integer nodes whose operands are
+ * constants. Division by zero and signed i64 overflow are rejected.
  * The input module is verified before optimization. Output storage is
  * caller-owned and must hold at least input->length nodes. Input and output
- * may alias. Signed overflow is rejected rather than invoking undefined
- * behavior or silently wrapping.
+ * may alias. Arithmetic never invokes undefined behavior or silently wraps.
  */
 int reaper_ir_fold_constants(
     const ReaperIrModule *input,

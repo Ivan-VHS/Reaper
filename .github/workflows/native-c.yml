@@ -12,8 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install C and Python toolchains
-        run: sudo apt-get update && sudo apt-get install -y build-essential cmake python3
+      - name: Install native C toolchain
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake
       - name: Configure C17 build
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
       - name: Build native core
@@ -25,3 +25,7 @@ jobs:
           ./build/reaper-c --version
           ./build/reaper-c --evolution-status
           ./build/reaper-c --tokens examples/hello.rpr
+          ./build/reaper-c --eval "6 * 7"
+          ./build/reaper-c --run examples/native_expression.rpr
+          ./build/reaper-c --selfhood
+          ./build/reaper-c --selfhood-token "Сам"

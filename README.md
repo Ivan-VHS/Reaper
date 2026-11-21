@@ -2,10 +2,10 @@
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
-[CI](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml) · [Windows Studio build](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml) · Python 3.10+ reference runtime · C17 native track · Windows Studio · Apache-2.0
+[CI](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml) · [Windows Studio build](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml) · Python 3.10+ full-language reference · native C17 expression runtime/ABI v1 · Windows Studio · Apache-2.0
 **Developer:** [Ivan-VHS](https://github.com/Ivan-VHS)
 
-Reaper is an expression-oriented language: `::` passes a value into the next operation. The Python runtime is the current executable compatibility reference. The C17 implementation is an active native track, not yet a complete replacement.
+Reaper is an expression-oriented language: `::` passes a value into the next operation. The Python runtime remains the full-language compatibility reference. The C17 runtime now independently executes the documented signed-i64 expression subset through a native parser, verified IR, optimizer and evaluator; it is not yet full-language parity or a closed self-hosting compiler.
 
 ## Live Reaper Studio
 
@@ -24,7 +24,7 @@ flowchart TD
     C --> F[DAP debugging service]
     G[JavaScript project] --> H[Official Node.js distribution]
     H --> I[V8, Node APIs, npm and Inspector]
-    J[C17 native track] --> K[Partial parser and lowering]
+    J[C17 native runtime] --> K[Parse → checked IR → optimize → execute i64]
 ```
 
 ## Runtime and output paths
@@ -33,12 +33,14 @@ This second view separates execution paths and supported outputs from catalogue-
 
 ```mermaid
 flowchart LR
-    A[Reaper program] --> B[Python runtime]
-    B --> C[Execution result]
-    D[Open source document] --> E[LSP requests]
-    E --> F[Diagnostics, completion and symbols]
-    G[Debug request] --> H[DAP]
-    H --> I[Breakpoints, stack and locals]
+    A[Full Reaper program] --> B[Python reference runtime]
+    B --> C[Full-language execution]
+    D[Native integer expression] --> E[C17 evaluator]
+    E --> F[Checked i64 result]
+    G[Open source document] --> H[LSP requests]
+    H --> I[Diagnostics, completion and symbols]
+    J[Debug request] --> K[DAP]
+    K --> L[Breakpoints, stack and locals]
 ```
 
 <sub>Actual application capture · 1920×1080 source image · original pixels retained; no artificial upscaling.</sub>
@@ -56,7 +58,7 @@ flowchart LR
 | NOO TAH | official Node.js integration: V8/libuv, ESM/CommonJS, core APIs, streams, workers, npm/npx, N-API and Inspector; Studio JS Run/Check/Debug/Stop and npm commands |
 | Internal plugin host | 18 built-in services with lifecycle state and bounded dispatch; Python reference runtime |
 | Kora | 66 standard utility functions in seven manifest-backed modules; three Lua ReaScripts for Cockos REAPER |
-| Native C17 | lexer, expression parser, owned AST, checked IR and limited lowering; not full Python-runtime parity |
+| Native C17 | standalone CLI and ABI v1; lexer, Pratt expression parser, owned AST, checked IR, constant folding and checked i64 execution for literals, parentheses, unary signs and `+ - * /`; full-language parity remains open |
 | МОСТ | 54 exact aliases: 21 executable in the current reference subset, 33 lexically reserved |
 | QCS 1.0 | separate hardware-domain parser and JSON AST; no hardware execution |
 | THESIS | typed evidence graph; claims are not automatically verified |
@@ -125,13 +127,18 @@ python -m unittest discover -s tests -v
 
 Launch the Windows Studio with `python reaper_desktop.py`.
 
-Build the native C17 track:
+Build and run the standalone native C17 expression runtime without installing Python:
 
 ```sh
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --parallel
+./build/reaper-c --eval "6 * 7"
+./build/reaper-c --run examples/native_expression.rpr
+./build/reaper-c --selfhood
 ctest --test-dir build --output-on-failure
 ```
+
+The build also produces `reaper_ffi` (versioned C ABI v1). See [native runtime and self-hosting boundary](docs/NATIVE_RUNTIME_AND_SELFHOOD.md) and the [selfhood/autonomy catalogue](docs/SELFHOOD_AUTONOMY.md).
 
 Example:
 
