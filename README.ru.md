@@ -19,6 +19,9 @@ Reaper — язык выражений с явным потоком данных
 | THESIS | граф доказательств; утверждения не проверяются автоматически |
 | Реестры | 813 предложений; 666 API-контрактов; запись каталога не равна готовой функции |
 | Федерация | OPlague snapshots, VentuSample manifests, optional Pytyliki C ABI |
+| Внутренняя экосистема | 18 модулей Reaper; реестр, сервисы и Dropaul workflow planner |
+
+Продукты: `python -m reaper.products --list` · описание: `python -m reaper.products --describe Dropaul` · план workflow: `reaper-products --run Dropaul plan_workflow --input '{"steps":[]}'`. [Экосистема 18 продуктов](docs/INTERNAL_PRODUCT_ECOSYSTEM.md).
 
 Запуск: `python -m reaper examples/flow.rpr` · Проверка: `python -m reaper --check examples/flow.rpr` · VM: `python -m reaper --engine vm examples/flow.rpr` · REPL: `python -m reaper --repl` · Тесты: `python -m unittest discover -s tests -v`.
 
