@@ -26,10 +26,6 @@
         {
           "name": "comment.line.number-sign.most",
           "match": "#.*$"
-        },
-        {
-          "name": "comment.line.double-slash.most",
-          "match": "//.*$"
         }
       ]
     },
