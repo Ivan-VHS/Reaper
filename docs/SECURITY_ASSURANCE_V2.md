@@ -8,7 +8,7 @@ The federated assurance workflow audits tracked source and configuration files o
 
 - **Source audit:** high-confidence private-key/token patterns, hard-coded credential assignments, local developer paths, sensitive-value logging and selected risky APIs.
 - **CodeQL:** Python, C/C++ native-track and GitHub Actions source analysis with the extended query suite.
-- **Dependency review:** GitHub dependency-review gate on pull requests, Dependabot for Actions and Python packages, and an offline inventory of manifests, lockfiles and exact pins.
+- **Dependency vulnerabilities:** OSV-Scanner compares dependency advisories on Pull Requests and performs a scheduled full scan; GitHub Dependency Review gates pull-request dependency changes, while Dependabot for Actions and Python packages, and an offline inventory of manifests, lockfiles and exact pins.
 - **Fuzz smoke:** the production Reaper tokenize and parse functions receive deterministic bounded malformed, Unicode, nested and valid program samples. Only expected lexical/parser errors are accepted as safe rejection.
 - **Privacy regression:** synthetic-token detection, placeholder handling, finding redaction and contract prohibitions are tested.
 - **Federation:** all four checkouts are inspected; common policy/tool checksums are compared; actual tracked source and dependency declarations are scanned per repository.
@@ -29,15 +29,16 @@ Every repository uses identical 100-point weights:
 
 | Category | Weight |
 |---|---:|
-| Secret hygiene | 25 |
+| Secret hygiene | 20 |
 | Privacy leak prevention | 15 |
 | Source-risk review | 15 |
 | Fuzz robustness | 15 |
-| Dependency pin hygiene | 10 |
+| Dependency pin hygiene | 5 |
+| Known dependency vulnerabilities (OSV) | 10 |
 | Privacy regressions | 10 |
 | Federation consistency | 10 |
 
-The federated report calculates an additional cross-repository score from policy/tool parity, aggregate source findings and dependency pin hygiene. The gate fails on critical secret findings, failed fuzz/privacy/federation checks or a score below 70.
+The federated report calculates an additional cross-repository score from policy/tool parity, aggregate source findings and dependency pin hygiene. The gate fails on critical secret findings, known dependency vulnerabilities, failed fuzz/privacy/federation checks or a score below 70.
 
 ## Boundaries
 
