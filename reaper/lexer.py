@@ -16,8 +16,8 @@ KEYWORDS = {
 }
 
 # Exact Russian spellings map to canonical REAPER keyword spellings.
-# "runtime" aliases are accepted by the 0.1 reference grammar; additional words
-# are reserved lexically for the evolving native grammar and do not imply parsing.
+# Runtime support is limited to constructs implemented in parser.py and runtime.py;
+# the remaining canonical words stay reserved until grammar and semantics exist.
 KEYWORD_ALIASES = {
     "пусть": "make",
     "переменная": "vary",
