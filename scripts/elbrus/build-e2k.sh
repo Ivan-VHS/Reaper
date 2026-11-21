@@ -21,7 +21,7 @@ ctest --test-dir "$BUILD_DIR" --output-on-failure
 if command -v python3 >/dev/null 2>&1 && python3 -c 'import sys; raise SystemExit(sys.version_info < (3, 10))'; then
   python3 -m unittest discover -s tests -v
   python3 -m reaper --check examples/flow.rpr
-  python3 examples/flow.rpr >/dev/null 2>&1 || python3 -m reaper examples/flow.rpr
+  python3 -m reaper examples/flow.rpr
 else
   echo "Python 3.10+ unavailable: C17 native tests passed; Python runtime tests were not run." >&2
 fi
