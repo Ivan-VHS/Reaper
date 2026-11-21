@@ -22,6 +22,11 @@ Reaper is an expression-oriented language: `::` passes a value into the next ope
 | THESIS | typed evidence graph; claims are not auto-verified |
 | Registries | 813 feature proposals; 666 API contracts; 666 reserved token lexemes |
 | Federation | OPlague snapshots, VentuSample pack v1, optional Pytyliki C ABI |
+| Internal products | 18 Reaper modules with callable services and a Dropaul workflow planner |
+
+## Internal product ecosystem
+
+`python -m reaper.products --list` · `python -m reaper.products --describe Dropaul` · `reaper-products --run Dropaul plan_workflow --input '{"steps":[]}'`.
 
 ## Run and test
 
@@ -41,6 +46,6 @@ make result := [1, 2, 3] :: map(double) :: sum()
 emit "result = " ++ text(result)
 ```
 
-[Features](docs/FEATURES.md) · [Language](LANGUAGE.md) · [Division](docs/DIVISION_ENGINE.md) · [Architecture](docs/ARCHITECTURE.md) · [813 registry](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [Federation](docs/PROJECT_FEDERATION_MATRIX.md) · [Docs index](docs/README.md)
+ [Internal product ecosystem](docs/INTERNAL_PRODUCT_ECOSYSTEM.md) · [Features](docs/FEATURES.md) · [Language](LANGUAGE.md) · [Division](docs/DIVISION_ENGINE.md) · [Architecture](docs/ARCHITECTURE.md) · [813 registry](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [Federation](docs/PROJECT_FEDERATION_MATRIX.md) · [Docs index](docs/README.md)
 
 [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md) · [Releases](https://github.com/Ivan-VHS/Reaper/releases) · [Apache-2.0](LICENSE)
