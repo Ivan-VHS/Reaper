@@ -1,0 +1,295 @@
+{
+  "schema": "anatidae.quality-remediation.v1",
+  "project": {
+    "id": "reaper",
+    "name": "Reaper",
+    "scope": "Flow-first programming language, Python reference runtime, developing native C17 core and developer tooling."
+  },
+  "entries": [
+    {
+      "id": "root-cause-correction",
+      "terms": {
+        "correction": "Исправление",
+        "coverage": "Всеобъемлемость",
+        "defect": "Ошибки"
+      },
+      "target": "Interpreter execution and error propagation",
+      "acceptance": "Reproduce the defect, isolate its root cause, add a regression check, and verify the corrected behavior at the affected entry point.",
+      "evidence": [
+        "reaper/runtime.py",
+        "tests/test_extended_runtime.py"
+      ]
+    },
+    {
+      "id": "tolerance-calibration",
+      "terms": {
+        "correction": "Корректировка",
+        "coverage": "Всесторонность",
+        "defect": "Погрешности"
+      },
+      "target": "Arithmetic precision and numeric boundaries",
+      "acceptance": "Check boundaries, units, tolerances, rounding and measurement assumptions from more than one independent path.",
+      "evidence": [
+        "reaper/arithmetic.py",
+        "tests/test_arithmetic.py"
+      ]
+    },
+    {
+      "id": "subsystem-removal",
+      "terms": {
+        "correction": "Устранение",
+        "coverage": "Комплексность",
+        "defect": "Неточности"
+      },
+      "target": "Language diagnostics and error taxonomy",
+      "acceptance": "Remove the underlying cause across dependent components; do not hide symptoms with local workarounds.",
+      "evidence": [
+        "reaper/errors.py",
+        "tests/test_language.py"
+      ]
+    },
+    {
+      "id": "acceptance-completeness",
+      "terms": {
+        "correction": "Поправка",
+        "coverage": "Полнота",
+        "defect": "Недочёты"
+      },
+      "target": "Module composition and public entry points",
+      "acceptance": "Close missing acceptance conditions across implementation, tests, documentation, configuration and distribution artifacts.",
+      "evidence": [
+        "reaper/modules.py",
+        "tests/test_composition.py"
+      ]
+    },
+    {
+      "id": "end-to-end-workflows",
+      "terms": {
+        "correction": "Налаживание",
+        "coverage": "Исчерпывающесть",
+        "defect": "Просчёты"
+      },
+      "target": "CLI execution and end-to-end program flow",
+      "acceptance": "Exercise the complete user workflow, including invalid input, cancellation, failure and recovery branches.",
+      "evidence": [
+        "reaper/cli.py",
+        "tests/test_extended_runtime.py"
+      ]
+    },
+    {
+      "id": "cross-platform-diagnostics",
+      "terms": {
+        "correction": "Отладка",
+        "coverage": "Универсальность",
+        "defect": "Отклонения"
+      },
+      "target": "Lexer tokenization and malformed-input handling",
+      "acceptance": "Run deterministic diagnostics for supported platforms and configurations; report unsupported combinations explicitly.",
+      "evidence": [
+        "reaper/lexer.py",
+        "tests/test_language.py"
+      ]
+    },
+    {
+      "id": "multidimensional-review",
+      "terms": {
+        "correction": "Доработка",
+        "coverage": "Многогранность",
+        "defect": "Дефекты"
+      },
+      "target": "Semantic graph and cross-layer invariants",
+      "acceptance": "Review functional behavior, security, resource use, accessibility, compatibility and documentation as one change set.",
+      "evidence": [
+        "reaper/semantic_graph.py",
+        "tests/test_semantic_graph.py"
+      ]
+    },
+    {
+      "id": "measured-optimization",
+      "terms": {
+        "correction": "Оптимизация",
+        "coverage": "Масштабность",
+        "defect": "Изъяны"
+      },
+      "target": "Metric-space calculations and numeric reporting",
+      "acceptance": "Measure a reproducible baseline before optimizing and prove that correctness, safety and output quality do not regress.",
+      "evidence": [
+        "reaper/metric_space.py",
+        "tests/test_metric_space.py"
+      ]
+    },
+    {
+      "id": "contract-safe-reconstruction",
+      "terms": {
+        "correction": "Реконструкция",
+        "coverage": "Охватность",
+        "defect": "Недостатки"
+      },
+      "target": "CMake targets and CI build variants",
+      "acceptance": "Restructure components only with explicit interface contracts, migration notes and compatibility regression checks.",
+      "evidence": [
+        "CMakeLists.txt",
+        ".github/workflows/ci.yml"
+      ]
+    },
+    {
+      "id": "toolchain-modernization",
+      "terms": {
+        "correction": "Модернизация",
+        "coverage": "Многоаспектность",
+        "defect": "Оплошности"
+      },
+      "target": "Native C frontend and Python/native compatibility",
+      "acceptance": "Update toolchains, platforms and dependencies deliberately, then run the affected build and regression matrix.",
+      "evidence": [
+        "reaper/native.py",
+        "tests/test_native.py"
+      ]
+    },
+    {
+      "id": "profile-synchronization",
+      "terms": {
+        "correction": "Обновление",
+        "coverage": "Многопрофильность",
+        "defect": "Промахи"
+      },
+      "target": "Polyglot adapters and supported source profiles",
+      "acceptance": "Synchronize supported profiles, operating modes, locales and configurations so they do not drift independently.",
+      "evidence": [
+        "reaper/polyglot.py",
+        "tests/test_polyglot.py"
+      ]
+    },
+    {
+      "id": "evidence-audit",
+      "terms": {
+        "correction": "Ревизия",
+        "coverage": "Разносторонность",
+        "defect": "Сбои"
+      },
+      "target": "Language feature audit and regression evidence",
+      "acceptance": "Audit implementation, tests, diagnostics, release workflows and evidence links; record findings with reproducible references.",
+      "evidence": [
+        "tests/test_qcs.py",
+        "docs/IMPLEMENTATION_UPDATE_2026-11-20.md"
+      ]
+    },
+    {
+      "id": "safe-recovery",
+      "terms": {
+        "correction": "Восстановление",
+        "coverage": "Всеохватность",
+        "defect": "Нарушения"
+      },
+      "target": "Governance and permission-denied recovery",
+      "acceptance": "Recover from partial failures without corrupting existing data; verify idempotency and atomicity where relevant.",
+      "evidence": [
+        "reaper/governance.py",
+        "tests/test_governance.py"
+      ]
+    },
+    {
+      "id": "bounded-configuration",
+      "terms": {
+        "correction": "Регулировка",
+        "coverage": "Целостность",
+        "defect": "Упущения"
+      },
+      "target": "FFI, embedded ABI and trusted-code boundary",
+      "acceptance": "Keep defaults, thresholds, quotas, timeouts and policy boundaries consistent with the documented operating envelope.",
+      "evidence": [
+        "reaper/ffi.py",
+        "tests/test_embedded_ffi.py"
+      ]
+    },
+    {
+      "id": "cross-layer-conformance",
+      "terms": {
+        "correction": "Совершенствование",
+        "coverage": "Совокупность",
+        "defect": "Несоответствия"
+      },
+      "target": "Intermediate representation and optimizer behavior",
+      "acceptance": "Verify end-to-end conformance from the public interface through implementation and persisted/exported results.",
+      "evidence": [
+        "reaper/ir.py",
+        "tests/test_language.py"
+      ]
+    },
+    {
+      "id": "dependency-aware-refactoring",
+      "terms": {
+        "correction": "Рефакторинг",
+        "coverage": "Глобальность",
+        "defect": "Дисфункции"
+      },
+      "target": "Composition pipeline and dependency boundaries",
+      "acceptance": "Remove harmful duplication and dependency cycles while preserving public contracts and observable behavior.",
+      "evidence": [
+        "reaper/composition.py",
+        "tests/test_composition.py"
+      ]
+    },
+    {
+      "id": "fault-containment",
+      "terms": {
+        "correction": "Стабилизация",
+        "coverage": "Безграничность",
+        "defect": "Неисправности"
+      },
+      "target": "Resource quotas, memory accounting and cleanup",
+      "acceptance": "Contain failures with explicit upper bounds for memory, CPU, retries, input sizes and execution time.",
+      "evidence": [
+        "reaper/resources.py",
+        "tests/test_runtime_platform.py"
+      ]
+    },
+    {
+      "id": "specification-alignment",
+      "terms": {
+        "correction": "Согласование",
+        "coverage": "Исчерпывающесть",
+        "defect": "Оговорки"
+      },
+      "target": "Federation contracts and imported project data",
+      "acceptance": "Resolve mismatches between source code, schemas, APIs, specifications, tests and user-facing documentation.",
+      "evidence": [
+        "reaper/federation.py",
+        "tests/test_federation.py"
+      ]
+    },
+    {
+      "id": "canonical-unification",
+      "terms": {
+        "correction": "Унификация",
+        "coverage": "Фундаментальность",
+        "defect": "Ляпы"
+      },
+      "target": "QCS parsing and syntax conformance",
+      "acceptance": "Use canonical data formats and versioned interfaces for shared capabilities without erasing project-specific boundaries.",
+      "evidence": [
+        "reaper/qcs.py",
+        "tests/test_qcs.py"
+      ]
+    },
+    {
+      "id": "release-readiness",
+      "terms": {
+        "correction": "Безошибочность",
+        "coverage": "Энциклопедичность",
+        "defect": "Деформации"
+      },
+      "target": "Engineering standard and release acceptance",
+      "acceptance": "Gate releases on relevant regression checks, clean build artifacts, synchronized documentation and reviewable evidence.",
+      "evidence": [
+        "docs/UNIFIED_ENGINEERING_STANDARD.md",
+        "tests/test_extended_runtime.py"
+      ]
+    }
+  ],
+  "limitations": [
+    "Evidence checks verify repository-relative file presence only; they do not execute or semantically validate the referenced implementation.",
+    "Passing this profile does not certify zero defects, security, hardware compatibility, language parity, audio fidelity or commercial readiness.",
+    "The project's existing permissions, licensing, interoperability and safety boundaries remain authoritative."
+  ]
+}
