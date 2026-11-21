@@ -9,12 +9,13 @@ import sys
 from pathlib import Path
 
 ALLOWED = {
-    "#FFFFFF",
-    "#F4F6FA",
-    "#0039A6",
-    "#0A1E46",
-    "#D52B1E",
-    "#B51A10",
+    "#FFFFFF", "#F4F6FA", "#0039A6", "#0A1E46", "#D52B1E", "#B51A10",
+    # Neutral surface profiles for Dawn / Sunset / Night; action and signal semantics stay blue/red.
+    "#F3F6FA", "#EAF0F8", "#10243A", "#365A83", "#526A82", "#CBD6E4", "#74849A",
+    "#F5EFE8", "#FFF9F2", "#EDE2D5", "#322B2A", "#68564F", "#78685F", "#D8C5B5", "#887D74",
+    "#081522", "#10263B", "#17344D", "#EDF4FA", "#C4D5E4", "#A9C0D4", "#73B7FF",
+    "#9ACBFF", "#FF7D78", "#FFA39B", "#31536B", "#FF8E86", "#174C7D", "#71899B", "#190B0B",
+    "#EAF3FF",
 }
 HEX = re.compile(r"#[0-9A-Fa-f]{6}\b")
 RGB = re.compile(r"\bRGB\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)", re.IGNORECASE)
@@ -24,6 +25,11 @@ AAA_TEXT_PAIRS = (
     ("#0039A6", "#F4F6FA"),
     ("#FFFFFF", "#0039A6"),
     ("#FFFFFF", "#0A1E46"),
+    ("#10243A", "#F3F6FA"),
+    ("#322B2A", "#F5EFE8"),
+    ("#EDF4FA", "#081522"),
+    ("#081522", "#73B7FF"),
+    ("#190B0B", "#FF7D78"),
 )
 
 
