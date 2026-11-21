@@ -78,6 +78,40 @@ def contrast_ratio(foreground: str, background: str) -> float:
     return (first + 0.05) / (second + 0.05)
 
 
+def _install_semantic_status_tokens() -> None:
+    """Add high-contrast status roles without changing the product's blue/red identity."""
+    for theme_name, palette in PALETTES.items():
+        dark = theme_name in {"dark", "night"}
+        palette.update({
+            "success": "#86EFAC" if dark else "#166534",
+            "warning": "#FCD34D" if dark else "#92400E",
+            "error": "#FCA5A5" if dark else "#B91C1C",
+            "info": "#93C5FD" if dark else "#1D4ED8",
+        })
+
+
+def palette_contrast_issues(palette: dict[str, str]) -> list[str]:
+    """Return WCAG AA text-pair violations for a semantic desktop palette."""
+    required_pairs = (
+        ("fg", "bg"), ("fg", "surface"), ("muted", "bg"),
+        ("heading", "bg"), ("on_blue", "blue"), ("on_red", "red"),
+        ("selection_fg", "selection"), ("success", "surface"),
+        ("warning", "surface"), ("error", "surface"), ("info", "surface"),
+    )
+    issues = []
+    for foreground, background in required_pairs:
+        if foreground not in palette or background not in palette:
+            issues.append(f"missing token: {foreground}/{background}")
+        elif contrast_ratio(palette[foreground], palette[background]) < 4.5:
+            issues.append(
+                f"{foreground}/{background} contrast is below 4.5:1"
+            )
+    return issues
+
+
+_install_semantic_status_tokens()
+
+
 def set_dpi_awareness() -> None:
     """Request per-monitor DPI awareness on Windows before creating Tk."""
     if os.name != "nt":
@@ -158,6 +192,9 @@ def palette_for(mode: str = "system", *, system_dark: bool | None = None) -> dic
     if requested not in PALETTES:
         raise ValueError("Theme must be 'system', 'light', 'dark', 'dawn', 'sunset' or 'night'")
     result = dict(PALETTES[requested])
+    issues = palette_contrast_issues(result)
+    if issues:
+        raise ValueError("Theme palette fails UI/UX 40026 contrast contract: " + "; ".join(issues))
     result.update({
         "mode": requested, "page": result["bg"], "surface_alt": result["elevated"],
         "text": result["fg"], "accent": result["blue"], "accent_hover": result["blue_hover"],
@@ -232,6 +269,15 @@ def apply_theme(root: tk.Misc, app_key: str, theme: str | None = None) -> str:
     style.configure("Title.TLabel", background=palette["bg"], foreground=palette["heading"], font=("Georgia", 18, "bold"))
     style.configure("Section.TLabel", background=palette["bg"], foreground=palette["heading"], font=("Georgia", 11, "bold"), padding=(4, 5))
     style.configure("Muted.TLabel", background=palette["bg"], foreground=palette["muted"])
+    # Semantic status styles are text-first and remain readable in every theme.
+    for status_name in ("Success", "Warning", "Error", "Info"):
+        token = status_name.lower()
+        style.configure(
+            f"Status.{status_name}.TLabel",
+            background=palette["surface"],
+            foreground=palette[token],
+            padding=(6, 3),
+        )
     style.configure(
         "TButton", background=palette["surface"], foreground=palette["fg"],
         bordercolor=palette["border"], lightcolor=palette["surface"], darkcolor=palette["border"],
