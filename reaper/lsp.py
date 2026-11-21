@@ -66,7 +66,10 @@ class LanguageService:
   if method in ("textDocument/definition","textDocument/references","textDocument/rename"):
    uri=p.get("textDocument",{}).get("uri",""); src=self.documents.get(uri,{}).get("text","")
    word=self.word_at(p); locations=self.locations(uri,src,word)
-   if method=="textDocument/definition": return (locations[:1] or None),notes
+   if method=="textDocument/definition":
+    declaration=re.compile(r"^\\s*(?:make|vary|craft)\\s+"+re.escape(word)+r"\\b")
+    declared=[item for item in locations if declaration.search(src.splitlines()[item["range"]["start"]["line"]])]
+    return (declared[:1] or None),notes
    if method=="textDocument/rename":
     new=p.get("newName","")
     if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*",new): return None,notes
