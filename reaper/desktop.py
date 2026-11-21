@@ -121,6 +121,8 @@ class ReaperStudio(tk.Tk):
         node_menu = tk.Menu(menu, tearoff=False)
         node_menu.add_command(label="Run JavaScript (NOO TAH)", command=self.run_node_source)
         node_menu.add_command(label="Check JavaScript", command=self.check_node_source)
+        node_menu.add_command(label="Debug JavaScript (Node Inspector)", command=lambda: self.run_node_source(inspect=True))
+        node_menu.add_command(label="Run npm command…", command=self.run_noo_tah_npm)
         node_menu.add_command(label="Node.js Runtime Diagnostics", command=self.noo_tah_doctor)
         node_menu.add_command(label="Stop Node.js Process", command=self.stop_node_source)
         menu.add_cascade(label="NOO TAH / Node.js", menu=node_menu)
@@ -241,6 +243,7 @@ class ReaperStudio(tk.Tk):
         ttk.Button(bar, text="▶ Запустить", command=self.run_source, style="Toolbar.TButton").pack(side="left", padx=3)
         ttk.Button(bar, text="JS Run", command=self.run_node_source, style="Toolbar.TButton").pack(side="left", padx=3)
         ttk.Button(bar, text="JS Check", command=self.check_node_source, style="Toolbar.TButton").pack(side="left", padx=3)
+        ttk.Button(bar, text="JS Debug", command=lambda: self.run_node_source(inspect=True), style="Toolbar.TButton").pack(side="left", padx=3)
         ttk.Button(bar, text="JS Stop", command=self.stop_node_source, style="Toolbar.TButton").pack(side="left", padx=3)
         ttk.Button(bar, text="Отладка", command=self.debug_source, style="Toolbar.TButton").pack(side="left", padx=3)
         ttk.Button(bar, text="Точка останова", command=self.toggle_breakpoint, style="Toolbar.TButton").pack(side="left", padx=3)
@@ -635,6 +638,9 @@ class ReaperStudio(tk.Tk):
             self.status.set("Выполнение завершено")
 
     def debug_source(self) -> None:
+        if self.current_file and self.current_file.suffix.lower() in {".js", ".mjs", ".cjs"}:
+            self.run_node_source(inspect=True)
+            return
         self._run_with_debugger(first_step=True)
 
 
@@ -666,7 +672,7 @@ class ReaperStudio(tk.Tk):
         self._append_output("NOO TAH CHECK: passed" if result.returncode == 0 else f"NOO TAH CHECK: failed ({result.returncode})")
         self.status.set("JavaScript syntax check passed" if result.returncode == 0 else "JavaScript syntax check failed")
 
-    def run_node_source(self) -> None:
+    def run_node_source(self, inspect: bool = False) -> None:
         file = self._node_file()
         if file is None:
             return
@@ -677,8 +683,12 @@ class ReaperStudio(tk.Tk):
             return
         try:
             runtime = NooTahRuntime.discover()
+            command = [runtime.node]
+            if inspect:
+                command.append("--inspect-brk=127.0.0.1:9229")
+            command.append(str(file))
             process = subprocess.Popen(
-                [runtime.node, str(file)], cwd=str(file.parent),
+                command, cwd=str(file.parent),
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                 text=True, encoding="utf-8", errors="replace", bufsize=1,
             )
@@ -691,6 +701,8 @@ class ReaperStudio(tk.Tk):
         self.clear_output()
         self.status.set(f"NOO TAH running: {file.name}")
         self._append_output(f"NOO TAH START: {file}")
+        if inspect:
+            self._append_output("Node Inspector: open chrome://inspect and attach to 127.0.0.1:9229")
         def pump() -> None:
             try:
                 assert process.stdout is not None
@@ -701,6 +713,47 @@ class ReaperStudio(tk.Tk):
             except Exception as error:
                 self._run_queue.put(("node-error", f"{type(error).__name__}: {error}"))
         threading.Thread(target=pump, name="noo-tah-process", daemon=True).start()
+
+
+    def run_noo_tah_npm(self) -> None:
+        command_text = simpledialog.askstring(
+            "NOO TAH / npm", "npm arguments (example: run build):",
+            initialvalue="run build", parent=self,
+        )
+        if not command_text:
+            return
+        if self._running:
+            self.status.set("Другая программа уже выполняется")
+            return
+        import shlex
+        try:
+            runtime = NooTahRuntime.discover()
+            if not runtime.npm_cli:
+                raise RuntimeError("npm CLI was not found in this Node.js installation")
+            cwd = self.project_root or (self.current_file.parent if self.current_file else Path.cwd())
+            process = subprocess.Popen(
+                [runtime.node, runtime.npm_cli, *shlex.split(command_text)],
+                cwd=str(cwd), stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                text=True, encoding="utf-8", errors="replace", bufsize=1,
+            )
+        except (RuntimeError, OSError, ValueError) as error:
+            self._append_output(f"NOO TAH npm: {error}")
+            self.status.set("npm command could not start")
+            return
+        self._node_process = process
+        self._running = True
+        self.status.set(f"npm: {command_text}")
+        self._append_output(f"NOO TAH npm START: {command_text} ({cwd})")
+        def pump() -> None:
+            try:
+                assert process.stdout is not None
+                for line in process.stdout:
+                    self._run_queue.put(("line", line.rstrip("\\r\\n")))
+                code = process.wait()
+                self._run_queue.put(("done", f"npm exited ({code})"))
+            except Exception as error:
+                self._run_queue.put(("node-error", f"{type(error).__name__}: {error}"))
+        threading.Thread(target=pump, name="noo-tah-npm", daemon=True).start()
 
     def stop_node_source(self) -> None:
         process = self._node_process
