@@ -197,8 +197,7 @@ def serve(stdin=None, stdout=None):
             if server.exit_requested:
                 return 0
     finally:
-        if not server.service._pool._shutdown:
-            server.service.shutdown()
+        server.service.shutdown()
 
 
 if __name__ == "__main__":
