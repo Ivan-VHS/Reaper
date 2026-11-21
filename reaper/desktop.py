@@ -33,7 +33,7 @@ from reaper.ide_support import SOURCE_EXTENSIONS, highlight_spans, iter_project_
 from reaper.ui_motion import MotionController
 from reaper.ui_theme import apply_theme, apply_ui_theme, set_dpi_awareness, toggle_theme
 
-APP_TITLE = "Reaper Studio"
+APP_TITLE = "Reaper Studio · Ivan-VHS"
 STARTER = """craft double(value) {
     yield value * 2
 }

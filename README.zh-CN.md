@@ -1,6 +1,7 @@
 # Reaper — 流式组合编程语言
 
 Python 3.10+ · C17 原生开发线 · Windows Studio · Apache-2.0 · [CI](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml)
+**开发者：** [Ivan-VHS](https://github.com/Ivan-VHS)
 
 Reaper 是表达式导向的数据流语言；`::` 将值传递给下一操作。Python 是当前参考解释器；C17 原生实现仍在开发中，尚不能完全替代 runtime。
 
