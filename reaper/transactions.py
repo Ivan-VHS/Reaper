@@ -71,6 +71,7 @@ class RuntimeTransaction:
         self._event_sink = event_sink
         self._generation = 0
         self._schema_version = schema_version
+        self._committed_schema_version = schema_version
         self._committed, self._checksum = _canonical(payload, max_bytes)
         self._staged = copy.deepcopy(self._committed)
         self._staged_checksum = self._checksum
@@ -216,6 +217,7 @@ class RuntimeTransaction:
                 raise TransactionError("staged state checksum mismatch")
             self._committed = copy.deepcopy(self._staged)
             self._checksum = digest
+            self._committed_schema_version = self._schema_version
             self._generation += 1
             self._event(event)
             return self.snapshot()
@@ -241,6 +243,7 @@ class RuntimeTransaction:
         with self._lock:
             self._staged = copy.deepcopy(self._committed)
             self._staged_checksum = self._checksum
+            self._schema_version = self._committed_schema_version
             self._failed = None
             self._event("ROLLBACK")
             return self.snapshot()
@@ -249,7 +252,7 @@ class RuntimeTransaction:
         with self._lock:
             return Snapshot(
                 generation=self._generation,
-                schema_version=self._schema_version,
+                schema_version=self._committed_schema_version,
                 checksum=self._checksum,
                 payload=copy.deepcopy(self._committed),
             )
