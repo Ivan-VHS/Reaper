@@ -42,3 +42,18 @@ Reaper's existing `Spring1D` controller provides the expressive paddle response 
 Duck illustrations, parallax, particles and water ripples are optional landing/showcase motifs only. They are not placed behind the editor, debugger, project tree, diagnostics or terminal output. The native IDE keeps opaque work surfaces, predictable focus paths and all animation on the Tk UI thread.
 
 See the [shared Anatidae motion constitution](ANATIDAE_MOTION_CONSTITUTION.md).
+
+
+## Motion Constitution v2026 mapping
+
+The shared token, accessibility and documentation source is [Motion Constitution v2026](MOTION_CONSTITUTION_V2026.md). This native contract remains the authority for what this application actually ships.
+
+- Canonical easing names: `--ease-spring` (bounded paddle response) and `--ease-snappy` (predictable state transitions); native curves are mapped in this document.
+- Canonical scale envelope: `--motion-scale` = 0.4×–2.2× and spring stiffness multiplier 0.7–1.4. These are shared design tokens; they are not exposed as user controls unless the application UI and runtime explicitly implement them.
+- Reduced Motion: OS preference and `UI_REDUCED_MOTION` take precedence; spatial/ambient motion is removed, state changes remain immediate, and only essential feedback may retain a fade of up to 80 ms.
+- Theme/layout parity: light/dark themes, keyboard focus and high-DPI layouts remain required. 2×2 overview and focus-scene are showcase layout targets, not a claim that this native product already provides those views.
+- Telemetry graphics: SVG/Canvas/native-paint charts must bind to sourced model values, show units and an accessible textual equivalent, and expose stale/error/unknown states. Demo data must be labelled.
+
+### Product-specific maturity
+
+Reaper Studio has native Tk spring presentation, persisted Reduce Motion/Eco/Expressive preferences, editor/debugger and local LSP/DAP tooling. CODEX-66 and the language service are local; they are not a cloud AI agent or streamed AI Diff. AST fold and diff timeline states must be exposed only where the corresponding editor model exists. No motion may delay runtime execution, debugging or language-service work.
