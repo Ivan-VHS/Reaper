@@ -2,7 +2,7 @@ name: Kora REAPER builds
 on:
   push:
     branches: [main, "feat/**"]
-    paths: ["reaper/kora/**", "reaper_scripts/kora/**", "tests/test_kora.py", "tests/test_kora_reascripts.py", "docs/KORA_REAPER.md", ".github/workflows/kora-reaper-build.yml"]
+    paths: ["reaper/kora/**", "reaper_scripts/kora/**", "reaper_scripts/clife/**", "tests/test_kora.py", "tests/test_kora_reascripts.py", "tests/test_clife.py", "tests/test_clife_reascripts.py", "tools/clife.py", "docs/KORA_REAPER.md", "docs/CLIFE.md", ".github/workflows/kora-reaper-build.yml"]
   pull_request:
     paths: ["reaper/kora/**", "reaper_scripts/kora/**", "tests/test_kora.py", "tests/test_kora_reascripts.py", "docs/KORA_REAPER.md", ".github/workflows/kora-reaper-build.yml"]
   workflow_dispatch:
@@ -17,8 +17,9 @@ jobs:
         with: {python-version: "3.12"}
       - name: Test and compile
         run: |
-          python -m unittest tests.test_kora tests.test_kora_reascripts -v
-          python -m compileall -q reaper/kora
+          python -m unittest tests.test_kora tests.test_kora_reascripts tests.test_clife_reascripts -v
+          python -m unittest tests.test_clife -v
+          python -m compileall -q reaper/kora tools/clife.py
       - name: Build wheel
         run: |
           python -m pip install --upgrade build
@@ -28,7 +29,10 @@ jobs:
           mkdir -p dist/kora-reascripts
           cp reaper_scripts/kora/*.lua dist/kora-reascripts/
           cp docs/KORA_REAPER.md dist/kora-reascripts/README.md
-          cd dist && zip -r kora-reascripts.zip kora-reascripts
+          mkdir -p dist/clife-reascripts
+          cp reaper_scripts/clife/*.lua dist/clife-reascripts/
+          cp docs/CLIFE.md dist/clife-reascripts/README.md
+          cd dist && zip -r kora-reascripts.zip kora-reascripts && zip -r clife-reascripts.zip clife-reascripts
       - uses: actions/upload-artifact@v4
         with:
           name: kora-reaper-builds
