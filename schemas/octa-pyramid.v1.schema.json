@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/Ivan-VHS/Reaper/blob/main/schemas/octa-pyramid.v1.schema.json",
-  "title": "OCTA-8 Federation Pyramid v1",
+  "$id": "urn:ivan-vhs:octa-federation-pyramid:v1",
+  "title": "OCTA-8 Four-Project Federation Pyramid v1",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -98,14 +98,15 @@
           "const": [
             "reaper",
             "pytyliki",
-            "oplague"
+            "oplague",
+            "ventusample"
           ]
         },
         "directed_peer_links": {
-          "const": 6
+          "const": 12
         },
         "self_loops": {
-          "const": 3
+          "const": 4
         }
       }
     },
@@ -143,8 +144,8 @@
     },
     "peer_links": {
       "type": "array",
-      "minItems": 6,
-      "maxItems": 6,
+      "minItems": 12,
+      "maxItems": 12,
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -165,20 +166,23 @@
             "enum": [
               "reaper",
               "pytyliki",
-              "oplague"
+              "oplague",
+              "ventusample"
             ]
           },
           "to": {
             "enum": [
               "reaper",
               "pytyliki",
-              "oplague"
+              "oplague",
+              "ventusample"
             ]
           },
           "transport": {
             "enum": [
               "json-file",
-              "native-ffi"
+              "native-ffi",
+              "none"
             ]
           },
           "interface": {
@@ -188,19 +192,25 @@
             "enum": [
               "artifact",
               "request",
-              "response"
+              "response",
+              "none"
             ]
           },
           "status": {
-            "const": "implemented"
+            "enum": [
+              "implemented",
+              "partial",
+              "planned",
+              "not_applicable"
+            ]
           }
         }
       }
     },
     "self_loops": {
       "type": "array",
-      "minItems": 3,
-      "maxItems": 3,
+      "minItems": 4,
+      "maxItems": 4,
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -214,7 +224,8 @@
             "enum": [
               "reaper",
               "pytyliki",
-              "oplague"
+              "oplague",
+              "ventusample"
             ]
           },
           "contract": {
@@ -235,7 +246,8 @@
         "hub_is_not_a_runtime_gateway",
         "request_response_edges_are_synchronous",
         "no_implicit_native_loading",
-        "no_driver_mutation_through_mesh"
+        "no_driver_mutation_through_mesh",
+        "producer_export_does_not_imply_consumer_integration"
       ],
       "properties": {
         "complete_pairwise_product": {
@@ -254,6 +266,9 @@
           "const": true
         },
         "no_driver_mutation_through_mesh": {
+          "const": true
+        },
+        "producer_export_does_not_imply_consumer_integration": {
           "const": true
         }
       }
