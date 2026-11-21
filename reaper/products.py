@@ -7,7 +7,7 @@ never executes arbitrary project code or silently mutates user files.
 from __future__ import annotations
 
 import ast
-from collections import defaultdict
+from collections import defaultdict, deque
 import hashlib
 import json
 import re
