@@ -6,10 +6,12 @@ never executes arbitrary project code or silently mutates user files.
 """
 from __future__ import annotations
 
+import argparse
 import ast
 import hashlib
 import json
 import re
+from collections import defaultdict, deque
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
@@ -26,7 +28,7 @@ class ProductSpec:
 
 PRODUCTS: tuple[ProductSpec, ...] = (
     ProductSpec("Operandu", "Data & logic", "Typed values, expressions and transformations.", ("value validation", "schema inspection", "expression metadata"), "inspect_value"),
-    ProductSpec("Doopraul", "Actions & workflows", "Action composition, event routing and bounded workflow planning.", ("workflow graph validation", "dependency ordering", "dry-run planning"), "plan_workflow"),
+    ProductSpec("Dropaul", "Actions & workflows", "Action composition, event routing and bounded workflow planning.", ("workflow graph validation", "dependency ordering", "dry-run planning"), "plan_workflow"),
     ProductSpec("Zdoro", "Integrity & diagnostics", "Workspace health, consistency and diagnostic reporting.", ("workspace inspection", "missing-file detection", "integrity summary"), "inspect_workspace"),
     ProductSpec("Pyemont", "Development", "Project structure, source inventory and module construction support.", ("source inventory", "module discovery", "project manifest"), "inspect_project"),
     ProductSpec("Dilly", "Interface & experience", "UI token and interface-contract consistency.", ("design token lint", "label inventory", "theme contract checks"), "lint_design_tokens"),
@@ -317,7 +319,7 @@ def run_product(name: str, operation: str, **kwargs: Any) -> Any:
     get_product(name)
     handlers: dict[tuple[str, str], Any] = {
         ("Operandu", "inspect_value"): inspect_value,
-        ("Doopraul", "plan_workflow"): plan_workflow,
+        ("Dropaul", "plan_workflow"): plan_workflow,
         ("Zdoro", "inspect_workspace"): inspect_workspace,
         ("Pyemont", "inspect_project"): inspect_project,
         ("Dilly", "lint_design_tokens"): lint_design_tokens,
@@ -339,3 +341,33 @@ def run_product(name: str, operation: str, **kwargs: Any) -> Any:
     if handler is None:
         raise ProductError(f"unsupported operation {operation!r} for {name}")
     return handler(**kwargs)
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Inspect the ecosystem or run one explicitly supported, read-only service."""
+    parser = argparse.ArgumentParser(description="Reaper internal product ecosystem")
+    commands = parser.add_mutually_exclusive_group(required=True)
+    commands.add_argument("--list", action="store_true", help="list all 18 products")
+    commands.add_argument("--describe", metavar="PRODUCT", help="show one product contract")
+    commands.add_argument("--run", nargs=2, metavar=("PRODUCT", "OPERATION"), help="run a supported local service")
+    parser.add_argument("--input", default="{}", help="JSON object passed to the selected service")
+    args = parser.parse_args(argv)
+    try:
+        if args.list:
+            output = list_products()
+        elif args.describe:
+            output = asdict(get_product(args.describe))
+        else:
+            payload = json.loads(args.input)
+            if not isinstance(payload, dict):
+                raise ProductError("--input must decode to a JSON object")
+            output = run_product(args.run[0], args.run[1], **payload)
+        print(json.dumps(output, ensure_ascii=False, indent=2, sort_keys=True, default=str))
+        return 0
+    except (ProductError, TypeError, ValueError, OSError) as error:
+        print(json.dumps({"error": str(error)}, ensure_ascii=False), file=__import__("sys").stderr)
+        return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
