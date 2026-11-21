@@ -33,15 +33,9 @@ Reaper Studio is a programming workbench for the MOST/Reaper language. Its core 
 
 ## Shared visual contract
 
-| Token | Light | Dark |
-|---|---|---|
-| Page | #F3F6FA | #101827 |
-| Surface | #FFFFFF | #172337 |
-| Text | #172337 | #EEF3FA |
-| Muted | #5C6B80 | #A7B4C7 |
-| Accent | #2563EB | #6EA8FE |
-| Alert | #DC2626 | #F87171 |
-| Editor | #FFFFFF | #111C2E |
+The authoritative light/dark semantic values are defined in [ANATIDAE_DESKTOP_DESIGN_SYSTEM.md](ANATIDAE_DESKTOP_DESIGN_SYSTEM.md). This document does not define a competing palette. Editor, output, variables, call stack, menus, selection and focus use the same white-blue-red semantic roles while preserving code-specific typography and syntax readability.
+
+The Anatidae vocabulary maps to a calm editor-first surface, directional command grouping and quiet state feedback. It does not add mascots, whimsical labels or decorative motion.
 
 ## Related repositories
 
