@@ -1,95 +1,35 @@
 # Reaper — язык программирования с потоковой композицией
 
-<p align="center">
-  <a href="https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml/badge.svg"></a>
-  <img alt="Python 3.10+" src="https://img.shields.io/badge/reference-runtime-Python%203.10%2B-2563EB?style=flat-square">
-  <img alt="C17" src="https://img.shields.io/badge/native-track-C17-DC2626?style=flat-square">
-  <img alt="Apache 2.0" src="https://img.shields.io/badge/license-Apache--2.0-334155?style=flat-square">
-</p>
+Python 3.10+ · C17 native track · Windows Studio · Apache-2.0 · [CI](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml)
 
-**Reaper — выразительный язык с читаемым синтаксисом и явным потоком данных.** Оператор `::` передаёт значение следующей операции. Репозиторий содержит эталонный интерпретатор Python, развиваемое ядро C17 и Reaper Studio для Windows.
+Reaper — язык выражений с явным потоком данных: оператор `::` передаёт значение следующей операции. Python — текущая исполняемая эталонная реализация; C17 — развиваемый нативный путь, пока не полная замена runtime.
 
-[English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
+## Живой снимок Studio
 
-## Пример
+<p align="center"><img src="assets/screenshots/reaper-studio.png" alt="Reaper Studio под Windows" width="100%"></p>
+<sub>Снимок работающего приложения Windows 11, 1920×1080.</sub>
+
+| Область | Текущая граница |
+|---|---|
+| Python runtime | lexer, parser, интерпретатор, CLI, REPL, модули, closures, quotas, audit |
+| Reaper Studio | Windows editor: check/run/debug, breakpoints, variables, call stack |
+| Native C17 | lexer, expression parser, owned AST, checked IR, limited lowering |
+| МОСТ | 54 точных алиаса: 21 исполняемый в reference subset, 33 зарезервированы |
+| QCS 1.0 | отдельный hardware-domain parser и JSON AST; без управления hardware |
+| THESIS | граф доказательств; утверждения не проверяются автоматически |
+| Реестры | 813 предложений; 666 API-контрактов; запись каталога не равна готовой функции |
+| Федерация | OPlague snapshots, VentuSample manifests, optional Pytyliki C ABI |
+
+Запуск: `python -m reaper examples/flow.rpr` · Проверка: `python -m reaper --check examples/flow.rpr` · VM: `python -m reaper --engine vm examples/flow.rpr` · REPL: `python -m reaper --repl` · Тесты: `python -m unittest discover -s tests -v`.
+
+Studio: `python reaper_desktop.py` (Windows). Native: `cmake -S . -B build -DCMAKE_BUILD_TYPE=Release`, затем build и CTest.
 
 ```reaper
-craft double(value) {
-    yield value * 2
-}
-make numbers := [1, 2, 3, 4]
-make answer := numbers :: map(double) :: sum()
-emit "answer = " ++ text(answer)
+craft double(value) { yield value * 2 }
+make result := [1, 2, 3] :: map(double) :: sum()
+emit "result = " ++ text(result)
 ```
 
-## Возможности
+[Функции](docs/FEATURES.md) · [Язык](LANGUAGE.md) · [Архитектура](docs/ARCHITECTURE.md) · [Реестр 813](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [Федерация](docs/PROJECT_FEDERATION_MATRIX.md) · [Индекс](docs/README.md)
 
-- **Python runtime:** лексер, парсер, интерпретатор, CLI, REPL, модули, замыкания, коллекции, учёт ресурсов, квоты, bytecode VM, профилирование и аудит с хеш-цепочкой; host-инъектируемые grants поддерживают HMAC-аутентификацию, проверку scope, конечный TTL и отзыв.
-- **Reaper Studio:** Windows-редактор с проверкой, запуском, отладкой, breakpoint, просмотром переменных и стека вызовов.
-- **Нативный C17:** лексер, expression-парсер, AST с владением, проверяемые integer IR-операции и ограниченный lowering. Это ещё не полный интерпретатор; Python остаётся эталоном.
-- **МОСТ:** русскоязычная поверхность REAPER с 54 точными псевдонимами (21 исполняемый в подмножестве REAPER 0.1, 33 зарезервированы лексически), UTF-8-позициями исходного текста и единым семантическим ядром. См. [20-принципный русскоязычный профиль](docs/MOST_RUSSIAN_NATIVE_PROFILE.md).
-- **QCS 1.0:** самостоятельный frontend аппаратного синтаксиса: позиции исходника, frame parser, Pratt expressions и JSON AST. Не заменяет `.rpr` и не исполняет аппаратные операции. Команда: `reaper-qcs check examples/qcs_irq.qcs`.
-- **Граф утверждений ТЕЗИС:** версионируемые тезисы, типизированные ссылки на доказательства, проверка сопоставимости периода и области, статусы ревью и добавляемая история исправлений. Автоматического признания тезиса истинным нет ([описание](docs/THESIS_ASSERTION_GRAPH.md)).
-- **Реестр MOST 666:** 666 контрактов API (147 существующих спецификаций + 519 предложений), реестр трассируемости и валидатор. Это каталог спецификаций, а не 666 готовых функций.
-- **Системы и interop:** Embedded C, профили MCU и бюджеты памяти; opt-in Pytyliki C ABI v1; 66 языков/toolchain, 14 архитектурных профилей и проверяемая матрица MOST 20×20.
-
-## Запуск
-
-Нужен Python 3.10+, сторонние runtime-зависимости отсутствуют.
-
-```bash
-git clone https://github.com/Ivan-VHS/Reaper.git
-cd Reaper
-python -m reaper examples/flow.rpr
-python -m reaper --check examples/flow.rpr
-python -m reaper --engine vm examples/flow.rpr
-python -m reaper --repl
-python -m pip install -e .
-python -m unittest discover -s tests -v
-```
-
-Reaper Studio в Windows: `python reaper_desktop.py`.
-
-## Сборка C17
-
-Нужны CMake и компилятор C17.
-
-```sh
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build --parallel
-ctest --test-dir build --output-on-failure
-./build/reaper-c --tokens examples/hello.rpr
-```
-
-## Архитектура и ограничения
-
-Python остаётся исполняемым эталоном до подтверждения нативного паритета. Managed heap — учёт поверх аллокатора Python, не физический аллокатор и не лимит RSS. Нативный FFI исполняет доверенный ABI-совместимый код внутри процесса. Поиск toolchain проверяет `PATH`, но не устанавливает компиляторы. МОСТ разрешает имена в канонические символы REAPER; QCS-разбор не доказывает аппаратные контракты.
-
-## Документация
-
-[Граф происхождения утверждений ТЕЗИС](docs/THESIS_ASSERTION_GRAPH.md)
-
-[Anatidae UI/UX](docs/UI_UX_SYSTEM.md) · [12 принципов анимации](docs/DISNEY_MOTION_SYSTEM.md) · [Язык](LANGUAGE.md) · [QCS frontend](docs/QCS_FRONTEND.md) · [Реестр MOST 666](docs/MOST_FUNCTIONS_666.md) · [Спецификация МОСТ](docs/MOST_LANGUAGE_SPEC.md) · [Runtime](docs/RUNTIME_PLATFORM.md) · [Инженерный стандарт](docs/UNIFIED_ENGINEERING_STANDARD.md)
-
-
-[Управление и согласие](docs/HUMAN_FIRST_GOVERNANCE.md) · [Конституция Anatidae](docs/ANATIDAE_CONSTITUTION.md) · [Дизайн-система](docs/ANATIDAE_DESKTOP_DESIGN_SYSTEM.md) · [Архитектура UI/UX](docs/UI_UX_ARCHITECTURE.md) · [12 принципов анимации](docs/DISNEY_MOTION_SYSTEM.md) · [Надёжность клинических систем CSR-120](docs/CLINICAL_SYSTEMS_CSR120.md) · [Статус реализации MOST](docs/MOST_IMPLEMENTATION_STATUS.md) · [Контракт проекта](docs/UNIFIED_PROJECT_CONTRACT.md)
-[Релизы Windows](https://github.com/Ivan-VHS/Reaper/releases) · [Сборка desktop](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml)
-
-## Доктрина Anatidae и гарантии языка
-
-- **Согласие и ответственность:** grants от хоста проходят HMAC-аутентификацию и проверку областей действия, имеют ограниченный срок и могут быть отозваны; аудит позволяет проверять решения выполнения.
-- **Ограниченное выполнение:** квоты, учёт ресурсов и проверка входных данных задают границы runtime. Интерпретатор Python остаётся эталоном совместимости, пока паритет нативного C17 не подтверждён.
-- **Единый контракт языка:** псевдонимы МОСТ используют канонические символы, parser и runtime REAPER; QCS — отдельный frontend проверки, а не исполнитель аппаратных команд.
-- **Честный статус реализации:** реестр MOST 666 содержит 147 существующих спецификаций и 519 предложений; это не означает, что реализовано 666 функций. Нативный C17 lowering остаётся частичным.
-- **Граница доверенного кода:** нативный FFI выполняет доверенный ABI-совместимый код внутри процесса и не является песочницей для недоверенных расширений.
-- **Доступные инструменты и осмысленная анимация:** Studio и редакторские интеграции должны обеспечивать понятное управление с клавиатуры, видимый фокус, читаемую диагностику, локализацию и поддержку уменьшения движения. Анимация проясняет обратную связь, а не скрывает состояние.
-
-Доктрина направляет инженерные решения, но не превращает пункты дорожной карты в реализованные функции runtime.
-
-## Контроль документации
-
-[Правила публикации](docs/DOCUMENTATION_CONTROL.md) устанавливают требования к публичным заявлениям, доказательствам, приватности и интеграциям.
-
-## Лицензия
-
-[Apache License 2.0](LICENSE)
+[English](README.md) · [Українська](README.uk.md) · [简体中文](README.zh-CN.md) · [Релизы](https://github.com/Ivan-VHS/Reaper/releases) · [Apache-2.0](LICENSE)
