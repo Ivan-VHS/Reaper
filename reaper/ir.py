@@ -139,6 +139,13 @@ class _Lowerer:
             for item in children:
                 self.expression(item)
             self.emit("BUILD_LIST", len(children), node.token)
+        elif node.kind == "map":
+            for item in children:
+                self.expression(item)
+            self.emit("BUILD_MAP", len(children) // 2, node.token)
+        elif node.kind == "member":
+            self.expression(children[0])
+            self.emit("MEMBER", node.value, node.token)
         elif node.kind == "index":
             self.expression(children[0])
             self.expression(children[1])
@@ -161,6 +168,11 @@ class _Lowerer:
             elif operator == "OR":
                 self.expression(children[0])
                 index = self.emit("OR_JUMP", None, node.token)
+                self.expression(children[1])
+                self.patch(index, len(self.code))
+            elif operator == "??":
+                self.expression(children[0])
+                index = self.emit("COALESCE_JUMP", None, node.token)
                 self.expression(children[1])
                 self.patch(index, len(self.code))
             elif operator == "::":
@@ -186,7 +198,8 @@ _ALLOWED = {
     "CONST", "LOAD", "DEFINE", "ASSIGN", "EMIT", "RETURN", "MAKE_FUNCTION",
     "JUMP_IF_FALSE", "JUMP", "ENTER_SCOPE", "EXIT_SCOPE", "ITER_INIT",
     "ITER_NEXT", "ITER_END", "POP", "BUILD_LIST", "INDEX", "UNARY",
-    "CALL", "PIPE_CALL", "BINARY", "AND_JUMP", "OR_JUMP", "IMPORT", "EXPORT",
+    "CALL", "PIPE_CALL", "BINARY", "AND_JUMP", "OR_JUMP", "COALESCE_JUMP",
+    "BUILD_MAP", "MEMBER", "IMPORT", "EXPORT",
 }
 
 
@@ -206,7 +219,7 @@ def verify(module: CanonicalIR) -> None:
         for index, instruction in enumerate(code):
             if instruction.op not in _ALLOWED:
                 raise IRVerificationError(f"{label}: unknown IR operation at {index}: {instruction.op}")
-            if instruction.op in {"JUMP", "JUMP_IF_FALSE", "AND_JUMP", "OR_JUMP"}:
+            if instruction.op in {"JUMP", "JUMP_IF_FALSE", "AND_JUMP", "OR_JUMP", "COALESCE_JUMP"}:
                 target = instruction.argument
                 if not isinstance(target, int) or target < 0 or target > len(code):
                     raise IRVerificationError(f"{label}: invalid jump target at {index}")

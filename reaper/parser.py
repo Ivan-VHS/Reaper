@@ -19,13 +19,14 @@ class Node:
 
 _PRECEDENCE = {
     "::": 1,
-    "OR": 2,
-    "AND": 3,
-    "==": 4, "!=": 4, "<": 4, "<=": 4, ">": 4, ">=": 4,
-    "++": 5,
-    "+": 6, "-": 6,
-    "*": 7, "/": 7, "//": 7, "%": 7,
-    "**": 8,
+    "??": 2,
+    "OR": 3,
+    "AND": 4,
+    "==": 5, "!=": 5, "<": 5, "<=": 5, ">": 5, ">=": 5,
+    "++": 6,
+    "+": 7, "-": 7,
+    "*": 8, "/": 8, "//": 8, "%": 8,
+    "**": 9,
 }
 
 
@@ -145,6 +146,11 @@ class Parser:
             if self._match("("):
                 left = self._call(left, self._previous())
                 continue
+            if self._match(".", "?."):
+                token = self._previous()
+                member = self._consume("IDENT", "expected a map key after member-access operator")
+                left = Node("member", token, value=(member.value, token.kind == "?."), children=[left])
+                continue
             if self._match("["):
                 token = self._previous()
                 index = self._expression()
@@ -159,7 +165,7 @@ class Parser:
                 break
             token = self._advance()
             self._skip_newlines()
-            next_minimum = precedence if operator == "**" else precedence + 1
+            next_minimum = precedence if operator in {"**", "??"} else precedence + 1
             right = self._expression(next_minimum)
             left = Node("binary", token, value=operator, children=[left, right])
         return left
@@ -194,7 +200,7 @@ class Parser:
                 return expression
             if token.kind in {"TRUE", "FALSE"}:
                 return Node("literal", token, value=token.kind == "TRUE")
-            return Node("unary", token, value=token.kind, children=[self._expression(9)])
+            return Node("unary", token, value=token.kind, children=[self._expression(10)])
         if self._match("NOTHING"):
             token = self._previous()
             return Node("literal", token, value=None)
@@ -214,6 +220,28 @@ class Parser:
                     self._skip_newlines()
             self._consume("]", "expected ']' after list")
             return Node("list", token, children=items)
+        if self._match("{"):
+            token = self._previous()
+            entries: list[Node] = []
+            self._skip_newlines()
+            if not self._check("}"):
+                while True:
+                    computed_key = self._match("[")
+                    key = self._expression()
+                    if computed_key:
+                        self._consume("]", "expected ']' after computed map key")
+                    elif key.kind == "name":
+                        # Bare identifiers are ergonomic string keys; use [name]
+                        # when the value of a variable should be used as the key.
+                        key = Node("literal", key.token, value=key.value)
+                    self._consume(":", "expected ':' between map key and value")
+                    entries.extend((key, self._expression()))
+                    self._skip_newlines()
+                    if not self._match(","):
+                        break
+                    self._skip_newlines()
+            self._consume("}", "expected '}' after map literal")
+            return Node("map", token, children=entries)
         raise self._error(self._peek(), "expected an expression")
 
     def _statement_end(self) -> None:
