@@ -101,7 +101,10 @@ static void parses_empty_blocks_and_empty_lists(void) {
     assert(parse_program("craft empty() {}\nmake items := []\n", &ast, &error));
     assert(count_kind(&ast, REAPER_AST_FUNCTION) == 1U);
     assert(count_kind(&ast, REAPER_AST_LIST) == 1U);
-    assert(reaper_ast_write_json(&ast, tmpfile()));
+    FILE *json = tmpfile();
+    assert(json != NULL);
+    assert(reaper_ast_write_json(&ast, json));
+    fclose(json);
     reaper_ast_free(&ast);
 }
 
