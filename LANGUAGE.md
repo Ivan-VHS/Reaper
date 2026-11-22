@@ -10,6 +10,8 @@ Reaper 0.1 is an expression-oriented Python-hosted interpreter. It is not yet a 
 | `change name = value` | reassignment |
 | `yield value` | function result |
 | `emit value` | explicit console output |
+| `attempt { ... } recover error { ... } finally { ... }` | recover language runtime errors and always run cleanup |
+| `recover` or `finally` | either clause may be used alone; at least one is required |
 | `value :: op(args)` | pass value as first argument |
 | `[a,b] :: map(fn)` | collection flow |
 
@@ -19,7 +21,11 @@ make total := [1, 2, 3] :: map(double) :: sum()
 emit "total = " ++ text(total)
 ```
 
-Rules: explicit effects; no implicit file/network/clock access in ordinary expressions; no silent coercion; bounded steps, call depth and collections. See [runtime limits](docs/RUNTIME_PLATFORM.md).
+Russian exact aliases: `попытка` → `attempt`, `обработать` → `recover`, `наконец` → `finally`.
+
+`recover` receives the runtime diagnostic as text. `finally` runs on success, recovery, uncaught language errors and early function return. The execution-budget error is deliberately not recoverable. This is implemented in the Python reference runtime and VM; native C17 parity is not claimed.
+
+Rules: explicit effects; no implicit file/network/clock access in ordinary expressions; no silent coercion; bounded steps, call depth and collections. See [runtime limits](docs/RUNTIME_PLATFORM.md) and [structured error handling](docs/STRUCTURED_ERROR_HANDLING.md).
 
 ## Integrated product layer
 
