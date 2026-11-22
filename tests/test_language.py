@@ -22,6 +22,7 @@ class LexerTests(unittest.TestCase):
             ("попытка", "attempt"),
             ("обработать", "recover"),
             ("наконец", "finally"),
+            ("бросить", "throw"),
             ("модуль", "module"),
             ("публичный", "pub"),
             ("процедура", "fn"),
@@ -220,11 +221,25 @@ class RuntimeTests(unittest.TestCase):
 
     def test_russian_attempt_recover_finally_aliases_execute(self) -> None:
         source = """
-        попытка { вывести 1 / 0 }
-        обработать ошибка { вывести "поймано" }
+        попытка { бросить "сбой" }
+        обработать ошибка { вывести contains(ошибка, "thrown: сбой") }
         наконец { вывести "закрыто" }
         """
-        self.assertEqual(self.capture(source), ["поймано", "закрыто"])
+        self.assertEqual(self.capture(source), ["true", "закрыто"])
+
+    def test_throw_is_recoverable_in_both_engines(self) -> None:
+        source = """
+        attempt { throw "manual failure" }
+        recover failure { emit contains(failure, "thrown: manual failure") }
+        """
+        for engine in ("treewalk", "vm"):
+            output: list[str] = []
+            Interpreter(output=output.append).run(source, engine=engine)
+            self.assertEqual(output, ["true"], engine)
+
+    def test_throw_requires_a_value(self) -> None:
+        with self.assertRaisesRegex(ParseError, "expected a value after 'throw'"):
+            parse("throw")
 
     def test_each_and_range(self) -> None:
         source = """
