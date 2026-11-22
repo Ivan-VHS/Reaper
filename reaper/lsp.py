@@ -6,6 +6,7 @@ import re
 import sys
 from .language_service import BUILTINS, KEYWORDS, LanguageService, Span, _offset
 from .lexer import KEYWORD_ALIASES
+from .formatter import format_document
 
 SEMANTIC_TOKEN_TYPES = [
     "namespace", "type", "class", "enum", "interface", "struct",
@@ -157,6 +158,7 @@ class LspServer:
                         "referencesProvider": True,
                         "renameProvider": {"prepareProvider": False},
                         "documentSymbolProvider": True,
+                        "documentFormattingProvider": True,
                         "workspaceSymbolProvider": True,
                         "semanticTokensProvider": {
                             "legend": {
@@ -243,6 +245,29 @@ class LspServer:
                     "range": self._range(analysis.snapshot.text, symbol.span),
                     "selectionRange": self._range(analysis.snapshot.text, symbol.span),
                 } for symbol in analysis.symbols]
+            elif method == "textDocument/formatting":
+                uri = params["textDocument"]["uri"]
+                snapshot = self.service._docs.get(uri)
+                if snapshot is None:
+                    raise ValueError(f"document is not open: {uri}")
+                options = params.get("options", {})
+                tab_size = options.get("tabSize", 4) if isinstance(options, dict) else 4
+                if isinstance(tab_size, bool) or not isinstance(tab_size, int):
+                    tab_size = 4
+                formatted = format_document(snapshot.text, indent_width=tab_size)
+                if formatted != snapshot.text:
+                    end_line = snapshot.text.count("\\n")
+                    last_line = snapshot.text.rsplit("\\n", 1)[-1]
+                    end_character = len(last_line.encode("utf-16-le")) // 2
+                    result = [{
+                        "range": {
+                            "start": {"line": 0, "character": 0},
+                            "end": {"line": end_line, "character": end_character},
+                        },
+                        "newText": formatted,
+                    }]
+                else:
+                    result = []
             elif method == "textDocument/semanticTokens/full":
                 uri = params["textDocument"]["uri"]
                 result = {"data": self._semantic_tokens(uri)}
