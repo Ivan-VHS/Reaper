@@ -22,6 +22,25 @@ class LspTransportTests(unittest.TestCase):
         finally:
             server.service.shutdown()
 
+    def test_exception_keywords_have_hover_descriptions(self):
+        server = LspServer()
+        uri = "file:///exceptions.rpr"
+        try:
+            server.dispatch({"method": "textDocument/didOpen", "params": {
+                "textDocument": {"uri": uri, "version": 1,
+                                 "text": 'attempt { throw "x" } recover failure { emit failure } finally { emit "done" }'}
+            }})
+            for word in ("attempt", "recover", "finally", "throw", "попытка", "бросить"):
+                line = f"{word} {{ nothing }}"
+                server.service.open(uri + word, line)
+                result = server.dispatch({"id": word, "method": "textDocument/hover", "params": {
+                    "textDocument": {"uri": uri + word},
+                    "position": {"line": 0, "character": len(word) // 2}
+                }})
+                self.assertIn(word, result["result"]["contents"]["value"] if word not in ("попытка", "бросить") else result["result"]["contents"]["value"])
+        finally:
+            server.service.shutdown()
+
 class DebugAdapterTests(unittest.TestCase):
     def test_initialize_and_breakpoint_contract(self):
         stream = io.BytesIO()
