@@ -48,6 +48,7 @@ flowchart LR
 | Область | Реализованные функции и границы |
 |---|---|
 | Python runtime | lexer, parser, интерпретатор, CLI, REPL, модули, closures, quotas и audit |
+| Flow toolkit | 12 ограниченных функциональных операций для tree-walk и VM; паритет с native C17 не заявляется |
 | Reaper Studio | основа Windows IDE: дерево проекта, редактор, подсветка, номера строк, поиск, check/run и отладчик |
 | LSP | stdio-сервис: инкрементальные UTF-16-документы, диагностика parser/structure, completion, hover, symbols и лексическая навигация; анализ в пределах открытого файла |
 | DAP | stdio debug adapter: запуск, построчные breakpoints, пошаговое выполнение операторов, stack и локальные переменные |
