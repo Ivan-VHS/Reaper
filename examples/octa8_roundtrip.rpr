@@ -1,0 +1,10 @@
+craft double(value) {
+    yield value * 2
+}
+make source := [1, 2, 3]
+make wire := source :: octa8_pack()
+assert(octa8_validate(wire), "OCTA-8 envelope is invalid")
+make transformed := wire :: octa8_map(double)
+make restored := transformed :: octa8_unpack()
+emit text(restored)
+emit wire :: octa8_digest()

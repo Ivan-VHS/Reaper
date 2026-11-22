@@ -14,6 +14,8 @@
 | OPlague ↔ Pytyliki | explicit-path metric cross-check | optional implemented |
 | VentuSample → Reaper | pack manifest, 22 descriptors | implemented |
 | Reaper → VentuSample | render request | planned |
+| All four projects | OCTA-8 JSON value envelope (`ivan-vhs.octa8.v1`) | implemented contract; native adapter coverage is project-specific |
+| All four projects | CLife v1 bounded snapshots with SHA-256 verification and new-directory recovery | implemented tool in each repository |
 | VentuSample ↔ Pytyliki | direct adapter | planned |
 | VentuSample ↔ OPlague | no useful coupling | not applicable |
 

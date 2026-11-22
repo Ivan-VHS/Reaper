@@ -792,6 +792,23 @@ class Interpreter:
         register("pytyliki_distance", pytyliki_distance, 3, 3)
         register("pytyliki_orthogonal", pytyliki_orthogonal, 4, 4)
 
+        from . import octa8 as _octa8
+
+        def octa8_map_language(envelope: Any, function: Any) -> dict[str, Any]:
+            callback(function)
+            return _octa8.octa8_map(
+                envelope,
+                lambda value: self._call(function, [value], Token("BUILTIN", "octa8_map", 1, 1)),
+            )
+
+        register("octa8_kind", _octa8.octa8_kind, 1, 1)
+        register("octa8_pack", _octa8.octa8_pack, 1, 1)
+        register("octa8_validate", _octa8.octa8_validate, 1, 1)
+        register("octa8_unpack", _octa8.octa8_unpack, 1, 1)
+        register("octa8_digest", _octa8.octa8_digest, 1, 1)
+        register("octa8_assert_kind", _octa8.octa8_assert_kind, 2, 2)
+        register("octa8_map", octa8_map_language, 2, 2)
+
     @staticmethod
     def _require_pytyliki(value: Any) -> PytylikiBridge:
         if not isinstance(value, PytylikiBridge):

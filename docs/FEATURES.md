@@ -15,6 +15,8 @@
 | THESIS | versioned assertion/evidence graph | no auto-verification |
 | VentuSample | pack v1 manifest, 22 descriptors, pair comparison | implemented consumer |
 | Pytyliki | optional C ABI metric calls | explicit trusted path |
+| OCTA-8 | eight bounded value kinds, deterministic JSON envelope, validate/unpack/digest/map language builtins | implemented in Python reference runtime; C17 parity not claimed |
+| CLife | bounded snapshots, SHA-256 verify and safe restore into new directory | implemented Python utility |
 | Registries | 813 proposals; 666 API contracts; 666 symbolic lexemes | specification, not completion |
 
 Python remains the compatibility reference. Native C17 is not yet a full interpreter.
