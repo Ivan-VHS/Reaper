@@ -52,6 +52,10 @@ if(REAPER_BUILD_TESTS)
     target_link_libraries(reaper-parser-tests PRIVATE reaper_core)
     add_test(NAME native-parser COMMAND reaper-parser-tests)
 
+    add_executable(reaper-program-parser-tests tests/test_program_parser.c)
+    target_link_libraries(reaper-program-parser-tests PRIVATE reaper_core)
+    add_test(NAME native-program-parser COMMAND reaper-program-parser-tests)
+
     add_executable(reaper-optimizer-tests tests/test_optimizer.c)
     target_link_libraries(reaper-optimizer-tests PRIVATE reaper_core)
     add_test(NAME native-optimizer COMMAND reaper-optimizer-tests)
