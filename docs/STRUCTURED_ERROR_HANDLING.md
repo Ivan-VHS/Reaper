@@ -29,7 +29,7 @@ The clauses have the following contract:
 - `recover name` is optional. It runs only after a `ReaperRuntimeError`; `name` is bound to the diagnostic text in a recovery-local scope.
 - `finally` is optional. It runs after normal completion, a recovered error, an uncaught language error, or an early `yield`.
 - At least one of `recover` or `finally` is required. Clause order is `recover` followed by `finally`.
-- `ExecutionLimitError` is deliberately not recoverable. A program cannot catch its way out of the configured execution budget.
+- `ExecutionLimitError` is deliberately not recoverable. A program cannot catch its way out of the configured execution budget. A `finally` block is still entered, but its own instructions consume the same budget; cleanup cannot be used to escape the limit.
 - `throw value` creates a catchable language error; it does not expose Python or host exception objects.
 - Errors raised by arbitrary host callbacks are not converted into language exceptions by this statement.
 
