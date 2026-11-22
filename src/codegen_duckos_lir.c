@@ -832,7 +832,7 @@ static int emit_function(
         "    movl $%d, %%eax\n"
         "    leave\n"
         "    ret\n",
-        f, f, REAPER_DUCK_STATUS_OVERFLOW,
+        f, f, REAPER_DUCK_STATUS_ARITHMETIC_OVERFLOW,
         f, REAPER_DUCK_STATUS_DIVISION_BY_ZERO,
         f, REAPER_DUCK_STATUS_INVALID_POINTER,
         f, REAPER_DUCK_STATUS_BAD_ALIGNMENT,
