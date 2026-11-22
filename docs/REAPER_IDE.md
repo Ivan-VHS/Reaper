@@ -23,7 +23,7 @@ Both services use Content-Length framed JSON-RPC over stdin/stdout. Stdout is re
 |---|---|---|
 | LSP transport | Implemented | JSON-RPC 2.0, Content-Length framing |
 | Parser diagnostics | Implemented | Existing REAPER lexer/parser; no second grammar |
-| Completion / hover | Implemented | Canonical keywords, aliases and bounded built-ins |
+| Completion / hover | Implemented | Canonical keywords, aliases and bounded built-ins; exception syntax has dedicated hover help |
 | Definition / references / rename | Basic | Lexical identifier matching, not semantic resolution |
 | Document symbols | Basic | Indexed make, vary, craft and supported type declarations |
 | DAP transport | Implemented | Framed request/response/events |
@@ -38,7 +38,8 @@ Both services use Content-Length framed JSON-RPC over stdin/stdout. Stdout is re
 
 The Windows Studio editor also reuses the canonical `LanguageService` directly:
 
-- **Ctrl+Space** opens local completion for REAPER keywords, built-ins and symbols in the current document.
+- **Ctrl+Space** opens local completion for REAPER keywords, built-ins and symbols in the current document. The exception keywords `attempt`, `recover`, `finally`, `throw` and their exact МОСТ aliases are included.
+- Hover help describes the structured exception-handling keywords.
 - **F12** navigates to a declaration in that document.
 - **Find references** highlights lexical occurrences and lists their line/column positions.
 - **Ctrl+Shift+R** renames lexical occurrences in the current document after a confirmation prompt.
