@@ -2,7 +2,7 @@
 
 | Component | Current scope | Status |
 |---|---|---|
-| Python runtime | lexer, parser, interpreter, CLI, REPL, modules | available |
+| Python runtime | lexer, parser, interpreter, CLI, REPL, modules, structured `attempt/recover/finally` | available; tree-walk and VM parity covered by tests |
 | Quotas/resources | steps, calls, collections, text, heap, open handles | reference runtime |
 | Division | Euclidean divmod, quotient/remainder, divisibility | implemented |
 | Allocation | partition/split, distribute, weighted allocation | implemented |
@@ -17,4 +17,4 @@
 | Pytyliki | optional C ABI metric calls | explicit trusted path |
 | Registries | 813 proposals; 666 API contracts; 666 symbolic lexemes | specification, not completion |
 
-Python remains the compatibility reference. Native C17 is not yet a full interpreter.
+The structured error-handling construct is implemented in the Python reference runtime and canonical IR/VM. Native C17 grammar and runtime parity remain out of scope for this feature. Python remains the compatibility reference. Native C17 is not yet a full interpreter.
