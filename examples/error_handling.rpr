@@ -1,0 +1,9 @@
+# Structured error handling in Reaper.
+attempt {
+    emit "starting"
+    emit 10 / 0
+} recover failure {
+    emit "recovered"
+} finally {
+    emit "cleanup"
+}
