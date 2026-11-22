@@ -1,163 +1,237 @@
-# Reaper — мова програмування з потоковою композицією
+# Reaper — мова програмування з потоковою композицією та Studio
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
-<p align="center"><img src="assets/readme/dashboard.svg" alt="Візуальний огляд Reaper 2026" width="100%"></p>
-<sub>Візуальний огляд проєкту · README оновлено 22.11.2026 · палітра проєкту · читабельні схеми даних</sub>
+<p align="center"><img src="assets/readme/dashboard.svg" alt="Огляд проєкту Reaper" width="100%"></p>
 
+[Вихідний код](https://github.com/Ivan-VHS/Reaper) · [Python CI](.github/workflows/ci.yml) · [Збирання Windows Studio](.github/workflows/desktop-build.yml) · [Сумісність Node.js](.github/workflows/noo-tah.yml) · [Індекс документації](docs/README.md) · [Apache-2.0](LICENSE)
 
+> **Призначення:** Reaper — локальна мова програмування, інтерпретатор, набір інструментів розробника та desktop IDE для Windows. Це не hosted web demo і не production web service. Python runtime є поточною виконуваною еталонною реалізацією сумісності; нативний трек C17 реалізований частково. Документацію звірено з `main` **22.11.2026**.
 
-[CI](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml) · [Збирання Windows Studio](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml) · Python 3.10+ reference runtime · нативний напрям C17 · Windows Studio · Apache-2.0
-**Розробник:** [Ivan-VHS](https://github.com/Ivan-VHS)
+## Призначення та стан реалізації
 
-Reaper — мова виразів із явним потоком даних: оператор `::` передає значення наступній операції. Python runtime залишається поточною еталонною виконуваною реалізацією. Реалізація C17 розвивається окремо й поки не є повною заміною runtime.
+Reaper — expression-oriented мова, у якій оператор `::` передає значення наступній операції. До складу входять Python reference runtime, CLI/REPL, Windows Studio, LSP/DAP через stdio та необов’язкова інтеграція з офіційним Node.js через NOO TAH.
 
-## Реальний знімок Reaper Studio
+Проєкт призначений для розробників мов і tooling, інженерів застосунків, QA, викладачів і рев’юерів, яким потрібно експериментувати з файлами Reaper та перевіряти контракти мовних сервісів.
 
-<p align="center"><img src="assets/screenshots/reaper-studio.png" alt="Reaper Studio у Windows 11" width="100%"></p>
+### Що реалізовано
 
-## Потік функціональних даних
+| Компонент | Поточний обсяг | Межа |
+|---|---|---|
+| Python runtime | lexer, parser, interpreter, CLI, REPL, модулі, closures, quotas та audit log | поточна виконувана еталонна реалізація |
+| Reaper Studio | основа Windows IDE: дерево проєкту, редактор, підсвічування синтаксису, пошук, check/run і debugger | локальний desktop-застосунок |
+| LSP | stdio JSON-RPC, diagnostics, completion, hover, symbols і лексична навігація | одкритий документ; без міжфайлового type inference |
+| DAP | stdio debug adapter, line breakpoints, stepping, stack і locals | налагодження на межах операторів; лише довірені локальні програми |
+| NOO TAH | керування проєктами/процесами навколо офіційного Node.js, npm/npx та Inspector | Node/V8/libuv надає upstream Node |
+| Native C17 | lexer, expression parser, owned AST, checked IR і обмежений lowering | активний частковий напрям, не parity з Python runtime |
+| QCS / embedded tools | окремий parser апаратної області, JSON AST та обмежені embedded-інструменти | довідковий/аналітичний інструментарій, не виконання на обладнанні |
+| Kora | стандартні допоміжні функції та Lua ReaScripts для Cockos REAPER | окремо від runtime мови Reaper |
 
-Схема показує реалізований рух даних між джерелами, етапами обробки та сформованими результатами проєкту.
+Каталоги та реєстри можуть містити запропоновані або зарезервовані записи. Запис у каталозі не означає, що функцію реалізовано в runtime. Рівень зрілості та межі описані у [Features](docs/FEATURES.md), [REAPER IDE](docs/REAPER_IDE.md), [NOO TAH](docs/NOO_TAH.md) і [Kora for REAPER](docs/KORA_REAPER.md).
 
-```mermaid
-flowchart TD
-    A[Вихідний код Reaper] --> B[Lexer і parser]
-    B --> C[Еталонне середовище Python]
-    C --> D[CLI та REPL]
-    B --> E[Мовний сервіс LSP]
-    C --> F[Сервіс налагодження DAP]
-    G[Проєкт JavaScript] --> H[Офіційний дистрибутив Node.js]
-    H --> I[V8, API Node.js, npm та Inspector]
-    J[Нативний напрям C17] --> K[Частковий parser і lowering]
-  classDef readmeNode fill:#EEF3FF,stroke:#245FC2,color:#1B3150,stroke-width:1.5px;
-  class A,B,C,D,E,F,G,H,I,J,K readmeNode;
-  linkStyle default stroke:#245FC2,stroke-width:1.8px;
-```
+Зображення нижче — знімок Windows Studio, а не браузерний playground.
 
-## Шляхи виконання та результатів
+<p align="center"><img src="assets/screenshots/reaper-studio.png" alt="Reaper Studio у Windows" width="100%"></p>
+<sub>Знімок desktop-програми · вихідне зображення 1920×1080. Скріншот не є live hosted demo.</sub>
 
-Друга схема відокремлює чинні шляхи виконання й підтримувані результати від каталожних або недоступних функцій.
+## Швидкий старт
 
-```mermaid
-flowchart LR
-    A[Програма Reaper] --> B[Середовище Python]
-    B --> C[Результат виконання]
-    D[Відкритий вихідний документ] --> E[Запити LSP]
-    E --> F[Діагностика, completion і symbols]
-    G[Запит налагодження] --> H[DAP]
-    H --> I[Точки зупинки, стек і локальні змінні]
-  classDef readmeNode fill:#EEF3FF,stroke:#245FC2,color:#1B3150,stroke-width:1.5px;
-  class A,B,C,D,E,F,G,H,I readmeNode;
-  linkStyle default stroke:#245FC2,stroke-width:1.8px;
-```
+### Вимоги
 
-<sub>Фактичний знімок програми · вихідне зображення 1920×1080 · початкові пікселі збережено, штучне збільшення не застосовується.</sub>
+- Python **3.10 або новіший**. CI перевіряє Python 3.10, 3.11 і 3.12.
+- Tkinter для графічного Studio (зазвичай входить до стандартної збірки Python; у деяких мінімальних Linux-пакетах його потрібно встановлювати окремо).
+- Git.
+- CMake **3.16+** і компілятор C17 лише для збирання часткового native track.
+- Node.js необов’язковий для NOO TAH. Compatibility workflow тестує Node.js **22 і 24**; він не потрібний для запуску програм Reaper `.rpr`.
 
-## Актуальна матриця можливостей
+Python package оголошує `setuptools>=68` як build-system requirement і не має переліку сторонніх runtime-залежностей у `pyproject.toml`.
 
-| Область | Реалізовані функції та межі |
-|---|---|
-| Python runtime | lexer, parser, інтерпретатор, CLI, REPL, модулі, closures, quotas та audit |
-| Reaper Studio | основа Windows IDE: дерево проєкту, редактор, підсвічування, номери рядків, пошук, check/run та налагоджувач |
-| LSP | stdio-сервіс: інкрементальні UTF-16-документи, parser/structure діагностика, completion, hover, symbols і лексична навігація; аналіз у межах відкритого файла |
-| DAP | stdio debug adapter: запуск, построкові breakpoints, покрокове виконання операторів, stack і локальні змінні |
-| Ділення й розподіл | перевірене ділення Евкліда, збалансоване розбиття роботи та пропорційний розподіл |
-| Atomic-Quantum 133 | 133 ID операцій; 8 перевірених ядер класичної симуляції; решта записів лише каталогізовані | обмежена модель вектора стану до 10 кубітів; без доступу до квантового обладнання |
-| NOO TAH | інтеграція офіційного Node.js: V8/libuv, ESM/CommonJS, core APIs, streams, workers, npm/npx, N-API та Inspector; JS Run/Check/Debug/Stop у Studio |
-| Внутрішні плагіни | 18 вбудованих сервісів із lifecycle-станом та обмеженим dispatch; Python reference runtime |
-| Kora | 66 стандартних utility-функцій у семи модулях із маніфестами; три Lua ReaScript для Cockos REAPER |
-| Native C17 | lexer, expression parser, owned AST, checked IR і обмежений lowering; без повного паритету з Python runtime |
-| МОСТ | 54 точні аліаси: 21 виконується в поточному reference subset, 33 зарезервовані лексично |
-| QCS 1.0 | окремий hardware-domain parser та JSON AST; без керування обладнанням |
-| THESIS | типізований граф доказів; твердження не підтверджуються автоматично |
-| Реєстри | 813 пропозицій функцій, 666 API-контрактів і 666 зарезервованих лексем; запис у реєстрі не означає готової реалізації |
-| Федерація | snapshots OPlague, manifests VentuSample та опційний Pytyliki C ABI |
-
-## CODEX-66 — робоче середовище IDE
-
-У Reaper Studio додано нативний каталог можливостей **CODEX-66**: шість груп по одинадцять пунктів, пошук за ID, назвою, категорією та зрілістю реалізації. **Ctrl+Space** відкриває локальні підказки REAPER, **F12** переходить до оголошення в поточному документі, **Знайти посилання** показує лексичні входження, а **Ctrl+Shift+R** перейменовує символ у поточному документі. **Ctrl+K** відкриває палітру команд.
-
-Каталог розрізняє реалізовані, часткові, заплановані й непідтримувані функції. Підказки працюють через локальний language service — це не хмарний AI. Пошук посилань і перейменування обмежені поточним документом; interpreter не є OS-пісочницею. Докладніше: [CODEX-66 — реалізація та межі](docs/CODEX_66_SHOWCASE.md).
-
-## Сервіси мови та налагодження
-
-Інструменти редактора надають stdio-протоколи:
+### Встановити Python reference runtime
 
 ```sh
-python -m reaper lsp
-python -m reaper dap
+python -m venv .venv
+# Активуйте середовище:
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+# Linux / macOS:       source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -e .
 ```
 
-Встановлені entry points: `reaper-lsp` і `reaper-dap`. LSP надає інкрементальні мовні функції на рівні документа. DAP налагоджує програми Reaper. Сервіси використовують канонічний Python parser/runtime; це не означає повного паритету C17, міжфайлового семантичного аналізу чи готового VS Code-клієнта.
-
-Точні можливості та межі: [архітектура REAPER IDE](docs/REAPER_IDE.md).
-
-## NOO TAH — середовище Node.js
-
-NOO TAH керує офіційним кросплатформним дистрибутивом Node.js, а не відтворює його рушій. V8, libuv, системні модулі, ESM/CommonJS, streams, workers, child processes, npm/npx, N-API та Inspector надає вибраний дистрибутив Node.
-
-Reaper Studio розпізнає проєкти `.js`, `.mjs` і `.cjs`; доступні JS Run, JS Check, JS Debug через Node Inspector, JS Stop, npm-команди й діагностика runtime. Node Inspector поки не інтегровано в панелі нативного DAP-налагоджувача.
+### Запустити програму та відкрити Studio
 
 ```sh
-reaper-noo-tah version
-reaper-noo-tah doctor
-reaper-noo-tah run app.mjs
-reaper-noo-tah check app.js
-reaper-noo-tah npm run build
-node --test tests/noo_tah/conformance.test.mjs
-```
-
-Тести сумісності перевіряють метадані runtime, ESM/CommonJS, файлове введення-виведення, crypto, streams/backpressure, loopback HTTP/TCP, workers, child processes, DNS і порядок event loop. CI-матриця використовує Node 22 та 24 на Windows, Linux і macOS. Документація: [NOO TAH](docs/NOO_TAH.md).
-
-## Kora та застосунки для Cockos REAPER
-
-Kora містить 66 стандартних utility-функцій у модулях ZDORO, DILLY, BAPLAP, KALI, PYEMONT, LIUR і SRETUO. Також доступні три Lua ReaScript:
-
-- **Track Health Dashboard** — діагностика проєкту й доріжок без змін.
-- **Prefix Selected Tracks** — перейменування вибраних доріжок однією undoable-операцією.
-- **Marker and Region Report** — список маркерів і регіонів у ReaScript console.
-
-У Cockos REAPER відкрийте **Actions → Show action list → ReaScript → Load** і виберіть скрипт із `reaper_scripts/kora/`. Це скрипти для вбудованого хоста REAPER, а не скомпільовані VST/AU/CLAP-ефекти. Окремий процес Node.js їм не потрібен. Документація: [Kora для REAPER](docs/KORA_REAPER.md).
-
-## Atomic-Quantum 133
-
-Python reference runtime містить 133 стабільні ID операцій у шести сімействах: стани, заплутаність, вимірювання, шум/ECC, атомна динаміка й алгоритми/телеметрія. Наразі вісім перевірених ядер забезпечують обмежену детерміновану класичну симуляцію; решта записів мають статус **catalogued-only** і не вважаються реалізованими. Вектор стану обмежений 10 кубітами, перевіряє скінченність амплітуд і нормалізацію та підтримує вимірювання із заданим seed. Доступу до квантового обладнання, його виявлення, калібрування чи керування немає; C17-трек не є квантовим виконанням. Докладніше: [контракт Atomic-Quantum 133](docs/ATOMIC_QUANTUM_133.md).
-
-## Запуск, тести та збирання
-
-```sh
-python -m reaper examples/flow.rpr
 python -m reaper --check examples/flow.rpr
-python -m reaper --engine vm examples/flow.rpr
+python -m reaper examples/flow.rpr
 python -m reaper --repl
+python reaper_desktop.py
+```
+
+Після editable installation доступні відповідні entry points `reaper` і `reaper-studio`.
+
+### Запустити тести
+
+```sh
+python -m compileall -q reaper tests
 python -m unittest discover -s tests -v
 ```
 
-Windows Studio: `python reaper_desktop.py`.
+Під час першого встановлення може завантажитися оголошений build backend із package index; подальше виконання програм відбувається локально. Немає HTTP-порту застосунку, браузерного URL, кроку seed бази даних чи окремого mock-сервера.
 
-Нативний напрям C17:
+### Необов’язковий native C17 track
 
 ```sh
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DREAPER_BUILD_TESTS=ON
 cmake --build build --parallel
 ctest --test-dir build --output-on-failure
 ```
 
-Приклад:
+Ця збірка перевіряє поточну нативну підмножину compiler і її тести. Вона не замінює Python runtime і не підтверджує повну мовну parity.
 
-```reaper
-craft double(value) { yield value * 2 }
-make result := [1, 2, 3] :: map(double) :: sum()
-emit "result = " ++ text(result)
+### Необов’язкові перевірки NOO TAH / Node.js
+
+Встановіть Node.js з офіційного дистрибутива та додайте `node` до `PATH`, потім виконайте:
+
+```sh
+reaper-noo-tah version
+reaper-noo-tah doctor
+reaper-noo-tah check app.mjs
+reaper-noo-tah run app.mjs
+reaper-noo-tah npm run build
 ```
 
-[Контракт IDE 666](docs/IDE_666_IMPLEMENTATION.md) · [LSP/DAP](docs/REAPER_IDE.md) · [Node.js](docs/NOO_TAH.md) · [Kora для REAPER](docs/KORA_REAPER.md) · [Плагіни](docs/PLUGINS.md) · [Внутрішні продукти](docs/INTERNAL_PRODUCTS.md) · [Можливості](docs/FEATURES.md) · [Мова](LANGUAGE.md) · [Архітектура](docs/ARCHITECTURE.md) · [Реєстр 813](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [Федерація](docs/PROJECT_FEDERATION_MATRIX.md) · [Індекс](docs/README.md)
+Ці команди працюють із вибраним локальним Node-проєктом. Якщо сам проєкт запускає HTTP-сервер, його порт визначає цей проєкт; Reaper не надає власного web-preview URL.
 
-[English](README.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md) · [Релізи](https://github.com/Ivan-VHS/Reaper/releases) · [Apache-2.0](LICENSE)
+## Відтворювані сценарії, приклади та дані
 
+Приклади в репозиторії — локальні програми, а не відповіді живого API:
 
-## Довідник розподілу бюджету
-Приклад моделі бюджету 500 грн із JSON-контрактом та автономним симулятором. Це документаційний приклад, а не функція runtime самого застосунку.
+- `examples/flow.rpr` — базовий smoke-приклад мови.
+- `examples/device_audit.rpr` — приклад read-only аудиту, який після запуску створює версійований JSON-звіт.
+- `tests/` містить тести parser, runtime, language service, debugger, реєстрів та інтеграцій.
+- NOO TAH conformance suite перевіряє Node built-ins, ESM/CommonJS, streams, workers, child processes і loopback HTTP/TCP. Публічний тестовий сервіс не використовується.
 
-[Багатомовний довідник](docs/RESOURCE_ALLOCATION_500_UAH.md) · [Інтерактивний симулятор](docs/resource-allocation-500-uah.html) · [Приклад JSON](examples/resource-allocation-500-uah.json) · [JSON Schema](schemas/resource-allocation.v1.schema.json)
+Основні сценарії:
+
+1. **Лише синтаксис:** `python -m reaper --check examples/flow.rpr`; команда перевіряє синтаксис без виконання програми.
+2. **Запуск прикладу:** `python -m reaper examples/flow.rpr`; перегляньте результат.
+3. **Альтернативний execution engine:** `python -m reaper --engine vm examples/flow.rpr`; порівняйте з типовим tree-walk engine.
+4. **Інтерактивний prompt:** `python -m reaper --repl`; вихід завершує поточну сесію в пам’яті.
+5. **LSP:** `python -m reaper lsp`; читає framed JSON-RPC зі stdin і пише протокольні повідомлення у stdout.
+6. **DAP:** `python -m reaper dap`; використовуйте довірену локальну програму для запуску та покрокового налагодження.
+7. **Node compatibility:** `node --test tests/noo_tah/conformance.test.mjs`; тести використовують loopback networking і Node built-ins.
+
+CLI застосовує явні resource limits: за замовчуванням один мільйон кроків виконання, 100 000 елементів колекції, один мільйон символів тексту, managed heap 64 MiB і 64 одночасно відкриті managed files. Значення можна змінювати документованими CLI-параметрами. Це обмеження інтерпретатора, а не OS-level sandbox.
+
+Стан runtime існує в процесі та у файлах, які вибирає оператор. Необов’язковий `--audit-log PATH` дописує локальний hash-chained журнал виконання; `--verify-audit-log PATH` перевіряє його. Закриття процесу завершує активну memory-сесію, але не видаляє файли програм чи журналів. Browser localStorage, sessionStorage, IndexedDB та cookies немає.
+
+## Конфігурація, середовище та довіра
+
+Кореневого `.env.example`, Docker Compose web stack, hosted-акаунтів, demo login, CORS policy чи налаштування HTTPS для самого застосунку немає. Python runtime працює без Node.js. NOO TAH має три документовані environment overrides:
+
+| Змінна | Призначення | Значення за замовчуванням / поведінка |
+|---|---|---|
+| `NOO_TAH_NODE` | шлях до виконуваного Node | інакше пошук `node` у `PATH` |
+| `NOO_TAH_NPM_CLI` | явний шлях до `npm-cli.js` | інакше пошук у типових шляхах біля вибраного Node |
+| `NOO_TAH_NPX_CLI` | явний шлях до `npx-cli.js` | інакше пошук у типових шляхах біля вибраного Node |
+
+Ці значення є шляхами до виконуваних файлів, а не секретами. Не зберігайте credentials у source control. Якщо Node відсутній, з’явиться зрозуміла помилка `Node.js not found`; відсутній npm/npx CLI повідомляє, який override потрібно задати.
+
+Інші важливі перемикачі:
+
+- `--check` / `--lint` розбирає програму без запуску.
+- `--engine treewalk|vm` вибирає runtime engine.
+- `--allow-native-ffi` явно дозволяє завантаження native C ABI; використовуйте лише довірену бібліотеку.
+- `--steps`, `--items`, `--text-length`, `--heap-bytes` та `--open-resources` задають resource limits.
+
+Інтерпретатор мови не є OS sandbox. DAP запускає довірені локальні файли; FFI дозволяє native code; встановлення npm-пакетів і lifecycle scripts запускає сторонній код із правами поточного користувача. Не запускайте невідомі програми чи пакети лише тому, що вони наведені як приклад.
+
+LSP і DAP використовують Content-Length framed JSON-RPC через standard input/output, а не hosted HTTP API. Node Inspector може відкрити локальну debugging endpoint за явним запитом; вона належить вибраному Node-процесу, а не публічному web stand Reaper.
+
+## Робота зі Studio та клавіатурні комбінації
+
+Редактор Windows Studio використовує канонічний language service для локальної навігації:
+
+| Комбінація / дія | Поведінка |
+|---|---|
+| `Ctrl+Space` | локальне доповнення ключових слів Reaper, built-ins і символів поточного документа |
+| `F12` | перехід до декларації в поточному документі |
+| Find references | пошук лексичних входжень ідентифікатора в поточному документі |
+| `Ctrl+Shift+R` | перейменування лексичних входжень у поточному документі після підтвердження |
+| `Ctrl+K` | відкриття command palette |
+| `Ctrl+Alt+K` | відкриття каталогу можливостей CODEX-66 |
+
+Ці дії працюють у межах документа, а не виконують міжфайловий semantic refactoring. Conditional breakpoints, evaluate, step-out, повний type inference і cloud AI assistant не заявляються як реалізовані.
+
+## Архітектура та структура репозиторію
+
+```text
+Reaper source (.rpr)
+  -> Python lexer / parser / runtime
+  -> CLI, REPL або Studio
+  -> optional LSP / DAP stdio services
+
+JavaScript project
+  -> NOO TAH process manager
+  -> official Node.js (V8, libuv, npm, Inspector)
+
+Native C17 track
+  -> lexer / parser / AST / IR / limited lowering
+```
+
+| Шлях | Вміст |
+|---|---|
+| `reaper/` | Python reference runtime, CLI, Studio, language/debug services і NOO TAH |
+| `reaper/kora/` | допоміжні функції стандартної бібліотеки Kora |
+| `src/`, `include/` | частковий native C17 track |
+| `tests/` | Python, protocol, runtime та native тести |
+| `examples/` | локальні приклади програм `.rpr` |
+| `docs/` | мова, IDE, архітектура й межі функцій |
+| `editors/` | підтримка редакторів та protocol notes |
+| `reaper_scripts/` | Lua-скрипти, які запускає Cockos REAPER |
+| `.github/workflows/` | CI, native/desktop build і Node compatibility |
+
+Проєкт не розділений на розгорнуті frontend, backend і mock API. Browser compatibility, browser storage, публічні порти, CORS та HTTPS не застосовуються до самого runtime Reaper.
+
+## CI, desktop-артефакти та відкат
+
+- [Reaper CI](.github/workflows/ci.yml) запускає тести Python 3.10/3.11/3.12 та перевіряє приклади й контракти.
+- [NOO TAH compatibility](.github/workflows/noo-tah.yml) перевіряє Node 22 і 24 у Windows, Linux та macOS.
+- Native C17 track збирається і тестується окремо.
+- [Desktop build](.github/workflows/desktop-build.yml) пакує Windows Studio у `Reaper-Studio-windows-x64.zip`. Git-тег формату `v*` запускає публікацію релізу.
+
+Workflow artifacts — це завантажувані результати збірки, а не live hosted IDE. Для відкату розповсюджуваної desktop-версії використовуйте попередній GitHub Release із тегом. Онлайн web service для відкату немає. Логи build і тестів доступні в GitHub Actions.
+
+## Усунення проблем
+
+| Симптом | Що перевірити |
+|---|---|
+| Не знайдено `python -m reaper` | активуйте virtual environment або запускайте з кореня репозиторію |
+| Studio не відкривається | перевірте, чи містить встановлений Python Tkinter |
+| Node не знайдено | встановіть Node.js або задайте шлях через `NOO_TAH_NODE` |
+| Не знайдено npm/npx | задайте `NOO_TAH_NPM_CLI` або `NOO_TAH_NPX_CLI` |
+| Node project build падає | виконайте `reaper-noo-tah doctor` і перегляньте вивід Node/npm; lifecycle scripts можуть запускати сторонній код |
+| Native C тести не проходять | перевірте CMake 3.16+, компілятор C17 та повний вивід CTest |
+| Некоректний вивід LSP/DAP | залишайте stdout для протокольних frames; application logs спрямовуйте у stderr |
+
+## Відомі обмеження, внесок і ліцензія
+
+Python залишається виконуваною еталонною реалізацією. Native C17 parsing/lowering частковий. LSP symbols/references/rename є лексичними й обмежені поточним документом; DAP stepping виконується на рівні операторів; IDE не є OS sandbox. NOO TAH делегує JavaScript офіційному Node, а не перевиконує V8.
+
+Окремого `CONTRIBUTING.md` не знайдено. Пропонуйте зміни через [GitHub Issues](https://github.com/Ivan-VHS/Reaper/issues) або Pull Request. Додавайте відтворюваний приклад `.rpr`, версії Python/Node/compiler і точну команду з результатом. Запускайте Python tests, а за зміни native track — CMake/CTest.
+
+Ліцензія: [Apache-2.0](LICENSE).
+
+## Відповідність 66 правилам README
+
+Правила вебстенду відображені з урахуванням реального продукту — локального інструментарію розробника:
+
+| Правила | Покриття в README |
+|---|---|
+| 1–11 · призначення та межі | описано мову/IDE, аудиторію, виконуваний і частковий напрями, локальну область і відсутність hosted demo |
+| 12–22 · швидкий старт | точне встановлення Python, CLI, Studio, тести, native C17 та необов’язкові Node-команди |
+| 23–33 · конфігурація й доступ | документовано три реальні NOO TAH overrides, CLI-перемикачі та межі довіри; фальшивих credentials чи `.env` немає |
+| 34–44 · дані й поведінка | локальні приклади, сценарії, execution quotas, тривалість audit log, loopback-only tests і межі debug |
+| 45–55 · архітектура та збірка | описано пакети, native sources, приклади, тести, сервіси та CI-артефакти |
+| 56–66 · експлуатація й підтримка | наведено build/release workflow, відкат артефакту, діагностику, відомі межі, внесок і ліцензію |
+
+**Публічного URL Reaper web-playground немає.** Скріншоти Studio та завантажувані Windows artifacts не є live web stand.
