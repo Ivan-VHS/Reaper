@@ -59,6 +59,30 @@ def make_pack() -> dict[str, object]:
     }
 
 
+def make_pack_v2() -> dict[str, object]:
+    pack = make_pack()
+    pack["schema"] = "ventusample.pack.v2"
+    parameters = pack["parameters"]
+    parameters["musical_key"] = "C Natural Minor"
+    parameters["mode_family"] = "minor"
+    parameters.update({
+        "stochastic_enabled": True,
+        "stochastic_seed": 42,
+        "stochastic_intensity_percent": 35,
+        "stochastic_trigger_mode": "bar",
+        "stochastic_plugin_mask": 5,
+        "stochastic_topology": "parallel",
+    })
+    item = pack["files"][0]
+    item.update({
+        "musical_key": "C Natural Minor",
+        "scale": "Natural Minor",
+        "mode_family": "minor",
+        "stochastic_routes": ["offline.eq", "offline.saturation"],
+    })
+    return pack
+
+
 class VentuSampleFederationTests(unittest.TestCase):
     def test_billionaire_golden_era_profile_and_schema_stay_in_sync(self) -> None:
         pack = make_pack()
@@ -134,6 +158,33 @@ class VentuSampleFederationTests(unittest.TestCase):
         ]
         with self.assertRaisesRegex(ValueError, "exactly 8 file"):
             ventusample_metrics(pack)
+
+    def test_v2_metrics_validate_tonal_and_stochastic_metadata(self) -> None:
+        pack = make_pack_v2()
+        metrics = ventusample_metrics(pack)
+        self.assertEqual(len(metrics), 22)
+        self.assertAlmostEqual(metrics["bpm_normalized"], 93 / 190)
+        report = compare_ventusample_packs(pack, pack)
+        self.assertTrue(report["same_schema"])
+        self.assertTrue(report["same_musical_key"])
+        self.assertTrue(report["same_mode_family"])
+        self.assertEqual(report["reference"]["stochastic_topology"], "parallel")
+
+    def test_v2_rejects_bad_mode_and_stochastic_route_metadata(self) -> None:
+        invalid_mode = make_pack_v2()
+        invalid_mode["parameters"]["mode_family"] = "unknown"
+        with self.assertRaisesRegex(ValueError, "mode_family"):
+            ventusample_metrics(invalid_mode)
+        invalid_route = make_pack_v2()
+        invalid_route["files"][0]["stochastic_routes"] = ["../outside"]
+        with self.assertRaisesRegex(ValueError, "invalid route"):
+            ventusample_metrics(invalid_route)
+
+    def test_v1_and_v2_manifests_are_comparable_without_losing_schema_identity(self) -> None:
+        report = compare_ventusample_packs(make_pack(), make_pack_v2())
+        self.assertFalse(report["same_schema"])
+        self.assertTrue(report["same_style"])
+        self.assertEqual(report["schema"], REAPER_VENTUSAMPLE_COMPARISON_SCHEMA)
 
     def test_reaper_language_builtins_can_audit_a_manifest_file(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
