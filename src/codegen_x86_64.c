@@ -20,22 +20,6 @@ static size_t stack_slot(size_t node_index) {
     return 16U + node_index * 8U;
 }
 
-static int emit_instruction(
-    FILE *output,
-    const char *format,
-    size_t lhs,
-    size_t rhs,
-    size_t node_index
-) {
-    return fprintf(
-        output,
-        format,
-        stack_slot(lhs),
-        stack_slot(rhs),
-        node_index
-    ) >= 0;
-}
-
 int reaper_codegen_x86_64_sysv_elf(
     const ReaperIrModule *module,
     FILE *output,
@@ -77,7 +61,6 @@ int reaper_codegen_x86_64_sysv_elf(
         );
     }
 
-    /* Keep the frame aligned and reserve one private slot for the result pointer. */
     size_t frame_size = 8U + module->length * 8U;
     frame_size = (frame_size + 15U) & ~(size_t)15U;
 
