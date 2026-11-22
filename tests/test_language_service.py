@@ -46,6 +46,24 @@ class LanguageServiceTests(unittest.TestCase):
         self.assertEqual([(item.name, item.kind) for item in analysis.symbols],
                          [("привет", "function")])
 
+    def test_workspace_symbols_span_open_documents(self):
+        first = "file:///b.rpr"
+        second = "file:///a.rpr"
+        self.service.open(first, "craft render() {\\n emit 1\\n}")
+        self.service.open(second, "make result := 2\\ncraft render_track() {\\n emit result\\n}")
+        matches = self.service.workspace_symbols("render")
+        self.assertEqual(
+            [(snapshot.uri, symbol.name) for snapshot, symbol in matches],
+            [(second, "render_track"), (first, "render")],
+        )
+
+    def test_workspace_symbol_query_is_case_insensitive_and_bounded(self):
+        self.service.open("file:///x.rpr", "craft Render() {\\n emit 1\\n}\\ncraft reset() {\\n emit 0\\n}")
+        matches = self.service.workspace_symbols("RENDER", limit=1)
+        self.assertEqual([symbol.name for _, symbol in matches], ["Render"])
+        with self.assertRaises(ValueError):
+            self.service.workspace_symbols("", limit=0)
+
     def test_lazy_plugin_activation(self):
         registry = LanguagePluginRegistry()
         created = []
@@ -72,6 +90,24 @@ class LspAdapterTests(unittest.TestCase):
         capabilities = result["result"]["capabilities"]
         self.assertEqual(capabilities["textDocumentSync"]["change"], 2)
         self.assertTrue(capabilities["definitionProvider"])
+
+    def test_workspace_symbol_request_returns_locations_for_open_documents(self):
+        self.server.dispatch({"method": "textDocument/didOpen", "params": {
+            "textDocument": {"uri": "file:///a.rpr", "version": 1,
+                             "text": "craft build() {\\n emit 1\\n}"}
+        }})
+        self.server.dispatch({"method": "textDocument/didOpen", "params": {
+            "textDocument": {"uri": "file:///b.rpr", "version": 1,
+                             "text": "craft build_pack() {\\n emit 2\\n}"}
+        }})
+        response = self.server.dispatch({
+            "jsonrpc": "2.0", "id": 7, "method": "workspace/symbol",
+            "params": {"query": "build"},
+        })
+        self.assertEqual(
+            [(item["name"], item["location"]["uri"]) for item in response["result"]],
+            [("build", "file:///a.rpr"), ("build_pack", "file:///b.rpr")],
+        )
 
     def test_open_publishes_diagnostics_and_symbols(self):
         self.server.dispatch({"method": "textDocument/didOpen", "params": {
