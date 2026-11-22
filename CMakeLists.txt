@@ -26,7 +26,7 @@ add_library(reaper_core STATIC
     src/capability_suite.c
 )
 
-target_include_directories(reaper_core PUBLIC \${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(reaper_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 if(MSVC)
     target_compile_options(reaper_core PRIVATE /W4)
@@ -94,43 +94,43 @@ if(REAPER_BUILD_TESTS)
            CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64|amd64)$")
             add_test(
                 NAME native-codegen-smoke
-                COMMAND \${Python3_EXECUTABLE}
-                    \${CMAKE_CURRENT_SOURCE_DIR}/tests/native_codegen_smoke.py
+                COMMAND ${Python3_EXECUTABLE}
+                    ${CMAKE_CURRENT_SOURCE_DIR}/tests/native_codegen_smoke.py
                     --compiler $<TARGET_FILE:reaper-c>
-                    --cc \${CMAKE_C_COMPILER}
-                    --examples-root \${CMAKE_CURRENT_SOURCE_DIR}/examples/native
+                    --cc ${CMAKE_C_COMPILER}
+                    --examples-root ${CMAKE_CURRENT_SOURCE_DIR}/examples/native
             )
             add_test(
                 NAME native-duckos-dabi64-smoke
-                COMMAND \${Python3_EXECUTABLE}
-                    \${CMAKE_CURRENT_SOURCE_DIR}/tests/native_dabi64_smoke.py
+                COMMAND ${Python3_EXECUTABLE}
+                    ${CMAKE_CURRENT_SOURCE_DIR}/tests/native_dabi64_smoke.py
                     --compiler $<TARGET_FILE:reaper-c>
-                    --cc \${CMAKE_C_COMPILER}
-                    --examples-root \${CMAKE_CURRENT_SOURCE_DIR}/examples/native
+                    --cc ${CMAKE_C_COMPILER}
+                    --examples-root ${CMAKE_CURRENT_SOURCE_DIR}/examples/native
             )
         endif()
 
-        add_test(NAME python-token-catalog COMMAND \${Python3_EXECUTABLE} -m unittest discover -s tests -p test_token_catalog.py)
-        add_test(NAME python-atomic-quantum COMMAND \${Python3_EXECUTABLE} -m unittest discover -s tests -p test_atomic_quantum.py)
-        add_test(NAME python-self-hosting-bootstrap COMMAND \${Python3_EXECUTABLE} -m unittest discover -s tests -p test_self_hosting.py)
-        add_test(NAME generated-token-catalog COMMAND \${Python3_EXECUTABLE} tools/generate_token_catalog.py --check)
-        add_test(NAME python-patch-pipeline COMMAND \${Python3_EXECUTABLE} -m unittest discover -s tests -p test_patch_pipeline.py)
-        add_test(NAME python-feature-registry COMMAND \${Python3_EXECUTABLE} -m unittest discover -s tests -p test_feature_registry.py)
-        add_test(NAME most-feature-registry COMMAND \${Python3_EXECUTABLE} tools/validate_features.py language/features.json)
-        add_test(NAME most-combinatorial-matrix COMMAND \${Python3_EXECUTABLE} -m unittest discover -s tests -p test_most_matrix.py)
-        add_test(NAME most-combinatorial-matrix-data COMMAND \${Python3_EXECUTABLE} tools/validate_most_matrix.py language/most_matrix_20x20.json)
-        add_test(NAME systems-language-matrix COMMAND \${Python3_EXECUTABLE} -m unittest discover -s tests -p test_systems_languages.py)
-        add_test(NAME python-extended-runtime COMMAND \${Python3_EXECUTABLE} -m unittest discover -s tests -p test_extended_runtime.py)
-        add_test(NAME python-extended-metrics COMMAND \${Python3_EXECUTABLE} -m unittest discover -s tests -p test_metric_extensions.py)
-        add_test(NAME python-native-ffi COMMAND \${Python3_EXECUTABLE} -m unittest discover -s tests -p test_native.py)
-        add_test(NAME python-embedded-ffi COMMAND \${Python3_EXECUTABLE} -m unittest discover -s tests -p test_embedded_ffi.py)
-        add_test(NAME python-noo-tah-bridge COMMAND \${Python3_EXECUTABLE} -m unittest discover -s tests -p test_noo_tah.py)
+        add_test(NAME python-token-catalog COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_token_catalog.py)
+        add_test(NAME python-atomic-quantum COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_atomic_quantum.py)
+        add_test(NAME python-self-hosting-bootstrap COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_self_hosting.py)
+        add_test(NAME generated-token-catalog COMMAND ${Python3_EXECUTABLE} tools/generate_token_catalog.py --check)
+        add_test(NAME python-patch-pipeline COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_patch_pipeline.py)
+        add_test(NAME python-feature-registry COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_feature_registry.py)
+        add_test(NAME most-feature-registry COMMAND ${Python3_EXECUTABLE} tools/validate_features.py language/features.json)
+        add_test(NAME most-combinatorial-matrix COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_most_matrix.py)
+        add_test(NAME most-combinatorial-matrix-data COMMAND ${Python3_EXECUTABLE} tools/validate_most_matrix.py language/most_matrix_20x20.json)
+        add_test(NAME systems-language-matrix COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_systems_languages.py)
+        add_test(NAME python-extended-runtime COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_extended_runtime.py)
+        add_test(NAME python-extended-metrics COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_metric_extensions.py)
+        add_test(NAME python-native-ffi COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_native.py)
+        add_test(NAME python-embedded-ffi COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_embedded_ffi.py)
+        add_test(NAME python-noo-tah-bridge COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_noo_tah.py)
         add_test(
             NAME bootstrap-reproducibility-preflight
-            COMMAND \${Python3_EXECUTABLE}
-                \${CMAKE_CURRENT_SOURCE_DIR}/scripts/bootstrap_check.py
+            COMMAND ${Python3_EXECUTABLE}
+                ${CMAKE_CURRENT_SOURCE_DIR}/scripts/bootstrap_check.py
                 --compiler $<TARGET_FILE:reaper-c>
-                --source \${CMAKE_CURRENT_SOURCE_DIR}/examples/hello.rpr
+                --source ${CMAKE_CURRENT_SOURCE_DIR}/examples/hello.rpr
         )
 
         set_tests_properties(
@@ -150,14 +150,14 @@ if(REAPER_BUILD_TESTS)
             python-embedded-ffi
             python-noo-tah-bridge
             bootstrap-reproducibility-preflight
-            PROPERTIES WORKING_DIRECTORY \${CMAKE_CURRENT_SOURCE_DIR}
+            PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         )
 
         if(TEST native-codegen-smoke)
             set_tests_properties(
                 native-codegen-smoke
                 native-duckos-dabi64-smoke
-                PROPERTIES WORKING_DIRECTORY \${CMAKE_CURRENT_SOURCE_DIR}
+                PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             )
         endif()
     endif()
