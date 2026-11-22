@@ -1,0 +1,24 @@
+name: Feature request
+description: Propose a focused language, runtime or tooling improvement.
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem and current workaround
+    validations:
+      required: true
+  - type: textarea
+    id: semantics
+    attributes:
+      label: Proposed syntax or API semantics
+      description: Include ambiguity, error handling and compatibility considerations.
+    validations:
+      required: true
+  - type: textarea
+    id: tests
+    attributes:
+      label: Acceptance tests and resource limits
+    validations:
+      required: true
