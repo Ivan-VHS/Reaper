@@ -123,7 +123,7 @@
     {
       "source": "процедура",
       "canonical": "fn",
-      "support": "lexical_reserved"
+      "support": "runtime"
     },
     {
       "source": "структура",
@@ -153,32 +153,32 @@
     {
       "source": "константа",
       "canonical": "const",
-      "support": "lexical_reserved"
+      "support": "runtime"
     },
     {
       "source": "связать",
       "canonical": "let",
-      "support": "lexical_reserved"
+      "support": "runtime"
     },
     {
       "source": "изменяемый",
       "canonical": "mut",
-      "support": "lexical_reserved"
+      "support": "runtime"
     },
     {
       "source": "возврат",
       "canonical": "return",
-      "support": "lexical_reserved"
+      "support": "runtime"
     },
     {
       "source": "условие",
       "canonical": "if",
-      "support": "lexical_reserved"
+      "support": "runtime"
     },
     {
       "source": "альтернатива",
       "canonical": "else",
-      "support": "lexical_reserved"
+      "support": "runtime"
     },
     {
       "source": "выбор",
@@ -258,17 +258,17 @@
     {
       "source": "для_каждого",
       "canonical": "for",
-      "support": "lexical_reserved"
+      "support": "runtime"
     },
     {
       "source": "прервать",
       "canonical": "break",
-      "support": "lexical_reserved"
+      "support": "runtime"
     },
     {
       "source": "продолжить",
       "canonical": "continue",
-      "support": "lexical_reserved"
+      "support": "runtime"
     },
     {
       "source": "отложить",

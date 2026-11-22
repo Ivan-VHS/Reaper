@@ -145,6 +145,88 @@ def pytyliki_orthogonal(
     return bool(output.value)
 
 
+class _PluginDescriptorV1(ctypes.Structure):
+    _fields_ = [
+        ("id", ctypes.c_char * 32),
+        ("name", ctypes.c_char * 64),
+        ("domain", ctypes.c_char * 64),
+        ("service", ctypes.c_char * 48),
+        ("capabilities", ctypes.c_char * 256),
+    ]
+
+
+def _plugin_functions(library: ctypes.CDLL) -> tuple[Any, Any, Any]:
+    try:
+        count = library.pytyliki_v1_plugin_count
+        plugin_at = library.pytyliki_v1_plugin_at
+        plugin_find = library.pytyliki_v1_plugin_find
+    except AttributeError as error:
+        raise ValueError("Pytyliki ABI v1 library does not expose the plugin catalogue API") from error
+    count.argtypes = [ctypes.POINTER(ctypes.c_uint64)]
+    count.restype = ctypes.c_int32
+    plugin_at.argtypes = [ctypes.c_uint64, ctypes.POINTER(_PluginDescriptorV1)]
+    plugin_at.restype = ctypes.c_int32
+    plugin_find.argtypes = [ctypes.c_char_p, ctypes.POINTER(_PluginDescriptorV1)]
+    plugin_find.restype = ctypes.c_int32
+    return count, plugin_at, plugin_find
+
+
+def _plugin_dict(value: _PluginDescriptorV1) -> dict[str, Any]:
+    decode = lambda field: getattr(value, field).decode("utf-8", errors="replace")
+    plugin_id = decode("id")
+    name = decode("name")
+    domain = decode("domain")
+    service = decode("service")
+    capabilities = decode("capabilities")
+    if not plugin_id or not name or not domain or not service:
+        raise ValueError("Pytyliki returned an incomplete plugin descriptor")
+    return {
+        "id": plugin_id,
+        "name": name,
+        "domain": domain,
+        "service": service,
+        "capabilities": [item for item in capabilities.split(";") if item],
+    }
+
+
+def pytyliki_plugins(library_path: str) -> list[dict[str, Any]]:
+    """Enumerate metadata-only Pytyliki plugin contracts through ABI v1."""
+    library = _load_library(library_path)
+    count_fn, plugin_at, _ = _plugin_functions(library)
+    count = ctypes.c_uint64()
+    _status(int(count_fn(ctypes.byref(count))), "plugin catalogue count")
+    if count.value > 256:
+        raise ValueError(f"Pytyliki returned an implausible plugin count: {count.value}")
+    plugins = []
+    seen: set[str] = set()
+    for index in range(int(count.value)):
+        value = _PluginDescriptorV1()
+        _status(int(plugin_at(index, ctypes.byref(value))), f"plugin descriptor {index}")
+        plugin = _plugin_dict(value)
+        marker = plugin["id"].casefold()
+        if marker in seen:
+            raise ValueError(f"Pytyliki returned a duplicate plugin id: {plugin['id']}")
+        seen.add(marker)
+        plugins.append(plugin)
+    return plugins
+
+
+def pytyliki_plugin_info(query: str, library_path: str) -> dict[str, Any]:
+    """Resolve one Pytyliki plugin id or display name without loading the plugin."""
+    if not isinstance(query, str) or not query.strip() or "\x00" in query:
+        raise ValueError("plugin query must be non-empty text without NUL")
+    if len(query.encode("utf-8")) > 1024:
+        raise ValueError("plugin query exceeds 1024 UTF-8 bytes")
+    library = _load_library(library_path)
+    _, _, plugin_find = _plugin_functions(library)
+    value = _PluginDescriptorV1()
+    status = int(plugin_find(query.encode("utf-8"), ctypes.byref(value)))
+    if status == -1:
+        raise KeyError(f"unknown Pytyliki plugin: {query}")
+    _status(status, "plugin catalogue lookup")
+    return _plugin_dict(value)
+
+
 class _EmbeddedProfileV1(ctypes.Structure):
     _fields_ = [
         ("id", ctypes.c_char * 40),

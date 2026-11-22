@@ -16,7 +16,8 @@ _OPCODES = {
         "CONST", "LOAD", "DEFINE", "ASSIGN", "EMIT", "RETURN", "MAKE_FUNCTION",
         "JUMP_IF_FALSE", "JUMP", "ENTER_SCOPE", "EXIT_SCOPE", "ITER_INIT",
         "ITER_NEXT", "ITER_END", "POP", "BUILD_LIST", "INDEX", "UNARY",
-        "CALL", "PIPE_CALL", "BINARY", "AND_JUMP", "OR_JUMP", "IMPORT", "EXPORT",
+        "CALL", "PIPE_CALL", "BINARY", "AND_JUMP", "OR_JUMP", "COALESCE_JUMP",
+        "BUILD_MAP", "GET_MEMBER", "IMPORT", "EXPORT",
     ), start=1)
 }
 _OPCODE_NAMES = {value: key for key, value in _OPCODES.items()}
@@ -143,8 +144,10 @@ class VirtualMachine:
                 environment = scopes.pop()
             elif name == "ITER_INIT":
                 iterable = stack.pop()
+                if isinstance(iterable, dict):
+                    iterable = list(iterable.keys())
                 if not isinstance(iterable, (list, tuple, str, range)):
-                    raise self.interpreter._error(token, "'each' needs a list, text, or range")
+                    raise self.interpreter._error(token, "'for/each' needs a list, map, text, or range")
                 self.interpreter._check_collection_size(iterable, token)
                 iterators.append(iter(iterable))
             elif name == "ITER_NEXT":
@@ -172,6 +175,25 @@ class VirtualMachine:
                 if count:
                     del stack[-count:]
                 stack.append(self.interpreter.memory.track(list(values)))
+            elif name == "BUILD_MAP":
+                count = instruction.argument
+                values = stack[-(count * 2):] if count else []
+                if count:
+                    del stack[-(count * 2):]
+                result = {}
+                try:
+                    for index in range(0, len(values), 2):
+                        result[values[index]] = values[index + 1]
+                except TypeError as error:
+                    raise self.interpreter._error(token, "map keys must be hashable values") from error
+                stack.append(self.interpreter.memory.track(result))
+            elif name == "GET_MEMBER":
+                target = stack.pop()
+                if not isinstance(target, dict):
+                    raise self.interpreter._error(token, "field access requires a map value")
+                if instruction.argument not in target:
+                    raise self.interpreter._error(token, f"map has no field '{instruction.argument}'")
+                stack.append(target[instruction.argument])
             elif name == "INDEX":
                 index = stack.pop()
                 collection = stack.pop()
@@ -218,6 +240,11 @@ class VirtualMachine:
                     stack.pop()
             elif name == "OR_JUMP":
                 if self.interpreter._truthy(stack[-1]):
+                    ip = instruction.argument
+                else:
+                    stack.pop()
+            elif name == "COALESCE_JUMP":
+                if stack[-1] is not None:
                     ip = instruction.argument
                 else:
                     stack.pop()

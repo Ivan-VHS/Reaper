@@ -1,4 +1,4 @@
-"""VentuSample pack v1 validation and read-only comparison for Reaper.
+"""VentuSample pack v1/v2 validation and read-only comparison for Reaper.
 
 The adapter consumes metadata only. WAV assets remain in the pack folder and
 are never opened, executed, modified or uploaded by this module.
@@ -16,6 +16,7 @@ from . import metric_space
 from .native import pytyliki_distance
 
 VENTUSAMPLE_PACK_SCHEMA = "ventusample.pack.v1"
+VENTUSAMPLE_PACK_V2_SCHEMA = "ventusample.pack.v2"
 REAPER_VENTUSAMPLE_COMPARISON_SCHEMA = "reaper.ventusample-comparison.v1"
 MAX_PACK_FILES = 256
 
@@ -29,11 +30,21 @@ _PARAMETER_FIELDS = {
     "source_pitch_semitones",
 }
 _FILE_FIELDS = {"file", "peak", "rms", "crest_db", "variation"}
+_V2_PARAMETER_FIELDS = {"musical_key", "mode_family"}
+_V2_OPTIONAL_PARAMETER_FIELDS = {
+    "stochastic_enabled", "stochastic_seed", "stochastic_intensity_percent",
+    "stochastic_trigger_mode", "stochastic_plugin_mask", "stochastic_topology",
+}
+_V2_FILE_FIELDS = {"musical_key", "scale", "mode_family"}
+_V2_OPTIONAL_FILE_FIELDS = {"stochastic_routes"}
 _STYLES = {
     "Boom Bap", "East Coast", "Harlem Dip-Trap", "G-Unit", "Modern Trap",
     "Atlanta Trap", "UK Drill", "UK Grime", "Memphis", "Jazz Rap",
     "G-Funk", "Boom Trap", "Cripple Trill", "Billionaire Golden Era",
 }
+_STYLES_V2 = _STYLES | {"Billionaire Golden Era"}
+_MODE_FAMILIES = {"major", "minor", "modal"}
+_FILE_MODE_FAMILIES = _MODE_FAMILIES | {"pitched_note"}
 _TARGETS = {"Full Loop", "Melody", "Drums", "Bass", "One-Shot Kit"}
 _KEYS = {"C", "Csharp", "D", "Dsharp", "E", "F", "Fsharp", "G", "Gsharp", "A", "Asharp", "B"}
 _SCALES = {"Natural Minor", "Harmonic Minor", "Dorian", "Phrygian", "Major", "Minor Pentatonic"}
@@ -84,8 +95,12 @@ def _validate_pack(pack: Any) -> tuple[dict[str, float], dict[str, Any]]:
     extra = keys - _TOP_LEVEL_FIELDS
     if missing or extra:
         raise ValueError(f"{label} fields are invalid; missing={sorted(missing)}, extra={sorted(extra)}")
-    if pack.get("schema") != VENTUSAMPLE_PACK_SCHEMA:
-        raise ValueError(f"{label}.schema must be {VENTUSAMPLE_PACK_SCHEMA}")
+    schema_id = pack.get("schema")
+    if schema_id not in {VENTUSAMPLE_PACK_SCHEMA, VENTUSAMPLE_PACK_V2_SCHEMA}:
+        raise ValueError(
+            f"{label}.schema must be {VENTUSAMPLE_PACK_SCHEMA} or {VENTUSAMPLE_PACK_V2_SCHEMA}"
+        )
+    is_v2 = schema_id == VENTUSAMPLE_PACK_V2_SCHEMA
     generator = pack.get("generator")
     if not isinstance(generator, str) or not generator.strip() or len(generator) > 128:
         raise ValueError(f"{label}.generator must be non-empty text of at most 128 characters")
@@ -101,15 +116,17 @@ def _validate_pack(pack: Any) -> tuple[dict[str, float], dict[str, Any]]:
     if not isinstance(parameters, Mapping):
         raise TypeError(f"{label}.parameters must be an object")
     parameter_keys = set(parameters)
-    missing_parameters = _PARAMETER_FIELDS - parameter_keys
-    extra_parameters = parameter_keys - _PARAMETER_FIELDS
+    required_parameter_fields = _PARAMETER_FIELDS | (_V2_PARAMETER_FIELDS if is_v2 else set())
+    allowed_parameter_fields = required_parameter_fields | (_V2_OPTIONAL_PARAMETER_FIELDS if is_v2 else set())
+    missing_parameters = required_parameter_fields - parameter_keys
+    extra_parameters = parameter_keys - allowed_parameter_fields
     if missing_parameters or extra_parameters:
         raise ValueError(
             f"{label}.parameters fields are invalid; missing={sorted(missing_parameters)}, "
             f"extra={sorted(extra_parameters)}"
         )
 
-    style = _choice(parameters["style"], "parameters.style", _STYLES)
+    style = _choice(parameters["style"], "parameters.style", _STYLES_V2 if is_v2 else _STYLES)
     target = _choice(parameters["target"], "parameters.target", _TARGETS)
     key = _choice(parameters["key"], "parameters.key", _KEYS)
     scale = _choice(parameters["scale"], "parameters.scale", _SCALES)
@@ -140,6 +157,42 @@ def _validate_pack(pack: Any) -> tuple[dict[str, float], dict[str, Any]]:
         if not isinstance(parameters[name], bool):
             raise TypeError(f"parameters.{name} must be boolean")
 
+    musical_key = None
+    mode_family = None
+    stochastic_parameters: dict[str, Any] = {}
+    if is_v2:
+        musical_key = parameters["musical_key"]
+        if not isinstance(musical_key, str) or not musical_key.strip() or len(musical_key) > 64:
+            raise ValueError("parameters.musical_key must be non-empty text of at most 64 characters")
+        mode_family = _choice(parameters["mode_family"], "parameters.mode_family", _MODE_FAMILIES)
+        if "stochastic_enabled" in parameters:
+            if not isinstance(parameters["stochastic_enabled"], bool):
+                raise TypeError("parameters.stochastic_enabled must be boolean")
+            stochastic_parameters["stochastic_enabled"] = parameters["stochastic_enabled"]
+        if "stochastic_seed" in parameters:
+            stochastic_parameters["stochastic_seed"] = _integer(
+                parameters["stochastic_seed"], "parameters.stochastic_seed", 0, 2147483647
+            )
+        if "stochastic_intensity_percent" in parameters:
+            stochastic_parameters["stochastic_intensity_percent"] = _integer(
+                parameters["stochastic_intensity_percent"],
+                "parameters.stochastic_intensity_percent", 0, 100
+            )
+        if "stochastic_trigger_mode" in parameters:
+            stochastic_parameters["stochastic_trigger_mode"] = _choice(
+                parameters["stochastic_trigger_mode"], "parameters.stochastic_trigger_mode",
+                {"file", "bar", "onset"}
+            )
+        if "stochastic_plugin_mask" in parameters:
+            stochastic_parameters["stochastic_plugin_mask"] = _integer(
+                parameters["stochastic_plugin_mask"], "parameters.stochastic_plugin_mask", 0, 255
+            )
+        if "stochastic_topology" in parameters:
+            stochastic_parameters["stochastic_topology"] = _choice(
+                parameters["stochastic_topology"], "parameters.stochastic_topology",
+                {"hybrid", "serial", "parallel"}
+            )
+
     files = pack.get("files")
     if not isinstance(files, list) or not 1 <= len(files) <= MAX_PACK_FILES:
         raise ValueError(f"{label}.files must contain 1..{MAX_PACK_FILES} audio records")
@@ -159,8 +212,14 @@ def _validate_pack(pack: Any) -> tuple[dict[str, float], dict[str, Any]]:
     for index, item in enumerate(files):
         if not isinstance(item, Mapping):
             raise TypeError(f"{label}.files[{index}] must be an object")
-        if set(item) != _FILE_FIELDS:
-            raise ValueError(f"{label}.files[{index}] must contain exactly {sorted(_FILE_FIELDS)}")
+        required_file_fields = _FILE_FIELDS | (_V2_FILE_FIELDS if is_v2 else set())
+        allowed_file_fields = required_file_fields | (_V2_OPTIONAL_FILE_FIELDS if is_v2 else set())
+        if not required_file_fields.issubset(item) or set(item) - allowed_file_fields:
+            raise ValueError(
+                f"{label}.files[{index}] fields are invalid; "
+                f"missing={sorted(required_file_fields - set(item))}, "
+                f"extra={sorted(set(item) - allowed_file_fields)}"
+            )
         filename = _safe_filename(item["file"], f"{label}.files[{index}].file")
         if not filename.lower().endswith(".wav"):
             raise ValueError(f"{label}.files[{index}].file must use the .wav extension")
@@ -172,6 +231,23 @@ def _validate_pack(pack: Any) -> tuple[dict[str, float], dict[str, Any]]:
         rms_values.append(_real(item["rms"], f"{label}.files[{index}].rms", 0.0, 1.0))
         crest_values.append(_real(item["crest_db"], f"{label}.files[{index}].crest_db", 0.0, 100.0))
         variation = _integer(item["variation"], f"{label}.files[{index}].variation", 1, variations)
+        if is_v2:
+            file_key = item["musical_key"]
+            if file_key is not None and (
+                not isinstance(file_key, str) or len(file_key) > 64
+            ):
+                raise ValueError(f"{label}.files[{index}].musical_key must be null or text of at most 64 characters")
+            file_scale = item["scale"]
+            if file_scale is not None and file_scale not in _SCALES:
+                raise ValueError(f"{label}.files[{index}].scale is not a supported scale")
+            if item["mode_family"] is not None:
+                _choice(item["mode_family"], f"{label}.files[{index}].mode_family", _FILE_MODE_FAMILIES)
+            if "stochastic_routes" in item:
+                routes = item["stochastic_routes"]
+                if not isinstance(routes, list) or len(routes) > 8:
+                    raise ValueError(f"{label}.files[{index}].stochastic_routes must contain at most 8 routes")
+                if any(not isinstance(route, str) or not route.strip() or len(route) > 512 for route in routes):
+                    raise ValueError(f"{label}.files[{index}].stochastic_routes contains an invalid route")
         seen_variations.add(variation)
         variation_counts[variation] += 1
     if seen_variations != set(range(1, variations + 1)):
@@ -207,6 +283,7 @@ def _validate_pack(pack: Any) -> tuple[dict[str, float], dict[str, Any]]:
         "mean_crest_normalized": mean(crest_values) / 100.0,
     }
     metadata = {
+        "schema": schema_id,
         "generator": generator,
         "style": style,
         "target": target,
@@ -223,11 +300,15 @@ def _validate_pack(pack: Any) -> tuple[dict[str, float], dict[str, Any]]:
         "file_count": len(files),
         "source_sample_present": bool(source_sample),
     }
+    if is_v2:
+        metadata["musical_key"] = musical_key
+        metadata["mode_family"] = mode_family
+        metadata.update(stochastic_parameters)
     return metrics, metadata
 
 
 def ventusample_metrics(pack: Any) -> dict[str, float]:
-    """Validate a complete VentuSample pack manifest and return normalized metrics."""
+    """Validate a complete VentuSample v1/v2 pack manifest and return normalized metrics."""
     metrics, _ = _validate_pack(pack)
     return dict(sorted(metrics.items()))
 
@@ -279,6 +360,9 @@ def compare_ventusample_packs(
         "same_sampler": left_meta["sampler"] == right_meta["sampler"],
         "same_timbre": left_meta["timbre"] == right_meta["timbre"],
         "same_seed": left_meta["seed"] == right_meta["seed"],
+        "same_schema": left_meta["schema"] == right_meta["schema"],
+        "same_musical_key": left_meta.get("musical_key", left_meta["key"]) == right_meta.get("musical_key", right_meta["key"]),
+        "same_mode_family": left_meta.get("mode_family") == right_meta.get("mode_family"),
         "dimensions": dimensions,
         "dimension_count": len(dimensions),
         "euclidean_distance": distance,

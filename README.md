@@ -7,6 +7,8 @@
 
 Reaper is an expression-oriented language: `::` passes a value into the next operation. The Python runtime is the current executable compatibility reference. The C17 implementation is an active native track, not yet a complete replacement.
 
+**Language slice 0.2:** the reference grammar now includes `let/const/mut`, `fn/return`, `if/else`, `for/while`, `break/continue`, map literals and field access, membership and lazy `??`. These features are exercised in both the tree-walk interpreter and the stack VM. See the [Reaper Language Reference 0.2](docs/LANGUAGE_REFERENCE_0.2.md) for implemented syntax and explicit non-goals.
+
 ## Live Reaper Studio
 
 <p align="center"><img src="assets/screenshots/reaper-studio.png" alt="Reaper Studio running on Windows 11" width="100%"></p>
@@ -47,7 +49,7 @@ flowchart LR
 
 | Area | Implemented scope and boundary |
 |---|---|
-| Python runtime | lexer, parser, interpreter, CLI, REPL, modules, closures, quotas and audit |
+| Python runtime 0.2 | modern syntax, closures, modules, path helpers, bounded JSON APIs and shared runtime quotas |
 | Reaper Studio | Windows IDE foundation: project tree, editor, syntax coloring, line numbers, search, check/run and debugger |
 | LSP | stdio service with incremental UTF-16 documents, parser/structure diagnostics, completion, hover, symbols and lexical navigation; per-open-file, not cross-file type inference |
 | DAP | stdio debug adapter with launch, line breakpoints, statement stepping, stack and local variables |
@@ -57,11 +59,11 @@ flowchart LR
 | Internal plugin host | 18 built-in services with lifecycle state and bounded dispatch; Python reference runtime |
 | Kora | 66 standard utility functions in seven manifest-backed modules; three Lua ReaScripts for Cockos REAPER |
 | Native C17 | lexer, expression parser, owned AST, checked IR and limited lowering; not full Python-runtime parity |
-| МОСТ | 54 exact aliases: 21 executable in the current reference subset, 33 lexically reserved |
+| МОСТ | 54 exact aliases: 31 executable in the 0.2 reference grammar, 23 lexically reserved |
 | QCS 1.0 | separate hardware-domain parser and JSON AST; no hardware execution |
 | THESIS | typed evidence graph; claims are not automatically verified |
 | Registries | 813 feature proposals, 666 API contracts and 666 reserved token lexemes; registry entries are not completion claims |
-| Federation | OPlague snapshots, VentuSample pack manifests and optional Pytyliki C ABI |
+| Federation and automation | OPlague read-only snapshot v1, VentuSample pack v1/v2, Pytyliki C ABI v1 metrics/MCU/plugin metadata; .rpr orchestration examples run through tree-walk and VM |
 
 ## CODEX-66 IDE workspace
 

@@ -17,7 +17,7 @@
       "status": "partial",
       "acceptance": [
         "54 exact aliases are tokenized",
-        "21 aliases execute through the REAPER 0.1 reference grammar"
+        "31 aliases execute through the REAPER 0.2 reference grammar"
       ]
     },
     {
@@ -66,8 +66,8 @@
       "contract": "Формальная грамматика одна; новые формы принимаются только после описания соответствия и тестов.",
       "status": "partial",
       "acceptance": [
-        "21 base aliases are accepted by the 0.1 reference grammar",
-        "33 extended aliases are reserved lexically only"
+        "31 aliases execute through the Reaper 0.2 reference grammar",
+        "23 extended aliases remain lexically reserved"
       ]
     },
     {

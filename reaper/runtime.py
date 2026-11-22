@@ -1,4 +1,4 @@
-"""Tree-walk runtime for Reaper's first stable language slice."""
+"""Tree-walk reference runtime for the Reaper 0.2 language slice."""
 
 from __future__ import annotations
 
@@ -80,6 +80,14 @@ class _ReturnSignal(Exception):
         self.value = value
 
 
+class _BreakSignal(Exception):
+    """Internal non-local control transfer for the nearest enclosing loop."""
+
+
+class _ContinueSignal(Exception):
+    """Internal non-local control transfer to the nearest loop header."""
+
+
 class Interpreter:
     def __init__(
         self,
@@ -136,9 +144,12 @@ class Interpreter:
         root = self.module_loader.begin_root(filename)
         try:
             if engine == "vm":
-                from .ir import lower
+                from .ir import IRVerificationError, lower
                 from .vm import VirtualMachine, assemble
-                program = assemble(lower(tree, filename))
+                try:
+                    program = assemble(lower(tree, filename))
+                except IRVerificationError as error:
+                    raise ReaperRuntimeError(f"{filename}: {error}") from error
                 machine = VirtualMachine(self, program)
                 self._active_vm = machine
                 try:
@@ -147,7 +158,11 @@ class Interpreter:
                     self._active_vm = None
             return self._execute_block(tree, self.globals, create_scope=False)
         except _ReturnSignal as signal:
-            raise ReaperRuntimeError(f"{filename}: yield can only be used inside a craft function") from signal
+            raise ReaperRuntimeError(f"{filename}: yield/return can only be used inside a craft function") from signal
+        except _BreakSignal as signal:
+            raise ReaperRuntimeError(f"{filename}: break can only be used inside a loop") from signal
+        except _ContinueSignal as signal:
+            raise ReaperRuntimeError(f"{filename}: continue can only be used inside a loop") from signal
         finally:
             self.resources.close_all()
             for library in reversed(self._ffi_libraries):
@@ -221,6 +236,10 @@ class Interpreter:
         elif node.kind == "yield":
             value = self._evaluate(children[0], environment) if children else None
             raise _ReturnSignal(value)
+        elif node.kind == "break":
+            raise _BreakSignal()
+        elif node.kind == "continue":
+            raise _ContinueSignal()
         elif node.kind == "function":
             name, parameters = node.value
             environment.define(name, UserFunction(name, parameters, children[0], environment))
@@ -231,21 +250,33 @@ class Interpreter:
                 return self._execute_block(children[2], environment)
         elif node.kind == "each":
             values = self._evaluate(children[0], environment)
+            if isinstance(values, dict):
+                values = list(values.keys())
             if not isinstance(values, (list, tuple, str, range)):
-                raise self._error(node.token, "'each' needs a list, text, or range")
+                raise self._error(node.token, "'for/each' needs a list, map, text, or range")
             self._check_collection_size(values, node.token)
             result = None
             for value in values:
                 self._tick(node.token)
                 scope = Environment(environment)
                 scope.define(node.value, value)
-                result = self._execute_block(children[1], scope)
+                try:
+                    result = self._execute_block(children[1], scope)
+                except _ContinueSignal:
+                    continue
+                except _BreakSignal:
+                    break
             return result
         elif node.kind == "while":
             result = None
             while self._truthy(self._evaluate(children[0], environment)):
                 self._tick(node.token)
-                result = self._execute_block(children[1], environment)
+                try:
+                    result = self._execute_block(children[1], environment)
+                except _ContinueSignal:
+                    continue
+                except _BreakSignal:
+                    break
             return result
         elif node.kind == "expression":
             return self._evaluate(children[0], environment)
@@ -269,6 +300,25 @@ class Interpreter:
                     f"collection item limit ({self.max_collection_items}) exceeded",
                 )
             return self.memory.track([self._evaluate(item, environment) for item in children])
+        if node.kind == "map":
+            if len(children) // 2 > self.max_collection_items:
+                raise self._error(node.token, f"collection item limit ({self.max_collection_items}) exceeded")
+            result: dict[Any, Any] = {}
+            for index in range(0, len(children), 2):
+                key = self._evaluate(children[index], environment)
+                value = self._evaluate(children[index + 1], environment)
+                try:
+                    result[key] = value
+                except TypeError as error:
+                    raise self._error(node.token, "map keys must be hashable values") from error
+            return self.memory.track(result)
+        if node.kind == "member":
+            target = self._evaluate(children[0], environment)
+            if not isinstance(target, dict):
+                raise self._error(node.token, "field access requires a map value")
+            if node.value not in target:
+                raise self._error(node.token, f"map has no field '{node.value}'")
+            return target[node.value]
         if node.kind == "index":
             collection = self._evaluate(children[0], environment)
             index = self._evaluate(children[1], environment)
@@ -298,6 +348,8 @@ class Interpreter:
                 return self._evaluate(children[1], environment) if self._truthy(left) else left
             if operator == "OR":
                 return left if self._truthy(left) else self._evaluate(children[1], environment)
+            if operator == "??":
+                return left if left is not None else self._evaluate(children[1], environment)
             if operator == "::":
                 right = children[1]
                 if right.kind == "call":
@@ -315,6 +367,13 @@ class Interpreter:
             return self._equal(left, right)
         if operator == "!=":
             return not self._equal(left, right)
+        if operator == "IN":
+            if isinstance(right, (list, tuple, str, range, dict)):
+                try:
+                    return left in right
+                except TypeError as error:
+                    raise self._error(token, f"membership check failed: {error}") from error
+            raise self._error(token, "'in' expects a list, map, text, or range on the right")
         if operator == "++":
             if isinstance(left, str) and isinstance(right, str):
                 if len(left) + len(right) > self.max_text_length:
@@ -402,6 +461,10 @@ class Interpreter:
                     return self.memory.track(self._execute_block(callee.body, local, create_scope=False))
                 except _ReturnSignal as signal:
                     return self.memory.track(signal.value)
+                except _BreakSignal as signal:
+                    raise self._error(token, "break cannot cross a function boundary") from signal
+                except _ContinueSignal as signal:
+                    raise self._error(token, "continue cannot cross a function boundary") from signal
             finally:
                 self.call_stack.pop()
                 self.call_depth -= 1
@@ -613,6 +676,45 @@ class Interpreter:
                 return Path.cwd()
             return Path(self.filename).resolve().parent
 
+        def path_text(value: Any, label: str = "path") -> str:
+            if not isinstance(value, str) or not value or "\x00" in value:
+                raise TypeError(f"{label} must be non-empty text without NUL")
+            if len(value) > 4096:
+                raise ValueError(f"{label} exceeds 4096 characters")
+            return value
+
+        def resolve_path(value: Any) -> Path:
+            raw = Path(path_text(value)).expanduser()
+            target = raw if raw.is_absolute() else script_directory() / raw
+            return target.resolve()
+
+        def path_join(*parts: Any) -> str:
+            if not parts:
+                raise ValueError("path_join expects at least one path component")
+            normalized = [path_text(part, "path component") for part in parts]
+            result = str(Path(normalized[0]).joinpath(*normalized[1:]))
+            if len(result) > 4096:
+                raise ValueError("joined path exceeds 4096 characters")
+            return result
+
+        def path_name(value: Any) -> str:
+            return resolve_path(value).name
+
+        def path_stem(value: Any) -> str:
+            return resolve_path(value).stem
+
+        def path_suffix(value: Any) -> str:
+            return resolve_path(value).suffix
+
+        def path_exists(value: Any) -> bool:
+            return resolve_path(value).exists()
+
+        def path_is_file(value: Any) -> bool:
+            return resolve_path(value).is_file()
+
+        def path_is_dir(value: Any) -> bool:
+            return resolve_path(value).is_dir()
+
         def open_file(path: Any, mode: Any = "r") -> ResourceHandle:
             if not isinstance(path, str) or not isinstance(mode, str):
                 raise TypeError("file_open expects text path and mode")
@@ -656,6 +758,14 @@ class Interpreter:
                 raise TypeError("ffi_close expects a handle returned by ffi_open or pytyliki_open")
             library.close()
 
+        register("absolute_path", lambda value: str(resolve_path(value)), 1, 1)
+        register("path_join", path_join, 1, None)
+        register("path_name", path_name, 1, 1)
+        register("path_stem", path_stem, 1, 1)
+        register("path_suffix", path_suffix, 1, 1)
+        register("path_exists", path_exists, 1, 1)
+        register("path_is_file", path_is_file, 1, 1)
+        register("path_is_dir", path_is_dir, 1, 1)
         register("file_open", open_file, 1, 2)
         register("file_read", self.resources.read, 1, 1)
         register("file_write", self.resources.write, 2, 2)
@@ -693,6 +803,20 @@ class Interpreter:
             4, 4,
         )
 
+        def pytyliki_plugin_catalog(path: Any) -> list[dict[str, Any]]:
+            if not self.allow_native_ffi:
+                raise ValueError("native FFI is disabled; run with --allow-native-ffi")
+            if not isinstance(path, str):
+                raise TypeError("pytyliki_plugin_catalog expects an explicit library path")
+            return pytyliki_native.pytyliki_plugins(path)
+
+        def pytyliki_plugin_info(query: Any, path: Any) -> dict[str, Any]:
+            if not self.allow_native_ffi:
+                raise ValueError("native FFI is disabled; run with --allow-native-ffi")
+            if not isinstance(query, str) or not isinstance(path, str):
+                raise TypeError("pytyliki_plugin_info expects a text query and explicit library path")
+            return pytyliki_native.pytyliki_plugin_info(query, path)
+
         def pytyliki_embedded_profiles(path: Any) -> list[dict[str, Any]]:
             if not self.allow_native_ffi:
                 raise ValueError("native FFI is disabled; run with --allow-native-ffi")
@@ -718,6 +842,8 @@ class Interpreter:
             }
             return pytyliki_native.pytyliki_embedded_budget(profile_id, sections, path)
 
+        register("pytyliki_plugin_catalog", pytyliki_plugin_catalog, 1, 1)
+        register("pytyliki_plugin_info", pytyliki_plugin_info, 2, 2)
         register("pytyliki_embedded_profiles", pytyliki_embedded_profiles, 1, 1)
         register("pytyliki_embedded_budget", pytyliki_embedded_budget, 8, 8)
 

@@ -34,6 +34,8 @@ class IRVerificationError(ValueError):
 class _Lowerer:
     def __init__(self) -> None:
         self.code: list[IRInstruction] = []
+        self.scope_depth = 0
+        self.loop_stack: list[dict[str, Any]] = []
 
     def emit(self, op: str, argument: Any, token: Any) -> int:
         self.code.append(IRInstruction(op, argument, token))
@@ -49,7 +51,9 @@ class _Lowerer:
 
     def scoped_block(self, block: Node) -> None:
         self.emit("ENTER_SCOPE", None, block.token)
+        self.scope_depth += 1
         self.statements(block.children)
+        self.scope_depth -= 1
         self.emit("EXIT_SCOPE", None, block.token)
 
     def statement(self, node: Node) -> None:
@@ -69,6 +73,18 @@ class _Lowerer:
             else:
                 self.emit("CONST", None, node.token)
             self.emit("RETURN", None, node.token)
+        elif node.kind in {"break", "continue"}:
+            if not self.loop_stack:
+                raise IRVerificationError(f"{node.kind} can only be used inside a loop")
+            loop = self.loop_stack[-1]
+            unwind = self.scope_depth - loop["scope_depth"]
+            for _ in range(unwind):
+                self.emit("EXIT_SCOPE", None, node.token)
+            if node.kind == "continue":
+                self.emit("JUMP", loop["continue_target"], node.token)
+            else:
+                jump = self.emit("JUMP", None, node.token)
+                loop["breaks"].append(jump)
         elif node.kind == "function":
             name, parameters = node.value
             nested = _Lowerer()
@@ -94,18 +110,32 @@ class _Lowerer:
             self.emit("ITER_INIT", node.value, node.token)
             loop_start = len(self.code)
             next_index = self.emit("ITER_NEXT", (node.value, None), node.token)
+            loop = {"scope_depth": self.scope_depth, "continue_target": loop_start, "breaks": []}
+            self.loop_stack.append(loop)
+            self.scope_depth += 1  # ITER_NEXT creates the per-iteration scope.
             self.statements(children[1].children)
+            self.scope_depth -= 1
+            self.loop_stack.pop()
             self.emit("EXIT_SCOPE", None, node.token)
             self.emit("JUMP", loop_start, node.token)
-            self.patch(next_index, (node.value, len(self.code)))
+            break_target = len(self.code)
+            self.patch(next_index, (node.value, break_target))
+            for jump in loop["breaks"]:
+                self.patch(jump, break_target)
             self.emit("ITER_END", None, node.token)
         elif node.kind == "while":
             loop_start = len(self.code)
             self.expression(children[0])
             exit_jump = self.emit("JUMP_IF_FALSE", None, node.token)
+            loop = {"scope_depth": self.scope_depth, "continue_target": loop_start, "breaks": []}
+            self.loop_stack.append(loop)
             self.scoped_block(children[1])
+            self.loop_stack.pop()
             self.emit("JUMP", loop_start, node.token)
-            self.patch(exit_jump, len(self.code))
+            end_target = len(self.code)
+            self.patch(exit_jump, end_target)
+            for jump in loop["breaks"]:
+                self.patch(jump, end_target)
         elif node.kind == "expression":
             self.expression(children[0])
             self.emit("POP", None, node.token)
@@ -139,6 +169,13 @@ class _Lowerer:
             for item in children:
                 self.expression(item)
             self.emit("BUILD_LIST", len(children), node.token)
+        elif node.kind == "map":
+            for item in children:
+                self.expression(item)
+            self.emit("BUILD_MAP", len(children) // 2, node.token)
+        elif node.kind == "member":
+            self.expression(children[0])
+            self.emit("GET_MEMBER", node.value, node.token)
         elif node.kind == "index":
             self.expression(children[0])
             self.expression(children[1])
@@ -161,6 +198,11 @@ class _Lowerer:
             elif operator == "OR":
                 self.expression(children[0])
                 index = self.emit("OR_JUMP", None, node.token)
+                self.expression(children[1])
+                self.patch(index, len(self.code))
+            elif operator == "??":
+                self.expression(children[0])
+                index = self.emit("COALESCE_JUMP", None, node.token)
                 self.expression(children[1])
                 self.patch(index, len(self.code))
             elif operator == "::":
@@ -186,7 +228,8 @@ _ALLOWED = {
     "CONST", "LOAD", "DEFINE", "ASSIGN", "EMIT", "RETURN", "MAKE_FUNCTION",
     "JUMP_IF_FALSE", "JUMP", "ENTER_SCOPE", "EXIT_SCOPE", "ITER_INIT",
     "ITER_NEXT", "ITER_END", "POP", "BUILD_LIST", "INDEX", "UNARY",
-    "CALL", "PIPE_CALL", "BINARY", "AND_JUMP", "OR_JUMP", "IMPORT", "EXPORT",
+    "CALL", "PIPE_CALL", "BINARY", "AND_JUMP", "OR_JUMP", "COALESCE_JUMP",
+    "BUILD_MAP", "GET_MEMBER", "IMPORT", "EXPORT",
 }
 
 
@@ -206,7 +249,7 @@ def verify(module: CanonicalIR) -> None:
         for index, instruction in enumerate(code):
             if instruction.op not in _ALLOWED:
                 raise IRVerificationError(f"{label}: unknown IR operation at {index}: {instruction.op}")
-            if instruction.op in {"JUMP", "JUMP_IF_FALSE", "AND_JUMP", "OR_JUMP"}:
+            if instruction.op in {"JUMP", "JUMP_IF_FALSE", "AND_JUMP", "OR_JUMP", "COALESCE_JUMP"}:
                 target = instruction.argument
                 if not isinstance(target, int) or target < 0 or target > len(code):
                     raise IRVerificationError(f"{label}: invalid jump target at {index}")

@@ -30,6 +30,43 @@ class FakeLibrary:
         self.pytyliki_v1_embedded_profile_count = FakeFunction(self.embedded_count)
         self.pytyliki_v1_embedded_profile_at = FakeFunction(self.embedded_profile)
         self.pytyliki_v1_embedded_budget_evaluate = FakeFunction(self.embedded_budget)
+        self.pytyliki_v1_plugin_count = FakeFunction(self.plugin_count)
+        self.pytyliki_v1_plugin_at = FakeFunction(self.plugin_at)
+        self.pytyliki_v1_plugin_find = FakeFunction(self.plugin_find)
+
+    @staticmethod
+    def plugin_count(output):
+        output._obj.value = 2
+        return 0
+
+    @staticmethod
+    def _write_plugin(index, output):
+        records = (
+            (b"operandu", b"Operandu", b"Data & logic", b"inspect_value",
+             b"value.validation;schema.inspection;expression.metadata"),
+            (b"dropaul", b"Dropaul", b"Actions & workflows", b"plan_workflow",
+             b"workflow.graph;dependency.ordering;dry_run"),
+        )
+        item = output._obj
+        (item.id, item.name, item.domain, item.service, item.capabilities) = records[index]
+        return 0
+
+    @classmethod
+    def plugin_at(cls, index, output):
+        if index >= 2:
+            return -1
+        return cls._write_plugin(index, output)
+
+    @classmethod
+    def plugin_find(cls, query, output):
+        key = query.decode("utf-8").casefold()
+        keys = ("operandu", "dropaul")
+        names = ("operandu", "dropaul")
+        display_names = ("Operandu", "Dropaul")
+        for index, candidate in enumerate(keys):
+            if key in {candidate, display_names[index].casefold()}:
+                return cls._write_plugin(index, output)
+        return -1
 
     @staticmethod
     def embedded_count(output):
@@ -162,6 +199,21 @@ class NativeBridgeTests(unittest.TestCase):
                 "/unused",
             )
 
+    def test_plugin_catalogue_and_name_lookup_are_metadata_only(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "libpytyliki.so"
+            path.touch()
+            with patch("reaper.native.ctypes.CDLL", return_value=FakeLibrary()):
+                catalog = native.pytyliki_plugins(str(path))
+                operand = native.pytyliki_plugin_info("Operandu", str(path))
+                dropaul = native.pytyliki_plugin_info("dropaul", str(path))
+                with self.assertRaisesRegex(KeyError, "unknown Pytyliki plugin"):
+                    native.pytyliki_plugin_info("not-installed", str(path))
+        self.assertEqual([item["id"] for item in catalog], ["operandu", "dropaul"])
+        self.assertEqual(operand["service"], "inspect_value")
+        self.assertIn("schema.inspection", operand["capabilities"])
+        self.assertEqual(dropaul["name"], "Dropaul")
+
     def test_vectors_are_bounded_and_finite(self) -> None:
         with self.assertRaises(TypeError):
             native._vector([True])
@@ -202,6 +254,28 @@ class PytylikiBridgeHandleTests(unittest.TestCase):
             with patch("reaper.native.ctypes.CDLL", return_value=FakeLibrary(version=2)):
                 with self.assertRaisesRegex(FfiError, "unsupported Pytyliki ABI"):
                     PytylikiBridge(str(path))
+
+    def test_reaper_language_can_inspect_pytyliki_plugin_catalogue(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "libpytyliki.so"
+            path.touch()
+            source = (
+                f'let catalog = pytyliki_plugin_catalog("{path}")\n'
+                f'let selected = pytyliki_plugin_info("Operandu", "{path}")\n'
+                'emit size(catalog)\n'
+                'emit selected.id\n'
+                'emit selected.service\n'
+                'emit contains(selected.capabilities, "schema.inspection")\n'
+            )
+            output: list[str] = []
+            with patch("reaper.native.ctypes.CDLL", return_value=FakeLibrary()):
+                Interpreter(output=output.append, allow_native_ffi=True).run(source)
+        self.assertEqual(output, ["2", "operandu", "inspect_value", "true"])
+
+    def test_plugin_catalogue_builtins_keep_the_explicit_ffi_opt_in(self) -> None:
+        source = 'emit size(pytyliki_plugin_catalog("/absolute/path/libpytyliki.so"))'
+        with self.assertRaisesRegex(Exception, "native FFI is disabled"):
+            Interpreter(output=lambda _line: None).run(source)
 
     def test_reaper_language_can_use_typed_bridge_builtins(self) -> None:
         source_template = (

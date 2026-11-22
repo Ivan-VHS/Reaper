@@ -19,13 +19,14 @@ class Node:
 
 _PRECEDENCE = {
     "::": 1,
-    "OR": 2,
-    "AND": 3,
-    "==": 4, "!=": 4, "<": 4, "<=": 4, ">": 4, ">=": 4,
-    "++": 5,
-    "+": 6, "-": 6,
-    "*": 7, "/": 7, "//": 7, "%": 7,
-    "**": 8,
+    "??": 2,
+    "OR": 3,
+    "AND": 4,
+    "==": 5, "!=": 5, "<": 5, "<=": 5, ">": 5, ">=": 5, "IN": 5,
+    "++": 6,
+    "+": 7, "-": 7,
+    "*": 8, "/": 8, "//": 8, "%": 8,
+    "**": 9,
 }
 
 
@@ -53,37 +54,39 @@ class Parser:
             return Node("import", token, value=(specifier.value, alias))
         if self._match("EXPORT"):
             token = self._previous()
-            if self._check("MAKE") or self._check("VARY") or self._check("CRAFT"):
+            if self._peek().kind in {"MAKE", "VARY", "LET", "MUT", "CONST", "CRAFT", "FN"}:
                 declaration = self._statement()
                 if declaration.kind not in {"declare", "function"}:
                     raise self._error(token, "inline export must declare a name or craft")
                 return Node("export", token, children=[declaration])
             name = self._consume("IDENT", "expected a name after 'export'")
             return Node("export", token, value=name.value)
-        if self._match("MAKE", "VARY"):
+        if self._match("MAKE", "VARY", "LET", "MUT", "CONST"):
             declaration = self._previous()
             name = self._consume("IDENT", "expected a name after declaration")
-            self._consume(":=", "expected ':=' after the name")
+            if not self._match(":=", "="):
+                raise self._error(self._peek(), "expected '=' or ':=' after the name")
             value = self._expression()
-            return Node("declare", declaration, value=(name.value, declaration.kind == "VARY"), children=[value])
+            return Node("declare", declaration, value=(name.value, declaration.kind in {"VARY", "MUT"}), children=[value])
         if self._match("CHANGE"):
             token = self._previous()
             name = self._consume("IDENT", "expected a mutable name after 'change'")
-            self._consume(":=", "expected ':=' after the name")
+            if not self._match(":=", "="):
+                raise self._error(self._peek(), "expected '=' or ':=' after the name")
             return Node("change", token, value=name.value, children=[self._expression()])
         if self._match("EMIT"):
             token = self._previous()
             return Node("emit", token, children=[self._expression()])
-        if self._match("YIELD"):
+        if self._match("YIELD", "RETURN"):
             token = self._previous()
             if self._check("NEWLINE") or self._check("}") or self._check("EOF"):
                 return Node("yield", token)
             return Node("yield", token, children=[self._expression()])
-        if self._match("CRAFT"):
+        if self._match("CRAFT", "FN"):
             return self._function_declaration(self._previous())
-        if self._match("WHEN"):
+        if self._match("WHEN", "IF"):
             return self._when(self._previous())
-        if self._match("EACH"):
+        if self._match("EACH", "FOR"):
             return self._each(self._previous())
         if self._match("LOOP"):
             token = self._previous()
@@ -91,6 +94,17 @@ class Parser:
             condition = self._expression()
             body = self._block()
             return Node("while", token, children=[condition, body])
+        if self._match("WHILE"):
+            token = self._previous()
+            condition = self._expression()
+            return Node("while", token, children=[condition, self._block()])
+        if self._match("BREAK", "CONTINUE"):
+            token = self._previous()
+            return Node("break" if token.kind == "BREAK" else "continue", token)
+        if self._check("IDENT") and self._peek_next().kind in {"=", ":="}:
+            token = self._advance()
+            self._advance()
+            return Node("change", token, value=token.value, children=[self._expression()])
         expression = self._expression()
         return Node("expression", expression.token, children=[expression])
 
@@ -116,7 +130,7 @@ class Parser:
         newline_position = self.current
         self._skip_newlines()
         no = None
-        if self._match("OTHERWISE"):
+        if self._match("OTHERWISE", "ELSE"):
             no = self._block()
         else:
             self.current = newline_position
@@ -151,6 +165,11 @@ class Parser:
                 self._consume("]", "expected ']' after index")
                 left = Node("index", token, children=[left, index])
                 continue
+            if self._match("."):
+                token = self._previous()
+                field = self._consume("IDENT", "expected a field name after '.'")
+                left = Node("member", token, value=field.value, children=[left])
+                continue
             if self._check("CATALOG_OPERATOR"):
                 raise self._error(self._peek(), "catalogue operator is reserved; executable semantics are not registered")
             operator = self._peek().kind
@@ -159,7 +178,7 @@ class Parser:
                 break
             token = self._advance()
             self._skip_newlines()
-            next_minimum = precedence if operator == "**" else precedence + 1
+            next_minimum = precedence if operator in {"**", "??"} else precedence + 1
             right = self._expression(next_minimum)
             left = Node("binary", token, value=operator, children=[left, right])
         return left
@@ -201,6 +220,23 @@ class Parser:
         if self._match("IDENT"):
             token = self._previous()
             return Node("name", token, value=token.value)
+        if self._match("{"):
+            token = self._previous()
+            entries: list[Node] = []
+            self._skip_newlines()
+            if not self._check("}"):
+                while True:
+                    entries.append(self._expression())
+                    self._consume(":", "expected ':' between a map key and value")
+                    entries.append(self._expression())
+                    self._skip_newlines()
+                    if not self._match(","):
+                        break
+                    self._skip_newlines()
+                    if self._check("}"):
+                        break
+            self._consume("}", "expected '}' after map literal")
+            return Node("map", token, children=entries)
         if self._match("["):
             token = self._previous()
             items: list[Node] = []
@@ -249,6 +285,9 @@ class Parser:
 
     def _peek(self) -> Token:
         return self.tokens[self.current]
+
+    def _peek_next(self) -> Token:
+        return self.tokens[min(self.current + 1, len(self.tokens) - 1)]
 
     def _previous(self) -> Token:
         return self.tokens[self.current - 1]
