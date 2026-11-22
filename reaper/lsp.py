@@ -4,7 +4,26 @@ from __future__ import annotations
 import json
 import re
 import sys
-from .language_service import LanguageService, Span, _offset
+from .language_service import BUILTINS, KEYWORDS, LanguageService, Span, _offset
+from .lexer import KEYWORD_ALIASES
+
+SEMANTIC_TOKEN_TYPES = [
+    "namespace", "type", "class", "enum", "interface", "struct",
+    "typeParameter", "parameter", "variable", "property", "enumMember",
+    "event", "function", "method", "macro", "keyword", "modifier",
+    "comment", "string", "number", "regexp", "operator", "decorator",
+]
+SEMANTIC_TOKEN_MODIFIERS = [
+    "declaration", "readonly", "static", "deprecated", "abstract",
+    "async", "modification", "documentation", "defaultLibrary",
+]
+_SEMANTIC_TOKEN_RE = re.compile(
+    r'"(?:\\.|[^"\\])*"|#.*$|(?:\d+(?:\.\d+)?)|'
+    r'(?:[A-Za-z_][A-Za-z0-9_]*|[^\W\d]\w*)|'
+    r'(?:~>|::|:=|==|!=|<=|>=|\*\*|//|[+\-*/%<>=!{}()[\],.:])',
+    re.UNICODE,
+)
+_DECLARATION_KEYWORDS = {"make", "vary", "craft", "fn", "let", "const", "функция", "процедура", "пусть", "переменная", "связать"}
 
 HOVER = {
     "make": "Immutable binding: `make name := expression`.",
