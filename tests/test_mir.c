@@ -94,6 +94,12 @@ static void lowers_structured_control_flow(void) {
         "}\n"
         "when total >= 6 {\n"
         "    emit total\n"
+        "    when total >= 10 {\n"
+        "        emit total\n"
+        "    } otherwise {\n"
+        "        emit 10\n"
+        "    }\n"
+        "    emit total\n"
         "} otherwise {\n"
         "    emit 0\n"
         "}\n"
@@ -108,7 +114,8 @@ static void lowers_structured_control_flow(void) {
     assert(count_opcode(&mir, REAPER_MIR_ITER_INIT) == 1U);
     assert(count_opcode(&mir, REAPER_MIR_ITER_NEXT) == 1U);
     assert(count_opcode(&mir, REAPER_MIR_ITER_CURRENT) == 1U);
-    assert(count_terminator(&mir, REAPER_MIR_TERM_BRANCH) == 3U);
+    assert(count_terminator(&mir, REAPER_MIR_TERM_BRANCH) == 4U);
+    assert(mir.instruction_order_count == mir.instruction_count);
     assert(count_terminator(&mir, REAPER_MIR_TERM_JUMP) >= 4U);
     assert(reaper_mir_verify(&mir, &error));
     reaper_mir_free(&mir);
