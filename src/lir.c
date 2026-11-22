@@ -232,13 +232,13 @@ int reaper_lir_build(
         malloc(output->instruction_order_count * sizeof *output->instruction_order);
     output->operands = output->operand_count == 0U ? NULL :
         malloc(output->operand_count * sizeof *output->operands);
-    output->parameter_slots = output->parameter_count == 0U ? NULL :
-        malloc(output->parameter_count * sizeof *output->parameter_slots);
+    output->parameter_slots = mir->parameter_count == 0U ? NULL :
+        malloc(mir->parameter_count * sizeof *output->parameter_slots);
     if (output->functions == NULL || output->blocks == NULL ||
         (output->instruction_count != 0U && output->instructions == NULL) ||
         (output->instruction_order_count != 0U && output->instruction_order == NULL) ||
         (output->operand_count != 0U && output->operands == NULL) ||
-        (output->parameter_count != 0U && output->parameter_slots == NULL)) {
+        (mir->parameter_count != 0U && output->parameter_slots == NULL)) {
         (void)fail(error, 0U, "unable to allocate LIR module storage");
         reaper_lir_free(output);
         return 0;
@@ -289,6 +289,11 @@ int reaper_lir_build(
             reaper_lir_free(output);
             return 0;
         }
+    }
+    if (output->parameter_count != mir->parameter_count) {
+        (void)fail(error, output->parameter_count, "LIR parameter-slot table is incomplete");
+        reaper_lir_free(output);
+        return 0;
     }
 
     for (size_t i = 0U; i < output->instruction_count; ++i) {
