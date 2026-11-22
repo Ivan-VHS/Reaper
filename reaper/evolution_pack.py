@@ -11,7 +11,7 @@ from .lexer import Token
 BUILTIN_NAMES = frozenset({
     "ok", "err", "is_ok", "is_err", "unwrap", "unwrap_or", "result_map",
     "result_bind", "try_call", "recover", "some", "is_some", "is_none",
-    "some_value", "coalesce", "snapshot", "clone", "reflash", "rebind",
+    "some_value", "coalesce", "snapshot", "clone", "reflash", "rebind", "map_of", "map_from_entries",
     "zip", "enumerate", "all_of", "any_of", "find", "find_index", "count_by",
     "take_while", "drop_while", "scan", "group_by", "partition_by", "window",
     "transpose", "interleave", "compact", "pluck", "keys", "values", "entries",
