@@ -2,7 +2,7 @@
 
 | Component | Current scope | Status |
 |---|---|---|
-| Python runtime | lexer, parser, interpreter, CLI, REPL, modules | available |
+| Python runtime | lexer, parser, interpreter, CLI, REPL, modules; ordered maps, member access, lazy null-coalescing and bounded map/sequence builtins | available |
 | Quotas/resources | steps, calls, collections, text, heap, open handles | reference runtime |
 | Division | Euclidean divmod, quotient/remainder, divisibility | implemented |
 | Allocation | partition/split, distribute, weighted allocation | implemented |
