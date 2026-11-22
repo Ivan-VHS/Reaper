@@ -56,7 +56,7 @@ static void usage(FILE *stream) {
         "  --version           Show native compiler version\n"
         "  --evolution-status  Show native development gates and safety boundary\n"
         "  --tokens            Print lexical tokens\n"
-        "  --ast-json          Parse one expression and print deterministic AST JSON\n"
+        "  --ast-json          Parse a complete source program and print deterministic AST JSON\n"
         "  --emit-asm          Emit native assembly for the selected target\n"
         "  --target NAME       x86_64-sysv or duckos-dabi64-v1 (default: x86_64-sysv)\n"
         "  -o PATH             Write generated assembly to PATH instead of stdout\n"
@@ -322,7 +322,7 @@ int main(int argc, char **argv) {
     } else if (dump_ast) {
         ReaperAst ast;
         ReaperParseError parse_error = {{0}, 0U, 0U};
-        if (!reaper_parse_expression(&tokens, &ast, &parse_error)) {
+        if (!reaper_parse_program(&tokens, &ast, &parse_error)) {
             fprintf(stderr, "%s:%zu:%zu: parser error: %s\n",
                 source_path, parse_error.line, parse_error.column,
                 parse_error.message);
