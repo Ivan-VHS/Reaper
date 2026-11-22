@@ -17,13 +17,13 @@
 
 <p align="center"><img src="assets/readme/workflow.svg" alt="Reaper implemented data flow" width="100%"></p>
 
-Реальный путь: исходный `.rpr` → lexer и parser → Python reference runtime → CLI, Studio, LSP и DAP.
+Рабочие пути: `.rpr` → Python reference runtime → CLI, Studio, LSP и DAP; отдельно — ограниченные i64-выражения → проверяемый native IR → assembly x86-64 System V ELF.
 
 
 [![Python CI](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/ci.yml?branch=main&label=Python%20CI)](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml)  [![Live Studio capture](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/readme-screenshots.yml?branch=main&label=Live%20Studio%20capture)](https://github.com/Ivan-VHS/Reaper/actions/workflows/readme-screenshots.yml)  [![License](https://img.shields.io/github/license/Ivan-VHS/Reaper)](LICENSE)
 
 
-> **Назначение:** Reaper — локальный язык программирования, интерпретатор, набор инструментов разработчика и desktop IDE для Windows. Это не hosted web demo и не production web service. Python runtime — текущая исполняемая эталонная реализация совместимости; нативный трек C17 реализован частично. Документация сверена с `main` **22.11.2026**.
+> **Назначение:** Reaper — локальный язык программирования, интерпретатор, набор инструментов разработчика и desktop IDE для Windows. Это не hosted web demo и не production web service. Python runtime — текущая исполняемая эталонная реализация совместимости; нативный C17-трек уже генерирует проверяемый assembly x86-64 System V ELF для ограниченной подмножины i64-выражений. Документация сверена с `main` **22.11.2026**.
 
 ## Назначение и состояние реализации
 
@@ -40,7 +40,7 @@ Reaper — expression-oriented язык, в котором оператор `::`
 | LSP | stdio JSON-RPC, diagnostics, completion, hover, symbols и лексическая навигация | открытый документ; без межфайлового type inference |
 | DAP | stdio debug adapter, line breakpoints, stepping, stack и locals | отладка на границах операторов; только доверенные локальные программы |
 | NOO TAH | управление проектами/процессами вокруг официального Node.js, npm/npx и Inspector | Node/V8/libuv предоставляет upstream Node |
-| Native C17 | lexer, expression parser, owned AST, checked IR и ограниченный lowering | активное частичное направление, не parity с Python runtime |
+| Native C17 | UTF-8 lexer, Pratt expression parser, owned AST, проверяемый i64 IR, checked lowering и backend assembly x86-64 System V ELF | только целочисленные выражения; не полный compiler и не parity с Python runtime |
 | QCS / embedded tools | отдельный parser аппаратной области, JSON AST и ограниченные embedded-инструменты | справочный/аналитический инструментарий, не выполнение на оборудовании |
 | Kora | необязательные вспомогательные функции стандартной библиотеки в семи модулях | отдельно от runtime языка Reaper |
 
@@ -100,7 +100,16 @@ cmake --build build --parallel
 ctest --test-dir build --output-on-failure
 ```
 
-Эта сборка проверяет текущую нативную подмножину compiler и её тесты. Она не заменяет Python runtime и не подтверждает полную языковую parity.
+Эта сборка проверяет нативную подмножину compiler и её тесты. Она не заменяет Python runtime и не подтверждает полную языковую parity.
+
+На Linux x86-64 можно сгенерировать нативный assembly и объектный файл:
+
+```sh
+./build/reaper-c --emit-asm examples/native/arithmetic.rpr -o build/arithmetic.s
+cc -c build/arithmetic.s -o build/arithmetic.o
+```
+
+Генерируемый assembly экспортирует `int reaper_program(int64_t *result)`. Грамматика подмножества и ABI описаны в [документации native compiler](docs/NATIVE_COMPILER.md). Это backend выражений, а не компиляция полноценных `.rpr`-программ.
 
 ### Необязательные проверки NOO TAH / Node.js
 
@@ -121,6 +130,7 @@ reaper-noo-tah npm run build
 Примеры в репозитории — локальные программы, а не ответы живого API:
 
 - `examples/flow.rpr` — базовый smoke-пример языка.
+- `examples/native/` — i64-выражения для проверки генерации native assembly, включая переполнение и деление на ноль.
 - `examples/device_audit.rpr` — пример read-only аудита, который после запуска создаёт версионированный JSON-отчёт.
 - `tests/` содержит тесты parser, runtime, language service, debugger, реестров и интеграций.
 - NOO TAH conformance suite проверяет Node built-ins, ESM/CommonJS, streams, workers, child processes и loopback HTTP/TCP. Публичный тестовый сервис не используется.
@@ -190,14 +200,15 @@ JavaScript project
   -> official Node.js (V8, libuv, npm, Inspector)
 
 Native C17 track
-  -> lexer / parser / AST / IR / limited lowering
+  -> UTF-8 lexer / Pratt parser / owned AST
+  -> verified i64 IR / checked lowering / x86-64 ELF assembly (только integer expressions)
 ```
 
 | Путь | Содержимое |
 |---|---|
 | `reaper/` | Python reference runtime, CLI, Studio, language/debug services и NOO TAH |
 | `reaper/kora/` | вспомогательные функции стандартной библиотеки Kora |
-| `src/`, `include/` | частичный native C17 track |
+| `src/`, `include/` | native C17 frontend, проверяемый i64 IR и backend x86-64 assembly |
 | `tests/` | Python, protocol, runtime и native тесты |
 | `examples/` | локальные программы-примеры `.rpr` |
 | `docs/` | язык, IDE, архитектура и границы возможностей |
@@ -229,9 +240,9 @@ Workflow artifacts — это скачиваемые результаты сбо
 
 ## Известные ограничения, вклад и лицензия
 
-Python остаётся исполняемой эталонной реализацией. Native C17 parsing/lowering реализован частично. LSP symbols/references/rename являются лексическими и ограничены текущим документом; DAP stepping выполняется на уровне операторов; IDE не является OS sandbox. NOO TAH делегирует JavaScript официальному Node, а не реализует собственную версию V8.
+Python остаётся исполняемой эталонной реализацией. Native C17 backend пока компилирует только signed i64-выражения с `+`, `-`, `*` и `/` в assembly x86-64 System V ELF; объявления, функции, ветвления и полноценные программы ещё не компилируются. LSP symbols/references/rename являются лексическими и ограничены текущим документом; DAP stepping выполняется на уровне операторов; IDE не является OS sandbox. NOO TAH делегирует JavaScript официальному Node, а не реализует собственную версию V8.
 
-Правила разработки, проверки изменений и оформления Pull Request описаны в [CONTRIBUTING.md](CONTRIBUTING.md). Предлагайте изменения через [GitHub Issues](https://github.com/Ivan-VHS/Reaper/issues) или Pull Request. Добавляйте воспроизводимый пример `.rpr`, версии Python/Node/compiler и точную команду с результатом. Запускайте Python tests, а при изменении native track — CMake/CTest.
+Правила разработки, проверки изменений и оформления Pull Request описаны в [CONTRIBUTING.md](CONTRIBUTING.md). Предлагайте изменения через [GitHub Issues](https://github.com/Ivan-VHS/Reaper/issues) или Pull Request. Добавляйте воспроизводимый пример `.rpr`, версии Python/Node/compiler и точную команду с результатом. Запускайте Python tests, а при изменении native track — CMake/CTest. Архитектура и ограничения native backend описаны в [docs/NATIVE_COMPILER.md](docs/NATIVE_COMPILER.md).
 
 Лицензия: [Apache-2.0](LICENSE).
 
