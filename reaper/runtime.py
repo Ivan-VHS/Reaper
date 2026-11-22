@@ -592,13 +592,23 @@ class Interpreter:
         def enumerate_values(values: Any, start: Any = 0) -> list[list[Any]]:
             values = sequence(values)
             start = integer(start, "enumerate start")
-            return [[start + index, item] for index, item in enumerate(values)]
+            token = Token("BUILTIN", "enumerate", 1, 1)
+            result: list[list[Any]] = []
+            for index, item in enumerate(values):
+                self._tick(token)
+                result.append([start + index, item])
+            return result
 
         def zip_values(left: Any, right: Any) -> list[list[Any]]:
             left = sequence(left)
             right = sequence(right)
             length = min(len(left), len(right))
-            return [[left[index], right[index]] for index in range(length)]
+            token = Token("BUILTIN", "zip", 1, 1)
+            result: list[list[Any]] = []
+            for index in range(length):
+                self._tick(token)
+                result.append([left[index], right[index]])
+            return result
 
         def scan_values(values: Any, initial: Any, function: Any) -> list[Any]:
             values = sequence(values)
@@ -627,7 +637,12 @@ class Interpreter:
             count = 1 + (len(values) - width) // step
             if count > self.max_collection_items:
                 raise ValueError(f"collection item limit ({self.max_collection_items}) exceeded")
-            return [values[offset:offset + width] for offset in range(0, len(values) - width + 1, step)]
+            token = Token("BUILTIN", "window", 1, 1)
+            result: list[Any] = []
+            for offset in range(0, len(values) - width + 1, step):
+                self._tick(token)
+                result.append(values[offset:offset + width])
+            return result
 
         register("divmod_euclidean", euclidean_divmod, 2, 2)
         register("euclidean_divmod", euclidean_divmod, 2, 2)
