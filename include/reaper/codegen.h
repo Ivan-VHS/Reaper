@@ -38,6 +38,12 @@ typedef struct {
  * The module must contain exactly one final RETURN and no more than
  * REAPER_CODEGEN_X86_64_MAX_NODES instructions.
  */
+int reaper_codegen_duckos_dabi64_v1(
+    const ReaperIrModule *module,
+    FILE *output,
+    ReaperCodegenError *error
+);
+
 int reaper_codegen_x86_64_sysv_elf(
     const ReaperIrModule *module,
     FILE *output,
