@@ -47,7 +47,7 @@ flowchart LR
 
 | Область | Реалізовані функції та межі |
 |---|---|
-| Python runtime | lexer, parser, інтерпретатор, CLI, REPL, модулі, closures, quotas та audit |
+| Python runtime | lexer, parser, інтерпретатор, CLI, REPL, модулі, closures, `attempt/recover/finally`, quotas та audit |
 | Reaper Studio | основа Windows IDE: дерево проєкту, редактор, підсвічування, номери рядків, пошук, check/run та налагоджувач |
 | LSP | stdio-сервіс: інкрементальні UTF-16-документи, parser/structure діагностика, completion, hover, symbols і лексична навігація; аналіз у межах відкритого файла |
 | DAP | stdio debug adapter: запуск, построкові breakpoints, покрокове виконання операторів, stack і локальні змінні |
@@ -117,6 +117,7 @@ Python reference runtime містить 133 стабільні ID операці
 
 ```sh
 python -m reaper examples/flow.rpr
+python -m reaper examples/error_handling.rpr
 python -m reaper --check examples/flow.rpr
 python -m reaper --engine vm examples/flow.rpr
 python -m reaper --repl
