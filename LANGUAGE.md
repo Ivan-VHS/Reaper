@@ -24,7 +24,7 @@ emit "total = " ++ text(total)
 
 Russian exact aliases: `попытка` → `attempt`, `обработать` → `recover`, `наконец` → `finally`, `бросить` → `throw`.
 
-`recover` receives the runtime diagnostic as text. `finally` runs on success, recovery, uncaught language errors and early function return. The execution-budget error is deliberately not recoverable. This is implemented in the Python reference runtime and VM; native C17 parity is not claimed.
+`recover` receives the runtime diagnostic as text. `finally` runs on success, recovery, uncaught language errors and early function return. The execution-budget error is deliberately not recoverable; `finally` code remains subject to the same step budget. This is implemented in the Python reference runtime and VM; native C17 parity is not claimed.
 
 Rules: explicit effects; no implicit file/network/clock access in ordinary expressions; no silent coercion; bounded steps, call depth and collections. See [runtime limits](docs/RUNTIME_PLATFORM.md) and [structured error handling](docs/STRUCTURED_ERROR_HANDLING.md).
 
