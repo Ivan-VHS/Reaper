@@ -12,10 +12,11 @@ craft parity(value) {
 }
 
 make profile := { name: "Ada", score: 9, active: true }
+make scores := { a: 2, b: 4, c: 5 }
 make absent := nothing
 emit profile.name
 emit absent?.nickname ?? "anonymous"
-emit map_values(profile, double)
-emit filter_entries(profile, is_even)
+emit map_values(scores, double)
+emit filter_entries(scores, is_even)
 emit group_by([1, 2, 3, 4, 5, 6], parity)
 emit zip(["north", "south"], [10, 20, 30])
