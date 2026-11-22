@@ -40,7 +40,7 @@ The target audience is language and tooling developers, application engineers, Q
 | LSP | stdio JSON-RPC, diagnostics, completion, hover, symbols, lexical navigation and semantic tokens | per-open-document; lexical highlighting, not cross-file type inference |
 | DAP | stdio debug adapter, line breakpoints, stepping, stack and locals | statement-boundary debugging; trusted local programs only |
 | NOO TAH | project/process management around the official Node.js runtime, npm/npx and Inspector | Node/V8/libuv are supplied by upstream Node |
-| Native C17 | program lexer/parser, owned AST, HIR name/scope/mutability and basic type checks, verified i64 expression IR, x86-64 System V and DuckOS DABI64 expression backends | declarations, functions, blocks and loops are parsed and semantically checked; only i64 expressions are currently emitted as machine code |
+| Native C17 | program lexer/parser, owned AST, HIR semantic checks, MIR function/CFG lowering, LIR virtual registers/local slots, verified i64 expression IR, System V and DuckOS DABI64 expression backends | full program structure reaches LIR; machine-code emission is still limited to i64 expressions |
 | QCS / embedded tools | separate hardware-domain parser, JSON AST and bounded embedded helpers | reference/analysis tools, not hardware execution |
 | Kora | optional standard-library helpers in seven manifest-backed modules | separate from the Reaper language runtime |
 
@@ -109,7 +109,7 @@ On Linux x86-64, emit a native expression object:
 cc -c build/arithmetic.s -o build/arithmetic.o
 ```
 
-The assembly exports `int reaper_program(int64_t *result)`. For the separate DuckOS ABI target, add `--target duckos-dabi64-v1`. The parser and HIR checker cover declarations, functions, local scopes, calls, blocks, loops and `::`, but those constructs are not yet lowered to machine code. See [Native compiler](docs/NATIVE_COMPILER.md) and [HIR/MIR/LIR status](docs/NATIVE_HIR.md).
+The assembly exports `int reaper_program(int64_t *result)`. For the separate DuckOS ABI target, add `--target duckos-dabi64-v1`. Declarations, functions, locals, calls and `::` now reach HIR, MIR and LIR; `when`, `each` and `loop while` become verified control-flow blocks. The existing machine-code backends still consume only the i64 expression IR. See [Native compiler](docs/NATIVE_COMPILER.md) and [HIR/MIR/LIR status](docs/NATIVE_HIR.md).
 
 ### Optional NOO TAH / Node.js checks
 
@@ -201,9 +201,10 @@ JavaScript project
 
 Native C17 track
   -> native program lexer/parser / owned AST / HIR semantic checks
-  -> verified i64 expression IR
+  -> MIR functions, CFG, calls and pipe-call lowering
+  -> LIR virtual registers, local slots and parameter maps
   -> x86-64 System V or DuckOS DABI64 assembly (integer expressions only)
-  -> MIR/CFG, general LIR and whole-program code generation pending
+  -> general LIR machine lowering, object writing/linking and OS runtime pending
 ```
 
 | Path | Contents |
@@ -242,7 +243,7 @@ Workflow artifacts are downloadable build outputs, not a live hosted IDE. To rol
 
 ## Known limitations, contribution and license
 
-Python remains the executable compatibility reference. The C17 parser and HIR checker understand declarations, functions, local scopes, calls, blocks, loops and `::`; machine-code generation is still limited to signed i64 expressions. MIR/CFG, general LIR, object writing/linking and the DuckOS loader/kernel/runtime remain unfinished. LSP symbol lookup, references and rename are lexical and document-local; DAP stepping is statement-granular; the IDE is not an OS sandbox. NOO TAH delegates JavaScript behavior to the official Node distribution rather than reimplementing V8.
+Python remains the executable compatibility reference. The C17 parser/HIR/MIR/LIR now represent program declarations, functions, local slots, calls, `::` and structured control flow. Machine-code generation remains limited to the signed i64 expression subset; a general MIR/LIR backend, ELF object writer/linker and DuckOS loader/kernel/runtime remain unfinished. LSP symbol lookup, references and rename are lexical and document-local; DAP stepping is statement-granular; the IDE is not an OS sandbox. NOO TAH delegates JavaScript behavior to the official Node distribution rather than reimplementing V8.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the repository's contribution workflow and validation requirements. Propose changes through [GitHub Issues](https://github.com/Ivan-VHS/Reaper/issues) or a Pull Request. Include a reproducible `.rpr` example, Python/Node/compiler versions and the exact command/output. Run Python tests and, when touching the native track, CMake/CTest. Native backend details and limits are in [docs/NATIVE_COMPILER.md](docs/NATIVE_COMPILER.md) and [docs/NATIVE_HIR.md](docs/NATIVE_HIR.md).
 
