@@ -25,6 +25,7 @@ import stat
 import sys
 import tempfile
 from typing import Any, Mapping, Sequence
+import unicodedata
 import uuid
 
 
@@ -120,9 +121,10 @@ class ReflashPlan:
             if not isinstance(raw, dict):
                 raise CLifeError("each reflash change must be an object")
             path = _normalise_relative(raw.get("path"))
-            if path in seen:
-                raise CLifeError(f"duplicate reflash path: {path}")
-            seen.add(path)
+            collision = _collision_key(path)
+            if collision in seen:
+                raise CLifeError(f"case-insensitive or Unicode-colliding reflash path: {path}")
+            seen.add(collision)
             base_hash = raw.get("base_sha256")
             if base_hash is not None and not _is_sha256(base_hash):
                 raise CLifeError(f"invalid base checksum for {path}")
@@ -236,6 +238,10 @@ def _is_sha256(value: Any) -> bool:
     return isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value) is not None
 
 
+def _collision_key(path: str) -> str:
+    return unicodedata.normalize("NFC", path).casefold()
+
+
 def _repository_root(value: str | Path) -> Path:
     root = Path(value).expanduser().resolve()
     if not root.is_dir():
@@ -250,6 +256,8 @@ def _normalise_relative(value: Any) -> str:
     if portable.startswith("/") or re.match(r"^[A-Za-z]:", portable):
         raise CLifeError(f"absolute paths are not allowed: {value!r}")
     parts = portable.split("/")
+    if any(unicodedata.normalize("NFC", part) != part for part in parts):
+        raise CLifeError(f"path must use NFC Unicode normalization: {value!r}")
     if any(part in {"", ".", ".."} for part in parts):
         raise CLifeError(f"unsafe relative path: {value!r}")
     if any(":" in part or part.endswith((" ", ".")) for part in parts):
@@ -311,6 +319,12 @@ def _walk_files(
             if len(files) > max_files:
                 raise CLifeError(f"repository exceeds the {max_files} file limit")
     files.sort(key=lambda item: item[0])
+    seen_paths: set[str] = set()
+    for relative, _ in files:
+        collision = _collision_key(relative)
+        if collision in seen_paths:
+            raise CLifeError(f"case-insensitive or Unicode-colliding repository path: {relative}")
+        seen_paths.add(collision)
     return files
 
 
@@ -319,7 +333,7 @@ def _secure_directory(path: Path) -> None:
     probe = Path(absolute.anchor)
     for part in absolute.parts[1:]:
         probe = probe / part
-        if probe.exists() and probe.is_symlink():
+        if probe.is_symlink():
             raise CLifeError(f"symlink directory is not allowed: {probe}")
 
 
@@ -413,6 +427,8 @@ def verify_checkpoint(checkpoint: str | Path) -> CheckpointVerification:
         digest_path = directory / "manifest.sha256"
         if manifest_path.is_symlink() or digest_path.is_symlink():
             raise CLifeError("checkpoint manifest files must not be symlinks")
+        if manifest_path.stat().st_size > _MAX_FILE_BYTES:
+            raise CLifeError("checkpoint manifest exceeds the size limit")
         raw = manifest_path.read_bytes()
         expected_manifest_hash = digest_path.read_text(encoding="ascii").strip()
         if not _is_sha256(expected_manifest_hash) or _sha256(raw) != expected_manifest_hash:
@@ -431,9 +447,10 @@ def verify_checkpoint(checkpoint: str | Path) -> CheckpointVerification:
                 continue
             try:
                 relative = _normalise_relative(record.get("path"))
-                if relative in seen:
-                    raise CLifeError(f"duplicate manifest path: {relative}")
-                seen.add(relative)
+                collision = _collision_key(relative)
+                if collision in seen:
+                    raise CLifeError(f"case-insensitive or Unicode-colliding manifest path: {relative}")
+                seen.add(collision)
                 expected_paths.add(relative)
                 size = record.get("size")
                 digest = record.get("sha256")
@@ -524,9 +541,10 @@ def plan_reflash(root: str | Path, updates: Mapping[str, str | bytes]) -> Reflas
     total = 0
     for raw_path, value in updates.items():
         relative = _normalise_relative(raw_path)
-        if relative in seen:
-            raise CLifeError(f"duplicate reflash path: {relative}")
-        seen.add(relative)
+        collision = _collision_key(relative)
+        if collision in seen:
+            raise CLifeError(f"case-insensitive or Unicode-colliding reflash path: {relative}")
+        seen.add(collision)
         if not isinstance(value, (str, bytes)):
             raise CLifeError(f"reflash content must be str or bytes: {relative}")
         content = value.encode("utf-8") if isinstance(value, str) else value
