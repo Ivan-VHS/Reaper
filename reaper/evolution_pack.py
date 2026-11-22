@@ -138,6 +138,33 @@ def install_evolution_builtins(interpreter: Any, register: Callable[..., None]) 
             value = call(fn, value)
         return value
 
+    def map_of(*arguments: Any) -> dict[Any, Any]:
+        if len(arguments) % 2:
+            raise ValueError("map_of() expects alternating key/value arguments")
+        if len(arguments) // 2 > limit:
+            raise ValueError(f"collection item limit ({limit}) exceeded")
+        result = {}
+        for index in range(0, len(arguments), 2):
+            try:
+                result[arguments[index]] = arguments[index + 1]
+            except TypeError as failure:
+                raise TypeError("map_of() keys must be hashable") from failure
+        return result
+
+    def map_from_entries(values: Any) -> dict[Any, Any]:
+        result = {}
+        for entry in seq(values):
+            pair = seq(entry)
+            if len(pair) != 2:
+                raise ValueError("map_from_entries() expects [key, value] pairs")
+            try:
+                result[pair[0]] = pair[1]
+            except TypeError as failure:
+                raise TypeError("map_from_entries() keys must be hashable") from failure
+        if len(result) > limit:
+            raise ValueError(f"collection item limit ({limit}) exceeded")
+        return result
+
     def rebind(source: Any, updates: Any) -> dict[Any, Any]:
         if not isinstance(source, dict) or not isinstance(updates, dict):
             raise TypeError("rebind() expects two maps")
@@ -418,7 +445,8 @@ def install_evolution_builtins(interpreter: Any, register: Callable[..., None]) 
         ("some_value", lambda v: v["value"] if tagged(v, "some") else (_raise("some_value() expects some(value)")), 1, 1),
         ("coalesce", lambda v, fallback: fallback if v is None else v, 2, 2),
         ("snapshot", snapshot, 1, 1), ("clone", snapshot, 1, 1), ("reflash", reflash, 1, 257),
-        ("rebind", rebind, 2, 2), ("zip", zip_values, 2, 16), ("enumerate", enumerate_values, 1, 2),
+        ("rebind", rebind, 2, 2), ("map_of", map_of, 0, 64),
+        ("map_from_entries", map_from_entries, 1, 1), ("zip", zip_values, 2, 16), ("enumerate", enumerate_values, 1, 2),
         ("all_of", all_of, 1, 2), ("any_of", any_of, 1, 2), ("find", find, 2, 2),
         ("find_index", find_index, 2, 2), ("count_by", count_by, 2, 2),
         ("take_while", take_while, 2, 2), ("drop_while", drop_while, 2, 2),
