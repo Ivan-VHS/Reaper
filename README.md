@@ -40,7 +40,7 @@ The target audience is language and tooling developers, application engineers, Q
 | LSP | stdio JSON-RPC, diagnostics, completion, hover, symbols, lexical navigation and semantic tokens | per-open-document; lexical highlighting, not cross-file type inference |
 | DAP | stdio debug adapter, line breakpoints, stepping, stack and locals | statement-boundary debugging; trusted local programs only |
 | NOO TAH | project/process management around the official Node.js runtime, npm/npx and Inspector | Node/V8/libuv are supplied by upstream Node |
-| Native C17 | UTF-8 lexer, Pratt expression parser, owned AST, verified i64 IR, checked lowering and x86-64 System V ELF assembly backend | bounded integer expressions only; not full program compilation or Python-runtime parity |
+| Native C17 | native lexer with UTF-8-aware source positions, Pratt expression parser, owned AST, verified i64 IR, checked lowering and x86-64 System V ELF assembly backend | bounded integer expressions only; not full program compilation or Python-runtime parity |
 | QCS / embedded tools | separate hardware-domain parser, JSON AST and bounded embedded helpers | reference/analysis tools, not hardware execution |
 | Kora | optional standard-library helpers in seven manifest-backed modules | separate from the Reaper language runtime |
 
