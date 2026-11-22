@@ -29,6 +29,20 @@ typedef __UINTPTR_TYPE__ rpr_uptr;
 #define RPR_SECTION(name) __attribute__((section(name)))
 #define RPR_USED __attribute__((used))
 #define RPR_ALWAYS_INLINE __attribute__((always_inline)) inline
+#define RPR_STATIC_ASSERT(condition, message) _Static_assert((condition), message)
+#define RPR_SIZEOF(type) sizeof(type)
+#define RPR_ALIGNOF(type) __alignof__(type)
+#define RPR_OFFSETOF(type, member) __builtin_offsetof(type, member)
+
+#if defined(__x86_64__) && (defined(__clang__) || defined(__GNUC__))
+#define RPR_SYSV_ABI __attribute__((sysv_abi))
+#define RPR_WIN64_ABI __attribute__((ms_abi))
+#define RPR_INTERRUPT_ABI __attribute__((interrupt))
+#else
+#define RPR_SYSV_ABI
+#define RPR_WIN64_ABI
+#define RPR_INTERRUPT_ABI
+#endif
 
 #define RPR_MEMORY_RELAXED __ATOMIC_RELAXED
 #define RPR_MEMORY_ACQUIRE __ATOMIC_ACQUIRE
@@ -61,6 +75,29 @@ rpr_atomic_compare_exchange_u32(rpr_atomic_u32 *value, rpr_u32 *expected,
     return __atomic_compare_exchange_n(
         &value->value, expected, desired, 0, success_order, failure_order
     );
+}
+
+static RPR_ALWAYS_INLINE rpr_u64
+rpr_atomic_load_u64(const rpr_atomic_u64 *value, int order) {
+    return __atomic_load_n(&value->value, order);
+}
+
+static RPR_ALWAYS_INLINE void
+rpr_atomic_store_u64(rpr_atomic_u64 *value, rpr_u64 desired, int order) {
+    __atomic_store_n(&value->value, desired, order);
+}
+
+static RPR_ALWAYS_INLINE int
+rpr_atomic_compare_exchange_u64(rpr_atomic_u64 *value, rpr_u64 *expected,
+                                rpr_u64 desired, int success_order,
+                                int failure_order) {
+    return __atomic_compare_exchange_n(
+        &value->value, expected, desired, 0, success_order, failure_order
+    );
+}
+
+static RPR_ALWAYS_INLINE void rpr_memory_fence(int order) {
+    __atomic_thread_fence(order);
 }
 
 typedef struct {
@@ -208,6 +245,67 @@ static RPR_ALWAYS_INLINE void rpr_x86_invalidate_page(const void *address) {
 
 static RPR_ALWAYS_INLINE void rpr_x86_halt(void) {
     __asm__ volatile("hlt" ::: "memory");
+}
+
+static RPR_ALWAYS_INLINE rpr_uptr rpr_x86_read_cr3(void) {
+    rpr_uptr value;
+    __asm__ volatile("mov %%cr3, %0" : "=r"(value) :: "memory");
+    return value;
+}
+
+static RPR_ALWAYS_INLINE void rpr_x86_write_cr3(rpr_uptr value) {
+    __asm__ volatile("mov %0, %%cr3" :: "r"(value) : "memory");
+}
+
+static RPR_ALWAYS_INLINE rpr_u64 rpr_x86_read_msr(rpr_u32 index) {
+    rpr_u32 low;
+    rpr_u32 high;
+    __asm__ volatile("rdmsr" : "=a"(low), "=d"(high) : "c"(index));
+    return ((rpr_u64)high << 32u) | low;
+}
+
+static RPR_ALWAYS_INLINE void rpr_x86_write_msr(rpr_u32 index, rpr_u64 value) {
+    rpr_u32 low = (rpr_u32)value;
+    rpr_u32 high = (rpr_u32)(value >> 32u);
+    __asm__ volatile("wrmsr" :: "c"(index), "a"(low), "d"(high) : "memory");
+}
+#endif
+
+#if defined(__aarch64__)
+static RPR_ALWAYS_INLINE void rpr_aarch64_dmb_ish(void) {
+    __asm__ volatile("dmb ish" ::: "memory");
+}
+
+static RPR_ALWAYS_INLINE void rpr_aarch64_dsb_sy(void) {
+    __asm__ volatile("dsb sy" ::: "memory");
+}
+
+static RPR_ALWAYS_INLINE void rpr_aarch64_isb(void) {
+    __asm__ volatile("isb" ::: "memory");
+}
+
+static RPR_ALWAYS_INLINE void rpr_aarch64_wait_for_interrupt(void) {
+    __asm__ volatile("wfi" ::: "memory");
+}
+
+static RPR_ALWAYS_INLINE rpr_u64 rpr_aarch64_read_ttbr0_el1(void) {
+    rpr_u64 value;
+    __asm__ volatile("mrs %0, ttbr0_el1" : "=r"(value));
+    return value;
+}
+
+static RPR_ALWAYS_INLINE void rpr_aarch64_write_ttbr0_el1(rpr_u64 value) {
+    __asm__ volatile("msr ttbr0_el1, %0" :: "r"(value) : "memory");
+}
+#endif
+
+#if defined(__riscv)
+static RPR_ALWAYS_INLINE void rpr_riscv_memory_fence(void) {
+    __asm__ volatile("fence iorw, iorw" ::: "memory");
+}
+
+static RPR_ALWAYS_INLINE void rpr_riscv_wait_for_interrupt(void) {
+    __asm__ volatile("wfi" ::: "memory");
 }
 #endif
 
