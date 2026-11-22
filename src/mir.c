@@ -801,19 +801,117 @@ int reaper_mir_build(
     return 1;
 }
 
+static int verify_fail(
+    ReaperMirError *error,
+    size_t index,
+    const char *message
+) {
+    if (error != NULL && error->message[0] == '\0') {
+        error->node_index = index;
+        (void)snprintf(error->message, sizeof error->message, "%s", message);
+    }
+    return 0;
+}
+
 int reaper_mir_verify(const ReaperMirModule *module, ReaperMirError *error) {
     if (error != NULL) {
         error->node_index = 0U;
         error->message[0] = '\0';
     }
-    if (module == NULL || module->functions == NULL ||
-        module->blocks == NULL || module->instructions == NULL)
-        return 0;
-    if (module->function_count == 0U || module->block_count == 0U)
-        return 0;
+    if (module == NULL || module->functions == NULL || module->blocks == NULL ||
+        (module->instruction_count != 0U && module->instructions == NULL) ||
+        (module->operand_count != 0U && module->operands == NULL) ||
+        (module->parameter_count != 0U && module->parameters == NULL)) {
+        return verify_fail(error, 0U, "MIR module storage is incomplete");
+    }
+    if (module->function_count == 0U || module->block_count == 0U) {
+        return verify_fail(error, 0U, "MIR requires at least one function and block");
+    }
 
-    for (size_t i = 0U; i < module->functions_count; ++i) {
-        (void)i;
+    for (size_t i = 0U; i < module->function_count; ++i) {
+        const ReaperMirFunction *function = &module->functions[i];
+        if (function->id != i || function->name == NULL ||
+            function->entry_block >= module->block_count ||
+            function->block_count == 0U ||
+            (size_t)function->first_block + function->block_count > module->block_count ||
+            function->entry_block != function->first_block ||
+            (size_t)function->parameter_offset + function->parameter_count > module->parameter_count) {
+            return verify_fail(error, i, "MIR function layout or entry block is invalid");
+        }
+        for (size_t block_id = function->first_block;
+             block_id < (size_t)function->first_block + function->block_count;
+             ++block_id) {
+            if (module->blocks[block_id].function_id != function->id) {
+                return verify_fail(error, block_id, "MIR function block range is not contiguous");
+            }
+        }
+    }
+
+    for (size_t i = 0U; i < module->block_count; ++i) {
+        const ReaperMirBlock *block = &module->blocks[i];
+        if (block->id != i || block->function_id >= module->function_count ||
+            block->terminator == REAPER_MIR_TERM_NONE) {
+            return verify_fail(error, i, "MIR block identity or terminator is invalid");
+        }
+        if (block->instruction_count == 0U) {
+            if (block->first_instruction != UINT32_MAX) {
+                return verify_fail(error, i, "empty MIR block has an instruction offset");
+            }
+        } else if (block->first_instruction == UINT32_MAX ||
+                   (size_t)block->first_instruction + block->instruction_count >
+                       module->instruction_count) {
+            return verify_fail(error, i, "MIR block instruction range is outside the module");
+        }
+
+        const ReaperMirFunction *owner = &module->functions[block->function_id];
+        size_t owner_end = (size_t)owner->first_block + owner->block_count;
+        if (block->terminator == REAPER_MIR_TERM_JUMP) {
+            if (block->target_true < owner->first_block || block->target_true >= owner_end ||
+                block->target_false != REAPER_MIR_NO_BLOCK) {
+                return verify_fail(error, i, "MIR jump target leaves its function");
+            }
+        } else if (block->terminator == REAPER_MIR_TERM_BRANCH) {
+            if (block->condition_value == REAPER_MIR_NO_VALUE ||
+                block->target_true < owner->first_block || block->target_true >= owner_end ||
+                block->target_false < owner->first_block || block->target_false >= owner_end) {
+                return verify_fail(error, i, "MIR branch target or condition is invalid");
+            }
+        } else if (block->terminator == REAPER_MIR_TERM_RETURN) {
+            if (block->target_true != REAPER_MIR_NO_BLOCK ||
+                block->target_false != REAPER_MIR_NO_BLOCK) {
+                return verify_fail(error, i, "MIR return block cannot carry branch targets");
+            }
+        } else {
+            return verify_fail(error, i, "unknown MIR terminator");
+        }
+
+        for (size_t instruction_id = block->first_instruction;
+             block->instruction_count != 0U &&
+             instruction_id < (size_t)block->first_instruction + block->instruction_count;
+             ++instruction_id) {
+            const ReaperMirInstruction *instruction =
+                &module->instructions[instruction_id];
+            if (instruction->text == NULL ||
+                instruction->opcode < REAPER_MIR_CONST ||
+                instruction->opcode > REAPER_MIR_ITER_CURRENT) {
+                return verify_fail(error, instruction_id, "MIR instruction identity is invalid");
+            }
+            if ((size_t)instruction->operand_offset + instruction->operand_count >
+                module->operand_count) {
+                return verify_fail(error, instruction_id, "MIR operand vector is outside the module");
+            }
+            if ((instruction->opcode == REAPER_MIR_STORE_LOCAL ||
+                 instruction->opcode == REAPER_MIR_LOAD_LOCAL) &&
+                instruction->symbol_id == REAPER_HIR_NO_SYMBOL) {
+                return verify_fail(error, instruction_id, "MIR local access has no resolved symbol");
+            }
+            if (instruction->opcode == REAPER_MIR_CALL ||
+                instruction->opcode == REAPER_MIR_PIPE_CALL) {
+                if (instruction->left == REAPER_MIR_NO_VALUE) {
+                    return verify_fail(error, instruction_id, "MIR call has no callee value");
+                }
+            }
+        }
     }
     return 1;
 }
