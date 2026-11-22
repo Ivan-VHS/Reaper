@@ -6,6 +6,8 @@
 | [CODEX_66_SHOWCASE.md](CODEX_66_SHOWCASE.md) | native CODEX-66 browser, local completion/navigation and honest feature status |
 | [IDE_666_IMPLEMENTATION.md](IDE_666_IMPLEMENTATION.md) | Studio IDE contract, canonical rule numbering and acceptance gates |
 | [REAPER_IDE.md](REAPER_IDE.md) | LSP/DAP protocol services, shipped editor capabilities and limitations |
+| [LSP_SEMANTIC_TOKENS.md](LSP_SEMANTIC_TOKENS.md) | LSP semantic token legend, encoding and lexical limits |
+| [PROGRAM_CATALOG_1000.md](PROGRAM_CATALOG_1000.md) | adoption map and project ownership for the 1,000-item catalogue |
 | [NOO_TAH.md](NOO_TAH.md) | official Node.js runtime management, V8/libuv, npm, Inspector and Studio bridge |
 | [KORA.md](KORA.md) | 66 standard-library functions in seven manifest-backed modules |
 | [UI_MOTION.md](UI_MOTION.md) | accessible, persisted motion preferences and reduced-motion limits |
