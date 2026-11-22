@@ -45,7 +45,7 @@ class ToolchainInventoryTests(unittest.TestCase):
             lock_path = Path(folder) / "lock.json"
             self.assertEqual(main(["--path", "", "--output", str(inventory_path)]), 0)
             self.assertIn(INVENTORY_SCHEMA, inventory_path.read_text(encoding="utf-8"))
-            self.assertEqual(main(["--path", "", "--lock", "--output", str(lock_path)]), 0)
+            self.assertEqual(main(["--path", "", "--lock", str(lock_path)]), 0)
             self.assertEqual(main(["--path", "", "--verify-lock", str(lock_path)]), 0)
 
 
