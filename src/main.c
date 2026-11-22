@@ -50,14 +50,15 @@ static void usage(FILE *stream) {
         "Reaper %s — native C17 compiler development track\n"
         "Usage: reaper-c [--version] [--evolution-status]\n"
         "       reaper-c [--tokens|--ast-json] <source.rpr>\n"
-        "       reaper-c --emit-asm <expression.rpr> [-o output.s]\n"
+        "       reaper-c --emit-asm <expression.rpr> [--target x86_64-sysv|duckos-dabi64-v1] [-o output.s]\n"
         "       reaper-c [--catalog|--catalog-token TOKEN]\n"
         "       reaper-c [--capabilities|--capability MODULE]\n"
         "  --version           Show native compiler version\n"
         "  --evolution-status  Show native development gates and safety boundary\n"
         "  --tokens            Print lexical tokens\n"
         "  --ast-json          Parse one expression and print deterministic AST JSON\n"
-        "  --emit-asm          Emit checked x86-64 System V ELF assembly for an i64 expression\n"
+        "  --emit-asm          Emit native assembly for the selected target\n"
+        "  --target NAME       x86_64-sysv or duckos-dabi64-v1 (default: x86_64-sysv)\n"
         "  -o PATH             Write generated assembly to PATH instead of stdout\n"
         "  --catalog           List the native token catalogue\n"
         "  --catalog-token     Inspect one token catalogue entry\n"
@@ -70,7 +71,8 @@ static void usage(FILE *stream) {
 static int emit_native_assembly(
     const ReaperTokenArray *tokens,
     const char *source_path,
-    FILE *output
+    FILE *output,
+    const char *target
 ) {
     ReaperAst ast;
     ReaperParseError parse_error = {{0}, 0U, 0U};
@@ -108,7 +110,17 @@ static int emit_native_assembly(
 
     ReaperIrModule module = { nodes, length };
     ReaperCodegenError codegen_error;
-    int success = reaper_codegen_x86_64_sysv_elf(&module, output, &codegen_error);
+    int success;
+    if (strcmp(target, "x86_64-sysv") == 0) {
+        success = reaper_codegen_x86_64_sysv_elf(&module, output, &codegen_error);
+    } else if (strcmp(target, "duckos-dabi64-v1") == 0) {
+        success = reaper_codegen_duckos_dabi64_v1(&module, output, &codegen_error);
+    } else {
+        fprintf(stderr, "%s: unknown native target '%s'\n", source_path, target);
+        free(nodes);
+        reaper_ast_free(&ast);
+        return 2;
+    }
     if (!success) {
         fprintf(stderr, "%s: native codegen error at IR node %zu: %s\n",
             source_path, codegen_error.node_index, codegen_error.message);
@@ -129,6 +141,7 @@ int main(int argc, char **argv) {
     const char *capability_lookup = NULL;
     const char *output_path = NULL;
     const char *source_path = NULL;
+    const char *target = "x86_64-sysv";
 
     for (int i = 1; i < argc; ++i) {
         if (strcmp(argv[i], "--version") == 0) {
@@ -149,6 +162,14 @@ int main(int argc, char **argv) {
         }
         if (strcmp(argv[i], "--emit-asm") == 0) {
             emit_assembly = 1;
+            continue;
+        }
+        if (strcmp(argv[i], "--target") == 0) {
+            if (i + 1 >= argc) {
+                usage(stderr);
+                return 2;
+            }
+            target = argv[++i];
             continue;
         }
         if (strcmp(argv[i], "-o") == 0) {
@@ -197,6 +218,7 @@ int main(int argc, char **argv) {
     if (dump_capabilities || capability_lookup != NULL) {
         if (source_path != NULL || dump_tokens || dump_ast || emit_assembly ||
             dump_catalog || catalog_lookup != NULL || output_path != NULL ||
+            strcmp(target, "x86_64-sysv") != 0 ||
             (dump_capabilities && capability_lookup != NULL)) {
             usage(stderr);
             return 2;
@@ -236,7 +258,8 @@ int main(int argc, char **argv) {
 
     if (dump_catalog || catalog_lookup != NULL) {
         if (source_path != NULL || dump_tokens || dump_ast || emit_assembly ||
-            output_path != NULL || (dump_catalog && catalog_lookup != NULL)) {
+            output_path != NULL || strcmp(target, "x86_64-sysv") != 0 ||
+            (dump_catalog && catalog_lookup != NULL)) {
             usage(stderr);
             return 2;
         }
@@ -267,7 +290,8 @@ int main(int argc, char **argv) {
     if (source_path == NULL ||
         (dump_tokens && dump_ast) ||
         (emit_assembly && (dump_tokens || dump_ast)) ||
-        (output_path != NULL && !emit_assembly)) {
+        (output_path != NULL && !emit_assembly) ||
+        (!emit_assembly && strcmp(target, "x86_64-sysv") != 0)) {
         usage(stderr);
         return 2;
     }
@@ -322,7 +346,7 @@ int main(int argc, char **argv) {
             }
         }
 
-        result = emit_native_assembly(&tokens, source_path, output);
+        result = emit_native_assembly(&tokens, source_path, output, target);
         if (output_path != NULL && fclose(output) != 0 && result == 0) {
             fprintf(stderr, "reaper-c: failed to finish %s\n", output_path);
             result = 1;
