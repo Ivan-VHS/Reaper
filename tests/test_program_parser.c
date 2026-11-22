@@ -81,8 +81,11 @@ static void parses_nested_calls_indexes_and_flow(void) {
     assert(reaper_parse_expression(&tokens, &ast, &error));
     reaper_tokens_free(&tokens);
 
-    assert(ast.items[ast.root].kind == REAPER_AST_INDEX);
-    uint32_t call = ast.items[ast.root].left;
+    assert(ast.items[ast.root].kind == REAPER_AST_BINARY);
+    assert(strcmp(ast.items[ast.root].text, "::") == 0);
+    uint32_t indexed = ast.items[ast.root].right;
+    assert(ast.items[indexed].kind == REAPER_AST_INDEX);
+    uint32_t call = ast.items[indexed].left;
     assert(ast.items[call].kind == REAPER_AST_CALL);
     assert(ast.items[ast.items[call].left].kind == REAPER_AST_CALL);
     reaper_ast_free(&ast);
