@@ -90,7 +90,7 @@ class ExpressiveLanguageTests(unittest.TestCase):
         emit user?.profile?.avatar
         emit user?.labels?.length
         emit absent?.profile?.avatar ?? "no-avatar"
-        emit user?.labels?[9] ?? "out-of-range"
+        emit user?.labels?.[9] ?? "out-of-range"
         """
         self.assert_both_engines(source, ["duck", "2", "no-avatar", "out-of-range"])
 
