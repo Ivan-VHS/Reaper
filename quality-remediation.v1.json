@@ -289,7 +289,7 @@
   ],
   "limitations": [
     "Evidence checks verify repository-relative file presence only; they do not execute or semantically validate the referenced implementation.",
-    "Passing this profile does not certify zero defects, security, hardware compatibility, language parity, audio fidelity or commercial readiness.",
+    "Passing this profile does not certify zero defects, security, hardware compatibility, language parity or commercial readiness.",
     "The project's existing permissions, licensing, interoperability and safety boundaries remain authoritative."
   ]
 }
