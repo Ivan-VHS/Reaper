@@ -25,7 +25,9 @@ make total := [1, 2, 3] :: map(double) :: sum()
 emit "total = " ++ text(total)
 ```
 
-Map values are evaluated from left to right. A bare identifier before `:` is a literal text key (`name: value`); use `[key]: value` for a computed key. Member lookup is map-only and never exposes Python object attributes. `?.` returns `nothing` only when its receiver is `nothing`; an absent key still reports an error. `??` evaluates its right side only when the left side is `nothing`. Map helper operations return new maps rather than mutating their inputs.\n\nRules: explicit effects; no implicit file/network/clock access in ordinary expressions; no silent coercion; bounded steps, call depth and collections. See [runtime limits](docs/RUNTIME_PLATFORM.md).
+Map values are evaluated from left to right. A bare identifier before `:` is a literal text key (`name: value`); use `[key]: value` for a computed key. Member lookup is map-only and never exposes Python object attributes. `?.` returns `nothing` only when its receiver is `nothing`; an absent key still reports an error. `??` evaluates its right side only when the left side is `nothing`. Map helper operations return new maps rather than mutating their inputs.
+
+Rules: explicit effects; no implicit file/network/clock access in ordinary expressions; no silent coercion; bounded steps, call depth and collections. See [runtime limits](docs/RUNTIME_PLATFORM.md).
 
 ## Map and sequence example
 
