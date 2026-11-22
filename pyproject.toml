@@ -1,6 +1,7 @@
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
+
 [project]
 name = "reaper-lang"
 version = "0.1.0"
@@ -8,9 +9,27 @@ description = "Reaper: a small, flow-first programming language and interpreter"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
-authors = [{ name = "Ivan-VHS" }]
-keywords = ["programming-language", "interpreter", "dataflow", "qcs"]
-classifiers = ["Development Status :: 3 - Alpha","Environment :: Console","Intended Audience :: Developers","License :: OSI Approved :: Apache Software License","Programming Language :: Python :: 3","Programming Language :: Python :: 3.10","Programming Language :: Python :: 3.11","Programming Language :: Python :: 3.12","Topic :: Software Development :: Interpreters"]
+authors = [
+    { name = "Ivan-VHS" },
+]
+keywords = [
+    "programming-language",
+    "interpreter",
+    "dataflow",
+    "qcs",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Interpreters",
+]
+
 [project.scripts]
 reaper = "reaper.cli:main"
 reaper-lsp = "reaper.lsp:serve"
@@ -20,10 +39,36 @@ reaper-polyglot = "reaper.polyglot:main"
 reaper-polyglot-code = "reaper.polyglot_code:main"
 reaper-embedded = "reaper.embedded:main"
 reaper-noo-tah = "reaper.noo_tah:main"
+
 [project.gui-scripts]
 reaper-studio = "reaper.desktop:main"
+
 [tool.setuptools]
-packages = ["reaper", "reaper.kora"]
+packages = [
+    "reaper",
+    "reaper.kora",
+]
+
 [tool.setuptools.package-data]
-"reaper" = ["systems_architectures.json", "systems_languages.json", "token_catalog.json", "atomic_quantum_catalogue.v1.json"]
-"reaper.kora" = ["manifest.json"]
+"reaper" = [
+    "systems_architectures.json",
+    "systems_languages.json",
+    "token_catalog.json",
+    "atomic_quantum_catalogue.v1.json",
+]
+"reaper.kora" = [
+    "manifest.json",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["reaper", "tests", "tools"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
