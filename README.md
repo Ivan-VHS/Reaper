@@ -250,3 +250,7 @@ The web-stand rules are reflected according to the actual local developer-toolin
 | 56–66 · operations and support | links build/release workflows, explains artifact rollback, diagnostics, known limitations, contribution route and license |
 
 **There is no public Reaper web-playground URL.** Studio screenshots and downloadable Windows artifacts are not a live web stand.
+
+## Unified report envelope
+
+Wrap JSON output in the shared ivan-vhs.report.v1 contract with: python tools/report_envelope.py --tool reaper --version VERSION < result.json. See docs/REPORT_ENVELOPE.md and schemas/ivan-vhs.report.v1.schema.json. The envelope preserves the tool-specific result and records limitations.
