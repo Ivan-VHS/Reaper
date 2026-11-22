@@ -133,7 +133,7 @@ class _Lowerer:
 
     def expression(self, node: Node) -> None:
         children = node.children or []
-        if node.kind in {"conditional", "map", "comprehension", "optional_property", "optional_index"}:
+        if node.kind in {"conditional", "map", "comprehension", "optional_property", "optional_index"} or (node.kind == "binary" and node.value == "??"):
             self.emit("EVAL_AST", node, node.token)
         elif node.kind == "literal":
             self.emit("CONST", node.value, node.token)
