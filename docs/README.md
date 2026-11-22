@@ -14,6 +14,7 @@
 | [INTERNAL_PRODUCTS.md](INTERNAL_PRODUCTS.md) | integrated product catalogue and service contracts |
 | [FEATURES.md](FEATURES.md) | shipped, reference and proposed capability matrix |
 | [LANGUAGE_REFERENCE_0.2.md](LANGUAGE_REFERENCE_0.2.md) | executable syntax, runtime semantics and current language boundaries |
+| [LANGUAGE_ROADMAP_0.3_PLUS.md](LANGUAGE_ROADMAP_0.3_PLUS.md) | gated language evolution from types and packages to stable 1.0 |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | runtime and compiler stages |
 | [ENGINEERING.md](ENGINEERING.md) | quality, effect and release gates |
 | [DIVISION_ENGINE.md](DIVISION_ENGINE.md) | checked division and workload allocation |
