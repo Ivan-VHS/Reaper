@@ -86,6 +86,7 @@ class LspServer:
                         "referencesProvider": True,
                         "renameProvider": {"prepareProvider": False},
                         "documentSymbolProvider": True,
+                        "workspaceSymbolProvider": True,
                     },
                     "serverInfo": {"name": "reaper-language-server", "version": "0.2.0"},
                 }
@@ -116,17 +117,38 @@ class LspServer:
                     result = {"contents": {"kind": "markdown", "value": description}}
                 elif word:
                     result = {"contents": {"kind": "markdown", "value": f"REAPER symbol `{word}`."}}
+            elif method == "workspace/symbol":
+                query = params.get("query", "")
+                result = [{
+                    "name": symbol.name,
+                    "kind": 12 if symbol.kind == "function" else 13,
+                    "containerName": "Reaper workspace",
+                    "location": {
+                        "uri": symbol.uri,
+                        "range": self._range(
+                            self.service._docs[symbol.uri].text, symbol.span
+                        ),
+                    },
+                } for symbol in self.service.workspace_symbols(query)]
             elif method in {"textDocument/definition", "textDocument/references", "textDocument/rename"}:
                 uri = params["textDocument"]["uri"]
                 snapshot = self.service._docs[uri]
                 word = self._word_at(uri, params["position"])
                 if method == "textDocument/definition":
-                    symbol = self.service.definition(uri, word)
-                    result = ({"uri": uri, "range": self._range(snapshot.text, symbol.span)}
-                              if symbol else None)
+                    symbols = self.service.workspace_definitions(word)
+                    result = [{
+                        "uri": symbol.uri,
+                        "range": self._range(
+                            self.service._docs[symbol.uri].text, symbol.span
+                        ),
+                    } for symbol in symbols] or None
                 elif method == "textDocument/references":
-                    result = [{"uri": uri, "range": self._range(snapshot.text, span)}
-                              for span in self.service.references(uri, word)]
+                    result = [{
+                        "uri": target_uri,
+                        "range": self._range(
+                            self.service._docs[target_uri].text, span
+                        ),
+                    } for target_uri, span in self.service.workspace_references(word)]
                 else:
                     edits = self.service.rename(uri, word, params["newName"])
                     result = {"changes": {uri: [
