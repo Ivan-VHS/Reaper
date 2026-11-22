@@ -10,6 +10,7 @@
 | [PROGRAM_CATALOG_1000.md](PROGRAM_CATALOG_1000.md) | adoption map and project ownership for the 1,000-item catalogue |
 | [NOO_TAH.md](NOO_TAH.md) | official Node.js runtime management, V8/libuv, npm, Inspector and Studio bridge |
 | [KORA.md](KORA.md) | 66 standard-library functions in seven manifest-backed modules |
+| [FREESTANDING.md](FREESTANDING.md) | no-hosted-runtime native OS build path, hardware helpers and compiler roadmap |
 | [UI_MOTION.md](UI_MOTION.md) | accessible, persisted motion preferences and reduced-motion limits |
 | [ANATIDAE_MOTION_CONSTITUTION.md](ANATIDAE_MOTION_CONSTITUTION.md) | shared white/blue/red desktop motion and surface profile |
 | [PLUGINS.md](PLUGINS.md) | internal plugin host and extension lifecycle |
