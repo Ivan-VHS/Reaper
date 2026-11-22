@@ -823,7 +823,9 @@ class Interpreter:
             remaining = {index: step.count for index, step in enumerate(steps) if step.kind == "take"}
             output: list[Any] = []
             stop = False
+            transduce_token = Token("BUILTIN", "transduce", 1, 1)
             for original in source:
+                self._tick(transduce_token)
                 current = original
                 accepted = True
                 for index, step in enumerate(steps):
