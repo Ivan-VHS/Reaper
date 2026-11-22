@@ -34,7 +34,7 @@ jobs:
           Copy-Item README.md dist/README.md
           Copy-Item LICENSE dist/LICENSE
           Compress-Archive -Path dist/Reaper-Studio.exe, dist/README.md, dist/LICENSE -DestinationPath Reaper-Studio-windows-x64.zip -Force
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: Reaper-Studio-windows-x64
           path: Reaper-Studio-windows-x64.zip

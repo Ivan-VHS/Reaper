@@ -34,7 +34,7 @@ jobs:
           .github/scripts/capture_desktop_screenshot.ps1 -FilePath $pythonw -Arguments @("reaper_desktop.py") -OutputPath "assets/screenshots/reaper-studio.png" -StartupSeconds 15
       - name: Keep repository screenshot as a reviewed snapshot
         run: echo "The live capture is uploaded as an artifact; this workflow does not push commits to the PR head."
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: readme-screenshot-reaper
           path: assets/screenshots/reaper-studio.png
