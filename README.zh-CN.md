@@ -30,9 +30,9 @@ flowchart TD
     G[JavaScript 项目] --> H[官方 Node.js 发行版]
     H --> I[V8、Node API、npm 和 Inspector]
     J[C17 原生分支] --> K[部分解析与 lowering]
-  classDef readmeNode fill:#211936,stroke:#B58AFF,color:#F8F5FF,stroke-width:1.5px;
+  classDef readmeNode fill:#EEF3FF,stroke:#245FC2,color:#1B3150,stroke-width:1.5px;
   class A,B,C,D,E,F,G,H,I,J,K readmeNode;
-  linkStyle default stroke:#B58AFF,stroke-width:1.8px;
+  linkStyle default stroke:#245FC2,stroke-width:1.8px;
 ```
 
 ## 执行路径与输出
@@ -47,9 +47,9 @@ flowchart LR
     E --> F[诊断、补全和符号]
     G[调试请求] --> H[DAP]
     H --> I[断点、调用栈和局部变量]
-  classDef readmeNode fill:#211936,stroke:#B58AFF,color:#F8F5FF,stroke-width:1.5px;
+  classDef readmeNode fill:#EEF3FF,stroke:#245FC2,color:#1B3150,stroke-width:1.5px;
   class A,B,C,D,E,F,G,H,I readmeNode;
-  linkStyle default stroke:#B58AFF,stroke-width:1.8px;
+  linkStyle default stroke:#245FC2,stroke-width:1.8px;
 ```
 
 <sub>应用实际截屏 · 原始图像为 1920×1080 · 保留原始像素，不进行人为放大。</sub>
