@@ -159,7 +159,7 @@ The reference runtime exposes bounded host helpers for project scripts:
 | `path_exists(path)`, `path_is_file(path)`, `path_is_dir(path)` | Read-only filesystem predicates |
 | `read_json(path)`, `write_json(path, value)` | Bounded JSON import and atomic output |
 | `oplage_metrics(snapshot)`, `oplage_compare(left, right)` | Validate read-only OPlague snapshot v1 and create a signed-by-hash comparison report |
-| `ventusample_metrics(pack)`, `ventusample_compare(left, right)` | Validate VentuSample pack v1/v2 metadata and compare musical/audio settings |
+| `ventusample_metrics(pack)`, `ventusample_compare(left, right)` | Validate VentuSample pack v1/v2 metadata and compare musical/audio settings |\n| `pytyliki_plugin_catalog(library)`, `pytyliki_plugin_info(query, library)` | Enumerate bounded Pytyliki ABI v1 plugin metadata; does not load plugin implementations |
 
 The path helpers reject empty/NUL-containing paths and bound path text length. They do not create directories or perform writes. JSON reading rejects duplicate keys, non-finite numbers and oversized files; JSON writing uses an atomic replacement. OPlague and VentuSample adapters are metadata-only: they do not inspect drivers, open WAV data, render audio or change hardware.
 
