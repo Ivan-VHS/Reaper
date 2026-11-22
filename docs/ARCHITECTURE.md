@@ -5,7 +5,7 @@
 | CLI / Studio | source input, run/check/debug, reports |
 | Lexer | deterministic tokens and source spans |
 | Python parser/runtime | reference semantics, scopes, values, quotas |
-| Native C17 | UTF-8 lexer, Pratt expression AST, checked i64 IR/lowering and x86-64 System V ELF assembly for bounded integer expressions |
+| Native C17 | native lexer with UTF-8-aware source positions, Pratt expression AST, checked i64 IR/lowering and x86-64 System V ELF assembly for bounded integer expressions |
 | MOST | exact keyword canonicalization before the same parser |
 | QCS | independent hardware-domain syntax validation |
 | Adapters | versioned JSON and explicitly selected native ABI |
