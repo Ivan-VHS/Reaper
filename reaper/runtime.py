@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+import time
+from dataclasses import dataclass, field
 from typing import Any, Callable
 
 from .errors import ExecutionLimitError, ReaperRuntimeError
@@ -73,6 +74,47 @@ class Builtin:
     callback: Callable[..., Any]
     minimum: int
     maximum: int | None
+
+
+@dataclass(slots=True)
+class VariantValue:
+    tag: str
+    fields: tuple[Any, ...]
+
+
+@dataclass(slots=True)
+class FunctionAdapter:
+    kind: str
+    function: Any = None
+    functions: tuple[Any, ...] = ()
+    bound: tuple[Any, ...] = ()
+    arity: int | None = None
+    cache: dict[Any, tuple[float | None, Any]] = field(default_factory=dict)
+    max_entries: int = 128
+    ttl_seconds: float | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class TransducerStep:
+    kind: str
+    function: Any = None
+    count: int | None = None
+
+
+_NO_MATCH = object()
+
+
+def _freeze_memo_value(value: Any) -> Any:
+    if value is None or isinstance(value, (bool, int, float, str)):
+        return (type(value).__name__, value)
+    if isinstance(value, (list, tuple)):
+        return (type(value).__name__, tuple(_freeze_memo_value(item) for item in value))
+    if isinstance(value, dict):
+        return ("dict", tuple(sorted(
+            ((_freeze_memo_value(key), _freeze_memo_value(item)) for key, item in value.items()),
+            key=repr,
+        )))
+    raise TypeError("memoized function arguments must contain only immutable scalar/list/map values")
 
 
 class _ReturnSignal(Exception):
@@ -216,6 +258,32 @@ class Interpreter:
             environment.define(name, self._evaluate(children[0], environment), mutable)
         elif node.kind == "change":
             environment.change(node.value, self._evaluate(children[0], environment))
+        elif node.kind == "coalesce_change":
+            current = environment.get(node.value)
+            if current is None:
+                environment.change(node.value, self._evaluate(children[0], environment))
+        elif node.kind == "let_else":
+            value = self._evaluate(children[0], environment)
+            bindings = self._match_pattern(value, node.value)
+            if bindings is _NO_MATCH:
+                self._execute_block(children[1], environment)
+                raise self._error(node.token, "let-else recovery block must leave the current scope")
+            for name, item in bindings.items():
+                environment.define(name, item)
+        elif node.kind == "match":
+            subject = self._evaluate(children[0], environment)
+            for arm in children[1:]:
+                bindings = self._match_pattern(subject, arm.value)
+                if bindings is _NO_MATCH:
+                    continue
+                arm_scope = Environment(environment)
+                for name, item in bindings.items():
+                    arm_scope.define(name, item)
+                has_guard = len(arm.children or []) == 2
+                body = arm.children[1] if has_guard else arm.children[0]
+                if has_guard and not self._truthy(self._evaluate(arm.children[0], arm_scope)):
+                    continue
+                return self._execute_block(body, arm_scope)
         elif node.kind == "emit":
             self.output(self._display(self._evaluate(children[0], environment)))
         elif node.kind == "yield":
@@ -269,6 +337,58 @@ class Interpreter:
                     f"collection item limit ({self.max_collection_items}) exceeded",
                 )
             return self.memory.track([self._evaluate(item, environment) for item in children])
+        if node.kind == "map":
+            if len(children) > self.max_collection_items:
+                raise self._error(node.token, f"collection item limit ({self.max_collection_items}) exceeded")
+            result: dict[str, Any] = {}
+            for entry in children:
+                if entry.value in result:
+                    raise self._error(entry.token, f"duplicate map key {entry.value!r}")
+                result[entry.value] = self._evaluate(entry.children[0], environment)
+            return self.memory.track(result)
+        if node.kind == "conditional":
+            branch = children[1] if self._truthy(self._evaluate(children[0], environment)) else children[2]
+            return self._evaluate(branch, environment)
+        if node.kind == "comprehension":
+            source = self._evaluate(children[1], environment)
+            if not isinstance(source, (list, tuple, str, range)):
+                raise self._error(node.token, "list comprehension source must be a list, text or range")
+            self._check_collection_size(source, node.token)
+            result = []
+            for item in source:
+                self._tick(node.token)
+                scope = Environment(environment)
+                scope.define(node.value, item)
+                if len(children) == 3 and not self._truthy(self._evaluate(children[2], scope)):
+                    continue
+                result.append(self._evaluate(children[0], scope))
+                if len(result) > self.max_collection_items:
+                    raise self._error(node.token, f"collection item limit ({self.max_collection_items}) exceeded")
+            return self.memory.track(result)
+        if node.kind == "optional_property":
+            base = self._evaluate(children[0], environment)
+            if base is None:
+                return None
+            if isinstance(base, dict):
+                return base.get(node.value)
+            if node.value == "length" and isinstance(base, (list, tuple, str)):
+                return len(base)
+            raise self._error(node.token, "optional property access expects a map, list, tuple or text")
+        if node.kind == "optional_index":
+            base = self._evaluate(children[0], environment)
+            if base is None:
+                return None
+            key = self._evaluate(children[1], environment)
+            try:
+                if isinstance(base, dict):
+                    return base.get(key)
+                if isinstance(base, (list, tuple, str)):
+                    if isinstance(key, bool) or not isinstance(key, int):
+                        return None
+                    return base[key]
+            except (IndexError, KeyError, TypeError):
+                return None
+            raise self._error(node.token, "optional indexing expects a map, list, tuple or text")
         if node.kind == "index":
             collection = self._evaluate(children[0], environment)
             index = self._evaluate(children[1], environment)
@@ -298,6 +418,8 @@ class Interpreter:
                 return self._evaluate(children[1], environment) if self._truthy(left) else left
             if operator == "OR":
                 return left if self._truthy(left) else self._evaluate(children[1], environment)
+            if operator == "??":
+                return left if left is not None else self._evaluate(children[1], environment)
             if operator == "::":
                 right = children[1]
                 if right.kind == "call":
@@ -310,7 +432,60 @@ class Interpreter:
             return self._binary(operator, left, right, node.token)
         raise self._error(node.token, f"unknown expression kind '{node.kind}'")
 
+    def _match_pattern(self, value: Any, pattern: Any) -> dict[str, Any] | object:
+        kind = pattern[0]
+        if kind == "wildcard":
+            return {}
+        if kind == "bind":
+            return {pattern[1]: value}
+        if kind == "literal":
+            return {} if self._equal(value, pattern[1]) else _NO_MATCH
+        if kind == "list":
+            patterns = pattern[1]
+            if not isinstance(value, (list, tuple)) or len(value) != len(patterns):
+                return _NO_MATCH
+            bindings: dict[str, Any] = {}
+            for item, child_pattern in zip(value, patterns):
+                child = self._match_pattern(item, child_pattern)
+                if child is _NO_MATCH or any(name in bindings for name in child):
+                    return _NO_MATCH
+                bindings.update(child)
+            return bindings
+        if kind == "map":
+            if not isinstance(value, dict):
+                return _NO_MATCH
+            bindings = {}
+            for key, child_pattern in pattern[1]:
+                if key not in value:
+                    return _NO_MATCH
+                child = self._match_pattern(value[key], child_pattern)
+                if child is _NO_MATCH or any(name in bindings for name in child):
+                    return _NO_MATCH
+                bindings.update(child)
+            return bindings
+        if kind == "variant":
+            _tag, patterns = pattern[1], pattern[2]
+            if not isinstance(value, VariantValue) or value.tag != _tag or len(value.fields) != len(patterns):
+                return _NO_MATCH
+            bindings = {}
+            for item, child_pattern in zip(value.fields, patterns):
+                child = self._match_pattern(item, child_pattern)
+                if child is _NO_MATCH or any(name in bindings for name in child):
+                    return _NO_MATCH
+                bindings.update(child)
+            return bindings
+        return _NO_MATCH
+
     def _binary(self, operator: str, left: Any, right: Any, token: Token) -> Any:
+        if operator == "IN":
+            return self._contains(right, left)
+        if operator in {"..", "..="}:
+            if isinstance(left, bool) or not isinstance(left, int) or isinstance(right, bool) or not isinstance(right, int):
+                raise self._error(token, "range bounds must be whole numbers")
+            if operator == "..":
+                return range(left, right)
+            step = 1 if right >= left else -1
+            return range(left, right + step, step)
         if operator == "==":
             return self._equal(left, right)
         if operator == "!=":
@@ -359,6 +534,44 @@ class Interpreter:
         raise self._error(token, f"unknown operator '{operator}'")
 
     def _call(self, callee: Any, arguments: list[Any], token: Token) -> Any:
+        if isinstance(callee, FunctionAdapter):
+            if callee.kind == "partial":
+                return self._call(callee.function, [*callee.bound, *arguments], token)
+            if callee.kind in {"compose", "pipe"}:
+                functions = callee.functions
+                if not functions:
+                    return arguments[0] if len(arguments) == 1 else arguments
+                order = reversed(functions) if callee.kind == "compose" else functions
+                value = arguments
+                for index, function in enumerate(order):
+                    value = self._call(function, value if index == 0 else [value], token)
+                return value
+            if callee.kind == "curry":
+                combined = (*callee.bound, *arguments)
+                if len(combined) < (callee.arity or 0):
+                    return FunctionAdapter("curry", function=callee.function, bound=combined, arity=callee.arity)
+                if len(combined) != callee.arity:
+                    raise self._error(token, f"curried function expects {callee.arity} total arguments, got {len(combined)}")
+                return self._call(callee.function, list(combined), token)
+            if callee.kind == "memo":
+                try:
+                    key = tuple(_freeze_memo_value(item) for item in arguments)
+                except TypeError as error:
+                    raise self._error(token, str(error)) from error
+                now = time.monotonic()
+                cached = callee.cache.get(key)
+                if cached is not None:
+                    expires, value = cached
+                    if expires is None or expires > now:
+                        return value
+                    callee.cache.pop(key, None)
+                value = self._call(callee.function, arguments, token)
+                if len(callee.cache) >= callee.max_entries:
+                    callee.cache.pop(next(iter(callee.cache)))
+                expires = None if callee.ttl_seconds is None else now + callee.ttl_seconds
+                callee.cache[key] = (expires, value)
+                return value
+            raise self._error(token, f"unknown function adapter '{callee.kind}'")
         if isinstance(callee, Builtin):
             valid = len(arguments) >= callee.minimum and (
                 callee.maximum is None or len(arguments) <= callee.maximum
@@ -523,7 +736,7 @@ class Interpreter:
             return allocations
 
         def callback(value: Any) -> None:
-            if not isinstance(value, (UserFunction, Builtin, NativeFunction)) and not getattr(value, "__reaper_bytecode__", False):
+            if not isinstance(value, (UserFunction, Builtin, NativeFunction, FunctionAdapter)) and not getattr(value, "__reaper_bytecode__", False):
                 raise TypeError("expected a Reaper function")
 
         def iterate(seed: Any, steps: Any, function: Any) -> list[Any]:
@@ -541,6 +754,164 @@ class Interpreter:
                 history.append(value)
             return history
 
+        def zip_values(*collections: Any) -> list[list[Any]]:
+            if not collections:
+                raise ValueError("zip() expects at least one collection")
+            sources = [sequence(item) for item in collections]
+            result = [list(items) for items in zip(*sources)]
+            if len(result) > self.max_collection_items:
+                raise ValueError(f"collection item limit ({self.max_collection_items}) exceeded")
+            return result
+
+        def enumerate_values(values: Any, *start: Any) -> list[list[Any]]:
+            source = sequence(values)
+            offset = integer(start[0], "enumerate start") if start else 0
+            return [[offset + index, item] for index, item in enumerate(source)]
+
+        def make_compose(*functions: Any) -> FunctionAdapter:
+            if not functions:
+                raise ValueError("compose() expects at least one function")
+            for function in functions:
+                callback(function)
+            return FunctionAdapter("compose", functions=tuple(functions))
+
+        def make_pipe(*functions: Any) -> FunctionAdapter:
+            if not functions:
+                raise ValueError("pipe_fn() expects at least one function")
+            for function in functions:
+                callback(function)
+            return FunctionAdapter("pipe", functions=tuple(functions))
+
+        def make_partial(function: Any, *bound: Any) -> FunctionAdapter:
+            callback(function)
+            return FunctionAdapter("partial", function=function, bound=tuple(bound))
+
+        def make_curry(function: Any, arity: Any) -> FunctionAdapter:
+            callback(function)
+            count = integer(arity, "curry arity")
+            if count < 1:
+                raise ValueError("curry arity must be positive")
+            return FunctionAdapter("curry", function=function, arity=count)
+
+        def make_memo(function: Any, *options: Any) -> FunctionAdapter:
+            callback(function)
+            limit = integer(options[0], "memoize max entries") if options else 128
+            if limit < 1 or limit > self.max_collection_items:
+                raise ValueError("memoize max entries must be within collection limits")
+            return FunctionAdapter("memo", function=function, max_entries=limit)
+
+        def make_memo_ttl(function: Any, ttl_ms: Any, *options: Any) -> FunctionAdapter:
+            callback(function)
+            if isinstance(ttl_ms, bool) or not isinstance(ttl_ms, (int, float)) or not math.isfinite(ttl_ms) or ttl_ms <= 0:
+                raise ValueError("memo_ttl duration must be a positive finite number of milliseconds")
+            limit = integer(options[0], "memo_ttl max entries") if options else 128
+            if limit < 1 or limit > self.max_collection_items:
+                raise ValueError("memo_ttl max entries must be within collection limits")
+            return FunctionAdapter("memo", function=function, max_entries=limit, ttl_seconds=float(ttl_ms) / 1000.0)
+
+        def make_transducer(kind: str, function: Any = None, count: int | None = None) -> TransducerStep:
+            if function is not None:
+                callback(function)
+            if count is not None and (isinstance(count, bool) or not isinstance(count, int) or count < 0):
+                raise ValueError("transducer count must be a non-negative whole number")
+            return TransducerStep(kind, function, count)
+
+        def transduce(values: Any, *steps: Any) -> list[Any]:
+            source = sequence(values)
+            if any(not isinstance(step, TransducerStep) for step in steps):
+                raise TypeError("transduce() expects mapping(), filtering() or taking() stages")
+            remaining = {index: step.count for index, step in enumerate(steps) if step.kind == "take"}
+            output: list[Any] = []
+            stop = False
+            for original in source:
+                current = original
+                accepted = True
+                for index, step in enumerate(steps):
+                    if step.kind == "map":
+                        current = self._call(step.function, [current], Token("BUILTIN", "mapping", 1, 1))
+                    elif step.kind == "filter":
+                        if not self._truthy(self._call(step.function, [current], Token("BUILTIN", "filtering", 1, 1))):
+                            accepted = False
+                            break
+                    elif step.kind == "take":
+                        if remaining[index] == 0:
+                            accepted = False
+                            stop = True
+                            break
+                        remaining[index] -= 1
+                    else:
+                        raise ValueError(f"unknown transducer stage {step.kind!r}")
+                if accepted:
+                    output.append(current)
+                    if len(output) > self.max_collection_items:
+                        raise ValueError(f"collection item limit ({self.max_collection_items}) exceeded")
+                if stop or any(value == 0 for value in remaining.values()):
+                    if remaining and any(value == 0 for value in remaining.values()):
+                        break
+            return output
+
+        def make_result(tag: str) -> Callable[..., VariantValue]:
+            def construct(*values: Any) -> VariantValue:
+                if len(values) != 1:
+                    raise ValueError(f"{tag}() expects exactly one value")
+                return VariantValue(tag, tuple(values))
+            return construct
+
+        def unwrap_result(value: Any) -> Any:
+            if isinstance(value, VariantValue):
+                if value.tag in {"Ok", "Some"} and len(value.fields) == 1:
+                    return value.fields[0]
+                if value.tag == "Err":
+                    message = self._display(value.fields[0]) if value.fields else "error result"
+                    raise ReaperRuntimeError(message)
+            if value is None:
+                raise ValueError("cannot unwrap nothing")
+            return value
+
+        def result_or_else(value: Any, fallback: Any) -> Any:
+            failed = value is None or (isinstance(value, VariantValue) and value.tag == "Err")
+            if not failed:
+                return unwrap_result(value)
+            payload = value.fields[0] if isinstance(value, VariantValue) and value.fields else None
+            if isinstance(fallback, (UserFunction, Builtin, NativeFunction, FunctionAdapter)) or getattr(fallback, "__reaper_bytecode__", False):
+                return self._call(fallback, [payload], Token("BUILTIN", "or_else", 1, 1))
+            return fallback
+
+        def try_result(function: Any, *arguments: Any) -> VariantValue:
+            callback(function)
+            try:
+                return VariantValue("Ok", (self._call(function, list(arguments), Token("BUILTIN", "try_result", 1, 1)),))
+            except ReaperRuntimeError as error:
+                return VariantValue("Err", (str(error),))
+
+        def invariant_guard(condition: Any, *message: Any) -> bool:
+            self._assert(condition, message[0] if message else "invariant violation")
+            return True
+
+        register("zip", zip_values, 1, None)
+        register("enumerate", enumerate_values, 1, 2)
+        register("compose", make_compose, 1, None)
+        register("pipe_fn", make_pipe, 1, None)
+        register("partial", make_partial, 1, None)
+        register("curry", make_curry, 2, 2)
+        register("memoize", make_memo, 1, 2)
+        register("memo_ttl", make_memo_ttl, 2, 3)
+        register("mapping", lambda function: make_transducer("map", function=function), 1, 1)
+        register("filtering", lambda function: make_transducer("filter", function=function), 1, 1)
+        register("taking", lambda count: make_transducer("take", count=integer(count, "take count")), 1, 1)
+        register("transduce", transduce, 1, None)
+        register("Ok", make_result("Ok"), 1, 1)
+        register("Err", make_result("Err"), 1, 1)
+        register("Some", make_result("Some"), 1, 1)
+        register("is_ok", lambda value: isinstance(value, VariantValue) and value.tag == "Ok", 1, 1)
+        register("is_err", lambda value: isinstance(value, VariantValue) and value.tag == "Err", 1, 1)
+        register("is_some", lambda value: isinstance(value, VariantValue) and value.tag == "Some", 1, 1)
+        register("unwrap", unwrap_result, 1, 1)
+        register("or_else", result_or_else, 2, 2)
+        register("try_result", try_result, 1, None)
+        register("invariant_guard", invariant_guard, 1, 2)
+        register("requires", invariant_guard, 1, 2)
+        register("ensures", invariant_guard, 1, 2)
         register("divmod_euclidean", euclidean_divmod, 2, 2)
         register("euclidean_divmod", euclidean_divmod, 2, 2)
         register("quotient", lambda dividend, divisor: euclidean_divmod(dividend, divisor)[0], 2, 2)
@@ -906,9 +1277,11 @@ class Interpreter:
             if not isinstance(needle, str):
                 raise TypeError("text membership expects text")
             return needle in container
+        if isinstance(container, dict):
+            return needle in container
         if isinstance(container, (list, tuple, range)):
             return any(self._equal(item, needle) for item in container)
-        raise TypeError("contains() expects text or a sequence")
+        raise TypeError("contains() expects text, a map or a sequence")
 
     def _starts_with(self, value: Any, prefix: Any) -> bool:
         return self._require_text(value).startswith(self._require_text(prefix))
@@ -973,7 +1346,9 @@ class Interpreter:
             return "list"
         if isinstance(value, dict):
             return "map"
-        if isinstance(value, (UserFunction, Builtin, NativeFunction)) or getattr(value, "__reaper_bytecode__", False):
+        if isinstance(value, VariantValue):
+            return "variant"
+        if isinstance(value, (UserFunction, Builtin, NativeFunction, FunctionAdapter)) or getattr(value, "__reaper_bytecode__", False):
             return "craft"
         if isinstance(value, ResourceHandle):
             return "resource"
@@ -1013,6 +1388,10 @@ class Interpreter:
             return value
         if isinstance(value, range):
             return f"range({value.start}, {value.stop}, {value.step})"
+        if isinstance(value, VariantValue):
+            return value.tag + "(" + ", ".join(self._display(item) for item in value.fields) + ")"
+        if isinstance(value, dict):
+            return "{" + ", ".join(str(key) + ": " + self._display(item) for key, item in value.items()) + "}"
         return str(value)
 
     def _error(self, token: Token, message: str) -> ReaperRuntimeError:
