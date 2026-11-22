@@ -5,7 +5,8 @@ from dataclasses import dataclass
 from difflib import SequenceMatcher
 from pathlib import Path
 import re, threading
-from .errors import ReaperError
+from .errors import LexError, ReaperError
+from .diagnostic_catalog import explain_diagnostic
 from .lexer import KEYWORD_ALIASES
 from .parser import parse
 
@@ -35,6 +36,7 @@ class Diagnostic:
     severity: str
     span: Span
     code: str
+    help: str | None = None
 
 @dataclass(frozen=True, slots=True)
 class Snapshot:
@@ -92,10 +94,12 @@ def _scan(snapshot):
                 expected = {")":"(", "]":"[", "}":"{"}[char]
                 if stack and stack[-1][0] == expected: stack.pop()
                 else: diagnostics.append(Diagnostic("unexpected closing delimiter", "error",
-                                                     Span(row,col,col+1), "unmatched-delimiter"))
+                                                     Span(row,col,col+1), "RPR-E0014",
+                                                     "Close the matching opener or remove the extra closing delimiter."))
     for char,row,col in stack:
         diagnostics.append(Diagnostic("unclosed delimiter " + char, "hint",
-                                      Span(row,col,col+1), "incomplete-delimiter"))
+                                      Span(row,col,col+1), "RPR-W0001",
+                                      "Add the matching closing delimiter, or remove the incomplete opener."))
     try:
         parse(snapshot.text, snapshot.uri)
     except (ReaperError, ValueError) as error:
@@ -104,9 +108,11 @@ def _scan(snapshot):
             row, column, message = int(parts[-3]) - 1, int(parts[-2]) - 1, parts[-1].strip()
         except (ValueError, IndexError):
             row, column, message = 0, 0, str(error)
+        code = "RPR-E0001" if isinstance(error, LexError) else "RPR-E0013"
+        definition = explain_diagnostic(code)
         diagnostics.append(Diagnostic(message, "error",
                                       Span(max(0, row), max(0, column), max(0, column) + 1),
-                                      "parser-error"))
+                                      code, definition["help"] if definition else None))
     return Analysis(snapshot, tuple(symbols), tuple(identifiers), tuple(diagnostics))
 
 class LanguageService:

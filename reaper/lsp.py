@@ -48,6 +48,7 @@ class LspServer:
             "source": "reaper",
             "code": item.code,
             "message": item.message,
+            **({"data": {"help": item.help}} if item.help else {}),
         } for item in analysis.diagnostics]
         self._notify("textDocument/publishDiagnostics", {
             "uri": uri, "version": analysis.snapshot.version, "diagnostics": diagnostics
