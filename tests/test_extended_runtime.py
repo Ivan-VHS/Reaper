@@ -79,6 +79,14 @@ class ExtendedRuntimeTests(unittest.TestCase):
 
 
 class CliEnhancementTests(unittest.TestCase):
+    def test_version_reports_language_edition(self) -> None:
+        stdout = io.StringIO()
+        with redirect_stdout(stdout):
+            with self.assertRaises(SystemExit) as raised:
+                main(["--version"])
+        self.assertEqual(raised.exception.code, 0)
+        self.assertIn("Reaper 0.2.0", stdout.getvalue())
+
     def test_json_run_and_profile(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "sample.rpr"
