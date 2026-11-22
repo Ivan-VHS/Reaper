@@ -313,6 +313,11 @@ static uint32_t lower_expression(MirBuilder *builder, uint32_t node_id) {
         );
 
     case REAPER_AST_IDENTIFIER: {
+        if (node->symbol_id != REAPER_HIR_NO_SYMBOL &&
+            node->symbol_id >= builder->hir->symbol_count) {
+            (void)fail(builder, node_id, "HIR identifier has an invalid resolved symbol index");
+            return REAPER_MIR_NO_VALUE;
+        }
         ReaperHirSymbol *symbol = node->symbol_id == REAPER_HIR_NO_SYMBOL
             ? NULL : &builder->hir->symbols[node->symbol_id];
         if (symbol != NULL && symbol->kind == REAPER_HIR_SYMBOL_FUNCTION) {
@@ -716,14 +721,6 @@ int reaper_mir_build(
     builder.module = output;
     builder.error = error;
 
-    uint32_t main_function = 0U;
-    if (!start_function(
-            &builder, "duck_main", REAPER_HIR_NO_SYMBOL, 0U,
-            (uint32_t)output->parameter_count, 0U, &main_function)) {
-        reaper_mir_free(output);
-        return 0;
-    }
-
     uint32_t program_id = REAPER_MIR_NO_VALUE;
     for (size_t i = 0U; i < hir->node_count; ++i) {
         if (hir->nodes[i].kind == REAPER_AST_PROGRAM) {
@@ -732,8 +729,20 @@ int reaper_mir_build(
         }
     }
     ReaperHirNode *root = hir_node(&builder, program_id);
-    if (root == NULL || root->kind != REAPER_AST_PROGRAM ||
-        !lower_sequence(&builder, root->left) ||
+    if (root == NULL || root->kind != REAPER_AST_PROGRAM) {
+        (void)fail(&builder, 0U, "HIR has no complete program root");
+        reaper_mir_free(output);
+        return 0;
+    }
+
+    uint32_t main_function = 0U;
+    if (!start_function(
+            &builder, "duck_main", REAPER_HIR_NO_SYMBOL, program_id,
+            0U, 0U, &main_function)) {
+        reaper_mir_free(output);
+        return 0;
+    }
+    if (!lower_sequence(&builder, root->left) ||
         !append_implicit_return(&builder, program_id)) {
         reaper_mir_free(output);
         return 0;
