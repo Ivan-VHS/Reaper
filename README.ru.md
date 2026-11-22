@@ -42,9 +42,9 @@ Reaper — expression-oriented язык, в котором оператор `::`
 | NOO TAH | управление проектами/процессами вокруг официального Node.js, npm/npx и Inspector | Node/V8/libuv предоставляет upstream Node |
 | Native C17 | lexer, expression parser, owned AST, checked IR и ограниченный lowering | активное частичное направление, не parity с Python runtime |
 | QCS / embedded tools | отдельный parser аппаратной области, JSON AST и ограниченные embedded-инструменты | справочный/аналитический инструментарий, не выполнение на оборудовании |
-| Kora | стандартные вспомогательные функции и Lua ReaScripts для Cockos REAPER | отдельно от runtime языка Reaper |
+| Kora | необязательные вспомогательные функции стандартной библиотеки в семи модулях | отдельно от runtime языка Reaper |
 
-Каталоги и реестры могут содержать предложенные или зарезервированные записи. Наличие записи в каталоге не означает, что функция реализована в runtime. Уровни зрелости и границы описаны в [Features](docs/FEATURES.md), [REAPER IDE](docs/REAPER_IDE.md), [NOO TAH](docs/NOO_TAH.md) и [Kora for REAPER](docs/KORA_REAPER.md).
+Каталоги и реестры могут содержать предложенные или зарезервированные записи. Наличие записи в каталоге не означает, что функция реализована в runtime. Уровни зрелости и границы описаны в [Features](docs/FEATURES.md), [REAPER IDE](docs/REAPER_IDE.md), [NOO TAH](docs/NOO_TAH.md) и [Kora helpers](docs/KORA.md).
 
 Изображение ниже — снимок Windows Studio, а не браузерный playground.
 
@@ -202,7 +202,6 @@ Native C17 track
 | `examples/` | локальные программы-примеры `.rpr` |
 | `docs/` | язык, IDE, архитектура и границы возможностей |
 | `editors/` | поддержка редакторов и protocol notes |
-| `reaper_scripts/` | Lua-скрипты для Cockos REAPER |
 | `.github/workflows/` | CI, native/desktop build и Node compatibility |
 
 Проект не разделён на развёрнутые frontend, backend и mock API. Browser compatibility, browser storage, публичные порты, CORS и HTTPS неприменимы к самому runtime Reaper.
