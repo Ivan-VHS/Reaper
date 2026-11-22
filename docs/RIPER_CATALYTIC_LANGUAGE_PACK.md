@@ -27,7 +27,7 @@ exceptions.
 
 snapshot(value) and clone(value) make a bounded deep copy of scalar, list and
 map data. reflash(value, fn...) applies functions from left to right.
-rebind(map, updates) returns a new map with updates applied without mutating input.
+rebind(map, updates) returns a new map with updates applied without mutating input.\nmap_of(key, value, ...) and map_from_entries(pairs) construct maps for programs.
 
 ## Collection forms
 
