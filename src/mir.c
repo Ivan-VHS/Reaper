@@ -244,7 +244,7 @@ static int append_branch(
     if (block->terminator != REAPER_MIR_TERM_NONE)
         return fail(builder, source_node, "MIR block already has a terminator");
     block->terminator = REAPER_MIR_TERM_BRANCH;
-    block->condition_value = condition;
+    block->terminator_value = condition;
     block->target_true = yes;
     block->target_false = no;
     return 1;
@@ -259,7 +259,7 @@ static int append_return(
     if (block == NULL || block->terminator != REAPER_MIR_TERM_NONE)
         return fail(builder, source_node, "invalid MIR return terminator");
     block->terminator = REAPER_MIR_TERM_RETURN;
-    block->condition_value = value;
+    block->terminator_value = value;
     return 1;
 }
 
@@ -724,7 +724,6 @@ int reaper_mir_build(
         return 0;
     }
 
-    ReaperHirNode *root = hir_node(&builder, 0U);
     uint32_t program_id = REAPER_MIR_NO_VALUE;
     for (size_t i = 0U; i < hir->node_count; ++i) {
         if (hir->nodes[i].kind == REAPER_AST_PROGRAM) {
@@ -732,7 +731,7 @@ int reaper_mir_build(
             break;
         }
     }
-    root = hir_node(&builder, program_id);
+    ReaperHirNode *root = hir_node(&builder, program_id);
     if (root == NULL || root->kind != REAPER_AST_PROGRAM ||
         !lower_sequence(&builder, root->left) ||
         !append_implicit_return(&builder, program_id)) {
@@ -871,7 +870,7 @@ int reaper_mir_verify(const ReaperMirModule *module, ReaperMirError *error) {
                 return verify_fail(error, i, "MIR jump target leaves its function");
             }
         } else if (block->terminator == REAPER_MIR_TERM_BRANCH) {
-            if (block->condition_value == REAPER_MIR_NO_VALUE ||
+            if (block->terminator_value == REAPER_MIR_NO_VALUE ||
                 block->target_true < owner->first_block || block->target_true >= owner_end ||
                 block->target_false < owner->first_block || block->target_false >= owner_end) {
                 return verify_fail(error, i, "MIR branch target or condition is invalid");
