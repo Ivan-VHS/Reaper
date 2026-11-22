@@ -5,7 +5,8 @@ from dataclasses import dataclass
 from difflib import SequenceMatcher
 from pathlib import Path
 import re, threading
-from .errors import ReaperError
+from .errors import LexError, ReaperError
+from .diagnostic_catalog import explain_diagnostic
 from .lexer import KEYWORD_ALIASES
 from .parser import parse
 
@@ -107,10 +108,11 @@ def _scan(snapshot):
             row, column, message = int(parts[-3]) - 1, int(parts[-2]) - 1, parts[-1].strip()
         except (ValueError, IndexError):
             row, column, message = 0, 0, str(error)
+        code = "RPR-E0001" if isinstance(error, LexError) else "RPR-E0013"
+        definition = explain_diagnostic(code)
         diagnostics.append(Diagnostic(message, "error",
                                       Span(max(0, row), max(0, column), max(0, column) + 1),
-                                      "RPR-E0013",
-                                      "Review the token at this location and the preceding statement boundary."))
+                                      code, definition["help"] if definition else None))
     return Analysis(snapshot, tuple(symbols), tuple(identifiers), tuple(diagnostics))
 
 class LanguageService:
