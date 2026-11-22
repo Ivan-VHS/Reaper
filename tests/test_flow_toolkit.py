@@ -96,6 +96,10 @@ class FlowToolkitTests(unittest.TestCase):
             Interpreter(output=lambda _line: None).run('emit enumerate([1], "zero")')
         with self.assertRaisesRegex(ReaperRuntimeError, "expected a Reaper function"):
             Interpreter(output=lambda _line: None).run("emit [1] :: all(1)")
+        with self.assertRaisesRegex(ReaperRuntimeError, "collection item limit"):
+            Interpreter(output=lambda _line: None, max_collection_items=5).run(
+                "emit window([1, 2, 3, 4], 3)"
+            )
         with self.assertRaises(ExecutionLimitError):
             Interpreter(output=lambda _line: None, max_steps=8).run(
                 "craft yes(value) { yield true }\nemit [1, 2, 3, 4] :: all(yes)"
