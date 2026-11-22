@@ -186,10 +186,12 @@ class LanguageService:
             raise ValueError("workspace symbol limit must be between 1 and 5000")
         needle = query.casefold()
         with self._lock:
-            uris = sorted(self._docs, key=str.casefold)
+            snapshots = tuple(sorted(
+                self._docs.values(), key=lambda snapshot: snapshot.uri.casefold()
+            ))
         matches = []
-        for uri in uris:
-            analysis = self.analyze(uri)
+        for snapshot in snapshots:
+            analysis = _scan(snapshot)
             for symbol in analysis.symbols:
                 if not needle or needle in symbol.name.casefold():
                     matches.append((analysis.snapshot, symbol))
