@@ -40,7 +40,7 @@ Reaper — expression-oriented язык, в котором оператор `::`
 | LSP | stdio JSON-RPC, diagnostics, completion, hover, symbols и лексическая навигация | открытый документ; без межфайлового type inference |
 | DAP | stdio debug adapter, line breakpoints, stepping, stack и locals | отладка на границах операторов; только доверенные локальные программы |
 | NOO TAH | управление проектами/процессами вокруг официального Node.js, npm/npx и Inspector | Node/V8/libuv предоставляет upstream Node |
-| Native C17 | нативный lexer/parser структурированных программ, owned AST, HIR-проверки имён/областей видимости/изменяемости и базовых типов, проверяемый i64 IR, backend x86-64 System V и DuckOS DABI64 | объявления, функции, блоки и циклы разбираются и проходят семантические проверки; машинный код пока генерируется только для i64-выражений; MIR и общий LIR ещё впереди |
+| Native C17 | нативный lexer/parser программ, owned AST, HIR-проверки, MIR-функции и CFG, LIR-виртуальные регистры и локальные stack slots, проверяемый i64 IR, backend System V и DuckOS DABI64 | структура полной программы доходит до LIR; машинный код пока генерируется только для i64-выражений |
 | QCS / embedded tools | отдельный parser аппаратной области, JSON AST и ограниченные embedded-инструменты | справочный/аналитический инструментарий, не выполнение на оборудовании |
 | Kora | необязательные вспомогательные функции стандартной библиотеки в семи модулях | отдельно от runtime языка Reaper |
 
@@ -109,7 +109,7 @@ ctest --test-dir build --output-on-failure
 cc -c build/arithmetic.s -o build/arithmetic.o
 ```
 
-Генерируемый assembly экспортирует `int reaper_program(int64_t *result)`. Для отдельного ABI DuckOS используй `--target duckos-dabi64-v1`. Парсер и HIR проверяют объявления, функции, области видимости, вызовы, блоки, циклы и `::`, но пока не генерируют для них машинный код. Подробности: [native compiler](docs/NATIVE_COMPILER.md) и [HIR/MIR/LIR](docs/NATIVE_HIR.md).
+Генерируемый assembly экспортирует `int reaper_program(int64_t *result)`. Для отдельного ABI DuckOS используй `--target duckos-dabi64-v1`. Объявления, функции, локальные переменные, вызовы и `::` теперь проходят HIR/MIR/LIR; `when`, `each` и `loop while` превращаются в проверяемые блоки управления. Существующие backend пока генерируют машинный код только для i64-выражений. Подробности: [native compiler](docs/NATIVE_COMPILER.md) и [HIR/MIR/LIR](docs/NATIVE_HIR.md).
 
 ### Необязательные проверки NOO TAH / Node.js
 
@@ -201,9 +201,10 @@ JavaScript project
 
 Native C17 track
   -> native program lexer/parser / owned AST / HIR semantic checks
-  -> verified i64 expression IR
+  -> MIR functions, CFG, calls и pipe-call lowering
+  -> LIR virtual registers, local slots и parameter maps
   -> x86-64 System V или DuckOS DABI64 assembly (только integer expressions)
-  -> MIR/CFG, общий LIR и компиляция всей программы ещё впереди
+  -> general LIR machine lowering, object writer/linker и runtime ОС ещё впереди
 ```
 
 | Путь | Содержимое |
@@ -242,7 +243,7 @@ Workflow artifacts — это скачиваемые результаты сбо
 
 ## Известные ограничения, вклад и лицензия
 
-Python остаётся исполняемой эталонной реализацией. Нативный C17 parser и HIR checker уже разбирают объявления, функции, локальные области видимости, вызовы, блоки, циклы и `::`; генерация машинного кода пока ограничена signed i64-выражениями. MIR/CFG, общий LIR, собственный object writer/linker и runtime DuckOS ещё не готовы. LSP symbols/references/rename являются лексическими и ограничены текущим документом; DAP stepping выполняется на уровне операторов; IDE не является OS sandbox. NOO TAH делегирует JavaScript официальному Node, а не реализует собственную версию V8.
+Python остаётся исполняемой эталонной реализацией. Нативный C17 parser/HIR/MIR/LIR уже представляют объявления, функции, локальные stack slots, вызовы, `::` и структурный control flow. Генерация машинного кода пока ограничена signed i64-выражениями; общий MIR/LIR backend, ELF object writer/linker и загрузчик/ядро/runtime DuckOS ещё не готовы. LSP symbols/references/rename являются лексическими и ограничены текущим документом; DAP stepping выполняется на уровне операторов; IDE не является OS sandbox. NOO TAH делегирует JavaScript официальному Node, а не реализует собственную версию V8.
 
 Правила разработки, проверки изменений и оформления Pull Request описаны в [CONTRIBUTING.md](CONTRIBUTING.md). Предлагайте изменения через [GitHub Issues](https://github.com/Ivan-VHS/Reaper/issues) или Pull Request. Добавляйте воспроизводимый пример `.rpr`, версии Python/Node/compiler и точную команду с результатом. Запускайте Python tests, а при изменении native track — CMake/CTest. Архитектура native backend описана в [docs/NATIVE_COMPILER.md](docs/NATIVE_COMPILER.md) и [docs/NATIVE_HIR.md](docs/NATIVE_HIR.md).
 
