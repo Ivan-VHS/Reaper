@@ -16,6 +16,27 @@ class LanguageServiceTests(unittest.TestCase):
         self.assertTrue(any(item.code == "RPR-W0001" for item in analysis.diagnostics))
         self.assertTrue(any(item.code == "RPR-E0013" for item in analysis.diagnostics))
 
+    def test_cross_document_definition_and_references(self):
+        declaration_uri = "file:///project/model.rpr"
+        usage_uri = "file:///project/main.rpr"
+        self.service.open(declaration_uri, "make total := 7")
+        self.service.open(usage_uri, "emit total")
+        definitions = self.service.workspace_definitions("total")
+        references = self.service.workspace_references("total")
+        self.assertEqual([item.uri for item in definitions], [declaration_uri])
+        self.assertEqual({uri for uri, _ in references}, {declaration_uri, usage_uri})
+        self.assertEqual(len(references), 2)
+
+    def test_workspace_symbol_query_is_bounded_and_case_insensitive(self):
+        self.service.open("file:///a.rpr", "craft Render() { emit 1 }")
+        self.service.open("file:///b.rpr", "craft render_more() { emit 2 }")
+        self.assertEqual(
+            [item.name for item in self.service.workspace_symbols("RENDER")],
+            ["Render", "render_more"],
+        )
+        with self.assertRaises(ValueError):
+            self.service.workspace_symbols("", limit=501)
+
     def test_navigation_references_and_rename_validation(self):
         uri = "file:///x.rpr"
         self.service.open(uri, "make total := 1\nemit total")
@@ -111,6 +132,34 @@ class LspAdapterTests(unittest.TestCase):
             "textDocument": {"uri": uri, "version": 2}, "contentChanges": [{"text": "emit 2"}]
         }})
         self.assertEqual(self.server.drain_notifications(), [])
+
+    def test_workspace_symbols_and_cross_document_definition(self):
+        declaration_uri = "file:///project/model.rpr"
+        usage_uri = "file:///project/main.rpr"
+        self.server.dispatch({"method": "textDocument/didOpen", "params": {
+            "textDocument": {"uri": declaration_uri, "version": 1,
+                             "text": "make total := 7"}
+        }})
+        self.server.dispatch({"method": "textDocument/didOpen", "params": {
+            "textDocument": {"uri": usage_uri, "version": 1,
+                             "text": "emit total"}
+        }})
+        symbols = self.server.dispatch({"jsonrpc": "2.0", "id": 20,
+            "method": "workspace/symbol", "params": {"query": "tot"}})
+        self.assertEqual(symbols["result"][0]["location"]["uri"], declaration_uri)
+
+        definition = self.server.dispatch({"jsonrpc": "2.0", "id": 21,
+            "method": "textDocument/definition",
+            "params": {"textDocument": {"uri": usage_uri},
+                       "position": {"line": 0, "character": 7}}})
+        self.assertEqual(definition["result"][0]["uri"], declaration_uri)
+
+        references = self.server.dispatch({"jsonrpc": "2.0", "id": 22,
+            "method": "textDocument/references",
+            "params": {"textDocument": {"uri": usage_uri},
+                       "position": {"line": 0, "character": 7}}})
+        self.assertEqual({item["uri"] for item in references["result"]},
+                         {declaration_uri, usage_uri})
 
     def test_close_clears_diagnostics(self):
         uri = "file:///x.rpr"
