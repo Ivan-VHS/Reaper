@@ -1,0 +1,9 @@
+# Structured error handling in Reaper.
+attempt {
+    emit "starting"
+    throw "manual failure"
+} recover failure {
+    emit contains(failure, "thrown: manual failure")
+} finally {
+    emit "cleanup"
+}

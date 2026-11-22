@@ -47,7 +47,7 @@ flowchart LR
 
 | Area | Implemented scope and boundary |
 |---|---|
-| Python runtime | lexer, parser, interpreter, CLI, REPL, modules, closures, quotas and audit |
+| Python runtime | lexer, parser, interpreter, CLI, REPL, modules, closures, structured errors (`attempt/recover/finally/throw`), quotas and audit |
 | Reaper Studio | Windows IDE foundation: project tree, editor, syntax coloring, line numbers, search, check/run and debugger |
 | LSP | stdio service with incremental UTF-16 documents, parser/structure diagnostics, completion, hover, symbols and lexical navigation; per-open-file, not cross-file type inference |
 | DAP | stdio debug adapter with launch, line breakpoints, statement stepping, stack and local variables |
@@ -117,6 +117,7 @@ The Python reference runtime exposes 133 stable operation IDs in six families: s
 
 ```sh
 python -m reaper examples/flow.rpr
+python -m reaper examples/error_handling.rpr
 python -m reaper --check examples/flow.rpr
 python -m reaper --engine vm examples/flow.rpr
 python -m reaper --repl

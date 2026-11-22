@@ -301,6 +301,26 @@
         "partition-conservation",
         "proportional-conservation"
       ]
+    },
+    {
+      "id": "MOST-EFF-002",
+      "name": "structured runtime error handling with attempt, recover and finally",
+      "area": "execution",
+      "status": "implemented",
+      "depends_on": [
+        "MOST-SYN-001"
+      ],
+      "acceptance": [
+        "explicit-throw-statement",
+        "parser-positive",
+        "parser-negative",
+        "recover-error-binding",
+        "finally-on-success",
+        "finally-on-error",
+        "finally-on-function-return",
+        "treewalk-vm-parity",
+        "execution-limit-not-catchable"
+      ]
     }
   ],
   "profile": "МОСТ — exact Russian keyword aliases; no separate parser, semantics, runtime or backend"

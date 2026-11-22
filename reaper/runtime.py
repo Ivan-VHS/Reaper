@@ -221,9 +221,33 @@ class Interpreter:
         elif node.kind == "yield":
             value = self._evaluate(children[0], environment) if children else None
             raise _ReturnSignal(value)
+        elif node.kind == "throw":
+            value = self._evaluate(children[0], environment)
+            raise self._error(node.token, f"thrown: {self._display(value)}")
         elif node.kind == "function":
             name, parameters = node.value
             environment.define(name, UserFunction(name, parameters, children[0], environment))
+        elif node.kind == "attempt":
+            recover_name, has_recover, has_final = node.value
+            cursor = 1
+            recover_block = children[cursor] if has_recover else None
+            if has_recover:
+                cursor += 1
+            final_block = children[cursor] if has_final else None
+            try:
+                try:
+                    return self._execute_block(children[0], environment)
+                except ExecutionLimitError:
+                    raise
+                except ReaperRuntimeError as error:
+                    if recover_block is None:
+                        raise
+                    recovery_scope = Environment(environment)
+                    recovery_scope.define(recover_name, str(error))
+                    return self._execute_block(recover_block, recovery_scope)
+            finally:
+                if final_block is not None:
+                    self._execute_block(final_block, environment)
         elif node.kind == "when":
             if self._truthy(self._evaluate(children[0], environment)):
                 return self._execute_block(children[1], environment)

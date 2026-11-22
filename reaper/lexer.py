@@ -12,6 +12,7 @@ KEYWORDS = {
     "make", "vary", "change", "craft", "yield", "emit", "when",
     "otherwise", "each", "in", "loop", "while", "true", "false",
     "nothing", "and", "or", "not", "import", "export", "as",
+    "attempt", "recover", "finally", "throw",
 }
 
 # Exact Russian spellings map to canonical REAPER keyword spellings.
@@ -39,6 +40,10 @@ KEYWORD_ALIASES = {
     "импорт": "import",
     "экспорт": "export",
     "как": "as",
+    "попытка": "attempt",
+    "обработать": "recover",
+    "наконец": "finally",
+    "бросить": "throw",
     "модуль": "module",
     "публичный": "pub",
     "процедура": "fn",

@@ -27,6 +27,18 @@ class HighlightTests(unittest.TestCase):
         self.assertEqual(spans[0].kind, "keyword")
         self.assertNotIn("значение", [source[s.start:s.end] for s in spans])
 
+    def test_exception_handling_keywords_are_highlighted(self) -> None:
+        source = 'attempt { throw "x" } recover failure { emit failure } finally { emit "done" }'
+        spans = highlight_spans(source)
+        values = {(span.kind, source[span.start:span.end]) for span in spans}
+        for keyword in ("attempt", "throw", "recover", "finally"):
+            self.assertIn(("keyword", keyword), values)
+        russian = "попытка { бросить \"x\" } обработать ошибка { вывести ошибка } наконец { ничего }"
+        russian_spans = highlight_spans(russian)
+        russian_values = {(span.kind, russian[span.start:span.end]) for span in russian_spans}
+        for keyword in ("попытка", "бросить", "обработать", "наконец"):
+            self.assertIn(("keyword", keyword), russian_values)
+
     def test_spans_are_ordered_and_do_not_overlap(self) -> None:
         source = 'make x := "value" // note'
         spans = highlight_spans(source)
