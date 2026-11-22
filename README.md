@@ -42,9 +42,9 @@ The target audience is language and tooling developers, application engineers, Q
 | NOO TAH | project/process management around the official Node.js runtime, npm/npx and Inspector | Node/V8/libuv are supplied by upstream Node |
 | Native C17 | lexer, expression parser, owned AST, checked IR and limited lowering | active partial track; not Python-runtime parity |
 | QCS / embedded tools | separate hardware-domain parser, JSON AST and bounded embedded helpers | reference/analysis tools, not hardware execution |
-| Kora | standard-library helpers and Lua ReaScripts for Cockos REAPER | separate from the Reaper language runtime |
+| Kora | optional standard-library helpers in seven manifest-backed modules | separate from the Reaper language runtime |
 
-Catalogues and registries may contain proposed or reserved entries. An item in a catalogue is not automatically an implemented runtime feature. The capability pages record maturity and boundaries: [Features](docs/FEATURES.md), [REAPER IDE](docs/REAPER_IDE.md), [NOO TAH](docs/NOO_TAH.md) and [Kora for REAPER](docs/KORA_REAPER.md).
+Catalogues and registries may contain proposed or reserved entries. An item in a catalogue is not automatically an implemented runtime feature. The capability pages record maturity and boundaries: [Features](docs/FEATURES.md), [REAPER IDE](docs/REAPER_IDE.md), [NOO TAH](docs/NOO_TAH.md) and [Kora helpers](docs/KORA.md).
 
 The image below is a capture of the Windows Studio application, not a browser-based playground.
 
@@ -202,7 +202,6 @@ Native C17 track
 | `examples/` | local `.rpr` sample programs |
 | `docs/` | language, IDE, architecture and feature-boundary documentation |
 | `editors/` | editor support and protocol notes |
-| `reaper_scripts/` | Lua scripts hosted by Cockos REAPER |
 | `.github/workflows/` | CI, native/desktop build and Node compatibility |
 
 The project is not split into a deployed frontend, backend and mock API. Browser compatibility, browser storage, public ports, CORS and HTTPS are not applicable to the Reaper runtime itself.
