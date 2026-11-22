@@ -38,7 +38,7 @@ The paddle curve is clamped to each native property's legal range. It must not m
 
 ## Pond-specific motifs
 
-The supplied duck bob, tail waggle, wave glide, ripples, quack particles, floating feathers and parallax layers are treated as a reusable *brand-motion vocabulary*:
+The supplied duck bob, tail waggle, wave glide, ripples, accent particles, floating feathers and parallax layers are treated as a reusable *brand-motion vocabulary*:
 
 - Use bobbing and tail motion only for a mascot or illustration in a welcome, empty or showcase surface. Keep the movement small (about 6 px and 2 degrees).
 - A water ripple may acknowledge one deliberate primary action; it must not obscure labels, values, keyboard focus or hit targets.
