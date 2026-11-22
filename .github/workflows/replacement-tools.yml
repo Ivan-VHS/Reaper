@@ -1,0 +1,21 @@
+name: Original replacement tools
+on:
+  push:
+    branches: ["feat/original-replacement-tools"]
+  pull_request:
+    paths:
+      - "tools/reaper_runtime_inventory.py"
+      - "tests/test_reaper_runtime_inventory.py"
+      - ".github/workflows/replacement-tools.yml"
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Run Reaper toolchain inventory tests
+        run: python -m unittest discover -s tests -p "test_reaper_runtime_inventory.py" -v
