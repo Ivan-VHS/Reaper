@@ -222,7 +222,7 @@ int reaper_lir_build(
     output->instruction_count = mir->instruction_count;
     output->instruction_order_count = mir->instruction_order_count;
     output->operand_count = mir->operand_count;
-    output->parameter_count = mir->parameter_count;
+    output->parameter_count = 0U;
 
     output->functions = calloc(output->function_count, sizeof *output->functions);
     output->blocks = calloc(output->block_count, sizeof *output->blocks);
@@ -244,10 +244,14 @@ int reaper_lir_build(
         return 0;
     }
 
-    memcpy(output->instruction_order, mir->instruction_order,
-        output->instruction_order_count * sizeof *output->instruction_order);
-    memcpy(output->operands, mir->operands,
-        output->operand_count * sizeof *output->operands);
+    if (output->instruction_order_count != 0U) {
+        memcpy(output->instruction_order, mir->instruction_order,
+            output->instruction_order_count * sizeof *output->instruction_order);
+    }
+    if (output->operand_count != 0U) {
+        memcpy(output->operands, mir->operands,
+            output->operand_count * sizeof *output->operands);
+    }
 
     for (size_t i = 0U; i < output->function_count; ++i) {
         const ReaperMirFunction *source = &mir->functions[i];
@@ -320,9 +324,6 @@ int reaper_lir_build(
                     return 0;
                 }
             } else {
-                target->slot_id = find_local(output, source->source_hir_node < hir->node_count
-                    ? mir->blocks[0].function_id : 0U, source->symbol_id);
-                /* The owning function is determined from the block's instruction list. */
                 uint32_t owner_function = REAPER_MIR_NO_VALUE;
                 for (size_t block_id = 0U; block_id < mir->block_count; ++block_id) {
                     const ReaperMirBlock *block = &mir->blocks[block_id];
@@ -506,7 +507,6 @@ int reaper_lir_verify(const ReaperLirModule *module, ReaperLirError *error) {
                 goto cleanup;
             }
             if ((instruction->opcode == REAPER_LIR_UNARY ||
-                 instruction->opcode == REAPER_LIR_LOAD_SLOT ||
                  instruction->opcode == REAPER_LIR_STORE_SLOT ||
                  instruction->opcode == REAPER_LIR_EMIT ||
                  instruction->opcode == REAPER_LIR_DROP ||
