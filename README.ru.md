@@ -232,7 +232,7 @@ Workflow artifacts — это скачиваемые результаты сбо
 
 Python остаётся исполняемой эталонной реализацией. Native C17 parsing/lowering реализован частично. LSP symbols/references/rename являются лексическими и ограничены текущим документом; DAP stepping выполняется на уровне операторов; IDE не является OS sandbox. NOO TAH делегирует JavaScript официальному Node, а не реализует собственную версию V8.
 
-Отдельного `CONTRIBUTING.md` не найдено. Предлагайте изменения через [GitHub Issues](https://github.com/Ivan-VHS/Reaper/issues) или Pull Request. Добавляйте воспроизводимый пример `.rpr`, версии Python/Node/compiler и точную команду с результатом. Запускайте Python tests, а при изменении native track — CMake/CTest.
+Правила разработки, проверки изменений и оформления Pull Request описаны в [CONTRIBUTING.md](CONTRIBUTING.md). Предлагайте изменения через [GitHub Issues](https://github.com/Ivan-VHS/Reaper/issues) или Pull Request. Добавляйте воспроизводимый пример `.rpr`, версии Python/Node/compiler и точную команду с результатом. Запускайте Python tests, а при изменении native track — CMake/CTest.
 
 Лицензия: [Apache-2.0](LICENSE).
 
@@ -250,3 +250,11 @@ Python остаётся исполняемой эталонной реализа
 | 56–66 · эксплуатация и поддержка | приведены build/release workflow, откат артефакта, диагностика, известные ограничения, вклад и лицензия |
 
 **Публичного URL Reaper web-playground нет.** Скриншоты Studio и скачиваемые Windows artifacts не являются live web stand.
+
+## Единая оболочка отчёта
+
+JSON-вывод можно обернуть в общий формат метаданных ivan-vhs.report.v1, сохранив исходный результат Reaper:
+
+    python tools/report_envelope.py --tool reaper --version VERSION < result.json
+
+См. docs/REPORT_ENVELOPE.md и schemas/ivan-vhs.report.v1.schema.json. Оболочка сохраняет данные инструмента и фиксирует ограничения результата.
