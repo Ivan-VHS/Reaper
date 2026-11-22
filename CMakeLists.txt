@@ -16,6 +16,7 @@ add_library(reaper_core STATIC
     src/ir.c
     src/parser.c
     src/ast_json.c
+    src/hir.c
     src/optimizer.c
     src/lower.c
     src/codegen_x86_64.c
@@ -55,6 +56,10 @@ if(REAPER_BUILD_TESTS)
     add_executable(reaper-program-parser-tests tests/test_program_parser.c)
     target_link_libraries(reaper-program-parser-tests PRIVATE reaper_core)
     add_test(NAME native-program-parser COMMAND reaper-program-parser-tests)
+
+    add_executable(reaper-hir-tests tests/test_hir.c)
+    target_link_libraries(reaper-hir-tests PRIVATE reaper_core)
+    add_test(NAME native-hir COMMAND reaper-hir-tests)
 
     add_executable(reaper-optimizer-tests tests/test_optimizer.c)
     target_link_libraries(reaper-optimizer-tests PRIVATE reaper_core)
