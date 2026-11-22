@@ -433,6 +433,23 @@
         "explicit-ffi-opt-in",
         "lifecycle-checks"
       ]
+    },
+    {
+      "id": "MOST-FED-003",
+      "name": "metadata-only Pytyliki ABI v1 plugin catalogue discovery",
+      "area": "interop",
+      "status": "implemented",
+      "depends_on": [
+        "MOST-HOST-001"
+      ],
+      "acceptance": [
+        "abi-plugin-count",
+        "bounded-plugin-descriptors",
+        "exact-plugin-name-resolution",
+        "metadata-only-boundary",
+        "explicit-ffi-opt-in",
+        "treewalk-vm-parity"
+      ]
     }
   ],
   "profile": "МОСТ — exact Russian keyword aliases; no separate parser, semantics, runtime or backend"
