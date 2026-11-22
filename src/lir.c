@@ -138,13 +138,6 @@ static int append_function_locals(
             const ReaperMirInstruction *instruction = &mir->instructions[instruction_id];
             if (instruction->opcode != REAPER_MIR_LOAD_LOCAL &&
                 instruction->opcode != REAPER_MIR_STORE_LOCAL) {
-                if (instruction->opcode == REAPER_MIR_ITER_INIT ||
-                    instruction->opcode == REAPER_MIR_ITER_NEXT ||
-                    instruction->opcode == REAPER_MIR_ITER_CURRENT) {
-                    if (instruction->symbol_id != REAPER_HIR_NO_SYMBOL &&
-                        !append_local(hir, output, function_id,
-                            instruction->symbol_id, error)) return 0;
-                }
                 continue;
             }
             if (!append_local(
@@ -317,10 +310,7 @@ int reaper_lir_build(
         }
 
         if (source->opcode == REAPER_MIR_LOAD_LOCAL ||
-            source->opcode == REAPER_MIR_STORE_LOCAL ||
-            source->opcode == REAPER_MIR_ITER_INIT ||
-            source->opcode == REAPER_MIR_ITER_NEXT ||
-            source->opcode == REAPER_MIR_ITER_CURRENT) {
+            source->opcode == REAPER_MIR_STORE_LOCAL) {
             if (source->symbol_id == REAPER_HIR_NO_SYMBOL) {
                 if (source->opcode == REAPER_MIR_LOAD_LOCAL ||
                     source->opcode == REAPER_MIR_STORE_LOCAL) {
@@ -576,10 +566,7 @@ int reaper_lir_verify(const ReaperLirModule *module, ReaperLirError *error) {
             }
 
             if (instruction->opcode == REAPER_LIR_LOAD_SLOT ||
-                instruction->opcode == REAPER_LIR_STORE_SLOT ||
-                instruction->opcode == REAPER_LIR_ITER_INIT ||
-                instruction->opcode == REAPER_LIR_ITER_NEXT ||
-                instruction->opcode == REAPER_LIR_ITER_CURRENT) {
+                instruction->opcode == REAPER_LIR_STORE_SLOT) {
                 if (instruction->slot_id >= owner->stack_slot_count) {
                     (void)verify_fail(error, instruction_id, "LIR local stack slot is invalid");
                     goto cleanup;
