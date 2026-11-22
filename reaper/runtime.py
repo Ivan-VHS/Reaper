@@ -269,6 +269,13 @@ class Interpreter:
                     f"collection item limit ({self.max_collection_items}) exceeded",
                 )
             return self.memory.track([self._evaluate(item, environment) for item in children])
+        if node.kind == "map":
+            entries = [self._evaluate(item, environment) for item in children]
+            return self._build_map(entries, node.token)
+        if node.kind == "member":
+            target = self._evaluate(children[0], environment)
+            name, optional = node.value
+            return self._member(target, name, optional, node.token)
         if node.kind == "index":
             collection = self._evaluate(children[0], environment)
             index = self._evaluate(children[1], environment)
@@ -298,6 +305,8 @@ class Interpreter:
                 return self._evaluate(children[1], environment) if self._truthy(left) else left
             if operator == "OR":
                 return left if self._truthy(left) else self._evaluate(children[1], environment)
+            if operator == "??":
+                return left if left is not None else self._evaluate(children[1], environment)
             if operator == "::":
                 right = children[1]
                 if right.kind == "call":
@@ -309,6 +318,33 @@ class Interpreter:
             right = self._evaluate(children[1], environment)
             return self._binary(operator, left, right, node.token)
         raise self._error(node.token, f"unknown expression kind '{node.kind}'")
+
+    def _build_map(self, flat_entries: list[Any], token: Token) -> dict[Any, Any]:
+        if len(flat_entries) % 2:
+            raise self._error(token, "map construction requires key/value pairs")
+        result: dict[Any, Any] = {}
+        for offset in range(0, len(flat_entries), 2):
+            key, value = flat_entries[offset], flat_entries[offset + 1]
+            try:
+                hash(key)
+            except TypeError as error:
+                raise self._error(token, "map keys must be hashable") from error
+            if key not in result and len(result) >= self.max_collection_items:
+                raise self._error(
+                    token,
+                    f"collection item limit ({self.max_collection_items}) exceeded",
+                )
+            result[key] = value
+        return self.memory.track(result)
+
+    def _member(self, target: Any, name: str, optional: bool, token: Token) -> Any:
+        if target is None and optional:
+            return None
+        if not isinstance(target, dict):
+            raise self._error(token, "member access requires a map")
+        if name not in target:
+            raise self._error(token, f"map has no key '{name}'")
+        return target[name]
 
     def _binary(self, operator: str, left: Any, right: Any, token: Token) -> Any:
         if operator == "==":
@@ -1009,6 +1045,11 @@ class Interpreter:
             return "false"
         if isinstance(value, list):
             return "[" + ", ".join(self._display(item) for item in value) + "]"
+        if isinstance(value, dict):
+            return "{" + ", ".join(
+                f"{self._display(key)}: {self._display(item)}"
+                for key, item in value.items()
+            ) + "}"
         if isinstance(value, str):
             return value
         if isinstance(value, range):
