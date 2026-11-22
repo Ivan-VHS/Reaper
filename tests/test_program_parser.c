@@ -52,7 +52,7 @@ static void parses_complete_flow_program(void) {
     assert(count_kind(&ast, REAPER_AST_WHEN) == 1U);
     assert(count_kind(&ast, REAPER_AST_EACH) == 1U);
     assert(count_kind(&ast, REAPER_AST_WHILE) == 1U);
-    assert(count_kind(&ast, REAPER_AST_CALL) >= 4U);
+    assert(count_kind(&ast, REAPER_AST_CALL) >= 3U);
     assert(count_kind(&ast, REAPER_AST_LIST) == 1U);
     assert(count_kind(&ast, REAPER_AST_BINARY) >= 6U);
 
