@@ -12,6 +12,7 @@ KEYWORDS = {
     "make", "vary", "change", "craft", "yield", "emit", "when",
     "otherwise", "each", "in", "loop", "while", "true", "false",
     "nothing", "and", "or", "not", "import", "export", "as",
+    "match", "case", "if", "else", "for", "let",
 }
 
 # Exact Russian spellings map to canonical REAPER keyword spellings.
@@ -72,6 +73,9 @@ KEYWORD_ALIASES = {
     "прервать": "break",
     "продолжить": "continue",
     "отложить": "defer",
+    "случай": "case",
+    "выбрать": "match",
+    "для_каждого": "for",
 }
 
 
@@ -86,8 +90,9 @@ class Token:
 class Lexer:
     """Convert source text into a position-aware token stream."""
 
-    _TWO_CHAR = {":=", "==", "!=", "<=", ">=", "//", "**", "++", "::"}
-    _ONE_CHAR = set("+-*/%<>(){}[],")
+    _THREE_CHAR = {"??=", "..="}
+    _TWO_CHAR = {":=", "==", "!=", "<=", ">=", "//", "**", "++", "::", "??", "?.", ".."}
+    _ONE_CHAR = set("+-*/%<>(){}[],?:.")
 
     def __init__(self, source: str, filename: str = "<memory>") -> None:
         self.source = source
@@ -193,6 +198,11 @@ class Lexer:
     def _operator_or_punctuation(self) -> None:
         start_line, start_column = self.line, self.column
         triplet = self.source[self.index:self.index + 3]
+        if triplet in self._THREE_CHAR:
+            for _ in range(3):
+                self._advance()
+            self.tokens.append(Token(triplet, triplet, start_line, start_column))
+            return
         if token_is_reserved(triplet):
             for _ in range(3):
                 self._advance()
