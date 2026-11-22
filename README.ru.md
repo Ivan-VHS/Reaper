@@ -40,7 +40,7 @@ Reaper — expression-oriented язык, в котором оператор `::`
 | LSP | stdio JSON-RPC, diagnostics, completion, hover, symbols и лексическая навигация | открытый документ; без межфайлового type inference |
 | DAP | stdio debug adapter, line breakpoints, stepping, stack и locals | отладка на границах операторов; только доверенные локальные программы |
 | NOO TAH | управление проектами/процессами вокруг официального Node.js, npm/npx и Inspector | Node/V8/libuv предоставляет upstream Node |
-| Native C17 | UTF-8 lexer, Pratt expression parser, owned AST, проверяемый i64 IR, checked lowering и backend assembly x86-64 System V ELF | только целочисленные выражения; не полный compiler и не parity с Python runtime |
+| Native C17 | native lexer с UTF-8-aware позициями, Pratt expression parser, owned AST, проверяемый i64 IR, checked lowering и backend assembly x86-64 System V ELF | только целочисленные выражения; не полный compiler и не parity с Python runtime |
 | QCS / embedded tools | отдельный parser аппаратной области, JSON AST и ограниченные embedded-инструменты | справочный/аналитический инструментарий, не выполнение на оборудовании |
 | Kora | необязательные вспомогательные функции стандартной библиотеки в семи модулях | отдельно от runtime языка Reaper |
 
