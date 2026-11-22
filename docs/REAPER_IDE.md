@@ -24,7 +24,9 @@ Both services use Content-Length framed JSON-RPC over stdin/stdout. Stdout is re
 | LSP transport | Implemented | JSON-RPC 2.0, Content-Length framing |
 | Parser diagnostics | Implemented | Existing REAPER lexer/parser; no second grammar |
 | Completion / hover | Implemented | Canonical keywords, aliases and bounded built-ins |
-| Definition / references / rename | Basic | Lexical identifier matching, not semantic resolution |
+| Definition / references | Workspace lexical | Across currently open documents; not semantic resolution |
+| Rename | Basic | Current-document lexical edits after client confirmation |
+| Workspace symbols | Implemented | Bounded search across open buffers only |
 | Document symbols | Basic | Indexed make, vary, craft and supported type declarations |
 | DAP transport | Implemented | Framed request/response/events |
 | Breakpoints and stepping | Implemented | Statement-boundary debugger; next and step-in share granularity |
@@ -44,7 +46,7 @@ The Windows Studio editor also reuses the canonical `LanguageService` directly:
 - **Ctrl+Shift+R** renames lexical occurrences in the current document after a confirmation prompt.
 - **Ctrl+K** opens the existing command palette; **Ctrl+Alt+K** opens the CODEX-66 capability browser.
 
-These actions are document-local. They do not provide cross-file type resolution, AST-safe refactoring, cloud AI generation, or an automatic code execution step. JavaScript files continue to use NOO TAH rather than the REAPER language completion service. The CODEX-66 catalogue labels each feature as implemented, partial, planned or unsupported and exports a versioned JSON snapshot; exporting does not activate any feature.
+F12, Find references and workspace-symbol search can inspect all currently open buffers (up to 512 documents and 8 million characters). Results remain lexical: they do not provide cross-file type resolution, disk crawling, AST-safe refactoring, cloud AI generation, or an automatic code execution step. Rename remains limited to the current document. JavaScript files continue to use NOO TAH rather than the REAPER language completion service. The CODEX-66 catalogue labels each feature as implemented, partial, planned or unsupported and exports a versioned JSON snapshot; exporting does not activate any feature.
 
 ## Architecture
 
@@ -62,7 +64,7 @@ parser diagnostics                Interpreter
              REAPER language core
 ```
 
-LSP advertises only implemented handlers. Document edits use UTF-16 positions and monotonically increasing versions; stale edits are rejected. A cancellable background index publishes only results for the current snapshot. The index is per open document and lexical: cross-file semantic resolution, type inference, semantic tokens and AST refactoring remain future work. DAP does not evaluate arbitrary host-language expressions or create an OS sandbox. Launch only trusted local programs.
+LSP advertises only implemented handlers. Document edits use UTF-16 positions and monotonically increasing versions; stale edits are rejected. A cancellable background index publishes only results for the current snapshot. The index is per open document and lexical. Workspace symbol lookup and navigation aggregate those open-document indexes under explicit document/character limits; disk crawling, cross-file semantic resolution, type inference, semantic tokens and AST refactoring remain future work. DAP does not evaluate arbitrary host-language expressions or create an OS sandbox. Launch only trusted local programs.
 
 ## Design constraints
 
