@@ -232,7 +232,7 @@ Workflow artifacts are downloadable build outputs, not a live hosted IDE. To rol
 
 Python remains the executable compatibility reference. Native C17 parsing/lowering is partial. LSP symbol lookup, references and rename are lexical and document-local; DAP stepping is statement-granular; the IDE is not an OS sandbox. NOO TAH delegates JavaScript behavior to the official Node distribution rather than reimplementing V8.
 
-No separate `CONTRIBUTING.md` was found. Propose changes through [GitHub Issues](https://github.com/Ivan-VHS/Reaper/issues) or a Pull Request. Include a reproducible `.rpr` example, Python/Node/compiler versions and the exact command/output. Run Python tests and, when touching the native track, CMake/CTest.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the repository's contribution workflow and validation requirements. Propose changes through [GitHub Issues](https://github.com/Ivan-VHS/Reaper/issues) or a Pull Request. Include a reproducible `.rpr` example, Python/Node/compiler versions and the exact command/output. Run Python tests and, when touching the native track, CMake/CTest.
 
 License: [Apache-2.0](LICENSE).
 

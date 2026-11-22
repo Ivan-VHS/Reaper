@@ -232,7 +232,7 @@ Workflow Artifact 是可下载的构建结果，不是在线托管 IDE。回滚�
 
 Python 仍是当前可执行的兼容性参考实现。Native C17 parsing/lowering 仅部分实现。LSP symbols/references/rename 是词法级且仅限当前文档；DAP stepping 以语句为粒度；IDE 不是 OS Sandbox。NOO TAH 将 JavaScript 行为交给官方 Node，而不是自行重实现 V8。
 
-未找到单独的 `CONTRIBUTING.md`。请通过 [GitHub Issues](https://github.com/Ivan-VHS/Reaper/issues) 或 Pull Request 提交改进。附上可复现的 `.rpr` 示例、Python/Node/compiler 版本以及准确命令和输出。运行 Python 测试；修改原生路线时还应运行 CMake/CTest。
+仓库的贡献流程、变更验证和 Pull Request 要求见 [CONTRIBUTING.md](CONTRIBUTING.md)。请通过 [GitHub Issues](https://github.com/Ivan-VHS/Reaper/issues) 或 Pull Request 提交改进。附上可复现的 `.rpr` 示例、Python/Node/compiler 版本以及准确命令和输出。运行 Python 测试；修改原生路线时还应运行 CMake/CTest。
 
 许可证：[Apache-2.0](LICENSE)。
 
@@ -250,3 +250,11 @@ Python 仍是当前可执行的兼容性参考实现。Native C17 parsing/loweri
 | 56–66 · 运维与支持 | 链接构建/发布工作流，说明产物回滚、诊断、已知限制、贡献方式和许可证 |
 
 **Reaper 没有公开的 Web Playground URL。** Studio 截图和可下载 Windows Artifact 不等于在线 Web Stand。
+
+## 统一报告封装
+
+可以将 JSON 输出包装为通用的 ivan-vhs.report.v1 元数据格式，同时保留 Reaper 的原始结果：
+
+    python tools/report_envelope.py --tool reaper --version VERSION < result.json
+
+请参阅 docs/REPORT_ENVELOPE.md 和 schemas/ivan-vhs.report.v1.schema.json。该封装保留工具数据并记录结果限制。
