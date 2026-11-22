@@ -585,16 +585,19 @@ static int check_statement(
                 builder->current_function = saved_function;
                 return fail(builder, node_id, "function parameter is not an identifier");
             }
-            if (add_symbol(
-                    builder, parameter_node->text, REAPER_HIR_SYMBOL_PARAMETER,
-                    REAPER_HIR_TYPE_UNKNOWN, REAPER_HIR_TYPE_UNKNOWN,
-                    0U, sequence->left, 0
-                ) == REAPER_HIR_NO_SYMBOL) {
+            uint32_t parameter_symbol = add_symbol(
+                builder, parameter_node->text, REAPER_HIR_SYMBOL_PARAMETER,
+                REAPER_HIR_TYPE_UNKNOWN, REAPER_HIR_TYPE_UNKNOWN,
+                0U, sequence->left, 0
+            );
+            if (parameter_symbol == REAPER_HIR_NO_SYMBOL) {
                 leave_scope(builder, previous);
                 --builder->function_depth;
                 builder->current_function = saved_function;
                 return 0;
             }
+            builder->module->nodes[sequence->left].symbol_id = parameter_symbol;
+            builder->module->nodes[sequence->left].type = REAPER_HIR_TYPE_UNKNOWN;
             parameter = sequence->right;
         }
 
