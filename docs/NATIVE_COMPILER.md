@@ -1,22 +1,27 @@
-# Native compiler: program front end and expression backends
+# Native compiler: complete front end and expression backends
 
-## Implemented front end
+## Implemented native stages
 
-The C17 native parser builds a complete structural AST for declarations, mutable variables, functions and parameters, blocks, yield/emit, when/otherwise, each, loop while, lists, calls, indexing and the :: pipeline.
+The C17 path now has distinct frontend and lowering stages:
 
-The HIR semantic pass resolves lexical names and nested scopes, enforces immutable make versus mutable vary, checks change assignments, function-call arity, built-in call arity and basic inferred types. It also checks boolean conditions, yield placement and the language's value-insertion semantics for ::.
+1. **Program AST:** declarations, mutable bindings, functions/parameters, blocks, yield/emit, when/otherwise, each, loop while, lists, calls, indexes and the :: pipeline.
+2. **HIR:** lexical name resolution, nested scopes, mutability, function/builtin arity and basic inferred type checking.
+3. **MIR:** generated duck_main and craft functions, locals, explicit calls/pipe-calls, when branches, while back edges and each iterator control flow.
+4. **LIR:** explicit virtual registers, per-function local stack slots, parameter-slot mapping, call argument vectors and verified low-level blocks/terminators.
 
-This is structural parsing and semantic validation. It does not yet mean that every parsed program is lowered to machine code.
+MIR and LIR are checked, target-neutral representations. They are not yet connected to a general machine-code emitter.
 
-## Current machine-code slice
+## Current executable machine-code subset
 
-The currently executable code-generation path remains a checked signed-i64 expression subset:
+The current target emitters still consume the original checked signed-i64 expression IR:
 
 ~~~text
-.rpr integer expression -> Pratt AST -> verified i64 IR -> target assembly
+.rpr integer expression -> Pratt AST -> checked i64 IR -> target assembly
 ~~~
 
 Supported operations are integer literals, parentheses, unary signs and binary +, -, * and /. Overflow, division by zero and INT64_MIN / -1 are explicit failures.
+
+This means full-program declarations and control flow are parsed and lowered through LIR, but are not yet compiled to machine code. That distinction is deliberate and documented in [Native HIR/MIR/LIR status](NATIVE_HIR.md).
 
 ## Build and test
 
@@ -26,16 +31,16 @@ cmake --build build --parallel
 ctest --test-dir build --output-on-failure
 ~~~
 
-The test set now includes complete-program AST parsing and HIR checks for name resolution, local scope, mutability, function arity, built-ins, :: and Russian МОСТ aliases.
+The native test set includes program AST parsing, HIR resolution/type checks, MIR CFG construction/verification, LIR virtual-register/stack-slot validation and end-to-end expression backends.
 
-## Emit System V assembly
+## Emit a System V expression
 
 ~~~sh
 ./build/reaper-c --emit-asm examples/native/arithmetic.rpr -o build/arithmetic.s
 cc -c build/arithmetic.s -o build/arithmetic.o
 ~~~
 
-This emits GNU assembler for x86-64 System V ELF. The assembly exports int reaper_program(int64_t *result). The host assembler still creates the object file.
+The assembly exports int reaper_program(int64_t *result). The host assembler/linker creates the object; Reaper does not yet write ELF relocation records or link an executable.
 
 ## Emit a DuckOS DABI64 expression
 
@@ -43,23 +48,24 @@ This emits GNU assembler for x86-64 System V ELF. The assembly exports int reape
 ./build/reaper-c --emit-asm --target duckos-dabi64-v1 examples/native/arithmetic.rpr -o build/duck-program.s
 ~~~
 
-DABI64 v1 uses a separate x86-64 function contract: R10 is the read-only DuckCallFrame pointer, R11 is the writable DuckCallResult pointer and RAX returns DuckAbiStatus. The generated entry validates the frame magic/version/size, rejects arguments/captures not yet supported by this expression entry, checks flags and alignment, writes the typed i64 result only on success and emits .note.duckos.abi.
+DABI64 v1 uses its own x86-64 function convention: R10 is a read-only DuckCallFrame pointer, R11 is a writable DuckCallResult pointer and RAX returns DuckAbiStatus. The generated entry validates the frame magic/version/size, no-argument entry shape, flags and result alignment; it writes a typed i64 result only on success and emits .note.duckos.abi.
 
-The ABI data layout and C frame validators are in the DuckOS repository. This backend does not silently fall back to System V.
+The ABI data layout and C frame validators are in the separate DuckOS repository. This backend does not silently fall back to System V.
 
 ## Current limits and next stages
 
 | Area | Current state |
 |---|---|
-| Program parser | implemented for the listed structural constructs |
-| HIR | lexical scope, mutability, name and basic type/arity checks |
-| MIR | not yet implemented; CFG lowering is next |
-| LIR | bounded i64 expression IR only |
-| System V codegen | i64 expressions |
-| DuckOS DABI64 codegen | no-argument i64 expression entry |
+| Program parser | complete structural AST for the listed constructs |
+| HIR | lexical scope, names, mutability, call arity and basic type checks |
+| MIR | functions, local access, calls, ::, when/while/each CFG and verifier |
+| LIR | virtual registers, local stack slots, parameter maps, calls and verified blocks |
+| System V codegen | checked i64 expressions only |
+| DuckOS DABI64 codegen | no-argument checked i64 expression entry only |
+| MIR/LIR machine-code backend | not yet implemented |
 | Object writer/linker | external assembler/linker; no native ELF writer or DuckOS linker |
-| DuckOS loader/kernel/runtime | not implemented |
+| DuckOS loader/kernel/runtime | ABI layout/validators only; OS components are not implemented |
 
-Next: verified MIR functions/CFG, calls and local slots; general LIR; DABI64 call-frame generation for parameterized functions; object relocation writing; DuckOS static linking, loading, startup, syscall dispatch and runtime primitives.
+Next: target-specific lowering from LIR, full DABI64 function/call-frame generation, runtime support for collections/iteration/I/O, relocatable ELF emission, DuckOS linking/loading/startup and kernel syscall dispatch.
 
-Python remains the compatibility oracle until differential tests establish parity.
+Python remains the compatibility oracle until differential tests establish equivalent semantics.
