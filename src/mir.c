@@ -841,8 +841,9 @@ int reaper_mir_verify(const ReaperMirModule *module, ReaperMirError *error) {
         (module->parameter_count != 0U && module->parameters == NULL)) {
         return verify_fail(error, 0U, "MIR module storage is incomplete");
     }
-    if (module->function_count == 0U || module->block_count == 0U) {
-        return verify_fail(error, 0U, "MIR requires at least one function and block");
+    if (module->function_count == 0U || module->block_count == 0U ||
+        module->instruction_order_count != module->instruction_count) {
+        return verify_fail(error, 0U, "MIR requires functions, blocks and a complete instruction order");
     }
     if (module->instruction_order_count != module->instruction_count) {
         return verify_fail(
