@@ -16,6 +16,14 @@ HOVER = {
     "when": "Conditional statement; may be followed by `otherwise`.",
     "each": "Iterate over a collection.",
     "loop": "Repeat while a condition is true.",
+    "attempt": "Execute a block and recover language runtime errors.",
+    "recover": "Handle a language runtime error; the binding contains diagnostic text.",
+    "finally": "Run cleanup after success, recovery, an uncaught error or early return.",
+    "throw": "Raise a catchable language runtime error from a value.",
+    "попытка": "Выполнить блок с обработкой ошибок языка.",
+    "обработать": "Обработать ошибку языка; переменная содержит текст диагностики.",
+    "наконец": "Выполнить очистку после успеха, ошибки или раннего возврата.",
+    "бросить": "Создать перехватываемую ошибку языка из значения.",
     "~>": "Flow operator: pass the left value to the next operation.",
 }
 
