@@ -158,6 +158,11 @@ class MapLanguageTests(unittest.TestCase):
                 with self.assertRaisesRegex(ReaperRuntimeError, message):
                     self.capture(source)
 
+    def test_existing_unary_power_precedence_is_preserved(self) -> None:
+        source = "emit -2 ** 2"
+        self.assertEqual(self.capture(source), ["4"])
+        self.assertEqual(self.capture(source, engine="vm"), ["4"])
+
     def test_map_flow_is_vm_compatible(self) -> None:
         source = 'emit {name: "Reaper"} :: get("name")'
         expected = ["Reaper"]
