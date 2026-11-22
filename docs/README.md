@@ -44,3 +44,8 @@ Only tested behavior is labelled implemented. Registry counts are catalogued ite
 - [Example JSON](../examples/resource-allocation-500-uah.json) and [JSON Schema](../schemas/resource-allocation.v1.schema.json).
 
 This is an illustrative personal-budgeting reference, not a claim that the host project manages payments or live retail prices.
+
+
+## Language quality
+
+[Language and editorial quality](LANGUAGE_QUALITY.md) — orthography, punctuation, lexical precision, syntax, multilingual review and conservative prose checks.
