@@ -213,7 +213,7 @@ def pytyliki_plugins(library_path: str) -> list[dict[str, Any]]:
 
 def pytyliki_plugin_info(query: str, library_path: str) -> dict[str, Any]:
     """Resolve one Pytyliki plugin id or display name without loading the plugin."""
-    if not isinstance(query, str) or not query.strip() or "\\0" in query:
+    if not isinstance(query, str) or not query.strip() or "\x00" in query:
         raise ValueError("plugin query must be non-empty text without NUL")
     if len(query.encode("utf-8")) > 1024:
         raise ValueError("plugin query exceeds 1024 UTF-8 bytes")
