@@ -115,6 +115,10 @@ class CLifeReflashTests(unittest.TestCase):
         with self.assertRaises(CLifeError):
             plan_reflash(self.root, {"../outside.txt": "nope"})
 
+    def test_case_insensitive_path_collision_is_rejected(self) -> None:
+        with self.assertRaisesRegex(CLifeError, "colliding reflash path"):
+            plan_reflash(self.root, {"Config.json": "one", "config.json": "two"})
+
     def test_plan_rejects_tampered_embedded_content(self) -> None:
         payload = json.loads(plan_reflash(self.root, {"app.rpr": "next"}).to_json())
         payload["changes"][0]["content_base64"] = "bm90LXRoZS1wbGFubmVkLWNvbnRlbnQ="
