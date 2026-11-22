@@ -50,8 +50,10 @@ def main() -> int:
 
     cases = (
         ("arithmetic.rpr", 0, "64"),
+        ("signed-division.rpr", 0, "-3"),
         ("overflow.rpr", 1, "0"),
         ("division-by-zero.rpr", 2, "0"),
+        ("division-overflow.rpr", 1, "0"),
     )
 
     with tempfile.TemporaryDirectory(prefix="reaper-native-") as temporary:
@@ -72,7 +74,7 @@ def main() -> int:
             run([args.cc, str(assembly), str(harness), "-o", str(executable)])
             run([str(executable), str(expected_status), expected_value])
 
-    print("native compiler smoke: 3 generated programs assembled and executed")
+    print("native compiler smoke: 5 generated programs assembled and executed")
     return 0
 
 
