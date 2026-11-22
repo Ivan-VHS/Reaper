@@ -2,6 +2,11 @@
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
+<p align="center"><img src="assets/readme/dashboard.svg" alt="Визуальный обзор Reaper 2026" width="100%"></p>
+<sub>Визуальный обзор проекта · README обновлён 22.11.2026 · палитра проекта · читаемые схемы данных</sub>
+
+
+
 [CI](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml) · [Сборка Windows Studio](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml) · Python 3.10+ reference runtime · нативная ветка C17 · Windows Studio · Apache-2.0
 **Разработчик:** [Ivan-VHS](https://github.com/Ivan-VHS)
 
@@ -25,6 +30,9 @@ flowchart TD
     G[Проект JavaScript] --> H[Официальный дистрибутив Node.js]
     H --> I[V8, API Node.js, npm и Inspector]
     J[Нативная ветка C17] --> K[Частичный парсер и lowering]
+  classDef readmeNode fill:#211936,stroke:#B58AFF,color:#F8F5FF,stroke-width:1.5px;
+  class A,B,C,D,E,F,G,H,I,J,K readmeNode;
+  linkStyle default stroke:#B58AFF,stroke-width:1.8px;
 ```
 
 ## Пути выполнения и результатов
@@ -39,6 +47,9 @@ flowchart LR
     E --> F[Диагностика, completion и symbols]
     G[Запрос отладки] --> H[DAP]
     H --> I[Точки останова, стек и локальные переменные]
+  classDef readmeNode fill:#211936,stroke:#B58AFF,color:#F8F5FF,stroke-width:1.5px;
+  class A,B,C,D,E,F,G,H,I readmeNode;
+  linkStyle default stroke:#B58AFF,stroke-width:1.8px;
 ```
 
 <sub>Фактический снимок приложения · исходное изображение 1920×1080 · исходные пиксели сохранены, искусственное увеличение не применяется.</sub>
