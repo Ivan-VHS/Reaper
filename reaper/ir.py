@@ -77,6 +77,9 @@ class _Lowerer:
             else:
                 self.emit("CONST", None, node.token)
             self.emit("RETURN", None, node.token)
+        elif node.kind == "throw":
+            self.expression(children[0])
+            self.emit("THROW", None, node.token)
         elif node.kind == "function":
             name, parameters = node.value
             nested = _Lowerer()
@@ -216,7 +219,7 @@ _ALLOWED = {
     "JUMP_IF_FALSE", "JUMP", "ENTER_SCOPE", "EXIT_SCOPE", "ITER_INIT",
     "ITER_NEXT", "ITER_END", "POP", "BUILD_LIST", "INDEX", "UNARY",
     "CALL", "PIPE_CALL", "BINARY", "AND_JUMP", "OR_JUMP", "IMPORT", "EXPORT",
-    "ATTEMPT",
+    "ATTEMPT", "THROW",
 }
 
 
