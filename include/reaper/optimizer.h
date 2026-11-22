@@ -34,7 +34,7 @@ int reaper_ir_optimize_fixed_point(
 );
 
 /*
- * Fold ADD_I64 nodes whose operands are both CONST_I64.
+ * Fold ADD_I64, SUB_I64, MUL_I64 and DIV_I64 nodes whose operands are both CONST_I64.
  * The input module is verified before optimization. Output storage is
  * caller-owned and must hold at least input->length nodes. Input and output
  * may alias. Signed overflow is rejected rather than invoking undefined
