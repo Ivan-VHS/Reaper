@@ -54,7 +54,9 @@ class _Lowerer:
 
     def statement(self, node: Node) -> None:
         children = node.children or []
-        if node.kind == "declare":
+        if node.kind in {"match", "let_else", "coalesce_change"}:
+            self.emit("EXEC_AST", node, node.token)
+        elif node.kind == "declare":
             self.expression(children[0])
             self.emit("DEFINE", node.value, node.token)
         elif node.kind == "change":
@@ -131,7 +133,9 @@ class _Lowerer:
 
     def expression(self, node: Node) -> None:
         children = node.children or []
-        if node.kind == "literal":
+        if node.kind in {"conditional", "map", "comprehension", "optional_property", "optional_index"} or (node.kind == "binary" and node.value == "??"):
+            self.emit("EVAL_AST", node, node.token)
+        elif node.kind == "literal":
             self.emit("CONST", node.value, node.token)
         elif node.kind == "name":
             self.emit("LOAD", node.value, node.token)
@@ -187,6 +191,7 @@ _ALLOWED = {
     "JUMP_IF_FALSE", "JUMP", "ENTER_SCOPE", "EXIT_SCOPE", "ITER_INIT",
     "ITER_NEXT", "ITER_END", "POP", "BUILD_LIST", "INDEX", "UNARY",
     "CALL", "PIPE_CALL", "BINARY", "AND_JUMP", "OR_JUMP", "IMPORT", "EXPORT",
+    "EVAL_AST", "EXEC_AST",
 }
 
 
@@ -210,6 +215,8 @@ def verify(module: CanonicalIR) -> None:
                 target = instruction.argument
                 if not isinstance(target, int) or target < 0 or target > len(code):
                     raise IRVerificationError(f"{label}: invalid jump target at {index}")
+            if instruction.op in {"EVAL_AST", "EXEC_AST"} and not isinstance(instruction.argument, Node):
+                raise IRVerificationError(f"{label}: {instruction.op} requires a validated AST node")
             if instruction.op == "MAKE_FUNCTION":
                 if not isinstance(instruction.argument, IRFunction):
                     raise IRVerificationError(f"{label}: MAKE_FUNCTION requires an IRFunction")

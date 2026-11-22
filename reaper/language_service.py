@@ -6,15 +6,15 @@ from difflib import SequenceMatcher
 from pathlib import Path
 import re, threading
 from .errors import ReaperError
-from .lexer import KEYWORD_ALIASES
+from .lexer import KEYWORD_ALIASES, KEYWORDS as LEXER_KEYWORDS
 from .parser import parse
 
 IDENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*|[^\W\d]\w*", re.UNICODE)
 DECLARATIONS = {"make","vary","craft","fn","let","const","struct","enum","type"}
 DECL_ALIASES = {alias for alias, canonical in KEYWORD_ALIASES.items() if canonical in DECLARATIONS}
 DECL = re.compile(r"\b(" + "|".join(map(re.escape, sorted(DECLARATIONS | DECL_ALIASES))) + r")\s+([\w]+)")
-KEYWORDS = {"make","vary","change","craft","yield","emit","when","otherwise","each","in","loop","while","true","false","nothing","and","or","not","import","export","as"} | set(KEYWORD_ALIASES) | set(KEYWORD_ALIASES.values())
-BUILTINS = {"text","number","length","range","map","keep","fold","sum","min","max","sort","reverse","unique","join","split"}
+KEYWORDS = set(LEXER_KEYWORDS) | set(KEYWORD_ALIASES) | set(KEYWORD_ALIASES.values())
+BUILTINS = {"text","number","length","range","map","keep","fold","sum","min","max","sort","reverse","unique","join","split","zip","enumerate","compose","pipe_fn","partial","curry","memoize","memo_ttl","mapping","filtering","taking","transduce","Ok","Err","Some","is_ok","is_err","is_some","unwrap","or_else","try_result","invariant_guard","requires","ensures"}
 
 @dataclass(frozen=True, slots=True)
 class Span:

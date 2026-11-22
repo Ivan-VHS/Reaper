@@ -7,7 +7,7 @@ from typing import Any
 from .debugger import DebuggerStopped
 from .errors import ReaperRuntimeError
 from .ir import CanonicalIR, IRFunction, IRInstruction, verify
-from .runtime import Builtin, Environment
+from .runtime import Builtin, Environment, _ReturnSignal
 from .lexer import Token
 
 
@@ -17,6 +17,7 @@ _OPCODES = {
         "JUMP_IF_FALSE", "JUMP", "ENTER_SCOPE", "EXIT_SCOPE", "ITER_INIT",
         "ITER_NEXT", "ITER_END", "POP", "BUILD_LIST", "INDEX", "UNARY",
         "CALL", "PIPE_CALL", "BINARY", "AND_JUMP", "OR_JUMP", "IMPORT", "EXPORT",
+        "EVAL_AST", "EXEC_AST",
     ), start=1)
 }
 _OPCODE_NAMES = {value: key for key, value in _OPCODES.items()}
@@ -108,7 +109,18 @@ class VirtualMachine:
                     token, environment, self.interpreter.call_stack, self.interpreter.filename
                 )
 
-            if name == "CONST":
+            if name == "EVAL_AST":
+                stack.append(self.interpreter.memory.track(
+                    self.interpreter._evaluate(instruction.argument, environment)
+                ))
+            elif name == "EXEC_AST":
+                try:
+                    result = self.interpreter._execute(instruction.argument, environment)
+                except _ReturnSignal as signal:
+                    if not allow_return:
+                        raise self.interpreter._error(token, "yield can only be used inside a craft function")
+                    return self.interpreter.memory.track(signal.value)
+            elif name == "CONST":
                 stack.append(instruction.argument)
             elif name == "LOAD":
                 stack.append(environment.get(instruction.argument))

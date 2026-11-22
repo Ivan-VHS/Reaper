@@ -20,6 +20,7 @@ reaper-polyglot = "reaper.polyglot:main"
 reaper-polyglot-code = "reaper.polyglot_code:main"
 reaper-embedded = "reaper.embedded:main"
 reaper-noo-tah = "reaper.noo_tah:main"
+reaper-clife = "reaper.clife:main"
 [project.gui-scripts]
 reaper-studio = "reaper.desktop:main"
 [tool.setuptools]

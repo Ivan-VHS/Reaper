@@ -66,6 +66,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     arguments = sys.argv[1:] if argv is None else argv
+    if arguments and arguments[0] == "clife":
+        from .clife import main as clife_main
+        return clife_main(arguments[1:])
     if arguments and arguments[0] == "lsp":
         from .lsp import serve as lsp_serve
         return lsp_serve()

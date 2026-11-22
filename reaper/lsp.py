@@ -16,6 +16,12 @@ HOVER = {
     "when": "Conditional statement; may be followed by `otherwise`.",
     "each": "Iterate over a collection.",
     "loop": "Repeat while a condition is true.",
+    "match": "Pattern matching with literal, binding, list, map and Result-variant patterns.",
+    "case": "One match arm; may bind values and add an if guard.",
+    "let": "Destructure a value and require an else block that exits the current function when the pattern fails.",
+    "for": "Build a bounded list comprehension: [expression for item in values if condition].",
+    "??": "Null coalescing: use the right operand only when the left operand is nothing.",
+    "?.": "Optional map/list property or index access; nothing propagates without an error.",
     "~>": "Flow operator: pass the left value to the next operation.",
 }
 
