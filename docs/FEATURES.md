@@ -2,7 +2,7 @@
 
 | Component | Current scope | Status |
 |---|---|---|
-| Python runtime | lexer, parser, interpreter, CLI, REPL, modules, structured `attempt/recover/finally` | available; tree-walk and VM parity covered by tests |
+| Python runtime | lexer, parser, interpreter, CLI, REPL, modules, structured `attempt/recover/finally/throw` | available; tree-walk and VM parity covered by tests |
 | Quotas/resources | steps, calls, collections, text, heap, open handles | reference runtime |
 | Division | Euclidean divmod, quotient/remainder, divisibility | implemented |
 | Allocation | partition/split, distribute, weighted allocation | implemented |
