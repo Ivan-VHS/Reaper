@@ -55,7 +55,9 @@ static void enforces_mutability_and_scope(void) {
 
     assert(build_hir(
         "vary counter := 0\n"
-        "when true { vary counter := 4; }\n"
+        "when true {\n"
+        "    vary counter := 4\n"
+        "}\n"
         "change counter := 5\n", &hir, &error));
     reaper_hir_free(&hir);
 
