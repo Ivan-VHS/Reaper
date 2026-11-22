@@ -19,8 +19,8 @@ EDGES={
 ("pytyliki","reaper","native-ffi","pytyliki.c-abi.v1","response","implemented"),
 ("oplague","pytyliki","native-ffi","pytyliki.c-abi.v1","request","implemented"),
 ("pytyliki","oplague","native-ffi","pytyliki.c-abi.v1","response","implemented"),
-("ventusample","reaper","json-file","ventusample.pack.v1","artifact","implemented"),
-("reaper","ventusample","json-file","ventusample.render-request.v1","artifact","planned"),
+("ventusample","reaper","none","not-applicable.v1","none","not_applicable"),
+("reaper","ventusample","none","not-applicable.v1","none","not_applicable"),
 ("ventusample","pytyliki","native-ffi","pytyliki.c-abi.v1","request","planned"),
 ("pytyliki","ventusample","native-ffi","pytyliki.c-abi.v1","response","planned"),
 ("ventusample","oplague","none","not-applicable.v1","none","not_applicable"),
@@ -75,7 +75,7 @@ def validate(topology_path:Path=TOPOLOGY_PATH,schema_path:Path=SCHEMA_PATH,proje
  loops=topology.get("self_loops")
  _need(isinstance(loops,list) and len(loops)==4 and {item.get("project") for item in loops if isinstance(item,dict)}==PROJECTS,"each project must have one independent self-loop")
  semantics=topology.get("semantics")
- _need(isinstance(semantics,dict) and semantics.get("complete_pairwise_product") is True and semantics.get("directed_link_count_formula")=="n*(n-1)" and semantics.get("hub_is_not_a_runtime_gateway") is True and semantics.get("request_response_edges_are_synchronous") is True and semantics.get("no_implicit_native_loading") is True and semantics.get("no_driver_mutation_through_mesh") is True and semantics.get("producer_export_does_not_imply_consumer_integration") is True and semantics.get("reaper_pack_consumer_implemented") is True,"OCTA-8 semantics are invalid")
+ _need(isinstance(semantics,dict) and semantics.get("complete_pairwise_product") is True and semantics.get("directed_link_count_formula")=="n*(n-1)" and semantics.get("hub_is_not_a_runtime_gateway") is True and semantics.get("request_response_edges_are_synchronous") is True and semantics.get("no_implicit_native_loading") is True and semantics.get("no_driver_mutation_through_mesh") is True and semantics.get("producer_export_does_not_imply_consumer_integration") is True and semantics.get("reaper_ventusample_runtime_integration") is False,"OCTA-8 semantics are invalid")
  manifest=_load(project_path)
  _need(isinstance(manifest,dict) and isinstance(manifest.get("project"),dict),"project manifest is malformed")
  project=manifest["project"].get("id")
