@@ -58,7 +58,7 @@ typedef struct ReaperMirBlock {
     uint32_t first_instruction;
     uint32_t instruction_count;
     ReaperMirTerminator terminator;
-    uint32_t condition_value;
+    uint32_t terminator_value;
     uint32_t target_true;
     uint32_t target_false;
 } ReaperMirBlock;
@@ -79,6 +79,9 @@ typedef struct ReaperMirModule {
     ReaperMirInstruction *instructions;
     size_t instruction_count;
     size_t instruction_capacity;
+    uint32_t *instruction_order;
+    size_t instruction_order_count;
+    size_t instruction_order_capacity;
     ReaperMirBlock *blocks;
     size_t block_count;
     size_t block_capacity;
