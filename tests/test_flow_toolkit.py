@@ -81,6 +81,14 @@ class FlowToolkitTests(unittest.TestCase):
             with self.subTest(engine=engine):
                 self.assertEqual(self.execute(source, engine), expected)
 
+    def test_generated_items_are_charged_to_the_step_budget(self) -> None:
+        for engine in ("treewalk", "vm"):
+            with self.subTest(engine=engine):
+                with self.assertRaises(ExecutionLimitError):
+                    Interpreter(output=lambda _line: None, max_steps=8).run(
+                        "emit enumerate(range(0, 20))", engine=engine
+                    )
+
     def test_argument_and_collection_limits_are_enforced(self) -> None:
         with self.assertRaisesRegex(ReaperRuntimeError, "window width must be positive"):
             Interpreter(output=lambda _line: None).run("emit window([1, 2], 0)")
