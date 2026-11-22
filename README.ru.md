@@ -215,7 +215,7 @@ Workflow artifacts — это скачиваемые результаты сбо
 
 ## Известные ограничения, вклад и лицензия
 
-Python остаётся исполняемой эталонной реализацией. Native C17 parsing/lowering реализован частично. LSP symbols/references/rename являются лексическими и ограничены текущим документом; DAP stepping выполняется на уровне операторов; IDE не является OS sandbox. NOO TAH делегирует JavaScript официальному Node, а не пере реализует V8.
+Python остаётся исполняемой эталонной реализацией. Native C17 parsing/lowering реализован частично. LSP symbols/references/rename являются лексическими и ограничены текущим документом; DAP stepping выполняется на уровне операторов; IDE не является OS sandbox. NOO TAH делегирует JavaScript официальному Node, а не реализует собственную версию V8.
 
 Отдельного `CONTRIBUTING.md` не найдено. Предлагайте изменения через [GitHub Issues](https://github.com/Ivan-VHS/Reaper/issues) или Pull Request. Добавляйте воспроизводимый пример `.rpr`, версии Python/Node/compiler и точную команду с результатом. Запускайте Python tests, а при изменении native track — CMake/CTest.
 
