@@ -186,6 +186,29 @@ class VentuSampleFederationTests(unittest.TestCase):
         self.assertTrue(report["same_style"])
         self.assertEqual(report["schema"], REAPER_VENTUSAMPLE_COMPARISON_SCHEMA)
 
+    def test_reaper_language_builtins_can_audit_v2_tonal_manifest(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "pack.json").write_text(json.dumps(make_pack_v2()), encoding="utf-8")
+            script = root / "audit-v2.rpr"
+            source = (
+                f"let pack = read_json({json.dumps(str(root / 'pack.json'))})\n"
+                "let metrics = ventusample_metrics(pack)\n"
+                "let report = ventusample_compare(pack, pack)\n"
+                'assert(report.same_schema == true)\n'
+                'assert(report.same_musical_key == true)\n'
+                'emit report.schema\n'
+                'emit pack.parameters.musical_key\n'
+                'emit text(metrics.mean_peak)\n'
+            )
+            for engine in ("treewalk", "vm"):
+                with self.subTest(engine=engine):
+                    output: list[str] = []
+                    Interpreter(output=output.append).run(source, filename=str(script), engine=engine)
+                    self.assertEqual(output[0], REAPER_VENTUSAMPLE_COMPARISON_SCHEMA)
+                    self.assertEqual(output[1], "C Natural Minor")
+                    self.assertAlmostEqual(float(output[2]), 0.65)
+
     def test_reaper_language_builtins_can_audit_a_manifest_file(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
