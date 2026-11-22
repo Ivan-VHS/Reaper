@@ -10,12 +10,6 @@ typedef struct ReaperHirScope {
 } ReaperHirScope;
 
 typedef struct {
-    uint32_t *items;
-    size_t length;
-    size_t capacity;
-} IdStack;
-
-typedef struct {
     const ReaperAst *ast;
     ReaperHirModule *module;
     ReaperHirError *error;
@@ -54,20 +48,6 @@ static int fail(
 static const ReaperAstNode *ast_node(HirBuilder *builder, uint32_t id) {
     if (id == REAPER_AST_NO_NODE || id >= builder->ast->length) return NULL;
     return &builder->ast->items[id];
-}
-
-static int stack_push(IdStack *stack, uint32_t value) {
-    if (stack->length == stack->capacity) {
-        size_t next = stack->capacity == 0U ? 8U : stack->capacity * 2U;
-        if (next < stack->capacity || next > SIZE_MAX / sizeof *stack->items)
-            return 0;
-        uint32_t *items = realloc(stack->items, next * sizeof *items);
-        if (items == NULL) return 0;
-        stack->items = items;
-        stack->capacity = next;
-    }
-    stack->items[stack->length++] = value;
-    return 1;
 }
 
 static int add_scope(HirBuilder *builder, uint32_t parent, uint32_t *scope_id) {
@@ -273,6 +253,9 @@ static int check_call(
 
     ReaperHirType callee_type;
     if (!infer_expression(builder, callee_id, 1, &callee_type)) return 0;
+    if (callee_type != REAPER_HIR_TYPE_FUNCTION) {
+        return fail(builder, node_id, "called value is not a function");
+    }
 
     size_t explicit_count = sequence_count(builder, arguments_id);
     if (explicit_count == SIZE_MAX ||
