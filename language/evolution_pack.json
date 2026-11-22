@@ -1,0 +1,437 @@
+{
+  "language": "RIPER",
+  "version": "1.0.0",
+  "profile": "Catalytic extension pack; bounded Python reference runtime",
+  "runtime": "python-reference",
+  "native_c17_parity": false,
+  "operators": [
+    {
+      "lexeme": "|>",
+      "kind": "flow-operator",
+      "status": "implemented",
+      "semantics": "passes the left value as the first argument to the right call"
+    },
+    {
+      "lexeme": "??",
+      "kind": "coalescing-operator",
+      "status": "implemented",
+      "semantics": "returns left unless it is nothing; right operand is lazy"
+    },
+    {
+      "lexeme": "in",
+      "kind": "membership-operator",
+      "status": "implemented",
+      "semantics": "membership in text, sequence or map keys"
+    }
+  ],
+  "builtins": [
+    {
+      "name": "ok",
+      "category": "result",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "err",
+      "category": "result",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "is_ok",
+      "category": "result",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "is_err",
+      "category": "result",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "unwrap",
+      "category": "result",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "unwrap_or",
+      "category": "result",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "result_map",
+      "category": "result",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "result_bind",
+      "category": "result",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "try_call",
+      "category": "resilience",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "recover",
+      "category": "resilience",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "some",
+      "category": "option",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "is_some",
+      "category": "option",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "is_none",
+      "category": "option",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "some_value",
+      "category": "option",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "coalesce",
+      "category": "option",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "snapshot",
+      "category": "state",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "clone",
+      "category": "state",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "reflash",
+      "category": "transformation",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "rebind",
+      "category": "transformation",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "zip",
+      "category": "collection",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "enumerate",
+      "category": "collection",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "all_of",
+      "category": "collection",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "any_of",
+      "category": "collection",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "find",
+      "category": "collection",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "find_index",
+      "category": "collection",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "count_by",
+      "category": "collection",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "take_while",
+      "category": "collection",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "drop_while",
+      "category": "collection",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "scan",
+      "category": "collection",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "group_by",
+      "category": "collection",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "partition_by",
+      "category": "collection",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "window",
+      "category": "collection",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "transpose",
+      "category": "collection",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "interleave",
+      "category": "collection",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "compact",
+      "category": "collection",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "pluck",
+      "category": "collection",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "keys",
+      "category": "collection",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "values",
+      "category": "collection",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "entries",
+      "category": "collection",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "merge",
+      "category": "collection",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "get_or",
+      "category": "collection",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "has_key",
+      "category": "collection",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "put",
+      "category": "collection",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "remove_key",
+      "category": "collection",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "slice",
+      "category": "collection",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "flat_map",
+      "category": "collection",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "clamp",
+      "category": "numeric",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "lerp",
+      "category": "numeric",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "sign",
+      "category": "numeric",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "is_even",
+      "category": "numeric",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "is_odd",
+      "category": "numeric",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "gcd",
+      "category": "numeric",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "lcm",
+      "category": "numeric",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "mean",
+      "category": "numeric",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "median",
+      "category": "numeric",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "variance",
+      "category": "numeric",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "stdev",
+      "category": "numeric",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "sum_by",
+      "category": "numeric",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "min_by",
+      "category": "numeric",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "max_by",
+      "category": "numeric",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "words",
+      "category": "text",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "lines",
+      "category": "text",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "char_at",
+      "category": "text",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "pad_left",
+      "category": "text",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "pad_right",
+      "category": "text",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "repeat_text",
+      "category": "text",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "count_text",
+      "category": "text",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "slice_text",
+      "category": "text",
+      "status": "implemented",
+      "kind": "builtin"
+    }
+  ]
+}
