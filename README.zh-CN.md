@@ -82,7 +82,13 @@ python -m reaper --repl
 python reaper_desktop.py
 ```
 
-完成 editable installation 后，还可使用 `reaper` 和 `reaper-studio` 入口命令。
+完成 editable installation 后，还可使用 `reaper`、`reaper-studio` 和 `reaper-toolchain` 入口命令。
+
+本地工具清单与 SHA-256 lock 创建不会运行所发现的程序：
+
+```sh
+reaper-toolchain --output toolchain-inventory.json
+```
 
 ### 运行测试
 
