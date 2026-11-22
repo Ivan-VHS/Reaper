@@ -298,7 +298,9 @@ class Interpreter:
                 return self._evaluate(children[1], environment) if self._truthy(left) else left
             if operator == "OR":
                 return left if self._truthy(left) else self._evaluate(children[1], environment)
-            if operator == "::":
+            if operator == "??":
+                return self._evaluate(children[1], environment) if left is None else left
+            if operator in {"::", "|>"}:
                 right = children[1]
                 if right.kind == "call":
                     callee = self._evaluate(right.children[0], environment)
@@ -315,6 +317,10 @@ class Interpreter:
             return self._equal(left, right)
         if operator == "!=":
             return not self._equal(left, right)
+        if operator == "IN":
+            if isinstance(right, (str, list, tuple, range, dict)):
+                return left in right
+            raise self._error(token, "'in' expects text, a sequence, or a map")
         if operator == "++":
             if isinstance(left, str) and isinstance(right, str):
                 if len(left) + len(right) > self.max_text_length:
@@ -791,6 +797,8 @@ class Interpreter:
         register("pytyliki_dot", pytyliki_dot, 3, 3)
         register("pytyliki_distance", pytyliki_distance, 3, 3)
         register("pytyliki_orthogonal", pytyliki_orthogonal, 4, 4)
+        from .evolution_pack import install_evolution_builtins
+        install_evolution_builtins(self, register)
 
     @staticmethod
     def _require_pytyliki(value: Any) -> PytylikiBridge:

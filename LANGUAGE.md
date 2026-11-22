@@ -24,3 +24,8 @@ Rules: explicit effects; no implicit file/network/clock access in ordinary expre
 ## Integrated product layer
 
 Reaper includes eighteen in-process product services, exposed through `reaper --products`, `reaper --product-info Dropaul`, and the Reaper Studio **Внутренние продукты** menu. The workflow product's canonical name is **Dropaul**. Product services use the Python reference runtime; C17 parity is not claimed.
+
+
+## Catalytic extension pack
+
+The Python reference runtime also supports the versioned [RIPER Catalytic Language Pack](docs/RIPER_CATALYTIC_LANGUAGE_PACK.md): bounded result/option helpers, snapshots, map and collection transformations, numeric/text helpers, and the operators `|>`, `??` and `in`. The C17 implementation does not yet claim parity for this extension pack.

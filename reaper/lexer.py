@@ -86,7 +86,7 @@ class Token:
 class Lexer:
     """Convert source text into a position-aware token stream."""
 
-    _TWO_CHAR = {":=", "==", "!=", "<=", ">=", "//", "**", "++", "::"}
+    _TWO_CHAR = {":=", "==", "!=", "<=", ">=", "//", "**", "++", "::", "|>", "??"}
     _ONE_CHAR = set("+-*/%<>(){}[],")
 
     def __init__(self, source: str, filename: str = "<memory>") -> None:
