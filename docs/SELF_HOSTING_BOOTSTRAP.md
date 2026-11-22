@@ -20,12 +20,19 @@ The bootstrap assertions cover arithmetic precedence, exponentiation associativi
 
 This is deliberately **not** a complete parser replacement: declarations, function definitions, control-flow statements, block grammar and parity with the Python `Node` AST are not yet implemented. The parser output is a stage-local representation, not the canonical AST contract. The Python parser remains the reference frontend.
 
+### Stage 1b: statement and block parser (partial)
+
+`selfhost/program_parser.rpr` now adds a Reaper-written top-level parser for declarations, mutable assignments, emit/yield statements, function definitions and parameter lists, conditional branches, iteration, while loops, import/export forms, blocks and expression statements. It builds tagged array nodes with source locations and has bootstrap assertions for representative valid programs and malformed declarations.
+
+This is still a stage-local AST, not the canonical Python `Node` contract. It does not provide semantic/name resolution, evaluation, module loading or execution. The Python implementation remains the compatibility oracle; the new parser is only an additional bootstrap slice.
+
 ## Bootstrap stages
 
 | Stage | Reaper-written component | Acceptance gate |
 |---|---|---|
 | 0 | Lexer | Token-by-token parity for the supported language, Unicode and error locations included |
 | 1 | Pratt expression parser (partial); statement parser and canonical AST still pending | Calls, indexes, lists and operators are covered; complete AST parity and statement grammar remain the acceptance gate |
+| 1b | Statement and block parser (partial) in `selfhost/program_parser.rpr` | Differential AST/error parity for all statement forms and malformed programs |
 | 2 | Semantic analysis and runtime support | Differential conformance against the reference interpreter |
 | 3 | Canonical IR construction and verifier | Deterministic IR plus rejection of malformed or unsafe IR |
 | 4 | Optimizer passes | Differential semantics, fixed-point budget and reproducible output |
@@ -47,6 +54,6 @@ This is deliberately **not** a complete parser replacement: declarations, functi
 - Close Unicode identifier parity in the self-hosted lexer.
 - Expand token conformance to every keyword, operator, escape, whitespace and malformed-source case.
 - Extend the Reaper-written frontend with declarations, function definitions, blocks, conditionals, iteration and loop statements.
-- Define a versioned canonical AST representation and compare parser output with the Python AST over a shared golden corpus.
-- Add differential tests for calls, indexes, list literals, operator precedence, nested blocks and malformed statements.
+- Define a versioned canonical AST representation and compare both Reaper-written parsers with the Python AST over a shared golden corpus.
+- Add differential tests for calls, indexes, list literals, operator precedence, nested blocks, import/export forms and malformed statements.
 - Move the CLI, diagnostics, semantic analysis and compiler pipeline into Reaper in dependency order.

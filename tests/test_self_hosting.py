@@ -19,6 +19,14 @@ class SelfHostingBootstrapTests(unittest.TestCase):
     def test_reaper_written_parser_runs_on_the_reference_runtime(self) -> None:
         self._run_selfhost_program("selfhost/parser.rpr", "SELFHOST_PARSER_OK")
 
+    def test_reaper_written_program_parser_runs_on_the_reference_runtime(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        lexer = (root / "selfhost/lexer.rpr").read_text(encoding="utf-8")
+        parser = (root / "selfhost/program_parser.rpr").read_text(encoding="utf-8")
+        output: list[str] = []
+        Interpreter(output=output.append).run(lexer + "\\n" + parser, str(root / "selfhost/program_parser.rpr"))
+        self.assertEqual(output, ["SELFHOST_LEXER_OK", "SELFHOST_PROGRAM_PARSER_OK"])
+
 
 if __name__ == "__main__":
     unittest.main()
