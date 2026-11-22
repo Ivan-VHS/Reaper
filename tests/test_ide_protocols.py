@@ -75,7 +75,7 @@ class DebugAdapterTests(unittest.TestCase):
     def test_read_only_evaluate_supports_values_and_rejects_calls(self):
         self.assertEqual(evaluate_read_only("counter * 2 + 1", {"counter": 20}), 41)
         self.assertEqual(evaluate_read_only("items[1]", {"items": [4, 9, 16]}), 9)
-        self.assertTrue(evaluate_read_only("ready AND count >= 3", {"ready": True, "count": 3}))
+        self.assertTrue(evaluate_read_only("ready and count >= 3", {"ready": True, "count": 3}))
         with self.assertRaises(ValueError):
             evaluate_read_only("emit(1)", {})
         with self.assertRaises(ValueError):
