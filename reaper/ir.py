@@ -22,6 +22,14 @@ class IRFunction:
 
 
 @dataclass(frozen=True, slots=True)
+class IRAttempt:
+    recover_name: str | None
+    body: tuple[IRInstruction, ...]
+    recover: tuple[IRInstruction, ...] | None
+    final: tuple[IRInstruction, ...] | None
+
+
+@dataclass(frozen=True, slots=True)
 class CanonicalIR:
     code: tuple[IRInstruction, ...]
     source_name: str = "<memory>"
@@ -78,6 +86,27 @@ class _Lowerer:
             function = IRFunction(name, tuple(parameters), tuple(nested.code))
             self.emit("MAKE_FUNCTION", function, node.token)
             self.emit("DEFINE", (name, False), node.token)
+        elif node.kind == "attempt":
+            recover_name, has_recover, has_final = node.value
+            cursor = 1
+            body_lowerer = _Lowerer()
+            body_lowerer.scoped_block(children[0])
+            recover_code = None
+            if has_recover:
+                recover_lowerer = _Lowerer()
+                recover_lowerer.scoped_block(children[cursor])
+                recover_code = tuple(recover_lowerer.code)
+                cursor += 1
+            final_code = None
+            if has_final:
+                final_lowerer = _Lowerer()
+                final_lowerer.scoped_block(children[cursor])
+                final_code = tuple(final_lowerer.code)
+            self.emit(
+                "ATTEMPT",
+                IRAttempt(recover_name, tuple(body_lowerer.code), recover_code, final_code),
+                node.token,
+            )
         elif node.kind == "when":
             self.expression(children[0])
             no_jump = self.emit("JUMP_IF_FALSE", None, node.token)
@@ -187,6 +216,7 @@ _ALLOWED = {
     "JUMP_IF_FALSE", "JUMP", "ENTER_SCOPE", "EXIT_SCOPE", "ITER_INIT",
     "ITER_NEXT", "ITER_END", "POP", "BUILD_LIST", "INDEX", "UNARY",
     "CALL", "PIPE_CALL", "BINARY", "AND_JUMP", "OR_JUMP", "IMPORT", "EXPORT",
+    "ATTEMPT",
 }
 
 
@@ -214,5 +244,13 @@ def verify(module: CanonicalIR) -> None:
                 if not isinstance(instruction.argument, IRFunction):
                     raise IRVerificationError(f"{label}: MAKE_FUNCTION requires an IRFunction")
                 check(instruction.argument.code, instruction.argument.name)
+            if instruction.op == "ATTEMPT":
+                if not isinstance(instruction.argument, IRAttempt):
+                    raise IRVerificationError(f"{label}: ATTEMPT requires an IRAttempt")
+                check(instruction.argument.body, f"{label}:attempt")
+                if instruction.argument.recover is not None:
+                    check(instruction.argument.recover, f"{label}:recover")
+                if instruction.argument.final is not None:
+                    check(instruction.argument.final, f"{label}:finally")
 
     check(module.code, module.source_name)
