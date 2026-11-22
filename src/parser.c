@@ -314,7 +314,7 @@ static uint32_t parse_primary(Parser *parser) {
 
     if (token_is(parser, "-") || token_is(parser, "+") ||
         token_is(parser, "not") || token_is(parser, "!")) {
-        const char *operator_text = token->text;
+        const char *operator_text = peek_text(parser);
         size_t line = token->line;
         size_t column = token->column;
         ++parser->pos;
@@ -429,13 +429,14 @@ static uint32_t parse_expression_bp(Parser *parser, int minimum) {
         if (binding_power == 0 || binding_power < minimum) break;
 
         char operator_copy[16];
-        size_t operator_length = strlen(token->text);
+        const char *canonical_operator = peek_text(parser);
+        size_t operator_length = strlen(canonical_operator);
         if (operator_length >= sizeof operator_copy) {
             (void)parse_fail(parser, "operator spelling exceeds parser limit");
             left = REAPER_AST_NO_NODE;
             break;
         }
-        memcpy(operator_copy, token->text, operator_length + 1U);
+        memcpy(operator_copy, canonical_operator, operator_length + 1U);
 
         size_t line = token->line;
         size_t column = token->column;
