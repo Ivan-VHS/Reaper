@@ -102,6 +102,19 @@ ctest --test-dir build --output-on-failure
 
 This builds the current native compiler subset and its tests. It does not replace the Python runtime or establish full language parity.
 
+### Optional freestanding OS toolchain
+
+The first OS-facing native track builds C17 and assembly modules for ELF targets without linking a hosted runtime. It requires Clang and LLVM lld; see [Freestanding OS toolchain](docs/FREESTANDING.md).
+
+```sh
+python -m reaper os doctor
+python -m reaper os check freestanding/reaper-os.json
+python -m reaper os build freestanding/reaper-os.json --dry-run
+python -m reaper os build freestanding/reaper-os.json
+```
+
+This is a native C/assembly bridge, not yet a compiler for general `.rpr` source. The x86_64 sample writes to COM1 and halts; boot it only in a suitable emulator/boot environment.
+
 ### Optional NOO TAH / Node.js checks
 
 Install Node.js from the official distribution and make `node` available on `PATH`, then run:
