@@ -9,8 +9,8 @@ from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[2]
 READMES = ("README.md", "README.ru.md", "README.uk.md", "README.zh-CN.md")
-MARKDOWN_LINK = re.compile(r"!? \[[^\]]*\]\(\s*(?:<([^>]+)>|([^\s)]+))")
-HTML_LINK = re.compile(r"\b(?:href|src)\s*=\s*[\"']([^\"']+)[\"']", re.IGNORECASE)
+MARKDOWN_LINK = re.compile(r"!?\[[^\]]*\]\(\s*(?:<([^>]+)>|([^\s)]+))")
+HTML_LINK = re.compile(r"""\b(?:href|src)\s*=\s*["']([^"']+)["']""", re.IGNORECASE)
 FENCE = re.compile(r"^\s*(?P<marker>\x60{3,}|~{3,})(?P<info>.*)$")
 TABLE_ROW = re.compile(r"^\s*\|.*\|\s*$")
 
@@ -97,7 +97,7 @@ def validate() -> list[str]:
             errors.append(f"{path.name}: must link to CONTRIBUTING.md")
 
         for raw in targets(content):
-            target = raw.strip().strip("\"'")
+            target = raw.strip().strip(chr(34) + chr(39))
             if not target:
                 continue
             parsed = urlsplit(target)
