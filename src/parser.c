@@ -18,6 +18,7 @@ typedef struct {
     unsigned depth;
     ReaperAst *ast;
     ReaperParseError *error;
+    ReaperParseError local_error;
 } Parser;
 
 static const ReaperToken *peek(Parser *parser) {
@@ -747,8 +748,13 @@ static int parser_init(
 
     memset(out, 0, sizeof *out);
     out->root = REAPER_AST_NO_NODE;
-    if (error != NULL) memset(error, 0, sizeof *error);
-    *parser = (Parser) { tokens, 0U, 0U, out, error };
+    memset(parser, 0, sizeof *parser);
+    parser->tokens = tokens;
+    parser->pos = 0U;
+    parser->depth = 0U;
+    parser->ast = out;
+    parser->error = error != NULL ? error : &parser->local_error;
+    memset(parser->error, 0, sizeof *parser->error);
     return 1;
 }
 
