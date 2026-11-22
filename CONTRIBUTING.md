@@ -22,3 +22,7 @@ If native components change, also configure and run the repository's CMake test 
 ## Pull request expectations
 
 Explain grammar and compatibility impact, resource bounds, diagnostics and test coverage. Include a short source example when syntax changes. Do not use issue-closing keywords in PR descriptions; maintainers close issues after review.
+
+## Shared report format
+
+To wrap an existing JSON result in the common report metadata contract, run python tools/report_envelope.py --tool reaper --version VERSION < result.json. Keep the tool-specific result unchanged. Tests live in tests/test_report_envelope.py.
