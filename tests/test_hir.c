@@ -42,7 +42,7 @@ static void resolves_functions_locals_and_flow_calls(void) {
     assert(build_hir(source, &hir, &error));
     assert(hir.node_count > 0U);
     assert(hir.symbol_count >= 8U);
-    assert(strcmp(reaper_hir_type_name(hir.nodes[hir.nodes[hir.node_count - 1U].source_node].type),
+    assert(strcmp(reaper_hir_type_name(hir.nodes[hir.node_count - 1U].type),
                   "unit") == 0);
     reaper_hir_free(&hir);
 }
