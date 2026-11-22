@@ -22,4 +22,4 @@ emit text(wire :: octa8_digest())
 
 Reaper owns language semantics and orchestration. Pytyliki remains C11, OPlague remains a read-only Python workbench, and VentuSample remains C++20. They share the OCTA-8 JSON envelope and CLife snapshot contract; native engines are not replaced by Reaper and no automatic code or plugin loading is introduced.
 
-The 8 facets are: value kind, boundedness, schema version, deterministic encoding, validation, digest, failure reporting and adapter ownership. Counts in registries or catalogues are not interpreted as completed runtime features.
+The machine-readable contracts are [OCTA-8](../schemas/octa8.v1.schema.json) and [CLife snapshots](../schemas/clife.snapshot.v1.schema.json). Run `python -m unittest tests.test_octa8 tests.test_clife -v` for the focused reference-runtime/savepoint checks. The eight *value kinds* are distinct from the eight engineering facets: boundedness, versioning, deterministic encoding, validation, digest, failure reporting, adapter ownership and explicit lifecycle control. Registry counts are not interpreted as completed runtime features.
