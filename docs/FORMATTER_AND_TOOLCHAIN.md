@@ -34,4 +34,4 @@ Verify the lock later, using the same PATH environment:
 reaper-toolchain --verify-lock toolchain-lock.json
 ```
 
-A changed path, missing executable or changed file content is reported as a mismatch. A lock describes a local toolchain snapshot; it does not prove the tool is trustworthy, licensed for a particular use or reproducibly built. Review the executable's provenance separately before using it.
+A changed path, missing executable or changed file content is reported as a mismatch. A lock describes a local toolchain snapshot; it does not prove the tool is trustworthy, licensed for a particular use or reproducibly built. Review the executable's provenance and licence terms separately before using it.
