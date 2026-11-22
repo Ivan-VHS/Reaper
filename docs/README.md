@@ -7,7 +7,7 @@
 | [IDE_666_IMPLEMENTATION.md](IDE_666_IMPLEMENTATION.md) | Studio IDE contract, canonical rule numbering and acceptance gates |
 | [REAPER_IDE.md](REAPER_IDE.md) | LSP/DAP protocol services, shipped editor capabilities and limitations |
 | [NOO_TAH.md](NOO_TAH.md) | official Node.js runtime management, V8/libuv, npm, Inspector and Studio bridge |
-| [KORA_REAPER.md](KORA_REAPER.md) | 66 Kora functions, seven modules and three Lua ReaScripts for Cockos REAPER |
+| [KORA.md](KORA.md) | 66 standard-library functions in seven manifest-backed modules |
 | [UI_MOTION.md](UI_MOTION.md) | accessible, persisted motion preferences and reduced-motion limits |
 | [ANATIDAE_MOTION_CONSTITUTION.md](ANATIDAE_MOTION_CONSTITUTION.md) | shared white/blue/red desktop motion and surface profile |
 | [PLUGINS.md](PLUGINS.md) | internal plugin host and extension lifecycle |

@@ -42,9 +42,9 @@ Reaper 是一种表达式导向语言，运算符 `::` 会将值传递给下一�
 | NOO TAH | 管理官方 Node.js 运行时、项目/进程、npm/npx 和 Inspector | Node/V8/libuv 由上游 Node 提供 |
 | Native C17 | lexer、表达式 parser、owned AST、checked IR 和有限 lowering | 正在开发的部分实现；不等于 Python Runtime |
 | QCS / Embedded | 独立硬件领域 parser、JSON AST 和有界嵌入式辅助工具 | 参考/分析工具，不执行硬件操作 |
-| Kora | 标准库辅助函数和供 Cockos REAPER 使用的 Lua ReaScripts | 与 Reaper 语言运行时分离 |
+| Kora | 七个清单模块中的可选标准库辅助函数 | 与 Reaper 语言运行时分离 |
 
-目录和注册表可能包含提案或预留条目。出现在目录中不代表该功能已在运行时实现。成熟度和边界见 [Features](docs/FEATURES.md)、[REAPER IDE](docs/REAPER_IDE.md)、[NOO TAH](docs/NOO_TAH.md) 和 [Kora for REAPER](docs/KORA_REAPER.md)。
+目录和注册表可能包含提案或预留条目。出现在目录中不代表该功能已在运行时实现。成熟度和边界见 [Features](docs/FEATURES.md)、[REAPER IDE](docs/REAPER_IDE.md)、[NOO TAH](docs/NOO_TAH.md) 和 [Kora helpers](docs/KORA.md)。
 
 下图是 Windows Studio 的实际桌面截屏，不是浏览器 Playground。
 
@@ -202,7 +202,6 @@ Native C17 track
 | `examples/` | 本地 `.rpr` 示例程序 |
 | `docs/` | 语言、IDE、架构和功能边界文档 |
 | `editors/` | 编辑器支持与协议说明 |
-| `reaper_scripts/` | 由 Cockos REAPER 托管执行的 Lua 脚本 |
 | `.github/workflows/` | CI、原生/桌面构建和 Node 兼容性 |
 
 该项目没有被拆分为已部署的 frontend、backend 和 Mock API。浏览器兼容性、浏览器存储、公共端口、CORS 和 HTTPS 不适用于 Reaper Runtime 本身。

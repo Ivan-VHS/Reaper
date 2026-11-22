@@ -75,7 +75,7 @@
       "id": "facet.safety",
       "side": 7,
       "name": "Execution and safety boundaries",
-      "invariant": "Read-only hardware workflows and offline audio; no privileged hardware mutation through the mesh."
+      "invariant": "Safe local workflows; no privileged hardware mutation through the mesh."
     },
     {
       "id": "facet.audit",
@@ -143,19 +143,19 @@
       "id": "ventusample-to-reaper",
       "from": "ventusample",
       "to": "reaper",
-      "transport": "json-file",
-      "interface": "ventusample.pack.v1",
-      "flow": "artifact",
-      "status": "implemented"
+      "transport": "none",
+      "interface": "not-applicable.v1",
+      "flow": "none",
+      "status": "not_applicable"
     },
     {
       "id": "reaper-to-ventusample",
       "from": "reaper",
       "to": "ventusample",
-      "transport": "json-file",
-      "interface": "ventusample.render-request.v1",
-      "flow": "artifact",
-      "status": "planned"
+      "transport": "none",
+      "interface": "not-applicable.v1",
+      "flow": "none",
+      "status": "not_applicable"
     },
     {
       "id": "ventusample-to-pytyliki",
@@ -203,7 +203,7 @@
     {
       "project": "pytyliki",
       "contract": "pytyliki.internal-core.v1",
-      "surface": "C11 processor systems, bounded benchmarks, memory kernel, DSP, metrics, TRACE and native ABI"
+      "surface": "C11 processor systems, bounded benchmarks, memory kernel, metrics, TRACE and native ABI"
     },
     {
       "project": "oplague",
@@ -212,8 +212,8 @@
     },
     {
       "project": "ventusample",
-      "contract": "ventusample.internal-audio.v1",
-      "surface": "Hip-hop pattern engine, sampler DSP, WAV I/O, seeded variations and desktop sample-pack generation"
+      "contract": "ventusample.independent-product.v1",
+      "surface": "Independent desktop application; domain modules remain owned by VentuSample"
     }
   ],
   "semantics": {
@@ -224,6 +224,6 @@
     "no_implicit_native_loading": true,
     "no_driver_mutation_through_mesh": true,
     "producer_export_does_not_imply_consumer_integration": true,
-    "reaper_pack_consumer_implemented": true
+    "reaper_ventusample_runtime_integration": false
   }
 }
