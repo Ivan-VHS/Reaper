@@ -47,7 +47,7 @@ flowchart LR
 
 | 模块 | 已实现范围与边界 |
 |---|---|
-| Python runtime | lexer、parser、解释器、CLI、REPL、模块、closures、quotas 和 audit |
+| Python runtime | lexer、parser、解释器、CLI、REPL、模块、closures、quotas 和 audit |\n| Flow toolkit | 12 个有界函数式组合操作，供 tree-walk 与 VM 调用路径共用；不宣称与 native C17 对等 |
 | Reaper Studio | Windows IDE 基础：项目树、编辑器、语法高亮、行号、搜索、check/run 和调试器 |
 | LSP | stdio 服务：增量 UTF-16 文档、parser/structure 诊断、completion、hover、symbols 和词法导航；按打开的文档工作，不提供跨文件类型推断 |
 | DAP | stdio 调试适配器：启动、行断点、语句级单步、调用栈和局部变量 |
