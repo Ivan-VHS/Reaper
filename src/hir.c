@@ -323,6 +323,7 @@ static int infer_expression(
     int callee_position,
     ReaperHirType *out_type
 ) {
+    (void)callee_position;
     if (node_id >= builder->module->node_count)
         return fail(builder, node_id, "expression node is outside the HIR module");
 
@@ -350,7 +351,7 @@ static int infer_expression(
     case REAPER_AST_IDENTIFIER: {
         uint32_t symbol_id = resolve_symbol(builder, node->text);
         if (symbol_id == REAPER_HIR_NO_SYMBOL) {
-            if (callee_position && is_builtin(node->text)) {
+            if (is_builtin(node->text)) {
                 node->type = REAPER_HIR_TYPE_FUNCTION;
                 break;
             }
@@ -484,6 +485,12 @@ static int check_sequence(
     unsigned function_depth
 );
 
+static int check_statement(
+    HirBuilder *builder,
+    uint32_t node_id,
+    unsigned function_depth
+);
+
 static int check_block(HirBuilder *builder, uint32_t block_id) {
     const ReaperAstNode *block = ast_node(builder, block_id);
     if (block == NULL || block->kind != REAPER_AST_BLOCK)
@@ -524,7 +531,9 @@ static int check_statement(
     ReaperHirType value_type = REAPER_HIR_TYPE_UNIT;
     switch (node->kind) {
     case REAPER_AST_PROGRAM:
-        return check_sequence(builder, node->left, function_depth);
+        if (!check_sequence(builder, node->left, function_depth)) return 0;
+        node->type = REAPER_HIR_TYPE_UNIT;
+        return 1;
 
     case REAPER_AST_BLOCK:
         return check_block(builder, node_id);
