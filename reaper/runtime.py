@@ -592,6 +592,8 @@ class Interpreter:
         def enumerate_values(values: Any, start: Any = 0) -> list[list[Any]]:
             values = sequence(values)
             start = integer(start, "enumerate start")
+            if len(values) * 2 > self.max_collection_items:
+                raise ValueError(f"collection item limit ({self.max_collection_items}) exceeded")
             token = Token("BUILTIN", "enumerate", 1, 1)
             result: list[list[Any]] = []
             for index, item in enumerate(values):
@@ -603,6 +605,8 @@ class Interpreter:
             left = sequence(left)
             right = sequence(right)
             length = min(len(left), len(right))
+            if length * 2 > self.max_collection_items:
+                raise ValueError(f"collection item limit ({self.max_collection_items}) exceeded")
             token = Token("BUILTIN", "zip", 1, 1)
             result: list[list[Any]] = []
             for index in range(length):
@@ -635,7 +639,7 @@ class Interpreter:
             if width > len(values):
                 return []
             count = 1 + (len(values) - width) // step
-            if count > self.max_collection_items:
+            if count * width > self.max_collection_items:
                 raise ValueError(f"collection item limit ({self.max_collection_items}) exceeded")
             token = Token("BUILTIN", "window", 1, 1)
             result: list[Any] = []
