@@ -94,6 +94,32 @@ int reaper_codegen_duckos_dabi64_v1(
         "    pushq %%rbp\n"
         "    movq %%rsp, %%rbp\n"
         "    subq $%zu, %%rsp\n"
+        "    testq %%r10, %%r10\n"
+        "    je .Lduck_bad_frame\n"
+        "    testq $15, %%r10\n"
+        "    jne .Lduck_bad_alignment\n"
+        "    cmpl $0x49424144, 0(%%r10)\n"
+        "    jne .Lduck_bad_magic\n"
+        "    cmpw $1, 4(%%r10)\n"
+        "    jne .Lduck_bad_version\n"
+        "    cmpw $0, 6(%%r10)\n"
+        "    jne .Lduck_bad_version\n"
+        "    cmpl $48, 8(%%r10)\n"
+        "    jb .Lduck_bad_frame_size\n"
+        "    cmpl $0, 12(%%r10)\n"
+        "    jne .Lduck_bad_arguments\n"
+        "    cmpl $0, 16(%%r10)\n"
+        "    jne .Lduck_bad_arguments\n"
+        "    cmpl $0, 20(%%r10)\n"
+        "    jne .Lduck_bad_flags\n"
+        "    cmpl $0, 24(%%r10)\n"
+        "    jne .Lduck_bad_flags\n"
+        "    cmpl $0, 28(%%r10)\n"
+        "    jne .Lduck_bad_flags\n"
+        "    cmpq $0, 32(%%r10)\n"
+        "    jne .Lduck_bad_arguments\n"
+        "    cmpq $0, 40(%%r10)\n"
+        "    jne .Lduck_bad_arguments\n"
         "    testq %%r11, %%r11\n"
         "    je .Lduck_bad_result\n"
         "    testq $15, %%r11\n"
@@ -196,12 +222,42 @@ int reaper_codegen_duckos_dabi64_v1(
         "    movl $%d, %%eax\n"
         "    leave\n"
         "    ret\n"
+        ".Lduck_bad_frame:\n"
+        "    movl $%d, %%eax\n"
+        "    leave\n"
+        "    ret\n"
+        ".Lduck_bad_magic:\n"
+        "    movl $%d, %%eax\n"
+        "    leave\n"
+        "    ret\n"
+        ".Lduck_bad_version:\n"
+        "    movl $%d, %%eax\n"
+        "    leave\n"
+        "    ret\n"
+        ".Lduck_bad_frame_size:\n"
+        "    movl $%d, %%eax\n"
+        "    leave\n"
+        "    ret\n"
+        ".Lduck_bad_flags:\n"
+        "    movl $%d, %%eax\n"
+        "    leave\n"
+        "    ret\n"
+        ".Lduck_bad_arguments:\n"
+        "    movl $%d, %%eax\n"
+        "    leave\n"
+        "    ret\n"
         ".size duck_program, .-duck_program\n"
         ".section .note.GNU-stack,\"\",@progbits\n",
         REAPER_DUCK_STATUS_ARITHMETIC_OVERFLOW,
         REAPER_DUCK_STATUS_DIVISION_BY_ZERO,
         REAPER_DUCK_STATUS_INVALID_POINTER,
-        REAPER_DUCK_STATUS_BAD_ALIGNMENT) < 0 || ferror(output)) {
+        REAPER_DUCK_STATUS_BAD_ALIGNMENT,
+        REAPER_DUCK_STATUS_INVALID_POINTER,
+        REAPER_DUCK_STATUS_BAD_MAGIC,
+        REAPER_DUCK_STATUS_VERSION_MISMATCH,
+        REAPER_DUCK_STATUS_BAD_FRAME_SIZE,
+        REAPER_DUCK_STATUS_INVALID_FLAGS,
+        REAPER_DUCK_STATUS_BAD_ARGUMENT_LAYOUT) < 0 || ferror(output)) {
         return duck_codegen_fail(error, module->length - 1U, "failed to finish DABI64 assembly output");
     }
 
