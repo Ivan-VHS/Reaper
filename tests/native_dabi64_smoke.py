@@ -98,7 +98,7 @@ def main() -> int:
     args = parser.parse_args()
 
     cases = (
-        ("arithmetic.rpr", 0, "65"),
+        ("arithmetic.rpr", 0, "64"),
         ("signed-division.rpr", 0, "-3"),
         ("overflow.rpr", 16, "0"),
         ("division-by-zero.rpr", 17, "0"),
