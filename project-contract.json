@@ -131,6 +131,16 @@
         "tests/test_ventusample_federation.py",
         "examples/ventusample_pack_audit.rpr"
       ]
+    },
+    {
+      "id": "lsp.workspace-symbols",
+      "status": "implemented",
+      "summary": "Provides deterministic, bounded workspace/symbol search over currently open editor documents without crawling unopened files or executing project code.",
+      "evidence": [
+        "reaper/language_service.py",
+        "reaper/lsp.py",
+        "tests/test_language_service.py"
+      ]
     }
   ],
   "interfaces": [
