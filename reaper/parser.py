@@ -91,6 +91,8 @@ class Parser:
             condition = self._expression()
             body = self._block()
             return Node("while", token, children=[condition, body])
+        if self._match("ATTEMPT"):
+            return self._attempt(self._previous())
         expression = self._expression()
         return Node("expression", expression.token, children=[expression])
 
@@ -128,6 +130,45 @@ class Parser:
         iterable = self._expression()
         body = self._block()
         return Node("each", token, value=name.value, children=[iterable, body])
+
+    def _attempt(self, token: Token) -> Node:
+        body = self._block()
+        recover_name = None
+        recover = None
+        final_block = None
+
+        boundary = self.current
+        self._skip_newlines()
+        if self._match("RECOVER"):
+            recover_name = self._consume(
+                "IDENT", "expected an error binding after 'recover'"
+            ).value
+            recover = self._block()
+            boundary = self.current
+        else:
+            self.current = boundary
+
+        self._skip_newlines()
+        if self._match("FINALLY"):
+            final_block = self._block()
+        else:
+            self.current = boundary
+
+        if recover is None and final_block is None:
+            raise self._error(
+                self._peek(), "an attempt block needs a 'recover' or 'finally' clause"
+            )
+
+        children = [body]
+        if recover is not None:
+            children.append(recover)
+        if final_block is not None:
+            children.append(final_block)
+        return Node(
+            "attempt", token,
+            value=(recover_name, recover is not None, final_block is not None),
+            children=children,
+        )
 
     def _block(self) -> Node:
         self._consume("{", "expected '{' to start a block")
