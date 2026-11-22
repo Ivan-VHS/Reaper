@@ -255,6 +255,28 @@ class PytylikiBridgeHandleTests(unittest.TestCase):
                 with self.assertRaisesRegex(FfiError, "unsupported Pytyliki ABI"):
                     PytylikiBridge(str(path))
 
+    def test_reaper_language_can_inspect_pytyliki_plugin_catalogue(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "libpytyliki.so"
+            path.touch()
+            source = (
+                f'let catalog = pytyliki_plugin_catalog("{path}")\n'
+                f'let selected = pytyliki_plugin_info("Operandu", "{path}")\n'
+                'emit size(catalog)\n'
+                'emit selected.id\n'
+                'emit selected.service\n'
+                'emit contains(selected.capabilities, "schema.inspection")\n'
+            )
+            output: list[str] = []
+            with patch("reaper.native.ctypes.CDLL", return_value=FakeLibrary()):
+                Interpreter(output=output.append, allow_native_ffi=True).run(source)
+        self.assertEqual(output, ["2", "operandu", "inspect_value", "true"])
+
+    def test_plugin_catalogue_builtins_keep_the_explicit_ffi_opt_in(self) -> None:
+        source = 'emit size(pytyliki_plugin_catalog("/absolute/path/libpytyliki.so"))'
+        with self.assertRaisesRegex(Exception, "native FFI is disabled"):
+            Interpreter(output=lambda _line: None).run(source)
+
     def test_reaper_language_can_use_typed_bridge_builtins(self) -> None:
         source_template = (
             'make bridge := pytyliki_open("{library}")\n'
