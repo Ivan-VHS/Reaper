@@ -486,8 +486,8 @@ def restore_checkpoint(checkpoint: str | Path, destination: str | Path) -> Path:
         raise CLifeError("checkpoint verification failed: " + "; ".join(verification.errors))
     source = Path(checkpoint).expanduser().absolute()
     target = Path(destination).expanduser().absolute()
-    if target == source or target == source / "files":
-        raise CLifeError("restore destination must differ from the checkpoint")
+    if target == source or target == source / "files" or source in target.parents or target in source.parents:
+        raise CLifeError("restore destination must not overlap the checkpoint directory")
     _secure_directory(target.parent)
     target.parent.mkdir(parents=True, exist_ok=True)
     _secure_directory(target.parent)
