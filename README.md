@@ -37,7 +37,7 @@ The target audience is language and tooling developers, application engineers, Q
 |---|---|---|
 | Python runtime | lexer, parser, interpreter, CLI, REPL, modules, closures, quotas and audit log | current executable reference |
 | Reaper Studio | Windows IDE foundation: project tree, editor, syntax coloring, search, check/run and debugger | local desktop application |
-| LSP | stdio JSON-RPC, diagnostics, completion, hover, symbols and lexical navigation | per-open-document; not cross-file type inference |
+| LSP | stdio JSON-RPC, diagnostics, completion, hover, symbols, lexical navigation and semantic tokens | per-open-document; lexical highlighting, not cross-file type inference |
 | DAP | stdio debug adapter, line breakpoints, stepping, stack and locals | statement-boundary debugging; trusted local programs only |
 | NOO TAH | project/process management around the official Node.js runtime, npm/npx and Inspector | Node/V8/libuv are supplied by upstream Node |
 | Native C17 | lexer, expression parser, owned AST, checked IR and limited lowering | active partial track; not Python-runtime parity |
