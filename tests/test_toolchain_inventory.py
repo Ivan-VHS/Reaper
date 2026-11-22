@@ -38,6 +38,16 @@ class ToolchainInventoryTests(unittest.TestCase):
             create_lock({"schema": "wrong", "tools": []})
         self.assertEqual(len(discover_toolchain("")[ "tools"]), len(TOOLS))
 
+    def test_cli_can_write_inventory_and_toolchain_lock(self):
+        from reaper.toolchain_inventory import main
+        with tempfile.TemporaryDirectory() as folder:
+            inventory_path = Path(folder) / "inventory.json"
+            lock_path = Path(folder) / "lock.json"
+            self.assertEqual(main(["--path", "", "--output", str(inventory_path)]), 0)
+            self.assertIn(INVENTORY_SCHEMA, inventory_path.read_text(encoding="utf-8"))
+            self.assertEqual(main(["--path", "", "--lock", "--output", str(lock_path)]), 0)
+            self.assertEqual(main(["--path", "", "--verify-lock", str(lock_path)]), 0)
+
 
 if __name__ == "__main__":
     unittest.main()
