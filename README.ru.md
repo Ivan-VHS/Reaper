@@ -102,6 +102,19 @@ ctest --test-dir build --output-on-failure
 
 Эта сборка проверяет текущую нативную подмножину compiler и её тесты. Она не заменяет Python runtime и не подтверждает полную языковую parity.
 
+### Необязательный freestanding OS toolchain
+
+Первый системный native track собирает C17- и assembly-модули в ELF без подключения hosted runtime. Нужны Clang и LLVM lld; подробности — в [документации freestanding OS](docs/FREESTANDING.md).
+
+```sh
+python -m reaper os doctor
+python -m reaper os check freestanding/reaper-os.json
+python -m reaper os build freestanding/reaper-os.json --dry-run
+python -m reaper os build freestanding/reaper-os.json
+```
+
+Это native C/assembly bridge, а не полноценный компилятор произвольного `.rpr`-кода. Пример для x86_64 пишет в COM1 и останавливает CPU; проверять его следует в подходящей виртуальной машине или загрузочной среде.
+
 ### Необязательные проверки NOO TAH / Node.js
 
 Установите Node.js из официального дистрибутива и добавьте `node` в `PATH`, затем выполните:
