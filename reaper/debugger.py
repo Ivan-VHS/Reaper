@@ -16,6 +16,7 @@ class DebugSnapshot:
     column: int
     call_stack: list[str]
     variables: dict[str, Any]
+    reason: str = "breakpoint"
 
 
 def _visible_variables(environment: Any) -> dict[str, Any]:
@@ -58,13 +59,18 @@ class RuntimeDebugger:
             raise DebuggerStopped()
 
         should_stop = False
+        stop_reason = "breakpoint"
         if self.step_out_depth is not None:
             if len(call_stack) <= self.step_out_depth:
                 self.step_out_depth = None
                 should_stop = True
+                stop_reason = "step"
             else:
                 return
-        elif token.line in self.breakpoints or self.step_mode:
+        elif self.step_mode:
+            should_stop = True
+            stop_reason = "step"
+        elif token.line in self.breakpoints:
             should_stop = True
 
         if not should_stop:
@@ -76,6 +82,7 @@ class RuntimeDebugger:
             column=token.column,
             call_stack=list(call_stack),
             variables=_visible_variables(environment),
+            reason=stop_reason,
         )
         self.last_snapshot = snapshot
         self.paused = True
