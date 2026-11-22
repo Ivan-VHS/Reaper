@@ -394,7 +394,7 @@ static int emit_frame_validation(
         "    jne .Lduck_fn_%zu_bad_version\n"
         "    cmpw $0, 6(%%r10)\n"
         "    jne .Lduck_fn_%zu_bad_version\n"
-        "    cmpl $48, 8(%%r10)\n"
+        "    cmpl $%u, 8(%%r10)\n"
         "    jb .Lduck_fn_%zu_bad_frame_size\n"
         "    cmpl $%u, 12(%%r10)\n"
         "    jne .Lduck_fn_%zu_bad_arguments\n"
@@ -409,8 +409,8 @@ static int emit_frame_validation(
         "    cmpq $0, 40(%%r10)\n"
         "    jne .Lduck_fn_%zu_bad_arguments\n",
         16U, index, index, index, index, index, index, index,
-        index, function->parameter_count, index, index, index, index, index,
-        index) < 0) return 0;
+        48U + function->parameter_count * 16U, index, function->parameter_count,
+        index, index, index, index, index, index) < 0) return 0;
 
     if (function->parameter_count == 0U) {
         if (fprintf(output,
