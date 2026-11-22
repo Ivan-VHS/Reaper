@@ -166,6 +166,12 @@ class ModernSyntaxTests(unittest.TestCase):
                     with self.assertRaisesRegex(ReaperRuntimeError, f"{keyword} can only be used inside a loop"):
                         self.capture(keyword, engine)
 
+    def test_hash_comments_do_not_hide_floor_division(self) -> None:
+        source = "emit 7 // 2 # comment after the expression\nemit 9 // 4"
+        for engine in ("treewalk", "vm"):
+            with self.subTest(engine=engine):
+                self.assertEqual(self.capture(source, engine), ["3", "2"])
+
     def test_parse_errors_keep_source_locations_for_new_syntax(self) -> None:
         with self.assertRaisesRegex(ParseError, r"<memory>:1:"):
             self.capture("fn broken( { return 1 }")
