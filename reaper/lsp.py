@@ -86,6 +86,7 @@ class LspServer:
                         "referencesProvider": True,
                         "renameProvider": {"prepareProvider": False},
                         "documentSymbolProvider": True,
+                        "workspaceSymbolProvider": True,
                     },
                     "serverInfo": {"name": "reaper-language-server", "version": "0.2.0"},
                 }
@@ -142,6 +143,16 @@ class LspServer:
                     "range": self._range(analysis.snapshot.text, symbol.span),
                     "selectionRange": self._range(analysis.snapshot.text, symbol.span),
                 } for symbol in analysis.symbols]
+            elif method == "workspace/symbol":
+                query = params.get("query", "")
+                result = [{
+                    "name": symbol.name,
+                    "kind": 12 if symbol.kind == "function" else 13,
+                    "location": {
+                        "uri": snapshot.uri,
+                        "range": self._range(snapshot.text, symbol.span),
+                    },
+                } for snapshot, symbol in self.service.workspace_symbols(query)]
             elif method == "shutdown":
                 self.service.shutdown()
             elif method == "exit":
