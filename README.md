@@ -82,7 +82,15 @@ python -m reaper --repl
 python reaper_desktop.py
 ```
 
-After editable installation, the equivalent entry points include `reaper` and `reaper-studio`.
+After editable installation, the equivalent entry points include `reaper`, `reaper-studio` and `reaper-toolchain`.
+
+Inspect local tool availability without launching any of the discovered tools:
+
+```sh
+reaper-toolchain --output toolchain-inventory.json
+```
+
+Studio also advertises LSP `textDocument/formatting`; formatting normalizes indentation and whitespace without rewriting program tokens.
 
 ### Run the test suite
 
