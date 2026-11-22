@@ -20,6 +20,7 @@
 | [DIVISION_ENGINE.md](DIVISION_ENGINE.md) | checked division and workload allocation |
 | [REAPER_813_FEATURE_ARCHITECTURE.md](REAPER_813_FEATURE_ARCHITECTURE.md) | proposal ID ranges and registry boundaries |
 | [REAPER_PARSER_M1.md](REAPER_PARSER_M1.md) | native parser acceptance |
+| [NATIVE_COMPILER.md](NATIVE_COMPILER.md) | checked i64 expression compiler and x86-64 System V ELF assembly backend |
 | [RUNTIME_PLATFORM.md](RUNTIME_PLATFORM.md) | Python runtime boundaries |
 | [REAPER_UNIFIED_ARCHITECTURE.md](REAPER_UNIFIED_ARCHITECTURE.md) | native destination and language invariants |
 | [MOST_LANGUAGE_SPEC.md](MOST_LANGUAGE_SPEC.md) | exact Russian aliases |
