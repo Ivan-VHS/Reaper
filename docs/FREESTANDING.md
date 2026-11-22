@@ -38,8 +38,10 @@ The target triples select Clang's code-generation target; each final binary
 still needs a target-compatible linker script and startup contract.
 
 Do not treat a successful ELF link as proof that the image boots on physical
-hardware. Validate with QEMU or the intended bootloader before using real
-machines. The sample uses x86 port I/O, and therefore is x86-only.
+hardware. This ELF has no Multiboot/UEFI handoff header: a loader must place it
+at the linked address, enter x86_64 long mode, provide valid mappings, and
+transfer control to `_start`. The entry stub then installs its own stack. The
+sample uses x86 port I/O, and therefore its device output is x86-only.
 
 ## Requirements
 
