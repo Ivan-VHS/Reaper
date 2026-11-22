@@ -4,7 +4,7 @@
 
 The C17 track now has an end-to-end compiler path for a deliberately small, fully checked language subset:
 
-.rpr expression → UTF-8 lexer → Pratt parser → owned AST → typed i64 IR → x86-64 assembly.
+.rpr expression → native lexer with UTF-8-aware source positions → Pratt parser → owned AST → typed i64 IR → x86-64 assembly.
 
 The backend accepts signed 64-bit integer literals, parentheses, unary + and -, and binary +, -, * and /. Division uses the IR's signed integer contract and truncates toward zero. Every other expression form is rejected with a diagnostic; the compiler does not guess a conversion or call back into Python.
 
