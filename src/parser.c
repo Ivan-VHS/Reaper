@@ -766,6 +766,7 @@ int reaper_parse_expression(
     Parser parser;
     if (!parser_init(tokens, out, error, &parser)) return 0;
 
+    skip_newlines(&parser);
     out->root = parse_expression_bp(&parser, 1);
     if (out->root == REAPER_AST_NO_NODE) {
         reaper_ast_free(out);
