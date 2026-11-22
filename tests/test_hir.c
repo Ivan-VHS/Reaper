@@ -80,6 +80,18 @@ static void checks_function_arity_and_return_context(void) {
     assert(strstr(error.message, "not declared") != NULL);
 }
 
+static void resolves_exact_most_keyword_aliases(void) {
+    const char *source =
+        "пусть значение := 1\n"
+        "если значение >= 1 и не ложь {\n"
+        "    вывести значение\n"
+        "}\n";
+    ReaperHirModule hir;
+    ReaperHirError error;
+    assert(build_hir(source, &hir, &error));
+    reaper_hir_free(&hir);
+}
+
 static void checks_builtin_pipe_arity(void) {
     ReaperHirModule hir;
     ReaperHirError error;
@@ -94,6 +106,7 @@ int main(void) {
     resolves_functions_locals_and_flow_calls();
     enforces_mutability_and_scope();
     checks_function_arity_and_return_context();
+    resolves_exact_most_keyword_aliases();
     checks_builtin_pipe_arity();
     puts("native HIR semantic tests: 4 groups passed");
     return 0;
