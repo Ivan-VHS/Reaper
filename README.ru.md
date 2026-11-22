@@ -7,6 +7,21 @@
 
 Reaper — язык выражений с явным потоком данных: оператор `::` передаёт значение следующей операции. Python runtime остаётся текущей исполняемой эталонной реализацией. Реализация на C17 развивается отдельно и пока не заменяет runtime полностью.
 
+## CLife: контрольные точки и безопасный перешив
+
+CLife добавляет к Python reference runtime явные операции жизненного цикла репозитория: контрольные снимки с SHA-256, проверку целостности, восстановление в новый или пустой каталог и планы перешива с проверкой исходных хешей. Применение плана создаёт контрольную точку и выполняет откат уже записанных файлов при ошибке.
+
+Межрепозиторный реестр работает локально и только читает зарегистрированные каталоги. Перенос выбранных файлов формирует обычный проверяемый план; автоматической синхронизации или исполнения чужого кода нет.
+
+```sh
+reaper clife checkpoint .
+reaper clife verify .reaper/checkpoints/<checkpoint-id>
+reaper clife restore .reaper/checkpoints/<checkpoint-id> ./recovered-copy
+reaper clife audit ./repo-a ./repo-b
+```
+
+План и применение перешива: `reaper clife plan ROOT updates.json --output change.plan.json`, затем после проверки плана — `reaper clife apply ROOT change.plan.json`. Полный контракт и ограничения: [docs/CLIFE.md](docs/CLIFE.md).
+
 ## Реальный снимок Reaper Studio
 
 <p align="center"><img src="assets/screenshots/reaper-studio.png" alt="Reaper Studio под Windows 11" width="100%"></p>
