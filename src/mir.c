@@ -833,6 +833,7 @@ int reaper_mir_verify(const ReaperMirModule *module, ReaperMirError *error) {
         error->node_index = 0U;
         error->message[0] = '\0';
     }
+
     if (module == NULL || module->functions == NULL || module->blocks == NULL ||
         (module->instruction_count != 0U &&
          (module->instructions == NULL || module->instruction_order == NULL)) ||
@@ -843,24 +844,44 @@ int reaper_mir_verify(const ReaperMirModule *module, ReaperMirError *error) {
     if (module->function_count == 0U || module->block_count == 0U) {
         return verify_fail(error, 0U, "MIR requires at least one function and block");
     }
+    if (module->instruction_order_count != module->instruction_count) {
+        return verify_fail(
+            error,
+            module->instruction_order_count,
+            "MIR instruction order does not cover the complete instruction array"
+        );
+    }
 
+    size_t expected_first_block = 0U;
     for (size_t i = 0U; i < module->function_count; ++i) {
         const ReaperMirFunction *function = &module->functions[i];
         if (function->id != i || function->name == NULL ||
             function->entry_block >= module->block_count ||
             function->block_count == 0U ||
+            function->first_block != expected_first_block ||
             (size_t)function->first_block + function->block_count > module->block_count ||
             function->entry_block != function->first_block ||
-            (size_t)function->parameter_offset + function->parameter_count > module->parameter_count) {
+            (size_t)function->parameter_offset + function->parameter_count >
+                module->parameter_count) {
             return verify_fail(error, i, "MIR function layout or entry block is invalid");
         }
+
+        size_t block_end = (size_t)function->first_block + function->block_count;
         for (size_t block_id = function->first_block;
-             block_id < (size_t)function->first_block + function->block_count;
-             ++block_id) {
+             block_id < block_end; ++block_id) {
             if (module->blocks[block_id].function_id != function->id) {
                 return verify_fail(error, block_id, "MIR function block range is not contiguous");
             }
         }
+        expected_first_block = block_end;
+    }
+
+    if (expected_first_block != module->block_count) {
+        return verify_fail(
+            error,
+            expected_first_block,
+            "MIR contains blocks outside a function's block range"
+        );
     }
 
     unsigned char *instruction_seen = NULL;
@@ -871,92 +892,130 @@ int reaper_mir_verify(const ReaperMirModule *module, ReaperMirError *error) {
         }
     }
 
+    int success = 0;
     for (size_t i = 0U; i < module->block_count; ++i) {
         const ReaperMirBlock *block = &module->blocks[i];
         if (block->id != i || block->function_id >= module->function_count ||
             block->terminator == REAPER_MIR_TERM_NONE) {
-            return verify_fail(error, i, "MIR block identity or terminator is invalid");
+            (void)verify_fail(error, i, "MIR block identity or terminator is invalid");
+            goto cleanup;
         }
+
         if (block->instruction_count == 0U) {
             if (block->first_instruction != UINT32_MAX) {
-                return verify_fail(error, i, "empty MIR block has an instruction offset");
+                (void)verify_fail(error, i, "empty MIR block has an instruction offset");
+                goto cleanup;
             }
         } else if (block->first_instruction == UINT32_MAX ||
                    (size_t)block->first_instruction + block->instruction_count >
                        module->instruction_order_count) {
-            return verify_fail(error, i, "MIR block instruction-order range is outside the module");
+            (void)verify_fail(error, i, "MIR block instruction-order range is outside the module");
+            goto cleanup;
         }
 
         const ReaperMirFunction *owner = &module->functions[block->function_id];
         size_t owner_end = (size_t)owner->first_block + owner->block_count;
         if (block->terminator == REAPER_MIR_TERM_JUMP) {
-            if (block->target_true < owner->first_block || block->target_true >= owner_end ||
-                block->target_false != REAPER_MIR_NO_BLOCK) {
-                return verify_fail(error, i, "MIR jump target leaves its function");
+            if (block->target_true < owner->first_block ||
+                block->target_true >= owner_end ||
+                block->target_false != REAPER_MIR_NO_BLOCK ||
+                block->terminator_value != REAPER_MIR_NO_VALUE) {
+                (void)verify_fail(error, i, "MIR jump target leaves its function or carries unused data");
+                goto cleanup;
             }
         } else if (block->terminator == REAPER_MIR_TERM_BRANCH) {
             if (block->terminator_value == REAPER_MIR_NO_VALUE ||
-                block->target_true < owner->first_block || block->target_true >= owner_end ||
-                block->target_false < owner->first_block || block->target_false >= owner_end) {
-                return verify_fail(error, i, "MIR branch target or condition is invalid");
+                block->target_true < owner->first_block ||
+                block->target_true >= owner_end ||
+                block->target_false < owner->first_block ||
+                block->target_false >= owner_end) {
+                (void)verify_fail(error, i, "MIR branch target or condition is invalid");
+                goto cleanup;
             }
         } else if (block->terminator == REAPER_MIR_TERM_RETURN) {
             if (block->target_true != REAPER_MIR_NO_BLOCK ||
                 block->target_false != REAPER_MIR_NO_BLOCK) {
-                return verify_fail(error, i, "MIR return block cannot carry branch targets");
+                (void)verify_fail(error, i, "MIR return block cannot carry branch targets");
+                goto cleanup;
             }
         } else {
-            return verify_fail(error, i, "unknown MIR terminator");
+            (void)verify_fail(error, i, "unknown MIR terminator");
+            goto cleanup;
         }
 
+        size_t order_end = (size_t)block->first_instruction + block->instruction_count;
         for (size_t order_index = block->first_instruction;
-             block->instruction_count != 0U &&
-             order_index < (size_t)block->first_instruction + block->instruction_count;
+             block->instruction_count != 0U && order_index < order_end;
              ++order_index) {
             uint32_t instruction_id = module->instruction_order[order_index];
             if (instruction_id >= module->instruction_count ||
                 instruction_seen[instruction_id] != 0U) {
-                free(instruction_seen);
-                return verify_fail(error, order_index, "MIR instruction order contains an invalid or repeated index");
+                (void)verify_fail(
+                    error,
+                    order_index,
+                    "MIR instruction order contains an invalid or repeated index"
+                );
+                goto cleanup;
             }
             instruction_seen[instruction_id] = 1U;
+
             const ReaperMirInstruction *instruction =
                 &module->instructions[instruction_id];
             if (instruction->text == NULL ||
                 instruction->opcode < REAPER_MIR_CONST ||
                 instruction->opcode > REAPER_MIR_ITER_CURRENT) {
-                return verify_fail(error, instruction_id, "MIR instruction identity is invalid");
+                (void)verify_fail(error, instruction_id, "MIR instruction identity is invalid");
+                goto cleanup;
             }
             if ((size_t)instruction->operand_offset + instruction->operand_count >
                 module->operand_count) {
-                return verify_fail(error, instruction_id, "MIR operand vector is outside the module");
+                (void)verify_fail(error, instruction_id, "MIR operand vector is outside the module");
+                goto cleanup;
             }
+
+            int produces_value =
+                instruction->opcode != REAPER_MIR_STORE_LOCAL &&
+                instruction->opcode != REAPER_MIR_EMIT &&
+                instruction->opcode != REAPER_MIR_DROP;
+            if (produces_value != (instruction->result_id != REAPER_MIR_NO_VALUE)) {
+                (void)verify_fail(error, instruction_id, "MIR result slot does not match the instruction kind");
+                goto cleanup;
+            }
+
             if ((instruction->opcode == REAPER_MIR_STORE_LOCAL ||
                  instruction->opcode == REAPER_MIR_LOAD_LOCAL) &&
                 instruction->symbol_id == REAPER_HIR_NO_SYMBOL) {
-                return verify_fail(error, instruction_id, "MIR local access has no resolved symbol");
+                (void)verify_fail(error, instruction_id, "MIR local access has no resolved symbol");
+                goto cleanup;
             }
             if (instruction->opcode == REAPER_MIR_CALL ||
                 instruction->opcode == REAPER_MIR_PIPE_CALL) {
                 if (instruction->left == REAPER_MIR_NO_VALUE) {
-                    return verify_fail(error, instruction_id, "MIR call has no callee value");
+                    (void)verify_fail(error, instruction_id, "MIR call has no callee value");
+                    goto cleanup;
                 }
+            }
+            if (instruction->opcode == REAPER_MIR_LIST &&
+                (instruction->left != REAPER_MIR_NO_VALUE ||
+                 instruction->right != REAPER_MIR_NO_VALUE)) {
+                (void)verify_fail(error, instruction_id, "MIR list items must use the operand vector");
+                goto cleanup;
             }
         }
     }
 
     for (size_t i = 0U; i < module->instruction_count; ++i) {
         if (instruction_seen[i] == 0U) {
-            free(instruction_seen);
-            return verify_fail(error, i, "MIR instruction is not owned by any basic block");
+            (void)verify_fail(error, i, "MIR instruction is not owned by any basic block");
+            goto cleanup;
         }
     }
+
+    success = 1;
+
+cleanup:
     free(instruction_seen);
-    if (module->instruction_order_count != module->instruction_count) {
-        return verify_fail(error, module->instruction_order_count,
-            "MIR block instruction order does not cover the complete instruction array");
-    }
-    return 1;
+    return success;
 }
 
 void reaper_mir_free(ReaperMirModule *module) {
