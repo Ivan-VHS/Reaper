@@ -60,5 +60,5 @@ Run the example and tests with:
 
 ```sh
 python -m reaper examples/error_handling.rpr
-python -m unittest tests.test_language -v
+python -m unittest discover -s tests -p 'test_language.py' -v
 ```
