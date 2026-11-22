@@ -221,6 +221,9 @@ class Interpreter:
         elif node.kind == "yield":
             value = self._evaluate(children[0], environment) if children else None
             raise _ReturnSignal(value)
+        elif node.kind == "throw":
+            value = self._evaluate(children[0], environment)
+            raise self._error(node.token, f"thrown: {self._display(value)}")
         elif node.kind == "function":
             name, parameters = node.value
             environment.define(name, UserFunction(name, parameters, children[0], environment))
