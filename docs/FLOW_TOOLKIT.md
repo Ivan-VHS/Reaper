@@ -45,5 +45,5 @@ emit window([1, 2, 3, 4], 2, 1)
 The implementation is shared by the reference runtime's tree-walk and VM call paths. It does not claim native C17 parity. Verify both engines with:
 
 ```sh
-python -m unittest tests.test_flow_toolkit -v
+python -m unittest discover -s tests -p 'test_flow_toolkit.py' -v
 ```
