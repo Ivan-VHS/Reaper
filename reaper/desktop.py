@@ -822,6 +822,7 @@ class ReaperStudio(tk.Tk):
     def toggle_ui_theme(self) -> None:
         self._theme_name = toggle_theme(self, "reaper-studio")
         self._theme_mode.set(self._theme_name)
+        self._apply_editor_visuals()
 
     def _source_name(self) -> str:
         return str(self.current_file) if self.current_file else "<editor>"
