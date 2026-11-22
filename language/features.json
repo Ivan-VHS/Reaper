@@ -375,6 +375,64 @@
         "falsey-left-preserved",
         "treewalk-vm-parity"
       ]
+    },
+    {
+      "id": "MOST-STD-003",
+      "name": "bounded script-relative path inspection builtins",
+      "area": "stdlib",
+      "status": "implemented",
+      "depends_on": [],
+      "acceptance": [
+        "path-input-boundary",
+        "script-relative-resolution",
+        "read-only-predicates",
+        "treewalk-vm-parity"
+      ]
+    },
+    {
+      "id": "MOST-FED-001",
+      "name": "read-only OPlague snapshot v1 validation and comparison",
+      "area": "federation",
+      "status": "implemented",
+      "depends_on": [
+        "MOST-STD-003"
+      ],
+      "acceptance": [
+        "snapshot-schema-validation",
+        "sha256-integrity",
+        "dimension-parity",
+        "treewalk-vm-parity"
+      ]
+    },
+    {
+      "id": "MOST-FED-002",
+      "name": "VentuSample pack v1/v2 metadata validation and comparison",
+      "area": "federation",
+      "status": "implemented",
+      "depends_on": [
+        "MOST-STD-003"
+      ],
+      "acceptance": [
+        "v1-compatibility",
+        "v2-tonal-metadata",
+        "stochastic-metadata-validation",
+        "treewalk-vm-parity"
+      ]
+    },
+    {
+      "id": "MOST-HOST-001",
+      "name": "explicit opt-in native C ABI v1 bridge for numerical and host operations",
+      "area": "interop",
+      "status": "implemented",
+      "depends_on": [
+        "MOST-STD-003"
+      ],
+      "acceptance": [
+        "absolute-path-required",
+        "abi-version-check",
+        "explicit-ffi-opt-in",
+        "lifecycle-checks"
+      ]
     }
   ],
   "profile": "МОСТ — exact Russian keyword aliases; no separate parser, semantics, runtime or backend"
