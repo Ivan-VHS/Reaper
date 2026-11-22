@@ -164,7 +164,12 @@ class LanguageService:
             if self._docs.get(uri) == snap: self._results[uri] = result
         return result
     def result(self, uri):
-        with self._lock: return self._results.get(uri)
+        with self._lock:
+            current = self._docs.get(uri)
+            cached = self._results.get(uri)
+            if current is None or cached is None or cached.snapshot != current:
+                return None
+            return cached
     def completion(self, uri, prefix=""):
         result = self.result(uri) or self.analyze(uri)
         names = {s.name:s.kind for s in result.symbols}
