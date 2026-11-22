@@ -37,7 +37,7 @@ Reaper — expression-oriented язык, в котором оператор `::`
 |---|---|---|
 | Python runtime | lexer, parser, interpreter, CLI, REPL, модули, closures, quotas и audit log | текущая исполняемая эталонная реализация |
 | Reaper Studio | основа Windows IDE: дерево проекта, редактор, подсветка синтаксиса, поиск, check/run и debugger | локальное desktop-приложение |
-| LSP | stdio JSON-RPC, diagnostics, completion, hover, symbols и лексическая навигация | открытый документ; без межфайлового type inference |
+| LSP | stdio JSON-RPC, diagnostics, completion, hover, document/workspace symbols и лексическая навигация | открытые документы редактора; без межфайлового type inference |
 | DAP | stdio debug adapter, line breakpoints, stepping, stack и locals | отладка на границах операторов; только доверенные локальные программы |
 | NOO TAH | управление проектами/процессами вокруг официального Node.js, npm/npx и Inspector | Node/V8/libuv предоставляет upstream Node |
 | Native C17 | lexer, expression parser, owned AST, checked IR и ограниченный lowering | активное частичное направление, не parity с Python runtime |

@@ -174,6 +174,33 @@ class LanguageService:
         ranked = sorted(names, key=lambda n:(not n.startswith(prefix),
                          -SequenceMatcher(None,prefix,n).ratio(), n.casefold()))
         return [{"label":n,"kind":names[n],"sortText":f"{i:04d}"} for i,n in enumerate(ranked[:100])]
+    def workspace_symbols(self, query="", limit=1000):
+        """Return declarations from currently open documents in stable order.
+
+        The index is intentionally limited to editor buffers. It does not walk
+        the filesystem, load unopened files, or execute project code.
+        """
+        if not isinstance(query, str):
+            raise TypeError("workspace symbol query must be text")
+        if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= 5000:
+            raise ValueError("workspace symbol limit must be between 1 and 5000")
+        needle = query.casefold()
+        with self._lock:
+            snapshots = tuple(sorted(
+                self._docs.values(), key=lambda snapshot: snapshot.uri.casefold()
+            ))
+        matches = []
+        for snapshot in snapshots:
+            analysis = _scan(snapshot)
+            for symbol in analysis.symbols:
+                if not needle or needle in symbol.name.casefold():
+                    matches.append((analysis.snapshot, symbol))
+        matches.sort(key=lambda item: (
+            item[0].uri.casefold(), item[1].name.casefold(),
+            item[1].span.line, item[1].span.start,
+        ))
+        return matches[:limit]
+
     def definition(self, uri, name):
         result = self.result(uri) or self.analyze(uri)
         return next((s for s in result.symbols if s.name == name), None)
