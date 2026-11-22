@@ -10,6 +10,7 @@
 | Studio | Windows editor, debug, call stack, local completion and current-document symbol navigation | desktop app |
 | CODEX-66 | searchable 66-item native feature catalogue with JSON export and maturity labels | implemented metadata/UI; feature statuses remain evidence-based |
 | Native C17 | lexer, expression Pratt parser, owned AST, checked IR | partial |
+| LSP semantic tokens | lexical highlighting for keywords, identifiers, strings, numbers and operators | stdio LSP; UTF-16 positions; no type inference |
 | МОСТ | 54 aliases: 21 executable, 33 reserved | mixed |
 | QCS | separate lexer/parser/JSON AST | validation tool |
 | THESIS | versioned assertion/evidence graph | no auto-verification |
