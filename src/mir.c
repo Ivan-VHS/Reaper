@@ -553,7 +553,7 @@ static int lower_each(MirBuilder *builder, uint32_t node_id, ReaperHirNode *node
     if (iterable == REAPER_MIR_NO_VALUE) return 0;
     uint32_t iterator = emit_instruction(
         builder, REAPER_MIR_ITER_INIT, REAPER_HIR_TYPE_UNKNOWN,
-        iterable, REAPER_MIR_NO_VALUE, node->symbol_id, node_id, "iter"
+        iterable, REAPER_MIR_NO_VALUE, REAPER_HIR_NO_SYMBOL, node_id, "iter"
     );
     if (iterator == REAPER_MIR_NO_VALUE) return 0;
 
@@ -567,7 +567,7 @@ static int lower_each(MirBuilder *builder, uint32_t node_id, ReaperHirNode *node
     builder->current_block = header;
     uint32_t available = emit_instruction(
         builder, REAPER_MIR_ITER_NEXT, REAPER_HIR_TYPE_BOOL,
-        iterator, REAPER_MIR_NO_VALUE, node->symbol_id, node_id, "next"
+        iterator, REAPER_MIR_NO_VALUE, REAPER_HIR_NO_SYMBOL, node_id, "next"
     );
     if (available == REAPER_MIR_NO_VALUE ||
         !append_branch(builder, available, body, exit, node_id)) return 0;
@@ -575,7 +575,7 @@ static int lower_each(MirBuilder *builder, uint32_t node_id, ReaperHirNode *node
     builder->current_block = body;
     uint32_t item = emit_instruction(
         builder, REAPER_MIR_ITER_CURRENT, REAPER_HIR_TYPE_UNKNOWN,
-        iterator, REAPER_MIR_NO_VALUE, node->symbol_id, node_id, "current"
+        iterator, REAPER_MIR_NO_VALUE, REAPER_HIR_NO_SYMBOL, node_id, "current"
     );
     if (item == REAPER_MIR_NO_VALUE ||
         !emit_void_instruction(builder, REAPER_MIR_STORE_LOCAL,
