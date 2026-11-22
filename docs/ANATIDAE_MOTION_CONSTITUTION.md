@@ -53,14 +53,14 @@ The supplied duck bob, tail waggle, wave glide, ripples, quack particles, floati
 3. Eco / Low-CPU Visuals suppresses all ambient effects and secondary refresh work.
 4. A pause control is mandatory wherever ambient animation is offered.
 5. Animation runs on the UI thread only, is cancelled when its window/widget is destroyed and never blocks work queues.
-6. UI motion must never run inside DSP callbacks, audio buffers, generator workers, benchmarks, device scans, archive inspection or compiler/runtime execution.
+6. UI motion must never run inside time-critical callbacks, data buffers, background workers, benchmarks, device scans, archive inspection or compiler/runtime execution.
 
 ## Native implementation map
 
 - **Pytyliki / Win32:** native startup transition only; Expressive may use a short vertical glide. No continuous background timer or animated performance controls.
 - **Reaper / Tk:** bounded UI-thread spring controller; optional showcase effects stay out of editor and debugger panes.
 - **OPlague / Tk:** persisted Expressive paddle easing; inventory and evidence panes remain still and opaque.
-- **VentuSample / Qt:** bounded Qt property animations and project-BPM indicator; no animation inside DSP or generator workers.
+- **VentuSample:** maintains its application-specific motion behavior in its own repository; it is not a Reaper runtime module.
 
 This file is the shared visual/motion reference. Product-specific contracts in `docs/UI_MOTION.md` remain authoritative for what is actually enabled in each application.
 
