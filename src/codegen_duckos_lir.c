@@ -372,14 +372,20 @@ static int validate_module(
 static int emit_frame_validation(
     FILE *output,
     const ReaperLirFunction *function,
-    size_t index
+    const DuckLirLayout *layout,
+    size_t function_id
 ) {
-    if (fprintf(output,
+#define EMIT(...) do { if (fprintf(output, __VA_ARGS__) < 0) return 0; } while (0)
+    EMIT(
         "    pushq %%rbp\n"
         "    movq %%rsp, %%rbp\n"
         "    subq $%zu, %%rsp\n"
         "    movq %%r10, -8(%%rbp)\n"
-        "    movq %%r11, -16(%%rbp)\n"
+        "    movq %%r11, -16(%%rbp)\n",
+        layout->frame_size
+    );
+
+    EMIT(
         "    testq %%r10, %%r10\n"
         "    je .Lduck_fn_%zu_bad_pointer\n"
         "    testq $15, %%r10\n"
@@ -387,17 +393,26 @@ static int emit_frame_validation(
         "    testq %%r11, %%r11\n"
         "    je .Lduck_fn_%zu_bad_pointer\n"
         "    testq $15, %%r11\n"
-        "    jne .Lduck_fn_%zu_bad_alignment\n"
+        "    jne .Lduck_fn_%zu_bad_alignment\n",
+        function_id, function_id, function_id, function_id
+    );
+
+    EMIT(
         "    cmpl $0x49424144, 0(%%r10)\n"
         "    jne .Lduck_fn_%zu_bad_magic\n"
         "    cmpw $1, 4(%%r10)\n"
         "    jne .Lduck_fn_%zu_bad_version\n"
         "    cmpw $0, 6(%%r10)\n"
         "    jne .Lduck_fn_%zu_bad_version\n"
-        "    cmpl $%u, 8(%%r10)\n"
+        "    cmpl $48, 8(%%r10)\n"
         "    jb .Lduck_fn_%zu_bad_frame_size\n"
         "    cmpl $%u, 12(%%r10)\n"
-        "    jne .Lduck_fn_%zu_bad_arguments\n"
+        "    jne .Lduck_fn_%zu_bad_arguments\n",
+        function_id, function_id, function_id, function_id,
+        function->parameter_count, function_id
+    );
+
+    EMIT(
         "    cmpl $0, 16(%%r10)\n"
         "    jne .Lduck_fn_%zu_bad_arguments\n"
         "    cmpl $0, 20(%%r10)\n"
@@ -408,30 +423,26 @@ static int emit_frame_validation(
         "    jne .Lduck_fn_%zu_bad_flags\n"
         "    cmpq $0, 40(%%r10)\n"
         "    jne .Lduck_fn_%zu_bad_arguments\n",
-        16U, index, index, index, index, index, index, index,
-        48U + function->parameter_count * 16U, index, function->parameter_count,
-        index, index, index, index, index, index) < 0) return 0;
+        function_id, function_id, function_id, function_id, function_id
+    );
 
     if (function->parameter_count == 0U) {
-        if (fprintf(output,
+        EMIT(
             "    cmpq $0, 32(%%r10)\n"
             "    jne .Lduck_fn_%zu_bad_arguments\n",
-            index) < 0) return 0;
+            function_id
+        );
     } else {
-        if (fprintf(output,
+        EMIT(
             "    movq 32(%%r10), %%r8\n"
             "    testq %%r8, %%r8\n"
             "    je .Lduck_fn_%zu_bad_arguments\n"
             "    testq $15, %%r8\n"
             "    jne .Lduck_fn_%zu_bad_alignment\n",
-            index, index) < 0) return 0;
-        for (size_t parameter = 0U; parameter < function->parameter_count; ++parameter) {
-            uint32_t slot = 0U;
-            /* The LIR parameter table stores stack slots in signature order. */
-            slot = 0U;
-            (void)slot;
-        }
+            function_id, function_id
+        );
     }
+#undef EMIT
     return 1;
 }
 
@@ -757,7 +768,7 @@ static int emit_function(
             f, f, f) < 0) return 0;
     }
 
-    if (!emit_frame_validation(output, function, f) ||
+    if (!emit_frame_validation(output, function, &layouts[f], f) ||
         !emit_parameter_loads(module, function, f, output)) {
         return codegen_fail(error, f, "failed to emit DABI64 function entry");
     }
