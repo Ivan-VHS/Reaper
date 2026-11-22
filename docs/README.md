@@ -12,7 +12,7 @@
 | [ANATIDAE_MOTION_CONSTITUTION.md](ANATIDAE_MOTION_CONSTITUTION.md) | shared white/blue/red desktop motion and surface profile |
 | [PLUGINS.md](PLUGINS.md) | internal plugin host and extension lifecycle |
 | [INTERNAL_PRODUCTS.md](INTERNAL_PRODUCTS.md) | integrated product catalogue and service contracts |
-| [FEATURES.md](FEATURES.md) | shipped, reference and proposed capability matrix |
+| [FEATURES.md](FEATURES.md) | shipped, reference and proposed capability matrix |\n| [FLOW_TOOLKIT.md](FLOW_TOOLKIT.md) | bounded collection combinators shared by the tree-walk and VM engines |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | runtime and compiler stages |
 | [ENGINEERING.md](ENGINEERING.md) | quality, effect and release gates |
 | [DIVISION_ENGINE.md](DIVISION_ENGINE.md) | checked division and workload allocation |
