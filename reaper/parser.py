@@ -226,10 +226,13 @@ class Parser:
             self._skip_newlines()
             if not self._check("}"):
                 while True:
+                    computed_key = self._match("[")
                     key = self._expression()
-                    # Bare identifiers are ergonomic string keys; write (name)
-                    # when the value of a variable should be used as the key.
-                    if key.kind == "name":
+                    if computed_key:
+                        self._consume("]", "expected ']' after computed map key")
+                    elif key.kind == "name":
+                        # Bare identifiers are ergonomic string keys; use [name]
+                        # when the value of a variable should be used as the key.
                         key = Node("literal", key.token, value=key.value)
                     self._consume(":", "expected ':' between map key and value")
                     entries.extend((key, self._expression()))
