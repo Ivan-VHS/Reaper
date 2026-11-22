@@ -6,6 +6,23 @@
 
 [源代码仓库](https://github.com/Ivan-VHS/Reaper) · [Python CI](.github/workflows/ci.yml) · [Windows Studio 构建](.github/workflows/desktop-build.yml) · [Node.js 兼容性](.github/workflows/noo-tah.yml) · [文档索引](docs/README.md) · [Apache-2.0](LICENSE)
 
+## Studio 实际截屏
+
+<p align="center"><a href="assets/screenshots/reaper-studio.png"><img src="assets/screenshots/reaper-studio.png" alt="Reaper 在 Windows 上运行的实际截屏" width="100%"></a></p>
+<p align="center"><sub>1920×1080 · 点击图片查看原始 PNG 文件。</sub></p>
+
+这是由本仓库 README 截图工作流从 Windows 上真实运行的 Reaper Studio 窗口截取的画面。横幅和流程图是原创 SVG 插图，并非软件截图。
+
+### 架构一览
+
+<p align="center"><img src="assets/readme/workflow.svg" alt="Reaper implemented data flow" width="100%"></p>
+
+实际流程：`.rpr` 源码 → lexer 与 parser → Python 参考运行时 → CLI、Studio、LSP 和 DAP。
+
+
+[![Python CI](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/ci.yml?branch=main&label=Python%20CI)](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml)  [![Live Studio capture](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/readme-screenshots.yml?branch=main&label=Live%20Studio%20capture)](https://github.com/Ivan-VHS/Reaper/actions/workflows/readme-screenshots.yml)  [![License](https://img.shields.io/github/license/Ivan-VHS/Reaper)](LICENSE)
+
+
 > **项目范围：** Reaper 是一款本地编程语言、解释器、开发工具集合以及 Windows 桌面 IDE。它不是托管的 Web Demo，也不是生产 Web 服务。Python 是当前可执行的兼容性参考实现；原生 C17 路线仍为部分实现。文档已于 **2026-11-22** 对照 `main` 分支核对。
 
 ## 项目用途与实现状态
@@ -31,8 +48,6 @@ Reaper 是一种表达式导向语言，运算符 `::` 会将值传递给下一�
 
 下图是 Windows Studio 的实际桌面截屏，不是浏览器 Playground。
 
-<p align="center"><img src="assets/screenshots/reaper-studio.png" alt="在 Windows 上运行的 Reaper Studio" width="100%"></p>
-<sub>桌面程序截屏 · 原始图像 1920×1080。截图不等于在线托管 Demo。</sub>
 
 ## 快速开始
 

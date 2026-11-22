@@ -6,6 +6,23 @@
 
 [Source](https://github.com/Ivan-VHS/Reaper) · [Python CI](.github/workflows/ci.yml) · [Windows Studio build](.github/workflows/desktop-build.yml) · [Node.js compatibility](.github/workflows/noo-tah.yml) · [Docs index](docs/README.md) · [Apache-2.0](LICENSE)
 
+## Live Studio capture
+
+<p align="center"><a href="assets/screenshots/reaper-studio.png"><img src="assets/screenshots/reaper-studio.png" alt="Real Windows desktop capture of Reaper" width="100%"></a></p>
+<p align="center"><sub>1920×1080 · Click the image to open the original PNG.</sub></p>
+
+Genuine capture of the running Reaper Studio window on Windows, created by the repository's README screenshot workflow. The banner and flow diagram are original SVG illustrations, not screenshots.
+
+### Architecture at a glance
+
+<p align="center"><img src="assets/readme/workflow.svg" alt="Reaper implemented data flow" width="100%"></p>
+
+Implemented path: `.rpr` source → lexer and parser → Python reference runtime → CLI, Studio, LSP and DAP.
+
+
+[![Python CI](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/ci.yml?branch=main&label=Python%20CI)](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml)  [![Live Studio capture](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/readme-screenshots.yml?branch=main&label=Live%20Studio%20capture)](https://github.com/Ivan-VHS/Reaper/actions/workflows/readme-screenshots.yml)  [![License](https://img.shields.io/github/license/Ivan-VHS/Reaper)](LICENSE)
+
+
 > **Scope:** Reaper is a local programming language, interpreter, developer tooling set and Windows desktop IDE. It is not a hosted web demo or production web service. Python is the current executable compatibility reference; the C17 native track is partial. Documentation was checked against `main` on **2026-11-22**.
 
 ## Purpose and implementation status
@@ -31,8 +48,6 @@ Catalogues and registries may contain proposed or reserved entries. An item in a
 
 The image below is a capture of the Windows Studio application, not a browser-based playground.
 
-<p align="center"><img src="assets/screenshots/reaper-studio.png" alt="Reaper Studio running on Windows" width="100%"></p>
-<sub>Desktop capture · 1920×1080 source image. A screenshot is not a live hosted demo.</sub>
 
 ## Quick Start
 

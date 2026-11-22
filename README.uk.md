@@ -6,6 +6,23 @@
 
 [Вихідний код](https://github.com/Ivan-VHS/Reaper) · [Python CI](.github/workflows/ci.yml) · [Збирання Windows Studio](.github/workflows/desktop-build.yml) · [Сумісність Node.js](.github/workflows/noo-tah.yml) · [Індекс документації](docs/README.md) · [Apache-2.0](LICENSE)
 
+## Реальний знімок Studio
+
+<p align="center"><a href="assets/screenshots/reaper-studio.png"><img src="assets/screenshots/reaper-studio.png" alt="Реальний знімок Reaper у Windows" width="100%"></a></p>
+<p align="center"><sub>1920×1080 · Натисніть зображення, щоб відкрити оригінальний PNG.</sub></p>
+
+Справжній знімок запущеного вікна Reaper Studio у Windows, створений screenshot workflow цього репозиторію. Банер і схема потоку — авторські SVG-ілюстрації, а не скріншоти.
+
+### Архітектура одним поглядом
+
+<p align="center"><img src="assets/readme/workflow.svg" alt="Reaper implemented data flow" width="100%"></p>
+
+Реальний шлях: вихідний `.rpr` → lexer і parser → Python reference runtime → CLI, Studio, LSP та DAP.
+
+
+[![Python CI](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/ci.yml?branch=main&label=Python%20CI)](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml)  [![Live Studio capture](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/readme-screenshots.yml?branch=main&label=Live%20Studio%20capture)](https://github.com/Ivan-VHS/Reaper/actions/workflows/readme-screenshots.yml)  [![License](https://img.shields.io/github/license/Ivan-VHS/Reaper)](LICENSE)
+
+
 > **Призначення:** Reaper — локальна мова програмування, інтерпретатор, набір інструментів розробника та desktop IDE для Windows. Це не hosted web demo і не production web service. Python runtime є поточною виконуваною еталонною реалізацією сумісності; нативний трек C17 реалізований частково. Документацію звірено з `main` **22.11.2026**.
 
 ## Призначення та стан реалізації
@@ -31,8 +48,6 @@ Reaper — expression-oriented мова, у якій оператор `::` пе�
 
 Зображення нижче — знімок Windows Studio, а не браузерний playground.
 
-<p align="center"><img src="assets/screenshots/reaper-studio.png" alt="Reaper Studio у Windows" width="100%"></p>
-<sub>Знімок desktop-програми · вихідне зображення 1920×1080. Скріншот не є live hosted demo.</sub>
 
 ## Швидкий старт
 
