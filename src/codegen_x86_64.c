@@ -60,6 +60,14 @@ int reaper_codegen_x86_64_sysv_elf(
             "IR must end with exactly one RETURN"
         );
     }
+    if (module->nodes[return_index].lhs >= module->length ||
+        module->nodes[module->nodes[return_index].lhs].type != REAPER_IR_TYPE_I64) {
+        return codegen_fail(
+            error,
+            return_index,
+            "x86-64 expression backend requires an i64 RETURN operand"
+        );
+    }
 
     size_t frame_size = 8U + module->length * 8U;
     frame_size = (frame_size + 15U) & ~(size_t)15U;
