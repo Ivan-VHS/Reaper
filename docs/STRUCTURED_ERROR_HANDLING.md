@@ -13,6 +13,16 @@ attempt {
 }
 ```
 
+A language-level `throw value` raises a `ReaperRuntimeError` with a source location and a display-form diagnostic. A surrounding `recover` can catch it like other language runtime errors:
+
+```reaper
+attempt {
+    throw "manual failure"
+} recover failure {
+    emit contains(failure, "thrown: manual failure")
+}
+```
+
 The clauses have the following contract:
 
 - `attempt` executes its body in a nested lexical scope.
@@ -20,6 +30,7 @@ The clauses have the following contract:
 - `finally` is optional. It runs after normal completion, a recovered error, an uncaught language error, or an early `yield`.
 - At least one of `recover` or `finally` is required. Clause order is `recover` followed by `finally`.
 - `ExecutionLimitError` is deliberately not recoverable. A program cannot catch its way out of the configured execution budget.
+- `throw value` creates a catchable language error; it does not expose Python or host exception objects.
 - Errors raised by arbitrary host callbacks are not converted into language exceptions by this statement.
 
 ## Russian aliases
@@ -31,6 +42,7 @@ The МОСТ lexical profile accepts exact aliases:
 | `attempt` | `попытка` |
 | `recover` | `обработать` |
 | `finally` | `наконец` |
+| `throw` | `бросить` |
 
 Example:
 
