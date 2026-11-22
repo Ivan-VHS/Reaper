@@ -11,4 +11,4 @@
 | Effects | capability-gated host operations |
 | Native target | C17, later standards only after conformance |
 
-Python 0.1 remains the reference until differential tests cover the complete language/CLI. Native parser/IR milestones do not imply a completed compiler.
+Python remains the executable compatibility reference until differential tests cover the complete language/CLI. The C17 backend currently emits x86-64 System V ELF assembly for a bounded signed-i64 expression subset only; this is not the DuckOS ABI or a complete native compiler. Native parser/IR milestones do not imply full compiler parity.
