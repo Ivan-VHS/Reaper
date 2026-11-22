@@ -803,6 +803,20 @@ class Interpreter:
             4, 4,
         )
 
+        def pytyliki_plugin_catalog(path: Any) -> list[dict[str, Any]]:
+            if not self.allow_native_ffi:
+                raise ValueError("native FFI is disabled; run with --allow-native-ffi")
+            if not isinstance(path, str):
+                raise TypeError("pytyliki_plugin_catalog expects an explicit library path")
+            return pytyliki_native.pytyliki_plugins(path)
+
+        def pytyliki_plugin_info(query: Any, path: Any) -> dict[str, Any]:
+            if not self.allow_native_ffi:
+                raise ValueError("native FFI is disabled; run with --allow-native-ffi")
+            if not isinstance(query, str) or not isinstance(path, str):
+                raise TypeError("pytyliki_plugin_info expects a text query and explicit library path")
+            return pytyliki_native.pytyliki_plugin_info(query, path)
+
         def pytyliki_embedded_profiles(path: Any) -> list[dict[str, Any]]:
             if not self.allow_native_ffi:
                 raise ValueError("native FFI is disabled; run with --allow-native-ffi")
@@ -828,6 +842,8 @@ class Interpreter:
             }
             return pytyliki_native.pytyliki_embedded_budget(profile_id, sections, path)
 
+        register("pytyliki_plugin_catalog", pytyliki_plugin_catalog, 1, 1)
+        register("pytyliki_plugin_info", pytyliki_plugin_info, 2, 2)
         register("pytyliki_embedded_profiles", pytyliki_embedded_profiles, 1, 1)
         register("pytyliki_embedded_budget", pytyliki_embedded_budget, 8, 8)
 
