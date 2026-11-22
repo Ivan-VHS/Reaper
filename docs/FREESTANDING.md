@@ -15,10 +15,11 @@ changing the behavior of the existing Python reference interpreter.
 - Initial target triples: **x86_64-unknown-none-elf**,
   **aarch64-unknown-none-elf** and **riscv64-unknown-none-elf**.
 - **include/reaper/freestanding.h**: fixed-width compiler-native types,
-  packed/aligned/section attributes, volatile MMIO accessors, atomic
-  compare-exchange, acquire/release spin lock, a caller-owned bump arena and
-  x86 port-I/O/control-instruction helpers.
-- A minimal x86_64 COM1 example which writes a boot message and halts.
+  packed/aligned/section attributes, SysV64/Win64 calling-convention markers,
+  volatile MMIO accessors, 32/64-bit atomics, memory fences, an acquire/release
+  spin lock, a caller-owned bump arena, and x86/AArch64/RISC-V instruction helpers.
+- An x86_64 COM1 example with an assembly `_start` that disables interrupts,
+  installs a private 16 KiB stack, and only then calls the C kernel entry.
 
 The header does not provide an implicit allocator or hidden runtime. The
 caller owns every arena and must provide its backing memory. MMIO pointers must
@@ -80,6 +81,12 @@ To integrate the low-level helper API into a native system module:
 This example only demonstrates the API shape. The address is illustrative;
 real device addresses must come from platform discovery and memory mapping.
 
+The header exposes x86 port I/O, CR3/MSR access and page invalidation, plus
+AArch64 barrier/TTBR0 helpers and a RISC-V I/O memory fence. It also provides
+atomic loads/stores/CAS for 32- and 64-bit values. These helpers emit the
+corresponding instructions; they do not check CPU privilege, device ownership,
+cacheability attributes or platform-specific register availability.
+
 ## Project manifest
 
 The manifest schema is reaper.os-project/v1. Paths are resolved relative
@@ -92,7 +99,7 @@ Allowed source extensions are .c, .s and preprocessed assembly .S.
       "format": "elf",
       "entry": "_start",
       "output": "build/kernel.elf",
-      "sources": ["src/boot.c"],
+      "sources": ["x86_64/entry.S", "x86_64/boot.c"],
       "include_dirs": ["../include"],
       "linker_script": "linker.ld"
     }
