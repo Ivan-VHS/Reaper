@@ -577,6 +577,202 @@ class Interpreter:
                 history.append(value)
             return history
 
+        def mapping(value: Any) -> dict[Any, Any]:
+            if not isinstance(value, dict):
+                raise TypeError("expected a map")
+            if len(value) > self.max_collection_items:
+                raise ValueError(f"collection item limit ({self.max_collection_items}) exceeded")
+            return value
+
+        def hashable_key(value: Any) -> Any:
+            try:
+                hash(value)
+            except TypeError as error:
+                raise TypeError("map keys must be hashable") from error
+            return value
+
+        def map_get(value: Any, key: Any, *default: Any) -> Any:
+            return mapping(value).get(hashable_key(key), default[0] if default else None)
+
+        def map_put(value: Any, key: Any, item: Any) -> dict[Any, Any]:
+            result = dict(mapping(value))
+            key = hashable_key(key)
+            if key not in result and len(result) >= self.max_collection_items:
+                raise ValueError(f"collection item limit ({self.max_collection_items}) exceeded")
+            result[key] = item
+            return result
+
+        def map_merge(left: Any, right: Any) -> dict[Any, Any]:
+            result = dict(mapping(left))
+            for key, item in mapping(right).items():
+                if key not in result and len(result) >= self.max_collection_items:
+                    raise ValueError(f"collection item limit ({self.max_collection_items}) exceeded")
+                result[key] = item
+            return result
+
+        def map_pick(value: Any, wanted: Any) -> dict[Any, Any]:
+            source = mapping(value)
+            result: dict[Any, Any] = {}
+            for raw_key in sequence(wanted):
+                key = hashable_key(raw_key)
+                if key in source:
+                    result[key] = source[key]
+            return result
+
+        def map_omit(value: Any, unwanted: Any) -> dict[Any, Any]:
+            result = dict(mapping(value))
+            result.pop(hashable_key(unwanted), None)
+            return result
+
+        def map_entries(value: Any) -> list[list[Any]]:
+            return [[key, item] for key, item in mapping(value).items()]
+
+        def map_from_entries(value: Any) -> dict[Any, Any]:
+            result: dict[Any, Any] = {}
+            for pair in sequence(value):
+                if not isinstance(pair, (list, tuple)) or len(pair) != 2:
+                    raise TypeError("from_entries() expects [key, value] pairs")
+                key = hashable_key(pair[0])
+                if key not in result and len(result) >= self.max_collection_items:
+                    raise ValueError(f"collection item limit ({self.max_collection_items}) exceeded")
+                result[key] = pair[1]
+            return result
+
+        def map_values(value: Any, function: Any) -> dict[Any, Any]:
+            callback(function)
+            token = Token("BUILTIN", "map_values", 1, 1)
+            result: dict[Any, Any] = {}
+            for key, item in mapping(value).items():
+                self._tick(token)
+                result[key] = self._call(function, [key, item], token)
+            return result
+
+        def filter_entries(value: Any, function: Any) -> dict[Any, Any]:
+            callback(function)
+            token = Token("BUILTIN", "filter_entries", 1, 1)
+            result: dict[Any, Any] = {}
+            for key, item in mapping(value).items():
+                self._tick(token)
+                if self._truthy(self._call(function, [key, item], token)):
+                    result[key] = item
+            return result
+
+        def zip_values(left: Any, right: Any) -> list[list[Any]]:
+            first_values, second_values = sequence(left), sequence(right)
+            return [
+                [first_values[index], second_values[index]]
+                for index in range(min(len(first_values), len(second_values)))
+            ]
+
+        def enumerate_values(value: Any, *start: Any) -> list[list[Any]]:
+            values = sequence(value)
+            offset = integer(start[0], "enumerate start") if start else 0
+            return [[offset + index, item] for index, item in enumerate(values)]
+
+        def any_value(value: Any) -> bool:
+            return any(self._truthy(item) for item in sequence(value))
+
+        def all_values(value: Any) -> bool:
+            return all(self._truthy(item) for item in sequence(value))
+
+        def compact(value: Any) -> list[Any]:
+            return [item for item in sequence(value) if item is not None]
+
+        def group_by(value: Any, function: Any) -> dict[Any, list[Any]]:
+            callback(function)
+            token = Token("BUILTIN", "group_by", 1, 1)
+            result: dict[Any, list[Any]] = {}
+            for item in sequence(value):
+                self._tick(token)
+                key = hashable_key(self._call(function, [item], token))
+                if key not in result:
+                    if len(result) >= self.max_collection_items:
+                        raise ValueError(f"collection item limit ({self.max_collection_items}) exceeded")
+                    result[key] = []
+                result[key].append(item)
+            return result
+
+        def count_by(value: Any, function: Any) -> dict[Any, int]:
+            callback(function)
+            token = Token("BUILTIN", "count_by", 1, 1)
+            result: dict[Any, int] = {}
+            for item in sequence(value):
+                self._tick(token)
+                key = hashable_key(self._call(function, [item], token))
+                if key not in result:
+                    if len(result) >= self.max_collection_items:
+                        raise ValueError(f"collection item limit ({self.max_collection_items}) exceeded")
+                    result[key] = 0
+                result[key] += 1
+            return result
+
+        def scan(value: Any, initial: Any, function: Any) -> list[Any]:
+            callback(function)
+            token = Token("BUILTIN", "scan", 1, 1)
+            result: list[Any] = []
+            accumulator = initial
+            for item in sequence(value):
+                self._tick(token)
+                accumulator = self._call(function, [accumulator, item], token)
+                result.append(accumulator)
+            return result
+
+        def take_while(value: Any, function: Any) -> list[Any]:
+            callback(function)
+            token = Token("BUILTIN", "take_while", 1, 1)
+            result: list[Any] = []
+            for item in sequence(value):
+                self._tick(token)
+                if not self._truthy(self._call(function, [item], token)):
+                    break
+                result.append(item)
+            return result
+
+        def drop_while(value: Any, function: Any) -> list[Any]:
+            callback(function)
+            token = Token("BUILTIN", "drop_while", 1, 1)
+            values = sequence(value)
+            offset = 0
+            for item in values:
+                self._tick(token)
+                if not self._truthy(self._call(function, [item], token)):
+                    break
+                offset += 1
+            return list(values[offset:])
+
+        def zip_with(left: Any, right: Any, function: Any) -> list[Any]:
+            callback(function)
+            token = Token("BUILTIN", "zip_with", 1, 1)
+            first_values, second_values = sequence(left), sequence(right)
+            result: list[Any] = []
+            for index in range(min(len(first_values), len(second_values))):
+                self._tick(token)
+                result.append(self._call(function, [first_values[index], second_values[index]], token))
+            return result
+
+        register("keys", lambda value: list(mapping(value).keys()), 1, 1)
+        register("values", lambda value: list(mapping(value).values()), 1, 1)
+        register("entries", map_entries, 1, 1)
+        register("has_key", lambda value, key: hashable_key(key) in mapping(value), 2, 2)
+        register("get", map_get, 2, 3)
+        register("put", map_put, 3, 3)
+        register("merge", map_merge, 2, 2)
+        register("pick", map_pick, 2, 2)
+        register("omit", map_omit, 2, 2)
+        register("from_entries", map_from_entries, 1, 1)
+        register("map_values", map_values, 2, 2)
+        register("filter_entries", filter_entries, 2, 2)
+        register("zip", zip_values, 2, 2)
+        register("enumerate", enumerate_values, 1, 2)
+        register("any", any_value, 1, 1)
+        register("all", all_values, 1, 1)
+        register("compact", compact, 1, 1)
+        register("group_by", group_by, 2, 2)
+        register("count_by", count_by, 2, 2)
+        register("scan", scan, 3, 3)
+        register("take_while", take_while, 2, 2)
+        register("drop_while", drop_while, 2, 2)
+        register("zip_with", zip_with, 3, 3)
         register("divmod_euclidean", euclidean_divmod, 2, 2)
         register("euclidean_divmod", euclidean_divmod, 2, 2)
         register("quotient", lambda dividend, divisor: euclidean_divmod(dividend, divisor)[0], 2, 2)
