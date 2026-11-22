@@ -82,7 +82,13 @@ python -m reaper --repl
 python reaper_desktop.py
 ```
 
-Після editable installation доступні відповідні entry points `reaper` і `reaper-studio`.
+Після editable installation доступні відповідні entry points `reaper`, `reaper-studio` і `reaper-toolchain`.
+
+Перегляд локальних інструментів та створення SHA-256 lock не запускають знайдені програми:
+
+```sh
+reaper-toolchain --output toolchain-inventory.json
+```
 
 ### Запустити тести
 
