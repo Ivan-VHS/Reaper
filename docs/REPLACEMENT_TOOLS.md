@@ -1,17 +1,19 @@
-# Original replacement tools
+# Reaper Toolchain Atlas — integrated environment inventory
 
-The new tools/reaper_runtime_inventory.py utility is an independently written inventory for the programming-language and toolchain domain represented by entries 251-310 in the source catalogue. It checks whether selected compilers and runtimes are present on PATH and asks each installed tool only for a version string.
+Reaper Toolchain Atlas is a read-only environment inventory for the language and runtime domain represented by catalogue entries 251–310. It combines one declarative catalogue, bounded probes, deterministic aggregation and three report formats.
 
-Run:
+Examples:
 
     python tools/reaper_runtime_inventory.py
-    python tools/reaper_runtime_inventory.py --available-only --json
+    python tools/reaper_runtime_inventory.py --family compiled --family proof --format markdown
+    python tools/reaper_runtime_inventory.py --available-only --format json --output reports/toolchains.json
+    python tools/reaper_runtime_inventory.py --workers 8 --timeout 3 --search-path "C:\Tools\bin"
 
-The catalogue is descriptive metadata, not a bundled compiler distribution. Probes use fixed argument lists, shell=False, closed standard input and a short timeout. The tool never compiles, imports, evaluates or executes a user project. A failed or timed-out probe is reported rather than treated as proof that a toolchain is broken. Tools without a safe, non-interactive version query are deliberately omitted from this first catalogue revision.
+The catalogue is descriptive metadata, not a bundled compiler distribution. Every probe uses a fixed argument vector, shell=False, closed standard input, a short timeout and a bounded worker pool. Results preserve catalogue order regardless of completion order. The application distinguishes missing tools from version-probe errors and timeouts; finding an executable does not imply that its full SDK or project build works.
 
-This is not a clone or reimplementation of Go, Rust, .NET, Java, Swift, Deno or any other named language runtime. It provides an original Reaper-side inventory layer and does not reuse third-party source code, logos, interface assets or trademarks. Names are used only to identify detected tools.
+The report schema is reaper.toolchain-atlas.v1. It contains a host summary, per-family counts, exact probe outcomes, executable paths and a policy record. The inventory does not compile, import, evaluate or execute a user's project.
 
-The new source and tests are original Reaper contributions, copyright (c) 2026 Ivan-VHS, under Apache License 2.0. The repository LICENSE remains authoritative.
+This is an original Reaper-side environment workbench, not a clone or reimplementation of any language or compiler. It contains no bundled third-party binaries, source, logos, interface assets or copied trademarks. Copyright (c) 2026 Ivan-VHS. The repository Apache-2.0 LICENSE remains authoritative.
 
 Test:
 
