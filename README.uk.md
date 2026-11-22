@@ -30,9 +30,9 @@ flowchart TD
     G[Проєкт JavaScript] --> H[Офіційний дистрибутив Node.js]
     H --> I[V8, API Node.js, npm та Inspector]
     J[Нативний напрям C17] --> K[Частковий parser і lowering]
-  classDef readmeNode fill:#211936,stroke:#B58AFF,color:#F8F5FF,stroke-width:1.5px;
+  classDef readmeNode fill:#EEF3FF,stroke:#245FC2,color:#1B3150,stroke-width:1.5px;
   class A,B,C,D,E,F,G,H,I,J,K readmeNode;
-  linkStyle default stroke:#B58AFF,stroke-width:1.8px;
+  linkStyle default stroke:#245FC2,stroke-width:1.8px;
 ```
 
 ## Шляхи виконання та результатів
@@ -47,9 +47,9 @@ flowchart LR
     E --> F[Діагностика, completion і symbols]
     G[Запит налагодження] --> H[DAP]
     H --> I[Точки зупинки, стек і локальні змінні]
-  classDef readmeNode fill:#211936,stroke:#B58AFF,color:#F8F5FF,stroke-width:1.5px;
+  classDef readmeNode fill:#EEF3FF,stroke:#245FC2,color:#1B3150,stroke-width:1.5px;
   class A,B,C,D,E,F,G,H,I readmeNode;
-  linkStyle default stroke:#B58AFF,stroke-width:1.8px;
+  linkStyle default stroke:#245FC2,stroke-width:1.8px;
 ```
 
 <sub>Фактичний знімок програми · вихідне зображення 1920×1080 · початкові пікселі збережено, штучне збільшення не застосовується.</sub>
