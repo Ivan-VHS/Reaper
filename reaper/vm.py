@@ -7,7 +7,7 @@ from typing import Any
 from .debugger import DebuggerStopped
 from .errors import ReaperRuntimeError
 from .ir import CanonicalIR, IRFunction, IRInstruction, verify
-from .runtime import Builtin, Environment
+from .runtime import Builtin, Environment, _ReturnSignal
 from .lexer import Token
 
 
@@ -114,7 +114,12 @@ class VirtualMachine:
                     self.interpreter._evaluate(instruction.argument, environment)
                 ))
             elif name == "EXEC_AST":
-                result = self.interpreter._execute(instruction.argument, environment)
+                try:
+                    result = self.interpreter._execute(instruction.argument, environment)
+                except _ReturnSignal as signal:
+                    if not allow_return:
+                        raise self.interpreter._error(token, "yield can only be used inside a craft function")
+                    return self.interpreter.memory.track(signal.value)
             elif name == "CONST":
                 stack.append(instruction.argument)
             elif name == "LOAD":
