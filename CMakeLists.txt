@@ -23,6 +23,7 @@ add_library(reaper_core STATIC
     src/lower.c
     src/codegen_x86_64.c
     src/codegen_duckos_dabi64.c
+    src/codegen_duckos_lir.c
     src/evolution.c
     src/token_catalog.c
     src/division.c
@@ -83,6 +84,10 @@ if(REAPER_BUILD_TESTS)
     target_link_libraries(reaper-codegen-tests PRIVATE reaper_core)
     add_test(NAME native-codegen COMMAND reaper-codegen-tests)
 
+    add_executable(reaper-codegen-duckos-lir-tests tests/test_codegen_duckos_lir.c)
+    target_link_libraries(reaper-codegen-duckos-lir-tests PRIVATE reaper_core)
+    add_test(NAME native-codegen-duckos-lir COMMAND reaper-codegen-duckos-lir-tests)
+
     add_executable(reaper-duckos-codegen-tests tests/test_duckos_codegen.c)
     target_link_libraries(reaper-duckos-codegen-tests PRIVATE reaper_core)
     add_test(NAME native-duckos-dabi64-codegen COMMAND reaper-duckos-codegen-tests)
@@ -122,6 +127,15 @@ if(REAPER_BUILD_TESTS)
                     --compiler $<TARGET_FILE:reaper-c>
                     --cc ${CMAKE_C_COMPILER}
                     --examples-root ${CMAKE_CURRENT_SOURCE_DIR}/examples/native
+            )
+            add_test(
+                NAME native-dabi64-lir-smoke
+                COMMAND ${Python3_EXECUTABLE}
+                    ${CMAKE_CURRENT_SOURCE_DIR}/tests/native_dabi64_lir_smoke.py
+                    --compiler $<TARGET_FILE:reaper-c>
+                    --cc ${CMAKE_C_COMPILER}
+                    --source ${CMAKE_CURRENT_SOURCE_DIR}/examples/native/program.rpr
+                    --test-include ${CMAKE_CURRENT_SOURCE_DIR}/tests
             )
         endif()
 
