@@ -59,6 +59,13 @@ jobs:
           sudo apt-get install -y clang lld binutils
       - name: Test OS project manifest and compiler plan
         run: python -m unittest discover -s tests -p test_os_toolchain.py -v
+      - name: Compile freestanding header for all configured targets
+        run: |
+          for target in x86_64-unknown-none-elf aarch64-unknown-none-elf riscv64-unknown-none-elf; do
+            clang --target="$target" -std=c17 -ffreestanding -fno-builtin \
+              -Wall -Wextra -Wpedantic -Werror -I include \
+              -c tests/freestanding_header_smoke.c -o "/tmp/reaper-$target.o"
+          done
       - name: Validate sample project
         run: python -m reaper os check freestanding/reaper-os.json
       - name: Build freestanding ELF
