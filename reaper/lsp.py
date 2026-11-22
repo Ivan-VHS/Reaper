@@ -256,8 +256,8 @@ class LspServer:
                     tab_size = 4
                 formatted = format_document(snapshot.text, indent_width=tab_size)
                 if formatted != snapshot.text:
-                    end_line = snapshot.text.count("\\n")
-                    last_line = snapshot.text.rsplit("\\n", 1)[-1]
+                    end_line = snapshot.text.count("\n")
+                    last_line = snapshot.text.rsplit("\n", 1)[-1]
                     end_character = len(last_line.encode("utf-16-le")) // 2
                     result = [{
                         "range": {
