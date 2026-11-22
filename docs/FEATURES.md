@@ -13,7 +13,6 @@
 | МОСТ | 54 aliases: 21 executable, 33 reserved | mixed |
 | QCS | separate lexer/parser/JSON AST | validation tool |
 | THESIS | versioned assertion/evidence graph | no auto-verification |
-| VentuSample | pack v1 manifest, 22 descriptors, pair comparison | implemented consumer |
 | Pytyliki | optional C ABI metric calls | explicit trusted path |
 | Registries | 813 proposals; 666 API contracts; 666 symbolic lexemes | specification, not completion |
 
