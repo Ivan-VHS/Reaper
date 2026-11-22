@@ -778,7 +778,6 @@ class ReaperStudio(tk.Tk):
         editor_bg = palette.get("surface", "#0F2A45" if dark else "#FFFFFF")
         editor_fg = palette.get("fg", "#E8EDF2" if dark else "#122C45")
         gutter_bg = palette.get("elevated", "#173A5E" if dark else "#EAF1FA")
-        gutter_fg = palette.get("muted", "#B3C4D6" if dark else "#4D6177")
         border = palette.get("border", "#31516F" if dark else "#CAD8E8")
         focus = palette.get("focus", palette.get("blue", "#70A5FF" if dark else "#004E98"))
         selection = palette.get("selection", "#244F82" if dark else "#D9E8FF")
@@ -1299,6 +1298,8 @@ class ReaperStudio(tk.Tk):
     def _redraw_line_numbers(self, _event: tk.Event | None = None) -> None:
         if not hasattr(self, "line_numbers"):
             return
+        palette = getattr(self, "_anatidae_palette", {})
+        line_number_color = palette.get("muted", "#94a3b8")
         self.line_numbers.delete("all")
         try:
             index = self.editor.index("@0,0")
@@ -1306,7 +1307,14 @@ class ReaperStudio(tk.Tk):
                 info = self.editor.dlineinfo(index)
                 if info is None:
                     break
-                self.line_numbers.create_text(40, info[1], anchor="ne", text=index.split(".")[0], fill=getattr(self, "_anatidae_palette", {}).get("muted", "#94a3b8"), font=("Cascadia Code", 9))
+                self.line_numbers.create_text(
+                    40,
+                    info[1],
+                    anchor="ne",
+                    text=index.split(".")[0],
+                    fill=line_number_color,
+                    font=("Cascadia Code", 9),
+                )
                 index = self.editor.index(f"{index}+1line")
                 if self.editor.compare(index, ">", "end-1c"):
                     break
