@@ -13,6 +13,7 @@ from .decomposition import (
 from .errors import ExecutionLimitError, LexError, ParseError, ReaperError, ReaperRuntimeError
 from .evolution import EvolutionEngine, EvolutionReport
 from .runtime import Interpreter, run
+from .transactions import RuntimeTransaction, Snapshot, TransactionConflict, TransactionError, TransactionLimitError
 from .ir import CanonicalIR, IRVerificationError, lower as lower_to_ir
 from .vm import BytecodeProgram, VirtualMachine, assemble as assemble_bytecode
 from .modules import ModuleCycleError, ModuleError, ModuleLoader
@@ -26,7 +27,7 @@ from .embedded import EmbeddedError, McuProfile, RegisterBank, build_project as 
 
 __version__ = "0.1.0"
 __all__ = [
-    "DivisionResult", "ExecutionLimitError", "EvolutionEngine", "EvolutionReport",
+    "DivisionResult", "ExecutionLimitError", "RuntimeTransaction", "Snapshot", "TransactionConflict", "TransactionError", "TransactionLimitError", "EvolutionEngine", "EvolutionReport",
     "ThesisLedger", "ThesisLedgerError",
     "accumulate", "aggregate", "amplify", "cartesianize", "combine", "compute",
     "compound", "convolve", "couple", "cross_multiply", "expand", "exponentiate",
