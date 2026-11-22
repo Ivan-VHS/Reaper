@@ -154,17 +154,21 @@ def verify_lock(lock: Any, search_path: str | None = None) -> dict[str, Any]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Inspect and pin local compiler and IDE toolchains without running them.")
-    parser.add_argument("--output", type=Path, help="Write the inventory or verification report to this path")
+    parser.add_argument("--output", type=Path, help="Write inventory or verification report to this path")
     parser.add_argument("--path", help="Explicit PATH string for a reproducible inventory")
-    parser.add_argument("--lock", type=Path, help="Create a SHA-256 lock from the discovered toolchain")
+    parser.add_argument("--lock", type=Path, help="Create a SHA-256 lock at this path")
     parser.add_argument("--verify-lock", type=Path, help="Verify a previously created toolchain lock")
     args = parser.parse_args(argv)
     if args.lock is not None and args.verify_lock is not None:
         parser.error("--lock and --verify-lock cannot be used together")
     try:
         inventory = discover_toolchain(args.path)
+        destination = args.output
         if args.lock is not None:
+            if args.output is not None:
+                parser.error("--output cannot be used together with --lock; --lock is the output path")
             result = create_lock(inventory)
+            destination = args.lock
         elif args.verify_lock is not None:
             try:
                 lock = json.loads(args.verify_lock.read_text(encoding="utf-8"))
@@ -173,14 +177,14 @@ def main(argv: list[str] | None = None) -> int:
             result = verify_lock(lock, args.path)
         else:
             result = inventory
-        encoded = json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False) + "\n"
-        if args.output:
-            args.output.write_text(encoded, encoding="utf-8", newline="\n")
+        encoded = json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False) + "\\n"
+        if destination:
+            destination.write_text(encoded, encoding="utf-8", newline="\\n")
         else:
             print(encoded, end="")
         return 0 if result.get("valid", True) else 1
     except (OSError, ToolchainError, TypeError, ValueError) as error:
-        parser.exit(2, f"toolchain inspection failed: {error}\n")
+        parser.exit(2, f"toolchain inspection failed: {error}\\n")
 
 
 if __name__ == "__main__":
