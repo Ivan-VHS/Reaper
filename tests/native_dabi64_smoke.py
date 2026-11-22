@@ -75,7 +75,31 @@ int main(int argc, char **argv) {
                         result.value.kind != 1 || result.value.flags != 0)) return 22;
     if (status != 0 && result.value.payload != UINT64_C(0x123456789abcdef)) return 23;
 
-    if (invoke(&frame, 0) != 1) return 24;
+    result.value.payload = UINT64_C(0x123456789abcdef);
+    frame.magic = 0;
+    if (invoke(&frame, &result) != 2 ||
+        result.value.payload != UINT64_C(0x123456789abcdef)) return 24;
+
+    frame.magic = UINT32_C(0x49424144);
+    frame.major = 2;
+    if (invoke(&frame, &result) != 3) return 25;
+
+    frame.major = 1;
+    frame.byte_size = 47;
+    if (invoke(&frame, &result) != 4) return 26;
+
+    frame.byte_size = sizeof(DuckCallFrame);
+    frame.argument_count = 1;
+    if (invoke(&frame, &result) != 18) return 27;
+
+    frame.argument_count = 0;
+    frame.flags = 1;
+    if (invoke(&frame, &result) != 7) return 28;
+
+    frame.flags = 0;
+    if (invoke((const DuckCallFrame *)((const char *)&frame + 8), &result) != 5) return 29;
+    if (invoke(&frame, 0) != 1) return 30;
+    if (invoke(&frame, (DuckCallResult *)((char *)&result + 8)) != 5) return 31;
     return 0;
 }
 """
