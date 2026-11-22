@@ -5,8 +5,8 @@ from dataclasses import dataclass
 from typing import Any
 
 from .debugger import DebuggerStopped
-from .errors import ReaperRuntimeError
-from .ir import CanonicalIR, IRFunction, IRInstruction, verify
+from .errors import ExecutionLimitError, ReaperRuntimeError
+from .ir import CanonicalIR, IRAttempt, IRFunction, IRInstruction, verify
 from .runtime import Builtin, Environment
 from .lexer import Token
 
@@ -17,6 +17,7 @@ _OPCODES = {
         "JUMP_IF_FALSE", "JUMP", "ENTER_SCOPE", "EXIT_SCOPE", "ITER_INIT",
         "ITER_NEXT", "ITER_END", "POP", "BUILD_LIST", "INDEX", "UNARY",
         "CALL", "PIPE_CALL", "BINARY", "AND_JUMP", "OR_JUMP", "IMPORT", "EXPORT",
+        "ATTEMPT",
     ), start=1)
 }
 _OPCODE_NAMES = {value: key for key, value in _OPCODES.items()}
@@ -33,6 +34,11 @@ class BytecodeInstruction:
 class BytecodeProgram:
     code: tuple[BytecodeInstruction, ...]
     source_name: str
+
+
+class _VMReturn(Exception):
+    def __init__(self, value: Any) -> None:
+        self.value = value
 
 
 @dataclass(slots=True)
@@ -54,6 +60,14 @@ def assemble(module: CanonicalIR) -> BytecodeProgram:
             if instruction.op == "MAKE_FUNCTION":
                 function = argument
                 argument = (function.name, function.parameters, encode(function.code))
+            elif instruction.op == "ATTEMPT":
+                attempt = argument
+                argument = (
+                    attempt.recover_name,
+                    encode(attempt.body),
+                    encode(attempt.recover) if attempt.recover is not None else None,
+                    encode(attempt.final) if attempt.final is not None else None,
+                )
             result.append(BytecodeInstruction(_OPCODES[instruction.op], argument, instruction.token))
         return tuple(result)
 
@@ -82,7 +96,10 @@ class VirtualMachine:
         self.interpreter.call_depth += 1
         self.interpreter.call_stack.append(function.name)
         try:
-            return self._execute(function.code, local, allow_return=True)
+            try:
+                return self._execute(function.code, local, allow_return=True)
+            except _VMReturn as returned:
+                return returned.value
         finally:
             self.interpreter.call_stack.pop()
             self.interpreter.call_depth -= 1
@@ -102,7 +119,7 @@ class VirtualMachine:
             self.interpreter._tick(token)
 
             if self.interpreter.debugger is not None and name in {
-                "DEFINE", "ASSIGN", "EMIT", "RETURN", "MAKE_FUNCTION", "IMPORT", "EXPORT", "ITER_NEXT",
+                "DEFINE", "ASSIGN", "EMIT", "RETURN", "MAKE_FUNCTION", "IMPORT", "EXPORT", "ITER_NEXT", "ATTEMPT",
             }:
                 self.interpreter.debugger.before_statement(
                     token, environment, self.interpreter.call_stack, self.interpreter.filename
@@ -125,7 +142,7 @@ class VirtualMachine:
                 value = stack.pop()
                 if not allow_return:
                     raise self.interpreter._error(token, "yield can only be used inside a craft function")
-                return self.interpreter.memory.track(value)
+                raise _VMReturn(self.interpreter.memory.track(value))
             elif name == "MAKE_FUNCTION":
                 function_name, parameters, function_code = instruction.argument
                 stack.append(BytecodeFunction(function_name, parameters, function_code, environment))
@@ -221,6 +238,22 @@ class VirtualMachine:
                     ip = instruction.argument
                 else:
                     stack.pop()
+            elif name == "ATTEMPT":
+                recover_name, body_code, recover_code, final_code = instruction.argument
+                try:
+                    try:
+                        self._execute(body_code, Environment(environment), allow_return)
+                    except ExecutionLimitError:
+                        raise
+                    except ReaperRuntimeError as error:
+                        if recover_code is None:
+                            raise
+                        recovery_environment = Environment(environment)
+                        recovery_environment.define(recover_name, str(error))
+                        self._execute(recover_code, recovery_environment, allow_return)
+                finally:
+                    if final_code is not None:
+                        self._execute(final_code, Environment(environment), allow_return)
             elif name == "IMPORT":
                 specifier, alias = instruction.argument
                 exports = self.interpreter.module_loader.load(specifier, self.interpreter.filename)
