@@ -13,6 +13,7 @@ keywords = ["programming-language", "interpreter", "dataflow", "qcs"]
 classifiers = ["Development Status :: 3 - Alpha","Environment :: Console","Intended Audience :: Developers","License :: OSI Approved :: Apache Software License","Programming Language :: Python :: 3","Programming Language :: Python :: 3.10","Programming Language :: Python :: 3.11","Programming Language :: Python :: 3.12","Topic :: Software Development :: Interpreters"]
 [project.scripts]
 reaper = "reaper.cli:main"
+reaper-os = "reaper.os_toolchain:main"
 reaper-lsp = "reaper.lsp:serve"
 reaper-dap = "reaper.dap:serve"
 reaper-qcs = "reaper.qcs:main"
