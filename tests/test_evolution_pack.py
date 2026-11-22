@@ -63,6 +63,25 @@ class EvolutionLanguagePackTests(unittest.TestCase):
             'emit recover(outcome, "recovered")'
         ), ["true", "recovered"])
 
+    def test_map_constructors_and_copy_on_write_updates(self):
+        self.assertEqual(self.capture(
+            'make source := map_of("a", 1, "b", 2)\n'
+            'make changed := put(source, "c", 3)\n'
+            'emit keys(changed)\n'
+            'emit get_or(changed, "missing", 9)\n'
+            'emit remove_key(changed, "a")\n'
+            'emit rebind(source, map_of("b", 20, "d", 4))'
+        ), ["[a, b, c]", "9", "{\'b\': 2, \'c\': 3}", "{\'a\': 1, \'b\': 20, \'d\': 4}"])
+
+    def test_flow_coalescing_and_membership_operators(self):
+        self.assertEqual(self.capture(
+            'emit [1, 2, 3] |> size()\n'
+            'emit 2 in [1, 2, 3]\n'
+            'emit "a" in "reaper"\n'
+            'emit 9 ?? missing_name\n'
+            'emit nothing ?? "fallback"'
+        ), ["3", "true", "true", "9", "fallback"])
+
     def test_collection_bounds_are_enforced(self):
         interpreter = Interpreter(output=lambda _line: None, max_collection_items=2)
         with self.assertRaisesRegex(Exception, "collection item limit"):
