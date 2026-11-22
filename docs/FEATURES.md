@@ -2,7 +2,8 @@
 
 | Component | Current scope | Status |
 |---|---|---|
-| Python runtime | lexer, parser, interpreter, CLI, REPL, modules | available |\n| Flow toolkit | 12 bounded functional combinators: predicates, search, enumeration, zip, scan and windows; tree-walk and VM call paths | Python reference runtime; native C17 parity not claimed |
+| Python runtime | lexer, parser, interpreter, CLI, REPL, modules | available |
+| Flow toolkit | 12 bounded functional combinators: predicates, search, enumeration, zip, scan and windows; tree-walk and VM call paths | Python reference runtime; native C17 parity not claimed |
 | Quotas/resources | steps, calls, collections, text, heap, open handles | reference runtime |
 | Division | Euclidean divmod, quotient/remainder, divisibility | implemented |
 | Allocation | partition/split, distribute, weighted allocation | implemented |
