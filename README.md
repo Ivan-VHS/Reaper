@@ -30,9 +30,9 @@ flowchart TD
     G[JavaScript project] --> H[Official Node.js distribution]
     H --> I[V8, Node APIs, npm and Inspector]
     J[C17 native track] --> K[Partial parser and lowering]
-  classDef readmeNode fill:#211936,stroke:#B58AFF,color:#F8F5FF,stroke-width:1.5px;
+  classDef readmeNode fill:#EEF3FF,stroke:#245FC2,color:#1B3150,stroke-width:1.5px;
   class A,B,C,D,E,F,G,H,I,J,K readmeNode;
-  linkStyle default stroke:#B58AFF,stroke-width:1.8px;
+  linkStyle default stroke:#245FC2,stroke-width:1.8px;
 ```
 
 ## Runtime and output paths
@@ -47,9 +47,9 @@ flowchart LR
     E --> F[Diagnostics, completion and symbols]
     G[Debug request] --> H[DAP]
     H --> I[Breakpoints, stack and locals]
-  classDef readmeNode fill:#211936,stroke:#B58AFF,color:#F8F5FF,stroke-width:1.5px;
+  classDef readmeNode fill:#EEF3FF,stroke:#245FC2,color:#1B3150,stroke-width:1.5px;
   class A,B,C,D,E,F,G,H,I readmeNode;
-  linkStyle default stroke:#B58AFF,stroke-width:1.8px;
+  linkStyle default stroke:#245FC2,stroke-width:1.8px;
 ```
 
 <sub>Actual application capture · 1920×1080 source image · original pixels retained; no artificial upscaling.</sub>
