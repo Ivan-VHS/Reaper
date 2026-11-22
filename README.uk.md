@@ -37,7 +37,8 @@ Reaper — expression-oriented мова, у якій оператор `::` пе�
 |---|---|---|
 | Python runtime | lexer, parser, interpreter, CLI, REPL, модулі, closures, quotas та audit log | поточна виконувана еталонна реалізація |
 | Reaper Studio | основа Windows IDE: дерево проєкту, редактор, підсвічування синтаксису, пошук, check/run і debugger | локальний desktop-застосунок |
-| LSP | stdio JSON-RPC, diagnostics, completion, hover, symbols і лексична навігація | відкритий документ; без міжфайлового type inference |
+| LSP | stdio JSON-RPC, diagnostics, completion, hover, symbols, лексична навігація та форматування документа | відкритий документ; без міжфайлового type inference |
+| Інвентаризація toolchain | пошук компіляторів, систем збирання, парсерів, форматтерів, налагоджувачів і WASM runtime з фіксацією SHA-256 | лише PATH і SHA-256; знайдені програми не запускаються |
 | DAP | stdio debug adapter, line breakpoints, stepping, stack і locals | налагодження на межах операторів; лише довірені локальні програми |
 | NOO TAH | керування проєктами/процесами навколо офіційного Node.js, npm/npx та Inspector | Node/V8/libuv надає upstream Node |
 | Native C17 | lexer, expression parser, owned AST, checked IR і обмежений lowering | активний частковий напрям, не parity з Python runtime |
@@ -81,7 +82,13 @@ python -m reaper --repl
 python reaper_desktop.py
 ```
 
-Після editable installation доступні відповідні entry points `reaper` і `reaper-studio`.
+Після editable installation доступні відповідні entry points `reaper`, `reaper-studio` і `reaper-toolchain`.
+
+Перегляд локальних інструментів та створення SHA-256 lock не запускають знайдені програми:
+
+```sh
+reaper-toolchain --output toolchain-inventory.json
+```
 
 ### Запустити тести
 

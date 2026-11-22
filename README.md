@@ -37,7 +37,8 @@ The target audience is language and tooling developers, application engineers, Q
 |---|---|---|
 | Python runtime | lexer, parser, interpreter, CLI, REPL, modules, closures, quotas and audit log | current executable reference |
 | Reaper Studio | Windows IDE foundation: project tree, editor, syntax coloring, search, check/run and debugger | local desktop application |
-| LSP | stdio JSON-RPC, diagnostics, completion, hover, symbols, lexical navigation and semantic tokens | per-open-document; lexical highlighting, not cross-file type inference |
+| LSP | stdio JSON-RPC, diagnostics, completion, hover, symbols, lexical navigation, semantic tokens and document formatting | per-open-document; lexical highlighting, not cross-file type inference |
+| Toolchain inventory | discovers compilers, builders, parsers, formatters, debuggers and WASM runtimes; pins binary hashes | PATH and SHA-256 only; discovered tools are never executed by inventory |
 | DAP | stdio debug adapter, line breakpoints, stepping, stack and locals | statement-boundary debugging; trusted local programs only |
 | NOO TAH | project/process management around the official Node.js runtime, npm/npx and Inspector | Node/V8/libuv are supplied by upstream Node |
 | Native C17 | lexer, expression parser, owned AST, checked IR and limited lowering | active partial track; not Python-runtime parity |
@@ -81,7 +82,15 @@ python -m reaper --repl
 python reaper_desktop.py
 ```
 
-After editable installation, the equivalent entry points include `reaper` and `reaper-studio`.
+After editable installation, the equivalent entry points include `reaper`, `reaper-studio` and `reaper-toolchain`.
+
+Inspect local tool availability without launching any of the discovered tools:
+
+```sh
+reaper-toolchain --output toolchain-inventory.json
+```
+
+Studio also advertises LSP `textDocument/formatting`; formatting normalizes indentation and whitespace without rewriting program tokens.
 
 ### Run the test suite
 

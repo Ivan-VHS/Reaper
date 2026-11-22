@@ -16,6 +16,8 @@ This file assigns the language-tooling portion of the supplied 1,000-item catalo
 
 - **LSP Semantic Tokens** — textDocument/semanticTokens/full, a declared legend and delta-encoded tokens for keywords, functions, variables, comments, strings, numbers and operators.
 - Token coordinates use UTF-16 code units as required by LSP. The pass is lexical, bounded to an open document, and does not execute source or claim type inference.
+- **LSP Formatting** — `textDocument/formatting` now returns a single bounded full-document edit using the in-repository whitespace formatter. It normalizes indentation and trailing whitespace without rewriting tokens.
+- **Toolchain Inventory and Lock** — `reaper-toolchain` discovers compiler, build, formatter, parser, debugger and WASM executables by PATH lookup only. Explicit locks pin resolved paths and SHA-256 contents; no discovered tool is launched.
 
 ## Adoption rules
 
