@@ -79,6 +79,11 @@ class Parser:
             if self._check("NEWLINE") or self._check("}") or self._check("EOF"):
                 return Node("yield", token)
             return Node("yield", token, children=[self._expression()])
+        if self._match("THROW"):
+            token = self._previous()
+            if self._check("NEWLINE") or self._check("}") or self._check("EOF"):
+                raise self._error(token, "expected a value after 'throw'")
+            return Node("throw", token, children=[self._expression()])
         if self._match("CRAFT"):
             return self._function_declaration(self._previous())
         if self._match("WHEN"):
