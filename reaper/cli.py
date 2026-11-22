@@ -76,10 +76,10 @@ def main(argv: list[str] | None = None) -> int:
             print(f"reaper: unknown diagnostic code: {arguments[1]}", file=sys.stderr)
             return 2
         print(f"{definition['code']}  {definition['title']}")
-        print(f"Severity: {definition['severity']}\\n")
-        print(f"What happened\\n  {definition['summary']}\\n")
-        print(f"Typical causes\\n  {definition['causes']}\\n")
-        print(f"How to fix it\\n  {definition['help']}")
+        print(f"Severity: {definition['severity']}\n")
+        print(f"What happened\n  {definition['summary']}\n")
+        print(f"Typical causes\n  {definition['causes']}\n")
+        print(f"How to fix it\n  {definition['help']}")
         return 0
     if arguments and arguments[0] == "lsp":
         from .lsp import serve as lsp_serve
