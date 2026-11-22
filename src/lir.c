@@ -268,7 +268,7 @@ int reaper_lir_build(
         target->vreg_count = vreg_count_for_function(mir, (uint32_t)i);
         if (target->name == NULL || target->vreg_count == UINT32_MAX ||
             (size_t)target->parameter_offset + target->parameter_count >
-                output->parameter_count) {
+                mir->parameter_count) {
             (void)fail(error, i, "invalid MIR function metadata or virtual-register range");
             reaper_lir_free(output);
             return 0;
@@ -403,7 +403,7 @@ int reaper_lir_verify(const ReaperLirModule *module, ReaperLirError *error) {
         for (size_t j = 0U; j < function->local_count; ++j) {
             const ReaperLirLocal *local = &module->locals[function->local_offset + j];
             if (local->function_id != function->id ||
-                local->slot_id != j || local->symbol_id >= UINT32_MAX) {
+                local->slot_id != j || local->symbol_id == REAPER_HIR_NO_SYMBOL) {
                 return verify_fail(error, function->local_offset + j, "LIR local-slot identity is invalid");
             }
         }
