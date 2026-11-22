@@ -19,6 +19,9 @@ class LexerTests(unittest.TestCase):
 
     def test_extended_russian_keywords_are_reserved_and_exact(self) -> None:
         aliases = [
+            ("попытка", "attempt"),
+            ("обработать", "recover"),
+            ("наконец", "finally"),
             ("модуль", "module"),
             ("публичный", "pub"),
             ("процедура", "fn"),
@@ -89,6 +92,10 @@ class ParserTests(unittest.TestCase):
         with self.assertRaisesRegex(ParseError, r"<memory>:1:"):
             parse("make x = 2")
 
+    def test_attempt_requires_recover_or_finally(self) -> None:
+        with self.assertRaisesRegex(ParseError, "needs a 'recover' or 'finally'"):
+            parse('attempt { emit "body" }')
+
 
 class RuntimeTests(unittest.TestCase):
     def capture(self, source: str, max_steps: int = 100_000) -> list[str]:
@@ -151,6 +158,73 @@ class RuntimeTests(unittest.TestCase):
         }
         """
         self.assertEqual(self.capture(source), ["small"])
+
+    def test_attempt_recover_finally_match_both_engines(self) -> None:
+        source = """
+        attempt {
+            emit 10 / 0
+        } recover failure {
+            emit contains(failure, "division by zero")
+        } finally {
+            emit "cleanup"
+        }
+        """
+        for engine in ("treewalk", "vm"):
+            output: list[str] = []
+            Interpreter(output=output.append).run(source, engine=engine)
+            self.assertEqual(output, ["true", "cleanup"], engine)
+
+    def test_attempt_success_skips_recover_and_runs_finally(self) -> None:
+        source = """
+        attempt {
+            emit "body"
+        } recover failure {
+            emit "wrong"
+        } finally {
+            emit "done"
+        }
+        """
+        for engine in ("treewalk", "vm"):
+            output: list[str] = []
+            Interpreter(output=output.append).run(source, engine=engine)
+            self.assertEqual(output, ["body", "done"], engine)
+
+    def test_attempt_finally_runs_when_error_is_not_recovered(self) -> None:
+        for engine in ("treewalk", "vm"):
+            output: list[str] = []
+            interpreter = Interpreter(output=output.append)
+            with self.assertRaisesRegex(ReaperRuntimeError, "division by zero"):
+                interpreter.run(
+                    'attempt { emit 1 / 0 } finally { emit "cleanup" }',
+                    engine=engine,
+                )
+            self.assertEqual(output, ["cleanup"], engine)
+
+    def test_attempt_finally_runs_before_function_return_in_both_engines(self) -> None:
+        source = """
+        craft answer() {
+            attempt {
+                yield 42
+            } recover failure {
+                yield -1
+            } finally {
+                emit "closed"
+            }
+        }
+        emit answer()
+        """
+        for engine in ("treewalk", "vm"):
+            output: list[str] = []
+            Interpreter(output=output.append).run(source, engine=engine)
+            self.assertEqual(output, ["closed", "42"], engine)
+
+    def test_russian_attempt_recover_finally_aliases_execute(self) -> None:
+        source = """
+        попытка { вывести 1 / 0 }
+        обработать ошибка { вывести "поймано" }
+        наконец { вывести "закрыто" }
+        """
+        self.assertEqual(self.capture(source), ["поймано", "закрыто"])
 
     def test_each_and_range(self) -> None:
         source = """
