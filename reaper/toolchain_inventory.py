@@ -173,14 +173,14 @@ def main(argv: list[str] | None = None) -> int:
             result = verify_lock(lock, args.path)
         else:
             result = inventory
-        encoded = json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False) + "\\n"
+        encoded = json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False) + "\n"
         if args.output:
-            args.output.write_text(encoded, encoding="utf-8", newline="\\n")
+            args.output.write_text(encoded, encoding="utf-8", newline="\n")
         else:
             print(encoded, end="")
         return 0 if result.get("valid", True) else 1
     except (OSError, ToolchainError, TypeError, ValueError) as error:
-        parser.exit(2, f"toolchain inspection failed: {error}\\n")
+        parser.exit(2, f"toolchain inspection failed: {error}\n")
 
 
 if __name__ == "__main__":
