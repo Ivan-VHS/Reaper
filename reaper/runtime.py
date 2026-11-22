@@ -1371,6 +1371,10 @@ class Interpreter:
             return False
         if isinstance(left, list):
             return len(left) == len(right) and all(self._equal(a, b) for a, b in zip(left, right))
+        if isinstance(left, VariantValue):
+            return left.tag == right.tag and len(left.fields) == len(right.fields) and all(
+                self._equal(a, b) for a, b in zip(left.fields, right.fields)
+            )
         if isinstance(left, dict):
             return left.keys() == right.keys() and all(self._equal(left[key], right[key]) for key in left)
         return left == right
