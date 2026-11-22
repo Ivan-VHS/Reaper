@@ -2,52 +2,66 @@
 
 ## Current front-end pipeline
 
-The C17 frontend separates parsing from semantic validation:
+The C17 frontend now separates parsing, semantic analysis and control-flow lowering:
 
 ~~~text
 .rpr source
   -> UTF-8-aware lexer
-  -> Pratt expression and statement parser
-  -> owned flat AST
-  -> HIR name, scope, mutability and type checks
+  -> expression and statement parser
+  -> owned program AST
+  -> HIR name/scope/mutability/type checks
+  -> MIR functions and control-flow graph
+  -> LIR virtual registers and local stack slots
 ~~~
 
-The native program AST has nodes for declarations, mutable bindings, functions and parameters, blocks, yield/emit, conditionals, each/while loops, lists, calls, indexing and the :: pipeline.
+The program AST models declarations, mutation, functions and parameters, blocks, yield/emit, when/otherwise, each/while loops, lists, calls, indexing and the :: pipeline.
 
-The HIR pass owns its node and symbol storage. It checks lexical scope, shadowing, duplicate declarations, make versus vary mutability, change assignments, function parameters, call arity, built-in arity, basic operator types, boolean conditions, list iteration, yield placement and the pipeline rule that inserts the left value as the first argument to the right-hand operation.
+HIR owns a typed copy of the AST and resolves symbols through nested scopes. It checks duplicate declarations, make/vary mutability, change assignments, function and built-in arity, basic numeric/logical/comparison types, boolean conditions, return placement and pipe argument insertion. Its inferred types are unit, i64, f64, bool, string, list, function and unknown. Unknown remains explicit where source declarations do not yet provide enough information.
 
-The inferred type set is unit, i64, f64, bool, string, list, function and unknown. Unknown stays explicit when source syntax does not declare a type or an expression depends on runtime values. Generic inference and whole-program effect analysis are not yet implemented.
+## MIR — implemented structural and control-flow lowering
 
-## MIR — planned control-flow representation
+MIR represents one generated duck_main entry plus one MIR function per craft. Each function has explicit basic blocks, result values, parameter symbol identities and block terminators.
 
-MIR is not yet a compiler stage. The next representation is designed around:
+- when lowers to yes/no/join blocks with explicit branch edges.
+- loop while lowers to condition/body/exit blocks with a verified back edge.
+- each lowers to iterator-init, iterator-next, iterator-current and loop blocks.
+- craft parameters are represented in the function parameter table.
+- make, vary and change become local stores; identifier reads become local loads.
+- calls carry an explicit callee virtual value and an operand vector.
+- :: becomes a pipe-call whose first argument is the left-hand value.
+- source HIR node IDs remain attached for diagnostics and future debug information.
 
-- one function per craft plus a generated program entry;
-- explicit local slots, typed values and call arguments;
-- basic blocks with jump, conditional branch or return terminators;
-- when as branch and join blocks;
-- loop while as condition/body/exit blocks with a back edge;
-- each as iterator-init/iterator-next plus branch;
-- :: as a call with the piped value inserted at argument zero;
-- source locations retained for diagnostics and debug information.
+MIR verification checks contiguous function/block ownership, required terminators, in-function jump/branch targets, result slots, call targets, local symbol identities and one-to-one block instruction ownership. Per-block instruction order is stored independently from the global instruction array, so nested branches do not depend on accidental memory adjacency.
 
-MIR verification will reject missing terminators, invalid block targets, local-slot errors and use-before-definition. The source-level parser does not itself make a loop executable.
+MIR is currently a target-independent representation. It is not yet emitted as machine code.
 
-## LIR — current expression representation
+## LIR — implemented virtual registers and stack slots
 
-ReaperIrModule is the existing bounded, topologically ordered value IR for signed-i64 expressions. It contains constants, checked addition/subtraction/multiplication/division and one final return. The System V and DABI64 expression backends currently consume this representation.
+The LIR pass converts MIR values into a target-neutral low-level representation:
 
-This is not yet a general LIR: there are no function boundaries, virtual-register allocation, call ABI lowering, memory operations, branches, source maps or relocations.
+- MIR results are explicit virtual registers, with a per-function register count.
+- Local symbols, mutable bindings, parameters and iteration variables receive stable per-function stack slots.
+- Function parameters map to their stack slots through a separate parameter-slot table.
+- Calls and pipe calls keep explicit argument vectors.
+- Basic blocks and their branch/jump/return terminators remain explicit.
+- Iterator/list/index instructions remain named operations until a runtime-aware target pass lowers them.
 
-## Targets
+The LIR verifier checks function/block ownership, stack-slot identities, parameter maps, vreg ranges, argument vectors, terminators and instruction ownership. It is a verified low-level boundary, not register allocation or machine code.
 
-- x86_64-sysv emits GNU assembly using the System V ELF function convention.
-- duckos-dabi64-v1 emits GNU assembly using the separate DuckOS DABI64 v1 frame/result convention and .note.duckos.abi.
+## Current machine-code boundary
 
-The DABI64 expression entry validates its frame magic/version/size, current no-argument layout, flags and result-slot alignment. It emits explicit status codes and writes its typed result only on success.
+The existing target emitters still consume the older verified i64 expression IR. They generate:
+- x86-64 System V ELF assembly;
+- x86-64 DuckOS DABI64 v1 assembly with the .note.duckos.abi note.
 
-## Object and runtime boundary
+Those backends compile the checked no-argument i64 expression entry only. They do not yet consume general MIR/LIR functions, parameterized calls, local slots or control-flow graphs. The next implementation stage is LIR-to-DABI64 lowering and a runtime contract for collections, iteration, strings, output and failure propagation.
 
-Both backends still emit assembly text; the host assembler/linker creates test objects. Reaper does not yet write relocations or link a DuckOS executable. DuckOS has a versioned ABI header and host-tested frame/result validators, but no kernel syscall dispatcher, ELF loader, process startup or runtime library yet.
+## Object files and DuckOS runtime boundary
 
-A construct is considered natively compiled only after AST representation, HIR semantics, MIR lowering, verified LIR, target code generation and executable tests exist. Parser support alone is not compilation.
+Reaper currently emits assembly text; the host assembler/linker creates the test objects. There is no native ELF relocatable-object writer or DuckOS static linker yet.
+
+DuckOS contains a versioned ABI header, frame/result validators and contract tests. The kernel syscall dispatcher, ELF loader, process startup, scheduler and user-space runtime are not implemented yet. A DABI64 host-call test verifies the register/frame contract only; it is not evidence of a bootable operating system.
+
+## Acceptance rule
+
+A construct is fully natively compiled only after AST representation, HIR semantics, MIR/LIR lowering, target code generation, object/linker integration and executable tests all exist. Parser or IR support alone is not whole-program compilation.
