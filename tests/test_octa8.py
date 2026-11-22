@@ -29,11 +29,11 @@ class Octa8Tests(unittest.TestCase):
             octa8_assert_kind(envelope, "text")
 
     def test_language_builtins_treewalk_and_vm(self):
-        source = 'make value := [1, 2, 3]\nmake packed := value :: octa8_pack()\nassert(octa8_validate(packed), "invalid OCTA envelope")\nemit text(packed :: octa8_unpack())'
+        source = "craft double(value) { yield value * 2 }\nmake value := [1, 2, 3]\nmake packed := value :: octa8_pack()\nassert(octa8_validate(packed), \"invalid OCTA envelope\")\nmake mapped := packed :: octa8_map(double)\nemit text(mapped :: octa8_unpack())"
         for engine in ("treewalk", "vm"):
             lines = []
             Interpreter(output=lines.append).run(source, engine=engine)
-            self.assertEqual(lines, ["[1, 2, 3]"])
+            self.assertEqual(lines, ["[2, 4, 6]"])
 
 if __name__ == "__main__":
     unittest.main()
