@@ -56,6 +56,8 @@ class DebugAdapterTests(unittest.TestCase):
         self.assertTrue(session._hit_condition_matches(">=2", 2))
         self.assertTrue(session._hit_condition_matches("%3", 6))
         self.assertFalse(session._hit_condition_matches("%3", 5))
+        with self.assertRaises(ValueError):
+            session._hit_condition_matches("0", 1)
 
     def test_condition_skips_breakpoint_and_logpoint_does_not_pause(self):
         stream = io.BytesIO()
@@ -79,6 +81,19 @@ class DebugAdapterTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             evaluate_read_only("missing + 1", {})
 
+    def test_manual_step_is_not_filtered_by_conditional_breakpoint(self):
+        stopped = []
+        debugger = RuntimeDebugger({9}, stopped.append)
+        debugger.step()
+        debugger.before_statement(
+            type("Token", (), {"line": 9, "column": 1})(),
+            None,
+            ["main"],
+            "test.rpr",
+        )
+        self.assertEqual(len(stopped), 1)
+        self.assertEqual(stopped[0].reason, "step")
+
     def test_step_out_waits_for_the_calling_frame(self):
         stopped = []
         debugger = RuntimeDebugger(pause_hook=stopped.append)
@@ -89,6 +104,7 @@ class DebugAdapterTests(unittest.TestCase):
         debugger.before_statement(type("Token", (), {"line": 12, "column": 1})(), None, ["outer"], "test.rpr")
         self.assertEqual(len(stopped), 1)
         self.assertEqual(stopped[0].line, 12)
+        self.assertEqual(stopped[0].reason, "step")
 
 
 if __name__ == "__main__":
