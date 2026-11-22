@@ -676,6 +676,45 @@ class Interpreter:
                 return Path.cwd()
             return Path(self.filename).resolve().parent
 
+        def path_text(value: Any, label: str = "path") -> str:
+            if not isinstance(value, str) or not value or "\\0" in value:
+                raise TypeError(f"{label} must be non-empty text without NUL")
+            if len(value) > 4096:
+                raise ValueError(f"{label} exceeds 4096 characters")
+            return value
+
+        def resolve_path(value: Any) -> Path:
+            raw = Path(path_text(value)).expanduser()
+            target = raw if raw.is_absolute() else script_directory() / raw
+            return target.resolve()
+
+        def path_join(*parts: Any) -> str:
+            if not parts:
+                raise ValueError("path_join expects at least one path component")
+            normalized = [path_text(part, "path component") for part in parts]
+            result = str(Path(normalized[0]).joinpath(*normalized[1:]))
+            if len(result) > 4096:
+                raise ValueError("joined path exceeds 4096 characters")
+            return result
+
+        def path_name(value: Any) -> str:
+            return resolve_path(value).name
+
+        def path_stem(value: Any) -> str:
+            return resolve_path(value).stem
+
+        def path_suffix(value: Any) -> str:
+            return resolve_path(value).suffix
+
+        def path_exists(value: Any) -> bool:
+            return resolve_path(value).exists()
+
+        def path_is_file(value: Any) -> bool:
+            return resolve_path(value).is_file()
+
+        def path_is_dir(value: Any) -> bool:
+            return resolve_path(value).is_dir()
+
         def open_file(path: Any, mode: Any = "r") -> ResourceHandle:
             if not isinstance(path, str) or not isinstance(mode, str):
                 raise TypeError("file_open expects text path and mode")
@@ -719,6 +758,14 @@ class Interpreter:
                 raise TypeError("ffi_close expects a handle returned by ffi_open or pytyliki_open")
             library.close()
 
+        register("absolute_path", lambda value: str(resolve_path(value)), 1, 1)
+        register("path_join", path_join, 1, None)
+        register("path_name", path_name, 1, 1)
+        register("path_stem", path_stem, 1, 1)
+        register("path_suffix", path_suffix, 1, 1)
+        register("path_exists", path_exists, 1, 1)
+        register("path_is_file", path_is_file, 1, 1)
+        register("path_is_dir", path_is_dir, 1, 1)
         register("file_open", open_file, 1, 2)
         register("file_read", self.resources.read, 1, 1)
         register("file_write", self.resources.write, 2, 2)
