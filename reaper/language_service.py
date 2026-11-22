@@ -184,6 +184,48 @@ class LanguageService:
         if not IDENT.fullmatch(replacement) or replacement in KEYWORDS or replacement in BUILTINS:
             raise ValueError("replacement must be a non-keyword identifier")
         return [(span,replacement) for span in self.references(uri,name)]
+    def _workspace_analyses(self):
+        """Return bounded analyses for documents the editor has already opened.
+
+        This is deliberately not a disk crawler: the LSP workspace consists only
+        of explicitly opened buffers, and results remain lexical rather than semantic.
+        """
+        with self._lock:
+            uris = sorted(self._docs)
+            total_chars = sum(len(self._docs[uri].text) for uri in uris)
+        if len(uris) > 512:
+            raise ValueError("workspace search is limited to 512 open documents")
+        if total_chars > 8_000_000:
+            raise ValueError("workspace search is limited to 8 million characters")
+        return [self.result(uri) or self.analyze(uri) for uri in uris]
+
+    def workspace_symbols(self, query="", limit=100):
+        if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= 500:
+            raise ValueError("workspace symbol limit must be between 1 and 500")
+        needle = str(query).casefold()
+        matches = []
+        for analysis in self._workspace_analyses():
+            for symbol in analysis.symbols:
+                if needle in symbol.name.casefold():
+                    matches.append(symbol)
+                    if len(matches) >= limit:
+                        return matches
+        return matches
+
+    def workspace_definitions(self, name):
+        needle = str(name)
+        return [symbol for symbol in self.workspace_symbols(needle, 500)
+                if symbol.name == needle]
+
+    def workspace_references(self, name):
+        needle = str(name)
+        references = []
+        for analysis in self._workspace_analyses():
+            for value, span in analysis.identifiers:
+                if value == needle:
+                    references.append((analysis.snapshot.uri, span))
+        return references
+
     def close(self, uri):
         with self._lock:
             self._docs.pop(uri,None); self._results.pop(uri,None)
