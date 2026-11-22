@@ -40,6 +40,7 @@ class RuntimeDebugger:
         self.breakpoints = set(breakpoints or ())
         self.pause_hook = pause_hook
         self.step_mode = False
+        self.step_out_depth: int | None = None
         self.stop_requested = False
         self.paused = False
         self.last_snapshot: DebugSnapshot | None = None
@@ -55,8 +56,20 @@ class RuntimeDebugger:
     def before_statement(self, token: Any, environment: Any, call_stack: list[str], filename: str) -> None:
         if self.stop_requested:
             raise DebuggerStopped()
-        if token.line not in self.breakpoints and not self.step_mode:
+
+        should_stop = False
+        if self.step_out_depth is not None:
+            if len(call_stack) <= self.step_out_depth:
+                self.step_out_depth = None
+                should_stop = True
+            else:
+                return
+        elif token.line in self.breakpoints or self.step_mode:
+            should_stop = True
+
+        if not should_stop:
             return
+
         snapshot = DebugSnapshot(
             filename=filename,
             line=token.line,
@@ -77,9 +90,18 @@ class RuntimeDebugger:
 
     def continue_execution(self) -> None:
         self.step_mode = False
+        self.step_out_depth = None
 
     def step(self) -> None:
+        self.step_out_depth = None
         self.step_mode = True
+
+    def step_out(self) -> None:
+        snapshot = self.last_snapshot
+        if snapshot is None or not snapshot.call_stack:
+            raise ValueError("stepOut is available only inside a function")
+        self.step_mode = False
+        self.step_out_depth = len(snapshot.call_stack) - 1
 
     def stop(self) -> None:
         self.stop_requested = True
