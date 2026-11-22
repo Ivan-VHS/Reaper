@@ -385,78 +385,148 @@ int reaper_lir_verify(const ReaperLirModule *module, ReaperLirError *error) {
         (module->local_count != 0U && module->locals == NULL)) {
         return verify_fail(error, 0U, "LIR module storage is incomplete");
     }
+    if (module->function_count == 0U || module->block_count == 0U ||
+        module->instruction_order_count != module->instruction_count) {
+        return verify_fail(error, 0U, "LIR module has no functions/blocks or an incomplete instruction order");
+    }
 
+    size_t expected_first_block = 0U;
+    size_t expected_local_offset = 0U;
+    size_t expected_parameter_offset = 0U;
     for (size_t i = 0U; i < module->function_count; ++i) {
         const ReaperLirFunction *function = &module->functions[i];
         if (function->id != i || function->name == NULL ||
             function->entry_block >= module->block_count ||
             function->block_count == 0U ||
+            function->first_block != expected_first_block ||
             (size_t)function->first_block + function->block_count > module->block_count ||
             function->entry_block != function->first_block ||
+            function->local_offset != expected_local_offset ||
             (size_t)function->local_offset + function->local_count > module->local_count ||
             function->stack_slot_count != function->local_count ||
+            function->parameter_offset != expected_parameter_offset ||
             (size_t)function->parameter_offset + function->parameter_count >
                 module->parameter_count) {
             return verify_fail(error, i, "LIR function metadata or stack layout is invalid");
         }
 
         for (size_t j = 0U; j < function->local_count; ++j) {
-            const ReaperLirLocal *local = &module->locals[function->local_offset + j];
+            const ReaperLirLocal *local =
+                &module->locals[function->local_offset + j];
             if (local->function_id != function->id ||
-                local->slot_id != j || local->symbol_id == REAPER_HIR_NO_SYMBOL) {
-                return verify_fail(error, function->local_offset + j, "LIR local-slot identity is invalid");
+                local->slot_id != j ||
+                local->symbol_id == REAPER_HIR_NO_SYMBOL ||
+                local->kind < REAPER_HIR_SYMBOL_VALUE ||
+                local->kind > REAPER_HIR_SYMBOL_ITERATION) {
+                return verify_fail(
+                    error,
+                    function->local_offset + j,
+                    "LIR local-slot identity is invalid"
+                );
+            }
+            for (size_t prior = 0U; prior < j; ++prior) {
+                if (module->locals[function->local_offset + prior].symbol_id ==
+                    local->symbol_id) {
+                    return verify_fail(
+                        error,
+                        function->local_offset + j,
+                        "LIR function contains duplicate local symbol slots"
+                    );
+                }
             }
         }
+
         for (size_t j = 0U; j < function->parameter_count; ++j) {
             uint32_t slot = module->parameter_slots[function->parameter_offset + j];
             if (slot >= function->stack_slot_count) {
-                return verify_fail(error, function->parameter_offset + j,
-                    "LIR parameter does not map to a local stack slot");
+                return verify_fail(
+                    error,
+                    function->parameter_offset + j,
+                    "LIR parameter does not map to a local stack slot"
+                );
             }
+            const ReaperLirLocal *local =
+                &module->locals[function->local_offset + slot];
+            if (local->kind != REAPER_HIR_SYMBOL_PARAMETER) {
+                return verify_fail(
+                    error,
+                    function->parameter_offset + j,
+                    "LIR function parameter does not map to a parameter symbol"
+                );
+            }
+        }
+
+        size_t block_end = (size_t)function->first_block + function->block_count;
+        for (size_t block_id = function->first_block; block_id < block_end; ++block_id) {
+            if (module->blocks[block_id].function_id != function->id) {
+                return verify_fail(
+                    error,
+                    block_id,
+                    "LIR function block range is not contiguous"
+                );
+            }
+        }
+
+        expected_first_block = block_end;
+        expected_local_offset += function->local_count;
+        expected_parameter_offset += function->parameter_count;
+    }
+
+    if (expected_first_block != module->block_count ||
+        expected_local_offset != module->local_count ||
+        expected_parameter_offset != module->parameter_count) {
+        return verify_fail(error, 0U, "LIR module contains data outside its function tables");
+    }
+
+    unsigned char *seen = NULL;
+    if (module->instruction_count != 0U) {
+        seen = calloc(module->instruction_count, sizeof *seen);
+        if (seen == NULL) {
+            return verify_fail(error, 0U, "unable to allocate LIR verifier workspace");
         }
     }
 
+    int success = 0;
     for (size_t i = 0U; i < module->block_count; ++i) {
         const ReaperLirBlock *block = &module->blocks[i];
         if (block->id != i || block->function_id >= module->function_count ||
             block->terminator == REAPER_LIR_TERM_NONE) {
-            return verify_fail(error, i, "LIR block identity or terminator is invalid");
+            (void)verify_fail(error, i, "LIR block identity or terminator is invalid");
+            goto cleanup;
         }
+
         const ReaperLirFunction *owner = &module->functions[block->function_id];
         size_t owner_end = (size_t)owner->first_block + owner->block_count;
         if (block->terminator == REAPER_LIR_TERM_JUMP) {
-            if (block->target_true < owner->first_block || block->target_true >= owner_end ||
+            if (block->target_true < owner->first_block ||
+                block->target_true >= owner_end ||
                 block->target_false != REAPER_LIR_NO_BLOCK ||
                 block->terminator_value != REAPER_LIR_NO_VALUE) {
-                return verify_fail(error, i, "LIR jump target leaves its function");
+                (void)verify_fail(error, i, "LIR jump target leaves its function");
+                goto cleanup;
             }
         } else if (block->terminator == REAPER_LIR_TERM_BRANCH) {
             if (block->terminator_value >= owner->vreg_count ||
-                block->target_true < owner->first_block || block->target_true >= owner_end ||
-                block->target_false < owner->first_block || block->target_false >= owner_end) {
-                return verify_fail(error, i, "LIR branch target or condition register is invalid");
+                block->target_true < owner->first_block ||
+                block->target_true >= owner_end ||
+                block->target_false < owner->first_block ||
+                block->target_false >= owner_end) {
+                (void)verify_fail(error, i, "LIR branch target or condition register is invalid");
+                goto cleanup;
             }
         } else if (block->terminator == REAPER_LIR_TERM_RETURN) {
             if (block->target_true != REAPER_LIR_NO_BLOCK ||
                 block->target_false != REAPER_LIR_NO_BLOCK ||
                 (block->terminator_value != REAPER_LIR_NO_VALUE &&
                  block->terminator_value >= owner->vreg_count)) {
-                return verify_fail(error, i, "LIR return terminator is invalid");
+                (void)verify_fail(error, i, "LIR return terminator is invalid");
+                goto cleanup;
             }
         } else {
-            return verify_fail(error, i, "unknown LIR terminator");
+            (void)verify_fail(error, i, "unknown LIR terminator");
+            goto cleanup;
         }
-    }
 
-    unsigned char *seen = NULL;
-    if (module->instruction_count != 0U) {
-        seen = calloc(module->instruction_count, sizeof *seen);
-        if (seen == NULL) return verify_fail(error, 0U, "unable to allocate LIR verifier workspace");
-    }
-
-    int success = 0;
-    for (size_t i = 0U; i < module->block_count; ++i) {
-        const ReaperLirBlock *block = &module->blocks[i];
         if (block->instruction_count == 0U) {
             if (block->first_instruction != UINT32_MAX) {
                 (void)verify_fail(error, i, "empty LIR block has an instruction offset");
@@ -464,28 +534,37 @@ int reaper_lir_verify(const ReaperLirModule *module, ReaperLirError *error) {
             }
             continue;
         }
+
         size_t end = (size_t)block->first_instruction + block->instruction_count;
         if (block->first_instruction == UINT32_MAX ||
             end > module->instruction_order_count) {
             (void)verify_fail(error, i, "LIR block instruction range is invalid");
             goto cleanup;
         }
-        const ReaperLirFunction *owner = &module->functions[block->function_id];
+
         for (size_t order = block->first_instruction; order < end; ++order) {
             uint32_t instruction_id = module->instruction_order[order];
             if (instruction_id >= module->instruction_count || seen[instruction_id] != 0U) {
-                (void)verify_fail(error, order, "LIR instruction order contains an invalid or repeated index");
+                (void)verify_fail(
+                    error,
+                    order,
+                    "LIR instruction order contains an invalid or repeated index"
+                );
                 goto cleanup;
             }
             seen[instruction_id] = 1U;
-            const ReaperLirInstruction *instruction = &module->instructions[instruction_id];
-            if (instruction->text == NULL || instruction->opcode < REAPER_LIR_CONST ||
+
+            const ReaperLirInstruction *instruction =
+                &module->instructions[instruction_id];
+            if (instruction->text == NULL ||
+                instruction->opcode < REAPER_LIR_CONST ||
                 instruction->opcode > REAPER_LIR_ITER_CURRENT ||
                 (size_t)instruction->operand_offset + instruction->operand_count >
                     module->operand_count) {
                 (void)verify_fail(error, instruction_id, "LIR instruction layout is invalid");
                 goto cleanup;
             }
+
             int has_result =
                 instruction->opcode != REAPER_LIR_STORE_SLOT &&
                 instruction->opcode != REAPER_LIR_EMIT &&
@@ -495,50 +574,83 @@ int reaper_lir_verify(const ReaperLirModule *module, ReaperLirError *error) {
                 (void)verify_fail(error, instruction_id, "LIR destination register is invalid");
                 goto cleanup;
             }
-            if ((instruction->opcode == REAPER_LIR_LOAD_SLOT ||
-                 instruction->opcode == REAPER_LIR_STORE_SLOT ||
-                 instruction->opcode == REAPER_LIR_ITER_INIT ||
-                 instruction->opcode == REAPER_LIR_ITER_NEXT ||
-                 instruction->opcode == REAPER_LIR_ITER_CURRENT) &&
-                instruction->symbol_id != REAPER_HIR_NO_SYMBOL &&
-                instruction->slot_id >= owner->stack_slot_count) {
-                (void)verify_fail(error, instruction_id, "LIR local stack slot is invalid");
+
+            if (instruction->opcode == REAPER_LIR_LOAD_SLOT ||
+                instruction->opcode == REAPER_LIR_STORE_SLOT ||
+                instruction->opcode == REAPER_LIR_ITER_INIT ||
+                instruction->opcode == REAPER_LIR_ITER_NEXT ||
+                instruction->opcode == REAPER_LIR_ITER_CURRENT) {
+                if (instruction->slot_id >= owner->stack_slot_count) {
+                    (void)verify_fail(error, instruction_id, "LIR local stack slot is invalid");
+                    goto cleanup;
+                }
+            } else if (instruction->slot_id != REAPER_LIR_NO_SLOT) {
+                (void)verify_fail(error, instruction_id, "non-local LIR instruction carries a stack slot");
                 goto cleanup;
             }
-            if ((instruction->opcode == REAPER_LIR_LOAD_SLOT ||
-                 instruction->opcode == REAPER_LIR_STORE_SLOT) &&
-                instruction->slot_id == REAPER_LIR_NO_SLOT) {
-                (void)verify_fail(error, instruction_id, "LIR local access has no stack slot");
+
+            switch (instruction->opcode) {
+            case REAPER_LIR_CONST:
+            case REAPER_LIR_FUNCTION_REF:
+            case REAPER_LIR_BUILTIN_REF:
+            case REAPER_LIR_LOAD_SLOT:
+                if (instruction->left != REAPER_LIR_NO_VALUE ||
+                    instruction->right != REAPER_LIR_NO_VALUE) {
+                    (void)verify_fail(error, instruction_id, "operand-free LIR instruction carries operands");
+                    goto cleanup;
+                }
+                break;
+
+            case REAPER_LIR_STORE_SLOT:
+            case REAPER_LIR_UNARY:
+            case REAPER_LIR_EMIT:
+            case REAPER_LIR_DROP:
+            case REAPER_LIR_ITER_INIT:
+            case REAPER_LIR_ITER_NEXT:
+            case REAPER_LIR_ITER_CURRENT:
+                if (instruction->left >= owner->vreg_count ||
+                    instruction->right != REAPER_LIR_NO_VALUE) {
+                    (void)verify_fail(error, instruction_id, "LIR unary/slot operand layout is invalid");
+                    goto cleanup;
+                }
+                break;
+
+            case REAPER_LIR_BINARY:
+            case REAPER_LIR_INDEX:
+                if (instruction->left >= owner->vreg_count ||
+                    instruction->right >= owner->vreg_count) {
+                    (void)verify_fail(error, instruction_id, "LIR binary operand register is invalid");
+                    goto cleanup;
+                }
+                break;
+
+            case REAPER_LIR_CALL:
+            case REAPER_LIR_PIPE_CALL:
+                if (instruction->left >= owner->vreg_count ||
+                    instruction->right != REAPER_LIR_NO_VALUE) {
+                    (void)verify_fail(error, instruction_id, "LIR call target is invalid");
+                    goto cleanup;
+                }
+                break;
+
+            case REAPER_LIR_LIST:
+                if (instruction->left != REAPER_LIR_NO_VALUE ||
+                    instruction->right != REAPER_LIR_NO_VALUE) {
+                    (void)verify_fail(error, instruction_id, "LIR list operands must use its operand vector");
+                    goto cleanup;
+                }
+                break;
+
+            default:
+                (void)verify_fail(error, instruction_id, "unknown LIR opcode");
                 goto cleanup;
             }
-            if ((instruction->opcode == REAPER_LIR_UNARY ||
-                 instruction->opcode == REAPER_LIR_STORE_SLOT ||
-                 instruction->opcode == REAPER_LIR_EMIT ||
-                 instruction->opcode == REAPER_LIR_DROP ||
-                 instruction->opcode == REAPER_LIR_ITER_INIT ||
-                 instruction->opcode == REAPER_LIR_ITER_NEXT ||
-                 instruction->opcode == REAPER_LIR_ITER_CURRENT) &&
-                instruction->left >= owner->vreg_count) {
-                (void)verify_fail(error, instruction_id, "LIR left virtual register is invalid");
-                goto cleanup;
-            }
-            if ((instruction->opcode == REAPER_LIR_BINARY ||
-                 instruction->opcode == REAPER_LIR_INDEX) &&
-                instruction->right >= owner->vreg_count) {
-                (void)verify_fail(error, instruction_id, "LIR right virtual register is invalid");
-                goto cleanup;
-            }
-            if ((instruction->opcode == REAPER_LIR_CALL ||
-                 instruction->opcode == REAPER_LIR_PIPE_CALL) &&
-                (instruction->left >= owner->vreg_count ||
-                 instruction->right != REAPER_LIR_NO_VALUE)) {
-                (void)verify_fail(error, instruction_id, "LIR call target is invalid");
-                goto cleanup;
-            }
+
             for (size_t arg = instruction->operand_offset;
-                 arg < (size_t)instruction->operand_offset + instruction->operand_count; ++arg) {
+                 arg < (size_t)instruction->operand_offset + instruction->operand_count;
+                 ++arg) {
                 if (module->operands[arg] >= owner->vreg_count) {
-                    (void)verify_fail(error, instruction_id, "LIR call operand register is invalid");
+                    (void)verify_fail(error, instruction_id, "LIR argument virtual register is invalid");
                     goto cleanup;
                 }
             }
@@ -550,10 +662,6 @@ int reaper_lir_verify(const ReaperLirModule *module, ReaperLirError *error) {
             (void)verify_fail(error, i, "LIR instruction is not owned by a basic block");
             goto cleanup;
         }
-    }
-    if (module->instruction_order_count != module->instruction_count) {
-        (void)verify_fail(error, module->instruction_order_count, "LIR instruction order is incomplete");
-        goto cleanup;
     }
 
     success = 1;
