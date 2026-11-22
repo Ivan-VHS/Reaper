@@ -225,6 +225,8 @@ class DebugSession:
             return count % interval == 0
         operator = match.group(1) or "=="
         target = int(match.group(2))
+        if target < 1:
+            raise ValueError("hitCondition count must be greater than zero")
         return {
             "==": count == target,
             ">=": count >= target,
@@ -242,41 +244,45 @@ class DebugSession:
         return re.sub(r"\{([^{}]+)\}", replace, template)
 
     def pause_hook(self, snapshot: DebugSnapshot):
-        spec = self.breakpoint_specs.get(snapshot.line, {})
-        count = self.hit_counts.get(snapshot.line, 0) + 1
-        self.hit_counts[snapshot.line] = count
+        spec = self.breakpoint_specs.get(snapshot.line, {}) if snapshot.reason == "breakpoint" else {}
+        if snapshot.reason == "breakpoint":
+            count = self.hit_counts.get(snapshot.line, 0) + 1
+            self.hit_counts[snapshot.line] = count
 
-        hit_condition = spec.get("hitCondition")
-        if hit_condition:
-            try:
-                if not self._hit_condition_matches(hit_condition, count):
-                    return
-            except ValueError as error:
-                self.event("output", {"category": "stderr", "output": f"Breakpoint hit condition: {error}\n"})
+            hit_condition = spec.get("hitCondition")
+            if hit_condition:
+                try:
+                    if not self._hit_condition_matches(hit_condition, count):
+                        return
+                except ValueError as error:
+                    self.event("output", {
+                        "category": "stderr",
+                        "output": f"Breakpoint hit condition: {error}\n",
+                    })
 
-        expression = spec.get("condition")
-        if expression:
-            try:
-                if not _truthy(evaluate_read_only(expression, snapshot.variables)):
-                    return
-            except Exception as error:
-                self.event(
-                    "output",
-                    {"category": "stderr", "output": f"Breakpoint condition at line {snapshot.line}: {error}\n"},
-                )
+            expression = spec.get("condition")
+            if expression:
+                try:
+                    if not _truthy(evaluate_read_only(expression, snapshot.variables)):
+                        return
+                except Exception as error:
+                    self.event("output", {
+                        "category": "stderr",
+                        "output": f"Breakpoint condition at line {snapshot.line}: {error}\n",
+                    })
 
-        log_message = spec.get("logMessage")
-        if log_message:
-            self.event("output", {
-                "category": "console",
-                "output": self._render_log_message(log_message, snapshot) + "\n",
-            })
-            return
+            log_message = spec.get("logMessage")
+            if log_message:
+                self.event("output", {
+                    "category": "console",
+                    "output": self._render_log_message(log_message, snapshot) + "\n",
+                })
+                return
 
         with self.condition:
             self.snapshot = snapshot
             self.event("stopped", {
-                "reason": "step" if self.debugger and self.debugger.step_mode else "breakpoint",
+                "reason": snapshot.reason,
                 "threadId": 1,
                 "allThreadsStopped": True,
             })
