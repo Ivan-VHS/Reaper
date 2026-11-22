@@ -13,8 +13,8 @@ class LanguageServiceTests(unittest.TestCase):
         self.service.open(uri, "craft greet(name) {\n emit name\nmake total := (1+2")
         analysis = self.service.analyze(uri)
         self.assertEqual([symbol.name for symbol in analysis.symbols], ["greet", "total"])
-        self.assertTrue(any(item.code == "incomplete-delimiter" for item in analysis.diagnostics))
-        self.assertTrue(any(item.code == "parser-error" for item in analysis.diagnostics))
+        self.assertTrue(any(item.code == "RPR-W0001" for item in analysis.diagnostics))
+        self.assertTrue(any(item.code == "RPR-E0013" for item in analysis.diagnostics))
 
     def test_navigation_references_and_rename_validation(self):
         uri = "file:///x.rpr"

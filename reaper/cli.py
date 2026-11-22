@@ -11,6 +11,7 @@ from pathlib import Path
 
 from .audit import AuditLog, AuditLogError, verify_audit_log
 from .errors import ReaperError
+from .diagnostic_catalog import diagnose_exception, explain_diagnostic
 from .evolution import EvolutionEngine
 from .runtime import Interpreter
 from .modules import ModuleLoader
@@ -66,6 +67,20 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     arguments = sys.argv[1:] if argv is None else argv
+    if arguments and arguments[0] == "--explain":
+        if len(arguments) != 2:
+            print("Usage: python -m reaper --explain RPR-E0013", file=sys.stderr)
+            return 2
+        definition = explain_diagnostic(arguments[1])
+        if definition is None:
+            print(f"reaper: unknown diagnostic code: {arguments[1]}", file=sys.stderr)
+            return 2
+        print(f"{definition['code']}  {definition['title']}")
+        print(f"Severity: {definition['severity']}\\n")
+        print(f"What happened\\n  {definition['summary']}\\n")
+        print(f"Typical causes\\n  {definition['causes']}\\n")
+        print(f"How to fix it\\n  {definition['help']}")
+        return 0
     if arguments and arguments[0] == "lsp":
         from .lsp import serve as lsp_serve
         return lsp_serve()
@@ -303,6 +318,7 @@ def main(argv: list[str] | None = None) -> int:
                 "file": str(path),
                 "output": output_lines,
                 "error": {"type": type(error).__name__, "message": str(error)},
+                "diagnostic": diagnose_exception(error, str(path)).to_dict(),
             }, ensure_ascii=False))
         else:
             print(f"reaper: {error}", file=sys.stderr)
