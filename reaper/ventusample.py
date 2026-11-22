@@ -240,7 +240,8 @@ def _validate_pack(pack: Any) -> tuple[dict[str, float], dict[str, Any]]:
             file_scale = item["scale"]
             if file_scale is not None and file_scale not in _SCALES:
                 raise ValueError(f"{label}.files[{index}].scale is not a supported scale")
-            _choice(item["mode_family"], f"{label}.files[{index}].mode_family", _FILE_MODE_FAMILIES | {None})
+            if item["mode_family"] is not None:
+                _choice(item["mode_family"], f"{label}.files[{index}].mode_family", _FILE_MODE_FAMILIES)
             if "stochastic_routes" in item:
                 routes = item["stochastic_routes"]
                 if not isinstance(routes, list) or len(routes) > 8:
