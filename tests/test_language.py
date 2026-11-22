@@ -201,6 +201,21 @@ class RuntimeTests(unittest.TestCase):
                 )
             self.assertEqual(output, ["cleanup"], engine)
 
+    def test_attempt_cannot_recover_execution_budget_error(self) -> None:
+        for engine in ("treewalk", "vm"):
+            output: list[str] = []
+            interpreter = Interpreter(output=output.append, max_steps=25)
+            source = """
+            attempt {
+                loop while true { emit "tick" }
+            } recover failure {
+                emit "caught"
+            }
+            """
+            with self.assertRaises(ExecutionLimitError):
+                interpreter.run(source, engine=engine)
+            self.assertNotIn("caught", output, engine)
+
     def test_attempt_finally_runs_before_function_return_in_both_engines(self) -> None:
         source = """
         craft answer() {
