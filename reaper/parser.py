@@ -200,7 +200,7 @@ class Parser:
                 return expression
             if token.kind in {"TRUE", "FALSE"}:
                 return Node("literal", token, value=token.kind == "TRUE")
-            return Node("unary", token, value=token.kind, children=[self._expression(9)])
+            return Node("unary", token, value=token.kind, children=[self._expression(10)])
         if self._match("NOTHING"):
             token = self._previous()
             return Node("literal", token, value=None)
