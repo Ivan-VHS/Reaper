@@ -37,7 +37,10 @@ class LspTransportTests(unittest.TestCase):
                     "textDocument": {"uri": uri + word},
                     "position": {"line": 0, "character": len(word) // 2}
                 }})
-                self.assertIn(word, result["result"]["contents"]["value"] if word not in ("попытка", "бросить") else result["result"]["contents"]["value"])
+                self.assertNotEqual(
+                    result["result"]["contents"]["value"],
+                    f"REAPER symbol `{word}`.",
+                )
         finally:
             server.service.shutdown()
 
