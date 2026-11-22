@@ -212,8 +212,8 @@
     },
     {
       "project": "ventusample",
-      "contract": "ventusample.internal-audio.v1",
-      "surface": "Hip-hop pattern engine, sampler DSP, WAV I/O, seeded variations and desktop sample-pack generation"
+      "contract": "ventusample.independent-product.v1",
+      "surface": "Independent desktop application; domain modules remain owned by VentuSample"
     }
   ],
   "semantics": {
