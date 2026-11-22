@@ -51,10 +51,10 @@ The canonical Russian terms and their order are preserved in the JSON manifest. 
 
 | Repository | Primary application | Non-negotiable boundary |
 |---|---|---|
-| Pytyliki | C11 processor, memory, DSP, metrics, benchmarks and native ABI | Hardware inspection remains read-only; numeric optimizations retain reference parity and explicit bounds |
+| Pytyliki | C11 processor, memory, metrics, benchmarks and native ABI | Hardware inspection remains read-only; numeric optimizations retain reference parity and explicit bounds |
 | Reaper | Language frontend, runtime, IR/VM, modules, resource ledger and native integration | Execution limits and explicit host effects remain in force; native loading is never implicit |
 | OPlague | Windows device/package inspection, evidence graph, snapshots and compatibility analysis | Package inspection remains read-only; no driver install/load, registry write or device mutation |
-| VentuSample | Deterministic C++20 offline audio generation, DSP routing and versioned pack exchange | Rendering remains offline; imported media and manifests remain bounded and validated |
+| VentuSample | Independent desktop application with its domain modules maintained in the VentuSample repository | Product-specific processing and media contracts remain owned by VentuSample |
 
 These are applicability guides, not assertions that every listed practice is already implemented. Update the relevant project contract and evidence files when a capability actually changes.
 
