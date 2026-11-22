@@ -677,7 +677,7 @@ class Interpreter:
             return Path(self.filename).resolve().parent
 
         def path_text(value: Any, label: str = "path") -> str:
-            if not isinstance(value, str) or not value or "\\0" in value:
+            if not isinstance(value, str) or not value or "\x00" in value:
                 raise TypeError(f"{label} must be non-empty text without NUL")
             if len(value) > 4096:
                 raise ValueError(f"{label} exceeds 4096 characters")
