@@ -26,7 +26,7 @@ static void serial_write(const char *text) {
     }
 }
 
-RPR_NORETURN RPR_SECTION(".text.boot") void _start(void) {
+RPR_NORETURN void reaper_kernel_main(void) {
     rpr_x86_disable_interrupts();
     serial_init();
     serial_write("Reaper freestanding kernel: booted\r\n");
