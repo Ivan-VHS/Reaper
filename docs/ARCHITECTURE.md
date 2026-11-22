@@ -5,13 +5,13 @@
 | CLI / Studio | source input, run/check/debug, reports |
 | Lexer | deterministic tokens and source spans |
 | Python parser/runtime | reference semantics, scopes, values, quotas |
-| Native C17 | native lexer with UTF-8-aware source positions, Pratt expression AST, checked i64 IR/lowering and x86-64 System V ELF assembly for bounded integer expressions |
+| Native C17 | complete-program Pratt/statement AST, HIR name/scope/mutability and basic type checks, checked i64 IR/lowering, System V and DuckOS DABI64 expression assembly targets |
 | MOST | exact keyword canonicalization before the same parser |
 | QCS | independent hardware-domain syntax validation |
 | Adapters | versioned JSON and explicitly selected native ABI |
 | Tests | syntax, semantics, bounds, negative cases and integrations |
 
-Reaper source → tokens → AST → bounded Python reference runtime → explicit output. The C17 compiler is a separate, partial path: it emits x86-64 System V ELF assembly only for its checked i64-expression subset; it is not yet a full-program compiler or a DuckOS ABI backend. Studio is Windows-only.
+Reaper source → tokens → AST → bounded Python reference runtime → explicit output. The C17 path now parses full program structure and performs HIR name/scope/mutability/basic-type checks, while native machine-code lowering remains limited to checked i64 expressions. Two explicit assembly targets exist: x86-64 System V and the separate DuckOS DABI64 v1 ABI. MIR/CFG, general LIR, whole-program codegen, object writing/linking and the DuckOS loader/kernel/runtime are still pending. Studio is Windows-only.
 
 ## Integrated product layer
 
