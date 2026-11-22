@@ -1,0 +1,21 @@
+# Ordered map literals, null-safe members and map/sequence helpers.
+craft double(key, value) {
+    yield value * 2
+}
+
+craft is_even(key, value) {
+    yield value % 2 == 0
+}
+
+craft parity(value) {
+    yield value % 2
+}
+
+make profile := { name: "Ada", score: 9, active: true }
+make absent := nothing
+emit profile.name
+emit absent?.nickname ?? "anonymous"
+emit map_values(profile, double)
+emit filter_entries(profile, is_even)
+emit group_by([1, 2, 3, 4, 5, 6], parity)
+emit zip(["north", "south"], [10, 20, 30])
