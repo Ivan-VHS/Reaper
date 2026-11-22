@@ -307,7 +307,7 @@ def _validate_pack(pack: Any) -> tuple[dict[str, float], dict[str, Any]]:
 
 
 def ventusample_metrics(pack: Any) -> dict[str, float]:
-    """Validate a complete VentuSample pack manifest and return normalized metrics."""
+    """Validate a complete VentuSample v1/v2 pack manifest and return normalized metrics."""
     metrics, _ = _validate_pack(pack)
     return dict(sorted(metrics.items()))
 
@@ -359,6 +359,9 @@ def compare_ventusample_packs(
         "same_sampler": left_meta["sampler"] == right_meta["sampler"],
         "same_timbre": left_meta["timbre"] == right_meta["timbre"],
         "same_seed": left_meta["seed"] == right_meta["seed"],
+        "same_schema": left_meta["schema"] == right_meta["schema"],
+        "same_musical_key": left_meta.get("musical_key", left_meta["key"]) == right_meta.get("musical_key", right_meta["key"]),
+        "same_mode_family": left_meta.get("mode_family") == right_meta.get("mode_family"),
         "dimensions": dimensions,
         "dimension_count": len(dimensions),
         "euclidean_distance": distance,
