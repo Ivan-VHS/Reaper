@@ -311,6 +311,7 @@
         "MOST-SYN-001"
       ],
       "acceptance": [
+        "explicit-throw-statement",
         "parser-positive",
         "parser-negative",
         "recover-error-binding",
