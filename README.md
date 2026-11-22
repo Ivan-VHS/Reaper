@@ -49,7 +49,7 @@ flowchart LR
 
 | Area | Implemented scope and boundary |
 |---|---|
-| Python runtime | lexer, parser, interpreter, CLI, REPL, modules, closures, quotas and audit |
+| Python runtime 0.2 | modern syntax, closures, modules, path helpers, bounded JSON APIs and shared runtime quotas |
 | Reaper Studio | Windows IDE foundation: project tree, editor, syntax coloring, line numbers, search, check/run and debugger |
 | LSP | stdio service with incremental UTF-16 documents, parser/structure diagnostics, completion, hover, symbols and lexical navigation; per-open-file, not cross-file type inference |
 | DAP | stdio debug adapter with launch, line breakpoints, statement stepping, stack and local variables |
@@ -63,7 +63,7 @@ flowchart LR
 | QCS 1.0 | separate hardware-domain parser and JSON AST; no hardware execution |
 | THESIS | typed evidence graph; claims are not automatically verified |
 | Registries | 813 feature proposals, 666 API contracts and 666 reserved token lexemes; registry entries are not completion claims |
-| Federation | OPlague snapshots, VentuSample pack manifests and optional Pytyliki C ABI |
+| Federation and automation | OPlague read-only snapshot v1, VentuSample pack v1/v2, Pytyliki C ABI v1 metrics/MCU/plugin metadata; .rpr orchestration examples run through tree-walk and VM |
 
 ## CODEX-66 IDE workspace
 
