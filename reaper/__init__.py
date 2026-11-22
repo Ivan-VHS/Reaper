@@ -1,5 +1,6 @@
 """Reaper — a small, flow-first programming language."""
 
+from .composition import compose, concat, concat_text, merge_mappings, pipe
 from .arithmetic import (
     accumulate,
     aggregate,
@@ -20,7 +21,6 @@ from .arithmetic import (
     product,
     scale,
 )
-from .composition import compose, concat, concat_text, merge_mappings, pipe
 from .decomposition import (
     DivisionResult,
     decompose_sequence,
@@ -31,14 +31,6 @@ from .decomposition import (
     recombine,
     split_evenly,
 )
-from .debugger import DebugSnapshot, DebuggerStopped, RuntimeDebugger
-from .embedded import (
-    EmbeddedError,
-    McuProfile,
-    RegisterBank,
-    build_project as build_embedded_project,
-    init_project as init_embedded_project,
-)
 from .errors import (
     ExecutionLimitError,
     LexError,
@@ -47,20 +39,28 @@ from .errors import (
     ReaperRuntimeError,
 )
 from .evolution import EvolutionEngine, EvolutionReport
-from .ffi import CAbiLibrary, FfiError, NativeFunction, PytylikiBridge
-from .ir import CanonicalIR, IRVerificationError, lower as lower_to_ir
-from .memory import HeapLimitError, MemoryManager, RegionError
-from .modules import ModuleCycleError, ModuleError, ModuleLoader
-from .resources import ResourceHandle, ResourceManager
 from .runtime import Interpreter, run
-from .thesis import ThesisLedger, ThesisLedgerError
+from .ir import CanonicalIR, IRVerificationError, lower as lower_to_ir
+from .vm import BytecodeProgram, VirtualMachine, assemble as assemble_bytecode
+from .modules import ModuleCycleError, ModuleError, ModuleLoader
+from .memory import HeapLimitError, MemoryManager, RegionError
+from .resources import ResourceHandle, ResourceManager
+from .ffi import CAbiLibrary, FfiError, NativeFunction, PytylikiBridge
+from .debugger import DebugSnapshot, DebuggerStopped, RuntimeDebugger
 from .token_catalog import (
     TOKEN_CATALOG_SIZE,
     token_catalog,
     token_info,
     token_is_reserved,
 )
-from .vm import BytecodeProgram, VirtualMachine, assemble as assemble_bytecode
+from .thesis import ThesisLedger, ThesisLedgerError
+from .embedded import (
+    EmbeddedError,
+    McuProfile,
+    RegisterBank,
+    build_project as build_embedded_project,
+    init_project as init_embedded_project,
+)
 
 __version__ = "0.1.0"
 
