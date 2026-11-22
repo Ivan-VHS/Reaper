@@ -17,7 +17,7 @@ _OPCODES = {
         "JUMP_IF_FALSE", "JUMP", "ENTER_SCOPE", "EXIT_SCOPE", "ITER_INIT",
         "ITER_NEXT", "ITER_END", "POP", "BUILD_LIST", "INDEX", "UNARY",
         "CALL", "PIPE_CALL", "BINARY", "AND_JUMP", "OR_JUMP", "IMPORT", "EXPORT",
-        "ATTEMPT",
+        "ATTEMPT", "THROW",
     ), start=1)
 }
 _OPCODE_NAMES = {value: key for key, value in _OPCODES.items()}
@@ -143,6 +143,9 @@ class VirtualMachine:
                 if not allow_return:
                     raise self.interpreter._error(token, "yield can only be used inside a craft function")
                 raise _VMReturn(self.interpreter.memory.track(value))
+            elif name == "THROW":
+                value = stack.pop()
+                raise self.interpreter._error(token, f"thrown: {self.interpreter._display(value)}")
             elif name == "MAKE_FUNCTION":
                 function_name, parameters, function_code = instruction.argument
                 stack.append(BytecodeFunction(function_name, parameters, function_code, environment))
