@@ -6,7 +6,7 @@ import tempfile
 import unittest
 
 from reaper.toolchain_inventory import (
-    create_lock, discover_toolchain, verify_lock, ToolchainError, TOOLS,
+    create_lock, discover_toolchain, verify_lock, ToolchainError, TOOLS, INVENTORY_SCHEMA,
 )
 
 
