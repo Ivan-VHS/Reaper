@@ -1,0 +1,29 @@
+{
+  "schema": "duckstory.config.v1",
+  "project": "Reaper",
+  "repository": "Ivan-VHS/Reaper",
+  "profile": "python-reference-language-c17-native-track",
+  "languages": [
+    "Reaper language",
+    "Python 3.10+",
+    "C17"
+  ],
+  "platforms": [
+    "Windows",
+    "Linux",
+    "macOS"
+  ],
+  "ui": true,
+  "automation": {
+    "mode": "report-only",
+    "allow_source_rewrites": false,
+    "allow_dependency_updates": false,
+    "allow_project_command_execution": false,
+    "allow_network_access": false
+  },
+  "standards": {
+    "application_security": "OWASP ASVS 5.0.0 where applicable",
+    "secure_development": "NIST SP 800-218 v1.1 final; Rev. 1 v1.2 tracked as draft",
+    "accessibility": "WCAG 2.2 and ISO/IEC 40500:2025 where applicable"
+  }
+}
