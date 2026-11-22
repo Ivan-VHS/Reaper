@@ -7,8 +7,7 @@
 | [IDE_666_IMPLEMENTATION.md](IDE_666_IMPLEMENTATION.md) | Studio IDE contract, canonical rule numbering and acceptance gates |
 | [REAPER_IDE.md](REAPER_IDE.md) | LSP/DAP protocol services, shipped editor capabilities and limitations |
 | [LSP_SEMANTIC_TOKENS.md](LSP_SEMANTIC_TOKENS.md) | LSP semantic token legend, encoding and lexical limits |
-| [PROGRAM_CATALOG_1000.md](PROGRAM_CATALOG_1000.md) | implementation map and verified first-wave capabilities |
-| [PROGRAM_CATALOG_1000.md](PROGRAM_CATALOG_1000.md) | adoption map and project ownership for the 1,000-item catalogue |
+| [PROGRAM_CATALOG_1000.md](PROGRAM_CATALOG_1000.md) | adoption map, implementation status and verified first-wave capabilities |
 | [NOO_TAH.md](NOO_TAH.md) | official Node.js runtime management, V8/libuv, npm, Inspector and Studio bridge |
 | [KORA.md](KORA.md) | 66 standard-library functions in seven manifest-backed modules |
 | [UI_MOTION.md](UI_MOTION.md) | accessible, persisted motion preferences and reduced-motion limits |
