@@ -1,18 +1,24 @@
-# Native compiler: first executable target
+# Native compiler: program front end and expression backends
 
-## What the backend does today
+## Implemented front end
 
-The C17 track now has an end-to-end compiler path for a deliberately small, fully checked language subset:
+The C17 native parser builds a complete structural AST for declarations, mutable variables, functions and parameters, blocks, yield/emit, when/otherwise, each, loop while, lists, calls, indexing and the :: pipeline.
 
-.rpr expression → native lexer with UTF-8-aware source positions → Pratt parser → owned AST → typed i64 IR → x86-64 assembly.
+The HIR semantic pass resolves lexical names and nested scopes, enforces immutable make versus mutable vary, checks change assignments, function-call arity, built-in call arity and basic inferred types. It also checks boolean conditions, yield placement and the language's value-insertion semantics for ::.
 
-The backend accepts signed 64-bit integer literals, parentheses, unary + and -, and binary +, -, * and /. Division uses the IR's signed integer contract and truncates toward zero. Every other expression form is rejected with a diagnostic; the compiler does not guess a conversion or call back into Python.
+This is structural parsing and semantic validation. It does not yet mean that every parsed program is lowered to machine code.
 
-The native compiler is an expression compiler at this stage. It does not yet compile declarations, local variables, functions, modules, strings, arrays, control flow or the :: pipeline into machine code.
+## Current machine-code slice
 
-## Build and emit
+The currently executable code-generation path remains a checked signed-i64 expression subset:
 
-Build the C17 tools:
+~~~text
+.rpr integer expression -> Pratt AST -> verified i64 IR -> target assembly
+~~~
+
+Supported operations are integer literals, parentheses, unary signs and binary +, -, * and /. Overflow, division by zero and INT64_MIN / -1 are explicit failures.
+
+## Build and test
 
 ~~~sh
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DREAPER_BUILD_TESTS=ON
@@ -20,59 +26,40 @@ cmake --build build --parallel
 ctest --test-dir build --output-on-failure
 ~~~
 
-Compile the checked example to GNU assembler:
+The test set now includes complete-program AST parsing and HIR checks for name resolution, local scope, mutability, function arity, built-ins, :: and Russian МОСТ aliases.
+
+## Emit System V assembly
 
 ~~~sh
 ./build/reaper-c --emit-asm examples/native/arithmetic.rpr -o build/arithmetic.s
-~~~
-
-The generated file exports one C-callable function:
-
-~~~c
-int reaper_program(int64_t *result);
-~~~
-
-Assemble the file on Linux x86-64 with the system C toolchain:
-
-~~~sh
 cc -c build/arithmetic.s -o build/arithmetic.o
 ~~~
 
-The generated object can be linked into a host program that declares and calls reaper_program. The native smoke test in CTest does exactly that for success, overflow, division-by-zero and a null result pointer.
+This emits GNU assembler for x86-64 System V ELF. The assembly exports int reaper_program(int64_t *result). The host assembler still creates the object file.
 
-## ABI and runtime contract
+## Emit a DuckOS DABI64 expression
 
-This first backend targets **x86-64 System V ELF** and emits GNU assembler syntax. It is not a generic x86-64, Windows x64, Mach-O, AArch64 or DuckOS ABI backend.
+~~~sh
+./build/reaper-c --emit-asm --target duckos-dabi64-v1 examples/native/arithmetic.rpr -o build/duck-program.s
+~~~
 
-The generated function returns a ReaperCodegenStatus value:
+DABI64 v1 uses a separate x86-64 function contract: R10 is the read-only DuckCallFrame pointer, R11 is the writable DuckCallResult pointer and RAX returns DuckAbiStatus. The generated entry validates the frame magic/version/size, rejects arguments/captures not yet supported by this expression entry, checks flags and alignment, writes the typed i64 result only on success and emits .note.duckos.abi.
 
-| Return code | Meaning |
-|---:|---|
-| 0 | success; result contains the expression value |
-| 1 | signed i64 overflow |
-| 2 | integer division by zero |
-| 3 | null result pointer |
+The ABI data layout and C frame validators are in the DuckOS repository. This backend does not silently fall back to System V.
 
-The output pointer is checked before it is used. The result is stored only after the entire IR program reaches its final RETURN; failure leaves the caller's result unchanged. Addition, subtraction and multiplication branch on the processor's signed-overflow flag. Division checks both zero and the INT64_MIN / -1 overflow case before executing idiv.
+## Current limits and next stages
 
-The generated function has no allocator, runtime-library or operating-system calls. It keeps its temporary i64 values in a bounded stack frame. The verifier requires topologically ordered IR, matching operand types and exactly one final RETURN; the backend caps a module at 4096 IR nodes.
+| Area | Current state |
+|---|---|
+| Program parser | implemented for the listed structural constructs |
+| HIR | lexical scope, mutability, name and basic type/arity checks |
+| MIR | not yet implemented; CFG lowering is next |
+| LIR | bounded i64 expression IR only |
+| System V codegen | i64 expressions |
+| DuckOS DABI64 codegen | no-argument i64 expression entry |
+| Object writer/linker | external assembler/linker; no native ELF writer or DuckOS linker |
+| DuckOS loader/kernel/runtime | not implemented |
 
-## What this is not
+Next: verified MIR functions/CFG, calls and local slots; general LIR; DABI64 call-frame generation for parameterized functions; object relocation writing; DuckOS static linking, loading, startup, syscall dispatch and runtime primitives.
 
-- It is not full Reaper language support or Python-runtime parity.
-- It does not yet produce object files, executables, debug information or relocatable libraries directly; GNU assembler and a linker remain external tools.
-- It does not provide a kernel ABI, system-call layer, driver ABI, process runtime, allocator, garbage collector or OS sandbox.
-- It does not establish self-hosting. The native frontend is still C17, while the Reaper-written lexer and partial Pratt parser remain bootstrap components.
-
-These boundaries are intentional. The first milestone is a small compiler path with observable semantics and an executable test, not a wide command surface whose features are only registered.
-
-## Next compiler milestones
-
-1. Bring the Reaper-written lexer to Unicode and error-location parity with the reference lexer.
-2. Complete declarations, blocks and statement parsing in Reaper source; freeze a versioned canonical AST.
-3. Add a semantic pass with explicit types, immutable bindings by default, explicit mutation and effect boundaries.
-4. Extend the IR with functions, locals, branches, calls and source maps while preserving verification and resource budgets.
-5. Add target-specific object emission, debug information and a linker/runtime contract for DuckOS.
-6. Rebuild the frontend and compiler stages from Reaper source and prove clean-room, reproducible bootstrap parity.
-
-Python remains the compatibility oracle until differential tests demonstrate that a native stage preserves the language's actual semantics.
+Python remains the compatibility oracle until differential tests establish parity.
