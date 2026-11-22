@@ -147,7 +147,25 @@ Both engines share runtime values, builtins, resource quotas, module loading, er
 
 The C17 track remains a separate partial native frontend/IR implementation. This release does not claim that C17 compiles or runs the full Python reference language.
 
-## 8. Diagnostics and safety boundaries
+## 8. Project automation and federation builtins
+
+The reference runtime exposes bounded host helpers for project scripts:
+
+| Builtin | Contract |
+|---|---|
+| `absolute_path(path)` | Resolve a path against the current `.rpr` file's directory |
+| `path_join(a, ...parts)` | Join path components without performing I/O |
+| `path_name(path)`, `path_stem(path)`, `path_suffix(path)` | Inspect path components |
+| `path_exists(path)`, `path_is_file(path)`, `path_is_dir(path)` | Read-only filesystem predicates |
+| `read_json(path)`, `write_json(path, value)` | Bounded JSON import and atomic output |
+| `oplage_metrics(snapshot)`, `oplage_compare(left, right)` | Validate read-only OPlague snapshot v1 and create a signed-by-hash comparison report |
+| `ventusample_metrics(pack)`, `ventusample_compare(left, right)` | Validate VentuSample pack v1/v2 metadata and compare musical/audio settings |
+
+The path helpers reject empty/NUL-containing paths and bound path text length. They do not create directories or perform writes. JSON reading rejects duplicate keys, non-finite numbers and oversized files; JSON writing uses an atomic replacement. OPlague and VentuSample adapters are metadata-only: they do not inspect drivers, open WAV data, render audio or change hardware.
+
+Native FFI remains a separate explicit capability. A script can use `absolute_path` to resolve a trusted library path, but loading it still requires the CLI opt-in `--allow-native-ffi` and an explicit C ABI v1 handle. Ordinary Reaper programs do not implicitly load project DLLs or discover binaries through PATH.
+
+## 9. Diagnostics and safety boundaries
 
 - Source-aware lexer and parser errors retain filename, line and column.
 - Execution-step, recursive call-depth, collection-size, text-size, heap and open-resource limits remain active.
@@ -156,13 +174,13 @@ The C17 track remains a separate partial native frontend/IR implementation. This
 - Map field access and membership are deterministic and local; map literals do not perform implicit I/O.
 - The VM rejects unsupported AST forms during lowering instead of silently executing a different program.
 
-## 9. Explicitly not part of 0.2
+## 10. Explicitly not part of 0.2
 
 The following vocabulary remains reserved or planned and must not be treated as implemented merely because the lexer recognizes it: user-defined `struct` / `enum` / `trait` / `impl`, static types and generics, pattern matching, async/await, compile-time evaluation, effect annotations, lexical memory regions, native C17 full-language parity, package manager and cross-project build toolchain.
 
 The next language milestones should add these as vertical slices: grammar + semantic rules + tree-walk behavior + IR/VM parity + diagnostics + conformance tests + documentation. Feature count alone is not an acceptance criterion.
 
-## 10. Conformance tests
+## 11. Conformance tests
 
 ```sh
 python -m unittest discover -s tests -p "test_language_v2.py" -v
