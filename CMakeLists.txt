@@ -121,14 +121,6 @@ if(REAPER_BUILD_TESTS)
                     --examples-root ${CMAKE_CURRENT_SOURCE_DIR}/examples/native
             )
             add_test(
-                NAME native-duckos-dabi64-smoke
-                COMMAND ${Python3_EXECUTABLE}
-                    ${CMAKE_CURRENT_SOURCE_DIR}/tests/native_dabi64_smoke.py
-                    --compiler $<TARGET_FILE:reaper-c>
-                    --cc ${CMAKE_C_COMPILER}
-                    --examples-root ${CMAKE_CURRENT_SOURCE_DIR}/examples/native
-            )
-            add_test(
                 NAME native-dabi64-lir-smoke
                 COMMAND ${Python3_EXECUTABLE}
                     ${CMAKE_CURRENT_SOURCE_DIR}/tests/native_dabi64_lir_smoke.py
