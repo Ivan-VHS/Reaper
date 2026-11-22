@@ -2,6 +2,11 @@
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
+<p align="center"><img src="assets/readme/dashboard.svg" alt="Reaper 2026 项目视觉概览" width="100%"></p>
+<sub>项目视觉概览 · README 更新于 2026-11-22 · 项目配色 · 清晰的数据图表</sub>
+
+
+
 [CI](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml) · [Windows Studio 构建](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml) · Python 3.10+ 参考运行时 · C17 原生开发线 · Windows Studio · Apache-2.0
 **开发者：** [Ivan-VHS](https://github.com/Ivan-VHS)
 
@@ -25,6 +30,9 @@ flowchart TD
     G[JavaScript 项目] --> H[官方 Node.js 发行版]
     H --> I[V8、Node API、npm 和 Inspector]
     J[C17 原生分支] --> K[部分解析与 lowering]
+  classDef readmeNode fill:#211936,stroke:#B58AFF,color:#F8F5FF,stroke-width:1.5px;
+  class A,B,C,D,E,F,G,H,I,J,K readmeNode;
+  linkStyle default stroke:#B58AFF,stroke-width:1.8px;
 ```
 
 ## 执行路径与输出
@@ -39,6 +47,9 @@ flowchart LR
     E --> F[诊断、补全和符号]
     G[调试请求] --> H[DAP]
     H --> I[断点、调用栈和局部变量]
+  classDef readmeNode fill:#211936,stroke:#B58AFF,color:#F8F5FF,stroke-width:1.5px;
+  class A,B,C,D,E,F,G,H,I readmeNode;
+  linkStyle default stroke:#B58AFF,stroke-width:1.8px;
 ```
 
 <sub>应用实际截屏 · 原始图像为 1920×1080 · 保留原始像素，不进行人为放大。</sub>

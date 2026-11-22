@@ -2,6 +2,11 @@
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
+<p align="center"><img src="assets/readme/dashboard.svg" alt="Reaper 2026 project visual overview" width="100%"></p>
+<sub>Project visual overview · README refreshed 2026-11-22 · project palette · accessible data-dense diagrams</sub>
+
+
+
 [CI](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml) · [Windows Studio build](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml) · Python 3.10+ reference runtime · C17 native track · Windows Studio · Apache-2.0
 **Developer:** [Ivan-VHS](https://github.com/Ivan-VHS)
 
@@ -25,6 +30,9 @@ flowchart TD
     G[JavaScript project] --> H[Official Node.js distribution]
     H --> I[V8, Node APIs, npm and Inspector]
     J[C17 native track] --> K[Partial parser and lowering]
+  classDef readmeNode fill:#211936,stroke:#B58AFF,color:#F8F5FF,stroke-width:1.5px;
+  class A,B,C,D,E,F,G,H,I,J,K readmeNode;
+  linkStyle default stroke:#B58AFF,stroke-width:1.8px;
 ```
 
 ## Runtime and output paths
@@ -39,6 +47,9 @@ flowchart LR
     E --> F[Diagnostics, completion and symbols]
     G[Debug request] --> H[DAP]
     H --> I[Breakpoints, stack and locals]
+  classDef readmeNode fill:#211936,stroke:#B58AFF,color:#F8F5FF,stroke-width:1.5px;
+  class A,B,C,D,E,F,G,H,I readmeNode;
+  linkStyle default stroke:#B58AFF,stroke-width:1.8px;
 ```
 
 <sub>Actual application capture · 1920×1080 source image · original pixels retained; no artificial upscaling.</sub>
