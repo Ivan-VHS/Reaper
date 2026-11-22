@@ -49,8 +49,8 @@ class LanguageServiceTests(unittest.TestCase):
     def test_workspace_symbols_span_open_documents(self):
         first = "file:///b.rpr"
         second = "file:///a.rpr"
-        self.service.open(first, "craft render() {\\n emit 1\\n}")
-        self.service.open(second, "make result := 2\\ncraft render_track() {\\n emit result\\n}")
+        self.service.open(first, "\n".join(("craft render() {", " emit 1", "}")))
+        self.service.open(second, "\n".join(("make result := 2", "craft render_track() {", " emit result", "}")))
         matches = self.service.workspace_symbols("render")
         self.assertEqual(
             [(snapshot.uri, symbol.name) for snapshot, symbol in matches],
@@ -58,7 +58,7 @@ class LanguageServiceTests(unittest.TestCase):
         )
 
     def test_workspace_symbol_query_is_case_insensitive_and_bounded(self):
-        self.service.open("file:///x.rpr", "craft Render() {\\n emit 1\\n}\\ncraft reset() {\\n emit 0\\n}")
+        self.service.open("file:///x.rpr", "\n".join(("craft Render() {", " emit 1", "}", "craft reset() {", " emit 0", "}")))
         matches = self.service.workspace_symbols("RENDER", limit=1)
         self.assertEqual([symbol.name for _, symbol in matches], ["Render"])
         with self.assertRaises(ValueError):
