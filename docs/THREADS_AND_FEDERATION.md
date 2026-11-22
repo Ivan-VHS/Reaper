@@ -9,6 +9,6 @@
 | QCS | independent parser/validator |
 | Registry | 666 function contracts, 20×20 matrix |
 | Governance | consent grants, quotas, audit |
-| Federation | OPlague snapshots, explicit Pytyliki ABI, VentuSample manifest consumer |
+| Federation | OCTA-8 JSON envelope; Pytyliki C11 and VentuSample C++20 value views; OPlague/Reaper Python adapters; CLife snapshots in all four peers |
 
 Planned render-request and direct VentuSample ABI links remain planned. See [OCTA-8](OCTA_PYRAMID_FEDERATION.md).
