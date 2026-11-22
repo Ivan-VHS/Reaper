@@ -42,8 +42,8 @@ snapshot = create_checkpoint("./my-project")
 assert verify_checkpoint(snapshot.path).valid
 
 plan = plan_reflash("./my-project", {
-    "src/app.rpr": 'emit "updated"\\n',
-    "config/clife.json": '{"enabled": true}\\n',
+    "src/app.rpr": 'emit "updated"',
+    "config/clife.json": '{"enabled": true}',
 })
 
 # Inspect and persist the plan before applying it.
@@ -73,8 +73,8 @@ repository-relative paths to UTF-8 text:
 
 ```json
 {
-  "src/app.rpr": "emit 7\\n",
-  "config/clife.txt": "enabled=true\\n"
+  "src/app.rpr": "emit 7",
+  "config/clife.txt": "enabled=true"
 }
 ```
 
