@@ -119,7 +119,7 @@ class VirtualMachine:
             self.interpreter._tick(token)
 
             if self.interpreter.debugger is not None and name in {
-                "DEFINE", "ASSIGN", "EMIT", "RETURN", "MAKE_FUNCTION", "IMPORT", "EXPORT", "ITER_NEXT", "ATTEMPT",
+                "DEFINE", "ASSIGN", "EMIT", "RETURN", "MAKE_FUNCTION", "IMPORT", "EXPORT", "ITER_NEXT", "ATTEMPT", "THROW",
             }:
                 self.interpreter.debugger.before_statement(
                     token, environment, self.interpreter.call_stack, self.interpreter.filename
