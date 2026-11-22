@@ -541,6 +541,94 @@ class Interpreter:
                 history.append(value)
             return history
 
+        def predicate_scan(values: Any, function: Any, operation: str) -> Any:
+            values = sequence(values)
+            callback(function)
+            token = Token("BUILTIN", operation, 1, 1)
+            count = 0
+            for index, item in enumerate(values):
+                self._tick(token)
+                matched = self._truthy(self._call(function, [item], token))
+                if operation == "any" and matched:
+                    return True
+                if operation == "all" and not matched:
+                    return False
+                if operation == "none" and matched:
+                    return False
+                if operation == "count" and matched:
+                    count += 1
+                if operation == "find" and matched:
+                    return item
+                if operation == "find_index" and matched:
+                    return index
+            if operation == "any":
+                return False
+            if operation in {"all", "none"}:
+                return True
+            if operation == "count":
+                return count
+            return None
+
+        def take_while(values: Any, function: Any) -> Any:
+            values = sequence(values)
+            callback(function)
+            token = Token("BUILTIN", "take_while", 1, 1)
+            for index, item in enumerate(values):
+                self._tick(token)
+                if not self._truthy(self._call(function, [item], token)):
+                    return values[:index]
+            return values[:]
+
+        def drop_while(values: Any, function: Any) -> Any:
+            values = sequence(values)
+            callback(function)
+            token = Token("BUILTIN", "drop_while", 1, 1)
+            for index, item in enumerate(values):
+                self._tick(token)
+                if not self._truthy(self._call(function, [item], token)):
+                    return values[index:]
+            return values[:0]
+
+        def enumerate_values(values: Any, start: Any = 0) -> list[list[Any]]:
+            values = sequence(values)
+            start = integer(start, "enumerate start")
+            return [[start + index, item] for index, item in enumerate(values)]
+
+        def zip_values(left: Any, right: Any) -> list[list[Any]]:
+            left = sequence(left)
+            right = sequence(right)
+            length = min(len(left), len(right))
+            return [[left[index], right[index]] for index in range(length)]
+
+        def scan_values(values: Any, initial: Any, function: Any) -> list[Any]:
+            values = sequence(values)
+            callback(function)
+            token = Token("BUILTIN", "scan", 1, 1)
+            if len(values) > self.max_collection_items:
+                raise ValueError(f"collection item limit ({self.max_collection_items}) exceeded")
+            result: list[Any] = []
+            accumulator = initial
+            for item in values:
+                self._tick(token)
+                accumulator = self._call(function, [accumulator, item], token)
+                result.append(accumulator)
+            return result
+
+        def window_values(values: Any, width: Any, step: Any = 1) -> list[Any]:
+            values = sequence(values)
+            width = integer(width, "window width")
+            step = integer(step, "window step")
+            if width < 1:
+                raise ValueError("window width must be positive")
+            if step < 1:
+                raise ValueError("window step must be positive")
+            if width > len(values):
+                return []
+            count = 1 + (len(values) - width) // step
+            if count > self.max_collection_items:
+                raise ValueError(f"collection item limit ({self.max_collection_items}) exceeded")
+            return [values[offset:offset + width] for offset in range(0, len(values) - width + 1, step)]
+
         register("divmod_euclidean", euclidean_divmod, 2, 2)
         register("euclidean_divmod", euclidean_divmod, 2, 2)
         register("quotient", lambda dividend, divisor: euclidean_divmod(dividend, divisor)[0], 2, 2)
@@ -586,6 +674,18 @@ class Interpreter:
         register("token_catalog", lambda *group: token_catalog(group[0] if group else None), 0, 1)
         register("token_info", token_info, 1, 1)
         register("token_is_reserved", token_is_reserved, 1, 1)
+        register("all", lambda values, fn: predicate_scan(values, fn, "all"), 2, 2)
+        register("any", lambda values, fn: predicate_scan(values, fn, "any"), 2, 2)
+        register("none", lambda values, fn: predicate_scan(values, fn, "none"), 2, 2)
+        register("count", lambda values, fn: predicate_scan(values, fn, "count"), 2, 2)
+        register("find", lambda values, fn: predicate_scan(values, fn, "find"), 2, 2)
+        register("find_index", lambda values, fn: predicate_scan(values, fn, "find_index"), 2, 2)
+        register("take_while", take_while, 2, 2)
+        register("drop_while", drop_while, 2, 2)
+        register("enumerate", enumerate_values, 1, 2)
+        register("zip", zip_values, 2, 2)
+        register("scan", scan_values, 3, 3)
+        register("window", window_values, 2, 3)
 
         def consent_check(token: Any, subject: Any, purpose: Any, scope: Any) -> bool:
             if self.consent_authority is None:
