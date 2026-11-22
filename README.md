@@ -17,13 +17,13 @@ Genuine capture of the running Reaper Studio window on Windows, created by the r
 
 <p align="center"><img src="assets/readme/workflow.svg" alt="Reaper implemented data flow" width="100%"></p>
 
-Implemented path: `.rpr` source → lexer and parser → Python reference runtime → CLI, Studio, LSP and DAP.
+Implemented paths: `.rpr` source → Python reference runtime → CLI, Studio, LSP and DAP; and bounded i64 expressions → verified native IR → x86-64 System V ELF assembly.
 
 
 [![Python CI](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/ci.yml?branch=main&label=Python%20CI)](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml)  [![Live Studio capture](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/readme-screenshots.yml?branch=main&label=Live%20Studio%20capture)](https://github.com/Ivan-VHS/Reaper/actions/workflows/readme-screenshots.yml)  [![License](https://img.shields.io/github/license/Ivan-VHS/Reaper)](LICENSE)
 
 
-> **Scope:** Reaper is a local programming language, interpreter, developer tooling set and Windows desktop IDE. It is not a hosted web demo or production web service. Python is the current executable compatibility reference; the C17 native track is partial. Documentation was checked against `main` on **2026-11-22**.
+> **Scope:** Reaper is a local programming language, interpreter, developer tooling set and Windows desktop IDE. It is not a hosted web demo or production web service. Python is the current executable compatibility reference; the C17 track now emits checked x86-64 System V ELF assembly for a bounded i64 expression subset. Documentation was checked against `main` on **2026-11-22**.
 
 ## Purpose and implementation status
 
@@ -40,7 +40,7 @@ The target audience is language and tooling developers, application engineers, Q
 | LSP | stdio JSON-RPC, diagnostics, completion, hover, symbols, lexical navigation and semantic tokens | per-open-document; lexical highlighting, not cross-file type inference |
 | DAP | stdio debug adapter, line breakpoints, stepping, stack and locals | statement-boundary debugging; trusted local programs only |
 | NOO TAH | project/process management around the official Node.js runtime, npm/npx and Inspector | Node/V8/libuv are supplied by upstream Node |
-| Native C17 | lexer, expression parser, owned AST, checked IR and limited lowering | active partial track; not Python-runtime parity |
+| Native C17 | UTF-8 lexer, Pratt expression parser, owned AST, verified i64 IR, checked lowering and x86-64 System V ELF assembly backend | bounded integer expressions only; not full program compilation or Python-runtime parity |
 | QCS / embedded tools | separate hardware-domain parser, JSON AST and bounded embedded helpers | reference/analysis tools, not hardware execution |
 | Kora | optional standard-library helpers in seven manifest-backed modules | separate from the Reaper language runtime |
 
@@ -100,7 +100,16 @@ cmake --build build --parallel
 ctest --test-dir build --output-on-failure
 ```
 
-This builds the current native compiler subset and its tests. It does not replace the Python runtime or establish full language parity.
+This builds the native compiler subset and its tests. It does not replace the Python runtime or establish full language parity.
+
+On Linux x86-64, emit a native expression object:
+
+```sh
+./build/reaper-c --emit-asm examples/native/arithmetic.rpr -o build/arithmetic.s
+cc -c build/arithmetic.s -o build/arithmetic.o
+```
+
+The assembly exports `int reaper_program(int64_t *result)`. The supported grammar and return-code contract are documented in [Native compiler](docs/NATIVE_COMPILER.md). This is an expression backend, not yet a compiler for complete `.rpr` programs.
 
 ### Optional NOO TAH / Node.js checks
 
@@ -121,6 +130,7 @@ These commands operate on the selected local Node project. If the project starts
 The checked-in examples are local source programs, not responses from a live API:
 
 - `examples/flow.rpr` is the basic language smoke example.
+- `examples/native/` contains integer expressions used to test native assembly generation, including overflow and division-by-zero cases.
 - `examples/device_audit.rpr` demonstrates a read-only audit path and produces a versioned JSON report when run.
 - `tests/` contains parser, runtime, language-service, debugger, registry and integration tests.
 - The NOO TAH conformance suite tests Node built-ins, ESM/CommonJS, streams, workers, child processes and loopback HTTP/TCP. It does not rely on a public test service.
@@ -190,14 +200,15 @@ JavaScript project
   -> official Node.js (V8, libuv, npm, Inspector)
 
 Native C17 track
-  -> lexer / parser / AST / IR / limited lowering
+  -> UTF-8 lexer / Pratt parser / owned AST
+  -> verified i64 IR / checked lowering / x86-64 ELF assembly (integer expressions only)
 ```
 
 | Path | Contents |
 |---|---|
 | `reaper/` | Python reference runtime, CLI, Studio, language/debug services and NOO TAH |
 | `reaper/kora/` | Kora standard-library helpers |
-| `src/`, `include/` | partial native C17 track |
+| `src/`, `include/` | native C17 frontend, verified integer IR and x86-64 assembly backend |
 | `tests/` | Python, protocol, runtime and native tests |
 | `examples/` | local `.rpr` sample programs |
 | `docs/` | language, IDE, architecture and feature-boundary documentation |
@@ -229,9 +240,9 @@ Workflow artifacts are downloadable build outputs, not a live hosted IDE. To rol
 
 ## Known limitations, contribution and license
 
-Python remains the executable compatibility reference. Native C17 parsing/lowering is partial. LSP symbol lookup, references and rename are lexical and document-local; DAP stepping is statement-granular; the IDE is not an OS sandbox. NOO TAH delegates JavaScript behavior to the official Node distribution rather than reimplementing V8.
+Python remains the executable compatibility reference. The native C17 backend compiles only signed i64 expressions with `+`, `-`, `*` and `/` to x86-64 System V ELF assembly; it does not yet compile declarations, functions, control flow or full programs. LSP symbol lookup, references and rename are lexical and document-local; DAP stepping is statement-granular; the IDE is not an OS sandbox. NOO TAH delegates JavaScript behavior to the official Node distribution rather than reimplementing V8.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the repository's contribution workflow and validation requirements. Propose changes through [GitHub Issues](https://github.com/Ivan-VHS/Reaper/issues) or a Pull Request. Include a reproducible `.rpr` example, Python/Node/compiler versions and the exact command/output. Run Python tests and, when touching the native track, CMake/CTest.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the repository's contribution workflow and validation requirements. Propose changes through [GitHub Issues](https://github.com/Ivan-VHS/Reaper/issues) or a Pull Request. Include a reproducible `.rpr` example, Python/Node/compiler versions and the exact command/output. Run Python tests and, when touching the native track, CMake/CTest. Native backend details and limits are in [docs/NATIVE_COMPILER.md](docs/NATIVE_COMPILER.md).
 
 License: [Apache-2.0](LICENSE).
 
