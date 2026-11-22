@@ -111,7 +111,7 @@ def load_project(manifest: str | Path) -> OsProject:
         raise ProjectError(f"schema must be {PROJECT_SCHEMA!r}")
 
     target = data.get("target")
-    if target not in TARGETS:
+    if not isinstance(target, str) or target not in TARGETS:
         available = ", ".join(TARGETS)
         raise ProjectError(f"unsupported target {target!r}; supported targets: {available}")
 
@@ -149,9 +149,9 @@ def load_project(manifest: str | Path) -> OsProject:
     optimization = data.get("optimization", "2")
     if not isinstance(compiler, str) or not compiler.strip():
         raise ProjectError("compiler must be a non-empty executable name")
-    if linker not in {"lld"}:
+    if not isinstance(linker, str) or linker != "lld":
         raise ProjectError("linker must be 'lld'; other linker drivers are not wired yet")
-    if optimization not in {"0", "1", "2", "3", "s", "z"}:
+    if not isinstance(optimization, str) or optimization not in {"0", "1", "2", "3", "s", "z"}:
         raise ProjectError("optimization must be one of: 0, 1, 2, 3, s, z")
 
     compile_flags = _string_list(data, "compile_flags")
@@ -254,6 +254,12 @@ def _print_command(command: Sequence[str]) -> None:
 
 def build_project(project: OsProject, *, dry_run: bool = False) -> int:
     validate_project_files(project)
+    commands = build_plan(project)
+    if dry_run:
+        for command in commands:
+            _print_command(command)
+        return 0
+
     compiler = resolve_tool(project.compiler)
     linker = shutil.which("ld.lld")
     if compiler is None:
@@ -262,12 +268,6 @@ def build_project(project: OsProject, *, dry_run: bool = False) -> int:
     if linker is None:
         print("reaper os: LLVM lld not found (expected ld.lld on PATH)", file=sys.stderr)
         return 127
-
-    commands = build_plan(project)
-    if dry_run:
-        for command in commands:
-            _print_command(command)
-        return 0
 
     project.output.parent.mkdir(parents=True, exist_ok=True)
     for command in commands:
