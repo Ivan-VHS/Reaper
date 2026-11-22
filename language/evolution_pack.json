@@ -1,6 +1,6 @@
 {
   "language": "RIPER",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "profile": "Catalytic extension pack; bounded Python reference runtime",
   "runtime": "python-reference",
   "native_c17_parity": false,
@@ -430,6 +430,18 @@
     {
       "name": "slice_text",
       "category": "text",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "map_of",
+      "category": "map",
+      "status": "implemented",
+      "kind": "builtin"
+    },
+    {
+      "name": "map_from_entries",
+      "category": "map",
       "status": "implemented",
       "kind": "builtin"
     }
