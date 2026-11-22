@@ -19,7 +19,7 @@ make total := [1, 2, 3] :: map(double) :: sum()
 emit "total = " ++ text(total)
 ```
 
-Rules: explicit effects; no implicit file/network/clock access in ordinary expressions; no silent coercion; bounded steps, call depth and collections. See [runtime limits](docs/RUNTIME_PLATFORM.md).
+Flow built-ins include `all`, `any`, `none`, `count`, `find`, `find_index`, `take_while`, `drop_while`, `enumerate`, `zip`, `scan` and `window`. Predicates and reducers are ordinary Reaper functions; every traversed item is charged to the execution budget. See [the Flow Toolkit contract](docs/FLOW_TOOLKIT.md).\n\nRules: explicit effects; no implicit file/network/clock access in ordinary expressions; no silent coercion; bounded steps, call depth and collections. See [runtime limits](docs/RUNTIME_PLATFORM.md).
 
 ## Integrated product layer
 
