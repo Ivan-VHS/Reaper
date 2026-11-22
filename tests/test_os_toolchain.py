@@ -67,6 +67,25 @@ class FreestandingToolchainTests(unittest.TestCase):
         with self.assertRaisesRegex(ProjectError, "unsupported target"):
             load_project(self.manifest)
 
+    def test_malformed_manifest_values_raise_project_errors(self) -> None:
+        for field, value in (("target", []), ("linker", {}), ("optimization", [])):
+            with self.subTest(field=field):
+                self.data[field] = value
+                self.write_manifest()
+                with self.assertRaises(ProjectError):
+                    load_project(self.manifest)
+                self.data[field] = {
+                    "target": "x86_64-unknown-none-elf",
+                    "linker": "lld",
+                    "optimization": "2",
+                }[field]
+
+    def test_rpr_is_not_misrepresented_as_a_machine_code_input(self) -> None:
+        self.data["sources"] = ["src/boot.rpr"]
+        self.write_manifest()
+        with self.assertRaisesRegex(ProjectError, "unsupported source type"):
+            load_project(self.manifest)
+
     def test_non_elf_output_is_not_claimed(self) -> None:
         self.data["format"] = "pe"
         self.write_manifest()
