@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+from pathlib import Path
 
 from reaper import Interpreter, ReaperRuntimeError
 from reaper.typecheck import check_source
@@ -134,6 +135,18 @@ class DuckProfileRuntimeTests(unittest.TestCase):
             results[0][1],
             {"ok": True, "kind": "map", "missing": []},
         )
+
+
+    def test_checked_in_example_typechecks_and_runs(self):
+        example = Path(__file__).resolve().parents[1] / "examples" / "duck_profile.rpr"
+        source = example.read_text(encoding="utf-8")
+        checked = check_source(source, str(example))
+        self.assertTrue(checked.ok, checked.as_dict())
+
+        output: list[str] = []
+        Interpreter(output=output.append).run(source, filename=str(example))
+        self.assertTrue(any("resource contract: ready" in line for line in output))
+        self.assertTrue(any("structural" in line for line in output))
 
 
 class DuckProfileTypeCheckerTests(unittest.TestCase):
