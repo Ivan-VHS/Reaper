@@ -26,3 +26,8 @@ This hub groups related specifications and implementation references. The linked
 - Follow links within this cluster when a shared compiler, runtime, IDE or quality contract is involved.
 - Use the central map for cross-cluster navigation and project boundaries.
 - Update this hub and the central catalog whenever a page is added, moved or retired.
+
+
+## Systems workbench direction
+
+The hardware-focused Studio target workspace, register/map views, IR/assembly inspection, memory budgets, simulator and debugger adapters are specified in [REAPER_IDE.md](../REAPER_IDE.md) and [HARDWARE_LANGUAGE.md](../HARDWARE_LANGUAGE.md). These panels remain planned except for the currently implemented editor and MMIO C API foundations.
