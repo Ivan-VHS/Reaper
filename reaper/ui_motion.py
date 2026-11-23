@@ -149,6 +149,124 @@ def duration_for(category: str, preferences: MotionPreferences | None = None) ->
     return duration
 
 
+
+def drapery_fold_offset(phase: float, position: float, amplitude: float = 2.0) -> float:
+    """Return a finite, bounded displacement for one vertical fabric fold."""
+    phase = float(phase)
+    position = float(position)
+    amplitude = float(amplitude)
+    if not all(math.isfinite(value) for value in (phase, position, amplitude)):
+        raise ValueError("Drapery parameters must be finite")
+    amplitude = max(0.0, min(4.0, amplitude))
+    return math.sin(phase + position * 0.72) * amplitude
+
+
+class DraperyAccent(tk.Canvas):
+    """Small animated cloth treatment for a product masthead, never a work pane."""
+
+    def __init__(self, master: tk.Misc, *, app_key: str, height: int = 34) -> None:
+        super().__init__(
+            master, height=height, background="#8F542C",
+            highlightthickness=0, borderwidth=0,
+        )
+        self.app_key = app_key
+        self._height = max(20, int(height))
+        self.preferences = load_preferences(app_key)
+        self.phase = 0.0
+        self._after_id: str | None = None
+        self.bind("<Configure>", self._on_configure, add="+")
+        self.bind("<Destroy>", self._on_destroy, add="+")
+        self._draw()
+        self._sync_timer()
+
+    def set_preferences(self, preferences: MotionPreferences) -> None:
+        self.preferences = preferences
+        self._sync_timer()
+        self._draw()
+
+    def _motion_allowed(self) -> bool:
+        return not (
+            self.preferences.reduce_motion
+            or self.preferences.eco_visuals
+            or reduced_motion_enabled()
+        )
+
+    def _on_configure(self, _event: tk.Event) -> None:
+        self._draw()
+
+    def _on_destroy(self, event: tk.Event) -> None:
+        if event.widget is self:
+            self._cancel_timer()
+
+    def _cancel_timer(self) -> None:
+        if self._after_id is not None:
+            try:
+                self.after_cancel(self._after_id)
+            except tk.TclError:
+                pass
+            self._after_id = None
+
+    def _sync_timer(self) -> None:
+        if self._motion_allowed():
+            if self._after_id is None:
+                self._after_id = self.after(110, self._tick)
+            return
+        self._cancel_timer()
+        self.phase = 0.0
+
+    def _tick(self) -> None:
+        self._after_id = None
+        if not self.winfo_exists() or not self._motion_allowed():
+            return
+        self.phase = (self.phase + 0.045) % (2.0 * math.pi)
+        self._draw()
+        self._after_id = self.after(110, self._tick)
+
+    def _draw(self) -> None:
+        width = max(1, self.winfo_width())
+        height = self._height
+        self.delete("drapery")
+        self.create_rectangle(
+            0, 0, width, height, fill="#9B5D30", outline="", tags="drapery"
+        )
+        spacing = width / max(8, min(28, width // 58 or 8))
+        fold_count = int(math.ceil(width / spacing))
+        amplitude = 2.2 if self.preferences.expressive_motion else 1.0
+        if not self._motion_allowed():
+            amplitude = 0.0
+
+        for index in range(fold_count + 1):
+            center = index * spacing
+            points: list[float] = []
+            highlight: list[float] = []
+            for step in range(6):
+                y = height * step / 5
+                offset = drapery_fold_offset(
+                    self.phase + index * 0.47, step * 0.18, amplitude
+                )
+                points.extend((center + offset, y))
+                highlight.extend((center + spacing * 0.16 + offset, y))
+
+            self.create_line(
+                *points, smooth=True, splinesteps=12,
+                fill="#542D1B", width=max(3, spacing * 0.13),
+                capstyle=tk.ROUND, tags="drapery",
+            )
+            self.create_line(
+                *highlight, smooth=True, splinesteps=12,
+                fill="#EBC17F", width=max(1, spacing * 0.035),
+                capstyle=tk.ROUND, tags="drapery",
+            )
+
+        self.create_rectangle(
+            0, 0, width, 2, fill="#F2D39A", outline="", tags="drapery"
+        )
+        self.create_rectangle(
+            0, height - 3, width, height,
+            fill="#4B2818", outline="", tags="drapery",
+        )
+
+
 class MotionController:
     """Runs short, non-blocking Tk window feedback without touching worker timing."""
 
