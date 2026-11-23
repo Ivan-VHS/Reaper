@@ -40,7 +40,7 @@ The reference runtime now supports typed result values and explicit correlation 
 | `request_context(id, trace?, parent?, metadata?)` | Create explicit request/trace IDs and bounded JSON metadata |
 | `context_with(context, key, value)` | Return a new context with one metadata field |
 | `context_get(context, key)` | Read request IDs or metadata |
-| `context_to_map(context)` | Produce a JSON-compatible context snapshot |
+| `context_to_map(context)` | Produce a JSON-compatible context snapshot, or an empty map when context is absent |
 | `runtime_stats()` | Read current step, call-depth, resource and heap counters/limits |
 
 Result transformations preserve context unless a callback explicitly supplies a replacement. Failure branches are not passed to success callbacks. Error codes/messages are validated; structured details and context metadata must be finite JSON-compatible maps within 16 KiB. IDs are supplied explicitly: the runtime does not fabricate request identifiers or read a clock.
