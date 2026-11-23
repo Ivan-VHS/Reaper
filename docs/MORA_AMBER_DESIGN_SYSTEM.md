@@ -17,6 +17,7 @@ Reaper Studio's existing Mora theme identifier now resolves to the shared amber/
 | Main action | `#D58B3D` |
 | Hover / focus | `#EAA653` / `#F3C16B` |
 | Critical | `#B64A40` |
+| Muted olive | `#526347` |
 | Selection | `#60442E` |
 | Structural edge | `#75543A` |
 
