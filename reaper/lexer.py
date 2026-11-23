@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from .errors import LexError
 from .token_catalog import token_is_reserved
+from .syntax_profiles import REAPER_KEYWORD_ALIASES as KEYWORD_ALIASES, resolve_syntax_profile
 
 
 MAX_SOURCE_CHARS = 4_000_000
@@ -21,62 +22,6 @@ KEYWORDS = {
 # Exact Russian spellings map to canonical REAPER keyword spellings.
 # "runtime" aliases are accepted by the 0.1 reference grammar; additional words
 # are reserved lexically for the evolving native grammar and do not imply parsing.
-KEYWORD_ALIASES = {
-    "пусть": "make",
-    "переменная": "vary",
-    "изменить": "change",
-    "функция": "craft",
-    "вернуть": "yield",
-    "вывести": "emit",
-    "если": "when",
-    "иначе": "otherwise",
-    "для": "each",
-    "в": "in",
-    "цикл": "loop",
-    "пока": "while",
-    "истина": "true",
-    "ложь": "false",
-    "ничего": "nothing",
-    "и": "and",
-    "или": "or",
-    "не": "not",
-    "импорт": "import",
-    "экспорт": "export",
-    "как": "as",
-    "модуль": "module",
-    "публичный": "pub",
-    "процедура": "fn",
-    "структура": "struct",
-    "перечисление": "enum",
-    "типаж": "trait",
-    "реализация": "impl",
-    "тип": "type",
-    "константа": "const",
-    "связать": "let",
-    "изменяемый": "mut",
-    "возврат": "return",
-    "условие": "if",
-    "альтернатива": "else",
-    "выбор": "match",
-    "область": "region",
-    "сырой": "raw",
-    "арена": "arena",
-    "сигнал": "signal",
-    "асинхронно": "async",
-    "ожидать": "await",
-    "тест": "test",
-    "вычислить_при_сборке": "comptime",
-    "требует": "requires",
-    "гарантирует": "ensures",
-    "небезопасно": "unsafe",
-    "внешний": "extern",
-    "где": "where",
-    "уничтожить": "drop",
-    "для_каждого": "for",
-    "прервать": "break",
-    "продолжить": "continue",
-    "отложить": "defer",
-}
 
 
 @dataclass(frozen=True, slots=True)
@@ -93,9 +38,10 @@ class Lexer:
     _TWO_CHAR = {":=", "==", "!=", "<=", ">=", "//", "**", "++", "::"}
     _ONE_CHAR = set("+-*/%<>(){}[],")
 
-    def __init__(self, source: str, filename: str = "<memory>") -> None:
+    def __init__(self, source: str, filename: str = "<memory>", syntax: str | None = None) -> None:
         self.source = source
         self.filename = filename
+        self.profile = resolve_syntax_profile(syntax, filename)
         self.index = 0
         self.line = 1
         self.column = 1
@@ -200,7 +146,7 @@ class Lexer:
         while self._peek().isalnum() or self._peek() == "_":
             self._advance()
         value = self.source[start:self.index]
-        canonical = KEYWORD_ALIASES.get(value)
+        canonical = self.profile.keyword_aliases.get(value)
         kind = canonical.upper() if canonical is not None else (
             value.upper() if value in KEYWORDS else "IDENT"
         )
@@ -228,5 +174,5 @@ class Lexer:
         raise LexError(f"{self.filename}:{self.line}:{self.column}: unexpected character {char!r}")
 
 
-def tokenize(source: str, filename: str = "<memory>") -> list[Token]:
-    return Lexer(source, filename).tokenize()
+def tokenize(source: str, filename: str = "<memory>", syntax: str | None = None) -> list[Token]:
+    return Lexer(source, filename, syntax).tokenize()
