@@ -41,6 +41,7 @@
 | [HARDWARE_LANGUAGE.md](HARDWARE_LANGUAGE.md) | systems-language architecture, MMIO contract, Studio hardware workbench and migration gates |
 | [NATIVE_COMPILER.md](NATIVE_COMPILER.md) | statically checked scalar AOT compilation to C17 and the host toolchain |
 | [ENGINEERING.md](ENGINEERING.md) | quality, effect and release gates |
+| [REAPER_BACKEND_66_IMPLEMENTATION.md](REAPER_BACKEND_66_IMPLEMENTATION.md) | Reaper-specific adaptation of 66 backend/runtime engineering rules, implementation stages and acceptance gates |
 | [DIVISION_ENGINE.md](DIVISION_ENGINE.md) | checked division and workload allocation |
 | [REAPER_813_FEATURE_ARCHITECTURE.md](REAPER_813_FEATURE_ARCHITECTURE.md) | proposal ID ranges and registry boundaries |
 | [REAPER_PARSER_M1.md](REAPER_PARSER_M1.md) | native parser acceptance |
