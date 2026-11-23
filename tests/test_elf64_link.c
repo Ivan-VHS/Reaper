@@ -45,7 +45,8 @@ static void test_static_link_and_relocation(void) {
     ReaperElf64Error error = {0};
     assert(reaper_elf64_write_object(&model, &object, &error) == REAPER_ELF64_OK);
 
-    ReaperElf64LinkInput input = {&object, "_start", 0x400000u, 4096u};
+    ReaperElf64Buffer input_objects[] = {object};
+    ReaperElf64LinkInput input = {input_objects, 1u, "_start", 0x400000u, 4096u};
     assert(reaper_elf64_link(&input, &executable, &error) == REAPER_ELF64_OK);
     assert(executable.size > 0x2000u);
     assert(memcmp(executable.data, "\x7f" "ELF", 4u) == 0);
@@ -68,6 +69,81 @@ static void test_static_link_and_relocation(void) {
 
     reaper_elf64_buffer_destroy(&object);
     reaper_elf64_buffer_destroy(&executable);
+}
+
+static void test_cross_object_symbol_resolution(void) {
+    static const uint8_t caller_text[] = {0xe8, 0, 0, 0, 0, 0xc3};
+    static const uint8_t callee_text[] = {0xc3};
+    const ReaperElf64Section caller_sections[] = {
+        {".text", REAPER_ELF64_SHT_PROGBITS, 0x6u, 16u, 0u,
+         caller_text, sizeof caller_text}
+    };
+    const ReaperElf64Symbol caller_symbols[] = {
+        {"_start", 0u, 0u, sizeof caller_text, REAPER_ELF64_STB_GLOBAL,
+         REAPER_ELF64_STT_FUNC, 0u},
+        {"external_fn", REAPER_ELF64_NO_SECTION, 0u, 0u,
+         REAPER_ELF64_STB_GLOBAL, REAPER_ELF64_STT_NOTYPE, 0u}
+    };
+    const ReaperElf64Relocation caller_relocations[] = {
+        {0u, 1u, 1u, REAPER_ELF64_R_X86_64_PLT32, -4}
+    };
+    const ReaperElf64Object caller_model = {
+        caller_sections, 1u, caller_symbols, 2u, caller_relocations, 1u
+    };
+    const ReaperElf64Section callee_sections[] = {
+        {".text", REAPER_ELF64_SHT_PROGBITS, 0x6u, 16u, 0u,
+         callee_text, sizeof callee_text}
+    };
+    const ReaperElf64Symbol callee_symbols[] = {
+        {"external_fn", 0u, 0u, sizeof callee_text, REAPER_ELF64_STB_GLOBAL,
+         REAPER_ELF64_STT_FUNC, 0u}
+    };
+    const ReaperElf64Object callee_model = {
+        callee_sections, 1u, callee_symbols, 1u, NULL, 0u
+    };
+
+    ReaperElf64Buffer objects[2] = {{0}};
+    ReaperElf64Buffer executable = {0};
+    ReaperElf64Error error = {0};
+    assert(reaper_elf64_write_object(&caller_model, &objects[0], &error) == REAPER_ELF64_OK);
+    assert(reaper_elf64_write_object(&callee_model, &objects[1], &error) == REAPER_ELF64_OK);
+    ReaperElf64LinkInput input = {objects, 2u, "_start", 0x400000u, 4096u};
+    assert(reaper_elf64_link(&input, &executable, &error) == REAPER_ELF64_OK);
+    assert(read64(executable.data + 24u) == 0x401000u);
+    assert((int32_t)read32(executable.data + 0x1001u) == 0xffbu);
+
+    reaper_elf64_buffer_destroy(&objects[0]);
+    reaper_elf64_buffer_destroy(&objects[1]);
+    reaper_elf64_buffer_destroy(&executable);
+}
+
+static void test_duplicate_strong_symbol_rejected(void) {
+    static const uint8_t code_a[] = {0xc3};
+    static const uint8_t code_b[] = {0xc3};
+    const ReaperElf64Section section_a = {
+        ".text", REAPER_ELF64_SHT_PROGBITS, 0x6u, 16u, 0u, code_a, sizeof code_a
+    };
+    const ReaperElf64Section section_b = {
+        ".text", REAPER_ELF64_SHT_PROGBITS, 0x6u, 16u, 0u, code_b, sizeof code_b
+    };
+    const ReaperElf64Symbol symbol_a = {
+        "_start", 0u, 0u, 1u, REAPER_ELF64_STB_GLOBAL, REAPER_ELF64_STT_FUNC, 0u
+    };
+    const ReaperElf64Symbol symbol_b = {
+        "_start", 0u, 0u, 1u, REAPER_ELF64_STB_GLOBAL, REAPER_ELF64_STT_FUNC, 0u
+    };
+    const ReaperElf64Object model_a = {&section_a, 1u, &symbol_a, 1u, NULL, 0u};
+    const ReaperElf64Object model_b = {&section_b, 1u, &symbol_b, 1u, NULL, 0u};
+    ReaperElf64Buffer objects[2] = {{0}};
+    ReaperElf64Buffer output = {0};
+    ReaperElf64Error error = {0};
+    assert(reaper_elf64_write_object(&model_a, &objects[0], &error) == REAPER_ELF64_OK);
+    assert(reaper_elf64_write_object(&model_b, &objects[1], &error) == REAPER_ELF64_OK);
+    ReaperElf64LinkInput input = {objects, 2u, "_start", 0x400000u, 4096u};
+    assert(reaper_elf64_link(&input, &output, &error) == REAPER_ELF64_INVALID_ARGUMENT);
+    assert(output.data == NULL);
+    reaper_elf64_buffer_destroy(&objects[0]);
+    reaper_elf64_buffer_destroy(&objects[1]);
 }
 
 static void test_unresolved_symbol_and_wx_rejected(void) {
@@ -101,7 +177,7 @@ static void test_unresolved_symbol_and_wx_rejected(void) {
     };
     const ReaperElf64Object wx_model = {&wx, 1u, local_symbols, 1u, NULL, 0u};
     assert(reaper_elf64_write_object(&wx_model, &object, &error) == REAPER_ELF64_OK);
-    input.object = &object;
+    input_objects[0] = object;
     assert(reaper_elf64_link(&input, &executable, &error) == REAPER_ELF64_UNSUPPORTED);
     reaper_elf64_buffer_destroy(&object);
 }
@@ -109,6 +185,8 @@ static void test_unresolved_symbol_and_wx_rejected(void) {
 int main(void) {
     test_static_link_and_relocation();
     test_unresolved_symbol_and_wx_rejected();
+    test_cross_object_symbol_resolution();
+    test_duplicate_strong_symbol_rejected();
     puts("ELF64 static linker tests passed");
     return 0;
 }
