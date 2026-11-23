@@ -115,6 +115,43 @@ class DuckProfileRuntimeTests(unittest.TestCase):
         with self.assertRaisesRegex(ReaperRuntimeError, "duck map item limit"):
             runtime.run("duck_adapt(source, defaults)")
 
+    def test_duplicate_required_fields_are_checked_once_in_input_order(self):
+        runtime = self.interpreter()
+        runtime.globals.define("settings", {"host": "localhost"})
+        runtime.run(
+            'make report := duck_probe(settings, ["port", "host", "port"])'
+        )
+        self.assertEqual(
+            runtime.globals.get("report"),
+            {"ok": False, "kind": "map", "missing": ["port"]},
+        )
+
+    def test_probe_enforces_the_field_budget(self):
+        runtime = self.interpreter(max_collection_items=2)
+        with self.assertRaisesRegex(ReaperRuntimeError, "field limit"):
+            runtime.run('duck_probe(42, ["one", "two", "three"])')
+
+    def test_adapt_does_not_replace_explicit_nothing_with_a_default(self):
+        runtime = self.interpreter()
+        source = {"timeout": None}
+        runtime.globals.define("source", source)
+        runtime.globals.define("defaults", {"timeout": 30})
+        runtime.run("make configured := duck_adapt(source, defaults)")
+        self.assertIsNone(runtime.globals.get("configured")["timeout"])
+        self.assertIsNone(source["timeout"])
+
+    def test_adapt_rejects_non_text_map_keys(self):
+        runtime = self.interpreter()
+        runtime.globals.define("source", {1: "not a field name"})
+        runtime.globals.define("defaults", {"enabled": True})
+        with self.assertRaisesRegex(ReaperRuntimeError, "keys must be text"):
+            runtime.run("duck_adapt(source, defaults)")
+
+    def test_unknown_capabilities_fail_closed(self):
+        runtime = self.interpreter()
+        runtime.run('make supported := duck_supports([1], "future_magic")')
+        self.assertFalse(runtime.globals.get("supported"))
+
     def test_duck_profile_has_treewalk_and_vm_parity(self):
         results = []
         for engine in ("treewalk", "vm"):
