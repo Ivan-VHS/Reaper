@@ -177,7 +177,7 @@ if(REAPER_BUILD_TESTS)
         if(TEST native-codegen-smoke)
             set_tests_properties(
                 native-codegen-smoke
-                native-duckos-dabi64-smoke
+                native-dabi64-lir-smoke
                 PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             )
         endif()
