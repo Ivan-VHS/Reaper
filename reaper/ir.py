@@ -86,7 +86,7 @@ class _Lowerer:
             nested.statements(children[0].children)
             nested.emit("CONST", None, node.token)
             nested.emit("RETURN", None, node.token)
-            function = IRFunction(name, tuple(parameters), tuple(nested.code))
+            function = IRFunction(name, tuple(parameters), tuple(nested.code), node.span)
             self.emit("MAKE_FUNCTION", function, node.token, node.span)
             self.emit("DEFINE", (name, False), node.token, node.span)
         elif node.kind == "when":
@@ -220,6 +220,10 @@ def verify(module: CanonicalIR) -> None:
         raise IRVerificationError("module code must be an immutable instruction tuple")
     if not isinstance(module.source_name, str) or not module.source_name:
         raise IRVerificationError("module source_name must be non-empty text")
+    if module.source_map is not None and not isinstance(module.source_map, SourceMap):
+        raise IRVerificationError("module source_map must be a SourceMap")
+    if not isinstance(module.syntax_mode, str) or not module.syntax_mode:
+        raise IRVerificationError("module syntax_mode must be non-empty text")
 
     binary_operators = {
         "==", "!=", "<", "<=", ">", ">=", "++",
@@ -280,6 +284,8 @@ def verify(module: CanonicalIR) -> None:
                 function = argument
                 if not isinstance(function, IRFunction):
                     raise IRVerificationError(f"{where}: MAKE_FUNCTION requires an IRFunction")
+                if function.span is not None and not isinstance(function.span, Span):
+                    raise IRVerificationError(f"{where}: function span must be a Span")
                 require_name(function.name, where)
                 if not isinstance(function.parameters, tuple):
                     raise IRVerificationError(f"{where}: function parameters must be a tuple")
