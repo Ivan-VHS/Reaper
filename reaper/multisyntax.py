@@ -423,25 +423,42 @@ class _PythonSubset:
             return self.execute_block(node.body if self.evaluate(node.test) else node.orelse)
         if isinstance(node, ast.While):
             result = None
+            broke = False
             while self.evaluate(node.test):
                 self.budget.tick()
-                try: result = self.execute_block(node.body)
-                except _ContinueSignal: continue
-                except _BreakSignal: break
-            if node.orelse: result = self.execute_block(node.orelse)
+                try:
+                    result = self.execute_block(node.body)
+                except _ContinueSignal:
+                    continue
+                except _BreakSignal:
+                    broke = True
+                    break
+            if node.orelse and not broke:
+                result = self.execute_block(node.orelse)
             return result
         if isinstance(node, ast.For):
             iterable = self.evaluate(node.iter)
-            if len(iterable) > self.collection_limit:
-                raise MultiSyntaxError("for-loop iterable exceeds the collection limit")
+            try:
+                if len(iterable) > self.collection_limit:
+                    raise MultiSyntaxError("for-loop iterable exceeds the collection limit")
+            except TypeError:
+                iterable = list(iterable)
+                if len(iterable) > self.collection_limit:
+                    raise MultiSyntaxError("for-loop iterable exceeds the collection limit")
             result = None
+            broke = False
             for item in iterable:
                 self.budget.tick()
                 self._assign(node.target, item)
-                try: result = self.execute_block(node.body)
-                except _ContinueSignal: continue
-                except _BreakSignal: break
-            if node.orelse: result = self.execute_block(node.orelse)
+                try:
+                    result = self.execute_block(node.body)
+                except _ContinueSignal:
+                    continue
+                except _BreakSignal:
+                    broke = True
+                    break
+            if node.orelse and not broke:
+                result = self.execute_block(node.orelse)
             return result
         if isinstance(node, ast.Match):
             subject = self.evaluate(node.subject)
@@ -459,6 +476,11 @@ class _PythonSubset:
             raise _BreakSignal()
         if isinstance(node, ast.Continue):
             raise _ContinueSignal()
+        if isinstance(node, ast.Assert):
+            if not self.evaluate(node.test):
+                detail = self.evaluate(node.msg) if node.msg else "assertion failed"
+                raise MultiSyntaxError(_text(detail))
+            return None
         if isinstance(node, ast.Pass):
             return None
         raise MultiSyntaxError(f"Python subset does not support statement {type(node).__name__}")
@@ -996,7 +1018,11 @@ def run_source(
     selected = normalize_syntax(syntax)
     budget = _budget or _Budget(max_steps)
     lines: list[str] = []
-    emit = output or lines.append
+    def emit_line(value: str) -> None:
+        lines.append(value)
+        if output is not None:
+            output(value)
+    emit = emit_line
     if selected == "reaper":
         from .runtime import Interpreter
         runtime = Interpreter(output=emit, max_steps=budget.limit - budget.steps)
