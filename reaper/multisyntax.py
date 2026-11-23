@@ -1120,11 +1120,121 @@ def run_polyglot(
     }
 
 
+def _validate_python_tree(tree: ast.AST) -> None:
+    allowed = {
+        ast.Module, ast.Expr, ast.Constant, ast.Name, ast.Load, ast.Store,
+        ast.List, ast.Tuple, ast.Set, ast.Dict, ast.BinOp, ast.UnaryOp,
+        ast.BoolOp, ast.Compare, ast.IfExp, ast.Subscript, ast.Slice,
+        ast.Call, ast.keyword, ast.Lambda, ast.JoinedStr, ast.FormattedValue,
+        ast.Assign, ast.AnnAssign, ast.AugAssign, ast.FunctionDef, ast.arguments,
+        ast.arg, ast.Return, ast.If, ast.While, ast.For, ast.Match, ast.match_case,
+        ast.MatchAs, ast.MatchValue, ast.MatchSingleton, ast.MatchSequence,
+        ast.MatchOr, ast.Break, ast.Continue, ast.Pass, ast.Assert,
+        ast.Add, ast.Sub, ast.Mult, ast.Div, ast.FloorDiv, ast.Mod, ast.Pow,
+        ast.UAdd, ast.USub, ast.Not, ast.And, ast.Or, ast.Eq, ast.NotEq,
+        ast.Lt, ast.LtE, ast.Gt, ast.GtE, ast.In, ast.NotIn, ast.Is, ast.IsNot,
+    }
+    for node in ast.walk(tree):
+        if type(node) not in allowed:
+            raise MultiSyntaxError(f"Python subset does not support {type(node).__name__}")
+        if isinstance(node, ast.FunctionDef) and node.decorator_list:
+            raise MultiSyntaxError("decorators are not enabled in the safe Python subset")
+        if isinstance(node, ast.arg):
+            if node.annotation is not None:
+                annotation = node.annotation
+                if not (
+                    isinstance(annotation, ast.Name) and annotation.id in _PythonSubset._annotations
+                    or isinstance(annotation, ast.Constant) and annotation.value == "Any"
+                    or isinstance(annotation, ast.Subscript) and isinstance(annotation.value, ast.Name)
+                    and annotation.value.id in {"list", "tuple", "dict", "set"}
+                ):
+                    raise MultiSyntaxError("unsupported Python boundary type annotation")
+
+
+def validate_source(syntax: str, source: str, *, filename: str = "<memory>") -> dict[str, Any]:
+    """Validate syntax and structure without executing user code."""
+    if not isinstance(source, str) or len(source) > MAX_SOURCE_CHARS:
+        raise MultiSyntaxError("source must be text no longer than 1,000,000 characters")
+    selected = normalize_syntax(syntax)
+    analysis: dict[str, Any] = {}
+    if selected == "reaper":
+        from .parser import parse
+        parse(source, filename)
+    elif selected == "python":
+        try:
+            tree = ast.parse(source, filename=filename, mode="exec")
+        except SyntaxError as error:
+            raise MultiSyntaxError(f"{filename}:{error.lineno}:{error.offset}: {error.msg}") from error
+        _validate_python_tree(tree)
+    elif selected == "pipeline":
+        stages = _split_pipeline(source)
+        for index, stage in enumerate(stages):
+            try:
+                tree = ast.parse(stage, mode="eval")
+            except SyntaxError as error:
+                raise MultiSyntaxError(f"invalid pipeline stage {index + 1}: {error.msg}") from error
+            _validate_python_tree(ast.Module(body=[ast.Expr(value=tree.body)], type_ignores=[]))
+            if index > 0 and not isinstance(tree.body, (ast.Name, ast.Call)):
+                raise MultiSyntaxError("pipeline stages must be function names or function calls")
+    elif selected == "lisp":
+        _read_lisp(source)
+    elif selected == "forth":
+        tokens = re.findall(r'"(?:\\\\.|[^"\\\\])*"|[^\\s]+', re.sub(r"\\\\[^\\n]*", "", source))
+        definition_open = False
+        for token in tokens:
+            if token == ":":
+                if definition_open:
+                    raise MultiSyntaxError("nested Forth ':' definition")
+                definition_open = True
+            elif token == ";":
+                if not definition_open:
+                    raise MultiSyntaxError("Forth ';' has no matching ':'")
+                definition_open = False
+        if definition_open:
+            raise MultiSyntaxError("Forth definition is missing ';'")
+    elif selected == "brainfuck":
+        analysis = analyze_brainfuck(source)
+    elif selected == "befunge93":
+        rows = source.splitlines() or [""]
+        if len(rows) > 25 or any(len(row) > 80 for row in rows):
+            raise MultiSyntaxError("Befunge-93 playfield is limited to 80 columns by 25 rows")
+        supported = set('0123456789+-*/%!\`><^v?_|"\\:$.,#pg&~@ ')
+        for row_index, row in enumerate(rows):
+            for column, character in enumerate(row):
+                if character not in supported:
+                    raise MultiSyntaxError(f"unsupported Befunge-93 instruction {character!r} at ({column},{row_index})")
+    return {
+        "schema": "reaper.syntax-validation.v1",
+        "syntax": selected,
+        "filename": filename,
+        "valid": True,
+        "analysis": analysis,
+        "execution_performed": False,
+    }
+
+
+def validate_polyglot(source: str, *, filename: str = "<polyglot>") -> dict[str, Any]:
+    blocks = parse_polyglot(source)
+    reports = [
+        validate_source(syntax, body, filename=f"{filename}#{index + 1}:{syntax}")
+        for index, (syntax, body) in enumerate(blocks)
+    ]
+    return {
+        "schema": "reaper.polyglot-validation.v1",
+        "filename": filename,
+        "valid": True,
+        "block_count": len(reports),
+        "blocks": reports,
+        "execution_performed": False,
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="reaper-multisyntax", description="Run Reaper and registered alternative syntax frontends.")
     parser.add_argument("source", nargs="?", type=Path)
     parser.add_argument("--syntax", default="auto", help="reaper, python, pipeline, lisp, forth, brainfuck or befunge93")
-    parser.add_argument("--polyglot", action="store_true", help="execute %% syntax blocks in source order")
+    parser.add_argument("--polyglot", action="store_true", help="execute or validate %% syntax blocks in source order")
+    parser.add_argument("--check", action="store_true", help="validate syntax without executing the program")
     parser.add_argument("--list", action="store_true", help="list registered syntax frontends")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--steps", type=int, default=1_000_000)
@@ -1155,6 +1265,8 @@ def main(argv: list[str] | None = None) -> int:
         elif args.list:
             for item in result["syntaxes"]:
                 print(f"{item['name']:<12} {item['paradigm']:<28} {item['status']}")
+        elif args.check:
+            print(f"Reaper syntax check: {result.get('block_count', 1)} block(s) valid")
         else:
             for line in result.get("output", []):
                 print(line, end="" if line.endswith("\n") else "\n")
