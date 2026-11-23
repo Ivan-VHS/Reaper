@@ -41,3 +41,25 @@ The original six brand colors remain canonical. Native desktop themes may use th
 | Selection | #D9E8FF | #244F82 |
 
 The visual validator accepts this semantic extension; code-level tests cover text, action and focus contrast. Gradients and color-only states remain outside the canon.
+
+## Mora Amber desktop profile
+
+Mora's shared desktop profile uses a material-led amber/sand palette with a dark walnut core. It is an additional semantic profile; the original white/blue/red product identity remains available for applications that depend on those colors.
+
+| Token | Value | Use |
+|---|---|---|
+| Workspace | #211913 | Deep walnut page |
+| Surface | #33261D | Main panels |
+| Elevated | #493326 | Secondary panels |
+| Primary text | #FFF3E2 | Body and titles |
+| Secondary text | #E7D2B8 | Supporting labels |
+| Muted text | #C4A98A | Quiet metadata |
+| Amber action | #D58B3D | Primary actions and progress |
+| Amber hover | #EAA653 | Hover and active action |
+| Focus | #F3C16B | Keyboard focus |
+| Olive support | #526347 | Muted secondary accent |
+| Critical red | #B64A40 | Critical and destructive states |
+| Structural edge | #75543A | Borders and material edges |
+| Selection | #60442E | Selected rows and text |
+
+Amber is never a warning/error color; red remains reserved for critical meaning. Status labels and icons remain explicit. Body text targets AAA contrast (7:1); controls meet AA where appropriate.
