@@ -194,7 +194,7 @@ def result_value(value: Any) -> Any:
     result = _result(value)
     if not result.succeeded:
         assert result.error is not None
-        raise ReaperRuntimeError(f"{result.error.code}: {result.error.message}")
+        raise ValueError(f"{result.error.code}: {result.error.message}")
     return result.value
 
 
