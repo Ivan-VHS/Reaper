@@ -9,6 +9,7 @@ from .errors import ReaperRuntimeError
 from .ir import CanonicalIR, IRFunction, IRInstruction, verify
 from .runtime import Builtin, Environment
 from .lexer import Token
+from .source import SourceMap, Span
 
 
 _OPCODES = {
@@ -27,12 +28,15 @@ class BytecodeInstruction:
     opcode: int
     argument: Any
     token: Token
+    span: Span | None = None
 
 
 @dataclass(frozen=True, slots=True)
 class BytecodeProgram:
     code: tuple[BytecodeInstruction, ...]
     source_name: str
+    source_map: SourceMap | None = None
+    syntax_mode: str = "reaper-classic"
 
 
 @dataclass(slots=True)
@@ -54,10 +58,14 @@ def assemble(module: CanonicalIR) -> BytecodeProgram:
             if instruction.op == "MAKE_FUNCTION":
                 function = argument
                 argument = (function.name, function.parameters, encode(function.code))
-            result.append(BytecodeInstruction(_OPCODES[instruction.op], argument, instruction.token))
+            result.append(BytecodeInstruction(
+                _OPCODES[instruction.op], argument, instruction.token, instruction.span
+            ))
         return tuple(result)
 
-    return BytecodeProgram(encode(module.code), module.source_name)
+    return BytecodeProgram(
+        encode(module.code), module.source_name, module.source_map, module.syntax_mode
+    )
 
 
 class VirtualMachine:
@@ -65,6 +73,8 @@ class VirtualMachine:
         self.interpreter = interpreter
         self.program = program
         self.iteration_stack: list[Any] = []
+        self.interpreter.source_map = program.source_map
+        self.interpreter.syntax_mode = program.syntax_mode
 
     def run(self) -> Any:
         return self._execute(self.program.code, self.interpreter.globals, allow_return=False)
@@ -98,6 +108,7 @@ class VirtualMachine:
             ip += 1
             name = _OPCODE_NAMES[instruction.opcode]
             token = instruction.token
+            self.interpreter._active_span = instruction.span
             self.interpreter._current_environment = environment
             self.interpreter._tick(token)
 
