@@ -13,6 +13,7 @@ import subprocess
 import threading
 from pathlib import Path
 import tkinter as tk
+from tkinter import font as tkfont
 from tkinter import filedialog, messagebox, simpledialog, ttk
 from tkinter.scrolledtext import ScrolledText
 from typing import Any
@@ -96,7 +97,15 @@ class ReaperStudio(tk.Tk):
         except tk.TclError:
             pass
         style.configure("Treeview", rowheight=24)
-        style.configure("PaneTitle.TLabel", font=("Segoe UI Semibold", 9))
+        try:
+            installed = {family.casefold(): family for family in tkfont.families(self)}
+        except tk.TclError:
+            installed = {}
+        heading_font = next(
+            (installed[name.casefold()] for name in ("Caveat", "Marck Script", "Lobster") if name.casefold() in installed),
+            "Segoe UI Semibold",
+        )
+        style.configure("PaneTitle.TLabel", font=(heading_font, 12))
         style.configure("Toolbar.TButton", padding=(9, 5))
 
     def _build_menu(self) -> None:
