@@ -1,0 +1,164 @@
+{
+  "schema": "ivan-vhs.system-capabilities.v1",
+  "version": 1,
+  "project": "Reaper",
+  "scope": "Reaper systems language, reference runtime, native C17 track, Studio, LSP/DAP and explicit local integrations.",
+  "reference": {
+    "id": "windows-xp-sp3-66-point-comparison",
+    "total_points": 66,
+    "quality": "mixed_historical_claims",
+    "treatment": "historical_input_for_portable_engineering_principles",
+    "warning": "The supplied 66-point list mixes cumulative updates, inherited behavior, absence statements, repeated topics and Windows-specific constraints. It is not treated as an authoritative XP SP3 changelog or as a requirement to reproduce legacy Windows behavior."
+  },
+  "adoption_rules": {
+    "allowed_statuses": [
+      "implemented",
+      "partial",
+      "planned",
+      "not_applicable",
+      "not_assessed"
+    ],
+    "rule": "Only claim implemented when repository code and tests or operational evidence support the exact behavior. Partial requires evidence and explicit limits. Not applicable requires a product-scope reason. Historical Windows features are not silently represented as native capabilities."
+  },
+  "source_groups": [
+    {
+      "id": "security-crypto-policy",
+      "title": "Security, cryptography and access policy",
+      "first": 1,
+      "last": 14,
+      "count": 14
+    },
+    {
+      "id": "network-protocols",
+      "title": "Networking, protocols and local interoperability",
+      "first": 15,
+      "last": 28,
+      "count": 14
+    },
+    {
+      "id": "installation-servicing",
+      "title": "Activation, installation, deployment and servicing",
+      "first": 29,
+      "last": 40,
+      "count": 12
+    },
+    {
+      "id": "user-interface-storage",
+      "title": "User interface, shell, multimedia and storage",
+      "first": 41,
+      "last": 54,
+      "count": 14
+    },
+    {
+      "id": "lifecycle-compatibility",
+      "title": "Lifecycle, versioning and technical limits",
+      "first": 55,
+      "last": 66,
+      "count": 12
+    }
+  ],
+  "controls": [
+    {
+      "id": "security-trust",
+      "source_group": "security-crypto-policy",
+      "source_points": [
+        1,
+        14
+      ],
+      "status": "partial",
+      "assessment": "The reference runtime has execution quotas and explicit host-effect boundaries; native hardware services and complete type/ownership/effect enforcement remain partial.",
+      "evidence": [
+        "docs/FEATURES.md",
+        "docs/HARDWARE_LANGUAGE.md",
+        "README.md"
+      ],
+      "verification": [
+        "tests"
+      ],
+      "limitations": [
+        "Native code and hardware adapters must stay opt-in and bounded."
+      ]
+    },
+    {
+      "id": "network-interoperability",
+      "source_group": "network-protocols",
+      "source_points": [
+        15,
+        28
+      ],
+      "status": "not_applicable",
+      "assessment": "Reaper is a local developer tool; its LSP/DAP use stdio and network services or remote execution are not part of the current product scope.",
+      "evidence": [
+        "docs/FEATURES.md",
+        "README.md"
+      ],
+      "verification": [],
+      "limitations": [
+        "Do not add network services merely to imitate Windows networking features."
+      ]
+    },
+    {
+      "id": "deployment-servicing",
+      "source_group": "installation-servicing",
+      "source_points": [
+        29,
+        40
+      ],
+      "status": "partial",
+      "assessment": "The Python package, local toolchain discovery and desktop build workflows exist; a signed system installer and OS-level servicing framework are not claimed.",
+      "evidence": [
+        "README.md",
+        "pyproject.toml",
+        "docs/FORMATTER_AND_TOOLCHAIN.md"
+      ],
+      "verification": [
+        "tests"
+      ],
+      "limitations": [
+        "Keep package installation separate from privileged system updates."
+      ]
+    },
+    {
+      "id": "user-experience-storage",
+      "source_group": "user-interface-storage",
+      "source_points": [
+        41,
+        54
+      ],
+      "status": "partial",
+      "assessment": "Studio, CLI and local project/source handling exist; a system-wide shell, compositor and OS storage manager are outside scope.",
+      "evidence": [
+        "README.md",
+        "docs/REAPER_IDE.md",
+        "docs/FEATURES.md"
+      ],
+      "verification": [
+        "tests"
+      ],
+      "limitations": [
+        "UI capability claims must remain scoped to the desktop IDE."
+      ]
+    },
+    {
+      "id": "compatibility-lifecycle",
+      "source_group": "lifecycle-compatibility",
+      "source_points": [
+        55,
+        66
+      ],
+      "status": "partial",
+      "assessment": "The Python runtime remains the compatibility reference while the C17 backend is partial; language, ABI and example checks cover only documented contracts.",
+      "evidence": [
+        "docs/HARDWARE_LANGUAGE.md",
+        "docs/FEATURES.md",
+        "README.md"
+      ],
+      "verification": [
+        "tests"
+      ],
+      "limitations": [
+        "Do not equate compatibility with full backend or hardware-runtime parity."
+      ]
+    }
+  ]
+}
