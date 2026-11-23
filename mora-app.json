@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "id": "reaper",
+  "name": "Reaper Studio",
+  "summary": "Язык программирования и IDE",
+  "description": "Редактор MOST/Reaper, check/run, debugger, LSP/DAP и локальные средства разработки.",
+  "category": "developer",
+  "accent": "#315EE8",
+  "capabilities": ["Редактор", "Check / Run", "Debugger", "LSP / DAP", "Локальный toolchain"],
+  "entrypoint": {
+    "kind": "python",
+    "path": "reaper_desktop.py",
+    "platforms": ["windows", "linux", "macos"],
+    "requires": ["Python 3.10+", "Tkinter"]
+  },
+  "integration": {
+    "theme_environment": "MORA_THEME_MODE",
+    "themes": ["dark", "light"],
+    "window_mode": "separate-native-window",
+    "local_only": true
+  }
+}
