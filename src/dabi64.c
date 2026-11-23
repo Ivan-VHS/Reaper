@@ -295,16 +295,26 @@ ReaperDabiStatus reaper_dabi_array_length(
 
 static int contains_object(const ReaperDabiValue *value, DabiObject *target,
                            uint32_t depth) {
+    DabiObject *object;
     if (value->tag == REAPER_DABI_TAG_ITERATOR) {
-        DabiObject *iterator = object_of(value);
-        return iterator == NULL || iterator->kind != DABI_OBJECT_ITERATOR ||
-               iterator->data.iterator.source == target;
+        object = object_of(value);
+        if (object == NULL || object->kind != DABI_OBJECT_ITERATOR ||
+            object->data.iterator.source == NULL)
+            return 1;
+        object = object->data.iterator.source;
+        if (object == target) return 1;
+        if (object->kind != DABI_OBJECT_ARRAY ||
+            depth >= REAPER_DABI64_MAX_NESTING)
+            return 1;
+    } else if (value->tag == REAPER_DABI_TAG_ARRAY) {
+        object = object_of(value);
+        if (object == target) return 1;
+        if (object == NULL || object->kind != DABI_OBJECT_ARRAY ||
+            depth >= REAPER_DABI64_MAX_NESTING)
+            return 1;
+    } else {
+        return 0;
     }
-    if (value->tag != REAPER_DABI_TAG_ARRAY) return 0;
-    DabiObject *object = object_of(value);
-    if (object == target) return 1;
-    if (object == NULL || object->kind != DABI_OBJECT_ARRAY ||
-        depth >= REAPER_DABI64_MAX_NESTING) return 1;
     for (uint64_t i = 0u; i < object->length; ++i)
         if (contains_object(&object->data.items[i], target, depth + 1u)) return 1;
     return 0;
