@@ -69,7 +69,8 @@ static void test_elf_load_plan_and_apply(void) {
     ReaperElf64Buffer object = {0}, executable = {0};
     ReaperElf64Error error = {0};
     assert(reaper_elf64_write_object(&model, &object, &error) == REAPER_ELF64_OK);
-    ReaperElf64LinkInput link = {&object, "_start", 0x400000u, 4096u};
+    ReaperElf64Buffer link_objects[] = {object};
+    ReaperElf64LinkInput link = {link_objects, 1u, "_start", 0x400000u, 4096u};
     assert(reaper_elf64_link(&link, &executable, &error) == REAPER_ELF64_OK);
 
     ReaperElf64LoadPlan plan;
