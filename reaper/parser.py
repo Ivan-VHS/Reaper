@@ -257,5 +257,6 @@ class Parser:
         return ParseError(f"{self.filename}:{token.line}:{token.column}: {message} (found {token.value or token.kind})")
 
 
-def parse(source: str, filename: str = "<memory>") -> Node:
-    return Parser(tokenize(source, filename), filename).parse()
+def parse(source: str, filename: str = "<memory>", syntax: str | None = None) -> Node:
+    """Parse one source file through its selected surface syntax and shared AST."""
+    return Parser(tokenize(source, filename, syntax=syntax), filename).parse()
