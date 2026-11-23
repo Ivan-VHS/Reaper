@@ -269,3 +269,8 @@ Python 仍是当前可执行的兼容性参考实现。Native C17 parsing/loweri
 ## 文档导航图
 
 请从[文档索引](docs/README.md)进入，并使用[信息架构图](docs/INFORMATION_ARCHITECTURE.md)浏览语言、编译器、Runtime、Studio 和集成主题集群。主题入口链接到详细契约；实现状态仍以源代码、测试和 Schema 为准。
+
+
+## Mora 桌面集成
+
+Reaper Studio 可从统一的 Mora 工作空间启动。Mora 提供应用目录和启动主题；Reaper 保留自己的编辑器、运行时、调试器和原生窗口。请参阅 [Mora 集成说明](docs/MORA_DESKTOP_INTEGRATION.md) 和 [DuckOS 工作空间契约](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/MORA_DESKTOP.md)。
