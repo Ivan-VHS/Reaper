@@ -185,12 +185,12 @@ class BackendService:
                     result: dict[str, Any] = {}
                     for key, item in islice(value.items(), 10_000):
                         if isinstance(key, str):
-                            result[key] = BackendServer._json_safe(
+                            result[key] = BackendService._json_safe(
                                 item, depth=depth + 1, seen=seen, budget=budget
                             )
                     return result
                 return [
-                    BackendServer._json_safe(
+                    BackendService._json_safe(
                         item, depth=depth + 1, seen=seen, budget=budget
                     )
                     for item in islice(value, 10_000)
