@@ -34,6 +34,19 @@ class DuckPipelineTests(unittest.TestCase):
             ],
         )
 
+    def test_non_map_records_become_diagnostics(self) -> None:
+        source = PROGRAM.read_text(encoding="utf-8")
+        source = source.split('make raw_channels :=', 1)[0]
+        source += '\\nmake results := ["not-a-map"] :: map(inspect_one)\\nemit results\\n'
+        output: list[str] = []
+
+        Interpreter(output=output.append).run(source, filename=str(PROGRAM))
+
+        self.assertEqual(
+            output,
+            ["[[false, [INVALID_RECORD, channel record must be a map, []]]]"],
+        )
+
     def test_map_access_and_conversion_builtins(self) -> None:
         output: list[str] = []
         interpreter = Interpreter(output=output.append)
