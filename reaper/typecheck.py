@@ -48,7 +48,7 @@ BUILTIN_RETURN: dict[str, str] = {
     "quotient": "Int", "remainder": "Int", "is_divisible": "Bool",
     "partition": "List[Any]", "distribute": "List[Int]",
     "proportional_split": "List[Int]", "size": "Int", "text": "Text",
-    "number": "Float", "kind": "Text", "range": "List[Int]",
+    "number": "Number", "kind": "Text", "range": "List[Int]",
     "push": "List[Any]", "first": ANY, "rest": "List[Any]", "sum": "Number",
     "sorted": "List[Any]", "sort_by": "List[Any]", "map": "List[Any]",
     "keep": "List[Any]", "filter": "List[Any]", "fold": ANY, "reduce": ANY,
@@ -268,6 +268,8 @@ class TypeChecker:
                 if not self._numeric(left) or not self._numeric(right):
                     self._report(node, "RPR-T0004", f"operator '{operator}' requires numeric operands, got {left} and {right}")
                     return ANY
+                if ANY in {left, right}:
+                    return "Number"
                 return "Float" if "Float" in {left, right} or operator == "/" else "Int"
             if operator == "++":
                 if left not in {"Text", ANY} or right not in {"Text", ANY}:
@@ -299,21 +301,34 @@ class TypeChecker:
                 )
                 self._report(node, "RPR-T0007", f"{name}() expects {expected} arguments, got {len(arguments)}")
             self._check_builtin_arguments(node, name, argument_types)
+            if name == "push" and argument_types:
+                item_type = argument_types[1] if len(argument_types) > 1 else ANY
+                element_type = self._element_type(argument_types[0], node)
+                return f"List[{self._unify(element_type, item_type)}]"
+            if name == "map" and len(arguments) > 1:
+                callback = arguments[1]
+                if callback.kind == "name" and callback.value in self.functions:
+                    return f"List[{self.functions[callback.value].return_type}]"
+                return "List[Any]"
+            if name in {"keep", "filter"} and argument_types:
+                return argument_types[0]
+            if name in {"sorted", "sort_by", "rest", "take", "drop", "unique", "partition"} and argument_types:
+                return argument_types[0] if argument_types[0].startswith("List[") else "List[Any]"
+            if name == "first" and argument_types:
+                return self._element_type(argument_types[0], node)
+            if name == "reverse" and argument_types:
+                return argument_types[0] if argument_types[0] == "Text" or argument_types[0].startswith("List[") else "List[Any]"
+            if name == "flatten" and argument_types:
+                nested_type = self._element_type(argument_types[0], node)
+                return nested_type if nested_type.startswith("List[") else "List[Any]"
+            if name == "chunk":
+                return "List[Any]"
             if name in {"map", "keep", "filter", "sorted", "sort_by", "push", "rest", "take", "drop", "chunk", "unique", "flatten", "partition", "distribute", "proportional_split", "range", "divmod_euclidean", "euclidean_divmod", "split"}:
                 if name == "range" or name in {"distribute", "proportional_split", "divmod_euclidean", "euclidean_divmod"}:
                     return "List[Int]"
                 if name == "split":
                     return "List[Text]"
-                if name == "push" and argument_types:
-                    item_type = argument_types[1] if len(argument_types) > 1 else ANY
-                    return f"List[{item_type}]"
-                if name in {"map", "keep", "filter"} and argument_types:
-                    return "List[Any]"
                 return "List[Any]"
-            if name == "first" and argument_types:
-                return self._element_type(argument_types[0], node)
-            if name in {"reverse"} and argument_types and argument_types[0] == "Text":
-                return "Text"
             return BUILTIN_RETURN.get(name, ANY)
         function = self.functions.get(name)
         if function is not None:
@@ -323,22 +338,47 @@ class TypeChecker:
         return ANY
 
     def _flow_type(self, left_node: Node, right_node: Node, left_type: str) -> str:
-        if right_node.kind == "call":
-            callee = right_node.children[0]
-            if callee.kind == "name" and callee.value in BUILTIN_ARITY:
-                name = callee.value
-                if name in {"map", "keep", "filter"}:
-                    return "List[Any]"
-                if name == "sum":
-                    return "Number"
-                if name in {"size", "length"}:
-                    return "Int"
-                if name in {"text", "join", "trim", "lower", "upper"}:
-                    return "Text"
-                if name in BUILTIN_RETURN:
-                    return BUILTIN_RETURN[name]
-            if callee.kind == "name" and callee.value in self.functions:
-                return self.functions[callee.value].return_type
+        if right_node.kind != "call":
+            return ANY
+        children = right_node.children or []
+        callee = children[0]
+        extra_nodes = children[1:]
+        extra_types = [self._expression(item) for item in extra_nodes]
+        if callee.kind != "name":
+            return ANY
+        name = callee.value
+        if name in BUILTIN_ARITY:
+            minimum, maximum = BUILTIN_ARITY[name]
+            supplied = 1 + len(extra_nodes)
+            if supplied < minimum or (maximum is not None and supplied > maximum):
+                expected = str(minimum) if minimum == maximum else (
+                    f"at least {minimum}" if maximum is None else f"{minimum}..{maximum}"
+                )
+                self._report(right_node, "RPR-T0007", f"{name}() expects {expected} arguments, got {supplied}")
+            self._check_builtin_arguments(right_node, name, [left_type, *extra_types])
+            if name == "map":
+                callback = extra_nodes[0] if extra_nodes else None
+                if callback is not None and callback.kind == "name" and callback.value in self.functions:
+                    return f"List[{self.functions[callback.value].return_type}]"
+                return "List[Any]"
+            if name in {"keep", "filter", "sorted", "sort_by", "take", "drop", "unique", "rest"}:
+                return left_type
+            if name == "sum":
+                return "Number"
+            if name in {"size", "length"}:
+                return "Int"
+            if name in {"text", "join", "trim", "lower", "upper"}:
+                return "Text"
+            if name == "reverse":
+                return left_type
+            if name in BUILTIN_RETURN:
+                return BUILTIN_RETURN[name]
+        function = self.functions.get(name)
+        if function is not None:
+            supplied = 1 + len(extra_nodes)
+            if supplied != function.arity:
+                self._report(right_node, "RPR-T0007", f"{name}() expects {function.arity} arguments, got {supplied}")
+            return function.return_type
         return ANY
 
     def _check_builtin_arguments(self, node: Node, name: str, types: list[str]) -> None:
@@ -385,6 +425,8 @@ class TypeChecker:
             return True
         if expected == "Float" and actual == "Int":
             return True
+        if expected == "Number" and actual in NUMERIC:
+            return True
         if expected.startswith("List[") and actual.startswith("List["):
             return expected == "List[Any]" or expected == actual
         return False
@@ -404,6 +446,10 @@ class TypeChecker:
             return ANY
         if left in NUMERIC and right in NUMERIC:
             return "Float"
+        if left == "Number" and right in NUMERIC | {"Number"}:
+            return "Number"
+        if right == "Number" and left in NUMERIC | {"Number"}:
+            return "Number"
         if left == NOTHING:
             return f"Optional[{right}]"
         if right == NOTHING:
