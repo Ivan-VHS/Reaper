@@ -30,6 +30,28 @@ def _string(value: Any, field: str, maximum: int = 4096) -> str:
     return value.strip()
 
 
+def _existing_path(value: str, base: Path, field: str, kind: str) -> Path:
+    candidate = Path(value).expanduser()
+    relative = not candidate.is_absolute()
+    if relative:
+        candidate = base / candidate
+    if candidate.is_symlink():
+        raise GameLaunchContractError(f"{field} must not be a symbolic link")
+    try:
+        resolved = candidate.resolve(strict=True)
+    except OSError as error:
+        raise GameLaunchContractError(f"{field} does not exist: {error}") from error
+    if relative:
+        try:
+            resolved.relative_to(base)
+        except ValueError as error:
+            raise GameLaunchContractError(f"relative {field} must stay inside the manifest directory") from error
+    valid = resolved.is_file() if kind == "file" else resolved.is_dir()
+    if not valid:
+        raise GameLaunchContractError(f"{field} must point to an existing {kind}")
+    return resolved
+
+
 def build_game_launch_task(profile: dict[str, Any], base_directory: str | Path = ".") -> dict[str, Any]:
     if not isinstance(profile, dict) or profile.get("schema") != PROFILE_SCHEMA:
         raise GameLaunchContractError(f"expected a {PROFILE_SCHEMA} manifest")
@@ -38,19 +60,11 @@ def build_game_launch_task(profile: dict[str, Any], base_directory: str | Path =
     base = Path(base_directory).expanduser().resolve()
 
     executable_text = _string(profile.get("executable"), "executable", 2048)
-    executable_path = Path(executable_text).expanduser()
-    if not executable_path.is_absolute():
-        executable_path = base / executable_path
-    if executable_path.is_symlink() or not executable_path.is_file():
-        raise GameLaunchContractError("executable must be an existing regular, non-symlink file")
-    executable = str(executable_path.resolve())
+    executable_path = _existing_path(executable_text, base, "executable", "file")
+    executable = str(executable_path)
 
     working_text = _string(profile.get("working_directory", "."), "working_directory", 2048)
-    working_path = Path(working_text).expanduser()
-    if not working_path.is_absolute():
-        working_path = base / working_path
-    if working_path.is_symlink() or not working_path.is_dir():
-        raise GameLaunchContractError("working_directory must be an existing directory, not a symlink")
+    working_path = _existing_path(working_text, base, "working_directory", "directory")
 
     arguments = profile.get("arguments", [])
     if not isinstance(arguments, list) or len(arguments) > MAX_ARGUMENTS:
@@ -75,12 +89,8 @@ def build_game_launch_task(profile: dict[str, Any], base_directory: str | Path =
     prefix = None
     if prefix_value is not None:
         prefix_text = _string(prefix_value, "runtime.prefix", 2048)
-        prefix_path = Path(prefix_text).expanduser()
-        if not prefix_path.is_absolute():
-            prefix_path = base / prefix_path
-        if prefix_path.is_symlink() or not prefix_path.is_dir():
-            raise GameLaunchContractError("runtime.prefix must be an existing directory, not a symlink")
-        prefix = str(prefix_path.resolve())
+        prefix_path = _existing_path(prefix_text, base, "runtime.prefix", "directory")
+        prefix = str(prefix_path)
 
     environment = profile.get("environment", {})
     if not isinstance(environment, dict):
