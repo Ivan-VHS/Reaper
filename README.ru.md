@@ -40,7 +40,7 @@ Reaper — expression-oriented язык, в котором оператор `::`
 | LSP | stdio JSON-RPC, diagnostics, completion, hover, symbols и лексическая навигация | открытый документ; без межфайлового type inference |
 | DAP | stdio debug adapter, line breakpoints, stepping, stack и locals | отладка на границах операторов; только доверенные локальные программы |
 | NOO TAH | управление проектами/процессами вокруг официального Node.js, npm/npx и Inspector | Node/V8/libuv предоставляет upstream Node |
-| Native C17 | нативный lexer/parser программ, owned AST, HIR-проверки, MIR-функции и CFG, LIR-виртуальные регистры и локальные stack slots, проверяемый i64 IR, backend System V и DuckOS DABI64 | структура полной программы доходит до LIR; машинный код пока генерируется только для i64-выражений |
+| Native C17 | AST программ, HIR semantic checks, MIR CFG, LIR virtual registers/locals, backend x86-64 System V и DuckOS DABI64 | скалярная подмножина DABI64 уже генерирует код для функций, локальных переменных, вызовов, when/while и ::; collections, emit и полный runtime ещё не готовы |
 | QCS / embedded tools | отдельный parser аппаратной области, JSON AST и ограниченные embedded-инструменты | справочный/аналитический инструментарий, не выполнение на оборудовании |
 | Kora | необязательные вспомогательные функции стандартной библиотеки в семи модулях | отдельно от runtime языка Reaper |
 
@@ -203,15 +203,16 @@ Native C17 track
   -> native program lexer/parser / owned AST / HIR semantic checks
   -> MIR functions, CFG, calls и pipe-call lowering
   -> LIR virtual registers, local slots и parameter maps
-  -> x86-64 System V или DuckOS DABI64 assembly (только integer expressions)
-  -> general LIR machine lowering, object writer/linker и runtime ОС ещё впереди
+  -> x86-64 System V expressions или DuckOS DABI64 scalar programs
+  -> host assembler / DuckOS-marked ELF object
+  -> kernel, loader и runtime DuckOS ещё впереди
 ```
 
 | Путь | Содержимое |
 |---|---|
 | `reaper/` | Python reference runtime, CLI, Studio, language/debug services и NOO TAH |
 | `reaper/kora/` | вспомогательные функции стандартной библиотеки Kora |
-| `src/`, `include/` | native C17 program parser, HIR semantic pass, проверяемый i64 IR и backend System V/DABI64 для выражений |
+| `src/`, `include/` | native C17 program parser, HIR/MIR/LIR и backend System V/DABI64 для скалярных программ |
 | `tests/` | Python, protocol, runtime и native тесты |
 | `examples/` | локальные программы-примеры `.rpr` |
 | `docs/` | язык, IDE, архитектура и границы возможностей |
@@ -243,7 +244,7 @@ Workflow artifacts — это скачиваемые результаты сбо
 
 ## Известные ограничения, вклад и лицензия
 
-Python остаётся исполняемой эталонной реализацией. Нативный C17 parser/HIR/MIR/LIR уже представляют объявления, функции, локальные stack slots, вызовы, `::` и структурный control flow. Генерация машинного кода пока ограничена signed i64-выражениями; общий MIR/LIR backend, ELF object writer/linker и загрузчик/ядро/runtime DuckOS ещё не готовы. LSP symbols/references/rename являются лексическими и ограничены текущим документом; DAP stepping выполняется на уровне операторов; IDE не является OS sandbox. NOO TAH делегирует JavaScript официальному Node, а не реализует собственную версию V8.
+Python остаётся исполняемой эталонной реализацией. DuckOS DABI64 backend уже компилирует скалярную подмножину целых программ: craft-функции, i64-параметры и локальные переменные, прямые вызовы, when/otherwise, loop while и ::. Коллекции, each, emit, строки, полный runtime, native ELF writer/linker, kernel services и самохостинг ещё не завершены. LSP symbols/references/rename являются лексическими и ограничены текущим документом; DAP stepping выполняется на уровне операторов; IDE не является OS sandbox. NOO TAH делегирует JavaScript официальному Node, а не реализует собственную версию V8.
 
 Правила разработки, проверки изменений и оформления Pull Request описаны в [CONTRIBUTING.md](CONTRIBUTING.md). Предлагайте изменения через [GitHub Issues](https://github.com/Ivan-VHS/Reaper/issues) или Pull Request. Добавляйте воспроизводимый пример `.rpr`, версии Python/Node/compiler и точную команду с результатом. Запускайте Python tests, а при изменении native track — CMake/CTest. Архитектура native backend описана в [docs/NATIVE_COMPILER.md](docs/NATIVE_COMPILER.md) и [docs/NATIVE_HIR.md](docs/NATIVE_HIR.md).
 
