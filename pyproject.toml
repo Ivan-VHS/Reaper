@@ -21,6 +21,7 @@ reaper-polyglot-code = "reaper.polyglot_code:main"
 reaper-embedded = "reaper.embedded:main"
 reaper-noo-tah = "reaper.noo_tah:main"
 reaper-toolchain = "reaper.toolchain_inventory:main"
+reaper-duckos-audit = "reaper.duckos_bridge:main"
 [project.gui-scripts]
 reaper-studio = "reaper.desktop:main"
 [tool.setuptools]
