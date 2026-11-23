@@ -12,6 +12,7 @@ import concurrent.futures
 import hashlib
 import hmac
 import ipaddress
+from itertools import islice
 import json
 import logging
 import math
@@ -561,12 +562,12 @@ class BackendServer:
 
     def _authorized(self, request: HttpRequest) -> bool:
         scheme, separator, supplied = request.headers.get("authorization", "").partition(" ")
-        return (
-            separator == " "
-            and scheme.lower() == "bearer"
-            and bool(supplied)
-            and hmac.compare_digest(supplied, self.config.token)
-        )
+        if separator != " " or scheme.lower() != "bearer" or not supplied:
+            return False
+        try:
+            return hmac.compare_digest(supplied, self.config.token)
+        except TypeError:
+            return False
 
     def _allow_request_rate(self) -> bool:
         now = time.monotonic()
@@ -843,7 +844,18 @@ class BackendServer:
         return False
 
     @staticmethod
-    def _json_safe(value: Any, *, depth: int = 0, seen: set[int] | None = None) -> Any:
+    def _json_safe(
+        value: Any,
+        *,
+        depth: int = 0,
+        seen: set[int] | None = None,
+        budget: list[int] | None = None,
+    ) -> Any:
+        if budget is None:
+            budget = [0]
+        budget[0] += 1
+        if budget[0] > 20_000:
+            return {"type": "item_limit"}
         if depth > 24:
             return {"type": "depth_limit"}
         if value is None or isinstance(value, (str, bool, int)):
@@ -860,13 +872,17 @@ class BackendServer:
             try:
                 if isinstance(value, dict):
                     result: dict[str, Any] = {}
-                    for key, item in list(value.items())[:10_000]:
+                    for key, item in islice(value.items(), 10_000):
                         if isinstance(key, str):
-                            result[key] = BackendServer._json_safe(item, depth=depth + 1, seen=seen)
+                            result[key] = BackendServer._json_safe(
+                                item, depth=depth + 1, seen=seen, budget=budget
+                            )
                     return result
                 return [
-                    BackendServer._json_safe(item, depth=depth + 1, seen=seen)
-                    for item in value[:10_000]
+                    BackendServer._json_safe(
+                        item, depth=depth + 1, seen=seen, budget=budget
+                    )
+                    for item in islice(value, 10_000)
                 ]
             finally:
                 seen.discard(identity)
