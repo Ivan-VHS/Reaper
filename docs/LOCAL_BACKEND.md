@@ -24,7 +24,8 @@ the service generates a cryptographically random bearer token and prints it
 once to the controlling terminal. The token is held in memory only; it is not
 written to SQLite or request logs. An operator may supply a token through
 REAPER_BACKEND_TOKEN or --token; configured tokens must contain at least
-32 characters.
+32 ASCII characters. Prefer the environment variable over --token on systems
+where command-line arguments are visible to other local processes.
 
 The service is intentionally not a hosted or LAN-facing API. It does not
 enable CORS, accept proxy-forwarded identity headers, or expose a remote bind
@@ -32,6 +33,8 @@ option. TLS is not configured because the listener is loopback-only. Do not
 publish the port through a tunnel, reverse proxy or port forward.
 
 ## HTTP contract
+
+The machine-readable OpenAPI 3.1 contract is maintained in [BACKEND_API_V1.yaml](BACKEND_API_V1.yaml). Keep its schemas and response codes aligned with the implementation when changing API v1.
 
 Requests use HTTP/1.0 or HTTP/1.1 with one request per connection. The parser
 requires an unambiguous Content-Length, rejects duplicate headers,
@@ -159,6 +162,30 @@ configured grace period, cancels remaining connection tasks, then shuts down
 the worker pool and closes SQLite. A worker task that is already executing is
 not forcibly terminated by asyncio; interpreter step and data limits bound the
 supported program path.
+
+## Runtime limits
+
+The main limits can be set at startup. The defaults match the table above.
+
+| CLI option | Default |
+|---|---:|
+| --max-connections | 64 |
+| --workers | 4 |
+| --queue-depth | 16 |
+| --request-timeout | 10 seconds |
+| --shutdown-grace | 10 seconds |
+| --max-requests-per-minute | 600 |
+| --max-header-bytes / --max-header-count | 16 KiB / 64 |
+| --max-body-bytes | 2 MiB + 8 KiB |
+| --max-source-bytes | 2 MiB |
+| --max-steps / --max-call-depth | 250,000 / 128 |
+| --max-collection-items | 50,000 |
+| --max-text-length | 250,000 |
+| --max-heap-bytes | 32 MiB |
+| --max-output-chars | 128,000 |
+| --idempotency-ttl | 86,400 seconds |
+| --idempotency-lease | 60 seconds |
+| --max-idempotency-rows | 50,000 |
 
 ## Configuration
 
