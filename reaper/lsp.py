@@ -7,6 +7,7 @@ import sys
 from .language_service import BUILTINS, KEYWORDS, LanguageService, Span, _offset
 from .lexer import KEYWORD_ALIASES
 from .formatter import format_document
+from .source import SourceBuffer, Span as SourceSpan
 
 SEMANTIC_TOKEN_TYPES = [
     "namespace", "type", "class", "enum", "interface", "struct",
@@ -52,23 +53,43 @@ class LspServer:
         pending, self.notifications = self.notifications, []
         return pending
 
-    def _range(self, text, span: Span):
+    def _range(self, text, span: Span | SourceSpan):
+        if isinstance(span, SourceSpan):
+            buffer = SourceBuffer.from_text(text)
+            start_line, start_character = buffer.line_index.lsp_position(span.start_offset)
+            end_line, end_character = buffer.line_index.lsp_position(span.end_offset)
+            return {
+                "start": {"line": start_line, "character": start_character},
+                "end": {"line": end_line, "character": end_character},
+            }
+
         lines = text.splitlines()
         line = lines[span.line] if span.line < len(lines) else ""
         start = len(line[:span.start].encode("utf-16-le")) // 2
         end = len(line[:span.end].encode("utf-16-le")) // 2
-        return {"start": {"line": span.line, "character": start},
-                "end": {"line": span.line, "character": end}}
+        return {
+            "start": {"line": span.line, "character": start},
+            "end": {"line": span.line, "character": end},
+        }
 
     def _publish(self, uri):
         analysis = self.service.analyze(uri)
         diagnostics = [{
-            "range": self._range(analysis.snapshot.text, item.span),
+            "range": self._range(
+                analysis.snapshot.text, item.source_span or item.span
+            ),
             "severity": {"error": 1, "warning": 2, "information": 3, "hint": 4}.get(item.severity, 1),
             "source": "reaper",
             "code": item.code,
             "message": item.message,
-            **({"data": {"help": item.help}} if item.help else {}),
+            **({
+                "data": {
+                    **({"help": item.help} if item.help else {}),
+                    "stage": item.stage,
+                    "syntax_mode": item.syntax_mode,
+                    **({"span": item.source_span.to_dict()} if item.source_span else {}),
+                }
+            } if item.help or item.source_span else {}),
         } for item in analysis.diagnostics]
         self._notify("textDocument/publishDiagnostics", {
             "uri": uri, "version": analysis.snapshot.version, "diagnostics": diagnostics
