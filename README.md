@@ -50,6 +50,8 @@ Catalogues and registries may contain proposed or reserved entries. An item in a
 The image below is a capture of the Windows Studio application, not a browser-based playground.
 
 
+Polyglot is text-only: it does not import or play audio/video, record sound, request spoken output or provide sound effects. SRT/VTT files are handled only as text transcripts. Audio-device and creative audio support are reserved for DuckOS and VentuSample.
+
 ## Quick Start
 
 ### Requirements
