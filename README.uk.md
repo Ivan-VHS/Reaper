@@ -1,4 +1,4 @@
-# Reaper — мова програмування з потоковою композицією та Studio
+# Reaper — низькорівнева системна мова та середовище розробки апаратури
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
@@ -23,13 +23,17 @@
 [![Python CI](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/ci.yml?branch=main&label=Python%20CI)](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml)  [![Live Studio capture](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/readme-screenshots.yml?branch=main&label=Live%20Studio%20capture)](https://github.com/Ivan-VHS/Reaper/actions/workflows/readme-screenshots.yml)  [![License](https://img.shields.io/github/license/Ivan-VHS/Reaper)](LICENSE)
 
 
-> **Призначення:** Reaper — локальна мова програмування, інтерпретатор, набір інструментів розробника та desktop IDE для Windows. Це не hosted web demo і не production web service. Python runtime є поточною виконуваною еталонною реалізацією сумісності; нативний трек C17 реалізований частково. Документацію звірено з `main` **22.11.2026**.
+> **Призначення:** Reaper переорієнтовується на низькорівневу системну мову та робоче середовище для прошивок, embedded-розробки й апаратно-залежного ПЗ, зберігаючи сумісність із чинними .rpr-програмами та Python runtime. Це локальні інструменти й Windows desktop IDE, а не hosted web service. Стан звірено **23.11.2026**.
 
 ## Призначення та стан реалізації
 
-Reaper — expression-oriented мова, у якій оператор `::` передає значення наступній операції. До складу входять Python reference runtime, CLI/REPL, Windows Studio, LSP/DAP через stdio та необов’язкова інтеграція з офіційним Node.js через NOO TAH.
+Reaper розвивається як системна мова для прошивок, embedded-програм, платформних компонентів і програмного забезпечення поруч з апаратурою. Потокова композиція через `::` залишається частиною мови; зберігаються Python reference runtime, CLI/REPL, Windows Studio, LSP/DAP і необов’язкова інтеграція NOO TAH.
 
-Проєкт призначений для розробників мов і tooling, інженерів застосунків, QA, викладачів і рев’юерів, яким потрібно експериментувати з файлами Reaper та перевіряти контракти мовних сервісів.
+**Вже доступно:** обмежений native scalar AOT через C17, часткове C17-ядро lexer/parser/IR, QCS-перевірка апаратних описів, MCU-профілі з генерацією linker script і новий перевірний MMIO API, який працює лише через переданий платформний адаптер.
+
+**Ще розробляється:** повноцінні типи, ownership/borrowing/effects, загальний backend машинного коду, апаратні конструкції всередині `.rpr`, реальні OS/driver MMIO/IRQ/DMA-сервіси та повний апаратний workspace Studio. Етапи й точні межі: [Hardware Language](docs/HARDWARE_LANGUAGE.md).
+
+Цільова аудиторія — embedded- і firmware-розробники, системні програмісти, інженери платформ/драйверів, розробники компіляторів і викладачі.
 
 ### Що реалізовано
 
