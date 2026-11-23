@@ -96,7 +96,7 @@ class PolyglotStoreTests(unittest.TestCase):
         busy_review = next(task["minutes"] for task in busy if task["mode"] == "review")
         self.assertGreaterEqual(busy_review, baseline_review)
 
-    def test_script_profile_tones_and_temporary_romanization_bridge(self) -> None:
+    def test_script_profile_written_tones_and_romanization_bridge(self) -> None:
         profile = self.store.create_profile(
             "Mandarin", "Russian", "A0", "conversation", 35, language_code="zh"
         )
