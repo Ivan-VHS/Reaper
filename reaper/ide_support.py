@@ -6,7 +6,9 @@ from pathlib import Path
 import re
 from typing import Iterator
 
-SOURCE_EXTENSIONS = frozenset({".rpr", ".most", ".js", ".mjs", ".cjs"})
+from .syntax_profiles import keyword_spellings
+
+SOURCE_EXTENSIONS = frozenset({".rpr", ".most", ".most-uk", ".rclass", ".rflow", ".js", ".mjs", ".cjs"})
 IGNORED_DIRECTORIES = frozenset({"__pycache__", "node_modules", "build", "dist", ".venv"})
 KEYWORDS = frozenset({
     "make", "vary", "change", "craft", "yield", "emit", "when", "otherwise",
@@ -49,12 +51,17 @@ class ProjectEntry:
     depth: int
 
 
-def highlight_spans(source: str) -> tuple[HighlightSpan, ...]:
-    """Return non-overlapping lexical spans without changing source text."""
+def highlight_spans(
+    source: str,
+    filename: str = "<memory>",
+    syntax: str | None = None,
+) -> tuple[HighlightSpan, ...]:
+    """Return profile-aware, non-overlapping spans without changing source text."""
     spans: list[HighlightSpan] = []
+    active_keywords = KEYWORDS | keyword_spellings(syntax, filename)
     for match in _TOKEN_PATTERN.finditer(source):
         kind = match.lastgroup
-        if kind == "identifier" and match.group() in KEYWORDS:
+        if kind == "identifier" and match.group() in active_keywords:
             kind = "keyword"
         if kind in {"keyword", "string", "number", "comment"}:
             spans.append(HighlightSpan(kind, match.start(), match.end()))
