@@ -172,12 +172,21 @@ class Lexer:
             self.column += 1
         return char
 
+    def _lex_error(self, message: str, start: int | None = None, end: int | None = None) -> LexError:
+        start_offset = self.index if start is None else start
+        end_offset = start_offset if end is None else end
+        span = self.buffer.span(start_offset, end_offset)
+        return LexError(
+            f"{self.filename}:{span.line}:{span.column}: {message}",
+            code="RPR-E0001",
+            stage="lexer",
+            span=span,
+            syntax_mode=self.buffer.syntax_mode,
+        )
+
     def _append_token(self, token: Token) -> None:
         if len(self.tokens) >= MAX_TOKEN_COUNT:
-            raise LexError(
-                f"{self.filename}:{self.line}:{self.column}: "
-                f"token limit ({MAX_TOKEN_COUNT}) exceeded"
-            )
+            raise self._lex_error(f"token limit ({MAX_TOKEN_COUNT}) exceeded")
         self.tokens.append(token)
 
     def _token(self, kind: str, value: str) -> None:
@@ -200,20 +209,26 @@ class Lexer:
         while not self._at_end() and self._peek() != '"':
             char = self._advance()
             if char == "\n":
-                raise LexError(f"{self.filename}:{start_line}:{start_column}: string literal cannot span lines")
+                raise self._lex_error(
+                    "string literal cannot span lines", start_offset, self.index
+                )
             if char == "\\":
                 if self._at_end():
                     break
                 escaped = self._advance()
                 if escaped not in escapes:
-                    raise LexError(
-                        f"{self.filename}:{self.line}:{self.column}: unknown escape sequence \\{escaped}"
+                    raise self._lex_error(
+                        f"unknown escape sequence \\{escaped}",
+                        self.index - 2,
+                        self.index,
                     )
                 value.append(escapes[escaped])
             else:
                 value.append(char)
         if self._at_end():
-            raise LexError(f"{self.filename}:{start_line}:{start_column}: unterminated string literal")
+            raise self._lex_error(
+                "unterminated string literal", start_offset, self.index
+            )
         self._advance()
         self._append_token(Token(
             "STRING", "".join(value), start_line, start_column,
@@ -284,7 +299,7 @@ class Lexer:
                 self.line, self.column,
             ))
             return
-        raise LexError(f"{self.filename}:{self.line}:{self.column}: unexpected character {char!r}")
+        raise self._lex_error(f"unexpected character {char!r}", start_offset, start_offset + 1)
 
 
 def tokenize(
