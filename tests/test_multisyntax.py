@@ -227,7 +227,7 @@ class PolyglotTests(unittest.TestCase):
     def test_cli_check_mode_never_executes_source(self):
         with tempfile.TemporaryDirectory() as temporary:
             source = Path(temporary) / "sample.py"
-            source.write_text("print('must not run')\\n", encoding="utf-8")
+            source.write_text("print('must not run')\n", encoding="utf-8")
             stdout = io.StringIO()
             with redirect_stdout(stdout):
                 exit_code = main([str(source), "--syntax", "python", "--check"])
