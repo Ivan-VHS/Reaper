@@ -40,6 +40,11 @@ jobs:
         run: |
           python -m reaper --check examples/duck_profile.rpr
           python -m reaper examples/duck_profile.rpr
+      - name: Validate industrial backend example
+        run: |
+          python -m reaper --check examples/backend_pipeline.rpr
+          python -m reaper examples/backend_pipeline.rpr
+          python -m reaper --engine vm examples/backend_pipeline.rpr
       - name: Validate federated audit program
         run: python -m reaper --check examples/device_audit.rpr
       - name: Run example
