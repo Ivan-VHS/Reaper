@@ -244,8 +244,15 @@ class TypeChecker:
         if node.kind == "index":
             collection_type = self._expression(children[0])
             index_type = self._expression(children[1])
-            if index_type not in {"Int", ANY}:
-                self._report(node, "RPR-T0003", f"sequence index must be Int, not {index_type}")
+            if collection_type.startswith("List[") or collection_type == "Text":
+                if index_type not in {"Int", ANY}:
+                    self._report(node, "RPR-T0003", f"sequence index must be Int, not {index_type}")
+            elif collection_type not in {"Map", ANY}:
+                self._report(
+                    node,
+                    "RPR-T0008",
+                    f"cannot index a value of type {collection_type}",
+                )
             return self._element_type(collection_type, node)
         if node.kind == "unary":
             operand = self._expression(children[0])
