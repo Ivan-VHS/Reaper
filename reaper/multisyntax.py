@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import hashlib
 import json
 import math
 import operator
@@ -1283,6 +1284,7 @@ def validate_source(syntax: str, source: str, *, filename: str = "<memory>") -> 
         "schema": "reaper.syntax-validation.v1",
         "syntax": selected,
         "filename": filename,
+        "source_sha256": hashlib.sha256(source.encode("utf-8")).hexdigest(),
         "valid": True,
         "analysis": analysis,
         "execution_performed": False,
@@ -1298,6 +1300,7 @@ def validate_polyglot(source: str, *, filename: str = "<polyglot>") -> dict[str,
     return {
         "schema": "reaper.polyglot-validation.v1",
         "filename": filename,
+        "source_sha256": hashlib.sha256(source.encode("utf-8")).hexdigest(),
         "valid": True,
         "block_count": len(reports),
         "blocks": reports,
