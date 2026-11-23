@@ -306,6 +306,8 @@ int main(void) {{
             self._compile_change(node, scope, output)
             return
         if kind == "emit":
+            if self._inside_function:
+                self._fail(node, "native craft functions cannot emit output; keep functions side-effect free")
             children = self._children(node)
             if len(children) != 1:
                 self._fail(node, "emit requires one expression")
@@ -431,6 +433,10 @@ int main(void) {{
             self._fail(node, f"unknown name '{node.value}'")
         if not symbol.mutable:
             self._fail(node, f"'{node.value}' was declared with 'make' and cannot be changed; use 'vary'")
+        if self._inside_function and any(
+            symbol is global_symbol for global_symbol in self.global_scope.symbols.values()
+        ):
+            self._fail(node, "native craft functions cannot mutate global bindings")
         expression, type_name = self._compile_expression(self._children(node)[0], scope)
         if type_name != symbol.type_name:
             self._fail(node, f"cannot assign {type_name} to {symbol.type_name} variable '{node.value}'")

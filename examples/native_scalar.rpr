@@ -1,0 +1,22 @@
+# Native AOT example: integer arithmetic, a craft, branches and a loop.
+make seed := 5
+vary total := 0
+
+craft add(a, b) {
+    yield a + b
+}
+
+change total := add(seed, 7)
+
+when total > 10 {
+    emit total
+} otherwise {
+    emit 0
+}
+
+loop while total > 10 {
+    change total := total - 1
+}
+
+emit total
+emit "Reaper native AOT ✓"
