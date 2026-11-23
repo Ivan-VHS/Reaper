@@ -15,7 +15,7 @@ A capability is considered implemented only when its source contract, runtime/co
 
 | Capability family | Inspiration | Reaper status | Integration boundary |
 |---|---|---|---|
-| Static type inference and diagnostics | C#, Java, Kotlin, Swift, TypeScript, F#, OCaml | **Partial — implemented in the Python reference toolchain** | `reaper typecheck` infers primitive/list types and checks supported expressions, mutability, indexes and function arity. It is conservative: unknown module/FFI values stay `Any`. |
+| Static type inference and diagnostics | C#, Java, Kotlin, Swift, TypeScript, F#, OCaml | **Partial — integrated into the reference toolchain** | `reaper --check` runs the same AST type pass by default; `reaper typecheck` provides focused diagnostics, and Studio/LSP use the same checker. It infers primitive/list types and checks supported expressions, mutability, indexes and function arity. Unknown module/FFI values stay `Any`. |
 | Nullability and explicit absence | Kotlin, Swift, Rust, OCaml | **Partial** | `nothing` is represented by the current runtime. The checker can preserve an inferred optional union, but there are no source annotations, flow-sensitive null refinement or exhaustive optional handling yet. |
 | Generics and parametric collections | Java, Kotlin, TypeScript, C++, Rust, Scala, D | **Partial** | Generic collection shape is inferred for list expressions and selected built-ins. User-declared generic functions, constraints and monomorphization are not implemented. |
 | Algebraic data types and pattern matching | F#, Scala, Rust, OCaml, Swift | **Planned** | Requires canonical enum/record declarations, exhaustive match checking and equivalent runtime/IR semantics. |
@@ -33,7 +33,7 @@ A capability is considered implemented only when its source contract, runtime/co
 
 ## The first delivered increment
 
-The new `reaper.typecheck` module adds a conservative semantic pass over the existing AST:
+The `reaper.typecheck` module adds a conservative semantic pass over the existing AST. It is now wired into the normal `reaper --check` workflow, Studio's native diagnostics tab and LSP:
 
 - infers `Int`, `Float`, `Bool`, `Text`, `Nothing` and list element types;
 - unifies numeric and heterogeneous collection element types conservatively;
@@ -45,14 +45,15 @@ The new `reaper.typecheck` module adds a conservative semantic pass over the exi
 - leaves unknown imported, host and FFI contracts as `Any` rather than inventing types;
 - reports source line/column diagnostics and supports JSON output.
 
-Run it from the repository root:
+Use the integrated check from the repository root:
 
 ```sh
-python -m reaper typecheck path/to/program.rpr
+python -m reaper --check path/to/program.rpr
 python -m reaper typecheck path/to/program.rpr --json
+python -m reaper --check --syntax-only path/to/program.rpr
 ```
 
-The pass is opt-in. Existing `--check`, execution behavior, tree-walk runtime and VM are unchanged. The checker is not yet a complete sound type system: parameters have no source-level annotations, generic user declarations are absent, and type inference across external module boundaries remains intentionally unknown.
+`--check` now runs syntax parsing and the conservative type pass. `--syntax-only` is the explicit parser-only compatibility path. Normal program execution, tree-walk runtime and VM semantics remain unchanged. The checker is not yet a complete sound type system: parameters have no source-level annotations, generic user declarations are absent, and type inference across external module boundaries remains intentionally unknown.
 
 ## Implementation order
 
