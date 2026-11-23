@@ -293,7 +293,13 @@ class Parser:
         return self.tokens[self.current - 1]
 
     def _error(self, token: Token, message: str) -> ParseError:
-        return ParseError(f"{self.filename}:{token.line}:{token.column}: {message} (found {token.value or token.kind})")
+        return ParseError(
+            f"{self.filename}:{token.line}:{token.column}: {message} (found {token.value or token.kind})",
+            code="RPR-E0013",
+            stage="parser",
+            span=token.span,
+            syntax_mode=token.syntax_mode,
+        )
 
 
 def parse(
