@@ -1,4 +1,21 @@
+> **Navigation:** Start with the [information architecture map](INFORMATION_ARCHITECTURE.md), then choose the relevant [topic hub](clusters/language-toolchain.md). The map catalogs every Markdown page and separates language, runtime, IDE, quality and integration contracts.
+
+## Topic hubs
+
+- [Language, compiler and runtime](clusters/language-toolchain.md) — Language semantics, parsing, intermediate representation, native execution and toolchain contracts.
+- [Studio, IDE and user experience](clusters/studio-ide-ui.md) — Editor capabilities, LSP/DAP behavior, UI interaction, accessibility and visual documentation.
+- [Architecture and system contracts](clusters/architecture-systems.md) — System decomposition, execution boundaries, runtime topology and architecture-level contracts.
+- [Quality, validation and evidence](clusters/quality-evidence.md) — Engineering gates, diagnostics, repeatability, audits and evidence-backed status claims.
+- [Integrations and project federation](clusters/federation-integration.md) — Plugin contracts, external runtimes, product interfaces and cross-project federation.
+- [Planning, governance and reference material](clusters/planning-governance.md) — Roadmaps, catalogs, ownership, policy and supporting engineering references.
+
+---
+
 # Documentation
+
+## Normative documentation standard
+
+[Unified documentation and semantics standard](UNIFIED_DOCUMENTATION_STANDARD.md) defines the shared terminology, capability maturity, runtime states, verification outcomes, evidence rules, localization requirements and documentation acceptance criteria. It is normative for this repository; project-specific architecture and implementation evidence remain authoritative for the product itself.
 
 | File | Purpose |
 |---|---|

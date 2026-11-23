@@ -264,3 +264,8 @@ JSON-вывод можно обернуть в общий формат мета�
     python tools/report_envelope.py --tool reaper --version VERSION < result.json
 
 См. docs/REPORT_ENVELOPE.md и schemas/ivan-vhs.report.v1.schema.json. Оболочка сохраняет данные инструмента и фиксирует ограничения результата.
+
+
+## Карта документации
+
+Используйте [индекс документации](docs/README.md) как точку входа, а [карту информационной архитектуры](docs/INFORMATION_ARCHITECTURE.md) — для навигации по кластерам языка, компилятора, runtime, Studio и интеграций. Хабы ведут к подробным контрактам; статус реализации подтверждается кодом, тестами и схемами.
