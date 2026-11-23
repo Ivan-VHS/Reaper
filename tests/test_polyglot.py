@@ -103,9 +103,9 @@ class PolyglotStoreTests(unittest.TestCase):
         self.assertEqual(profile["script_family"], "han")
         self.assertEqual(profile["tonal_language"], 1)
         self.assertEqual(profile["romanization_bridge"], 1)
-        self.assertIn("tone", profile["phonetic_focus"])
+        self.assertIn("tone marks", profile["orthography_focus"])
         tasks = {item["mode"]: item for item in self.store.session_plan(profile)}
-        self.assertIn("тон", tasks["listening"]["task"])
+        self.assertIn("тон", tasks["analysis"]["task"])
         self.assertIn("родную письменность", tasks["reading"]["task"])
 
     def test_phrase_card_keeps_personal_example_and_frequency_rank(self) -> None:
@@ -137,12 +137,12 @@ class PolyglotStoreTests(unittest.TestCase):
     def test_script_can_be_overridden_for_a_language_variant(self) -> None:
         profile = self.store.create_profile(
             "Serbian", "Russian", script_family="latin", tonal_language=False,
-            romanization_bridge=False, phonetic_focus="stress and palatal contrasts",
+            romanization_bridge=False, orthography_focus="stress marks and palatal spelling contrasts",
         )
         self.assertEqual(profile["script_family"], "latin")
         self.assertEqual(profile["tonal_language"], 0)
         self.assertEqual(profile["romanization_bridge"], 0)
-        self.assertEqual(profile["phonetic_focus"], "stress and palatal contrasts")
+        self.assertEqual(profile["orthography_focus"], "stress marks and palatal spelling contrasts")
 
     def test_cli_exposes_script_tone_and_phrase_context_options(self) -> None:
         output = io.StringIO()
@@ -150,7 +150,7 @@ class PolyglotStoreTests(unittest.TestCase):
             code = main([
                 "--db", str(self.db), "init", "Mandarin", "--native", "Russian",
                 "--code", "zh", "--tonal", "--romanization-bridge", "on",
-                "--phonetic-focus", "tone pairs and connected speech",
+                "--orthography-focus", "written tone marks and minimal spelling pairs",
             ])
         self.assertEqual(code, 0)
         with redirect_stdout(io.StringIO()):
@@ -206,7 +206,7 @@ class PolyglotStoreTests(unittest.TestCase):
             profile = migrated.get_profile("Japanese")
             self.assertEqual(profile["script_family"], "japanese")
             self.assertEqual(profile["romanization_bridge"], 1)
-            self.assertIn("mora", profile["phonetic_focus"])
+            self.assertIn("kana", profile["orthography_focus"])
             phrase_columns = {
                 row["name"] for row in migrated.connection.execute("PRAGMA table_info(phrases)")
             }
@@ -215,25 +215,35 @@ class PolyglotStoreTests(unittest.TestCase):
             }
             self.assertIn("personal_example", phrase_columns)
             self.assertIn("frequency_rank", phrase_columns)
-            self.assertIn("phonetic_focus", profile_columns)
+            self.assertIn("orthography_focus", profile_columns)
             version = migrated.connection.execute(
                 "SELECT value FROM metadata WHERE key='schema_version'"
             ).fetchone()["value"]
             self.assertEqual(version, "2")
 
     def test_session_report_and_json_export(self) -> None:
-        self.store.log_session(self.profile, 25, "listening", "Podcast with transcript", 4)
-        self.store.log_session(self.profile, 10, "speaking", "Retold the story", 3)
+        self.store.log_session(self.profile, 25, "reading", "Article with written notes", 4)
+        self.store.log_session(self.profile, 10, "writing", "Summarized the story", 3)
         report = self.store.report(self.profile)
         self.assertEqual(report["last_7_days_minutes"], 35)
         self.assertEqual(report["last_7_days_sessions"], 2)
         self.assertEqual(report["total_study_minutes"], 35)
-        self.assertEqual(report["learning_phase"], "sound_foundation")
+        self.assertEqual(report["learning_phase"], "written_foundation")
         self.assertGreater(report["total_study_hours"], 0)
         exported = self.store.export_profile(self.profile)
         self.assertEqual(exported["schema_version"], 2)
         self.assertEqual(len(exported["sessions"]), 2)
         self.assertEqual(json.loads(json.dumps(exported))["profile"]["target_language"], "English")
+
+    def test_audio_media_and_oral_practice_are_not_reaper_features(self) -> None:
+        with self.assertRaisesRegex(PolyglotError, "content kind"):
+            self.store.add_content(self.profile, "Audio lesson", "not imported", kind="audio")
+        with self.assertRaisesRegex(PolyglotError, "content kind"):
+            self.store.add_content(self.profile, "Video lesson", "not imported", kind="video")
+        for mode in ("listening", "speaking", "shadowing", "conversation"):
+            with self.subTest(mode=mode):
+                with self.assertRaisesRegex(PolyglotError, "session mode"):
+                    self.store.log_session(self.profile, 5, mode)
 
     def test_duplicate_content_and_phrase_are_reported(self) -> None:
         self.store.add_content(self.profile, "Story", "Once upon a time.")
