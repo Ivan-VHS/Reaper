@@ -73,3 +73,21 @@ LSP advertises only implemented handlers. Document edits use UTF-16 positions an
 - IDE features grant no hidden filesystem, network, shell, FFI or hardware permission.
 - Protocol stdout is machine-only; logs belong on stderr.
 - A capability is shipped only when its handler and regression tests exist.
+
+
+## Systems and hardware workspace roadmap
+
+Reaper Studio is being reoriented around firmware and systems projects. The existing editor, command palette, LSP and DAP remain the current desktop foundation; the hardware panels below are roadmap capabilities unless explicitly marked otherwise.
+
+| Workspace area | Intended behavior | Maturity |
+|---|---|---|
+| Target and board profiles | target triple, CPU features, ABI, memory regions, linker script and toolchain fingerprint | planned |
+| Hardware manifest | typed peripheral/register metadata, address space, width, endian, reset value and access policy | planned |
+| Memory map | Flash/SRAM/ROM/MMIO/reserved ranges, section placement and overlap diagnostics | planned |
+| Compiler inspector | typed IR, CFG, ownership/effect view, assembly/object output and source mapping | planned |
+| Resource budgets | stack, heap, static sections, interrupt stack and DMA region budgets | planned |
+| Simulator and debugger | QEMU/vendor simulator launch, register views, memory inspection and probe-specific debug adapters | planned |
+| Hardware authorization | explicit per-project capabilities, adapter identity, privilege boundary and auditable actions | planned |
+| MMIO descriptor API | checked C descriptors and callback dispatch with fake-bus tests | implemented native C API; no physical mapping |
+
+Do not present target selection, live register inspection, firmware flashing, or physical-device debugging as shipped Studio features until each has a working adapter and automated/manual qualification evidence. The desktop must show when a feature is simulated, delegated to a platform tool, experimental or unavailable.
