@@ -19,3 +19,8 @@ The adapter never creates threads or processes, changes scheduling priority, set
 ```sh
 python -m unittest tests.test_gaming_policy_contract -v
 ```
+
+
+## Sequential rollout
+
+Rollout gate: this PR stays in draft until DuckOS #75, OPlague #166 and Pytyliki #213 are merged. Then it is the fourth stage of the gaming-policy rollout.
