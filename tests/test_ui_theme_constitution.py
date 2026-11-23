@@ -32,6 +32,26 @@ class UiThemeConstitutionTests(unittest.TestCase):
         self.assertEqual(palette_for("system", system_dark=True)["mode"], "dark")
         self.assertEqual(palette_for("system", system_dark=False)["mode"], "light")
 
+    def test_shared_mora_tokens_are_used_for_light_and_dark(self) -> None:
+        expected = {
+            "light": {
+                "bg": "#F5F3FA", "surface": "#FFFFFF", "elevated": "#ECE9F5",
+                "fg": "#211F31", "secondary": "#4E4B63", "muted": "#66627A",
+                "blue": "#5B43B5", "blue_hover": "#49359D", "red": "#A91F49",
+                "border": "#D6D0E7", "selection": "#E6E0F7",
+            },
+            "dark": {
+                "bg": "#10142A", "surface": "#191E39", "elevated": "#252B4B",
+                "fg": "#F5F4FF", "secondary": "#D5D6EB", "muted": "#A8ADC8",
+                "blue": "#A78BFA", "blue_hover": "#C1AEFF", "red": "#FF8EAC",
+                "border": "#3B4262", "selection": "#353054",
+            },
+        }
+        for mode, tokens in expected.items():
+            palette = palette_for(mode)
+            for token, value in tokens.items():
+                self.assertEqual(palette[token], value, f"{mode}.{token}")
+
     def test_focus_and_supporting_text_have_semantic_contrast(self) -> None:
         for palette in PALETTES.values():
             self.assertGreaterEqual(contrast_ratio(palette["focus"], palette["bg"]), 3.0)
