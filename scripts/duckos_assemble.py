@@ -28,6 +28,10 @@ def read_elf_sections(data: bytearray) -> tuple[int, list[str]]:
     if data[4] != 2 or data[5] != 1:
         raise ValueError("DuckOS DABI64 requires ELF64 little-endian objects")
 
+    object_type = struct.unpack_from("<H", data, 16)[0]
+    if object_type != 1:
+        raise ValueError(f"expected an ELF relocatable object (ET_REL), got type {object_type}")
+
     machine = struct.unpack_from("<H", data, 18)[0]
     if machine != ELF_MACHINE_X86_64:
         raise ValueError(f"expected ELF machine x86-64 (62), got {machine}")
