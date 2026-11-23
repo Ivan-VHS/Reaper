@@ -77,3 +77,5 @@ This is an illustrative personal-budgeting reference, not a claim that the host 
 | [DABI64_ABI.md](DABI64_ABI.md) | versioned 64-bit native module ABI and value ownership contract |
 
 | [ELF64_OBJECT_WRITER.md](ELF64_OBJECT_WRITER.md) | deterministic x86-64 ET_REL writer, symbols and RELA records |
+
+| [ELF64_LINKER.md](ELF64_LINKER.md) | static ELF64 executable linking, symbol resolution and relocation application |
