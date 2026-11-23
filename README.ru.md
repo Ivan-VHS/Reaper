@@ -39,9 +39,9 @@ Reaper становится системным языком для прошив�
 
 | Компонент | Текущий объём | Граница |
 |---|---|---|
-| Python runtime | lexer, parser, interpreter, CLI, REPL, модули, closures, quotas и audit log | текущая исполняемая эталонная реализация |
+| Python runtime | lexer, parser, interpreter, CLI, REPL, модули, closures, quotas и audit log | текущая исполняемая эталонная реализация |\n| Static type analysis | вывод базовых и list-типов, проверка операторов/индексов, изменяемости и арности вызовов | частичная реализация; запуск через `reaper typecheck` |
 | Reaper Studio | основа Windows IDE, дерево/редактор/debugger и обзор Systems/Hardware с MCU-профилями и границами доступа | локальное desktop-приложение; без live-инспектора устройств |
-| LSP | stdio JSON-RPC, diagnostics, completion, hover, symbols, лексическая навигация и форматирование документа | открытый документ; без межфайлового type inference |
+| LSP | stdio JSON-RPC, diagnostics, completion, hover, symbols, лексическая навигация, форматирование и локальная проверка типов | открытый документ; без межфайлового type inference |
 | Инвентаризация toolchain | поиск компиляторов, сборщиков, парсеров, форматтеров, отладчиков и WASM runtime с фиксацией SHA-256 | только PATH и SHA-256; найденные программы не запускаются |
 | DAP | stdio debug adapter, line breakpoints, stepping, stack и locals | отладка на границах операторов; только доверенные локальные программы |
 | NOO TAH | управление проектами/процессами вокруг официального Node.js, npm/npx и Inspector | Node/V8/libuv предоставляет upstream Node |
@@ -49,7 +49,7 @@ Reaper становится системным языком для прошив�
 | QCS / embedded tools | отдельный parser аппаратной области, JSON AST и ограниченные embedded-инструменты | справочный/аналитический инструментарий, не выполнение на оборудовании |
 | Kora | необязательные вспомогательные функции стандартной библиотеки в семи модулях | отдельно от runtime языка Reaper |
 
-Каталоги и реестры могут содержать предложенные или зарезервированные записи. Наличие записи в каталоге не означает, что функция реализована в runtime. Уровни зрелости и границы описаны в [Features](docs/FEATURES.md), [REAPER IDE](docs/REAPER_IDE.md), [NOO TAH](docs/NOO_TAH.md) и [Kora helpers](docs/KORA.md).
+Каталоги и реестры могут содержать предложенные или зарезервированные записи. Наличие записи в каталоге не означает, что функция реализована в runtime. Уровни зрелости и границы описаны в [Features](docs/FEATURES.md), [Polyglot capability layer](docs/POLYGLOT_CAPABILITY_LAYER.md), [REAPER IDE](docs/REAPER_IDE.md), [NOO TAH](docs/NOO_TAH.md) и [Kora helpers](docs/KORA.md).
 
 Изображение ниже — снимок Windows Studio, а не браузерный playground.
 
@@ -85,6 +85,7 @@ python -m pip install -e .
 
 ```sh
 python -m reaper --check examples/flow.rpr
+python -m reaper typecheck examples/flow.rpr
 python -m reaper examples/flow.rpr
 python -m reaper --repl
 python reaper_desktop.py
