@@ -135,6 +135,7 @@ def validate_capability_standard(document: str) -> list[str]:
     for control in (
         "Requirement → design → source → tests → CI → documentation → versioned contract",
         "invalid settings must fail clearly and safely", "treat imported files", "rollback or recovery path", "partial or planned",
+        "keep planned and not_applicable items in the roadmap or implementation-status ledger",
     ):
         if control.casefold() not in document.casefold():
             errors.append(f"capability standard is missing control: {control}")
