@@ -158,10 +158,11 @@ class ResultValueTests(unittest.TestCase):
     def test_runtime_heap_tracks_payloads_inside_results(self):
         heap = MemoryManager(max_heap_bytes=4096)
         result = heap.track(ok({"items": [1, 2, 3]}))
-        self.assertGreaterEqual(heap.stats()["objects"], 2)
+        tracked_objects = heap.stats()["objects"]
+        self.assertGreaterEqual(tracked_objects, 3)
         self.assertEqual(heap.collect([result]), 0)
-        self.assertGreaterEqual(heap.stats()["objects"], 2)
-        self.assertEqual(heap.collect([]), 2)
+        self.assertEqual(heap.stats()["objects"], tracked_objects)
+        self.assertEqual(heap.collect([]), tracked_objects)
 
 
 class ResultLanguageTests(unittest.TestCase):
