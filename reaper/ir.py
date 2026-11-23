@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from .parser import Node
+from .source import SourceBuffer, SourceMap, Span
 
 
 @dataclass(frozen=True, slots=True)
@@ -12,6 +13,7 @@ class IRInstruction:
     op: str
     argument: Any
     token: Any
+    span: Span | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -19,12 +21,15 @@ class IRFunction:
     name: str
     parameters: tuple[str, ...]
     code: tuple[IRInstruction, ...]
+    span: Span | None = None
 
 
 @dataclass(frozen=True, slots=True)
 class CanonicalIR:
     code: tuple[IRInstruction, ...]
     source_name: str = "<memory>"
+    source_map: SourceMap | None = None
+    syntax_mode: str = "reaper-classic"
 
 
 class IRVerificationError(ValueError):
@@ -35,40 +40,46 @@ class _Lowerer:
     def __init__(self) -> None:
         self.code: list[IRInstruction] = []
 
-    def emit(self, op: str, argument: Any, token: Any) -> int:
-        self.code.append(IRInstruction(op, argument, token))
+    def emit(
+        self,
+        op: str,
+        argument: Any,
+        token: Any,
+        span: Span | None = None,
+    ) -> int:
+        self.code.append(IRInstruction(op, argument, token, span))
         return len(self.code) - 1
 
     def patch(self, index: int, argument: Any) -> None:
         old = self.code[index]
-        self.code[index] = IRInstruction(old.op, argument, old.token)
+        self.code[index] = IRInstruction(old.op, argument, old.token, old.span)
 
     def statements(self, nodes: list[Node] | None) -> None:
         for node in nodes or []:
             self.statement(node)
 
     def scoped_block(self, block: Node) -> None:
-        self.emit("ENTER_SCOPE", None, block.token)
+        self.emit("ENTER_SCOPE", None, block.token, block.span)
         self.statements(block.children)
-        self.emit("EXIT_SCOPE", None, block.token)
+        self.emit("EXIT_SCOPE", None, block.token, block.span)
 
     def statement(self, node: Node) -> None:
         children = node.children or []
         if node.kind == "declare":
             self.expression(children[0])
-            self.emit("DEFINE", node.value, node.token)
+            self.emit("DEFINE", node.value, node.token, node.span)
         elif node.kind == "change":
             self.expression(children[0])
-            self.emit("ASSIGN", node.value, node.token)
+            self.emit("ASSIGN", node.value, node.token, node.span)
         elif node.kind == "emit":
             self.expression(children[0])
-            self.emit("EMIT", None, node.token)
+            self.emit("EMIT", None, node.token, node.span)
         elif node.kind == "yield":
             if children:
                 self.expression(children[0])
             else:
-                self.emit("CONST", None, node.token)
-            self.emit("RETURN", None, node.token)
+                self.emit("CONST", None, node.token, node.span)
+            self.emit("RETURN", None, node.token, node.span)
         elif node.kind == "function":
             name, parameters = node.value
             nested = _Lowerer()
@@ -76,14 +87,14 @@ class _Lowerer:
             nested.emit("CONST", None, node.token)
             nested.emit("RETURN", None, node.token)
             function = IRFunction(name, tuple(parameters), tuple(nested.code))
-            self.emit("MAKE_FUNCTION", function, node.token)
-            self.emit("DEFINE", (name, False), node.token)
+            self.emit("MAKE_FUNCTION", function, node.token, node.span)
+            self.emit("DEFINE", (name, False), node.token, node.span)
         elif node.kind == "when":
             self.expression(children[0])
-            no_jump = self.emit("JUMP_IF_FALSE", None, node.token)
+            no_jump = self.emit("JUMP_IF_FALSE", None, node.token, node.span)
             self.scoped_block(children[1])
             if len(children) == 3:
-                end_jump = self.emit("JUMP", None, node.token)
+                end_jump = self.emit("JUMP", None, node.token, node.span)
                 self.patch(no_jump, len(self.code))
                 self.scoped_block(children[2])
                 self.patch(end_jump, len(self.code))
@@ -91,28 +102,28 @@ class _Lowerer:
                 self.patch(no_jump, len(self.code))
         elif node.kind == "each":
             self.expression(children[0])
-            self.emit("ITER_INIT", node.value, node.token)
+            self.emit("ITER_INIT", node.value, node.token, node.span)
             loop_start = len(self.code)
-            next_index = self.emit("ITER_NEXT", (node.value, None), node.token)
+            next_index = self.emit("ITER_NEXT", (node.value, None), node.token, node.span)
             self.statements(children[1].children)
-            self.emit("EXIT_SCOPE", None, node.token)
-            self.emit("JUMP", loop_start, node.token)
+            self.emit("EXIT_SCOPE", None, node.token, node.span)
+            self.emit("JUMP", loop_start, node.token, node.span)
             self.patch(next_index, (node.value, len(self.code)))
-            self.emit("ITER_END", None, node.token)
+            self.emit("ITER_END", None, node.token, node.span)
         elif node.kind == "while":
             loop_start = len(self.code)
             self.expression(children[0])
-            exit_jump = self.emit("JUMP_IF_FALSE", None, node.token)
+            exit_jump = self.emit("JUMP_IF_FALSE", None, node.token, node.span)
             self.scoped_block(children[1])
-            self.emit("JUMP", loop_start, node.token)
+            self.emit("JUMP", loop_start, node.token, node.span)
             self.patch(exit_jump, len(self.code))
         elif node.kind == "expression":
             self.expression(children[0])
-            self.emit("POP", None, node.token)
+            self.emit("POP", None, node.token, node.span)
         elif node.kind == "block":
             self.scoped_block(node)
         elif node.kind == "import":
-            self.emit("IMPORT", node.value, node.token)
+            self.emit("IMPORT", node.value, node.token, node.span)
         elif node.kind == "export":
             if children:
                 child = children[0]
@@ -125,42 +136,42 @@ class _Lowerer:
                     raise IRVerificationError("only declarations and functions can be exported inline")
             else:
                 name = node.value
-            self.emit("EXPORT", name, node.token)
+            self.emit("EXPORT", name, node.token, node.span)
         else:
             raise IRVerificationError(f"cannot lower statement kind: {node.kind}")
 
     def expression(self, node: Node) -> None:
         children = node.children or []
         if node.kind == "literal":
-            self.emit("CONST", node.value, node.token)
+            self.emit("CONST", node.value, node.token, node.span)
         elif node.kind == "name":
-            self.emit("LOAD", node.value, node.token)
+            self.emit("LOAD", node.value, node.token, node.span)
         elif node.kind == "list":
             for item in children:
                 self.expression(item)
-            self.emit("BUILD_LIST", len(children), node.token)
+            self.emit("BUILD_LIST", len(children), node.token, node.span)
         elif node.kind == "index":
             self.expression(children[0])
             self.expression(children[1])
-            self.emit("INDEX", None, node.token)
+            self.emit("INDEX", None, node.token, node.span)
         elif node.kind == "unary":
             self.expression(children[0])
-            self.emit("UNARY", node.value, node.token)
+            self.emit("UNARY", node.value, node.token, node.span)
         elif node.kind == "call":
             self.expression(children[0])
             for argument in children[1:]:
                 self.expression(argument)
-            self.emit("CALL", len(children) - 1, node.token)
+            self.emit("CALL", len(children) - 1, node.token, node.span)
         elif node.kind == "binary":
             operator = node.value
             if operator == "AND":
                 self.expression(children[0])
-                index = self.emit("AND_JUMP", None, node.token)
+                index = self.emit("AND_JUMP", None, node.token, node.span)
                 self.expression(children[1])
                 self.patch(index, len(self.code))
             elif operator == "OR":
                 self.expression(children[0])
-                index = self.emit("OR_JUMP", None, node.token)
+                index = self.emit("OR_JUMP", None, node.token, node.span)
                 self.expression(children[1])
                 self.patch(index, len(self.code))
             elif operator == "::":
@@ -170,14 +181,14 @@ class _Lowerer:
                     self.expression(right.children[0])
                     for argument in right.children[1:]:
                         self.expression(argument)
-                    self.emit("PIPE_CALL", len(right.children) - 1, node.token)
+                    self.emit("PIPE_CALL", len(right.children) - 1, node.token, node.span)
                 else:
                     self.expression(right)
-                    self.emit("PIPE_CALL", 0, node.token)
+                    self.emit("PIPE_CALL", 0, node.token, node.span)
             else:
                 self.expression(children[0])
                 self.expression(children[1])
-                self.emit("BINARY", operator, node.token)
+                self.emit("BINARY", operator, node.token, node.span)
         else:
             raise IRVerificationError(f"cannot lower expression kind: {node.kind}")
 
@@ -193,7 +204,10 @@ _ALLOWED = {
 def lower(tree: Node, source_name: str = "<memory>") -> CanonicalIR:
     compiler = _Lowerer()
     compiler.statements(tree.children)
-    module = CanonicalIR(tuple(compiler.code), source_name)
+    buffer = tree.source_buffer
+    source_map = SourceMap.from_buffers([buffer]) if isinstance(buffer, SourceBuffer) else None
+    syntax_mode = buffer.syntax_mode if isinstance(buffer, SourceBuffer) else "reaper-classic"
+    module = CanonicalIR(tuple(compiler.code), source_name, source_map, syntax_mode)
     verify(module)
     return module
 
@@ -226,6 +240,12 @@ def verify(module: CanonicalIR) -> None:
                 raise IRVerificationError(f"{where}: expected an IRInstruction")
             if not isinstance(instruction.op, str) or instruction.op not in _ALLOWED:
                 raise IRVerificationError(f"{where}: unknown IR operation: {instruction.op!r}")
+
+            if instruction.span is not None:
+                if not isinstance(instruction.span, Span):
+                    raise IRVerificationError(f"{where}: instruction span must be a Span")
+                if module.source_map is not None and instruction.span.source_id not in module.source_map.sources:
+                    raise IRVerificationError(f"{where}: instruction span references an unknown source")
 
             op = instruction.op
             argument = instruction.argument
