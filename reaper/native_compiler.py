@@ -582,9 +582,13 @@ def compile_ast(program: Node, filename: str = "<memory>") -> str:
     return NativeCompiler(filename).compile(program)
 
 
-def compile_source(source: str, filename: str = "<memory>") -> str:
-    """Parse and compile a source string to C17."""
-    return compile_ast(parse(source, filename), filename)
+def compile_source(
+    source: str,
+    filename: str = "<memory>",
+    syntax: str | None = None,
+) -> str:
+    """Parse the selected surface syntax and compile the supported subset to C17."""
+    return compile_ast(parse(source, filename, syntax=syntax), filename)
 
 
 def find_c_compiler(explicit: str | None = None) -> str:
@@ -607,6 +611,7 @@ def build_executable(
     compiler: str | None = None,
     optimization: str = "2",
     timeout: float = 120.0,
+    syntax: str | None = None,
 ) -> Path:
     """Build a native host executable through a local C17 compiler.
 
@@ -623,7 +628,7 @@ def build_executable(
     if destination.suffix.lower() in {".c", ".h", ".rpr"}:
         raise ValueError("native output must be an executable path, not a source-file path")
     destination.parent.mkdir(parents=True, exist_ok=True)
-    generated = compile_source(source, filename)
+    generated = compile_source(source, filename, syntax=syntax)
     # Build beside the requested output so the final replacement is atomic and
     # a failed compiler invocation never destroys a previously working binary.
     with tempfile.TemporaryDirectory(prefix=".reaper-aot-", dir=destination.parent) as temporary:
