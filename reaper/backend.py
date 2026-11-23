@@ -134,6 +134,14 @@ class BackendConfig:
             raise ValueError("max_header_count cannot exceed 256")
         if self.max_body_bytes > 16 * 1024 * 1024:
             raise ValueError("max_body_bytes cannot exceed 16 MiB")
+        if self.max_connections > 10_000:
+            raise ValueError("max_connections cannot exceed 10000")
+        if self.max_workers > 256:
+            raise ValueError("max_workers cannot exceed 256")
+        if self.queue_depth > 10_000:
+            raise ValueError("queue_depth cannot exceed 10000")
+        if self.max_requests_per_minute > 1_000_000:
+            raise ValueError("max_requests_per_minute cannot exceed 1000000")
         token = self.token.strip() if self.token else secrets.token_urlsafe(32)
         if len(token) < 32:
             raise ValueError("backend bearer token must contain at least 32 characters")
@@ -699,6 +707,13 @@ class BackendServer:
         except RequestFailure:
             await self._best_effort_abandon(scope, key, claim.owner)
             raise
+        except BackendStoreError as error:
+            await self._best_effort_abandon(scope, key, claim.owner)
+            raise RequestFailure(
+                503,
+                "storage_unavailable",
+                "idempotency storage could not persist the result",
+            ) from error
         except Exception:
             await self._best_effort_abandon(scope, key, claim.owner)
             raise
@@ -757,7 +772,7 @@ class BackendServer:
             def capture(line: str) -> None:
                 nonlocal output_size
                 next_size = output_size + len(line)
-                if next_size > self.config.max_output_chars:
+                if next_size > self.config.max_output_chars or len(output) >= 10_000:
                     raise OutputLimitExceeded("program output limit exceeded")
                 output.append(line)
                 output_size = next_size
