@@ -62,7 +62,7 @@ static void test_static_link_and_relocation(void) {
     assert(read64(ph_text + 8u) == 0x1000u);
     assert(read64(ph_text + 16u) == 0x401000u);
     assert(read32(ph_data) == 1u);
-    assert((read32(ph_data + 4u) & 3u) == 3u);
+    assert((read32(ph_data + 4u) & 6u) == 6u);
     assert(read64(ph_data + 8u) == 0x2000u);
     assert(read64(executable.data + 0x1002u) == 0x402000u);
 
