@@ -85,3 +85,8 @@ This is an illustrative personal-budgeting reference, not a claim that the host 
 ## Project-specific engineering profile
 
 [IVAN_VHS_ENGINEERING_PROFILE.md](IVAN_VHS_ENGINEERING_PROFILE.md) translates the project's direction into concrete architecture boundaries, implementation priorities, human-readable code conventions and acceptance tests. It is a development contract; it does not mark planned work as implemented.
+
+
+## Additional desktop profile
+
+[Mora Amber design system](MORA_AMBER_DESIGN_SYSTEM.md) describes the shared warm palette and its contrast, material and motion constraints for the Reaper Studio workbench.
