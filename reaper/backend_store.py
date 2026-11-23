@@ -295,6 +295,21 @@ class BackendStore:
             self._ensure_open()
             return self._connection.execute("SELECT 1").fetchone()[0] == 1
 
+    def storage_bytes(self) -> int:
+        """Return the current size of the database and its SQLite sidecar files."""
+        total = 0
+        for candidate in (
+            self.path,
+            Path(str(self.path) + "-wal"),
+            Path(str(self.path) + "-shm"),
+            Path(str(self.path) + "-journal"),
+        ):
+            try:
+                total += candidate.stat().st_size
+            except FileNotFoundError:
+                continue
+        return total
+
     def integrity_check(self) -> str:
         with self._lock:
             self._ensure_open()
