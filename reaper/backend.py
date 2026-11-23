@@ -88,6 +88,10 @@ class BackendConfig:
     max_idempotency_rows: int = 50_000
 
     def __post_init__(self) -> None:
+        if not isinstance(self.host, str) or not self.host:
+            raise ValueError("backend host must be a numeric loopback IP address")
+        if not isinstance(self.token, str):
+            raise ValueError("backend token must be a string")
         try:
             address = ipaddress.ip_address(self.host)
         except ValueError as error:
@@ -96,9 +100,19 @@ class BackendConfig:
             raise ValueError("backend may bind only to a loopback IP address")
         if isinstance(self.port, bool) or not isinstance(self.port, int) or not 0 <= self.port <= 65535:
             raise ValueError("port must be an integer from 0 through 65535")
-        if not math.isfinite(self.request_timeout) or self.request_timeout <= 0:
+        if (
+            isinstance(self.request_timeout, bool)
+            or not isinstance(self.request_timeout, (int, float))
+            or not math.isfinite(self.request_timeout)
+            or self.request_timeout <= 0
+        ):
             raise ValueError("request_timeout must be finite and positive")
-        if not math.isfinite(self.shutdown_grace) or self.shutdown_grace <= 0:
+        if (
+            isinstance(self.shutdown_grace, bool)
+            or not isinstance(self.shutdown_grace, (int, float))
+            or not math.isfinite(self.shutdown_grace)
+            or self.shutdown_grace <= 0
+        ):
             raise ValueError("shutdown_grace must be finite and positive")
         positive = (
             self.max_connections,
