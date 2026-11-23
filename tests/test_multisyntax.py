@@ -96,9 +96,8 @@ class LispTests(unittest.TestCase):
             "(define (square value) (* value value))\n"
             "(define doubled (lambda (value) (* value 2)))\n"
             "(display (square 5))\n"
-            "(display (map doubled '(1 2 3)))\n"
+            "(display (map doubled (quote (1 2 3))))\n"
         )
-        # Quote returns the parsed list as data; symbol resolution is not performed.
         run_source("lisp", source, output=output.append)
         self.assertEqual(output, ["25", "(2 4 6)"])
 
