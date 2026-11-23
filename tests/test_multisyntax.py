@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import unittest
 import io
+import hashlib
 from contextlib import redirect_stdout
 from pathlib import Path
 import tempfile
@@ -219,6 +220,7 @@ class PolyglotTests(unittest.TestCase):
         self.assertTrue(report["valid"])
         self.assertFalse(report["execution_performed"])
         self.assertEqual(report["syntax"], "python")
+        self.assertEqual(report["source_sha256"], hashlib.sha256(b"print('not executed')").hexdigest())
 
     def test_polyglot_validation_checks_every_block_without_running(self):
         source = "%% python\\nprint('no run')\\n%% brainfuck\\n[->+<]"
