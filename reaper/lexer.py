@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from .errors import LexError
 from .token_catalog import token_is_reserved
+from .source import SourceBuffer, Span
 
 
 MAX_SOURCE_CHARS = 4_000_000
@@ -85,17 +86,41 @@ class Token:
     value: str
     line: int
     column: int
+    start_offset: int = 0
+    end_offset: int = 0
+    source_id: str = "<memory>"
+    syntax_mode: str = "reaper-classic"
+    end_line: int | None = None
+    end_column: int | None = None
+
+    @property
+    def span(self) -> Span:
+        return Span(
+            self.source_id, self.start_offset, self.end_offset,
+            self.line, self.column, self.syntax_mode,
+            self.end_line, self.end_column,
+        )
 
 
 class Lexer:
     """Convert source text into a position-aware token stream."""
 
-    _TWO_CHAR = {":=", "==", "!=", "<=", ">=", "//", "**", "++", "::"}
+    _TWO_CHAR = {":=", "==", "!=", "<=", ">=", "//", "**", "++", "::", "->"}
     _ONE_CHAR = set("+-*/%<>(){}[],")
 
-    def __init__(self, source: str, filename: str = "<memory>") -> None:
-        self.source = source
-        self.filename = filename
+    def __init__(
+        self,
+        source: str | SourceBuffer,
+        filename: str = "<memory>",
+        *,
+        keyword_aliases: dict[str, str] | None = None,
+    ) -> None:
+        self.buffer = source if isinstance(source, SourceBuffer) else SourceBuffer.from_text(
+            source, filename
+        )
+        self.source = self.buffer.text
+        self.filename = self.buffer.source_id
+        self.keyword_aliases = KEYWORD_ALIASES if keyword_aliases is None else keyword_aliases
         self.index = 0
         self.line = 1
         self.column = 1
@@ -123,7 +148,11 @@ class Lexer:
                 self._identifier()
             else:
                 self._operator_or_punctuation()
-        self._append_token(Token("EOF", "", self.line, self.column))
+        self._append_token(Token(
+            "EOF", "", self.line, self.column,
+            self.index, self.index, self.buffer.source_id, self.buffer.syntax_mode,
+            self.line, self.column,
+        ))
         return self.tokens
 
     def _at_end(self) -> bool:
@@ -152,14 +181,19 @@ class Lexer:
         self.tokens.append(token)
 
     def _token(self, kind: str, value: str) -> None:
-        self._append_token(Token(kind, value, self.line, self.column))
+        start = self.index
+        self._append_token(Token(
+            kind, value, self.line, self.column,
+            start, start + len(value), self.buffer.source_id, self.buffer.syntax_mode,
+            self.line, self.column + len(value),
+        ))
 
     def _skip_comment(self) -> None:
         while not self._at_end() and self._peek() != "\n":
             self._advance()
 
     def _string(self) -> None:
-        start_line, start_column = self.line, self.column
+        start_line, start_column, start_offset = self.line, self.column, self.index
         self._advance()
         value: list[str] = []
         escapes = {"n": "\n", "r": "\r", "t": "\t", '"': '"', "\\": "\\"}
@@ -181,7 +215,11 @@ class Lexer:
         if self._at_end():
             raise LexError(f"{self.filename}:{start_line}:{start_column}: unterminated string literal")
         self._advance()
-        self._append_token(Token("STRING", "".join(value), start_line, start_column))
+        self._append_token(Token(
+            "STRING", "".join(value), start_line, start_column,
+            start_offset, self.index, self.buffer.source_id, self.buffer.syntax_mode,
+            self.line, self.column,
+        ))
 
     def _number(self) -> None:
         start = self.index
@@ -192,7 +230,11 @@ class Lexer:
             self._advance()
             while self._peek().isdigit():
                 self._advance()
-        self._append_token(Token("NUMBER", self.source[start:self.index], start_line, start_column))
+        self._append_token(Token(
+            "NUMBER", self.source[start:self.index], start_line, start_column,
+            start, self.index, self.buffer.source_id, self.buffer.syntax_mode,
+            self.line, self.column,
+        ))
 
     def _identifier(self) -> None:
         start = self.index
@@ -200,33 +242,55 @@ class Lexer:
         while self._peek().isalnum() or self._peek() == "_":
             self._advance()
         value = self.source[start:self.index]
-        canonical = KEYWORD_ALIASES.get(value)
+        canonical = self.keyword_aliases.get(value)
         kind = canonical.upper() if canonical is not None else (
             value.upper() if value in KEYWORDS else "IDENT"
         )
-        self._append_token(Token(kind, value, start_line, start_column))
+        self._append_token(Token(
+            kind, value, start_line, start_column,
+            start, self.index, self.buffer.source_id, self.buffer.syntax_mode,
+            self.line, self.column,
+        ))
 
     def _operator_or_punctuation(self) -> None:
+        start_offset = self.index
         start_line, start_column = self.line, self.column
         triplet = self.source[self.index:self.index + 3]
         if token_is_reserved(triplet):
             for _ in range(3):
                 self._advance()
-            self._append_token(Token("CATALOG_OPERATOR", triplet, start_line, start_column))
+            self._append_token(Token(
+                "CATALOG_OPERATOR", triplet, start_line, start_column,
+                start_offset, self.index, self.buffer.source_id, self.buffer.syntax_mode,
+                self.line, self.column,
+            ))
             return
         pair = self._peek() + self._peek(1)
         if pair in self._TWO_CHAR:
             self._advance()
             self._advance()
-            self._append_token(Token(pair, pair, start_line, start_column))
+            self._append_token(Token(
+                pair, pair, start_line, start_column,
+                start_offset, self.index, self.buffer.source_id, self.buffer.syntax_mode,
+                self.line, self.column,
+            ))
             return
         char = self._peek()
         if char in self._ONE_CHAR or char == "=":
             self._advance()
-            self._append_token(Token(char, char, start_line, start_column))
+            self._append_token(Token(
+                char, char, start_line, start_column,
+                start_offset, self.index, self.buffer.source_id, self.buffer.syntax_mode,
+                self.line, self.column,
+            ))
             return
         raise LexError(f"{self.filename}:{self.line}:{self.column}: unexpected character {char!r}")
 
 
-def tokenize(source: str, filename: str = "<memory>") -> list[Token]:
-    return Lexer(source, filename).tokenize()
+def tokenize(
+    source: str | SourceBuffer,
+    filename: str = "<memory>",
+    *,
+    keyword_aliases: dict[str, str] | None = None,
+) -> list[Token]:
+    return Lexer(source, filename, keyword_aliases=keyword_aliases).tokenize()
