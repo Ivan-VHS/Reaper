@@ -214,6 +214,22 @@ class Parser:
                     self._skip_newlines()
             self._consume("]", "expected ']' after list")
             return Node("list", token, children=items)
+        if self._match("{"):
+            token = self._previous()
+            entries: list[Node] = []
+            self._skip_newlines()
+            if not self._check("}"):
+                while True:
+                    key = self._expression()
+                    self._consume(":", "expected ':' between dictionary key and value")
+                    value = self._expression()
+                    entries.extend((key, value))
+                    self._skip_newlines()
+                    if not self._match(","):
+                        break
+                    self._skip_newlines()
+            self._consume("}", "expected '}' after dictionary literal")
+            return Node("map", token, children=entries)
         raise self._error(self._peek(), "expected an expression")
 
     def _statement_end(self) -> None:
