@@ -277,11 +277,11 @@ def verify(module: CanonicalIR) -> None:
                     require_name(argument[1], where)
 
             elif op == "UNARY":
-                if argument not in {"NOT", "-"}:
+                if not isinstance(argument, str) or argument not in {"NOT", "-"}:
                     raise IRVerificationError(f"{where}: unsupported unary operator {argument!r}")
 
             elif op == "BINARY":
-                if argument not in binary_operators:
+                if not isinstance(argument, str) or argument not in binary_operators:
                     raise IRVerificationError(f"{where}: unsupported binary operator {argument!r}")
 
     check(module.code, module.source_name)
