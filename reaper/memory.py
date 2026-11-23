@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any, Iterable
 
 from .errors import ReaperRuntimeError
+from .result import ErrorValue, RequestContext, ResultValue
 
 
 class HeapLimitError(ReaperRuntimeError):
@@ -46,19 +47,27 @@ class MemoryManager:
         visited: set[int] = set()
         while pending:
             current = pending.pop()
-            if not isinstance(current, (list, dict, bytearray)):
+            if not isinstance(current, (ResultValue, RequestContext, ErrorValue, list, dict, bytearray)):
                 continue
             identity = id(current)
             if identity in visited or identity in self.allocations:
                 continue
             visited.add(identity)
             size = sys.getsizeof(current)
+            if isinstance(current, RequestContext):
+                size += sys.getsizeof(current._metadata_json)
+            elif isinstance(current, ErrorValue):
+                size += sys.getsizeof(current._details_json)
             if self.used_bytes + size > self.max_heap_bytes:
                 raise HeapLimitError(
                     f"Reaper heap limit ({self.max_heap_bytes} bytes) exceeded"
                 )
             self.allocations[identity] = Allocation(current, size, self.regions[-1])
-            if isinstance(current, dict):
+            if isinstance(current, ResultValue):
+                pending.append(current.value if current.succeeded else current.error)
+                if current.context is not None:
+                    pending.append(current.context)
+            elif isinstance(current, dict):
                 pending.extend(current.keys())
                 pending.extend(current.values())
             elif isinstance(current, list):
@@ -127,6 +136,12 @@ class MemoryManager:
                     pending.append(parent)
             elif hasattr(value, "value") and value.__class__.__name__ == "Binding":
                 pending.append(value.value)
+            elif isinstance(value, ResultValue):
+                pending.append(value.value if value.succeeded else value.error)
+                if value.context is not None:
+                    pending.append(value.context)
+            elif isinstance(value, (RequestContext, ErrorValue)):
+                pass
             elif value.__class__.__name__ in {"UserFunction", "BytecodeFunction"}:
                 pending.append(value.closure)
         return marked

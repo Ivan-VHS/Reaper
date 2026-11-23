@@ -36,6 +36,8 @@
 | [PLUGINS.md](PLUGINS.md) | internal plugin host and extension lifecycle |
 | [INTERNAL_PRODUCTS.md](INTERNAL_PRODUCTS.md) | integrated product catalogue and service contracts |
 | [FEATURES.md](FEATURES.md) | shipped, reference and proposed capability matrix |
+| [INDUSTRIAL_BACKEND_PROFILE.md](INDUSTRIAL_BACKEND_PROFILE.md) | Result/Context contracts, low-level host boundaries, runtime lifecycle and staged systems roadmap |
+| [DUCK_LANGUAGE_PROFILE.md](DUCK_LANGUAGE_PROFILE.md) | structural map contracts, safe inspection, preflight probes and bounded adaptation |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | runtime and compiler stages |
 | [NATIVE_COMPILER.md](NATIVE_COMPILER.md) | checked scalar AOT compilation to C17 and the host toolchain |
 | [HARDWARE_LANGUAGE.md](HARDWARE_LANGUAGE.md) | systems-language architecture, MMIO contract, Studio hardware workbench and migration gates |

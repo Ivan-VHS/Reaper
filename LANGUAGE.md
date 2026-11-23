@@ -19,7 +19,15 @@ make total := [1, 2, 3] :: map(double) :: sum()
 emit "total = " ++ text(total)
 ```
 
-Rules: explicit effects; no implicit file/network/clock access in ordinary expressions; no silent coercion; bounded steps, call depth and collections. See [runtime limits](docs/RUNTIME_PLATFORM.md).\n\n## Static type analysis\n\nThe optional `reaper typecheck program.rpr` command runs conservative type inference over the existing AST. It checks supported numeric and text operators, collection indexes and iteration, mutable bindings, and known call arity. Unknown values at module and host boundaries remain `Any`. This is a first semantic-analysis slice, not yet a complete sound type system with source annotations, user generics, null-flow refinement or exhaustive pattern matching. See [Polyglot capability layer](docs/POLYGLOT_CAPABILITY_LAYER.md) for the capability map and implementation status.
+Rules: explicit effects; no implicit file/network/clock access in ordinary expressions; no silent coercion; bounded steps, call depth and collections. See [runtime limits](docs/RUNTIME_PLATFORM.md).\n\n## Duck profile
+
+The reference runtime provides bounded structural-map helpers: `duck_has`, `duck_supports`, `duck_require`, `duck_probe`, `duck_adapt`, `duck_inspect` and `duck_capabilities`. `runtime_stats()` exposes execution and resource counters. These are map contracts and safe metadata operations, not user-defined traits or arbitrary method dispatch. See [Duck language profile](docs/DUCK_LANGUAGE_PROFILE.md).
+
+## Industrial Result and request context
+
+Use `ok(value)` and `err(code, message)` to return explicit outcomes. Compose success paths with `result_map` or `result_and_then`, recover failures with `result_recover`, and preserve correlation metadata using `request_context`. The checker infers `Result[T]` for supported calls and diagnoses invalid unwrap/context contracts. This is synchronous value composition, not an async/network stack. See [Industrial backend profile](docs/INDUSTRIAL_BACKEND_PROFILE.md).
+
+## Static type analysis\n\nThe optional `reaper typecheck program.rpr` command runs conservative type inference over the existing AST. It checks supported numeric and text operators, collection indexes and iteration, mutable bindings, and known call arity. Unknown values at module and host boundaries remain `Any`. This is a first semantic-analysis slice, not yet a complete sound type system with source annotations, user generics, null-flow refinement or exhaustive pattern matching. See [Polyglot capability layer](docs/POLYGLOT_CAPABILITY_LAYER.md) for the capability map and implementation status.
 
 ## Integrated product layer
 
