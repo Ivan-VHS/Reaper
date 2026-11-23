@@ -40,12 +40,12 @@ Reaper 正在成为面向固件、嵌入式程序、平台组件和硬件相关�
 | 组件 | 当前范围 | 明确边界 |
 |---|---|---|
 | Python Runtime | lexer、parser、interpreter、CLI、REPL、模块、闭包、配额与审计日志 | 当前可执行参考实现 |
-| Reaper Studio | Windows IDE 基础：项目树、编辑器、语法着色、搜索、check/run 与 debugger | 本地桌面应用 |
+| Reaper Studio | Windows IDE 基础、项目树/编辑器/debugger，以及显示 MCU 配置和能力边界的 Systems/Hardware 概览 | 本地桌面应用；尚无实时设备寄存器查看器 |
 | LSP | stdio JSON-RPC、诊断、补全、hover、符号、词法导航和文档格式化 | 每个已打开文档独立；不提供跨文件类型推断 |
 | Toolchain 清单 | 通过 PATH 查找编译器、构建工具、解析器、格式化工具、调试器和 WASM 运行时，并固定 SHA-256 | 仅执行路径查找与哈希；不会运行找到的程序 |
 | DAP | stdio 调试适配器、行断点、单步、堆栈和局部变量 | 语句边界调试；仅适用于可信本地程序 |
 | NOO TAH | 管理官方 Node.js 运行时、项目/进程、npm/npx 和 Inspector | Node/V8/libuv 由上游 Node 提供 |
-| Native C17 | lexer、表达式 parser、owned AST、checked IR 和有限 lowering | 正在开发的部分实现；不等于 Python Runtime |
+| Native C17 + MMIO | lexer、表达式 parser、owned AST、checked i64 IR、有限 lowering 和受检 MMIO 适配器契约 | 实验性部分实现；不映射物理内存，也不等于 Python Runtime |
 | QCS / Embedded | 独立硬件领域 parser、JSON AST 和有界嵌入式辅助工具 | 参考/分析工具，不执行硬件操作 |
 | Kora | 七个清单模块中的可选标准库辅助函数 | 与 Reaper 语言运行时分离 |
 
