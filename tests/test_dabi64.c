@@ -111,6 +111,19 @@ static void test_values_and_collections(ReaperDabiRuntime *runtime) {
     assert(reaper_dabi_iter_next(runtime, &iterator, &has_value, &item) == REAPER_DABI_OK);
     assert(has_value == 0 && item.tag == REAPER_DABI_TAG_UNIT);
     reaper_dabi_value_drop(runtime, &iterator);
+
+    ReaperDabiValue parent = reaper_dabi_unit();
+    ReaperDabiValue child = reaper_dabi_unit();
+    ReaperDabiValue parent_iterator = reaper_dabi_unit();
+    assert(reaper_dabi_array_new(runtime, &parent) == REAPER_DABI_OK);
+    assert(reaper_dabi_array_new(runtime, &child) == REAPER_DABI_OK);
+    assert(reaper_dabi_array_push(runtime, &parent, &child) == REAPER_DABI_OK);
+    assert(reaper_dabi_iter_begin(runtime, &parent, &parent_iterator) == REAPER_DABI_OK);
+    assert(reaper_dabi_array_push(runtime, &child, &parent_iterator) == REAPER_DABI_RANGE_ERROR);
+    reaper_dabi_value_drop(runtime, &parent_iterator);
+    reaper_dabi_value_drop(runtime, &parent);
+    reaper_dabi_value_drop(runtime, &child);
+
     reaper_dabi_value_drop(runtime, &first);
     reaper_dabi_value_drop(runtime, &second);
     reaper_dabi_value_drop(runtime, &joined);
