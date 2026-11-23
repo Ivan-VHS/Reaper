@@ -231,6 +231,25 @@ class BackendServerTests(unittest.TestCase):
                 self.assertEqual(import_status, 422)
                 self.assertEqual(import_result["error"]["code"], "restricted_effect")
 
+                blocked_json_path = root / "backend-must-not-create.json"
+                for index, restricted_source in enumerate((
+                    f'write_json("{blocked_json_path.as_posix()}", [1, 2, 3])\\n',
+                    f'read_json("{blocked_json_path.as_posix()}")\\n',
+                    'oplage_compare(1, 2, "untrusted-native-library.so")\\n',
+                    'pytyliki_embedded_profiles("untrusted-native-library.so")\\n',
+                )):
+                    restricted_status, _headers, _restricted_result = await send_request(
+                        server,
+                        "POST",
+                        "/v1/run",
+                        payload={"source": restricted_source},
+                        token=token,
+                        idempotency_key=f"restricted-{index}",
+                    )
+                    self.assertEqual(restricted_status, 422)
+
+                self.assertFalse(blocked_json_path.exists())
+
                 metrics_status, _headers, metrics = await send_request(
                     server,
                     "GET",
