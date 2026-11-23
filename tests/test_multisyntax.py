@@ -23,6 +23,7 @@ class SyntaxRegistryTests(unittest.TestCase):
         self.assertEqual(detect_syntax("sample.bf"), "brainfuck")
         self.assertEqual(detect_syntax("sample.unknown", source="#!syntax lisp\n(+ 1 2)"), "lisp")
         self.assertEqual(detect_syntax("sample.rpr"), "reaper")
+        self.assertEqual(detect_syntax("sample.most"), "reaper")
 
 
 class PythonSubsetTests(unittest.TestCase):
