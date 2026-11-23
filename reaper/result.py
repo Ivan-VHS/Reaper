@@ -16,6 +16,7 @@ _IDENTIFIER = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
 _ERROR_CODE = re.compile(r"^[A-Z][A-Z0-9_.-]{1,63}$")
 _MAX_CONTEXT_BYTES = 16 * 1024
 _MAX_ERROR_DETAILS_BYTES = 16 * 1024
+_RESERVED_CONTEXT_FIELDS = {"request_id", "trace_id", "parent_id"}
 
 
 class ResultContractError(ValueError):
@@ -66,6 +67,8 @@ class RequestContext:
             raise ResultContractError("context metadata must be valid JSON") from error
         if not isinstance(metadata, dict) or any(not isinstance(key, str) for key in metadata):
             raise ResultContractError("context metadata must be a map with text keys")
+        if _RESERVED_CONTEXT_FIELDS.intersection(metadata):
+            raise ResultContractError("context metadata cannot shadow request/trace identifiers")
         object.__setattr__(
             self, "_metadata_json",
             _canonical_json(metadata, _MAX_CONTEXT_BYTES, "context metadata"),
@@ -153,6 +156,8 @@ def request_context(
     details = {} if metadata is None else metadata
     if not isinstance(details, dict) or any(not isinstance(key, str) for key in details):
         raise ResultContractError("context metadata must be a map with text keys")
+    if _RESERVED_CONTEXT_FIELDS.intersection(details):
+        raise ResultContractError("context metadata cannot shadow request/trace identifiers")
     encoded = _canonical_json(details, _MAX_CONTEXT_BYTES, "context metadata")
     return RequestContext(request, trace, parent, encoded)
 
@@ -162,6 +167,8 @@ def context_with(context: Any, key: Any, value: Any) -> RequestContext:
         raise TypeError("context_with expects a RequestContext")
     if not isinstance(key, str) or not key or len(key) > 128:
         raise ResultContractError("context metadata key must contain 1..128 characters")
+    if key in _RESERVED_CONTEXT_FIELDS:
+        raise ResultContractError("context metadata cannot shadow request/trace identifiers")
     metadata = context.metadata
     metadata[key] = copy.deepcopy(value)
     encoded = _canonical_json(metadata, _MAX_CONTEXT_BYTES, "context metadata")
@@ -171,12 +178,12 @@ def context_with(context: Any, key: Any, value: Any) -> RequestContext:
 
 
 def context_get(context: Any, key: Any) -> Any:
+    if not isinstance(key, str):
+        raise TypeError("context_get key must be text")
     if context is None:
         return None
     if not isinstance(context, RequestContext):
         raise TypeError("context_get expects a RequestContext or nothing")
-    if not isinstance(key, str):
-        raise TypeError("context_get key must be text")
     if key == "request_id":
         return context.request_id
     if key == "trace_id":
