@@ -45,7 +45,7 @@ class DuckPipelineTests(unittest.TestCase):
 
         self.assertEqual(
             output,
-            ["[[false, [INVALID_RECORD, channel record must be a map, []]]]"],
+            ["[[false, [INVALID_RECORD, channel record must be a map or plain record, []]]]"],
         )
 
     def test_plain_record_instance_uses_instance_fields(self) -> None:
