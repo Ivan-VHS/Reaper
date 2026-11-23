@@ -1,0 +1,40 @@
+# Industrial flow: explicit correlation, typed outcomes and recoverable domain failures.
+
+craft normalize_port(value) {
+    when value < 1 {
+        yield err("NET-EPORT", "port is below the permitted range", resource_stats())
+    } otherwise {
+        when value > 65535 {
+            yield err("NET-EPORT", "port exceeds the permitted range", resource_stats())
+        } otherwise {
+            yield ok(value)
+        }
+    }
+}
+
+craft reserve_port(value) {
+    yield ok(value)
+}
+
+craft use_fallback(error) {
+    emit "recovered: " ++ error["code"]
+    yield ok(8080)
+}
+
+make context := request_context("req-demo-42", "trace-demo-42", nothing, resource_stats())
+make input := ok(443, context)
+make checked := input :: result_and_then(normalize_port)
+make reserved := checked :: result_and_then(reserve_port)
+
+make invalid := ok(70000, context) :: result_and_then(normalize_port)
+make recovered := invalid :: result_recover(use_fallback)
+
+when is_ok(reserved) {
+    emit "accepted port = " ++ text(result_value(reserved))
+} otherwise {
+    emit result_error(reserved)
+}
+
+emit "recovered port = " ++ text(result_value(recovered))
+emit context_to_map(result_context(reserved))
+emit runtime_stats()
