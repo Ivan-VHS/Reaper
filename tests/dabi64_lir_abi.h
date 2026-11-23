@@ -1,48 +1,35 @@
 #ifndef REAPER_TEST_DABI64_ABI_H
 #define REAPER_TEST_DABI64_ABI_H
 
-#include <stdint.h>
+/*
+ * Keep the executable ABI harness on the same public contract as the
+ * compiler and DuckOS reference implementation. The relative include is
+ * intentional: tests compile this header from the repository checkout.
+ */
+#include "../include/reaper/duckos_abi.h"
 
-#define DUCK_ABI_MAGIC UINT32_C(0x49424144)
-#define DUCK_ABI_MAJOR 1
-#define DUCK_ABI_MINOR 0
+#define DUCK_ABI_MAGIC REAPER_DABI64_MAGIC
+#define DUCK_ABI_MAJOR REAPER_DABI64_MAJOR
+#define DUCK_ABI_MINOR REAPER_DABI64_MINOR
 
-typedef enum DuckValueKind {
-    DUCK_VALUE_UNIT = 0,
-    DUCK_VALUE_I64 = 1
-} DuckValueKind;
+#define DUCK_STATUS_OK REAPER_DUCK_STATUS_OK
+#define DUCK_STATUS_INVALID_POINTER REAPER_DUCK_STATUS_INVALID_POINTER
+#define DUCK_STATUS_BAD_MAGIC REAPER_DUCK_STATUS_BAD_MAGIC
+#define DUCK_STATUS_VERSION_MISMATCH REAPER_DUCK_STATUS_VERSION_MISMATCH
+#define DUCK_STATUS_BAD_FRAME_SIZE REAPER_DUCK_STATUS_BAD_FRAME_SIZE
+#define DUCK_STATUS_BAD_ALIGNMENT REAPER_DUCK_STATUS_BAD_ALIGNMENT
+#define DUCK_STATUS_INVALID_FLAGS REAPER_DUCK_STATUS_INVALID_FLAGS
+#define DUCK_STATUS_ARITHMETIC_OVERFLOW REAPER_DUCK_STATUS_ARITHMETIC_OVERFLOW
+#define DUCK_STATUS_DIVISION_BY_ZERO REAPER_DUCK_STATUS_DIVISION_BY_ZERO
+#define DUCK_STATUS_BAD_ARGUMENT_LAYOUT REAPER_DUCK_STATUS_BAD_ARGUMENT_LAYOUT
 
-typedef enum DuckAbiStatus {
-    DUCK_STATUS_OK = 0,
-    DUCK_STATUS_BAD_ARGUMENT_LAYOUT = 18
-} DuckAbiStatus;
+typedef ReaperDuckValueKind DuckValueKind;
+typedef ReaperDuckValue DuckValue;
+typedef ReaperDuckCallFrame DuckCallFrame;
+typedef ReaperDuckCallResult DuckCallResult;
+typedef ReaperDuckAbiStatus DuckAbiStatus;
 
-typedef struct DuckValue {
-    uint64_t payload;
-    uint32_t kind;
-    uint32_t flags;
-} DuckValue;
-
-typedef struct DuckCallFrame {
-    uint32_t magic;
-    uint16_t abi_major;
-    uint16_t abi_minor;
-    uint32_t byte_size;
-    uint32_t argument_count;
-    uint32_t capture_count;
-    uint32_t flags;
-    uint32_t reserved0;
-    uint32_t reserved1;
-    const DuckValue *arguments;
-    const DuckValue *captures;
-} DuckCallFrame;
-
-typedef struct DuckCallResult {
-    DuckValue value;
-} DuckCallResult;
-
-_Static_assert(sizeof(DuckValue) == 16, "DABI64 value size");
-_Static_assert(sizeof(DuckCallFrame) == 48, "DABI64 call-frame size");
-_Static_assert(sizeof(DuckCallResult) == 16, "DABI64 result size");
+#define DUCK_VALUE_UNIT REAPER_DUCK_VALUE_UNIT
+#define DUCK_VALUE_I64 REAPER_DUCK_VALUE_I64
 
 #endif
