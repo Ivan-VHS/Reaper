@@ -1,4 +1,4 @@
-"""Deterministic .rpr module loading, export isolation, and dependency graphs."""
+"""Deterministic multi-syntax module loading, export isolation, and dependency graphs."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -111,7 +111,7 @@ class ModuleLoader:
             name = self._canonical(path)
             if name in visiting:
                 cycle = visiting[visiting.index(name):] + [name]
-                raise ModuleCycleError("cyclic .rpr import: " + " -> ".join(cycle))
+                raise ModuleCycleError("cyclic Reaper module import: " + " -> ".join(cycle))
             if name in self.graph and name != root and self.graph[name] == set():
                 # A parsed leaf is already complete.
                 pass
