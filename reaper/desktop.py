@@ -138,7 +138,7 @@ class ReaperStudio(tk.Tk):
         run_menu.add_command(label="Проверить синтаксис и типы", command=self.check_source, accelerator="Shift+F5")
         run_menu.add_command(label="Запустить", command=self.run_source, accelerator="F5")
         run_menu.add_command(label="Отладка с первого шага", command=self.debug_source)
-        run_menu.add_command(label="Точка останова", command=self.toggle_breakpoint, accelerator="F9")
+        run_menu.add_command(label="Точка остановки", command=self.toggle_breakpoint, accelerator="F9")
         run_menu.add_command(label="Продолжить", command=self.continue_debug)
         run_menu.add_command(label="Шаг", command=self.step_debug)
         run_menu.add_command(label="Остановить отладку", command=self.stop_debug)
@@ -661,7 +661,7 @@ class ReaperStudio(tk.Tk):
         ttk.Button(bar, text="JS Debug", command=lambda: self.run_node_source(inspect=True), style="Toolbar.TButton").pack(side="left", padx=3)
         ttk.Button(bar, text="JS Stop", command=self.stop_node_source, style="Toolbar.TButton").pack(side="left", padx=3)
         ttk.Button(bar, text="Отладка", command=self.debug_source, style="Toolbar.TButton").pack(side="left", padx=3)
-        ttk.Button(bar, text="Точка останова", command=self.toggle_breakpoint, style="Toolbar.TButton").pack(side="left", padx=3)
+        ttk.Button(bar, text="Точка остановки", command=self.toggle_breakpoint, style="Toolbar.TButton").pack(side="left", padx=3)
         ttk.Button(bar, text="Атмосфера", command=self.toggle_ui_theme, style="Toolbar.TButton").pack(side="left", padx=3)
         ttk.Button(bar, text="CODEX-66", command=self.show_codex66, style="Toolbar.TButton").pack(side="left", padx=(7, 3))
         self.file_label = tk.StringVar(value="Untitled.rpr")
@@ -1062,11 +1062,11 @@ class ReaperStudio(tk.Tk):
         line = int(self.editor.index("insert").split(".")[0])
         if line in self.breakpoints:
             self.breakpoints.remove(line)
-            self.status.set(f"Точка останова удалена: {line}")
+            self.status.set(f"Точка остановки удалена: {line}")
         else:
             self.breakpoints.add(line)
-            self.status.set(f"Точка останова добавлена: {line}")
-        self._append_output("Точки останова: " + (", ".join(map(str, sorted(self.breakpoints))) or "нет"))
+            self.status.set(f"Точка остановки добавлена: {line}")
+        self._append_output("Точки остановки: " + (", ".join(map(str, sorted(self.breakpoints))) or "нет"))
 
     def _pause_for_debug(self, snapshot: Any) -> None:
         self.variables_view.delete(*self.variables_view.get_children())

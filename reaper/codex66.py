@@ -116,7 +116,7 @@ _ROWS = (
      "Studio остаётся однодокументным редактором; multi-tab/split view не реализован."),
 
     # 23–33 · отладка и тестирование
-    ("23", "debug-test", "Условные точки останова", "not_supported",
+    ("23", "debug-test", "Условные точки остановки", "not_supported",
      "Остановка по выражению или условию счётчика.",
      "DAP явно сообщает supportsConditionalBreakpoints=false; доступны обычные line breakpoints."),
     ("24", "debug-test", "Logpoints без остановки", "planned",
