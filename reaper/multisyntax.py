@@ -1191,7 +1191,7 @@ def validate_source(syntax: str, source: str, *, filename: str = "<memory>") -> 
     elif selected == "lisp":
         _read_lisp(source)
     elif selected == "forth":
-        tokens = re.findall(r'"(?:\\\\.|[^"\\\\])*"|[^\\s]+', re.sub(r"\\\\[^\\n]*", "", source))
+        tokens = re.findall(r'"(?:\\.|[^"\\])*"|[^\s]+', re.sub(r"\\[^\n]*", "", source))
         definition_open = False
         for token in tokens:
             if token == ":":
