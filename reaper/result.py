@@ -11,6 +11,8 @@ import re
 from dataclasses import dataclass
 from typing import Any, Callable
 
+from .errors import ReaperRuntimeError
+
 
 _IDENTIFIER = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
 _ERROR_CODE = re.compile(r"^[A-Z][A-Z0-9_.-]{1,63}$")
@@ -192,7 +194,7 @@ def result_value(value: Any) -> Any:
     result = _result(value)
     if not result.succeeded:
         assert result.error is not None
-        raise RuntimeError(f"{result.error.code}: {result.error.message}")
+        raise ReaperRuntimeError(f"{result.error.code}: {result.error.message}")
     return result.value
 
 
@@ -211,32 +213,36 @@ def _carry_context(result: ResultValue, context: RequestContext | None) -> Resul
     return ResultValue(result.succeeded, result.value, result.error, context)
 
 
-def result_map(value: Any, transform: Any) -> ResultValue:
+def result_map(value: Any, transform: Any, invoke: Callable[[Any, list[Any]], Any]) -> ResultValue:
     result = _result(value)
-    if not callable(transform):
-        raise TypeError("result_map expects a callable Reaper function")
     if not result.succeeded:
         return result
-    return ok(transform(result.value), result.context)
+    return ok(invoke(transform, [result.value]), result.context)
 
 
-def result_and_then(value: Any, transform: Any) -> ResultValue:
+def result_and_then(
+    value: Any, transform: Any, invoke: Callable[[Any, list[Any]], Any]
+) -> ResultValue:
     result = _result(value)
-    if not callable(transform):
-        raise TypeError("result_and_then expects a callable Reaper function")
     if not result.succeeded:
         return result
-    return _carry_context(_result(transform(result.value)), result.context)
+    return _carry_context(_result(invoke(transform, [result.value])), result.context)
 
 
-def result_recover(value: Any, recover: Any) -> ResultValue:
+def result_recover(
+    value: Any, recover: Any, invoke: Callable[[Any, list[Any]], Any]
+) -> ResultValue:
     result = _result(value)
-    if not callable(recover):
-        raise TypeError("result_recover expects a callable Reaper function")
     if result.succeeded:
         return result
     assert result.error is not None
-    return _carry_context(_result(recover(result.error.as_dict())), result.context)
+    return _carry_context(_result(invoke(recover, [result.error.as_dict()])), result.context)
+
+
+def context_to_map(context: Any) -> dict[str, Any]:
+    if not isinstance(context, RequestContext):
+        raise TypeError("context_to_map expects a RequestContext")
+    return context.as_dict()
 
 
 def result_or(value: Any, fallback: Any) -> Any:
