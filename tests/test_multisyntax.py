@@ -116,6 +116,17 @@ class LispTests(unittest.TestCase):
         with self.assertRaisesRegex(MultiSyntaxError, "unknown Lisp symbol"):
             run_source("lisp", "(not-defined 1)")
 
+    def test_lisp_higher_order_operations_invoke_language_closures(self):
+        output = []
+        source = (
+            "(define (square value) (* value value))\\n"
+            "(display (map square '(1 2 3)))\\n"
+            "(display (filter (lambda (value) (> value 2)) '(1 2 3 4)))\\n"
+            "(display (fold (lambda (total value) (+ total value)) 0 '(1 2 3 4)))"
+        )
+        run_source("lisp", source, output=output.append)
+        self.assertEqual(output, ["(1 4 9)", "(3 4)", "10"])
+
 
 class ForthTests(unittest.TestCase):
     def test_stack_operations_and_colon_definitions(self):
