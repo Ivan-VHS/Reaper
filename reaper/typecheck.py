@@ -402,7 +402,15 @@ class TypeChecker:
                             f"{name}() callback '{callback_node.value}' expects one parameter, got {function.arity}",
                         )
                     callback_type = function.return_type
-                elif callback_node.value not in BUILTIN_ARITY:
+                elif callback_node.value in BUILTIN_ARITY:
+                    minimum, maximum = BUILTIN_ARITY[callback_node.value]
+                    if minimum > 1 or (maximum is not None and maximum < 1):
+                        self._report(
+                            node, "RPR-T0007",
+                            f"{name}() callback '{callback_node.value}' cannot be called with one argument",
+                        )
+                    callback_type = BUILTIN_RETURN.get(callback_node.value, ANY)
+                else:
                     self._report(
                         node, "RPR-T0013",
                         f"{name}() callback '{callback_node.value}' is not a known Reaper function",
