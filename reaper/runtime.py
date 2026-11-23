@@ -447,6 +447,42 @@ class Interpreter:
                 )
             return size
 
+        def map_has_key(value: Any, key: Any) -> bool:
+            if not isinstance(value, dict):
+                raise TypeError("has_key() expects a map")
+            if not isinstance(key, str):
+                raise TypeError("has_key() key must be text")
+            return key in value
+
+        def map_get(value: Any, key: Any, default: Any = None) -> Any:
+            if not isinstance(value, dict):
+                raise TypeError("get() expects a map")
+            if not isinstance(key, str):
+                raise TypeError("get() key must be text")
+            return value.get(key, default)
+
+        def to_integer(value: Any, fallback: Any = None) -> int:
+            try:
+                if isinstance(value, bool):
+                    raise TypeError("booleans are not integers")
+                if isinstance(value, int):
+                    return value
+                if isinstance(value, float):
+                    if not math.isfinite(value) or not value.is_integer():
+                        raise ValueError("number must be a finite whole number")
+                    return int(value)
+                if isinstance(value, str):
+                    source = value.strip()
+                    digits = source[1:] if source[:1] in {"+", "-"} else source
+                    if not digits or not digits.isascii() or not digits.isdigit():
+                        raise ValueError("text must contain a whole decimal number")
+                    return int(source, 10)
+                raise TypeError("expected a whole number or decimal integer text")
+            except (TypeError, ValueError, OverflowError):
+                if fallback is not None:
+                    return to_integer(fallback)
+                raise
+
         def integer(value: Any, label: str) -> int:
             if isinstance(value, bool) or not isinstance(value, int):
                 raise TypeError(f"{label} must be a whole number")
@@ -550,8 +586,13 @@ class Interpreter:
         register("distribute", distribute, 2, 2)
         register("proportional_split", proportional_split, 2, 2)
         register("size", bounded_size, 1, 1)
+        register("len", bounded_size, 1, 1)
         register("text", self._display, 1, 1)
+        register("to_str", self._display, 1, 1)
         register("number", self._to_number, 1, 1)
+        register("to_int", to_integer, 1, 2)
+        register("has_key", map_has_key, 2, 2)
+        register("get", map_get, 2, 3)
         register("kind", self._kind, 1, 1)
         register("range", bounded_range, 1, 3)
         register("push", push, 2, 2)
