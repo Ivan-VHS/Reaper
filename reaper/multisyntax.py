@@ -21,7 +21,7 @@ from typing import Any, Callable
 MAX_SOURCE_CHARS = 1_000_000
 MAX_COLLECTION_ITEMS = 100_000
 MAX_POLYGLOT_BLOCKS = 128
-POLYGLOT_HEADER = re.compile(r"^\s*%%\s+([a-z][a-z0-9_-]*)(?:\s+as\s+[A-Za-z_][A-Za-z0-9_]*)?\s*$", re.I)
+POLYGLOT_HEADER = re.compile(r"^\s*%%\s+([a-z][a-z0-9_-]*)\s*$", re.I)
 
 
 class MultiSyntaxError(ValueError):
@@ -641,6 +641,25 @@ def _read_lisp(source: str) -> list[Any]:
 def _run_lisp(source: str, output: Callable[[str], None], budget: _Budget) -> Any:
     environment: dict[str, Any] = {}
 
+    def invoke(function: Any, arguments: list[Any]) -> Any:
+        if isinstance(function, _LispFunction):
+            if len(arguments) != len(function.parameters):
+                raise MultiSyntaxError("Lisp function arity mismatch")
+            local = dict(function.closure)
+            local.update(zip(function.parameters, arguments))
+            result = None
+            for expression in function.body:
+                result = evaluate(expression, local)
+            return result
+        if not callable(function):
+            raise MultiSyntaxError("Lisp expression is not callable")
+        try:
+            return function(*arguments)
+        except MultiSyntaxError:
+            raise
+        except (TypeError, ValueError, ZeroDivisionError, IndexError, OverflowError) as error:
+            raise MultiSyntaxError(f"Lisp call failed: {error}") from error
+
     def display(value: Any) -> str:
         if isinstance(value, _Symbol): return value.value
         if isinstance(value, list): return "(" + " ".join(display(item) for item in value) + ")"
@@ -668,9 +687,13 @@ def _run_lisp(source: str, output: Callable[[str], None], budget: _Budget) -> An
         "not": lambda value: not value,
         "display": lambda value: output(display(value)),
         "newline": lambda: output(""),
-        "map": lambda function, items: [function(item) for item in items],
-        "filter": lambda function, items: [item for item in items if function(item)],
-        "fold": lambda function, initial, items: _fold(function, initial, items),
+        "map": lambda function, items: [invoke(function, [item]) for item in items],
+        "filter": lambda function, items: [item for item in items if invoke(function, [item])],
+        "fold": lambda function, initial, items: _fold(
+            lambda accumulated, item: invoke(function, [accumulated, item]),
+            initial,
+            items,
+        ),
     })
 
     def evaluate(expression: Any, scope: dict[str, Any]) -> Any:
@@ -724,17 +747,7 @@ def _run_lisp(source: str, output: Callable[[str], None], budget: _Budget) -> An
                 return result
         function = evaluate(head, scope)
         arguments = [evaluate(item, scope) for item in expression[1:]]
-        if isinstance(function, _LispFunction):
-            if len(arguments) != len(function.parameters): raise MultiSyntaxError("Lisp function arity mismatch")
-            local = dict(function.closure)
-            local.update(zip(function.parameters, arguments))
-            result = None
-            for item in function.body: result = evaluate(item, local)
-            return result
-        if not callable(function): raise MultiSyntaxError("Lisp expression is not callable")
-        try: return function(*arguments)
-        except (TypeError, ValueError, ZeroDivisionError, IndexError) as error:
-            raise MultiSyntaxError(f"Lisp call failed: {error}") from error
+        return invoke(function, arguments)
 
     parsed = _read_lisp(source)
     result = None
