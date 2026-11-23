@@ -607,7 +607,7 @@ class PolyglotStore:
         if profile.get("tonal_language"):
             tasks[3] = (tasks[3][0], tasks[3][1] + "; сохраняйте тоновые знаки в письменной транскрипции")
         if profile.get("romanization_bridge"):
-            tasks[1] = (tasks[1][0], tasks[1][1] + "; постепенно переходите на родную письменность")
+            tasks[0] = (tasks[0][0], tasks[0][1] + "; постепенно переходите на родную письменность")
         if profile.get("orthography_focus"):
             tasks[3] = (tasks[3][0], tasks[3][1] + f"; фокус: {profile['orthography_focus']}")
         return [
