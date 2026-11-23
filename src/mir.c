@@ -353,7 +353,7 @@ static uint32_t lower_expression(MirBuilder *builder, uint32_t node_id) {
         if (left == REAPER_MIR_NO_VALUE) return left;
         return emit_instruction(
             builder, REAPER_MIR_UNARY, node->type,
-            left, REAPER_MIR_NO_VALUE, REAPER_MIR_NO_SYMBOL,
+            left, REAPER_MIR_NO_VALUE, REAPER_HIR_NO_SYMBOL,
             node_id, node->text
         );
 
