@@ -11,8 +11,6 @@ import re
 from dataclasses import dataclass
 from typing import Any, Callable
 
-from .errors import ReaperRuntimeError
-
 
 _IDENTIFIER = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
 _ERROR_CODE = re.compile(r"^[A-Z][A-Z0-9_.-]{1,63}$")
@@ -135,8 +133,10 @@ def context_with(context: Any, key: Any, value: Any) -> RequestContext:
 
 
 def context_get(context: Any, key: Any) -> Any:
+    if context is None:
+        return None
     if not isinstance(context, RequestContext):
-        raise TypeError("context_get expects a RequestContext")
+        raise TypeError("context_get expects a RequestContext or nothing")
     if not isinstance(key, str):
         raise TypeError("context_get key must be text")
     if key == "request_id":
@@ -239,9 +239,11 @@ def result_recover(
     return _carry_context(_result(invoke(recover, [result.error.as_dict()])), result.context)
 
 
-def context_to_map(context: Any) -> dict[str, Any]:
+def context_to_map(context: Any) -> dict[str, Any] | None:
+    if context is None:
+        return None
     if not isinstance(context, RequestContext):
-        raise TypeError("context_to_map expects a RequestContext")
+        raise TypeError("context_to_map expects a RequestContext or nothing")
     return context.as_dict()
 
 
