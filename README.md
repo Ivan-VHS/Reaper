@@ -267,3 +267,8 @@ Wrap JSON output in the shared ivan-vhs.report.v1 contract with: python tools/re
 ## Documentation map
 
 Use the [documentation index](docs/README.md) as the entry point and the [information architecture map](docs/INFORMATION_ARCHITECTURE.md) for language, compiler, runtime, Studio and integration clusters. Topic hubs lead to detailed contracts; implementation status remains governed by source, tests and schemas.
+
+
+## Mora desktop integration
+
+Reaper Studio is available from the shared Mora workspace. Mora supplies the app catalogue and startup theme; Reaper keeps its own editor, runtime, debugger and native window. See [Mora integration](docs/MORA_DESKTOP_INTEGRATION.md) and the [DuckOS workspace contract](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/MORA_DESKTOP.md).
