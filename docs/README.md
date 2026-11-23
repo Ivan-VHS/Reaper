@@ -16,6 +16,7 @@
 | [INTERNAL_PRODUCTS.md](INTERNAL_PRODUCTS.md) | integrated product catalogue and service contracts |
 | [FEATURES.md](FEATURES.md) | shipped, reference and proposed capability matrix |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | runtime and compiler stages |
+| [NATIVE_COMPILER.md](NATIVE_COMPILER.md) | statically checked scalar AOT compilation to C17 and the host toolchain |
 | [ENGINEERING.md](ENGINEERING.md) | quality, effect and release gates |
 | [DIVISION_ENGINE.md](DIVISION_ENGINE.md) | checked division and workload allocation |
 | [REAPER_813_FEATURE_ARCHITECTURE.md](REAPER_813_FEATURE_ARCHITECTURE.md) | proposal ID ranges and registry boundaries |
