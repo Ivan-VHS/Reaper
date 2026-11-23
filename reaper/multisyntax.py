@@ -91,7 +91,7 @@ def normalize_syntax(name: str) -> str:
 def detect_syntax(filename: str | Path, explicit: str = "auto", source: str = "") -> str:
     if explicit.casefold() != "auto":
         return normalize_syntax(explicit)
-    marker = re.match(r"\s*#!syntax\s+([a-z0-9_-]+)\s*(?:\n|$)", source, re.I)
+                marker = re.match(r"\s*#!syntax\s+[a-z0-9_-]+\s*(?:\n|$)", source, re.I)
     if marker:
         return normalize_syntax(marker.group(1))
     suffix = Path(filename).suffix.casefold()
@@ -1275,7 +1275,7 @@ def main(argv: list[str] | None = None) -> int:
                     if args.polyglot
                     else validate_source(
                         detect_syntax(args.source, args.syntax, source),
-                        re.sub(r"^\\s*#!syntax\\s+[a-z0-9_-]+\\s*(?:\\n|$)", "", source, count=1, flags=re.I),
+                        re.sub(r"^\s*#!syntax\s+[a-z0-9_-]+\s*(?:\n|$)", "", source, count=1, flags=re.I),
                         filename=str(args.source),
                     )
                 )
@@ -1286,7 +1286,7 @@ def main(argv: list[str] | None = None) -> int:
                 )
             else:
                 syntax = detect_syntax(args.source, args.syntax, source)
-                marker = re.match(r"\\s*#!syntax\\s+[a-z0-9_-]+\\s*(?:\\n|$)", source, re.I)
+                marker = re.match(r"\s*#!syntax\s+[a-z0-9_-]+\s*(?:\n|$)", source, re.I)
                 if marker:
                     source = source[marker.end():]
                 result = run_source(
@@ -1303,7 +1303,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Reaper syntax check: {result.get('block_count', 1)} block(s) valid")
         else:
             for line in result.get("output", []):
-                print(line, end="" if line.endswith("\\n") else "\\n")
+                print(line, end="" if line.endswith("\n") else "\n")
             if args.polyglot:
                 print(f"Reaper polyglot: {result['block_count']} blocks, {result['steps']} steps")
         return 0
