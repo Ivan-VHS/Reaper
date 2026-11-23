@@ -139,6 +139,10 @@ class _Lowerer:
             for item in children:
                 self.expression(item)
             self.emit("BUILD_LIST", len(children), node.token)
+        elif node.kind == "map":
+            for item in children:
+                self.expression(item)
+            self.emit("BUILD_MAP", len(children) // 2, node.token)
         elif node.kind == "index":
             self.expression(children[0])
             self.expression(children[1])
@@ -186,7 +190,7 @@ _ALLOWED = {
     "CONST", "LOAD", "DEFINE", "ASSIGN", "EMIT", "RETURN", "MAKE_FUNCTION",
     "JUMP_IF_FALSE", "JUMP", "ENTER_SCOPE", "EXIT_SCOPE", "ITER_INIT",
     "ITER_NEXT", "ITER_END", "POP", "BUILD_LIST", "INDEX", "UNARY",
-    "CALL", "PIPE_CALL", "BINARY", "AND_JUMP", "OR_JUMP", "IMPORT", "EXPORT",
+    "CALL", "PIPE_CALL", "BINARY", "AND_JUMP", "OR_JUMP", "IMPORT", "EXPORT", "BUILD_MAP",
 }
 
 
@@ -234,7 +238,7 @@ def verify(module: CanonicalIR) -> None:
                 if type(argument) is not int or argument < 0 or argument > len(code):
                     raise IRVerificationError(f"{where}: invalid jump target")
 
-            elif op in {"CALL", "PIPE_CALL", "BUILD_LIST"}:
+            elif op in {"CALL", "PIPE_CALL", "BUILD_LIST", "BUILD_MAP"}:
                 if type(argument) is not int or argument < 0:
                     raise IRVerificationError(f"{where}: argument count must be a non-negative integer")
 

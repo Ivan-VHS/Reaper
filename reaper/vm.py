@@ -16,7 +16,7 @@ _OPCODES = {
         "CONST", "LOAD", "DEFINE", "ASSIGN", "EMIT", "RETURN", "MAKE_FUNCTION",
         "JUMP_IF_FALSE", "JUMP", "ENTER_SCOPE", "EXIT_SCOPE", "ITER_INIT",
         "ITER_NEXT", "ITER_END", "POP", "BUILD_LIST", "INDEX", "UNARY",
-        "CALL", "PIPE_CALL", "BINARY", "AND_JUMP", "OR_JUMP", "IMPORT", "EXPORT",
+        "CALL", "PIPE_CALL", "BINARY", "AND_JUMP", "OR_JUMP", "IMPORT", "EXPORT", "BUILD_MAP",
     ), start=1)
 }
 _OPCODE_NAMES = {value: key for key, value in _OPCODES.items()}
@@ -172,6 +172,15 @@ class VirtualMachine:
                 if count:
                     del stack[-count:]
                 stack.append(self.interpreter.memory.track(list(values)))
+            elif name == "BUILD_MAP":
+                count = instruction.argument
+                flattened = stack[-count * 2:] if count else []
+                if count:
+                    del stack[-count * 2:]
+                result = {}
+                for index in range(0, len(flattened), 2):
+                    result[flattened[index]] = flattened[index + 1]
+                stack.append(self.interpreter.memory.track(result))
             elif name == "INDEX":
                 index = stack.pop()
                 collection = stack.pop()

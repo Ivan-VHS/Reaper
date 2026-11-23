@@ -1,0 +1,56 @@
+# Reaper-written typed scalar IR builder and verifier.
+# This is a bootstrap frontend slice, not yet a complete native compiler.
+
+craft lower_add(left, right) {
+    yield [
+        {"id": 0, "op": "const", "type": "i64", "value": left},
+        {"id": 1, "op": "const", "type": "i64", "value": right},
+        {"id": 2, "op": "add", "type": "i64", "lhs": 0, "rhs": 1}
+    ]
+}
+
+craft verify_typed_ir(nodes) {
+    vary valid := true
+    vary expected_id := 0
+
+    each node in nodes {
+        when node["id"] != expected_id {
+            change valid := false
+        }
+
+        when node["type"] != "i64" {
+            change valid := false
+        }
+
+        when node["op"] == "const" {
+            when node["id"] < 0 {
+                change valid := false
+            }
+        }
+
+        when node["op"] == "add" {
+            when node["lhs"] >= node["id"] {
+                change valid := false
+            }
+            when node["rhs"] >= node["id"] {
+                change valid := false
+            }
+        }
+
+        when node["op"] != "const" and node["op"] != "add" {
+            change valid := false
+        }
+
+        change expected_id := expected_id + 1
+    }
+
+    yield valid
+}
+
+craft run_scalar_ir(nodes) {
+    when not verify_typed_ir(nodes) {
+        yield -1
+    }
+
+    yield nodes[0]["value"] + nodes[1]["value"]
+}

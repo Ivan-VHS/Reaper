@@ -269,6 +269,22 @@ class Interpreter:
                     f"collection item limit ({self.max_collection_items}) exceeded",
                 )
             return self.memory.track([self._evaluate(item, environment) for item in children])
+        if node.kind == "map":
+            item_count = len(children) // 2
+            if item_count > self.max_collection_items:
+                raise self._error(
+                    node.token,
+                    f"collection item limit ({self.max_collection_items}) exceeded",
+                )
+            result: dict[Any, Any] = {}
+            for offset in range(0, len(children), 2):
+                key = self._evaluate(children[offset], environment)
+                value = self._evaluate(children[offset + 1], environment)
+                try:
+                    result[key] = value
+                except TypeError as error:
+                    raise self._error(node.token, f"dictionary key is not hashable: {error}") from error
+            return self.memory.track(result)
         if node.kind == "index":
             collection = self._evaluate(children[0], environment)
             index = self._evaluate(children[1], environment)

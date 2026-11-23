@@ -75,8 +75,8 @@ class NativeCompilerTests(unittest.TestCase):
             compile_source("vary count := 0\ncraft change_count() { change count := 1\n yield count\n}\n", "global-write.rpr")
 
     def test_rejects_unsupported_dynamic_features_explicitly(self) -> None:
-        with self.assertRaisesRegex(NativeCompileError, "outside the native scalar subset"):
-            compile_source("emit [1, 2, 3]\n", "list.rpr")
+        with self.assertRaisesRegex(NativeCompileError, "decimal or nothing literals"):
+            compile_source("emit 1.5\n", "decimal.rpr")
 
     def test_native_output_cannot_overwrite_source(self) -> None:
         with tempfile.TemporaryDirectory(prefix="reaper-native-path-") as folder:
@@ -107,6 +107,63 @@ class NativeCompilerTests(unittest.TestCase):
             result = subprocess.run([str(executable)], capture_output=True, text=True, check=False)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout, "-9223372036854775808\n")
+
+    def test_native_strings_arrays_maps_and_scoped_drops(self) -> None:
+        try:
+            compiler = find_c_compiler()
+        except NativeToolchainError:
+            self.skipTest("GCC-compatible C compiler is not installed")
+
+        source = '''\
+vary values := [7, 8]
+emit len(values)
+emit values[1]
+change values := push(values, 9)
+emit values
+
+vary stock := {"apples": 4, "pears": 2}
+emit stock["pears"]
+change stock := put(stock, "pears", 5)
+emit has(stock, "apples")
+emit len(stock)
+emit stock
+emit "Reaper" ++ " Native"
+
+when true {
+    make temporary := [4, 5]
+    emit len(temporary)
+}
+'''
+        with tempfile.TemporaryDirectory(prefix="reaper-native-collections-") as folder:
+            executable = build_executable(
+                source, Path(folder) / "collections",
+                filename="collections.rpr", compiler=compiler,
+            )
+            result = subprocess.run([str(executable)], capture_output=True, text=True, check=False)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.splitlines(), [
+            "2",
+            "8",
+            "[7, 8, 9]",
+            "2",
+            "true",
+            "2",
+            '{"apples": 4, "pears": 5}',
+            "Reaper Native",
+            "2",
+        ])
+
+    def test_native_collections_reject_unsupported_element_types(self) -> None:
+        with self.assertRaisesRegex(NativeCompileError, "contain i64"):
+            compile_source("""emit ["text"]
+""", "array-type.rpr")
+        with self.assertRaisesRegex(NativeCompileError, "keys must be strings"):
+            compile_source("""emit {1: 2}
+""", "map-key-type.rpr")
+        with self.assertRaisesRegex(NativeCompileError, "values must be integers"):
+            compile_source("""emit {"name": "value"}
+""", "map-value-type.rpr")
 
     def test_overflow_is_reported_at_runtime(self) -> None:
         try:
