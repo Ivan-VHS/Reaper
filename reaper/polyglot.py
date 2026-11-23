@@ -468,7 +468,7 @@ class PolyglotStore:
 
     def add_phrase(
         self, profile: dict[str, Any], phrase: str, translation: str,
-        context: str = "", pronunciation: str = "", source: str = "",
+        context: str = "", source: str = "",
         tags: Iterable[str] = (), content_id: int | None = None,
         personal_example: str = "", frequency_rank: int | None = None,
     ) -> int:
@@ -486,12 +486,12 @@ class PolyglotStore:
             cursor = self.connection.execute(
                 """
                 INSERT INTO phrases(profile_id,content_id,phrase,translation,context,
-                    pronunciation,source,tags_json,personal_example,frequency_rank,
+                    source,tags_json,personal_example,frequency_rank,
                     due_on,created_at,updated_at)
-                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)
+                VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
                 """,
                 (profile["id"], content_id, phrase, translation, context,
-                 pronunciation, source, json.dumps(list(tags), ensure_ascii=False),
+                 source, json.dumps(list(tags), ensure_ascii=False),
                  personal_example.strip(), frequency_rank, date.today().isoformat(), now, now),
             )
         except sqlite3.IntegrityError as error:
@@ -693,10 +693,8 @@ def run_review(
         if card["context"]:
             output_fn(f"Контекст: {card['context']}")
         if fixed_rating is None:
-            input_fn("Произнесите или запишите ответ, затем нажмите Enter… ")
+            input_fn("Вспомните или запишите ответ, затем нажмите Enter… ")
         output_fn(f"Ответ: {card['phrase']}")
-        if card["pronunciation"]:
-            output_fn(f"Произношение: {card['pronunciation']}")
         if card.get("personal_example"):
             output_fn(f"Личный пример: {card['personal_example']}")
         rating = fixed_rating
@@ -767,8 +765,7 @@ def build_parser() -> argparse.ArgumentParser:
     add_phrase.add_argument("phrase")
     add_phrase.add_argument("--translation", required=True)
     add_phrase.add_argument("--context", default="")
-    add_phrase.add_argument("--pronunciation", default="")
-    add_phrase.add_argument("--source", default="")
+        add_phrase.add_argument("--source", default="")
     add_phrase.add_argument("--content-id", type=int)
     add_phrase.add_argument("--personal-example", default="", help="a sentence you can use about your own life")
     add_phrase.add_argument("--frequency-rank", type=int, help="optional manually supplied frequency rank")
@@ -856,7 +853,7 @@ def main(argv: list[str] | None = None) -> int:
             if args.command == "phrase":
                 if args.phrase_command == "add":
                     card_id = store.add_phrase(
-                        profile, args.phrase, args.translation, args.context, args.pronunciation,
+                        profile, args.phrase, args.translation, args.context,
                         args.source, args.tag, args.content_id,
                         args.personal_example, args.frequency_rank,
                     )
