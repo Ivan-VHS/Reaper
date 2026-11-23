@@ -397,6 +397,11 @@ class TypeChecker:
                 function = self.functions.get(callback_node.value)
                 if function is not None:
                     callback_type = function.return_type
+                elif callback_node.value not in BUILTIN_ARITY:
+                    self._report(
+                        node, "RPR-T0013",
+                        f"{name}() callback '{callback_node.value}' is not a known Reaper function",
+                    )
             if name == "result_map":
                 return f"Result[{callback_type}]"
             if callback_type != ANY and not callback_type.startswith("Result["):
@@ -533,10 +538,7 @@ class TypeChecker:
         if name == "context_to_map" and types and types[0] not in {"Context", ANY}:
             self._report(node, "RPR-T0012", "context_to_map() expects a Context")
 
-        if name in {"result_map", "result_and_then", "result_recover"} and len(types) > 1:
-            if len(node.children or []) > 2 and node.children[2].kind == "name":
-                if node.children[2].value not in self.functions:
-                    self._report(node, "RPR-T0013", f"{name}() callback must be a known Reaper craft function")
+
 
     def _element_type(self, type_name: str, node: Node | None = None) -> str:
         if type_name.startswith("List[") and type_name.endswith("]"):
@@ -580,6 +582,8 @@ class TypeChecker:
     def _unify(self, left: str, right: str) -> str:
         if left == right:
             return left
+        if left.startswith("Result[") and right.startswith("Result["):
+            return f"Result[{self._unify(self._result_payload(left), self._result_payload(right))}]"
         if left == ANY or right == ANY:
             return ANY
         if left in NUMERIC and right in NUMERIC:
