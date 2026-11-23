@@ -19,9 +19,9 @@ program or using LSP/DAP. Start the backend explicitly:
     reaper-backend serve
 
 The service binds only to a numeric loopback address (127.0.0.1 or ::1).
-A non-loopback bind is rejected during configuration validation. At startup,
-the service generates a cryptographically random bearer token and prints it
-once to the controlling terminal. The token is held in memory only; it is not
+A non-loopback bind is rejected during configuration validation. At startup, the service displays the active bearer token once to
+the controlling terminal. When no token is configured, it generates a
+cryptographically random value. The token is held in memory only; it is not
 written to SQLite or request logs. An operator may supply a token through
 REAPER_BACKEND_TOKEN or --token; configured tokens must contain at least
 32 ASCII characters. Prefer the environment variable over --token on systems
@@ -53,7 +53,7 @@ Cache-Control: no-store and X-Content-Type-Options: nosniff.
 | /healthz | GET | none | Process liveness; deliberately contains no dependency details |
 | /readyz | GET | none | SQLite readiness check |
 | /v1/info | GET | bearer | API/runtime versions, supported operations and effective limits |
-| /v1/metrics | GET | bearer | In-memory request counts, active connections, byte totals and rolling p50/p95/p99 latency |
+| /v1/metrics | GET | bearer | Request counts, worker queue, CPU time, available RSS/I/O counters, SQLite footprint, network bytes and rolling p50/p95/p99 latency |
 | /v1/check | POST | bearer + idempotency key | Parse and statically analyze a source string without executing it |
 | /v1/run | POST | bearer + idempotency key | Optional restricted execution; disabled unless explicitly enabled |
 
@@ -154,8 +154,11 @@ to the idempotency cache.
 Logs are newline-delimited JSON records with request ID, method, route, status,
 duration and byte counts. They deliberately exclude bearer tokens, source text,
 program output and request bodies. Latency percentiles are calculated from a
-bounded in-memory rolling sample, not from an unbounded history. Metrics reset
-when the process restarts.
+bounded in-memory rolling sample, not from an unbounded history. Metrics expose
+worker activity and waiters, cumulative process CPU seconds, peak RSS and block
+I/O counters when the host platform provides them, the current SQLite/WAL/SHM
+footprint and network bytes. Unsupported OS counters are returned as null.
+Metrics reset when the process restarts.
 
 SIGINT/SIGTERM stops the listener, allows active requests to finish for the
 configured grace period, cancels remaining connection tasks, then shuts down
