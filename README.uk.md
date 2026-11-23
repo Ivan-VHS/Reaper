@@ -1,4 +1,4 @@
-# Reaper — мова програмування з потоковою композицією та Studio
+# Reaper — низькорівнева системна мова та середовище розробки апаратури
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
@@ -23,25 +23,29 @@
 [![Python CI](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/ci.yml?branch=main&label=Python%20CI)](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml)  [![Live Studio capture](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/readme-screenshots.yml?branch=main&label=Live%20Studio%20capture)](https://github.com/Ivan-VHS/Reaper/actions/workflows/readme-screenshots.yml)  [![License](https://img.shields.io/github/license/Ivan-VHS/Reaper)](LICENSE)
 
 
-> **Призначення:** Reaper — локальна мова програмування, інтерпретатор, набір інструментів розробника та desktop IDE для Windows. Це не hosted web demo і не production web service. Python runtime є поточною виконуваною еталонною реалізацією сумісності; нативний трек C17 реалізований частково. Документацію звірено з `main` **22.11.2026**.
+> **Призначення:** Reaper переорієнтовується на низькорівневу системну мову та робоче середовище для прошивок, embedded-розробки й апаратно-залежного ПЗ, зберігаючи сумісність із чинними .rpr-програмами та Python runtime. Це локальні інструменти й Windows desktop IDE, а не hosted web service. Стан звірено **23.11.2026**.
 
 ## Призначення та стан реалізації
 
-Reaper — expression-oriented мова, у якій оператор `::` передає значення наступній операції. До складу входять Python reference runtime, CLI/REPL, Windows Studio, LSP/DAP через stdio та необов’язкова інтеграція з офіційним Node.js через NOO TAH.
+Reaper розвивається як системна мова для прошивок, embedded-програм, платформних компонентів і програмного забезпечення поруч з апаратурою. Потокова композиція через `::` залишається частиною мови; зберігаються Python reference runtime, CLI/REPL, Windows Studio, LSP/DAP і необов’язкова інтеграція NOO TAH.
 
-Проєкт призначений для розробників мов і tooling, інженерів застосунків, QA, викладачів і рев’юерів, яким потрібно експериментувати з файлами Reaper та перевіряти контракти мовних сервісів.
+**Вже доступно:** обмежений native scalar AOT через C17, часткове C17-ядро lexer/parser/IR, QCS-перевірка апаратних описів, MCU-профілі з генерацією linker script і новий перевірний MMIO API, який працює лише через переданий платформний адаптер.
+
+**Ще розробляється:** повноцінні типи, ownership/borrowing/effects, загальний backend машинного коду, апаратні конструкції всередині `.rpr`, реальні OS/driver MMIO/IRQ/DMA-сервіси та повний апаратний workspace Studio. Етапи й точні межі: [Hardware Language](docs/HARDWARE_LANGUAGE.md).
+
+Цільова аудиторія — embedded- і firmware-розробники, системні програмісти, інженери платформ/драйверів, розробники компіляторів і викладачі.
 
 ### Що реалізовано
 
 | Компонент | Поточний обсяг | Межа |
 |---|---|---|
 | Python runtime | lexer, parser, interpreter, CLI, REPL, модулі, closures, quotas та audit log | поточна виконувана еталонна реалізація |
-| Reaper Studio | основа Windows IDE: дерево проєкту, редактор, підсвічування синтаксису, пошук, check/run і debugger | локальний desktop-застосунок |
+| Reaper Studio | основа Windows IDE, дерево/редактор/debugger та огляд Systems/Hardware з MCU-профілями й межами доступу | локальний desktop-застосунок; без live-інспектора пристроїв |
 | LSP | stdio JSON-RPC, diagnostics, completion, hover, symbols, лексична навігація та форматування документа | відкритий документ; без міжфайлового type inference |
 | Інвентаризація toolchain | пошук компіляторів, систем збирання, парсерів, форматтерів, налагоджувачів і WASM runtime з фіксацією SHA-256 | лише PATH і SHA-256; знайдені програми не запускаються |
 | DAP | stdio debug adapter, line breakpoints, stepping, stack і locals | налагодження на межах операторів; лише довірені локальні програми |
 | NOO TAH | керування проєктами/процесами навколо офіційного Node.js, npm/npx та Inspector | Node/V8/libuv надає upstream Node |
-| Native C17 | lexer, expression parser, owned AST, checked IR і обмежений lowering | активний частковий напрям, не parity з Python runtime |
+| Native C17 + MMIO | lexer, expression parser, owned AST, checked i64 IR, обмежений lowering і перевірний MMIO adapter contract | часткова експериментальна реалізація; без фізичного mapping і parity з Python runtime |
 | QCS / embedded tools | окремий parser апаратної області, JSON AST та обмежені embedded-інструменти | довідковий/аналітичний інструментарій, не виконання на обладнанні |
 | Kora | необов’язкові допоміжні функції стандартної бібліотеки у семи модулях | окремо від runtime мови Reaper |
 

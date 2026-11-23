@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "reaper-lang"
 version = "0.1.0"
-description = "Reaper: a small, flow-first programming language and interpreter"
+description = "Reaper: an experimental low-level systems language, native C17 compiler track, and hardware development workbench"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
 authors = [{ name = "Ivan-VHS" }]
-keywords = ["programming-language", "interpreter", "dataflow", "qcs"]
-classifiers = ["Development Status :: 3 - Alpha","Environment :: Console","Intended Audience :: Developers","License :: OSI Approved :: Apache Software License","Programming Language :: Python :: 3","Programming Language :: Python :: 3.10","Programming Language :: Python :: 3.11","Programming Language :: Python :: 3.12","Topic :: Software Development :: Interpreters"]
+keywords = ["systems-programming", "embedded", "firmware", "hardware", "compiler", "native-code", "mmio", "qcs", "interpreter", "dataflow"]
+classifiers = ["Development Status :: 3 - Alpha","Environment :: Console","Intended Audience :: Developers","License :: OSI Approved :: Apache Software License","Programming Language :: Python :: 3","Programming Language :: Python :: 3.10","Programming Language :: Python :: 3.11","Programming Language :: Python :: 3.12","Topic :: Software Development :: Interpreters","Topic :: Software Development :: Compilers"]
 [project.scripts]
 reaper = "reaper.cli:main"
 reaper-lsp = "reaper.lsp:serve"
