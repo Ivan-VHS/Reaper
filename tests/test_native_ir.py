@@ -67,6 +67,53 @@ class NativeTypedIRTests(unittest.TestCase):
         self.assertEqual(len(plan), 1)
         self.assertEqual(plan[0].runtime_call, "array.release")
 
+    def test_inliner_expands_a_pure_integer_function_then_folds_it(self) -> None:
+        from reaper.native_ir import NativeIRFunction, inline_native_calls, prepare_native_ir
+        function = NativeIRFunction(
+            "sum", (("left", NativeType.I64), ("right", NativeType.I64)),
+            (
+                NativeIRValue(0, "PARAM", NativeType.I64, symbol="left"),
+                NativeIRValue(1, "PARAM", NativeType.I64, symbol="right"),
+                NativeIRValue(2, "BINARY", NativeType.I64, (0, 1), runtime_call="i64.add"),
+            ), 2, NativeType.I64,
+        )
+        module = NativeIRModule((
+            NativeIRValue(0, "CONST", NativeType.I64, symbol="19"),
+            NativeIRValue(1, "CONST", NativeType.I64, symbol="23"),
+            NativeIRValue(2, "CALL", NativeType.I64, (0, 1), symbol="sum"),
+        ), "inline.rpr")
+        expanded, names = inline_native_calls(module, (function,))
+        self.assertEqual(names, ("sum",))
+        self.assertFalse(any(value.operation == "CALL" for value in expanded.values))
+        plan = prepare_native_ir(module, (function,))
+        self.assertEqual(plan.module.values[-2].operation, "CONST")
+        self.assertEqual(plan.module.values[-2].symbol, "42")
+
+    def test_inliner_leaves_effectful_functions_alone(self) -> None:
+        from reaper.native_ir import NativeIRFunction, inline_native_calls
+        function = NativeIRFunction(
+            "length", (("text", NativeType.STRING),),
+            (
+                NativeIRValue(0, "PARAM", NativeType.STRING, symbol="text", ownership=Ownership.BORROWED),
+                NativeIRValue(1, "CALL", NativeType.I64, (0,), symbol="len", runtime_call="string.length"),
+            ), 1, NativeType.I64, pure=False,
+        )
+        module = NativeIRModule((
+            NativeIRValue(0, "CONST", NativeType.STRING, symbol="hello", ownership=Ownership.BORROWED),
+            NativeIRValue(1, "CALL", NativeType.I64, (0,), symbol="length"),
+        ), "no-inline.rpr")
+        result, names = inline_native_calls(module, (function,))
+        self.assertEqual(names, ())
+        self.assertEqual(result.values[-1].operation, "CALL")
+
+    def test_consuming_runtime_call_does_not_schedule_a_second_drop(self) -> None:
+        values = (
+            NativeIRValue(0, "ARRAY_LITERAL", NativeType.ARRAY, ownership=Ownership.OWNED),
+            NativeIRValue(1, "CONST", NativeType.I64, symbol="0"),
+            NativeIRValue(2, "INDEX", NativeType.I64, (0, 1), runtime_call="array.get"),
+        )
+        self.assertEqual(ownership_drop_plan(NativeIRModule(values, "consume.rpr")), ())
+
     def test_linear_scan_allocator_assigns_and_spills(self) -> None:
         values = (
             NativeIRValue(0, "CONST", NativeType.I64, symbol="1"),
