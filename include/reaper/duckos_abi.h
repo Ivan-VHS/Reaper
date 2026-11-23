@@ -10,6 +10,18 @@
 #define REAPER_DABI64_NOTE_TYPE UINT32_C(0x44414249)
 #define REAPER_DABI64_ELF_OSABI 0xD5u
 
+/* Shared names used by target-independent code and the DABI64 ELF note writer. */
+#define REAPER_DUCK_ABI_MAJOR REAPER_DABI64_MAJOR
+#define REAPER_DUCK_ABI_MINOR REAPER_DABI64_MINOR
+#define REAPER_DUCK_ABI_NOTE_TYPE REAPER_DABI64_NOTE_TYPE
+#define REAPER_DUCK_ABI_ARCH_X86_64 1u
+#define REAPER_DUCK_ABI_NOTE_FLAGS 0u
+
+typedef enum ReaperDuckValueKind {
+    REAPER_DUCK_VALUE_UNIT = 0,
+    REAPER_DUCK_VALUE_I64 = 1
+} ReaperDuckValueKind;
+
 typedef struct ReaperDuckValue {
     uint64_t payload;
     uint32_t kind;
@@ -48,7 +60,14 @@ typedef enum ReaperDuckAbiStatus {
 } ReaperDuckAbiStatus;
 
 _Static_assert(sizeof(ReaperDuckValue) == 16, "DABI64 value layout mismatch");
+_Static_assert(offsetof(ReaperDuckValue, payload) == 0, "DABI64 payload offset mismatch");
+_Static_assert(offsetof(ReaperDuckValue, kind) == 8, "DABI64 kind offset mismatch");
+_Static_assert(offsetof(ReaperDuckValue, flags) == 12, "DABI64 value flags offset mismatch");
 _Static_assert(sizeof(ReaperDuckCallFrame) == 48, "DABI64 frame layout mismatch");
+_Static_assert(offsetof(ReaperDuckCallFrame, magic) == 0, "DABI64 magic offset mismatch");
+_Static_assert(offsetof(ReaperDuckCallFrame, abi_major) == 4, "DABI64 major offset mismatch");
+_Static_assert(offsetof(ReaperDuckCallFrame, byte_size) == 8, "DABI64 size offset mismatch");
+_Static_assert(offsetof(ReaperDuckCallFrame, argument_count) == 12, "DABI64 argument count offset mismatch");
 _Static_assert(offsetof(ReaperDuckCallFrame, arguments) == 32, "DABI64 argument offset mismatch");
 _Static_assert(offsetof(ReaperDuckCallFrame, captures) == 40, "DABI64 capture offset mismatch");
 _Static_assert(sizeof(ReaperDuckCallResult) == 16, "DABI64 result layout mismatch");
