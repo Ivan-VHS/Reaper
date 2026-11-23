@@ -12,7 +12,6 @@ import concurrent.futures
 import hashlib
 import hmac
 import ipaddress
-from itertools import islice
 import json
 import logging
 import math
@@ -31,13 +30,9 @@ from typing import Any, Callable
 from urllib.parse import urlsplit
 
 from . import __version__ as REAPER_VERSION
+from .backend_service import API_VERSION, BackendService, OutputLimitExceeded
 from .backend_store import BackendStore, BackendStoreError
-from .errors import ReaperError
-from .parser import Node, parse
-from .typecheck import TypeChecker
 
-
-API_VERSION = 1
 _LOG = logging.getLogger("reaper.backend")
 _HEADER_NAME = re.compile(r"^[!#$%&'*+\-.^_|~0-9A-Za-z]+$")
 _METHOD = re.compile(r"^[A-Z]{1,16}$")
@@ -174,10 +169,6 @@ class RequestFailure(Exception):
         self.headers = headers or {}
 
 
-class OutputLimitExceeded(RuntimeError):
-    pass
-
-
 class BackendMetrics:
     """Bounded in-memory request counters and a rolling latency sample."""
 
@@ -224,6 +215,14 @@ class BackendServer:
 
     def __init__(self, config: BackendConfig) -> None:
         self.config = config
+        self.service = BackendService(
+            max_steps=config.max_steps,
+            max_call_depth=config.max_call_depth,
+            max_collection_items=config.max_collection_items,
+            max_text_length=config.max_text_length,
+            max_heap_bytes=config.max_heap_bytes,
+            max_output_chars=config.max_output_chars,
+        )
         self.store = BackendStore(
             config.database,
             lease_seconds=config.idempotency_lease,
@@ -534,7 +533,7 @@ class BackendServer:
                 "check",
                 key,
                 fingerprint,
-                partial(self._check_source, source),
+                partial(self.service.check_source, source),
             )
         if request.path == "/v1/run" and request.method == "POST":
             if not self.config.allow_execution:
@@ -554,7 +553,7 @@ class BackendServer:
                 "run",
                 key,
                 fingerprint,
-                partial(self._run_source, source, engine),
+                partial(self.service.run_source, source, engine),
             )
         if request.path in {"/v1/info", "/v1/metrics", "/v1/check", "/v1/run"}:
             raise RequestFailure(405, "method_not_allowed", "method is not allowed for this endpoint")
@@ -725,168 +724,6 @@ class BackendServer:
             await self._run_blocking(self.store.abandon, scope, key, owner)
         except Exception:
             _LOG.warning("could not release an idempotency claim")
-
-    def _check_source(self, source: str) -> tuple[int, dict[str, Any]]:
-        try:
-            tree = parse(source, "<backend-request>")
-            result = TypeChecker("<backend-request>").check(tree)
-            return 200, {"api_version": API_VERSION, **result.as_dict()}
-        except ReaperError as error:
-            return 422, {
-                "api_version": API_VERSION,
-                "ok": False,
-                "error": {"code": "source_error", "message": str(error)},
-            }
-        except (RecursionError, ValueError) as error:
-            return 422, {
-                "api_version": API_VERSION,
-                "ok": False,
-                "error": {"code": "source_limit", "message": str(error)},
-            }
-
-    def _run_source(self, source: str, engine: str) -> tuple[int, dict[str, Any]]:
-        try:
-            tree = parse(source, "<backend-request>")
-            type_result = TypeChecker("<backend-request>").check(tree)
-            if not type_result.ok:
-                return 422, {
-                    "api_version": API_VERSION,
-                    "ok": False,
-                    "error": {"code": "type_error", "message": "source did not pass static type analysis"},
-                    "diagnostics": [item.as_dict() for item in type_result.diagnostics],
-                }
-            if self._contains_import(tree):
-                return 422, {
-                    "api_version": API_VERSION,
-                    "ok": False,
-                    "error": {
-                        "code": "restricted_effect",
-                        "message": "module imports are disabled in backend execution",
-                    },
-                }
-
-            from .runtime import Interpreter
-
-            output: list[str] = []
-            output_size = 0
-
-            def capture(line: str) -> None:
-                nonlocal output_size
-                next_size = output_size + len(line)
-                if next_size > self.config.max_output_chars or len(output) >= 10_000:
-                    raise OutputLimitExceeded("program output limit exceeded")
-                output.append(line)
-                output_size = next_size
-
-            interpreter = Interpreter(
-                output=capture,
-                max_steps=self.config.max_steps,
-                max_call_depth=self.config.max_call_depth,
-                max_collection_items=self.config.max_collection_items,
-                max_text_length=self.config.max_text_length,
-                allow_native_ffi=False,
-                max_heap_bytes=self.config.max_heap_bytes,
-                max_open_resources=1,
-            )
-            forbidden_builtins = {
-                "ask",
-                "file_open",
-                "file_read",
-                "file_write",
-                "file_close",
-                "with_file",
-                "ffi_open",
-                "ffi_bind",
-                "ffi_close",
-                "pytyliki_open",
-                "consent_check",
-                "consent_revoke",
-            }
-            for name in forbidden_builtins:
-                interpreter.globals.values.pop(name, None)
-
-            result = interpreter.run(source, filename="<backend-request>", engine=engine)
-            return 200, {
-                "api_version": API_VERSION,
-                "ok": True,
-                "engine": engine,
-                "output": output,
-                "result": self._json_safe(result),
-                "steps": interpreter.steps,
-            }
-        except OutputLimitExceeded as error:
-            return 422, {
-                "api_version": API_VERSION,
-                "ok": False,
-                "error": {"code": "output_limit", "message": str(error)},
-            }
-        except ReaperError as error:
-            return 422, {
-                "api_version": API_VERSION,
-                "ok": False,
-                "error": {"code": "runtime_error", "message": str(error)},
-            }
-        except (ArithmeticError, RecursionError, TypeError, ValueError) as error:
-            return 422, {
-                "api_version": API_VERSION,
-                "ok": False,
-                "error": {"code": "runtime_error", "message": str(error)},
-            }
-
-    @staticmethod
-    def _contains_import(tree: Node) -> bool:
-        pending = [tree]
-        while pending:
-            node = pending.pop()
-            if node.kind == "import":
-                return True
-            pending.extend(node.children or [])
-        return False
-
-    @staticmethod
-    def _json_safe(
-        value: Any,
-        *,
-        depth: int = 0,
-        seen: set[int] | None = None,
-        budget: list[int] | None = None,
-    ) -> Any:
-        if budget is None:
-            budget = [0]
-        budget[0] += 1
-        if budget[0] > 20_000:
-            return {"type": "item_limit"}
-        if depth > 24:
-            return {"type": "depth_limit"}
-        if value is None or isinstance(value, (str, bool, int)):
-            return value
-        if isinstance(value, float):
-            return value if math.isfinite(value) else None
-        if seen is None:
-            seen = set()
-        if isinstance(value, (list, tuple, dict)):
-            identity = id(value)
-            if identity in seen:
-                return {"type": "cycle"}
-            seen.add(identity)
-            try:
-                if isinstance(value, dict):
-                    result: dict[str, Any] = {}
-                    for key, item in islice(value.items(), 10_000):
-                        if isinstance(key, str):
-                            result[key] = BackendServer._json_safe(
-                                item, depth=depth + 1, seen=seen, budget=budget
-                            )
-                    return result
-                return [
-                    BackendServer._json_safe(
-                        item, depth=depth + 1, seen=seen, budget=budget
-                    )
-                    for item in islice(value, 10_000)
-                ]
-            finally:
-                seen.discard(identity)
-        return {"type": type(value).__name__}
 
     async def _run_blocking(self, function: Callable[..., Any], *args: Any) -> Any:
         if self._work_slots is None or self._closed:
