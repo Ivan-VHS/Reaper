@@ -1,0 +1,70 @@
+{
+  "schema": "katyuhen.project.v1",
+  "version": 1,
+  "id": "reaper",
+  "name": "Reaper",
+  "role": "language-toolchain",
+  "repository": "https://github.com/Ivan-VHS/Reaper",
+  "entrypoints": [
+    {
+      "id": "reaper-project",
+      "path": "README.md",
+      "kind": "project-index",
+      "maturity": "implemented"
+    }
+  ],
+  "interfaces": [
+    {
+      "id": "reaper.cabi.v1",
+      "direction": "provides",
+      "version": "1",
+      "transport": "explicit-trusted-c-abi",
+      "maturity": "partial",
+      "description": "Versioned native expression ABI; the C17 implementation track is not at Python-runtime parity."
+    },
+    {
+      "id": "oplague.device-snapshot.v1",
+      "direction": "consumes",
+      "version": "1",
+      "transport": "versioned-json-file",
+      "maturity": "specified",
+      "description": "Read-only device snapshot exchange; validate the supplied schema and provenance."
+    },
+    {
+      "id": "ventusample.pack.v1",
+      "direction": "consumes",
+      "version": "1",
+      "transport": "versioned-json-file",
+      "maturity": "implemented",
+      "description": "Manifest-only inspection of supported VentuSample pack metadata."
+    },
+    {
+      "id": "pytyliki.cabi.v1",
+      "direction": "consumes",
+      "version": "1",
+      "transport": "explicit-trusted-c-abi",
+      "maturity": "specified",
+      "description": "Optional native interoperability through a caller-selected trusted library."
+    }
+  ],
+  "capabilities": [
+    "language.parse-and-run",
+    "cli-and-repl",
+    "windows-studio",
+    "lsp",
+    "dap",
+    "versioned-native-abi",
+    "toolchain-inventory"
+  ],
+  "limits": [
+    "Python remains the executable compatibility reference; native C17 parity is partial.",
+    "External native libraries must be explicitly selected and trusted.",
+    "Project federation does not grant device or driver mutation rights."
+  ],
+  "security": {
+    "network_policy": "not_required",
+    "native_library_policy": "explicit_path_only",
+    "driver_mutation_policy": "not_supported",
+    "process_execution_policy": "local_runtime"
+  }
+}
