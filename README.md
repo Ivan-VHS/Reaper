@@ -17,7 +17,7 @@ Genuine capture of the running Reaper Studio window on Windows, created by the r
 
 <p align="center"><img src="assets/readme/workflow.svg" alt="Reaper implemented data flow" width="100%"></p>
 
-Implemented paths: `.rpr` source → Python reference runtime → CLI, Studio, LSP and DAP; and bounded i64 expressions → verified native IR → x86-64 System V ELF assembly.
+Implemented paths: `.rpr` source → Python reference runtime → CLI, Studio, LSP and DAP; and scalar whole programs → native AST/HIR/MIR/LIR → DuckOS DABI64 assembly and DuckOS-marked ELF objects.
 
 
 [![Python CI](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/ci.yml?branch=main&label=Python%20CI)](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml)  [![Live Studio capture](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/readme-screenshots.yml?branch=main&label=Live%20Studio%20capture)](https://github.com/Ivan-VHS/Reaper/actions/workflows/readme-screenshots.yml)  [![License](https://img.shields.io/github/license/Ivan-VHS/Reaper)](LICENSE)
@@ -40,7 +40,7 @@ The target audience is language and tooling developers, application engineers, Q
 | LSP | stdio JSON-RPC, diagnostics, completion, hover, symbols, lexical navigation and semantic tokens | per-open-document; lexical highlighting, not cross-file type inference |
 | DAP | stdio debug adapter, line breakpoints, stepping, stack and locals | statement-boundary debugging; trusted local programs only |
 | NOO TAH | project/process management around the official Node.js runtime, npm/npx and Inspector | Node/V8/libuv are supplied by upstream Node |
-| Native C17 | program lexer/parser, owned AST, HIR semantic checks, MIR function/CFG lowering, LIR virtual registers/local slots, verified i64 expression IR, System V and DuckOS DABI64 expression backends | full program structure reaches LIR; machine-code emission is still limited to i64 expressions |
+| Native C17 | program AST, HIR semantic checks, MIR control-flow graph, LIR virtual registers/locals, x86-64 System V expression backend and DuckOS DABI64 scalar-program backend | functions, locals, calls, when/while and :: compile for the scalar DABI64 subset; collections, emit, full runtime and Python parity are not complete |
 | QCS / embedded tools | separate hardware-domain parser, JSON AST and bounded embedded helpers | reference/analysis tools, not hardware execution |
 | Kora | optional standard-library helpers in seven manifest-backed modules | separate from the Reaper language runtime |
 
@@ -203,15 +203,16 @@ Native C17 track
   -> native program lexer/parser / owned AST / HIR semantic checks
   -> MIR functions, CFG, calls and pipe-call lowering
   -> LIR virtual registers, local slots and parameter maps
-  -> x86-64 System V or DuckOS DABI64 assembly (integer expressions only)
-  -> general LIR machine lowering, object writing/linking and OS runtime pending
+  -> x86-64 System V expression backend or DuckOS DABI64 scalar-program backend
+  -> host assembler / DuckOS-marked ELF object
+  -> DuckOS kernel, loader and runtime pending
 ```
 
 | Path | Contents |
 |---|---|
 | `reaper/` | Python reference runtime, CLI, Studio, language/debug services and NOO TAH |
 | `reaper/kora/` | Kora standard-library helpers |
-| `src/`, `include/` | native C17 program parser, HIR semantic pass, verified i64 IR and System V/DABI64 expression backends |
+| `src/`, `include/` | native C17 program parser, HIR/MIR/LIR, x86-64 System V and DuckOS DABI64 backends |
 | `tests/` | Python, protocol, runtime and native tests |
 | `examples/` | local `.rpr` sample programs |
 | `docs/` | language, IDE, architecture and feature-boundary documentation |
@@ -243,7 +244,7 @@ Workflow artifacts are downloadable build outputs, not a live hosted IDE. To rol
 
 ## Known limitations, contribution and license
 
-Python remains the executable compatibility reference. The C17 parser/HIR/MIR/LIR now represent program declarations, functions, local slots, calls, `::` and structured control flow. Machine-code generation remains limited to the signed i64 expression subset; a general MIR/LIR backend, ELF object writer/linker and DuckOS loader/kernel/runtime remain unfinished. LSP symbol lookup, references and rename are lexical and document-local; DAP stepping is statement-granular; the IDE is not an OS sandbox. NOO TAH delegates JavaScript behavior to the official Node distribution rather than reimplementing V8.
+Python remains the executable compatibility reference. The DuckOS DABI64 backend now compiles a scalar whole-program subset: craft functions, i64 parameters and locals, direct calls, when/otherwise, loop while and ::. Collections, each, emit, strings, the full runtime, the native ELF writer/linker, DuckOS kernel services and self-hosting remain unfinished. LSP symbol lookup, references and rename are lexical and document-local; DAP stepping is statement-granular; the IDE is not an OS sandbox. NOO TAH delegates JavaScript behavior to the official Node distribution rather than reimplementing V8.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the repository's contribution workflow and validation requirements. Propose changes through [GitHub Issues](https://github.com/Ivan-VHS/Reaper/issues) or a Pull Request. Include a reproducible `.rpr` example, Python/Node/compiler versions and the exact command/output. Run Python tests and, when touching the native track, CMake/CTest. Native backend details and limits are in [docs/NATIVE_COMPILER.md](docs/NATIVE_COMPILER.md) and [docs/NATIVE_HIR.md](docs/NATIVE_HIR.md).
 
