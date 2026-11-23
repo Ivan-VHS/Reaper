@@ -39,7 +39,7 @@ typedef struct RprStringAllocation {
 static size_t rpr_heap_bytes = 0;
 static RprStringAllocation *rpr_string_allocations = NULL;
 
-static void *rpr_heap_alloc(size_t size) {
+static inline void *rpr_heap_alloc(size_t size) {
     const size_t limit = 64U * 1024U * 1024U;
     if (size == 0U) size = 1U;
     if (size > limit - rpr_heap_bytes) {
@@ -55,14 +55,14 @@ static void *rpr_heap_alloc(size_t size) {
     return memory;
 }
 
-static void rpr_heap_free(void *memory, size_t size) {
+static inline void rpr_heap_free(void *memory, size_t size) {
     if (memory == NULL) return;
     free(memory);
     if (size <= rpr_heap_bytes) rpr_heap_bytes -= size;
     else rpr_heap_bytes = 0U;
 }
 
-static char *rpr_string_copy(const char *source) {
+static inline char *rpr_string_copy(const char *source) {
     if (source == NULL) {
         (void)rpr_fail("null string value");
         return NULL;
@@ -77,7 +77,7 @@ static char *rpr_string_copy(const char *source) {
     return copy;
 }
 
-static const char *rpr_string_concat(const char *left, const char *right) {
+static inline const char *rpr_string_concat(const char *left, const char *right) {
     if (left == NULL || right == NULL) {
         (void)rpr_fail("cannot concatenate a null string");
         return "";
@@ -108,14 +108,14 @@ static const char *rpr_string_concat(const char *left, const char *right) {
     return joined;
 }
 
-static int64_t rpr_string_length(const char *value) {
+static inline int64_t rpr_string_length(const char *value) {
     if (value == NULL) return rpr_fail("null string value");
     size_t length = strlen(value);
     if (length > INT64_MAX) return rpr_fail("string length exceeds i64");
     return (int64_t)length;
 }
 
-static void rpr_string_cleanup(void) {
+static inline void rpr_string_cleanup(void) {
     RprStringAllocation *item = rpr_string_allocations;
     while (item != NULL) {
         RprStringAllocation *next = item->next;
@@ -126,7 +126,7 @@ static void rpr_string_cleanup(void) {
     rpr_string_allocations = NULL;
 }
 
-static RprArray *rpr_array_from(const int64_t *items, size_t length) {
+static inline RprArray *rpr_array_from(const int64_t *items, size_t length) {
     if (length > 100000U) {
         (void)rpr_fail("native array item limit exceeded");
         return NULL;
@@ -146,7 +146,7 @@ static RprArray *rpr_array_from(const int64_t *items, size_t length) {
     return array;
 }
 
-static RprArray *rpr_array_retain(RprArray *array) {
+static inline RprArray *rpr_array_retain(RprArray *array) {
     if (array != NULL) {
         if (array->references == SIZE_MAX) {
             (void)rpr_fail("native array reference count overflow");
@@ -157,7 +157,7 @@ static RprArray *rpr_array_retain(RprArray *array) {
     return array;
 }
 
-static void rpr_array_release(RprArray *array) {
+static inline void rpr_array_release(RprArray *array) {
     if (array == NULL || array->references == 0U) return;
     --array->references;
     if (array->references == 0U) {
@@ -166,7 +166,7 @@ static void rpr_array_release(RprArray *array) {
     }
 }
 
-static int64_t rpr_array_get_owned(RprArray *array, int64_t index) {
+static inline int64_t rpr_array_get_owned(RprArray *array, int64_t index) {
     if (array == NULL) return rpr_fail("cannot index a null array");
     if (index < 0 || (uint64_t)index >= (uint64_t)array->length) {
         rpr_array_release(array);
@@ -177,7 +177,7 @@ static int64_t rpr_array_get_owned(RprArray *array, int64_t index) {
     return value;
 }
 
-static int64_t rpr_array_length_owned(RprArray *array) {
+static inline int64_t rpr_array_length_owned(RprArray *array) {
     if (array == NULL) return rpr_fail("cannot measure a null array");
     size_t length = array->length;
     rpr_array_release(array);
@@ -185,7 +185,7 @@ static int64_t rpr_array_length_owned(RprArray *array) {
     return (int64_t)length;
 }
 
-static RprArray *rpr_array_clone(const RprArray *source) {
+static inline RprArray *rpr_array_clone(const RprArray *source) {
     if (source == NULL) {
         (void)rpr_fail("cannot clone a null array");
         return NULL;
@@ -193,7 +193,7 @@ static RprArray *rpr_array_clone(const RprArray *source) {
     return rpr_array_from(source->items, source->length);
 }
 
-static RprArray *rpr_array_push_owned(RprArray *array, int64_t value) {
+static inline RprArray *rpr_array_push_owned(RprArray *array, int64_t value) {
     if (array == NULL) {
         (void)rpr_fail("cannot append to a null array");
         return NULL;
@@ -226,7 +226,7 @@ static RprArray *rpr_array_push_owned(RprArray *array, int64_t value) {
     return array;
 }
 
-static void rpr_array_print_owned(RprArray *array) {
+static inline void rpr_array_print_owned(RprArray *array) {
     if (array == NULL) {
         (void)rpr_fail("cannot print a null array");
         return;
@@ -240,7 +240,7 @@ static void rpr_array_print_owned(RprArray *array) {
     rpr_array_release(array);
 }
 
-static RprMap *rpr_map_new(void) {
+static inline RprMap *rpr_map_new(void) {
     RprMap *map = (RprMap *)rpr_heap_alloc(sizeof *map);
     if (map == NULL) return NULL;
     map->references = 1U;
@@ -253,7 +253,7 @@ static RprMap *rpr_map_new(void) {
     return map;
 }
 
-static RprMap *rpr_map_retain(RprMap *map) {
+static inline RprMap *rpr_map_retain(RprMap *map) {
     if (map != NULL) {
         if (map->references == SIZE_MAX) {
             (void)rpr_fail("native map reference count overflow");
@@ -264,7 +264,7 @@ static RprMap *rpr_map_retain(RprMap *map) {
     return map;
 }
 
-static void rpr_map_release(RprMap *map) {
+static inline void rpr_map_release(RprMap *map) {
     if (map == NULL || map->references == 0U) return;
     --map->references;
     if (map->references == 0U) {
@@ -275,7 +275,7 @@ static void rpr_map_release(RprMap *map) {
     }
 }
 
-static RprMap *rpr_map_clone(const RprMap *source) {
+static inline RprMap *rpr_map_clone(const RprMap *source) {
     if (source == NULL) {
         (void)rpr_fail("cannot clone a null map");
         return NULL;
@@ -307,7 +307,7 @@ static RprMap *rpr_map_clone(const RprMap *source) {
     return copy;
 }
 
-static RprMap *rpr_map_put_owned(RprMap *map, const char *key, int64_t value) {
+static inline RprMap *rpr_map_put_owned(RprMap *map, const char *key, int64_t value) {
     if (map == NULL || key == NULL) {
         rpr_map_release(map);
         (void)rpr_fail("map insertion requires a map and a string key");
@@ -352,7 +352,7 @@ static RprMap *rpr_map_put_owned(RprMap *map, const char *key, int64_t value) {
     return map;
 }
 
-static RprMap *rpr_map_from(const RprMapInit *items, size_t count) {
+static inline RprMap *rpr_map_from(const RprMapInit *items, size_t count) {
     if (count > 100000U) {
         (void)rpr_fail("native map entry limit exceeded");
         return NULL;
@@ -366,7 +366,7 @@ static RprMap *rpr_map_from(const RprMapInit *items, size_t count) {
     return map;
 }
 
-static int64_t rpr_map_get_owned(RprMap *map, const char *key) {
+static inline int64_t rpr_map_get_owned(RprMap *map, const char *key) {
     if (map == NULL || key == NULL) {
         rpr_map_release(map);
         return rpr_fail("map lookup requires a map and a string key");
@@ -382,7 +382,7 @@ static int64_t rpr_map_get_owned(RprMap *map, const char *key) {
     return rpr_fail("dictionary key does not exist");
 }
 
-static int64_t rpr_map_has_owned(RprMap *map, const char *key) {
+static inline int64_t rpr_map_has_owned(RprMap *map, const char *key) {
     if (map == NULL || key == NULL) {
         rpr_map_release(map);
         return rpr_fail("map membership requires a map and a string key");
@@ -394,7 +394,7 @@ static int64_t rpr_map_has_owned(RprMap *map, const char *key) {
     return found;
 }
 
-static int64_t rpr_map_length_owned(RprMap *map) {
+static inline int64_t rpr_map_length_owned(RprMap *map) {
     if (map == NULL) return rpr_fail("cannot measure a null map");
     size_t length = map->length;
     rpr_map_release(map);
@@ -402,7 +402,7 @@ static int64_t rpr_map_length_owned(RprMap *map) {
     return (int64_t)length;
 }
 
-static void rpr_print_quoted(const char *value) {
+static inline void rpr_print_quoted(const char *value) {
     (void)putchar('"');
     for (const unsigned char *cursor = (const unsigned char *)value; *cursor; ++cursor) {
         if (*cursor == '"' || *cursor == '\\') {
@@ -421,7 +421,7 @@ static void rpr_print_quoted(const char *value) {
     (void)putchar('"');
 }
 
-static void rpr_map_print_owned(RprMap *map) {
+static inline void rpr_map_print_owned(RprMap *map) {
     if (map == NULL) {
         (void)rpr_fail("cannot print a null map");
         return;
