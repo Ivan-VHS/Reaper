@@ -820,12 +820,13 @@ def analyze_brainfuck(source: str) -> dict[str, Any]:
         offset = commands[stack[-1]][0]
         raise MultiSyntaxError(f"unmatched '[' at source offset {offset}")
 
+    pointer_prefix = [0]
+    for _source_index, command in commands:
+        delta = 1 if command == ">" else -1 if command == "<" else 0
+        pointer_prefix.append(pointer_prefix[-1] + delta)
     warnings: list[dict[str, Any]] = []
     for opening, closing in sorted((a, b) for a, b in pairs.items() if a < b):
-        displacement = 0
-        for _source_index, command in commands[opening + 1:closing]:
-            if command == ">": displacement += 1
-            elif command == "<": displacement -= 1
+        displacement = pointer_prefix[closing] - pointer_prefix[opening + 1]
         if displacement:
             warnings.append({
                 "code": "BF-W001",
@@ -869,6 +870,8 @@ def _run_brainfuck(
     tape = [0] * tape_size
     pointer = 0
     instruction = 0
+    if len(input_text) > MAX_SOURCE_CHARS:
+        raise MultiSyntaxError("input text exceeds the 1,000,000-character limit")
     input_bytes = input_text.encode("utf-8")
     input_pointer = 0
     output_bytes = bytearray()
