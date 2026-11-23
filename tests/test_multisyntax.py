@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 import unittest
+import io
+from contextlib import redirect_stdout
+from pathlib import Path
+import tempfile
 
 from reaper.multisyntax import (
     MultiSyntaxError, analyze_brainfuck, detect_syntax, list_syntaxes,
-    parse_polyglot, run_polyglot, run_source, validate_polyglot, validate_source,
+    main, parse_polyglot, run_polyglot, run_source, validate_polyglot, validate_source,
 )
 
 
@@ -219,6 +223,17 @@ class PolyglotTests(unittest.TestCase):
     def test_pipeline_and_befunge_static_validation(self):
         self.assertTrue(validate_source("pipeline", "[1, 2] |> sum")["valid"])
         self.assertTrue(validate_source("befunge93", "23+.@")["valid"])
+
+    def test_cli_check_mode_never_executes_source(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "sample.py"
+            source.write_text("print('must not run')\\n", encoding="utf-8")
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                exit_code = main([str(source), "--syntax", "python", "--check"])
+        self.assertEqual(exit_code, 0)
+        self.assertIn("syntax check", stdout.getvalue())
+        self.assertNotIn("must not run", stdout.getvalue())
 
     def test_native_reaper_syntax_remains_available(self):
         output = []
