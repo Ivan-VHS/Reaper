@@ -143,7 +143,7 @@ static void test_object_with_symbols_and_relocations(void) {
 static void test_rejects_bad_relocations_and_alignment(void) {
     static const uint8_t code[] = {0x90, 0xc3, 0, 0};
     const ReaperElf64Section section = {
-        ".text", REAPER_ELF64_SHT_PROGBITS, 0x6u, 3u, 0u, code, sizeof code
+        ".text", REAPER_ELF64_SHT_PROGBITS, 0x6u, 4u, 0u, code, sizeof code
     };
     const ReaperElf64Symbol symbol = {
         "external", REAPER_ELF64_NO_SECTION, 0u, 0u,
