@@ -50,6 +50,10 @@ Reaper 是一种表达式导向语言，运算符 `::` 会将值传递给下一�
 下图是 Windows Studio 的实际桌面截屏，不是浏览器 Playground。
 
 
+## 相关操作系统产品：DuckOS
+
+七款 Mora 应用（Cockos、Kavun、Ka-bon、Gloverty、Po、Illidia 和 Unify）在独立的 [DuckOS 项目](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/PREINSTALLED_APPLICATIONS.md)中定义。它们属于操作系统应用层，并不是 Reaper 的组成部分。本仓库不声称随附这些应用或提供其操作系统服务。Reaper 自身的能力和接口仍以本仓库的源代码、测试和版本化契约为准。
+
 ## 快速开始
 
 ### 环境要求

@@ -50,6 +50,10 @@ Reaper — expression-oriented мова, у якій оператор `::` пе�
 Зображення нижче — знімок Windows Studio, а не браузерний playground.
 
 
+## Пов’язаний продукт ОС: DuckOS
+
+Сім застосунків Mora (Cockos, Kavun, Ka-bon, Gloverty, Po, Illidia та Unify) описані в окремому проєкті [DuckOS](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/PREINSTALLED_APPLICATIONS.md). Це рівень застосунків операційної системи, а не компонент Reaper. Цей репозиторій не заявляє про постачання цих застосунків або надання їхніх системних служб. Можливості та інтерфейси Reaper визначаються його вихідним кодом, тестами й версіонованими контрактами.
+
 ## Швидкий старт
 
 ### Вимоги
