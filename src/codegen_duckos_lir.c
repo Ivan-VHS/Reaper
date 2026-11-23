@@ -842,11 +842,12 @@ static int emit_function(
         return codegen_fail(error, f, "failed to write DABI64 function error exits");
     }
 
-    if (fprintf(output, ".size %s%zu, .-%s%zu\n",
-            f == 0U ? "duck_program" : "duck_fn_",
-            f,
-            f == 0U ? "duck_program" : "duck_fn_",
-            f) < 0) return 0;
+    if (f == 0U) {
+        if (fprintf(output, ".size duck_program, .-duck_program\n") < 0) return 0;
+    } else if (fprintf(output, ".size duck_fn_%zu, .-duck_fn_%zu\n",
+            f, f) < 0) {
+        return 0;
+    }
     return 1;
 }
 
