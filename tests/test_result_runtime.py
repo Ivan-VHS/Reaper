@@ -49,7 +49,7 @@ class RequestContextTests(unittest.TestCase):
 
     def test_missing_optional_context_is_a_safe_empty_result(self):
         self.assertIsNone(context_get(None, "request_id"))
-        self.assertIsNone(context_to_map(None))
+        self.assertEqual(context_to_map(None), {})
 
     def test_invalid_context_data_is_rejected(self):
         with self.assertRaisesRegex(ResultContractError, "request_id"):
