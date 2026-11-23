@@ -55,6 +55,22 @@ class RequestContext:
     parent_id: str | None
     _metadata_json: str = "{}"
 
+    def __post_init__(self) -> None:
+        _identifier(self.request_id, "request_id")
+        _identifier(self.trace_id, "trace_id")
+        if self.parent_id is not None:
+            _identifier(self.parent_id, "parent_id")
+        try:
+            metadata = json.loads(self._metadata_json)
+        except (TypeError, ValueError) as error:
+            raise ResultContractError("context metadata must be valid JSON") from error
+        if not isinstance(metadata, dict) or any(not isinstance(key, str) for key in metadata):
+            raise ResultContractError("context metadata must be a map with text keys")
+        object.__setattr__(
+            self, "_metadata_json",
+            _canonical_json(metadata, _MAX_CONTEXT_BYTES, "context metadata"),
+        )
+
     @property
     def metadata(self) -> dict[str, Any]:
         return json.loads(self._metadata_json)
@@ -73,6 +89,22 @@ class ErrorValue:
     code: str
     message: str
     _details_json: str = "{}"
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.code, str) or not _ERROR_CODE.fullmatch(self.code):
+            raise ResultContractError("error code must be an uppercase stable identifier")
+        if not isinstance(self.message, str) or not self.message.strip() or len(self.message) > 2048:
+            raise ResultContractError("error message must contain 1..2048 characters")
+        try:
+            details = json.loads(self._details_json)
+        except (TypeError, ValueError) as error:
+            raise ResultContractError("error details must be valid JSON") from error
+        if not isinstance(details, dict) or any(not isinstance(key, str) for key in details):
+            raise ResultContractError("error details must be a map with text keys")
+        object.__setattr__(
+            self, "_details_json",
+            _canonical_json(details, _MAX_ERROR_DETAILS_BYTES, "error details"),
+        )
 
     @property
     def details(self) -> dict[str, Any]:
@@ -96,10 +128,16 @@ class ResultValue:
     context: RequestContext | None = None
 
     def __post_init__(self) -> None:
+        if type(self.succeeded) is not bool:
+            raise ResultContractError("Result state must be a boolean")
         if self.succeeded and self.error is not None:
             raise ResultContractError("a successful Result cannot contain an error")
-        if not self.succeeded and self.error is None:
-            raise ResultContractError("a failed Result must contain an error")
+        if not self.succeeded and not isinstance(self.error, ErrorValue):
+            raise ResultContractError("a failed Result must contain an ErrorValue")
+        if not self.succeeded and self.value is not None:
+            raise ResultContractError("a failed Result cannot contain a success payload")
+        if self.context is not None and not isinstance(self.context, RequestContext):
+            raise ResultContractError("Result context must be a RequestContext or nothing")
 
 
 def request_context(
