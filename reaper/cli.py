@@ -22,6 +22,7 @@ from .systems_architectures import main as systems_architectures_main
 from .token_catalog import CATALOG_GROUPS, catalog_summary, token_catalog, token_info
 from .products import ProductError, get_product, list_products
 from .plugins import PluginError, PluginManager
+from .syntax_profiles import available_syntax_profiles
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -31,6 +32,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--items", type=int, default=100_000, help="maximum items in any collection (default: 100000)")
     parser.add_argument("--text-length", type=int, default=1_000_000, help="maximum text length in characters (default: 1000000)")
     parser.add_argument("--version", action="version", version="Reaper 0.1.0")
+    parser.add_argument(
+        "--syntax", choices=tuple(item.profile_id for item in available_syntax_profiles()),
+        help="explicit source syntax profile; by default the file extension selects it",
+    )
     parser.add_argument("--audit-log", metavar="PATH", help="append a hash-chained local execution journal")
     parser.add_argument("--verify-audit-log", metavar="PATH", help="verify a journal and exit")
     parser.add_argument("--check", "--lint", dest="check", action="store_true", help="parse and run static type analysis without executing the program")
@@ -142,7 +147,7 @@ def main(argv: list[str] | None = None) -> int:
             source_path = Path(args.source)
             source_text = source_path.read_text(encoding="utf-8")
             if args.emit_c is not None:
-                generated = compile_source(source_text, str(source_path))
+                generated = compile_source(source_text, str(source_path), syntax=args.syntax)
                 if args.emit_c == "-":
                     sys.stdout.write(generated)
                 else:
@@ -165,6 +170,7 @@ def main(argv: list[str] | None = None) -> int:
                     filename=str(source_path),
                     compiler=args.cc,
                     optimization=args.optimization,
+                    syntax=args.syntax,
                 )
                 if args.json:
                     print(json.dumps({
@@ -324,7 +330,7 @@ def main(argv: list[str] | None = None) -> int:
             audit.record("source_loaded", source_name=path.name, source_sha256=source_sha256)
         if args.check:
             try:
-                tree = parse(source, str(path))
+                tree = parse(source, str(path), syntax=args.syntax)
             except ReaperError as error:
                 if audit:
                     audit.record("syntax_check_failed", error_type=type(error).__name__)
@@ -391,7 +397,7 @@ def main(argv: list[str] | None = None) -> int:
             max_open_resources=args.open_resources,
         )
         try:
-            interpreter.run(source, str(path), engine=args.engine)
+            interpreter.run(source, str(path), engine=args.engine, syntax=args.syntax)
             profile_data = {
                 "elapsed_seconds": round(time.perf_counter() - started, 9),
                 "steps": interpreter.steps,
