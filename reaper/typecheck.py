@@ -65,7 +65,7 @@ BUILTIN_RETURN: dict[str, str] = {
     "result_context": "Optional[Context]", "result_or": ANY,
     "result_map": "Result[Any]", "result_and_then": "Result[Any]",
     "result_recover": "Result[Any]", "request_context": "Context",
-    "context_with": "Context", "context_get": ANY, "context_to_map": "Map",
+    "context_with": "Context", "context_get": ANY, "context_to_map": "Optional[Map]",
     "push": "List[Any]", "first": ANY, "rest": "List[Any]", "sum": "Number",
     "sorted": "List[Any]", "sort_by": "List[Any]", "map": "List[Any]",
     "keep": "List[Any]", "filter": "List[Any]", "fold": ANY, "reduce": ANY,
@@ -512,7 +512,7 @@ class TypeChecker:
             if types[0] != ANY and not types[0].startswith("Result["):
                 self._report(node, "RPR-T0011", f"{name}() expects a Result, got {types[0]}")
 
-        if name == "ok" and len(types) > 1 and types[1] not in {"Context", ANY}:
+        if name == "ok" and len(types) > 1 and types[1] not in {"Context", "Optional[Context]", ANY}:
             self._report(node, "RPR-T0012", f"ok() context must be Context, got {types[1]}")
 
         if name == "err":
@@ -522,7 +522,7 @@ class TypeChecker:
                 self._report(node, "RPR-T0005", "err() message must be Text")
             if len(types) > 2 and types[2] not in {"Map", ANY}:
                 self._report(node, "RPR-T0008", "err() details must be a Map")
-            if len(types) > 3 and types[3] not in {"Context", ANY}:
+            if len(types) > 3 and types[3] not in {"Context", "Optional[Context]", ANY}:
                 self._report(node, "RPR-T0012", "err() context must be Context")
 
         if name == "request_context":
@@ -535,12 +535,15 @@ class TypeChecker:
                 self._report(node, "RPR-T0008", "request_context() metadata must be a Map")
 
         if name in {"context_with", "context_get"}:
-            if types and types[0] not in {"Context", ANY}:
+            accepted_context = {"Context", ANY}
+            if name == "context_get":
+                accepted_context.add("Optional[Context]")
+            if types and types[0] not in accepted_context:
                 self._report(node, "RPR-T0012", f"{name}() expects a Context")
             if len(types) > 1 and types[1] not in {"Text", ANY}:
                 self._report(node, "RPR-T0005", f"{name}() key must be Text")
 
-        if name == "context_to_map" and types and types[0] not in {"Context", ANY}:
+        if name == "context_to_map" and types and types[0] not in {"Context", "Optional[Context]", ANY}:
             self._report(node, "RPR-T0012", "context_to_map() expects a Context")
 
 
