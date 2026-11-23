@@ -14,20 +14,20 @@ from typing import Iterator
 THEME_ENV = "REAPER_UI_THEME"
 PALETTES: dict[str, dict[str, str]] = {
     "light": {
-        "bg": "#F4F8FD", "surface": "#FFFFFF", "elevated": "#EAF1FA",
-        "fg": "#122C45", "secondary": "#314B66", "muted": "#4D6177",
-        "heading": "#004E98", "blue": "#004E98", "blue_hover": "#1A5FDB", "on_blue": "#FFFFFF",
-        "red": "#B5122D", "red_hover": "#9C1026", "on_red": "#FFFFFF",
-        "border": "#CAD8E8", "focus": "#1A5FDB",
-        "selection": "#D9E8FF", "selection_fg": "#122C45", "disabled": "#6B7C90",
+        "bg": "#F5F3FA", "surface": "#FFFFFF", "elevated": "#ECE9F5",
+        "fg": "#211F31", "secondary": "#4E4B63", "muted": "#66627A",
+        "heading": "#5B43B5", "blue": "#5B43B5", "blue_hover": "#49359D", "on_blue": "#FFFFFF",
+        "red": "#A91F49", "red_hover": "#84193A", "on_red": "#FFFFFF",
+        "border": "#D6D0E7", "focus": "#006F68",
+        "selection": "#E6E0F7", "selection_fg": "#211F31", "disabled": "#77738B",
     },
     "dark": {
-        "bg": "#071A2D", "surface": "#0F2A45", "elevated": "#173A5E",
-        "fg": "#E8EDF2", "secondary": "#D0DCE8", "muted": "#B3C4D6",
-        "heading": "#FFFFFF", "blue": "#70A5FF", "blue_hover": "#8AB6FF", "on_blue": "#071A2D",
-        "red": "#FF7B86", "red_hover": "#FF9AA2", "on_red": "#071A2D",
-        "border": "#31516F", "focus": "#8AB6FF",
-        "selection": "#244F82", "selection_fg": "#FFFFFF", "disabled": "#9BAFC4",
+        "bg": "#10142A", "surface": "#191E39", "elevated": "#252B4B",
+        "fg": "#F5F4FF", "secondary": "#D5D6EB", "muted": "#A8ADC8",
+        "heading": "#F5F4FF", "blue": "#A78BFA", "blue_hover": "#C1AEFF", "on_blue": "#1D1730",
+        "red": "#FF8EAC", "red_hover": "#FFC0CF", "on_red": "#330A1A",
+        "border": "#3B4262", "focus": "#38D4B7",
+        "selection": "#353054", "selection_fg": "#F5F4FF", "disabled": "#8388A3",
     },
 }
 
@@ -81,16 +81,30 @@ def contrast_ratio(foreground: str, background: str) -> float:
 
 
 def _install_semantic_status_tokens() -> None:
-    """Add high-contrast status roles without changing the product's blue/red identity."""
+    """Use Mora's teal, purple and danger roles for semantic status feedback."""
     for theme_name, palette in PALETTES.items():
-        dark = theme_name in {"dark", "night"}
-        palette.update({
-            # Status meaning is carried by text/icon; hues stay inside the shared brand canon.
-            "success": "#73B7FF" if dark else "#0039A6",
-            "warning": "#FF7D78" if dark else "#B51A10",
-            "error": "#FF7D78" if dark else "#B51A10",
-            "info": "#FFFFFF" if dark else "#0A1E46",
-        })
+        if theme_name == "dark":
+            palette.update({
+                "success": "#38D4B7",
+                "warning": "#C1AEFF",
+                "error": "#FF8EAC",
+                "info": "#D5D6EB",
+            })
+        elif theme_name == "light":
+            palette.update({
+                "success": "#006F68",
+                "warning": "#5B43B5",
+                "error": "#A91F49",
+                "info": "#4E4B63",
+            })
+        else:
+            dark = theme_name == "night"
+            palette.update({
+                "success": "#73B7FF" if dark else "#0039A6",
+                "warning": "#FF7D78" if dark else "#B51A10",
+                "error": "#FF7D78" if dark else "#B51A10",
+                "info": "#FFFFFF" if dark else "#0A1E46",
+            })
 
 
 def palette_contrast_issues(palette: dict[str, str]) -> list[str]:
