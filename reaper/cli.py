@@ -27,7 +27,7 @@ from .syntax_profiles import available_syntax_profiles
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="reaper", description="Run and improve a Reaper language project.")
-    parser.add_argument("source", nargs="?", help="path to a .rpr source file, or project directory with --evolve")
+    parser.add_argument("source", nargs="?", help="path to a Reaper source file, or project directory with --evolve")
     parser.add_argument("--steps", type=int, default=1_000_000, help="maximum execution steps (default: 1000000)")
     parser.add_argument("--items", type=int, default=100_000, help="maximum items in any collection (default: 100000)")
     parser.add_argument("--text-length", type=int, default=1_000_000, help="maximum text length in characters (default: 1000000)")
@@ -46,12 +46,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--engine", choices=("treewalk", "vm"), default="treewalk", help="execution engine (default: treewalk)")
     parser.add_argument("--allow-native-ffi", action="store_true", help="allow loading native C ABI libraries")
     native_group = parser.add_mutually_exclusive_group()
-    native_group.add_argument("--emit-c", metavar="PATH", help="emit the checked native C17 subset to PATH; use '-' for stdout")
-    native_group.add_argument("--native", metavar="PATH", help="compile the checked native C17 subset to a host executable")
+    native_group.add_argument("--emit-c", metavar="PATH", help="emit the checked native C17 subset from a Reaper source file to PATH; use '-' for stdout")
+    native_group.add_argument("--native", metavar="PATH", help="compile the checked native C17 subset from a Reaper source file to a host executable")
     parser.add_argument("--cc", metavar="COMPILER", help="GCC/Clang-compatible compiler for --native; otherwise CC or PATH is used")
     parser.add_argument("--optimization", choices=("0", "1", "2", "3", "s"), default="2", help="native build optimization level (default: 2)")
 
-    parser.add_argument("--module-graph", action="store_true", help="print the transitive .rpr dependency graph as JSON without executing code")
+    parser.add_argument("--module-graph", action="store_true", help="print the transitive Reaper module graph as JSON without executing code")
     parser.add_argument("--heap-bytes", type=int, default=64 * 1024 * 1024, help="managed heap ceiling in bytes")
     parser.add_argument("--open-resources", type=int, default=64, help="maximum simultaneously open managed files")
     parser.add_argument("--systems", action="store_true", help="list the 20 engineering system contracts")
@@ -138,7 +138,7 @@ def main(argv: list[str] | None = None) -> int:
         if conflicting_mode:
             parser.error("native compilation cannot be combined with other execution, inspection, audit, or FFI modes")
         if not args.source:
-            parser.error("--emit-c and --native require a .rpr source file")
+            parser.error("--emit-c and --native require a Reaper source file")
         if args.json and args.emit_c == "-":
             parser.error("--json cannot be combined with --emit-c -")
         try:
@@ -237,7 +237,7 @@ def main(argv: list[str] | None = None) -> int:
         if not args.source:
             parser.error("--module-graph requires a .rpr entry file")
         try:
-            graph = ModuleLoader(Interpreter()).scan(str(Path(args.source)))
+            graph = ModuleLoader(Interpreter()).scan(str(Path(args.source)), syntax=args.syntax)
         except (OSError, UnicodeError, ReaperError, ValueError) as error:
             print(f"reaper: module graph failed: {error}", file=sys.stderr)
             return 1
