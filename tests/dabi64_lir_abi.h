@@ -1,0 +1,35 @@
+#ifndef REAPER_TEST_DABI64_ABI_H
+#define REAPER_TEST_DABI64_ABI_H
+
+/*
+ * Keep the executable ABI harness on the same public contract as the
+ * compiler and DuckOS reference implementation. The relative include is
+ * intentional: tests compile this header from the repository checkout.
+ */
+#include "../include/reaper/duckos_abi.h"
+
+#define DUCK_ABI_MAGIC REAPER_DABI64_MAGIC
+#define DUCK_ABI_MAJOR REAPER_DABI64_MAJOR
+#define DUCK_ABI_MINOR REAPER_DABI64_MINOR
+
+#define DUCK_STATUS_OK REAPER_DUCK_STATUS_OK
+#define DUCK_STATUS_INVALID_POINTER REAPER_DUCK_STATUS_INVALID_POINTER
+#define DUCK_STATUS_BAD_MAGIC REAPER_DUCK_STATUS_BAD_MAGIC
+#define DUCK_STATUS_VERSION_MISMATCH REAPER_DUCK_STATUS_VERSION_MISMATCH
+#define DUCK_STATUS_BAD_FRAME_SIZE REAPER_DUCK_STATUS_BAD_FRAME_SIZE
+#define DUCK_STATUS_BAD_ALIGNMENT REAPER_DUCK_STATUS_BAD_ALIGNMENT
+#define DUCK_STATUS_INVALID_FLAGS REAPER_DUCK_STATUS_INVALID_FLAGS
+#define DUCK_STATUS_ARITHMETIC_OVERFLOW REAPER_DUCK_STATUS_ARITHMETIC_OVERFLOW
+#define DUCK_STATUS_DIVISION_BY_ZERO REAPER_DUCK_STATUS_DIVISION_BY_ZERO
+#define DUCK_STATUS_BAD_ARGUMENT_LAYOUT REAPER_DUCK_STATUS_BAD_ARGUMENT_LAYOUT
+
+typedef ReaperDuckValueKind DuckValueKind;
+typedef ReaperDuckValue DuckValue;
+typedef ReaperDuckCallFrame DuckCallFrame;
+typedef ReaperDuckCallResult DuckCallResult;
+typedef ReaperDuckAbiStatus DuckAbiStatus;
+
+#define DUCK_VALUE_UNIT REAPER_DUCK_VALUE_UNIT
+#define DUCK_VALUE_I64 REAPER_DUCK_VALUE_I64
+
+#endif

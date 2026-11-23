@@ -11,16 +11,15 @@ extern "C" {
 #endif
 
 /*
- * Lower the currently supported integer-expression subset of the owned AST
- * into verified canonical IR, followed by a RETURN node.
+ * Lower the verified i64 expression subset into canonical, topologically
+ * ordered IR and append one RETURN instruction.
  *
- * Supported source forms: integer literals and binary integer addition.
- * All other AST forms fail explicitly; no coercion or guessed semantics.
+ * Supported source forms: signed i64 literals, unary + and -, and binary
+ * +, -, * and / operations. Division follows the checked signed-i64 IR
+ * contract (truncation toward zero). Other syntax is rejected explicitly.
  *
- * The caller owns output storage and must provide ast->length + 1 slots.
- * The resulting IR references only earlier nodes and is verified before
- * success is reported. Signed overflow is left explicit in ADD_I64 IR and
- * is rejected if encountered by the checked constant-folding pass.
+ * Reserve at least 2 * ast->length + 1 output nodes. The result is verified
+ * before success is reported, and no arithmetic is executed during lowering.
  */
 int reaper_lower_ast_to_ir(
     const ReaperAst *ast,

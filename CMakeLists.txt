@@ -1,72 +1,197 @@
 cmake_minimum_required(VERSION 3.16)
 project(Reaper VERSION 0.2.0 LANGUAGES C)
+
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
+
 option(REAPER_BUILD_TESTS "Build native C tests" ON)
+
 if(MSVC)
- add_compile_options(/utf-8)
+    add_compile_options(/utf-8)
 endif()
-if(MSVC)
- add_compile_options(/utf-8)
-endif()
-add_library(reaper_core STATIC src/lexer.c src/ir.c src/parser.c src/ast_json.c src/optimizer.c src/lower.c src/evolution.c src/token_catalog.c src/division.c src/capability_suite.c)
+
+add_library(reaper_core STATIC
+    src/lexer.c
+    src/ir.c
+    src/parser.c
+    src/ast_json.c
+    src/hir.c
+    src/mir.c
+    src/lir.c
+    src/optimizer.c
+    src/lower.c
+    src/codegen_x86_64.c
+    src/codegen_duckos_dabi64.c
+    src/codegen_duckos_lir.c
+    src/evolution.c
+    src/token_catalog.c
+    src/division.c
+    src/capability_suite.c
+)
+
 target_include_directories(reaper_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
 if(MSVC)
- target_compile_options(reaper_core PRIVATE /W4)
+    target_compile_options(reaper_core PRIVATE /W4)
 else()
- target_compile_options(reaper_core PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+    target_compile_options(reaper_core PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
 endif()
+
 add_executable(reaper-c src/main.c)
 target_link_libraries(reaper-c PRIVATE reaper_core)
+
 if(REAPER_BUILD_TESTS)
- enable_testing()
- add_executable(reaper-lexer-tests tests/test_lexer.c)
- target_link_libraries(reaper-lexer-tests PRIVATE reaper_core)
- add_test(NAME native-lexer COMMAND reaper-lexer-tests)
- add_executable(reaper-ir-tests tests/test_ir.c)
- target_link_libraries(reaper-ir-tests PRIVATE reaper_core)
- add_test(NAME native-ir COMMAND reaper-ir-tests)
- add_executable(reaper-parser-tests tests/test_parser.c)
- target_link_libraries(reaper-parser-tests PRIVATE reaper_core)
- add_test(NAME native-parser COMMAND reaper-parser-tests)
- add_executable(reaper-optimizer-tests tests/test_optimizer.c)
- target_link_libraries(reaper-optimizer-tests PRIVATE reaper_core)
- add_test(NAME native-optimizer COMMAND reaper-optimizer-tests)
- add_executable(reaper-lower-tests tests/test_lower.c)
- target_link_libraries(reaper-lower-tests PRIVATE reaper_core)
- add_test(NAME native-lowering COMMAND reaper-lower-tests)
- add_executable(reaper-token-catalog-tests tests/test_token_catalog.c)
- target_link_libraries(reaper-token-catalog-tests PRIVATE reaper_core)
- add_test(NAME native-token-catalog COMMAND reaper-token-catalog-tests)
- add_executable(reaper-evolution-tests tests/test_evolution.c)
- target_link_libraries(reaper-evolution-tests PRIVATE reaper_core)
- add_test(NAME native-evolution COMMAND reaper-evolution-tests)
- add_executable(reaper-division-tests tests/test_division.c)
- target_link_libraries(reaper-division-tests PRIVATE reaper_core)
- add_test(NAME native-division COMMAND reaper-division-tests)
- add_executable(reaper-capability-tests tests/test_capability_suite.c)
- target_link_libraries(reaper-capability-tests PRIVATE reaper_core)
- add_test(NAME native-capabilities COMMAND reaper-capability-tests)
- find_package(Python3 COMPONENTS Interpreter)
- if(Python3_Interpreter_FOUND)
-  add_test(NAME python-token-catalog COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_token_catalog.py)
-  add_test(NAME python-atomic-quantum COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_atomic_quantum.py)
-  add_test(NAME python-self-hosting-bootstrap COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_self_hosting.py)
-  add_test(NAME generated-token-catalog COMMAND ${Python3_EXECUTABLE} tools/generate_token_catalog.py --check)
-  add_test(NAME python-patch-pipeline COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_patch_pipeline.py)
-  add_test(NAME python-feature-registry COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_feature_registry.py)
-  add_test(NAME most-feature-registry COMMAND ${Python3_EXECUTABLE} tools/validate_features.py language/features.json)
-  add_test(NAME most-combinatorial-matrix COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_most_matrix.py)
-  add_test(NAME most-combinatorial-matrix-data COMMAND ${Python3_EXECUTABLE} tools/validate_most_matrix.py language/most_matrix_20x20.json)
-  add_test(NAME systems-language-matrix COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_systems_languages.py)
-  add_test(NAME python-extended-runtime COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_extended_runtime.py)
-  add_test(NAME python-extended-metrics COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_metric_extensions.py)
-  add_test(NAME python-native-ffi COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_native.py)
-  add_test(NAME python-embedded-ffi COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_embedded_ffi.py)
-  add_test(NAME python-noo-tah-bridge COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_noo_tah.py)
-  add_test(NAME bootstrap-reproducibility-preflight COMMAND ${Python3_EXECUTABLE} scripts/bootstrap_check.py --compiler $<TARGET_FILE:reaper-c> --source ${CMAKE_CURRENT_SOURCE_DIR}/examples/hello.rpr)
-  set_tests_properties(python-token-catalog python-atomic-quantum generated-token-catalog python-self-hosting-bootstrap python-patch-pipeline python-feature-registry most-feature-registry most-combinatorial-matrix most-combinatorial-matrix-data systems-language-matrix python-extended-runtime python-extended-metrics python-native-ffi python-embedded-ffi python-noo-tah-bridge bootstrap-reproducibility-preflight PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
- endif()
+    enable_testing()
+
+    add_executable(reaper-lexer-tests tests/test_lexer.c)
+    target_link_libraries(reaper-lexer-tests PRIVATE reaper_core)
+    add_test(NAME native-lexer COMMAND reaper-lexer-tests)
+
+    add_executable(reaper-ir-tests tests/test_ir.c)
+    target_link_libraries(reaper-ir-tests PRIVATE reaper_core)
+    add_test(NAME native-ir COMMAND reaper-ir-tests)
+
+    add_executable(reaper-parser-tests tests/test_parser.c)
+    target_link_libraries(reaper-parser-tests PRIVATE reaper_core)
+    add_test(NAME native-parser COMMAND reaper-parser-tests)
+
+    add_executable(reaper-program-parser-tests tests/test_program_parser.c)
+    target_link_libraries(reaper-program-parser-tests PRIVATE reaper_core)
+    add_test(NAME native-program-parser COMMAND reaper-program-parser-tests)
+
+    add_executable(reaper-hir-tests tests/test_hir.c)
+    target_link_libraries(reaper-hir-tests PRIVATE reaper_core)
+    add_test(NAME native-hir COMMAND reaper-hir-tests)
+
+    add_executable(reaper-mir-tests tests/test_mir.c)
+    target_link_libraries(reaper-mir-tests PRIVATE reaper_core)
+    add_test(NAME native-mir COMMAND reaper-mir-tests)
+
+    add_executable(reaper-lir-tests tests/test_lir.c)
+    target_link_libraries(reaper-lir-tests PRIVATE reaper_core)
+    add_test(NAME native-lir COMMAND reaper-lir-tests)
+
+    add_executable(reaper-optimizer-tests tests/test_optimizer.c)
+    target_link_libraries(reaper-optimizer-tests PRIVATE reaper_core)
+    add_test(NAME native-optimizer COMMAND reaper-optimizer-tests)
+
+    add_executable(reaper-lower-tests tests/test_lower.c)
+    target_link_libraries(reaper-lower-tests PRIVATE reaper_core)
+    add_test(NAME native-lowering COMMAND reaper-lower-tests)
+
+    add_executable(reaper-codegen-tests tests/test_codegen.c)
+    target_link_libraries(reaper-codegen-tests PRIVATE reaper_core)
+    add_test(NAME native-codegen COMMAND reaper-codegen-tests)
+
+    add_executable(reaper-codegen-duckos-lir-tests tests/test_codegen_duckos_lir.c)
+    target_link_libraries(reaper-codegen-duckos-lir-tests PRIVATE reaper_core)
+    add_test(NAME native-codegen-duckos-lir COMMAND reaper-codegen-duckos-lir-tests)
+
+    add_executable(reaper-duckos-codegen-tests tests/test_duckos_codegen.c)
+    target_link_libraries(reaper-duckos-codegen-tests PRIVATE reaper_core)
+    add_test(NAME native-duckos-dabi64-codegen COMMAND reaper-duckos-codegen-tests)
+
+    add_executable(reaper-token-catalog-tests tests/test_token_catalog.c)
+    target_link_libraries(reaper-token-catalog-tests PRIVATE reaper_core)
+    add_test(NAME native-token-catalog COMMAND reaper-token-catalog-tests)
+
+    add_executable(reaper-evolution-tests tests/test_evolution.c)
+    target_link_libraries(reaper-evolution-tests PRIVATE reaper_core)
+    add_test(NAME native-evolution COMMAND reaper-evolution-tests)
+
+    add_executable(reaper-division-tests tests/test_division.c)
+    target_link_libraries(reaper-division-tests PRIVATE reaper_core)
+    add_test(NAME native-division COMMAND reaper-division-tests)
+
+    add_executable(reaper-capability-tests tests/test_capability_suite.c)
+    target_link_libraries(reaper-capability-tests PRIVATE reaper_core)
+    add_test(NAME native-capabilities COMMAND reaper-capability-tests)
+
+    find_package(Python3 COMPONENTS Interpreter)
+    if(Python3_Interpreter_FOUND)
+        if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND
+           CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64|amd64)$")
+            add_test(
+                NAME native-codegen-smoke
+                COMMAND ${Python3_EXECUTABLE}
+                    ${CMAKE_CURRENT_SOURCE_DIR}/tests/native_codegen_smoke.py
+                    --compiler $<TARGET_FILE:reaper-c>
+                    --cc ${CMAKE_C_COMPILER}
+                    --examples-root ${CMAKE_CURRENT_SOURCE_DIR}/examples/native
+            )
+            add_test(
+                NAME native-dabi64-lir-smoke
+                COMMAND ${Python3_EXECUTABLE}
+                    ${CMAKE_CURRENT_SOURCE_DIR}/tests/native_dabi64_lir_smoke.py
+                    --compiler $<TARGET_FILE:reaper-c>
+                    --cc ${CMAKE_C_COMPILER}
+                    --source ${CMAKE_CURRENT_SOURCE_DIR}/examples/native/program.rpr
+                    --test-include ${CMAKE_CURRENT_SOURCE_DIR}/tests
+            )
+            add_test(
+                NAME native-dabi64-object-smoke
+                COMMAND ${Python3_EXECUTABLE}
+                    ${CMAKE_CURRENT_SOURCE_DIR}/tests/native_dabi64_object_smoke.py
+                    --compiler $<TARGET_FILE:reaper-c>
+                    --cc ${CMAKE_C_COMPILER}
+                    --source ${CMAKE_CURRENT_SOURCE_DIR}/examples/native/program.rpr
+                    --assembler-script ${CMAKE_CURRENT_SOURCE_DIR}/scripts/duckos_assemble.py
+            )
+        endif()
+
+        add_test(NAME python-token-catalog COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_token_catalog.py)
+        add_test(NAME python-atomic-quantum COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_atomic_quantum.py)
+        add_test(NAME python-self-hosting-bootstrap COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_self_hosting.py)
+        add_test(NAME generated-token-catalog COMMAND ${Python3_EXECUTABLE} tools/generate_token_catalog.py --check)
+        add_test(NAME python-patch-pipeline COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_patch_pipeline.py)
+        add_test(NAME python-feature-registry COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_feature_registry.py)
+        add_test(NAME most-feature-registry COMMAND ${Python3_EXECUTABLE} tools/validate_features.py language/features.json)
+        add_test(NAME most-combinatorial-matrix COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_most_matrix.py)
+        add_test(NAME most-combinatorial-matrix-data COMMAND ${Python3_EXECUTABLE} tools/validate_most_matrix.py language/most_matrix_20x20.json)
+        add_test(NAME systems-language-matrix COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_systems_languages.py)
+        add_test(NAME python-extended-runtime COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_extended_runtime.py)
+        add_test(NAME python-extended-metrics COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_metric_extensions.py)
+        add_test(NAME python-native-ffi COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_native.py)
+        add_test(NAME python-embedded-ffi COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_embedded_ffi.py)
+        add_test(NAME python-noo-tah-bridge COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_noo_tah.py)
+        add_test(
+            NAME bootstrap-reproducibility-preflight
+            COMMAND ${Python3_EXECUTABLE}
+                ${CMAKE_CURRENT_SOURCE_DIR}/scripts/bootstrap_check.py
+                --compiler $<TARGET_FILE:reaper-c>
+                --source ${CMAKE_CURRENT_SOURCE_DIR}/examples/hello.rpr
+        )
+
+        set_tests_properties(
+            python-token-catalog
+            python-atomic-quantum
+            generated-token-catalog
+            python-self-hosting-bootstrap
+            python-patch-pipeline
+            python-feature-registry
+            most-feature-registry
+            most-combinatorial-matrix
+            most-combinatorial-matrix-data
+            systems-language-matrix
+            python-extended-runtime
+            python-extended-metrics
+            python-native-ffi
+            python-embedded-ffi
+            python-noo-tah-bridge
+            bootstrap-reproducibility-preflight
+            PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        )
+
+        if(TEST native-codegen-smoke)
+            set_tests_properties(
+                native-codegen-smoke
+                native-dabi64-lir-smoke
+                native-dabi64-object-smoke
+                PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            )
+        endif()
+    endif()
 endif()
+
 install(TARGETS reaper-c RUNTIME DESTINATION bin)

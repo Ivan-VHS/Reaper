@@ -1,0 +1,2 @@
+# A bounded integer expression compiled by the C17 native backend.
+19 + 23 * 2 - 1

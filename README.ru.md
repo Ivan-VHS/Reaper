@@ -17,13 +17,13 @@
 
 <p align="center"><img src="assets/readme/workflow.svg" alt="Reaper implemented data flow" width="100%"></p>
 
-Реальный путь: исходный `.rpr` → lexer и parser → Python reference runtime → CLI, Studio, LSP и DAP.
+Рабочие пути: `.rpr` → Python reference runtime → CLI, Studio, LSP и DAP; отдельно — scalar whole programs → native AST/HIR/MIR/LIR → DuckOS DABI64 assembly и DuckOS-marked ELF objects.
 
 
 [![Python CI](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/ci.yml?branch=main&label=Python%20CI)](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml)  [![Live Studio capture](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/readme-screenshots.yml?branch=main&label=Live%20Studio%20capture)](https://github.com/Ivan-VHS/Reaper/actions/workflows/readme-screenshots.yml)  [![License](https://img.shields.io/github/license/Ivan-VHS/Reaper)](LICENSE)
 
 
-> **Назначение:** Reaper — локальный язык программирования, интерпретатор, набор инструментов разработчика и desktop IDE для Windows. Это не hosted web demo и не production web service. Python runtime — текущая исполняемая эталонная реализация совместимости; нативный трек C17 реализован частично. Документация сверена с `main` **22.11.2026**.
+> **Назначение:** Reaper — локальный язык программирования, интерпретатор, набор инструментов разработчика и desktop IDE для Windows. Это не hosted web demo и не production web service. Python runtime — текущая исполняемая эталонная реализация совместимости; нативный C17-трек уже генерирует проверяемый assembly x86-64 System V ELF для ограниченной подмножины i64-выражений. Документация сверена с `main` **22.11.2026**.
 
 ## Назначение и состояние реализации
 
@@ -41,7 +41,7 @@ Reaper — expression-oriented язык, в котором оператор `::`
 | Инвентаризация toolchain | поиск компиляторов, сборщиков, парсеров, форматтеров, отладчиков и WASM runtime с фиксацией SHA-256 | только PATH и SHA-256; найденные программы не запускаются |
 | DAP | stdio debug adapter, line breakpoints, stepping, stack и locals | отладка на границах операторов; только доверенные локальные программы |
 | NOO TAH | управление проектами/процессами вокруг официального Node.js, npm/npx и Inspector | Node/V8/libuv предоставляет upstream Node |
-| Native C17 | lexer, expression parser, owned AST, checked IR и ограниченный lowering | активное частичное направление, не parity с Python runtime |
+| Native C17 | AST программ, HIR semantic checks, MIR CFG, LIR virtual registers/locals, backend x86-64 System V и DuckOS DABI64 | скалярная подмножина DABI64 уже генерирует код для функций, локальных переменных, вызовов, when/while и ::; collections, emit и полный runtime ещё не готовы |
 | QCS / embedded tools | отдельный parser аппаратной области, JSON AST и ограниченные embedded-инструменты | справочный/аналитический инструментарий, не выполнение на оборудовании |
 | Kora | необязательные вспомогательные функции стандартной библиотеки в семи модулях | отдельно от runtime языка Reaper |
 
@@ -107,7 +107,16 @@ cmake --build build --parallel
 ctest --test-dir build --output-on-failure
 ```
 
-Эта сборка проверяет текущую нативную подмножину compiler и её тесты. Она не заменяет Python runtime и не подтверждает полную языковую parity.
+Эта сборка проверяет нативную подмножину compiler и её тесты. Она не заменяет Python runtime и не подтверждает полную языковую parity.
+
+На Linux x86-64 можно скомпилировать целую scalar-программу DuckOS DABI64 через AST → HIR → MIR → LIR:
+
+```sh
+./build/reaper-c --emit-asm --target duckos-dabi64-v1 examples/native/program.rpr -o build/program.s
+python scripts/duckos_assemble.py --cc cc --assembly build/program.s --object build/program.o
+```
+
+Входная функция получает frame через R10, result через R11 и возвращает статус через RAX. Для scalar-подмножества работают craft-функции, i64-параметры и локальные переменные, прямые вызовы, when/otherwise, loop while и `::`. `each`, коллекции, строки и `emit` пока требуют runtime-служб DuckOS. Объектный этап использует host assembler, проверяет ABI note и отмечает ELF EI_OSABI значением DuckOS; это ещё не собственный ELF writer или linker. Подробности: [native compiler](docs/NATIVE_COMPILER.md) и [HIR/MIR/LIR](docs/NATIVE_HIR.md).
 
 ### Необязательные проверки NOO TAH / Node.js
 
@@ -128,6 +137,7 @@ reaper-noo-tah npm run build
 Примеры в репозитории — локальные программы, а не ответы живого API:
 
 - `examples/flow.rpr` — базовый smoke-пример языка.
+- `examples/native/` — i64-выражения для проверки генерации native assembly, включая переполнение и деление на ноль.
 - `examples/device_audit.rpr` — пример read-only аудита, который после запуска создаёт версионированный JSON-отчёт.
 - `tests/` содержит тесты parser, runtime, language service, debugger, реестров и интеграций.
 - NOO TAH conformance suite проверяет Node built-ins, ESM/CommonJS, streams, workers, child processes и loopback HTTP/TCP. Публичный тестовый сервис не используется.
@@ -197,14 +207,19 @@ JavaScript project
   -> official Node.js (V8, libuv, npm, Inspector)
 
 Native C17 track
-  -> lexer / parser / AST / IR / limited lowering
+  -> native program lexer/parser / owned AST / HIR semantic checks
+  -> MIR functions, CFG, calls и pipe-call lowering
+  -> LIR virtual registers, local slots и parameter maps
+  -> x86-64 System V expressions или DuckOS DABI64 scalar programs
+  -> host assembler / DuckOS-marked ELF object
+  -> kernel, loader и runtime DuckOS ещё впереди
 ```
 
 | Путь | Содержимое |
 |---|---|
 | `reaper/` | Python reference runtime, CLI, Studio, language/debug services и NOO TAH |
 | `reaper/kora/` | вспомогательные функции стандартной библиотеки Kora |
-| `src/`, `include/` | частичный native C17 track |
+| `src/`, `include/` | native C17 program parser, HIR/MIR/LIR и backend System V/DABI64 для скалярных программ |
 | `tests/` | Python, protocol, runtime и native тесты |
 | `examples/` | локальные программы-примеры `.rpr` |
 | `docs/` | язык, IDE, архитектура и границы возможностей |
@@ -236,9 +251,9 @@ Workflow artifacts — это скачиваемые результаты сбо
 
 ## Известные ограничения, вклад и лицензия
 
-Python остаётся исполняемой эталонной реализацией. Native C17 parsing/lowering реализован частично. LSP symbols/references/rename являются лексическими и ограничены текущим документом; DAP stepping выполняется на уровне операторов; IDE не является OS sandbox. NOO TAH делегирует JavaScript официальному Node, а не реализует собственную версию V8.
+Python остаётся исполняемой эталонной реализацией. DuckOS DABI64 backend уже компилирует скалярную подмножину целых программ: craft-функции, i64-параметры и локальные переменные, прямые вызовы, when/otherwise, loop while и ::. Коллекции, each, emit, строки, полный runtime, native ELF writer/linker, kernel services и самохостинг ещё не завершены. LSP symbols/references/rename являются лексическими и ограничены текущим документом; DAP stepping выполняется на уровне операторов; IDE не является OS sandbox. NOO TAH делегирует JavaScript официальному Node, а не реализует собственную версию V8.
 
-Правила разработки, проверки изменений и оформления Pull Request описаны в [CONTRIBUTING.md](CONTRIBUTING.md). Предлагайте изменения через [GitHub Issues](https://github.com/Ivan-VHS/Reaper/issues) или Pull Request. Добавляйте воспроизводимый пример `.rpr`, версии Python/Node/compiler и точную команду с результатом. Запускайте Python tests, а при изменении native track — CMake/CTest.
+Правила разработки, проверки изменений и оформления Pull Request описаны в [CONTRIBUTING.md](CONTRIBUTING.md). Предлагайте изменения через [GitHub Issues](https://github.com/Ivan-VHS/Reaper/issues) или Pull Request. Добавляйте воспроизводимый пример `.rpr`, версии Python/Node/compiler и точную команду с результатом. Запускайте Python tests, а при изменении native track — CMake/CTest. Архитектура native backend описана в [docs/NATIVE_COMPILER.md](docs/NATIVE_COMPILER.md) и [docs/NATIVE_HIR.md](docs/NATIVE_HIR.md).
 
 Лицензия: [Apache-2.0](LICENSE).
 
