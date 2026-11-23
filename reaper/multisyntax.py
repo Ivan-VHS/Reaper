@@ -298,6 +298,8 @@ class _PythonSubset:
             tree = ast.parse(self.source, filename=self.filename, mode="exec")
         except SyntaxError as error:
             raise MultiSyntaxError(f"{self.filename}:{error.lineno}:{error.offset}: {error.msg}") from error
+        except RecursionError as error:
+            raise MultiSyntaxError("Python syntax nesting limit exceeded") from error
         return self.execute_block(tree.body)
 
     def call_function(self, function: _PythonFunction, arguments: tuple[Any, ...], keywords: dict[str, Any]) -> Any:
@@ -590,6 +592,8 @@ def _read_lisp(source: str) -> list[Any]:
     current = result
     for token in tokens:
         if token == "(":
+            if len(stack) >= 256:
+                raise MultiSyntaxError("Lisp nesting limit (256) exceeded")
             child: list[Any] = []
             current.append(child)
             stack.append(current)
@@ -1019,6 +1023,8 @@ def run_source(
     if not isinstance(source, str) or len(source) > MAX_SOURCE_CHARS:
         raise MultiSyntaxError("source must be text no longer than 1,000,000 characters")
     selected = normalize_syntax(syntax)
+    if not isinstance(input_text, str) or len(input_text) > MAX_SOURCE_CHARS:
+        raise MultiSyntaxError("input text must be text no longer than 1,000,000 characters")
     budget = _budget or _Budget(max_steps)
     lines: list[str] = []
     def emit_line(value: str) -> None:
@@ -1028,7 +1034,10 @@ def run_source(
     emit = emit_line
     if selected == "reaper":
         from .runtime import Interpreter
-        runtime = Interpreter(output=emit, max_steps=budget.limit - budget.steps)
+        remaining_steps = budget.limit - budget.steps
+        if remaining_steps < 1:
+            raise MultiSyntaxError(f"execution step limit ({budget.limit}) exceeded")
+        runtime = Interpreter(output=emit, max_steps=remaining_steps)
         runtime.run(source, filename)
         budget.tick(runtime.steps)
         result: Any = None
