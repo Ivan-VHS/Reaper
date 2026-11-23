@@ -40,8 +40,9 @@ The intended audience is embedded and firmware developers, systems programmers, 
 | Component | Current scope | Boundary |
 |---|---|---|
 | Python runtime | lexer, parser, interpreter, CLI, REPL, modules, closures, quotas and audit log | current executable reference |
+| Static type analysis | inferred primitive/list types, operator/index checks, mutability and call-arity diagnostics | partial; built into `reaper --check`, Studio and LSP |
 | Reaper Studio | Windows IDE foundation, project tree/editor/debugger, plus systems/hardware overview with MCU profiles and capability boundaries | local desktop application; no live device inspector |
-| LSP | stdio JSON-RPC, diagnostics, completion, hover, symbols, lexical navigation, semantic tokens and document formatting | per-open-document; lexical highlighting, not cross-file type inference |
+| LSP | stdio JSON-RPC, diagnostics, completion, hover, symbols, lexical navigation, semantic tokens, document formatting and local inferred-type checks | per-open-document; no cross-file type inference |
 | Toolchain inventory | discovers compilers, builders, parsers, formatters, debuggers and WASM runtimes; pins binary hashes | PATH and SHA-256 only; discovered tools are never executed by inventory |
 | DAP | stdio debug adapter, line breakpoints, stepping, stack and locals | statement-boundary debugging; trusted local programs only |
 | NOO TAH | project/process management around the official Node.js runtime, npm/npx and Inspector | Node/V8/libuv are supplied by upstream Node |
@@ -49,7 +50,7 @@ The intended audience is embedded and firmware developers, systems programmers, 
 | QCS / embedded tools | separate hardware-domain parser, JSON AST and bounded embedded helpers | reference/analysis tools, not hardware execution |
 | Kora | optional standard-library helpers in seven manifest-backed modules | separate from the Reaper language runtime |
 
-Catalogues and registries may contain proposed or reserved entries. An item in a catalogue is not automatically an implemented runtime feature. The capability pages record maturity and boundaries: [Features](docs/FEATURES.md), [REAPER IDE](docs/REAPER_IDE.md), [NOO TAH](docs/NOO_TAH.md) and [Kora helpers](docs/KORA.md).
+Catalogues and registries may contain proposed or reserved entries. An item in a catalogue is not automatically an implemented runtime feature. The capability pages record maturity and boundaries: [Features](docs/FEATURES.md), [Polyglot capability layer](docs/POLYGLOT_CAPABILITY_LAYER.md), [REAPER IDE](docs/REAPER_IDE.md), [NOO TAH](docs/NOO_TAH.md) and [Kora helpers](docs/KORA.md).
 
 The image below is a capture of the Windows Studio application, not a browser-based playground.
 
@@ -85,6 +86,8 @@ python -m pip install -e .
 
 ```sh
 python -m reaper --check examples/flow.rpr
+python -m reaper --check --syntax-only examples/flow.rpr
+python -m reaper typecheck examples/flow.rpr --json
 python -m reaper examples/flow.rpr
 python -m reaper --repl
 python reaper_desktop.py

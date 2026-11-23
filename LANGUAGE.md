@@ -19,7 +19,7 @@ make total := [1, 2, 3] :: map(double) :: sum()
 emit "total = " ++ text(total)
 ```
 
-Rules: explicit effects; no implicit file/network/clock access in ordinary expressions; no silent coercion; bounded steps, call depth and collections. See [runtime limits](docs/RUNTIME_PLATFORM.md).
+Rules: explicit effects; no implicit file/network/clock access in ordinary expressions; no silent coercion; bounded steps, call depth and collections. See [runtime limits](docs/RUNTIME_PLATFORM.md).\n\n## Static type analysis\n\nThe optional `reaper typecheck program.rpr` command runs conservative type inference over the existing AST. It checks supported numeric and text operators, collection indexes and iteration, mutable bindings, and known call arity. Unknown values at module and host boundaries remain `Any`. This is a first semantic-analysis slice, not yet a complete sound type system with source annotations, user generics, null-flow refinement or exhaustive pattern matching. See [Polyglot capability layer](docs/POLYGLOT_CAPABILITY_LAYER.md) for the capability map and implementation status.
 
 ## Integrated product layer
 

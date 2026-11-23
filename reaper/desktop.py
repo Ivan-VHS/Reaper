@@ -135,10 +135,10 @@ class ReaperStudio(tk.Tk):
         menu.add_cascade(label="Правка", menu=edit_menu)
 
         run_menu = tk.Menu(menu, tearoff=False)
-        run_menu.add_command(label="Проверить исходный код", command=self.check_source, accelerator="Shift+F5")
+        run_menu.add_command(label="Проверить синтаксис и типы", command=self.check_source, accelerator="Shift+F5")
         run_menu.add_command(label="Запустить", command=self.run_source, accelerator="F5")
         run_menu.add_command(label="Отладка с первого шага", command=self.debug_source)
-        run_menu.add_command(label="Точка останова", command=self.toggle_breakpoint, accelerator="F9")
+        run_menu.add_command(label="Точка остановки", command=self.toggle_breakpoint, accelerator="F9")
         run_menu.add_command(label="Продолжить", command=self.continue_debug)
         run_menu.add_command(label="Шаг", command=self.step_debug)
         run_menu.add_command(label="Остановить отладку", command=self.stop_debug)
@@ -661,7 +661,7 @@ class ReaperStudio(tk.Tk):
         ttk.Button(bar, text="JS Debug", command=lambda: self.run_node_source(inspect=True), style="Toolbar.TButton").pack(side="left", padx=3)
         ttk.Button(bar, text="JS Stop", command=self.stop_node_source, style="Toolbar.TButton").pack(side="left", padx=3)
         ttk.Button(bar, text="Отладка", command=self.debug_source, style="Toolbar.TButton").pack(side="left", padx=3)
-        ttk.Button(bar, text="Точка останова", command=self.toggle_breakpoint, style="Toolbar.TButton").pack(side="left", padx=3)
+        ttk.Button(bar, text="Точка остановки", command=self.toggle_breakpoint, style="Toolbar.TButton").pack(side="left", padx=3)
         ttk.Button(bar, text="Атмосфера", command=self.toggle_ui_theme, style="Toolbar.TButton").pack(side="left", padx=3)
         ttk.Button(bar, text="CODEX-66", command=self.show_codex66, style="Toolbar.TButton").pack(side="left", padx=(7, 3))
         self.file_label = tk.StringVar(value="Untitled.rpr")
@@ -719,12 +719,28 @@ class ReaperStudio(tk.Tk):
         output_page = ttk.Frame(tabs)
         variables_page = ttk.Frame(tabs)
         stack_page = ttk.Frame(tabs)
+        types_page = ttk.Frame(tabs)
         tabs.add(output_page, text="Вывод")
         tabs.add(variables_page, text="Переменные")
         tabs.add(stack_page, text="Стек вызовов")
+        tabs.add(types_page, text="Типы / Диагностика")
         self.output_tabs = tabs
         self.output = ScrolledText(output_page, height=9, wrap="word", font=("Cascadia Code", 9), state="disabled")
         self.output.pack(fill="both", expand=True)
+        self.type_view = ttk.Treeview(
+            types_page,
+            columns=("line", "code", "message"),
+            show="headings",
+            selectmode="browse",
+        )
+        self.type_view.heading("line", text="Строка")
+        self.type_view.heading("code", text="Код")
+        self.type_view.heading("message", text="Диагностика")
+        self.type_view.column("line", width=70, anchor="center", stretch=False)
+        self.type_view.column("code", width=110, anchor="w", stretch=False)
+        self.type_view.column("message", width=720, anchor="w", stretch=True)
+        self.type_view.pack(fill="both", expand=True)
+        self.type_view.bind("<Double-1>", self._open_type_diagnostic)
         self.variables_view = ttk.Treeview(variables_page, columns=("value",), show="tree headings")
         self.variables_view.heading("#0", text="Имя")
         self.variables_view.heading("value", text="Значение")
@@ -923,18 +939,74 @@ class ReaperStudio(tk.Tk):
         self.output.delete("1.0", "end")
         self.output.configure(state="disabled")
 
+    def _open_type_diagnostic(self, _event: tk.Event | None = None) -> None:
+        selected = self.type_view.selection()
+        if not selected:
+            return
+        values = self.type_view.item(selected[0], "values")
+        if not values:
+            return
+        try:
+            line = max(1, int(values[0]))
+            self.editor.mark_set("insert", f"{line}.0")
+            self.editor.see(f"{line}.0")
+            self.editor.focus_set()
+            self._update_cursor_status()
+        except (tk.TclError, ValueError):
+            return
+
+    def _show_type_diagnostics(self, diagnostics: list[Any]) -> int:
+        self.type_view.delete(*self.type_view.get_children())
+        errors = 0
+        for index, item in enumerate(diagnostics):
+            severity = getattr(item, "severity", "error")
+            if severity == "error":
+                errors += 1
+            self.type_view.insert(
+                "",
+                "end",
+                iid=f"type-{index}",
+                values=(
+                    item.line,
+                    item.code,
+                    f"{severity.upper()}: {item.message}",
+                ),
+            )
+        return errors
+
     def check_source(self) -> None:
         if self.current_file and self.current_file.suffix.lower() in {".js", ".mjs", ".cjs"}:
             self.check_node_source()
             return
         try:
-            parse(self._source(), self._source_name())
+            tree = parse(self._source(), self._source_name())
+            from reaper.typecheck import TypeChecker
+
+            checked = TypeChecker(self._source_name()).check(tree)
         except ReaperError as error:
+            self.type_view.delete(*self.type_view.get_children())
             self._append_output(f"CHECK FAILED: {error}")
             self.status.set("Проверка исходного кода не пройдена")
+            self.output_tabs.select(0)
             return
-        self._append_output(f"CHECK OK: {self._source_name()} — синтаксис корректен")
-        self.status.set("Проверка пройдена")
+
+        error_count = self._show_type_diagnostics(list(checked.diagnostics))
+        self._append_output(
+            f"CHECK: {self._source_name()} — синтаксис корректен; "
+            f"типовых ошибок: {error_count}; диагностик: {len(checked.diagnostics)}"
+        )
+        if error_count:
+            for item in checked.diagnostics:
+                if item.severity == "error":
+                    self._append_output(
+                        f"{item.code} ({item.line}:{item.column}): {item.message}"
+                    )
+            self.output_tabs.select(3)
+            self.status.set(f"Проверка типов не пройдена · {error_count} ошибок")
+            return
+
+        self.output_tabs.select(0)
+        self.status.set("Синтаксис и поддерживаемые типы проверены")
 
     def run_source(self) -> None:
         if self.current_file and self.current_file.suffix.lower() in {".js", ".mjs", ".cjs"}:
@@ -990,11 +1062,11 @@ class ReaperStudio(tk.Tk):
         line = int(self.editor.index("insert").split(".")[0])
         if line in self.breakpoints:
             self.breakpoints.remove(line)
-            self.status.set(f"Точка останова удалена: {line}")
+            self.status.set(f"Точка остановки удалена: {line}")
         else:
             self.breakpoints.add(line)
-            self.status.set(f"Точка останова добавлена: {line}")
-        self._append_output("Точки останова: " + (", ".join(map(str, sorted(self.breakpoints))) or "нет"))
+            self.status.set(f"Точка остановки добавлена: {line}")
+        self._append_output("Точки остановки: " + (", ".join(map(str, sorted(self.breakpoints))) or "нет"))
 
     def _pause_for_debug(self, snapshot: Any) -> None:
         self.variables_view.delete(*self.variables_view.get_children())
