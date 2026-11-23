@@ -28,6 +28,7 @@ class UiThemeConstitutionTests(unittest.TestCase):
         self.assertGreaterEqual(contrast_ratio(palette["fg"], palette["bg"]), 7.0)
         self.assertGreaterEqual(contrast_ratio(palette["muted"], palette["bg"]), 4.5)
         self.assertGreaterEqual(contrast_ratio(palette["on_brand"], palette["brand"]), 4.5)
+        self.assertGreaterEqual(contrast_ratio(palette["on_brand_secondary"], palette["brand_secondary"]), 4.5)
 
     def test_atmospheric_profiles_are_resolved(self) -> None:
         self.assertEqual(palette_for("dawn")["bg"], "#F3F6FA")
