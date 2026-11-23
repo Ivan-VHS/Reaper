@@ -43,8 +43,9 @@ class BackendStore:
         retention_seconds: int = 86_400,
         max_rows: int = 50_000,
     ) -> None:
-        if lease_seconds < 1 or retention_seconds < 1 or max_rows < 1:
-            raise ValueError("store limits must be positive")
+        limits = (lease_seconds, retention_seconds, max_rows)
+        if any(isinstance(value, bool) or not isinstance(value, int) or value < 1 for value in limits):
+            raise ValueError("store limits must be positive integers")
         self.path = Path(path).expanduser()
         self.lease_seconds = lease_seconds
         self.retention_seconds = retention_seconds
@@ -121,8 +122,12 @@ class BackendStore:
             raise ValueError("idempotency scope must contain 1..64 characters")
         if not key or len(key) > 128:
             raise ValueError("idempotency key must contain 1..128 characters")
-        if len(request_hash) != 64:
-            raise ValueError("request hash must be a SHA-256 hex digest")
+        if (
+            not isinstance(request_hash, str)
+            or len(request_hash) != 64
+            or any(char not in "0123456789abcdef" for char in request_hash)
+        ):
+            raise ValueError("request hash must be a lowercase SHA-256 hex digest")
 
         now = time.time()
         owner = os.urandom(16).hex()
@@ -234,8 +239,10 @@ class BackendStore:
         status_code: int,
         response: dict[str, Any],
     ) -> None:
-        if not 100 <= status_code <= 599:
+        if isinstance(status_code, bool) or not isinstance(status_code, int) or not 100 <= status_code <= 599:
             raise ValueError("invalid HTTP status code")
+        if not isinstance(response, dict):
+            raise ValueError("idempotency response must be a JSON object")
         try:
             rendered = json.dumps(
                 response,
