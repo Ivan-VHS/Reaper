@@ -8,10 +8,18 @@ from typing import Callable
 
 from .lexer import KEYWORD_ALIASES
 from .source import SourceBuffer
+from .errors import ReaperError
 
 
-class SyntaxSelectionError(ValueError):
+class SyntaxSelectionError(ReaperError):
     """A source requested a syntax mode that has no registered frontend."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(
+            message,
+            code="RPR-E0015",
+            stage="syntax-router",
+        )
 
 
 @dataclass(frozen=True, slots=True)
