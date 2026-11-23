@@ -40,7 +40,7 @@ Reaper становится системным языком для прошив�
 | Компонент | Текущий объём | Граница |
 |---|---|---|
 | Python runtime | lexer, parser, interpreter, CLI, REPL, модули, closures, quotas и audit log | текущая исполняемая эталонная реализация |
-| Static type analysis | вывод базовых и list-типов, проверка операторов/индексов, изменяемости и арности вызовов | частичная реализация; запуск через `reaper typecheck` |
+| Static type analysis | вывод базовых и list-типов, проверка операторов/индексов, изменяемости и арности вызовов | частично реализована; встроена в `reaper --check`, Studio и LSP |
 | Reaper Studio | основа Windows IDE, дерево/редактор/debugger и обзор Systems/Hardware с MCU-профилями и границами доступа | локальное desktop-приложение; без live-инспектора устройств |
 | LSP | stdio JSON-RPC, diagnostics, completion, hover, symbols, лексическая навигация, форматирование и локальная проверка типов | открытый документ; без межфайлового type inference |
 | Инвентаризация toolchain | поиск компиляторов, сборщиков, парсеров, форматтеров, отладчиков и WASM runtime с фиксацией SHA-256 | только PATH и SHA-256; найденные программы не запускаются |
@@ -86,7 +86,8 @@ python -m pip install -e .
 
 ```sh
 python -m reaper --check examples/flow.rpr
-python -m reaper typecheck examples/flow.rpr
+python -m reaper --check --syntax-only examples/flow.rpr
+python -m reaper typecheck examples/flow.rpr --json
 python -m reaper examples/flow.rpr
 python -m reaper --repl
 python reaper_desktop.py
