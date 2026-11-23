@@ -238,8 +238,10 @@ def _paint_native_widgets(root: tk.Misc, palette: dict[str, str]) -> None:
 
 def apply_theme(root: tk.Misc, app_key: str, theme: str | None = None) -> str:
     """Apply and persist light/dark semantic tokens across all Studio surfaces."""
+    mora_theme = os.environ.get("MORA_THEME_MODE", "").strip().casefold()
+    inherited_theme = mora_theme if mora_theme in {"light", "dark"} else None
     selected = theme if theme in PALETTES else (
-        getattr(root, "_anatidae_theme", None) or _load_theme(app_key)
+        inherited_theme or getattr(root, "_anatidae_theme", None) or _load_theme(app_key)
     )
     palette = PALETTES[selected]
     root._anatidae_theme = selected  # type: ignore[attr-defined]
