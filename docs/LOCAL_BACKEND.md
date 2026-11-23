@@ -85,10 +85,11 @@ The engine field may be treewalk or vm. This endpoint uses a fresh
 interpreter for every request, applies the configured Reaper step, call-depth,
 collection, text and managed-heap budgets, and captures bounded output.
 
-The backend removes interactive input, file access, native FFI and consent
-built-ins before execution, and rejects module imports. The request cannot
-select a filename or filesystem path. Output is captured in the response; it
-is not written to server stdout. This is a restricted local execution profile,
+The backend removes interactive input, file/resource access, JSON file
+read/write, native FFI, Pytyliki bridge and embedded-library calls, optional
+native OPlage comparison, and consent built-ins before execution; it also
+rejects module imports. The request cannot select a filename or filesystem
+path. Output is captured in the response; it is not written to server stdout. This is a restricted local execution profile,
 not an operating-system sandbox or process-isolation boundary. The Python
 reference runtime and its interpreter implementation still execute inside the
 backend process. Keep the listener on loopback and use it only from trusted
