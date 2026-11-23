@@ -42,6 +42,7 @@ _HEADER_NAME = re.compile(r"^[!#$%&'*+\-.^_|~0-9A-Za-z]+$")
 _METHOD = re.compile(r"^[A-Z]{1,16}$")
 _REQUEST_ID = re.compile(r"^[A-Za-z0-9._:-]{1,96}$")
 _IDEMPOTENCY_KEY = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
+_CONTENT_LENGTH = re.compile(r"^[0-9]{1,10}$")
 
 _REASONS = {
     200: "OK",
@@ -121,9 +122,9 @@ class BackendConfig:
             self.idempotency_lease,
             self.max_idempotency_rows,
         )
-        if any(isinstance(value, bool) or value < 1 for value in positive):
+        if any(isinstance(value, bool) or not isinstance(value, int) or value < 1 for value in positive):
             raise ValueError("backend resource limits must be positive integers")
-        if isinstance(self.queue_depth, bool) or self.queue_depth < 0:
+        if isinstance(self.queue_depth, bool) or not isinstance(self.queue_depth, int) or self.queue_depth < 0:
             raise ValueError("queue_depth must be a non-negative integer")
         if self.max_source_bytes > self.max_body_bytes:
             raise ValueError("max_source_bytes cannot exceed max_body_bytes")
@@ -300,7 +301,7 @@ class BackendServer:
         request_size = 0
         request_id = uuid.uuid4().hex
         response_headers: dict[str, str] = {}
-        payload: dict[str, Any]
+        payload: dict[str, Any] = self._error_payload("internal_error", "request failed", request_id)
         try:
             request = await self._read_request(reader)
             request_id = request.request_id
@@ -428,7 +429,7 @@ class BackendServer:
                 raise RequestFailure(411, "length_required", "POST requests require Content-Length")
             content_length = 0
         else:
-            if not content_length_text.isdigit() or len(content_length_text) > 10:
+            if not _CONTENT_LENGTH.fullmatch(content_length_text):
                 raise RequestFailure(400, "content_length", "Content-Length is invalid")
             content_length = int(content_length_text)
         if content_length > self.config.max_body_bytes:
