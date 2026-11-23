@@ -40,7 +40,7 @@ Reaper розвивається як системна мова для проши
 | Компонент | Поточний обсяг | Межа |
 |---|---|---|
 | Python runtime | lexer, parser, interpreter, CLI, REPL, модулі, closures, quotas та audit log | поточна виконувана еталонна реалізація |
-| Static type analysis | виведення базових і list-типів, перевірка операторів/індексів, змінності та арності викликів | часткова реалізація; запуск через `reaper typecheck` |
+| Static type analysis | виведення базових і list-типів, перевірка операторів/індексів, змінності та арності викликів | частково реалізована; вбудована в `reaper --check`, Studio та LSP |
 | Reaper Studio | основа Windows IDE, дерево/редактор/debugger та огляд Systems/Hardware з MCU-профілями й межами доступу | локальний desktop-застосунок; без live-інспектора пристроїв |
 | LSP | stdio JSON-RPC, diagnostics, completion, hover, symbols, лексична навігація, форматування та локальна перевірка типів | відкритий документ; без міжфайлового type inference |
 | Інвентаризація toolchain | пошук компіляторів, систем збирання, парсерів, форматтерів, налагоджувачів і WASM runtime з фіксацією SHA-256 | лише PATH і SHA-256; знайдені програми не запускаються |
@@ -86,7 +86,8 @@ python -m pip install -e .
 
 ```sh
 python -m reaper --check examples/flow.rpr
-python -m reaper typecheck examples/flow.rpr
+python -m reaper --check --syntax-only examples/flow.rpr
+python -m reaper typecheck examples/flow.rpr --json
 python -m reaper examples/flow.rpr
 python -m reaper --repl
 python reaper_desktop.py
