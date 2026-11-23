@@ -31,7 +31,7 @@ The language is not allowed to imply that user-space code can safely access arbi
 | C17 core | native lexer, expression parser, owned AST, checked integer IR, constant folding and limited lowering | IR and parser cover only a small subset |
 | QCS | separate hardware-domain lexer/parser and JSON AST | design/validation frontend, not device execution |
 | Embedded workbench | MCU profiles, Flash/SRAM maps, linker-script generation and cross-compiler process invocation | no board flashing or physical MMIO |
-| Studio | Windows editor foundation, CLI integration, local diagnostics and debugger foundations | hardware workbench is a target direction, not a shipped complete IDE |
+| Studio | Windows editor/debugger foundation plus a Systems/Hardware overview showing MCU profiles and current access limits | no live device inspector or complete hardware IDE |
 | Native capability catalogue | versioned module and operation descriptions with a small set of C primitives | catalogue entries are not automatically executable handlers |
 
 ## Target language layers
