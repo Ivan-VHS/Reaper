@@ -48,7 +48,7 @@ Lists, `each`, collection pipelines, closures, modules, decimals, `nothing`, dyn
 | `to_str(value)` | formats a Reaper value as text |
 | `len(value)` | bounded length of text, lists, maps and ranges; `size(value)` remains available |
 
-The reference runtime accepts maps supplied by JSON input or host adapters. The current source grammar does not yet include map literals, property access (`.field`) or arrow-function expressions. Use bracket indexing for known keys and `has_key`/`get` for optional fields.
+The reference runtime accepts JSON maps and ordinary host objects with instance fields. Attribute inspection reads stored instance data only; it does not invoke computed properties. The current source grammar does not yet include map literals, property access (`.field`) or arrow-function expressions. Use bracket indexing for known keys and `has_key`/`get` for optional fields.
 
 ## Duck pipeline example
 
