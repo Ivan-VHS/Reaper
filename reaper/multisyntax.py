@@ -586,33 +586,57 @@ class _LispFunction:
 
 
 def _read_lisp(source: str) -> list[Any]:
-    tokens = re.findall(r'"(?:\\.|[^"\\])*"|[()]|[^()\s]+', source)
+    tokens = re.findall(r'"(?:\\.|[^"\\])*"|[()]|' + "'" + r'|[^()\s]+', source)
     result: list[Any] = []
     stack: list[list[Any]] = []
     current = result
+    pending_quotes = 0
+
+    def append_form(value: Any) -> None:
+        nonlocal pending_quotes
+        while pending_quotes:
+            value = [_Symbol("quote"), value]
+            pending_quotes -= 1
+        current.append(value)
+
     for token in tokens:
-        if token == "(":
+        if token == "'":
+            pending_quotes += 1
+            if pending_quotes > 256:
+                raise MultiSyntaxError("Lisp quote nesting limit exceeded")
+        elif token == "(":
             if len(stack) >= 256:
                 raise MultiSyntaxError("Lisp nesting limit (256) exceeded")
             child: list[Any] = []
-            current.append(child)
+            append_form(child)
             stack.append(current)
             current = child
         elif token == ")":
-            if not stack: raise MultiSyntaxError("unexpected ')' in Lisp source")
+            if pending_quotes:
+                raise MultiSyntaxError("quote marker has no following Lisp expression")
+            if not stack:
+                raise MultiSyntaxError("unexpected ')' in Lisp source")
             current = stack.pop()
         elif token.startswith('"'):
-            try: current.append(json.loads(token))
-            except json.JSONDecodeError as error: raise MultiSyntaxError("invalid Lisp string literal") from error
+            try:
+                append_form(json.loads(token))
+            except json.JSONDecodeError as error:
+                raise MultiSyntaxError("invalid Lisp string literal") from error
         elif re.fullmatch(r"-?(?:\d+\.\d+|\d+)", token):
-            current.append(float(token) if "." in token else int(token))
-        elif token in {"#t", "true"}: current.append(True)
-        elif token in {"#f", "false"}: current.append(False)
-        elif token in {"nil", "null"}: current.append(None)
-        else: current.append(_Symbol(token))
-    if stack: raise MultiSyntaxError("unclosed '(' in Lisp source")
+            append_form(float(token) if "." in token else int(token))
+        elif token in {"#t", "true"}:
+            append_form(True)
+        elif token in {"#f", "false"}:
+            append_form(False)
+        elif token in {"nil", "null"}:
+            append_form(None)
+        else:
+            append_form(_Symbol(token))
+    if pending_quotes:
+        raise MultiSyntaxError("quote marker has no following Lisp expression")
+    if stack:
+        raise MultiSyntaxError("unclosed '(' in Lisp source")
     return result
-
 
 def _run_lisp(source: str, output: Callable[[str], None], budget: _Budget) -> Any:
     environment: dict[str, Any] = {}
@@ -829,7 +853,10 @@ def analyze_brainfuck(source: str) -> dict[str, Any]:
         delta = 1 if command == ">" else -1 if command == "<" else 0
         pointer_prefix.append(pointer_prefix[-1] + delta)
     warnings: list[dict[str, Any]] = []
-    for opening, closing in sorted((a, b) for a, b in pairs.items() if a < b):
+    for opening, (_source_index, command) in enumerate(commands):
+        if command != "[":
+            continue
+        closing = pairs[opening]
         displacement = pointer_prefix[closing] - pointer_prefix[opening + 1]
         if displacement:
             warnings.append({
