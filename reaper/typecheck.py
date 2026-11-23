@@ -28,6 +28,11 @@ BUILTIN_ARITY: dict[str, tuple[int, int | None]] = {
     "duck_capabilities": (1, 1), "duck_supports": (2, 2), "duck_has": (2, 2),
     "duck_probe": (2, 2), "duck_require": (2, 2), "duck_adapt": (2, 2),
     "duck_inspect": (1, 1), "runtime_stats": (0, 0),
+    "ok": (1, 2), "err": (2, 4), "is_ok": (1, 1), "is_err": (1, 1),
+    "result_value": (1, 1), "result_error": (1, 1), "result_context": (1, 1),
+    "result_or": (2, 2), "result_map": (2, 2), "result_and_then": (2, 2),
+    "result_recover": (2, 2), "request_context": (1, 4),
+    "context_with": (3, 3), "context_get": (2, 2), "context_to_map": (1, 1),
     "range": (1, 3), "push": (2, 2), "first": (1, 1), "rest": (1, 1),
     "sum": (1, 1), "sorted": (1, 3), "sort_by": (2, 3),
     "map": (2, 2), "keep": (2, 2), "filter": (2, 2), "fold": (3, 3),
@@ -55,6 +60,12 @@ BUILTIN_RETURN: dict[str, str] = {
     "duck_capabilities": "List[Text]", "duck_supports": "Bool", "duck_has": "Bool",
     "duck_probe": "Map", "duck_require": ANY, "duck_adapt": "Map",
     "duck_inspect": "Map", "runtime_stats": "Map",
+    "ok": "Result[Any]", "err": "Result[Nothing]", "is_ok": "Bool", "is_err": "Bool",
+    "result_value": ANY, "result_error": "Optional[Error]",
+    "result_context": "Optional[Context]", "result_or": ANY,
+    "result_map": "Result[Any]", "result_and_then": "Result[Any]",
+    "result_recover": "Result[Any]", "request_context": "Context",
+    "context_with": "Context", "context_get": ANY, "context_to_map": "Map",
     "push": "List[Any]", "first": ANY, "rest": "List[Any]", "sum": "Number",
     "sorted": "List[Any]", "sort_by": "List[Any]", "map": "List[Any]",
     "keep": "List[Any]", "filter": "List[Any]", "fold": ANY, "reduce": ANY,
@@ -315,6 +326,9 @@ class TypeChecker:
                 )
                 self._report(node, "RPR-T0007", f"{name}() expects {expected} arguments, got {len(arguments)}")
             self._check_builtin_arguments(node, name, argument_types)
+            inferred_result = self._result_call_type(name, arguments, argument_types, node)
+            if inferred_result is not None:
+                return inferred_result
             if name == "push" and argument_types:
                 item_type = argument_types[1] if len(argument_types) > 1 else ANY
                 element_type = self._element_type(argument_types[0], node)
@@ -353,6 +367,51 @@ class TypeChecker:
             return function.return_type
         return ANY
 
+    @staticmethod
+    def _result_payload(type_name: str) -> str:
+        if type_name.startswith("Result[") and type_name.endswith("]"):
+            return type_name[7:-1]
+        return ANY
+
+    def _result_call_type(self, name: str, arguments: list[Node], types: list[str], node: Node) -> str | None:
+        if name == "ok":
+            return f"Result[{types[0]}]" if types else "Result[Any]"
+        if name == "err":
+            return "Result[Nothing]"
+        if name in {"is_ok", "is_err"}:
+            return "Bool"
+        if name == "result_value":
+            return self._result_payload(types[0]) if types else ANY
+        if name == "result_error":
+            return "Optional[Error]"
+        if name == "result_context":
+            return "Optional[Context]"
+        if name == "result_or":
+            payload = self._result_payload(types[0]) if types else ANY
+            fallback = types[1] if len(types) > 1 else ANY
+            return self._unify(payload, fallback)
+        if name in {"result_map", "result_and_then", "result_recover"}:
+            callback_node = arguments[1] if len(arguments) > 1 else None
+            callback_type = ANY
+            if callback_node is not None and callback_node.kind == "name":
+                function = self.functions.get(callback_node.value)
+                if function is not None:
+                    callback_type = function.return_type
+            if name == "result_map":
+                return f"Result[{callback_type}]"
+            if callback_type != ANY and not callback_type.startswith("Result["):
+                self._report(node, "RPR-T0010", f"{name}() callback must return a Result, got {callback_type}")
+            return callback_type if callback_type.startswith("Result[") else "Result[Any]"
+        if name == "request_context":
+            return "Context"
+        if name == "context_with":
+            return "Context"
+        if name == "context_get":
+            return ANY
+        if name == "context_to_map":
+            return "Map"
+        return None
+
     def _flow_type(self, left_node: Node, right_node: Node, left_type: str) -> str:
         if right_node.kind != "call":
             return ANY
@@ -372,6 +431,11 @@ class TypeChecker:
                 )
                 self._report(right_node, "RPR-T0007", f"{name}() expects {expected} arguments, got {supplied}")
             self._check_builtin_arguments(right_node, name, [left_type, *extra_types])
+            inferred_result = self._result_call_type(
+                name, [left_node, *extra_nodes], [left_type, *extra_types], right_node
+            )
+            if inferred_result is not None:
+                return inferred_result
             if name == "map":
                 callback = extra_nodes[0] if extra_nodes else None
                 if callback is not None and callback.kind == "name" and callback.value in self.functions:
@@ -433,6 +497,46 @@ class TypeChecker:
 
         if name == "duck_adapt" and any(item not in {"Map", ANY} for item in types[:2]):
             self._report(node, "RPR-T0008", "duck_adapt() expects source and defaults to be Maps")
+
+        if name in {"is_ok", "is_err", "result_value", "result_error", "result_context", "result_or", "result_map", "result_and_then", "result_recover"} and types:
+            if types[0] != ANY and not types[0].startswith("Result["):
+                self._report(node, "RPR-T0011", f"{name}() expects a Result, got {types[0]}")
+
+        if name == "ok" and len(types) > 1 and types[1] not in {"Context", ANY}:
+            self._report(node, "RPR-T0012", f"ok() context must be Context, got {types[1]}")
+
+        if name == "err":
+            if types and types[0] not in {"Text", ANY}:
+                self._report(node, "RPR-T0005", "err() error code must be Text")
+            if len(types) > 1 and types[1] not in {"Text", ANY}:
+                self._report(node, "RPR-T0005", "err() message must be Text")
+            if len(types) > 2 and types[2] not in {"Map", ANY}:
+                self._report(node, "RPR-T0008", "err() details must be a Map")
+            if len(types) > 3 and types[3] not in {"Context", ANY}:
+                self._report(node, "RPR-T0012", "err() context must be Context")
+
+        if name == "request_context":
+            if types and types[0] not in {"Text", ANY}:
+                self._report(node, "RPR-T0005", "request_context() request_id must be Text")
+            for value_type in types[1:3]:
+                if value_type not in {"Text", NOTHING, ANY}:
+                    self._report(node, "RPR-T0005", "request_context() trace and parent IDs must be Text or nothing")
+            if len(types) > 3 and types[3] not in {"Map", ANY}:
+                self._report(node, "RPR-T0008", "request_context() metadata must be a Map")
+
+        if name in {"context_with", "context_get"}:
+            if types and types[0] not in {"Context", ANY}:
+                self._report(node, "RPR-T0012", f"{name}() expects a Context")
+            if len(types) > 1 and types[1] not in {"Text", ANY}:
+                self._report(node, "RPR-T0005", f"{name}() key must be Text")
+
+        if name == "context_to_map" and types and types[0] not in {"Context", ANY}:
+            self._report(node, "RPR-T0012", "context_to_map() expects a Context")
+
+        if name in {"result_map", "result_and_then", "result_recover"} and len(types) > 1:
+            if len(node.children or []) > 2 and node.children[2].kind == "name":
+                if node.children[2].value not in self.functions:
+                    self._report(node, "RPR-T0013", f"{name}() callback must be a known Reaper craft function")
 
     def _element_type(self, type_name: str, node: Node | None = None) -> str:
         if type_name.startswith("List[") and type_name.endswith("]"):
