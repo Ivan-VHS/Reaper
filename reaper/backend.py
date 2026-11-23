@@ -34,7 +34,7 @@ from .backend_service import API_VERSION, BackendService
 from .backend_store import BackendStore, BackendStoreError
 
 _LOG = logging.getLogger("reaper.backend")
-_HEADER_NAME = re.compile(r"^[!#$%&'*+\-.^_|~0-9A-Za-z]+$")
+_HEADER_NAME = re.compile(r"^[!#$%&'*+\-.^_\x60|~0-9A-Za-z]+$")
 _METHOD = re.compile(r"^[A-Z]{1,16}$")
 _REQUEST_ID = re.compile(r"^[A-Za-z0-9._:-]{1,96}$")
 _IDEMPOTENCY_KEY = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
@@ -153,6 +153,10 @@ class BackendConfig:
         if self.max_requests_per_minute > 1_000_000:
             raise ValueError("max_requests_per_minute cannot exceed 1000000")
         token = self.token.strip() if self.token else secrets.token_urlsafe(32)
+        try:
+            token.encode("ascii")
+        except UnicodeEncodeError as error:
+            raise ValueError("backend bearer token must contain only ASCII characters") from error
         if len(token) < 32:
             raise ValueError("backend bearer token must contain at least 32 characters")
         object.__setattr__(self, "token", token)
@@ -905,10 +909,19 @@ def _build_parser() -> argparse.ArgumentParser:
     serve.add_argument("--workers", type=int, default=4)
     serve.add_argument("--queue-depth", type=int, default=16)
     serve.add_argument("--max-requests-per-minute", type=int, default=600)
+    serve.add_argument("--max-header-bytes", type=int, default=16 * 1024)
+    serve.add_argument("--max-header-count", type=int, default=64)
+    serve.add_argument("--max-body-bytes", type=int, default=2 * 1024 * 1024 + 8192)
     serve.add_argument("--max-source-bytes", type=int, default=2 * 1024 * 1024)
     serve.add_argument("--max-steps", type=int, default=250_000)
+    serve.add_argument("--max-call-depth", type=int, default=128)
+    serve.add_argument("--max-collection-items", type=int, default=50_000)
+    serve.add_argument("--max-text-length", type=int, default=250_000)
     serve.add_argument("--max-heap-bytes", type=int, default=32 * 1024 * 1024)
     serve.add_argument("--max-output-chars", type=int, default=128_000)
+    serve.add_argument("--idempotency-ttl", type=int, default=86_400)
+    serve.add_argument("--idempotency-lease", type=int, default=60)
+    serve.add_argument("--max-idempotency-rows", type=int, default=50_000)
 
     verify = commands.add_parser("verify", help="run SQLite integrity and schema checks")
     verify.add_argument("--database", default=_database_from_env())
@@ -935,11 +948,19 @@ def main(argv: list[str] | None = None) -> int:
                 max_workers=args.workers,
                 queue_depth=args.queue_depth,
                 max_requests_per_minute=args.max_requests_per_minute,
+                max_header_bytes=args.max_header_bytes,
+                max_header_count=args.max_header_count,
+                max_body_bytes=args.max_body_bytes,
                 max_source_bytes=args.max_source_bytes,
-                max_body_bytes=max(2 * 1024 * 1024 + 8192, args.max_source_bytes + 8192),
                 max_steps=args.max_steps,
+                max_call_depth=args.max_call_depth,
+                max_collection_items=args.max_collection_items,
+                max_text_length=args.max_text_length,
                 max_heap_bytes=args.max_heap_bytes,
                 max_output_chars=args.max_output_chars,
+                idempotency_ttl=args.idempotency_ttl,
+                idempotency_lease=args.idempotency_lease,
+                max_idempotency_rows=args.max_idempotency_rows,
             )
             asyncio.run(_serve(config))
             return 0
