@@ -16,6 +16,14 @@ class LanguageServiceTests(unittest.TestCase):
         self.assertTrue(any(item.code == "RPR-W0001" for item in analysis.diagnostics))
         self.assertTrue(any(item.code == "RPR-E0013" for item in analysis.diagnostics))
 
+    def test_duck_pipeline_builtins_are_available_in_completion(self):
+        uri = "file:///duck.rpr"
+        self.service.open(uri, "")
+        labels = {item["label"] for item in self.service.completion(uri)}
+        self.assertTrue(
+            {"has_key", "get", "to_int", "to_str", "len"} <= labels
+        )
+
     def test_local_type_diagnostics_are_published_with_source_spans(self):
         uri = "file:///typed.rpr"
         self.service.open(uri, 'emit "text" * 2')

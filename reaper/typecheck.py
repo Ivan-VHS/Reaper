@@ -14,6 +14,7 @@ from typing import Any
 
 from .errors import ReaperError
 from .parser import Node, parse
+from .source import Span
 
 
 ANY = "Any"
@@ -24,7 +25,9 @@ BUILTIN_ARITY: dict[str, tuple[int, int | None]] = {
     "divmod_euclidean": (2, 2), "euclidean_divmod": (2, 2),
     "quotient": (2, 2), "remainder": (2, 2), "is_divisible": (2, 2),
     "partition": (2, 2), "distribute": (2, 2), "proportional_split": (2, 2),
-    "size": (1, 1), "text": (1, 1), "number": (1, 1), "kind": (1, 1),
+    "size": (1, 1), "len": (1, 1), "text": (1, 1), "to_str": (1, 1),
+    "number": (1, 1), "to_int": (1, 2), "kind": (1, 1),
+    "has_key": (2, 2), "get": (2, 3),
     "range": (1, 3), "push": (2, 2), "first": (1, 1), "rest": (1, 1),
     "sum": (1, 1), "sorted": (1, 3), "sort_by": (2, 3),
     "map": (2, 2), "keep": (2, 2), "filter": (2, 2), "fold": (3, 3),
@@ -48,7 +51,8 @@ BUILTIN_RETURN: dict[str, str] = {
     "quotient": "Int", "remainder": "Int", "is_divisible": "Bool",
     "partition": "List[Any]", "distribute": "List[Int]",
     "proportional_split": "List[Int]", "size": "Int", "text": "Text",
-    "number": "Number", "kind": "Text", "range": "List[Int]",
+    "number": "Number", "to_int": "Int", "to_str": "Text", "len": "Int",
+    "kind": "Text", "has_key": "Bool", "get": ANY, "range": "List[Int]",
     "push": "List[Any]", "first": ANY, "rest": "List[Any]", "sum": "Number",
     "sorted": "List[Any]", "sort_by": "List[Any]", "map": "List[Any]",
     "keep": "List[Any]", "filter": "List[Any]", "fold": ANY, "reduce": ANY,
@@ -74,15 +78,20 @@ class TypeDiagnostic:
     line: int
     column: int
     severity: str = "error"
+    span: Span | None = None
 
     def as_dict(self) -> dict[str, Any]:
-        return {
+        payload = {
             "code": self.code,
             "message": self.message,
             "line": self.line,
             "column": self.column,
             "severity": self.severity,
         }
+        if self.span is not None:
+            payload["span"] = self.span.to_dict()
+            payload["syntax_mode"] = self.span.syntax_mode
+        return payload
 
 
 @dataclass(slots=True)
@@ -373,9 +382,9 @@ class TypeChecker:
                 return left_type
             if name == "sum":
                 return "Number"
-            if name in {"size", "length"}:
+            if name in {"size", "length", "len"}:
                 return "Int"
-            if name in {"text", "join", "trim", "lower", "upper"}:
+            if name in {"text", "to_str", "join", "trim", "lower", "upper"}:
                 return "Text"
             if name == "reverse":
                 return left_type
@@ -465,7 +474,10 @@ class TypeChecker:
         return f"Union[{left},{right}]"
 
     def _report(self, node: Node, code: str, message: str) -> None:
-        self.diagnostics.append(TypeDiagnostic(code, message, node.token.line, node.token.column))
+        self.diagnostics.append(TypeDiagnostic(
+            code, message, node.token.line, node.token.column,
+            span=node.span,
+        ))
 
 
 def check_source(source: str, filename: str = "<memory>") -> TypeCheckResult:

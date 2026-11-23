@@ -6,6 +6,7 @@ from typing import Any
 
 from .errors import ReaperRuntimeError
 from .parser import Node, parse
+from .source import SourceMap
 
 
 class ModuleError(ReaperRuntimeError):
@@ -47,8 +48,10 @@ class ModuleLoader:
             raise ModuleError("import path must be non-empty text")
         base = Path(importer).resolve().parent if not importer.startswith("<") else Path.cwd()
         target = (base / specifier).resolve()
-        if target.suffix.lower() != ".rpr":
-            raise ModuleError(f"Reaper modules must use the .rpr extension: {target}")
+        if target.suffix.lower() not in {".rpr", ".rflow", ".most"}:
+            raise ModuleError(
+                f"Reaper modules must use .rpr, .rflow, or .most: {target}"
+            )
         return target
 
     def load(self, specifier: str, importer: str) -> dict[str, Any]:
@@ -81,6 +84,11 @@ class ModuleLoader:
         try:
             self.interpreter.filename = target_name
             tree = parse(source, target_name)
+            if tree.source_buffer is not None:
+                if self.interpreter.source_map is None:
+                    self.interpreter.source_map = SourceMap.from_buffers([tree.source_buffer])
+                else:
+                    self.interpreter.source_map.add(tree.source_buffer)
             self.interpreter._execute_block(tree, module_env, create_scope=False)
             missing = sorted(name for name in module_env.exports if name not in module_env.values)
             if missing:

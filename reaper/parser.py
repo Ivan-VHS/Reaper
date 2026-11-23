@@ -6,7 +6,9 @@ from dataclasses import dataclass
 from typing import Any
 
 from .errors import ParseError
-from .lexer import Token, tokenize
+from .lexer import KEYWORD_ALIASES, Token, tokenize
+from .frontends import route_source
+from .source import SourceBuffer, Span
 
 
 @dataclass(slots=True)
@@ -15,10 +17,18 @@ class Node:
     token: Token
     value: Any = None
     children: list["Node"] | None = None
+    span: Span | None = None
+    source_buffer: SourceBuffer | None = None
+
+    def __post_init__(self) -> None:
+        if self.span is None:
+            child_spans = [child.span for child in self.children or []]
+            self.span = Span.cover(self.token.span, *child_spans)
 
 
 _PRECEDENCE = {
     "::": 1,
+    "->": 1,
     "OR": 2,
     "AND": 3,
     "==": 4, "!=": 4, "<": 4, "<=": 4, ">": 4, ">=": 4,
@@ -30,9 +40,18 @@ _PRECEDENCE = {
 
 
 class Parser:
-    def __init__(self, tokens: list[Token], filename: str = "<memory>") -> None:
+    def __init__(
+        self,
+        tokens: list[Token],
+        filename: str = "<memory>",
+        *,
+        flow_arrows: bool = False,
+        source_buffer: SourceBuffer | None = None,
+    ) -> None:
         self.tokens = tokens
         self.filename = filename
+        self.flow_arrows = flow_arrows
+        self.source_buffer = source_buffer
         self.current = 0
 
     def parse(self) -> Node:
@@ -41,7 +60,9 @@ class Parser:
         while not self._check("EOF"):
             statements.append(self._statement())
             self._statement_end()
-        return Node("program", self._peek(), children=statements)
+        root = Node("program", self._peek(), children=statements)
+        root.source_buffer = self.source_buffer
+        return root
 
     def _statement(self) -> Node:
         if self._match("IMPORT"):
@@ -130,14 +151,17 @@ class Parser:
         return Node("each", token, value=name.value, children=[iterable, body])
 
     def _block(self) -> Node:
-        self._consume("{", "expected '{' to start a block")
+        opening = self._consume("{", "expected '{' to start a block")
         statements: list[Node] = []
         self._skip_newlines()
         while not self._check("}") and not self._check("EOF"):
             statements.append(self._statement())
             self._statement_end()
-        self._consume("}", "expected '}' after block")
-        return Node("block", self._previous(), children=statements)
+        closing = self._consume("}", "expected '}' after block")
+        return Node(
+            "block", closing, children=statements,
+            span=Span.cover(opening.span, closing.span),
+        )
 
     def _expression(self, minimum: int = 1) -> Node:
         left = self._prefix()
@@ -148,12 +172,17 @@ class Parser:
             if self._match("["):
                 token = self._previous()
                 index = self._expression()
-                self._consume("]", "expected ']' after index")
-                left = Node("index", token, children=[left, index])
+                closing = self._consume("]", "expected ']' after index")
+                left = Node(
+                    "index", token, children=[left, index],
+                    span=Span.cover(left.span, token.span, closing.span),
+                )
                 continue
             if self._check("CATALOG_OPERATOR"):
                 raise self._error(self._peek(), "catalogue operator is reserved; executable semantics are not registered")
             operator = self._peek().kind
+            if operator == "->" and not self.flow_arrows:
+                raise self._error(self._peek(), "flow arrow requires the 'flow-first' syntax profile")
             precedence = _PRECEDENCE.get(operator, 0)
             if precedence < minimum:
                 break
@@ -161,7 +190,10 @@ class Parser:
             self._skip_newlines()
             next_minimum = precedence if operator == "**" else precedence + 1
             right = self._expression(next_minimum)
-            left = Node("binary", token, value=operator, children=[left, right])
+            left = Node(
+                "binary", token, value="::" if operator == "->" else operator,
+                children=[left, right],
+            )
         return left
 
     def _call(self, callee: Node, token: Token) -> Node:
@@ -174,8 +206,11 @@ class Parser:
                 if not self._match(","):
                     break
                 self._skip_newlines()
-        self._consume(")", "expected ')' after arguments")
-        return Node("call", token, children=[callee, *arguments])
+        closing = self._consume(")", "expected ')' after arguments")
+        return Node(
+            "call", token, children=[callee, *arguments],
+            span=Span.cover(callee.span, token.span, closing.span),
+        )
 
     def _prefix(self) -> Node:
         if self._check("CATALOG_OPERATOR"):
@@ -190,7 +225,8 @@ class Parser:
             token = self._previous()
             if token.kind == "(":
                 expression = self._expression()
-                self._consume(")", "expected ')' after expression")
+                closing = self._consume(")", "expected ')' after expression")
+                expression.span = Span.cover(token.span, expression.span, closing.span)
                 return expression
             if token.kind in {"TRUE", "FALSE"}:
                 return Node("literal", token, value=token.kind == "TRUE")
@@ -212,8 +248,11 @@ class Parser:
                     if not self._match(","):
                         break
                     self._skip_newlines()
-            self._consume("]", "expected ']' after list")
-            return Node("list", token, children=items)
+            closing = self._consume("]", "expected ']' after list")
+            return Node(
+                "list", token, children=items,
+                span=Span.cover(token.span, *(item.span for item in items), closing.span),
+            )
         raise self._error(self._peek(), "expected an expression")
 
     def _statement_end(self) -> None:
@@ -254,8 +293,31 @@ class Parser:
         return self.tokens[self.current - 1]
 
     def _error(self, token: Token, message: str) -> ParseError:
-        return ParseError(f"{self.filename}:{token.line}:{token.column}: {message} (found {token.value or token.kind})")
+        return ParseError(
+            f"{self.filename}:{token.line}:{token.column}: {message} (found {token.value or token.kind})",
+            code="RPR-E0013",
+            stage="parser",
+            span=token.span,
+            syntax_mode=token.syntax_mode,
+        )
 
 
-def parse(source: str, filename: str = "<memory>") -> Node:
-    return Parser(tokenize(source, filename), filename).parse()
+def parse(
+    source: str | SourceBuffer,
+    filename: str = "<memory>",
+    *,
+    syntax_mode: str | None = None,
+) -> Node:
+    buffer = source if isinstance(source, SourceBuffer) else SourceBuffer.from_text(
+        source, filename
+    )
+    selection = route_source(buffer, filename, syntax_mode)
+    profile = selection.profile
+    aliases = KEYWORD_ALIASES if profile.localized_aliases else {}
+    tokens = tokenize(selection.source, filename, keyword_aliases=aliases)
+    return Parser(
+        tokens,
+        filename,
+        flow_arrows=profile.flow_arrows,
+        source_buffer=selection.source,
+    ).parse()

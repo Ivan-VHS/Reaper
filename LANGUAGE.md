@@ -35,3 +35,31 @@ python -m reaper program.rpr --native program
 ```
 
 Lists, `each`, collection pipelines, closures, modules, decimals, `nothing`, dynamic dispatch, async/effects, and arbitrary FFI are deliberately outside this first native slice. The Python runtime remains authoritative for those constructs. The C17 MMIO adapter validates descriptors and capability grants through a host-supplied bus; it does not map physical memory. QCS remains a separate validation frontend. See [Native AOT Compiler](docs/NATIVE_COMPILER.md) and [Hardware Language](docs/HARDWARE_LANGUAGE.md).
+
+
+## Map access and conversion helpers
+
+| Builtin | Contract |
+|---|---|
+| `has_key(map, key)` | true when a map contains the text key; rejects non-maps and non-text keys |
+| `get(map, key[, default])` | reads a text-keyed map entry or returns the explicit default (otherwise `nothing`) |
+| `to_int(value)` | converts an integer, an integral finite number, or decimal integer text; rejects booleans and fractional values |
+| `to_int(value, fallback)` | returns the converted integer, or converts the explicit fallback when conversion fails |
+| `to_str(value)` | formats a Reaper value as text |
+| `len(value)` | bounded length of text, lists, maps and ranges; `size(value)` remains available |
+
+The reference runtime accepts JSON maps and plain host objects with an instance `__dict__`. Attribute inspection reads stored instance data only; it does not invoke computed properties or slot descriptors. The current source grammar does not yet include map literals, property access (`.field`) or arrow-function expressions. Use bracket indexing for known keys and `has_key`/`get` for optional fields.
+
+## Duck pipeline example
+
+`examples/duck_pipeline.rpr` demonstrates pure name normalization, map-based duck inspection, range validation, tagged success/error values, and `map`/`filter` composition. It reads its records from `examples/data/duck_pipeline_input.json`.
+
+Run and validate it with:
+
+```sh
+python -m reaper --check examples/duck_pipeline.rpr
+python -m reaper examples/duck_pipeline.rpr
+python -m unittest tests.test_duck_pipeline -v
+```
+
+The example uses `[true, value]` and `[false, [code, message, details]]` as an explicit Result convention. It is a Python reference-runtime example; collection pipelines and dynamic map input are not part of the current native C17 AOT subset.

@@ -20,6 +20,7 @@ from .memory import HeapLimitError, MemoryManager, RegionError
 from .modules import ModuleError, ModuleLoader
 from .resources import ResourceError, ResourceHandle, ResourceManager
 from .token_catalog import token_catalog, token_info, token_is_reserved
+from .source import SourceMap, Span
 
 
 @dataclass(slots=True)
@@ -120,6 +121,9 @@ class Interpreter:
         self._active_vm: Any = None
         self._current_environment: Environment | None = None
         self._ffi_libraries: list[Any] = []
+        self.source_map: SourceMap | None = None
+        self.syntax_mode = "reaper-classic"
+        self._active_span: Span | None = None
         self._install_builtins()
 
     def _memory_roots(self) -> list[Any]:
@@ -133,6 +137,14 @@ class Interpreter:
             raise ValueError("engine must be 'treewalk' or 'vm'")
         self.filename = filename
         tree = parse(source, filename)
+        self.source_map = (
+            SourceMap.from_buffers([tree.source_buffer])
+            if tree.source_buffer is not None else None
+        )
+        self.syntax_mode = (
+            tree.source_buffer.syntax_mode if tree.source_buffer is not None
+            else "reaper-classic"
+        )
         root = self.module_loader.begin_root(filename)
         try:
             if engine == "vm":
@@ -155,6 +167,7 @@ class Interpreter:
             self._ffi_libraries.clear()
             self.module_loader.end_root(root)
             self._current_environment = None
+            self._active_span = None
             self.memory.collect(self._memory_roots())
 
     def _tick(self, token: Token) -> None:
@@ -162,7 +175,12 @@ class Interpreter:
         if self.steps > self.max_steps:
             raise ExecutionLimitError(
                 f"{self.filename}:{token.line}:{token.column}: execution stopped after "
-                f"{self.max_steps} steps; increase --steps only for programs you trust"
+                f"{self.max_steps} steps; increase --steps only for programs you trust",
+                code="RPR-R0002",
+                stage="runtime",
+                span=token.span,
+                syntax_mode=token.syntax_mode,
+                details={"max_steps": self.max_steps},
             )
 
     def _check_collection_size(self, values: Any, token: Token) -> Any:
@@ -186,6 +204,7 @@ class Interpreter:
 
     def _execute(self, node: Node, environment: Environment) -> Any:
         self._current_environment = environment
+        self._active_span = node.span
         if self.debugger is not None:
             self.debugger.before_statement(node.token, environment, self.call_stack, self.filename)
         self._tick(node.token)
@@ -256,6 +275,7 @@ class Interpreter:
         return None
     def _evaluate(self, node: Node, environment: Environment) -> Any:
         self._current_environment = environment
+        self._active_span = node.span
         self._tick(node.token)
         children = node.children or []
         if node.kind == "literal":
@@ -447,6 +467,61 @@ class Interpreter:
                 )
             return size
 
+        def record_fields(value: Any) -> dict[str, Any]:
+            if isinstance(value, dict):
+                return value
+            try:
+                fields = object.__getattribute__(value, "__dict__")
+            except (AttributeError, TypeError) as error:
+                raise TypeError("expected a map or an object with instance fields") from error
+            if not isinstance(fields, dict):
+                raise TypeError("record instance fields must be a map")
+            return fields
+
+        def is_record(value: Any) -> bool:
+            if isinstance(value, dict):
+                return True
+            try:
+                fields = object.__getattribute__(value, "__dict__")
+            except (AttributeError, TypeError):
+                return False
+            return isinstance(fields, dict)
+
+        def map_has_key(value: Any, key: Any) -> bool:
+            if not isinstance(key, str):
+                raise TypeError("has_key() key must be text")
+            return key in record_fields(value)
+
+        def map_get(value: Any, key: Any, default: Any = None) -> Any:
+            if not isinstance(key, str):
+                raise TypeError("get() key must be text")
+            return record_fields(value).get(key, default)
+
+        def value_kind(value: Any) -> str:
+            return "map" if is_record(value) else self._kind(value)
+
+        def to_integer(value: Any, fallback: Any = None) -> int:
+            try:
+                if isinstance(value, bool):
+                    raise TypeError("booleans are not integers")
+                if isinstance(value, int):
+                    return value
+                if isinstance(value, float):
+                    if not math.isfinite(value) or not value.is_integer():
+                        raise ValueError("number must be a finite whole number")
+                    return int(value)
+                if isinstance(value, str):
+                    source = value.strip()
+                    digits = source[1:] if source[:1] in {"+", "-"} else source
+                    if not digits or not digits.isascii() or not digits.isdigit():
+                        raise ValueError("text must contain a whole decimal number")
+                    return int(source, 10)
+                raise TypeError("expected a whole number or decimal integer text")
+            except (TypeError, ValueError, OverflowError):
+                if fallback is not None:
+                    return to_integer(fallback)
+                raise
+
         def integer(value: Any, label: str) -> int:
             if isinstance(value, bool) or not isinstance(value, int):
                 raise TypeError(f"{label} must be a whole number")
@@ -550,9 +625,14 @@ class Interpreter:
         register("distribute", distribute, 2, 2)
         register("proportional_split", proportional_split, 2, 2)
         register("size", bounded_size, 1, 1)
+        register("len", bounded_size, 1, 1)
         register("text", self._display, 1, 1)
+        register("to_str", self._display, 1, 1)
         register("number", self._to_number, 1, 1)
-        register("kind", self._kind, 1, 1)
+        register("to_int", to_integer, 1, 2)
+        register("has_key", map_has_key, 2, 2)
+        register("get", map_get, 2, 3)
+        register("kind", value_kind, 1, 1)
         register("range", bounded_range, 1, 3)
         register("push", push, 2, 2)
         register("first", lambda values: _first(sequence(values)), 1, 1)
@@ -1012,8 +1092,24 @@ class Interpreter:
             return f"range({value.start}, {value.stop}, {value.step})"
         return str(value)
 
-    def _error(self, token: Token, message: str) -> ReaperRuntimeError:
-        return ReaperRuntimeError(f"{self.filename}:{token.line}:{token.column}: {message}")
+    def _error(
+        self,
+        token: Token,
+        message: str,
+        *,
+        span: Span | None = None,
+    ) -> ReaperRuntimeError:
+        selected_span = span
+        if selected_span is None:
+            selected_span = token.span if token.kind != "BUILTIN" else self._active_span
+        mode = selected_span.syntax_mode if selected_span is not None else self.syntax_mode
+        return ReaperRuntimeError(
+            f"{self.filename}:{token.line}:{token.column}: {message}",
+            code="RPR-R0001",
+            stage="runtime",
+            span=selected_span,
+            syntax_mode=mode,
+        )
 
 
 def _raise_type(message: str) -> Any:

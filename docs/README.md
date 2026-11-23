@@ -36,6 +36,7 @@
 | [PLUGINS.md](PLUGINS.md) | internal plugin host and extension lifecycle |
 | [INTERNAL_PRODUCTS.md](INTERNAL_PRODUCTS.md) | integrated product catalogue and service contracts |
 | [FEATURES.md](FEATURES.md) | shipped, reference and proposed capability matrix |
+| [Duck pipeline example](../examples/duck_pipeline.rpr) | bounded channel normalization, map inspection, tagged results and collection composition |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | runtime and compiler stages |
 | [NATIVE_COMPILER.md](NATIVE_COMPILER.md) | checked scalar AOT compilation to C17 and the host toolchain |
 | [HARDWARE_LANGUAGE.md](HARDWARE_LANGUAGE.md) | systems-language architecture, MMIO contract, Studio hardware workbench and migration gates |
