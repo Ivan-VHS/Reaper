@@ -40,12 +40,12 @@ Reaper розвивається як системна мова для проши
 | Компонент | Поточний обсяг | Межа |
 |---|---|---|
 | Python runtime | lexer, parser, interpreter, CLI, REPL, модулі, closures, quotas та audit log | поточна виконувана еталонна реалізація |
-| Reaper Studio | основа Windows IDE: дерево проєкту, редактор, підсвічування синтаксису, пошук, check/run і debugger | локальний desktop-застосунок |
+| Reaper Studio | основа Windows IDE, дерево/редактор/debugger та огляд Systems/Hardware з MCU-профілями й межами доступу | локальний desktop-застосунок; без live-інспектора пристроїв |
 | LSP | stdio JSON-RPC, diagnostics, completion, hover, symbols, лексична навігація та форматування документа | відкритий документ; без міжфайлового type inference |
 | Інвентаризація toolchain | пошук компіляторів, систем збирання, парсерів, форматтерів, налагоджувачів і WASM runtime з фіксацією SHA-256 | лише PATH і SHA-256; знайдені програми не запускаються |
 | DAP | stdio debug adapter, line breakpoints, stepping, stack і locals | налагодження на межах операторів; лише довірені локальні програми |
 | NOO TAH | керування проєктами/процесами навколо офіційного Node.js, npm/npx та Inspector | Node/V8/libuv надає upstream Node |
-| Native C17 | lexer, expression parser, owned AST, checked IR і обмежений lowering | активний частковий напрям, не parity з Python runtime |
+| Native C17 + MMIO | lexer, expression parser, owned AST, checked i64 IR, обмежений lowering і перевірний MMIO adapter contract | часткова експериментальна реалізація; без фізичного mapping і parity з Python runtime |
 | QCS / embedded tools | окремий parser апаратної області, JSON AST та обмежені embedded-інструменти | довідковий/аналітичний інструментарій, не виконання на обладнанні |
 | Kora | необов’язкові допоміжні функції стандартної бібліотеки у семи модулях | окремо від runtime мови Reaper |
 
