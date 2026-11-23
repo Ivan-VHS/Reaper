@@ -355,33 +355,43 @@ rpr_cleanup:
             if len(children) != 1:
                 self._fail(node, "emit requires one expression")
             expression, type_name = self._compile_expression(children[0], scope)
-            output.append(self._line("if (!rpr_tick()) return EXIT_FAILURE;"))
+            self._emit_tick_guard(output)
             temporary = self._name("emit")
             if type_name == _STRING:
                 output.append(self._line(f"const char *{temporary} = {expression};"))
-                output.append(self._line("if (rpr_failed) return EXIT_FAILURE;"))
+                self._emit_failure_guard(output)
                 output.append(self._line(f"(void)printf(\"%s\\n\", {temporary});"))
+            elif type_name == "array<i64>":
+                output.append(self._line(f"RprArray *{temporary} = {expression};"))
+                self._emit_failure_guard(output)
+                output.append(self._line(f"rpr_array_print_owned({temporary});"))
+            elif type_name == "map<string,i64>":
+                output.append(self._line(f"RprMap *{temporary} = {expression};"))
+                self._emit_failure_guard(output)
+                output.append(self._line(f"rpr_map_print_owned({temporary});"))
             elif type_name == _BOOL:
                 output.append(self._line(f"int64_t {temporary} = (int64_t)({expression});"))
-                output.append(self._line("if (rpr_failed) return EXIT_FAILURE;"))
+                self._emit_failure_guard(output)
                 output.append(self._line(f"(void)printf(\"%s\\n\", rpr_truthy({temporary}) ? \"true\" : \"false\");"))
             else:
                 output.append(self._line(f"int64_t {temporary} = (int64_t)({expression});"))
-                output.append(self._line("if (rpr_failed) return EXIT_FAILURE;"))
+                self._emit_failure_guard(output)
                 output.append(self._line(f"(void)printf(\"%\" PRId64 \"\\n\", {temporary});"))
             return
         if kind == "yield":
             if not self._inside_function:
                 self._fail(node, "'yield' is only valid inside a craft function")
             children = self._children(node)
-            if len(children) > 1:
-                self._fail(node, "yield accepts at most one expression")
             if len(children) != 1:
                 self._fail(node, "native craft functions must yield one integer expression")
             expression, type_name = self._compile_expression(children[0], scope)
             if type_name != _I64:
                 self._fail(node, "native craft functions must yield an integer")
-            output.append(self._line(f"return (int64_t)({expression});"))
+            temporary = self._name("return")
+            output.append(self._line(f"int64_t {temporary} = (int64_t)({expression});"))
+            self._emit_failure_guard(output)
+            self._emit_active_drops(output)
+            output.append(self._line(f"return {temporary};"))
             return
         if kind == "when":
             children = self._children(node)
@@ -500,22 +510,31 @@ rpr_cleanup:
             self._fail(node, "malformed declaration name or mutability")
         if global_scope and source_name in self.function_table:
             self._fail(node, f"'{source_name}' is already declared as a function")
+
         expression, type_name = self._compile_expression(self._children(node)[0], scope)
-        if type_name not in {_I64, _BOOL, _STRING}:
-            self._fail(node, "native variables must be i64, bool, or string")
+        if type_name not in {_I64, _BOOL, _STRING, "array<i64>", "map<string,i64>"}:
+            self._fail(node, "native variables must be i64, bool, string, array<i64>, or map<string,i64>")
+
         c_name = self._name("global" if global_scope else "local")
         symbol = Symbol(source_name, c_name, type_name, mutable)
         if not scope.define(symbol):
             self._fail(node, f"'{source_name}' is already declared in this scope")
+
+        c_type = self._c_type(type_name)
         if global_scope:
-            c_type = "const char *" if type_name == _STRING else "int64_t"
             self.global_declarations.append(f"static {c_type} {c_name};")
             output.append(self._line(f"{c_name} = {expression};"))
+            if type_name in {"array<i64>", "map<string,i64>"}:
+                kind = "array" if type_name == "array<i64>" else "map"
+                self._global_owned.append((c_name, kind))
         else:
-            c_type = "const char *" if type_name == _STRING else "int64_t"
-            qualifier = "const " if not mutable and type_name != _STRING else ""
-            const_pointer = " const" if not mutable and type_name == _STRING else ""
-            output.append(self._line(f"{qualifier}{c_type}{const_pointer} {c_name} = {expression};"))
+            prefix = "const " if not mutable and type_name in {_I64, _BOOL} else ""
+            qualifier = " const" if not mutable and type_name not in {_I64, _BOOL} else ""
+            output.append(self._line(f"{prefix}{c_type}{qualifier} {c_name} = {expression};"))
+            if type_name in {"array<i64>", "map<string,i64>"}:
+                kind = "array" if type_name == "array<i64>" else "map"
+                self._owned_scopes[-1].append((c_name, kind))
+        self._emit_failure_guard(output)
 
     def _compile_change(self, node: Node, scope: Scope, output: list[str]) -> None:
         if not isinstance(node.value, str) or len(self._children(node)) != 1:
@@ -529,12 +548,24 @@ rpr_cleanup:
             symbol is global_symbol for global_symbol in self.global_scope.symbols.values()
         ):
             self._fail(node, "native craft functions cannot mutate global bindings")
+
         expression, type_name = self._compile_expression(self._children(node)[0], scope)
         if type_name != symbol.type_name:
             self._fail(node, f"cannot assign {type_name} to {symbol.type_name} variable '{node.value}'")
-        tick = "if (!rpr_tick()) return 0;" if self._inside_function else "if (!rpr_tick()) return EXIT_FAILURE;"
-        output.append(self._line(tick))
-        output.append(self._line(f"{symbol.c_name} = {expression};"))
+        self._emit_tick_guard(output)
+
+        if type_name in {"array<i64>", "map<string,i64>"}:
+            kind = "array" if type_name == "array<i64>" else "map"
+            temporary = self._name("replacement")
+            output.append(self._line(f"{self._c_type(type_name)} {temporary} = {expression};"))
+            self._emit_failure_guard(output)
+            output.append(self._line(f"rpr_{kind}_release({symbol.c_name});"))
+            output.append(self._line(f"{symbol.c_name} = {temporary};"))
+        else:
+            temporary = self._name("replacement")
+            output.append(self._line(f"{self._c_type(type_name)} {temporary} = {expression};"))
+            self._emit_failure_guard(output)
+            output.append(self._line(f"{symbol.c_name} = {temporary};"))
 
     def _compile_expression(self, node: Node, scope: Scope) -> tuple[str, str]:
         expression, type_name = self._compile_expression_inner(node, scope)
