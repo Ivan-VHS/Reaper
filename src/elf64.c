@@ -379,7 +379,6 @@ ReaperElf64Status reaper_elf64_write_object(
                              (uint16_t)(i + 1u), 0u, 0u);
             }
         }
-        if (pass == 0u) first_global_symbol = (uint32_t)(symbol_table.length / ELF64_SYM_SIZE);
         for (uint32_t i = 0u; i < object->symbol_count; ++i) {
             const ReaperElf64Symbol *symbol = &object->symbols[i];
             int is_local = symbol->binding == REAPER_ELF64_STB_LOCAL;
@@ -403,6 +402,8 @@ ReaperElf64Status reaper_elf64_write_object(
                          (uint8_t)((symbol->binding << 4u) | symbol->type),
                          symbol->visibility, section_index, symbol->value, symbol->size);
         }
+        if (pass == 0u)
+            first_global_symbol = (uint32_t)(symbol_table.length / ELF64_SYM_SIZE);
     }
 
     symbol_section_index = 1u + object->section_count;
