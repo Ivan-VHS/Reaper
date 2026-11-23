@@ -40,7 +40,7 @@ The intended audience is embedded and firmware developers, systems programmers, 
 | Component | Current scope | Boundary |
 |---|---|---|
 | Python runtime | lexer, parser, interpreter, CLI, REPL, modules, closures, quotas and audit log | current executable reference |
-| Reaper Studio | Windows IDE foundation: project tree, editor, syntax coloring, search, check/run and debugger | local desktop application |
+| Reaper Studio | Windows IDE foundation, project tree/editor/debugger, plus systems/hardware overview with MCU profiles and capability boundaries | local desktop application; no live device inspector |
 | LSP | stdio JSON-RPC, diagnostics, completion, hover, symbols, lexical navigation, semantic tokens and document formatting | per-open-document; lexical highlighting, not cross-file type inference |
 | Toolchain inventory | discovers compilers, builders, parsers, formatters, debuggers and WASM runtimes; pins binary hashes | PATH and SHA-256 only; discovered tools are never executed by inventory |
 | DAP | stdio debug adapter, line breakpoints, stepping, stack and locals | statement-boundary debugging; trusted local programs only |
