@@ -79,6 +79,39 @@ static void test_runtime_program_each(void) {
     assert(reaper_dabi_runtime_destroy(&runtime) == REAPER_DABI_OK);
 }
 
+static void test_canonical_ir_lowering(void) {
+    const ReaperIrNode nodes[] = {
+        {REAPER_IR_OP_CONST_I64, REAPER_IR_TYPE_I64,
+         REAPER_IR_NO_VALUE, REAPER_IR_NO_VALUE, 19, 1u, 1u},
+        {REAPER_IR_OP_CONST_I64, REAPER_IR_TYPE_I64,
+         REAPER_IR_NO_VALUE, REAPER_IR_NO_VALUE, 23, 1u, 5u},
+        {REAPER_IR_OP_ADD_I64, REAPER_IR_TYPE_I64, 0u, 1u, 0, 1u, 3u},
+        {REAPER_IR_OP_RETURN, REAPER_IR_TYPE_UNIT, 2u,
+         REAPER_IR_NO_VALUE, 0, 1u, 1u}
+    };
+    const ReaperIrModule module = {nodes, 4u};
+    ReaperDabiInstruction instructions[4];
+    ReaperDabiProgram program;
+    ReaperDabiProgramError error;
+    ReaperDabiValue result;
+    ProgramHost host_state = {0};
+    ReaperDabiHostV1 host = {
+        REAPER_DABI64_VERSION, (uint32_t)sizeof(ReaperDabiHostV1),
+        &host_state, program_write, NULL, NULL, NULL
+    };
+    ReaperDabiRuntime runtime;
+
+    assert(reaper_dabi_runtime_init(&runtime, &host, NULL) == REAPER_DABI_OK);
+    assert(reaper_dabi_lower_ir(&module, instructions, 4u, 40u,
+                                &program, &error) == REAPER_DABI_OK);
+    assert(reaper_dabi_program_execute(&runtime, &program, &result, &error) ==
+           REAPER_DABI_OK);
+    assert(result.tag == REAPER_DABI_TAG_I64 && result.payload.i64 == 42);
+    reaper_dabi_value_drop(&runtime, &result);
+    assert(runtime.live_objects == 0u);
+    assert(reaper_dabi_runtime_destroy(&runtime) == REAPER_DABI_OK);
+}
+
 static void test_verifier_rejects_bad_control_flow(void) {
     const ReaperDabiInstruction code[] = {
         {REAPER_DABI_OP_JUMP, 0u, REAPER_DABI_PROGRAM_NO_SLOT,
@@ -92,6 +125,7 @@ static void test_verifier_rejects_bad_control_flow(void) {
 int main(void) {
     test_runtime_program_each();
     test_verifier_rejects_bad_control_flow();
+    test_canonical_ir_lowering();
     puts("DABI64 runtime-call program tests passed");
     return 0;
 }
