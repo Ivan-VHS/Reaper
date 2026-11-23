@@ -30,12 +30,12 @@ PALETTES: dict[str, dict[str, str]] = {
         "selection": "#244F82", "selection_fg": "#FFFFFF", "disabled": "#9BAFC4",
     },
     "mora": {
-        "bg": "#10142A", "surface": "#191E39", "elevated": "#252B4B",
-        "fg": "#F5F4FF", "secondary": "#D5D6EB", "muted": "#A8ADC8",
-        "heading": "#FFFFFF", "blue": "#A78BFA", "blue_hover": "#C1AEFF", "on_blue": "#1D1730",
-        "red": "#FF8EAC", "red_hover": "#FFB0C3", "on_red": "#330A1A",
-        "border": "#3B4262", "focus": "#38D4B7",
-        "selection": "#353054", "selection_fg": "#FFFFFF", "disabled": "#B0B4CC",
+        "bg": "#211913", "surface": "#33261D", "elevated": "#493326",
+        "fg": "#FFF3E2", "secondary": "#E7D2B8", "muted": "#C4A98A",
+        "heading": "#FFD9A1", "blue": "#D58B3D", "blue_hover": "#EAA653", "on_blue": "#211913",
+        "red": "#B64A40", "red_hover": "#C85C50", "on_red": "#FFF3E2",
+        "border": "#75543A", "focus": "#F3C16B",
+        "selection": "#60442E", "selection_fg": "#FFF3E2", "disabled": "#B09A83",
     },
 }
 
@@ -91,7 +91,17 @@ def contrast_ratio(foreground: str, background: str) -> float:
 def _install_semantic_status_tokens() -> None:
     """Add high-contrast status roles without changing the product's blue/red identity."""
     for theme_name, palette in PALETTES.items():
-        dark = theme_name in {"dark", "night", "mora"}
+        if theme_name == "mora":
+            palette.update({
+                "success": "#9EC39A", "warning": "#F0BE73",
+                "error": "#EF8E7C", "info": "#E8C99F",
+                "brand": "#D58B3D", "brand_hover": "#EAA653",
+                "on_brand": "#211913", "brand_secondary": "#6F8062",
+                "on_brand_secondary": "#FFF3E2",
+            })
+            continue
+
+        dark = theme_name in {"dark", "night"}
         palette.update({
             # Status meaning is carried by text/icon; hues stay inside the shared brand canon.
             "success": "#73B7FF" if dark else "#0039A6",
@@ -209,7 +219,7 @@ def palette_for(mode: str = "system", *, system_dark: bool | None = None) -> dic
     if requested == "system":
         requested = "dark" if (_system_dark() if system_dark is None else system_dark) else "light"
     if requested not in PALETTES:
-        raise ValueError("Theme must be 'system', 'light', 'dark', 'dawn', 'sunset' or 'night'")
+        raise ValueError("Theme must be 'system', 'light', 'dark', 'mora', 'dawn', 'sunset' or 'night'")
     result = dict(PALETTES[requested])
     issues = palette_contrast_issues(result)
     if issues:
