@@ -88,7 +88,7 @@ static void test_elf_load_plan_and_apply(void) {
             assert(memcmp(mock.blocks[i], text, sizeof text) == 0);
             found_text = 1;
         }
-        if ((mock.flags[i] & 3u) == 3u) {
+        if ((mock.flags[i] & 6u) == 6u) {
             for (uint64_t j = 0u; j < mock.sizes[i]; ++j)
                 assert(mock.blocks[i][j] == 0u);
             found_bss = 1;
