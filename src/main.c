@@ -2,7 +2,11 @@
 #include "reaper/capability_suite.h"
 #include "reaper/codegen.h"
 #include "reaper/evolution.h"
+#include "reaper/hir.h"
 #include "reaper/ir.h"
+#include "reaper/lir.h"
+#include "reaper/mir.h"
+#include "reaper/codegen_duckos_lir.h"
 #include "reaper/lexer.h"
 #include "reaper/lower.h"
 #include "reaper/token_catalog.h"
@@ -50,14 +54,14 @@ static void usage(FILE *stream) {
         "Reaper %s — native C17 compiler development track\n"
         "Usage: reaper-c [--version] [--evolution-status]\n"
         "       reaper-c [--tokens|--ast-json] <source.rpr>\n"
-        "       reaper-c --emit-asm <expression.rpr> [--target x86_64-sysv|duckos-dabi64-v1] [-o output.s]\n"
+        "       reaper-c --emit-asm <source.rpr> [--target x86_64-sysv|duckos-dabi64-v1] [-o output.s]\n"
         "       reaper-c [--catalog|--catalog-token TOKEN]\n"
         "       reaper-c [--capabilities|--capability MODULE]\n"
         "  --version           Show native compiler version\n"
         "  --evolution-status  Show native development gates and safety boundary\n"
         "  --tokens            Print lexical tokens\n"
         "  --ast-json          Parse a complete source program and print deterministic AST JSON\n"
-        "  --emit-asm          Emit native assembly for the selected target\n"
+        "  --emit-asm          Emit native assembly; DABI64 compiles a complete checked program\n"
         "  --target NAME       x86_64-sysv or duckos-dabi64-v1 (default: x86_64-sysv)\n"
         "  -o PATH             Write generated assembly to PATH instead of stdout\n"
         "  --catalog           List the native token catalogue\n"
@@ -68,12 +72,83 @@ static void usage(FILE *stream) {
     );
 }
 
+static int emit_duckos_program(
+    const ReaperTokenArray *tokens,
+    const char *source_path,
+    FILE *output
+) {
+    ReaperAst ast = {0};
+    ReaperParseError parse_error = {{0}, 0U, 0U};
+    if (!reaper_parse_program(tokens, &ast, &parse_error)) {
+        fprintf(stderr, "%s:%zu:%zu: parser error: %s\n",
+            source_path, parse_error.line, parse_error.column,
+            parse_error.message);
+        return 1;
+    }
+
+    ReaperHirModule hir = {0};
+    ReaperHirError hir_error = {0};
+    if (!reaper_hir_build(&ast, &hir, &hir_error)) {
+        if (hir_error.node_index < ast.length) {
+            const ReaperAstNode *node = &ast.items[hir_error.node_index];
+            fprintf(stderr, "%s:%zu:%zu: semantic error: %s\n",
+                source_path, node->line, node->column, hir_error.message);
+        } else {
+            fprintf(stderr, "%s: semantic error at AST node %zu: %s\n",
+                source_path, hir_error.node_index, hir_error.message);
+        }
+        reaper_hir_free(&hir);
+        reaper_ast_free(&ast);
+        return 1;
+    }
+
+    ReaperMirModule mir = {0};
+    ReaperMirError mir_error = {0};
+    if (!reaper_mir_build(&hir, &mir, &mir_error)) {
+        fprintf(stderr, "%s: MIR lowering error at node %zu: %s\n",
+            source_path, mir_error.node_index, mir_error.message);
+        reaper_mir_free(&mir);
+        reaper_hir_free(&hir);
+        reaper_ast_free(&ast);
+        return 1;
+    }
+
+    ReaperLirModule lir = {0};
+    ReaperLirError lir_error = {0};
+    if (!reaper_lir_build(&hir, &mir, &lir, &lir_error)) {
+        fprintf(stderr, "%s: LIR lowering error at node %zu: %s\n",
+            source_path, lir_error.node_index, lir_error.message);
+        reaper_lir_free(&lir);
+        reaper_mir_free(&mir);
+        reaper_hir_free(&hir);
+        reaper_ast_free(&ast);
+        return 1;
+    }
+
+    ReaperCodegenError codegen_error = {0};
+    int success = reaper_codegen_duckos_dabi64_lir(&lir, output, &codegen_error);
+    if (!success) {
+        fprintf(stderr, "%s: DABI64 codegen error at LIR node %zu: %s\n",
+            source_path, codegen_error.node_index, codegen_error.message);
+    }
+
+    reaper_lir_free(&lir);
+    reaper_mir_free(&mir);
+    reaper_hir_free(&hir);
+    reaper_ast_free(&ast);
+    return success ? 0 : 1;
+}
+
 static int emit_native_assembly(
     const ReaperTokenArray *tokens,
     const char *source_path,
     FILE *output,
     const char *target
 ) {
+    if (strcmp(target, "duckos-dabi64-v1") == 0) {
+        return emit_duckos_program(tokens, source_path, output);
+    }
+
     ReaperAst ast;
     ReaperParseError parse_error = {{0}, 0U, 0U};
     if (!reaper_parse_expression(tokens, &ast, &parse_error)) {
