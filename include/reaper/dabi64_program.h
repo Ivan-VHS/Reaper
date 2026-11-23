@@ -2,6 +2,7 @@
 #define REAPER_DABI64_PROGRAM_H
 
 #include "reaper/dabi64.h"
+#include "reaper/ir.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -13,6 +14,10 @@ extern "C" {
 typedef enum {
     REAPER_DABI_OP_INVALID = 0,
     REAPER_DABI_OP_CONST_I64,
+    REAPER_DABI_OP_ADD_I64,
+    REAPER_DABI_OP_SUB_I64,
+    REAPER_DABI_OP_MUL_I64,
+    REAPER_DABI_OP_DIV_I64,
     REAPER_DABI_OP_CONST_STRING,
     REAPER_DABI_OP_CALL,
     REAPER_DABI_OP_JUMP,
@@ -45,6 +50,15 @@ typedef struct {
     ReaperDabiStatus status;
     char message[160];
 } ReaperDabiProgramError;
+
+ReaperDabiStatus reaper_dabi_lower_ir(
+    const ReaperIrModule *module,
+    ReaperDabiInstruction *output,
+    uint64_t output_capacity,
+    uint64_t step_limit,
+    ReaperDabiProgram *program_out,
+    ReaperDabiProgramError *error
+);
 
 ReaperDabiStatus reaper_dabi_program_verify(
     const ReaperDabiProgram *program, ReaperDabiProgramError *error
