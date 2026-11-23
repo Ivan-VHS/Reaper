@@ -74,7 +74,7 @@ class PolyglotStoreTests(unittest.TestCase):
     def test_new_cards_are_due_and_interactive_review_can_be_driven(self) -> None:
         card_id = self.store.add_phrase(
             self.profile, "How are you?", "Как дела?",
-            context="A casual greeting", pronunciation="hau ar yu",
+            context="A casual written greeting",
             personal_example="I am doing well today.",
         )
         output: list[str] = []
