@@ -444,10 +444,12 @@ ReaperElf64Status reaper_elf64_link(
         if ((s->flags & SHF_EXECINSTR) != 0u) flags |= PF_X;
         ph = image + EHDR + (size_t)ph_index * PHDR;
         w32(ph, PT_LOAD); w32(ph + 4u, flags);
-        w64(ph + 8u, s->image_offset); w64(ph + 16u, s->address);
+        w64(ph + 8u, s->type == SHT_NOBITS ? file_size : s->image_offset);
+        w64(ph + 16u, s->address);
         w64(ph + 24u, s->address);
         w64(ph + 32u, s->type == SHT_NOBITS ? 0u : s->size);
-        w64(ph + 40u, s->size); w64(ph + 48u, page_size);
+        w64(ph + 40u, s->size);
+        w64(ph + 48u, s->type == SHT_NOBITS ? 1u : page_size);
         ph_index++;
     }
 
