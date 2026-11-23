@@ -320,7 +320,7 @@ class BackendStore:
                         raise BackendStoreError(f"backup integrity check failed: {result}")
                 finally:
                     backup_connection.close()
-            with temporary.open("rb") as stream:
+            with temporary.open("rb+") as stream:
                 os.fsync(stream.fileno())
             os.replace(temporary, target)
             try:
