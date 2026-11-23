@@ -50,13 +50,8 @@ class MemoryManager:
             if isinstance(current, ResultValue):
                 if current.succeeded:
                     pending.append(current.value)
-                if current.error is not None:
-                    pending.append(current.error.details)
-                if current.context is not None:
-                    pending.append(current.context.metadata)
                 continue
             if isinstance(current, RequestContext):
-                pending.append(current.metadata)
                 continue
             if not isinstance(current, (list, dict, bytearray)):
                 continue
@@ -142,12 +137,8 @@ class MemoryManager:
             elif isinstance(value, ResultValue):
                 if value.succeeded:
                     pending.append(value.value)
-                if value.error is not None:
-                    pending.append(value.error.details)
-                if value.context is not None:
-                    pending.append(value.context.metadata)
             elif isinstance(value, RequestContext):
-                pending.append(value.metadata)
+                pass
             elif value.__class__.__name__ in {"UserFunction", "BytecodeFunction"}:
                 pending.append(value.closure)
         return marked
