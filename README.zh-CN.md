@@ -264,3 +264,8 @@ Python 仍是当前可执行的兼容性参考实现。Native C17 parsing/loweri
     python tools/report_envelope.py --tool reaper --version VERSION < result.json
 
 请参阅 docs/REPORT_ENVELOPE.md 和 schemas/ivan-vhs.report.v1.schema.json。该封装保留工具数据并记录结果限制。
+
+
+## 文档导航图
+
+请从[文档索引](docs/README.md)进入，并使用[信息架构图](docs/INFORMATION_ARCHITECTURE.md)浏览语言、编译器、Runtime、Studio 和集成主题集群。主题入口链接到详细契约；实现状态仍以源代码、测试和 Schema 为准。
