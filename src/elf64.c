@@ -386,7 +386,7 @@ ReaperElf64Status reaper_elf64_write_object(
             if ((pass == 0u) != is_local) continue;
             uint16_t section_index = 0u;
             if (symbol->section_index == REAPER_ELF64_ABSOLUTE_SECTION) {
-                section_index = (uint16_t)REAPER_ELF64_SHN_ABS;
+                section_index = (uint16_t)REAPER_ELF64_ABSOLUTE_SECTION;
             } else if (symbol->section_index != REAPER_ELF64_NO_SECTION) {
                 section_index = (uint16_t)(symbol->section_index + 1u);
             }
