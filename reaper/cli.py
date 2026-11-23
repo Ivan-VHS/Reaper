@@ -93,6 +93,9 @@ def main(argv: list[str] | None = None) -> int:
     if arguments and arguments[0] == "dap":
         from .dap import serve as dap_serve
         return dap_serve()
+    if arguments and arguments[0] == "typecheck":
+        from .typecheck import main as typecheck_main
+        return typecheck_main(arguments[1:])
     if arguments and arguments[0] == "embedded":
         from .embedded import main as embedded_main
         return embedded_main(arguments[1:])
