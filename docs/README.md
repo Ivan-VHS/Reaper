@@ -52,6 +52,10 @@
 | [../LANGUAGE.md](../LANGUAGE.md) | syntax quick reference |
 | [../editors/vscode/README.md](../editors/vscode/README.md) | editor grammar and external protocol-service notes |
 
+| [DABI64_ABI.md](DABI64_ABI.md) | versioned 64-bit native module ABI and value ownership contract |
+| [ELF64_OBJECT_WRITER.md](ELF64_OBJECT_WRITER.md) | deterministic x86-64 ET_REL writer, symbols and RELA records |
+| [ELF64_LINKER.md](ELF64_LINKER.md) | static ELF64 executable linking, symbol resolution and relocation application |
+
 Only tested behavior is labelled implemented. Registry counts are catalogued items, not feature-completion claims. Python remains the current compatibility reference; C17 parity requires separate conformance evidence.
 
 
@@ -78,8 +82,7 @@ This is an illustrative personal-budgeting reference, not a claim that the host 
 
 [IVAN_VHS_ENGINEERING_PROFILE.md](IVAN_VHS_ENGINEERING_PROFILE.md) translates the project's direction into concrete architecture boundaries, implementation priorities, human-readable code conventions and acceptance tests. It is a development contract; it does not mark planned work as implemented.
 
-| [DABI64_ABI.md](DABI64_ABI.md) | versioned 64-bit native module ABI and value ownership contract |
 
-| [ELF64_OBJECT_WRITER.md](ELF64_OBJECT_WRITER.md) | deterministic x86-64 ET_REL writer, symbols and RELA records |
+## Additional desktop profile
 
-| [ELF64_LINKER.md](ELF64_LINKER.md) | static ELF64 executable linking, symbol resolution and relocation application |
+[Mora Amber design system](MORA_AMBER_DESIGN_SYSTEM.md) describes the shared warm palette and its contrast, material and motion constraints for the Reaper Studio workbench.
