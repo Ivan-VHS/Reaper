@@ -19,7 +19,9 @@ emit inventory["pears"]
         self.assertEqual(output, ["4", "2"])
 
     def test_dictionary_literal_flows_through_canonical_ir_and_vm(self) -> None:
-        source = 'make values := {"first": 13}\\nemit values["first"]\\n'
+        source = """make values := {"first": 13}
+emit values["first"]
+"""
         tree = parse(source, "map-ir.rpr")
         module = lower(tree, "map-ir.rpr")
         verify(module)
@@ -30,11 +32,13 @@ emit inventory["pears"]
     def test_dictionary_keys_must_be_hashable(self) -> None:
         output: list[str] = []
         with self.assertRaisesRegex(Exception, "not hashable"):
-            Interpreter(output=output.append).run('make data := {[1, 2]: 3}\\n', "bad-map.rpr")
+            Interpreter(output=output.append).run("""make data := {[1, 2]: 3}
+""", "bad-map.rpr")
 
     def test_dictionary_literal_rejects_missing_separator(self) -> None:
         with self.assertRaisesRegex(Exception, "expected ':'"):
-            parse('emit {"name" 4}\\n', "bad-map.rpr")
+            parse("""emit {"name" 4}
+""", "bad-map.rpr")
 
 
 if __name__ == "__main__":
