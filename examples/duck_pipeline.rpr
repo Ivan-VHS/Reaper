@@ -1,0 +1,92 @@
+# duck_pipeline.rpr
+# Bounded channel normalizer and dictionary-interface inspector.
+# Input records are loaded from JSON because map literals are not part of the
+# current .rpr grammar. The program itself uses native Reaper composition.
+
+craft normalize_name(raw) {
+    yield raw :: to_str() :: trim() :: lower()
+}
+
+# A small Result convention: [true, value] or [false, [code, message, details]].
+craft ok(value) {
+    yield [true, value]
+}
+
+craft err(code, message, details) {
+    yield [false, [code, message, details]]
+}
+
+craft extract_level(item) {
+    when has_key(item, "level") {
+        yield to_int(get(item, "level", -1), -1)
+    } otherwise {
+        when has_key(item, "value") {
+            yield to_int(get(item, "value", -1), -1)
+        } otherwise {
+            yield -1
+        }
+    }
+}
+
+craft inspect_one(item) {
+    make name := get(item, "name", "") :: to_str() :: trim() :: lower()
+
+    when len(name) == 0 {
+        yield err("EMPTY_NAME", "channel name is empty", [name])
+    } otherwise {
+        make level := extract_level(item)
+
+        when level < 0 or level > 100 {
+            yield err(
+                "OUT_OF_RANGE",
+                "level must be 0..100",
+                [name, level]
+            )
+        } otherwise {
+            yield ok([name, level, level > 0])
+        }
+    }
+}
+
+craft is_ok(result) {
+    yield result[0] == true
+}
+
+craft is_err(result) {
+    yield result[0] == false
+}
+
+craft unwrap_ok(result) {
+    yield result[1]
+}
+
+craft unwrap_err(result) {
+    yield result[1]
+}
+
+craft is_active(channel) {
+    yield channel[2]
+}
+
+craft channel_name(channel) {
+    yield channel[0]
+}
+
+craft run_duck_pipeline(raw_items) {
+    make inspected := raw_items :: map(inspect_one)
+    make valid := inspected :: filter(is_ok) :: map(unwrap_ok)
+    make issues := inspected :: filter(is_err) :: map(unwrap_err)
+    make active_channels := valid :: filter(is_active) :: map(channel_name)
+
+    # Report layout:
+    # [0] valid_count, [1] issue_count, [2] active_channels, [3] issues.
+    yield [len(valid), len(issues), active_channels, issues]
+}
+
+make raw_channels := read_json("examples/data/duck_pipeline_input.json")
+make report := run_duck_pipeline(raw_channels)
+
+emit "Valid count: " ++ text(report[0])
+emit "Issue count: " ++ text(report[1])
+emit "Active channels: " ++ text(report[2])
+emit "Issues: " ++ text(report[3])
