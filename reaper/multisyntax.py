@@ -1233,8 +1233,12 @@ def validate_source(syntax: str, source: str, *, filename: str = "<memory>") -> 
     selected = normalize_syntax(syntax)
     analysis: dict[str, Any] = {}
     if selected == "reaper":
+        from .errors import ReaperError
         from .parser import parse
-        parse(source, filename)
+        try:
+            parse(source, filename)
+        except ReaperError as error:
+            raise MultiSyntaxError(str(error)) from error
     elif selected == "python":
         try:
             tree = ast.parse(source, filename=filename, mode="exec")
