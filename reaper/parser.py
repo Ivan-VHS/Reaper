@@ -46,7 +46,7 @@ class Parser:
     def _statement(self) -> Node:
         if self._match("IMPORT"):
             token = self._previous()
-            specifier = self._consume("STRING", "expected a quoted .rpr path after 'import'")
+            specifier = self._consume("STRING", "expected a quoted Reaper module path after 'import'")
             alias = None
             if self._match("AS"):
                 alias = self._consume("IDENT", "expected an import alias after 'as'").value
