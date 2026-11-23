@@ -396,6 +396,11 @@ class TypeChecker:
             if callback_node is not None and callback_node.kind == "name":
                 function = self.functions.get(callback_node.value)
                 if function is not None:
+                    if function.arity != 1:
+                        self._report(
+                            node, "RPR-T0007",
+                            f"{name}() callback '{callback_node.value}' expects one parameter, got {function.arity}",
+                        )
                     callback_type = function.return_type
                 elif callback_node.value not in BUILTIN_ARITY:
                     self._report(
@@ -583,7 +588,13 @@ class TypeChecker:
         if left == right:
             return left
         if left.startswith("Result[") and right.startswith("Result["):
-            return f"Result[{self._unify(self._result_payload(left), self._result_payload(right))}]"
+            left_payload = self._result_payload(left)
+            right_payload = self._result_payload(right)
+            if left_payload == NOTHING:
+                return right
+            if right_payload == NOTHING:
+                return left
+            return f"Result[{self._unify(left_payload, right_payload)}]"
         if left == ANY or right == ANY:
             return ANY
         if left in NUMERIC and right in NUMERIC:
