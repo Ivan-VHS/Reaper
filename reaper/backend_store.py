@@ -106,7 +106,7 @@ class BackendStore:
                 )
             self._connection.execute(f"PRAGMA user_version = {self.SCHEMA_VERSION}")
             self._connection.execute("COMMIT")
-        except sqlite3.Error:
+        except Exception:
             self._connection.execute("ROLLBACK")
             raise
 
