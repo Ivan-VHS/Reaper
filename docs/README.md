@@ -50,7 +50,7 @@
 | [PROJECT_FEDERATION_MATRIX.md](PROJECT_FEDERATION_MATRIX.md) | peer-project boundaries and integrations |
 | [THREADS_AND_FEDERATION.md](THREADS_AND_FEDERATION.md) | implementation and integration evidence |
 | [ATOMIC_QUANTUM_133.md](ATOMIC_QUANTUM_133.md) | 133 stable operation IDs, eight tested classical simulation kernels and hardware boundary |
-| [../LANGUAGE.md](../LANGUAGE.md) | syntax quick reference |
+| [../LANGUAGE.md](../LANGUAGE.md) | syntax quick reference |\n| [POLYGLOT_CAPABILITY_LAYER.md](POLYGLOT_CAPABILITY_LAYER.md) | capability mapping inspired by 15 industrial languages, implementation status and migration gates |
 | [../editors/vscode/README.md](../editors/vscode/README.md) | editor grammar and external protocol-service notes |
 
 Only tested behavior is labelled implemented. Registry counts are catalogued items, not feature-completion claims. Python remains the current compatibility reference; C17 parity requires separate conformance evidence.
