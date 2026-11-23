@@ -111,6 +111,8 @@ def main(argv: list[str] | None = None) -> int:
         return polyglot_code_main(arguments[1:])
     parser = build_parser()
     args = parser.parse_args(arguments)
+    if args.syntax_only and not args.check:
+        parser.error("--syntax-only requires --check")
     native_requested = args.emit_c is not None or args.native is not None
     if args.cc is not None and args.native is None:
         parser.error("--cc requires --native")
@@ -309,8 +311,6 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--heap-bytes must be a positive integer")
     if args.open_resources < 1:
         parser.error("--open-resources must be a positive integer")
-    if args.syntax_only and not args.check:
-        parser.error("--syntax-only requires --check")
     path = Path(args.source)
     output_lines: list[str] = []
     profile_data: dict[str, float | int] | None = None
