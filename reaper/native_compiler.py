@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any
 
 from .parser import Node, parse
+from .syntax_profiles import supported_source_extensions
 
 
 class NativeCompileError(ValueError):
@@ -625,8 +626,8 @@ def build_executable(
     destination = Path(output).expanduser().resolve()
     if filename != "<memory>" and destination == Path(filename).expanduser().resolve():
         raise ValueError("native output must not overwrite its Reaper source file")
-    if destination.suffix.lower() in {".c", ".h", ".rpr"}:
-        raise ValueError("native output must be an executable path, not a source-file path")
+    if destination.suffix.casefold() in {".c", ".h"} | supported_source_extensions():
+        raise ValueError("native output must be an executable path, not a Reaper source or C header/source path")
     destination.parent.mkdir(parents=True, exist_ok=True)
     generated = compile_source(source, filename, syntax=syntax)
     # Build beside the requested output so the final replacement is atomic and
