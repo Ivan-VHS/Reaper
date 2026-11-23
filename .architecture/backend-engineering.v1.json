@@ -1,0 +1,218 @@
+{
+  "schema": "ivan-vhs.backend-engineering.v1",
+  "version": 1,
+  "project": "Reaper",
+  "scope": "Local systems-language toolchain, Python reference runtime, experimental native C17 compiler track, Studio, stdio LSP/DAP and explicit local integrations; not a hosted backend service.",
+  "standard": "docs/BACKEND_ENGINEERING_STANDARD.md",
+  "schema_file": ".architecture/backend-engineering.v1.schema.json",
+  "status_policy": {
+    "allowed_statuses": [
+      "implemented",
+      "partial",
+      "planned",
+      "not_applicable",
+      "not_assessed"
+    ],
+    "rule": "Use implemented or partial only when repository code and focused verification paths support the exact statement. Record limits explicitly. A design document, capability catalog or profile-validation job does not prove runtime behavior."
+  },
+  "controls": [
+    {
+      "id": "boundaries-contracts",
+      "title": "Module boundaries and versioned contracts",
+      "status": "partial",
+      "assessment": "The language modules, runtime APIs and transactional snapshot contract define explicit component boundaries; cross-file semantic and ABI guarantees remain staged.",
+      "evidence": [
+        "reaper/modules.py",
+        "docs/ARCHITECTURE.md",
+        "docs/TRANSACTIONAL_RUNTIME.md"
+      ],
+      "verification": [
+        "tests/test_language.py",
+        "tests/test_transactions.py"
+      ],
+      "limitations": [
+        "Module and host APIs are not a claim of a fully native compiler/runtime or stable external ABI."
+      ]
+    },
+    {
+      "id": "input-validation-idempotency",
+      "title": "Input validation and idempotent state changes",
+      "status": "partial",
+      "assessment": "Frontend quotas, parser checks and optimistic transaction generations bound and protect selected state-changing operations.",
+      "evidence": [
+        "reaper/transactions.py",
+        "reaper/lexer.py",
+        "docs/TRANSACTIONAL_RUNTIME.md"
+      ],
+      "verification": [
+        "tests/test_frontend_limits.py",
+        "tests/test_transactions.py"
+      ],
+      "limitations": [
+        "The Python reference runtime remains the compatibility implementation; idempotency is provided only where the operation contract defines it."
+      ]
+    },
+    {
+      "id": "io-transport",
+      "title": "Low-level I/O and transport boundaries",
+      "status": "partial",
+      "assessment": "LSP and DAP expose local stdio protocol adapters with protocol-focused tests; a remote network service is not part of the current product scope.",
+      "evidence": [
+        "reaper/lsp.py",
+        "reaper/dap.py",
+        "docs/FEATURES.md"
+      ],
+      "verification": [
+        "tests/test_ide_protocols.py",
+        "tests/test_language_service.py"
+      ],
+      "limitations": [
+        "Stdio protocol support does not establish a network daemon, remote execution or distributed transport."
+      ]
+    },
+    {
+      "id": "concurrency-backpressure",
+      "title": "Concurrency, scheduling and backpressure",
+      "status": "not_assessed",
+      "assessment": "The project has local runtime and tooling paths, but bounded worker scheduling, queue saturation and cancellation behavior have not been established as a general runtime contract.",
+      "evidence": [],
+      "verification": [],
+      "limitations": [
+        "Do not infer concurrency safety or load capacity from asynchronous API names or local process boundaries."
+      ]
+    },
+    {
+      "id": "memory-resource-lifecycle",
+      "title": "Memory ownership and resource lifetime",
+      "status": "partial",
+      "assessment": "The runtime includes explicit memory and execution-budget components with focused regression coverage.",
+      "evidence": [
+        "reaper/memory.py",
+        "reaper/budget.py",
+        "docs/FEATURES.md"
+      ],
+      "verification": [
+        "tests/test_extended_runtime.py",
+        "tests/test_budget.py"
+      ],
+      "limitations": [
+        "These controls do not establish native ownership checking, a general allocator, or cross-process memory isolation."
+      ]
+    },
+    {
+      "id": "data-integrity-transactions",
+      "title": "Data integrity and transactions",
+      "status": "partial",
+      "assessment": "RuntimeTransaction uses bounded JSON-compatible snapshots, generations, digests and rollback for caller-owned in-memory state.",
+      "evidence": [
+        "reaper/transactions.py",
+        "docs/TRANSACTIONAL_RUNTIME.md"
+      ],
+      "verification": [
+        "tests/test_transactions.py"
+      ],
+      "limitations": [
+        "The transaction API is not a persistent database transaction or firmware-flashing facility."
+      ]
+    },
+    {
+      "id": "failure-recovery-lifecycle",
+      "title": "Failure handling, recovery and lifecycle",
+      "status": "partial",
+      "assessment": "The resilience policy and transaction tests specify bounded retries, safe failures and rollback for selected local operations.",
+      "evidence": [
+        "docs/DISTRIBUTED_SYSTEMS_ENGINEERING_STANDARD.md",
+        "reaper/transactions.py",
+        "scripts/validate_resilience_policy.py"
+      ],
+      "verification": [
+        "tests/test_resilience_policy.py",
+        "tests/test_transactions.py"
+      ],
+      "limitations": [
+        "A validated policy file does not enforce every runtime failure path; no distributed recovery system is claimed."
+      ]
+    },
+    {
+      "id": "security-privilege-secrets",
+      "title": "Security, privileges and secret handling",
+      "status": "partial",
+      "assessment": "Execution audit and local trust-boundary guidance exist, with tests for audit behavior and resilience-policy invariants.",
+      "evidence": [
+        "reaper/audit.py",
+        "docs/DISTRIBUTED_SYSTEMS_ENGINEERING_STANDARD.md",
+        "SECURITY.md"
+      ],
+      "verification": [
+        "tests/test_audit.py",
+        "tests/test_resilience_policy.py"
+      ],
+      "limitations": [
+        "The local interpreter is not a sandbox for hostile native code; no hosted identity or secret service is claimed."
+      ]
+    },
+    {
+      "id": "observability-diagnostics",
+      "title": "Observability and diagnostics",
+      "status": "partial",
+      "assessment": "The runtime exposes audit records and structured diagnostics for selected execution and toolchain operations.",
+      "evidence": [
+        "reaper/audit.py",
+        "docs/EXECUTION_AUDIT.md"
+      ],
+      "verification": [
+        "tests/test_audit.py",
+        "tests/test_diagnostics.py"
+      ],
+      "limitations": [
+        "There is no distributed tracing or service-level latency telemetry for the current local product."
+      ]
+    },
+    {
+      "id": "performance-capacity",
+      "title": "Performance budgets and capacity",
+      "status": "not_assessed",
+      "assessment": "No verified service throughput, queue-capacity or horizontal scaling baseline is currently defined for the local language toolchain.",
+      "evidence": [],
+      "verification": [],
+      "limitations": [
+        "Do not claim horizontal scalability or production server capacity for a local CLI and desktop IDE."
+      ]
+    },
+    {
+      "id": "configuration-extensibility",
+      "title": "Configuration, extensibility and integration",
+      "status": "partial",
+      "assessment": "Plugin and Kora module interfaces provide explicit local extension points and dedicated compatibility tests.",
+      "evidence": [
+        "reaper/plugins.py",
+        "reaper/kora/plugins.py",
+        "docs/KORA.md"
+      ],
+      "verification": [
+        "tests/test_plugins.py",
+        "tests/test_kora.py"
+      ],
+      "limitations": [
+        "Plugin discovery is not permission to execute untrusted code; extension sandboxing remains a separate requirement."
+      ]
+    },
+    {
+      "id": "verification-delivery",
+      "title": "Verification and delivery gate",
+      "status": "implemented",
+      "assessment": "This PR adds a machine-readable backend engineering profile, safe-path/status validator, negative self-tests and a dedicated CI gate.",
+      "evidence": [
+        "docs/BACKEND_ENGINEERING_STANDARD.md",
+        "tools/validate_backend_engineering.py",
+        ".github/workflows/backend-engineering.yml"
+      ],
+      "verification": [
+        ".github/workflows/backend-engineering.yml"
+      ],
+      "limitations": [
+        "The gate validates profile integrity and evidence paths; it does not certify compiler parity, native runtime completeness or production readiness."
+      ]
+    }
+  ]
+}
