@@ -858,7 +858,7 @@ class BackendServer:
         return {"type": type(value).__name__}
 
     async def _run_blocking(self, function: Callable[..., Any], *args: Any) -> Any:
-        if self._work_slots is None or self._closing:
+        if self._work_slots is None or self._closed:
             raise RequestFailure(503, "shutting_down", "backend is shutting down")
         try:
             await asyncio.wait_for(
