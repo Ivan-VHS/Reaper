@@ -36,3 +36,10 @@ This hub groups related specifications and implementation references. The linked
 - Follow links within this cluster when a shared compiler, runtime, IDE or quality contract is involved.
 - Use the central map for cross-cluster navigation and project boundaries.
 - Update this hub and the central catalog whenever a page is added, moved or retired.
+
+
+## Systems and hardware language
+
+- [HARDWARE_LANGUAGE.md](../HARDWARE_LANGUAGE.md) — language target, typed memory and effects, ownership, checked MMIO, native compiler milestones and hardware qualification.
+- [NATIVE_COMPILER.md](../NATIVE_COMPILER.md) — current scalar AOT boundary and explicit unsupported constructs.
+- [EMBEDDED_C_WORKBENCH.md](../EMBEDDED_C_WORKBENCH.md) — MCU profiles, linker generation and cross-compiler invocation boundaries.
