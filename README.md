@@ -111,18 +111,6 @@ ctest --test-dir build --output-on-failure
 
 This builds the current native compiler subset and its tests. It does not replace the Python runtime or establish full language parity.
 
-### Experimental scalar AOT compiler
-
-The Python runtime and VM remain the compatibility reference. The experimental native AOT route statically checks a defined scalar subset, emits inspectable C17, and invokes a local GCC/Clang-compatible compiler:
-
-```sh
-python -m reaper examples/native_scalar.rpr --emit-c build/native_scalar.c
-python -m reaper examples/native_scalar.rpr --native build/native_scalar
-./build/native_scalar
-```
-
-Use `--cc clang` to select a compiler or `--optimization 0` through `3` (or `s`) to choose a build profile. `--emit-c -` writes C17 to standard output. Unsupported dynamic features are rejected before code generation; they are not silently interpreted or linked into the native program. This is a C17 compiler bridge, not yet a direct ELF/PE writer or a full native replacement for the Python runtime. See [the native compiler contract](docs/NATIVE_COMPILER.md).
-
 ### Optional NOO TAH / Node.js checks
 
 Install Node.js from the official distribution and make `node` available on `PATH`, then run:
