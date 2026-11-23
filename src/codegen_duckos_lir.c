@@ -242,10 +242,15 @@ static int validate_module(
                     return codegen_fail(error, instruction_id, "built-in runtime calls are not linked into this DABI64 backend yet");
 
                 case REAPER_LIR_LOAD_SLOT:
-                case REAPER_LIR_STORE_SLOT:
                     if (instruction->type != REAPER_HIR_TYPE_I64 &&
                         instruction->type != REAPER_HIR_TYPE_UNKNOWN) {
-                        return codegen_fail(error, instruction_id, "DABI64 local slots currently carry i64 values only");
+                        return codegen_fail(error, instruction_id, "DABI64 local loads currently require i64 values");
+                    }
+                    break;
+
+                case REAPER_LIR_STORE_SLOT:
+                    if (!value_is_i64(module, function->id, instruction->left)) {
+                        return codegen_fail(error, instruction_id, "DABI64 local stores currently accept i64 values only");
                     }
                     break;
 
