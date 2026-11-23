@@ -40,8 +40,9 @@ Reaper 正在成为面向固件、嵌入式程序、平台组件和硬件相关�
 | 组件 | 当前范围 | 明确边界 |
 |---|---|---|
 | Python Runtime | lexer、parser、interpreter、CLI、REPL、模块、闭包、配额与审计日志 | 当前可执行参考实现 |
+| 静态类型分析 | 推断基础类型与列表元素类型，检查运算符、索引、可变性和调用参数数量 | 部分实现；通过 `reaper typecheck` 启用 |
 | Reaper Studio | Windows IDE 基础、项目树/编辑器/debugger，以及显示 MCU 配置和能力边界的 Systems/Hardware 概览 | 本地桌面应用；尚无实时设备寄存器查看器 |
-| LSP | stdio JSON-RPC、诊断、补全、hover、符号、词法导航和文档格式化 | 每个已打开文档独立；不提供跨文件类型推断 |
+| LSP | stdio JSON-RPC、诊断、补全、hover、符号、词法导航、文档格式化和局部类型检查 | 每个已打开文档独立；不提供跨文件类型推断 |
 | Toolchain 清单 | 通过 PATH 查找编译器、构建工具、解析器、格式化工具、调试器和 WASM 运行时，并固定 SHA-256 | 仅执行路径查找与哈希；不会运行找到的程序 |
 | DAP | stdio 调试适配器、行断点、单步、堆栈和局部变量 | 语句边界调试；仅适用于可信本地程序 |
 | NOO TAH | 管理官方 Node.js 运行时、项目/进程、npm/npx 和 Inspector | Node/V8/libuv 由上游 Node 提供 |
@@ -49,7 +50,7 @@ Reaper 正在成为面向固件、嵌入式程序、平台组件和硬件相关�
 | QCS / Embedded | 独立硬件领域 parser、JSON AST 和有界嵌入式辅助工具 | 参考/分析工具，不执行硬件操作 |
 | Kora | 七个清单模块中的可选标准库辅助函数 | 与 Reaper 语言运行时分离 |
 
-目录和注册表可能包含提案或预留条目。出现在目录中不代表该功能已在运行时实现。成熟度和边界见 [Features](docs/FEATURES.md)、[REAPER IDE](docs/REAPER_IDE.md)、[NOO TAH](docs/NOO_TAH.md) 和 [Kora helpers](docs/KORA.md)。
+目录和注册表可能包含提案或预留条目。出现在目录中不代表该功能已在运行时实现。成熟度和边界见 [Features](docs/FEATURES.md)、[Polyglot capability layer](docs/POLYGLOT_CAPABILITY_LAYER.md)、[REAPER IDE](docs/REAPER_IDE.md)、[NOO TAH](docs/NOO_TAH.md) 和 [Kora helpers](docs/KORA.md)。
 
 下图是 Windows Studio 的实际桌面截屏，不是浏览器 Playground。
 
@@ -85,6 +86,7 @@ python -m pip install -e .
 
 ```sh
 python -m reaper --check examples/flow.rpr
+python -m reaper typecheck examples/flow.rpr
 python -m reaper examples/flow.rpr
 python -m reaper --repl
 python reaper_desktop.py
