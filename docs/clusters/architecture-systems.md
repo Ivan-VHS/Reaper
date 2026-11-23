@@ -10,6 +10,7 @@ This hub groups related specifications and implementation references. The linked
 
 - [HARDWARE LANGUAGE](../HARDWARE_LANGUAGE.md) — systems-language target, MMIO safety contract and hardware qualification gates.
 - [ARCHITECTURE 66](../ARCHITECTURE_66.md)
+- [REAPER BACKEND 66 IMPLEMENTATION](../REAPER_BACKEND_66_IMPLEMENTATION.md) — local runtime/backend architecture, contracts, security, resilience and staged acceptance.
 - [ARCHITECTURE](../ARCHITECTURE.md)
 - [ATOMIC QUANTUM 133](../ATOMIC_QUANTUM_133.md)
 - [CLINICAL SYSTEMS CSR120](../CLINICAL_SYSTEMS_CSR120.md)
