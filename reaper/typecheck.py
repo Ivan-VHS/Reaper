@@ -25,6 +25,9 @@ BUILTIN_ARITY: dict[str, tuple[int, int | None]] = {
     "quotient": (2, 2), "remainder": (2, 2), "is_divisible": (2, 2),
     "partition": (2, 2), "distribute": (2, 2), "proportional_split": (2, 2),
     "size": (1, 1), "text": (1, 1), "number": (1, 1), "kind": (1, 1),
+    "duck_capabilities": (1, 1), "duck_supports": (2, 2), "duck_has": (2, 2),
+    "duck_probe": (2, 2), "duck_require": (2, 2), "duck_adapt": (2, 2),
+    "duck_inspect": (1, 1), "runtime_stats": (0, 0),
     "range": (1, 3), "push": (2, 2), "first": (1, 1), "rest": (1, 1),
     "sum": (1, 1), "sorted": (1, 3), "sort_by": (2, 3),
     "map": (2, 2), "keep": (2, 2), "filter": (2, 2), "fold": (3, 3),
@@ -49,6 +52,9 @@ BUILTIN_RETURN: dict[str, str] = {
     "partition": "List[Any]", "distribute": "List[Int]",
     "proportional_split": "List[Int]", "size": "Int", "text": "Text",
     "number": "Number", "kind": "Text", "range": "List[Int]",
+    "duck_capabilities": "List[Text]", "duck_supports": "Bool", "duck_has": "Bool",
+    "duck_probe": "Map", "duck_require": ANY, "duck_adapt": "Map",
+    "duck_inspect": "Map", "runtime_stats": "Map",
     "push": "List[Any]", "first": ANY, "rest": "List[Any]", "sum": "Number",
     "sorted": "List[Any]", "sort_by": "List[Any]", "map": "List[Any]",
     "keep": "List[Any]", "filter": "List[Any]", "fold": ANY, "reduce": ANY,
@@ -313,6 +319,8 @@ class TypeChecker:
                 item_type = argument_types[1] if len(argument_types) > 1 else ANY
                 element_type = self._element_type(argument_types[0], node)
                 return f"List[{self._unify(element_type, item_type)}]"
+            if name == "duck_require" and argument_types:
+                return argument_types[0]
             if name == "map" and len(arguments) > 1:
                 callback = arguments[1]
                 if callback.kind == "name" and callback.value in self.functions:
@@ -407,6 +415,24 @@ class TypeChecker:
             for value_type in types[:2]:
                 if value_type not in {"Int", ANY}:
                     self._report(node, "RPR-T0009", f"{name}() expects Int arguments, got {value_type}")
+
+        if name in {"duck_has", "duck_supports"} and len(types) > 1:
+            if types[1] not in {"Text", ANY}:
+                self._report(node, "RPR-T0005", f"{name}() expects a text field or capability name, got {types[1]}")
+
+        if name in {"duck_require", "duck_probe"} and len(types) > 1:
+            fields_type = types[1]
+            if fields_type not in {"Text", ANY} and not fields_type.startswith("List[Text"):
+                self._report(node, "RPR-T0008", f"{name}() expects field names as Text or List[Text], got {fields_type}")
+
+        if name == "duck_require" and types[0] not in {"Map", ANY}:
+            self._report(node, "RPR-T0008", f"duck_require() expects a Map, got {types[0]}")
+
+        if name == "duck_has" and types[0] not in {"Map", ANY}:
+            self._report(node, "RPR-T0008", f"duck_has() expects a Map, got {types[0]}")
+
+        if name == "duck_adapt" and any(item not in {"Map", ANY} for item in types[:2]):
+            self._report(node, "RPR-T0008", "duck_adapt() expects source and defaults to be Maps")
 
     def _element_type(self, type_name: str, node: Node | None = None) -> str:
         if type_name.startswith("List[") and type_name.endswith("]"):
