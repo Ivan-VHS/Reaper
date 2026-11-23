@@ -1,0 +1,27 @@
+{
+  "$schema": "https://github.com/Ivan-VHS/DuckOS/blob/main/mora/app-manifest.schema.json",
+  "schema_version": "1.0.0",
+  "application_id": "ivan-vhs.reaper-studio",
+  "project": "Ivan-VHS/Reaper",
+  "display_name": "Reaper Studio",
+  "description": "Local IDE for the Reaper programming language, including source editing, checking and debugging tools.",
+  "launch": {
+    "kind": "local_process",
+    "platforms": ["windows"],
+    "entrypoint": "reaper_desktop.py",
+    "runtime": "python3",
+    "arguments": [],
+    "working_directory": "."
+  },
+  "policy": {
+    "integration_policy": "opt_in",
+    "confirmation_required": true,
+    "shell_interpolation": false,
+    "trust_source": "operator_installed_project"
+  },
+  "maturity": {
+    "maturity_status": "specified",
+    "verification_status": "not_run"
+  },
+  "capabilities": ["language-studio", "source-editor", "local-project-tools"]
+}
