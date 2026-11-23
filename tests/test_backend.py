@@ -240,6 +240,11 @@ class BackendServerTests(unittest.TestCase):
                 self.assertEqual(metrics_status, 200)
                 self.assertGreaterEqual(metrics["requests"]["total"], 7)
                 self.assertIn("p95", metrics["latency_ms"])
+                self.assertIn("active", metrics["workers"])
+                self.assertIn("cpu_seconds", metrics["process"])
+                self.assertIn("max_rss_bytes", metrics["process"])
+                self.assertIn("sqlite_bytes", metrics["storage"])
+                self.assertIn("received", metrics["network_bytes"])
 
                 ready_status, _headers, ready = await send_request(server, "GET", "/readyz")
                 self.assertEqual(ready_status, 200)
