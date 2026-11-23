@@ -354,7 +354,7 @@ components:
             type: integer
     MetricsResponse:
       type: object
-      required: [request_id, requests, active_connections, worker_capacity, latency_ms, bytes]
+      required: [request_id, requests, active_connections, workers, latency_ms, process, storage, network_bytes]
       properties:
         request_id:
           type: string
@@ -365,9 +365,19 @@ components:
         active_connections:
           type: integer
           minimum: 0
-        worker_capacity:
-          type: integer
-          minimum: 0
+        workers:
+          type: object
+          required: [active, waiting, capacity]
+          properties:
+            active:
+              type: integer
+              minimum: 0
+            waiting:
+              type: integer
+              minimum: 0
+            capacity:
+              type: integer
+              minimum: 0
         latency_ms:
           type: object
           required: [sample_count, p50, p95, p99]
@@ -384,7 +394,30 @@ components:
             p99:
               type: number
               minimum: 0
-        bytes:
+        process:
+          type: object
+          required: [cpu_seconds, max_rss_bytes, block_reads, block_writes]
+          properties:
+            cpu_seconds:
+              type: number
+              minimum: 0
+            max_rss_bytes:
+              type: [integer, "null"]
+              minimum: 0
+            block_reads:
+              type: [integer, "null"]
+              minimum: 0
+            block_writes:
+              type: [integer, "null"]
+              minimum: 0
+        storage:
+          type: object
+          required: [sqlite_bytes]
+          properties:
+            sqlite_bytes:
+              type: [integer, "null"]
+              minimum: 0
+        network_bytes:
           type: object
           required: [received, sent]
           properties:
