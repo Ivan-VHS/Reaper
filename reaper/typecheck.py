@@ -150,7 +150,8 @@ class TypeChecker:
             self.scopes[-1][parameter] = Binding(ANY, False)
         self.return_types.append([])
         self._visit_block_contents(node.children[0])
-        inferred = self._unify_all(self.return_types.pop()) if self.return_types[-1:] else NOTHING
+        returned = self.return_types.pop()
+        inferred = self._unify_all(returned) if returned else NOTHING
         self.functions[name].return_type = inferred
         self.scopes = previous_scope
 
@@ -203,7 +204,7 @@ class TypeChecker:
             return
         if node.kind == "each":
             iterable_type = self._expression(children[0])
-            element_type = self._element_type(iterable_type)
+            element_type = self._element_type(iterable_type, node)
             self.scopes.append({node.value: Binding(element_type, False)})
             self._visit_block_contents(children[1])
             self.scopes.pop()
@@ -245,7 +246,7 @@ class TypeChecker:
             index_type = self._expression(children[1])
             if index_type not in {"Int", ANY}:
                 self._report(node, "RPR-T0003", f"sequence index must be Int, not {index_type}")
-            return self._element_type(collection_type)
+            return self._element_type(collection_type, node)
         if node.kind == "unary":
             operand = self._expression(children[0])
             if node.value == "-" and operand not in NUMERIC | {ANY, "Number"}:
@@ -310,7 +311,7 @@ class TypeChecker:
                     return "List[Any]"
                 return "List[Any]"
             if name == "first" and argument_types:
-                return self._element_type(argument_types[0])
+                return self._element_type(argument_types[0], node)
             if name in {"reverse"} and argument_types and argument_types[0] == "Text":
                 return "Text"
             return BUILTIN_RETURN.get(name, ANY)
@@ -359,16 +360,15 @@ class TypeChecker:
                 if value_type not in {"Int", ANY}:
                     self._report(node, "RPR-T0009", f"{name}() expects Int arguments, got {value_type}")
 
-    def _element_type(self, type_name: str) -> str:
+    def _element_type(self, type_name: str, node: Node | None = None) -> str:
         if type_name.startswith("List[") and type_name.endswith("]"):
             return type_name[5:-1]
         if type_name == "Text":
             return "Text"
-        if type_name == ANY:
+        if type_name in {ANY, "Map"}:
             return ANY
-        if type_name == "Map":
-            return ANY
-        self._report_tokenless("RPR-T0008", f"cannot iterate or index a value of type {type_name}")
+        if node is not None:
+            self._report(node, "RPR-T0008", f"cannot iterate or index a value of type {type_name}")
         return ANY
 
     def _find_binding(self, name: str) -> Binding | None:
@@ -412,9 +412,6 @@ class TypeChecker:
 
     def _report(self, node: Node, code: str, message: str) -> None:
         self.diagnostics.append(TypeDiagnostic(code, message, node.token.line, node.token.column))
-
-    def _report_tokenless(self, code: str, message: str) -> None:
-        self.diagnostics.append(TypeDiagnostic(code, message, 1, 1))
 
 
 def check_source(source: str, filename: str = "<memory>") -> TypeCheckResult:
