@@ -8,6 +8,7 @@ from pathlib import Path
 from reaper.ide_support import highlight_spans
 from reaper.ir import lower
 from reaper.language_service import LanguageService
+from reaper.native_compiler import compile_source
 from reaper.parser import parse
 from reaper.runtime import Interpreter
 from reaper.syntax_profiles import (
@@ -50,6 +51,12 @@ class SyntaxProfileTests(unittest.TestCase):
             shapes.append(tuple((item.op, item.argument) for item in module.code))
         self.assertEqual(shapes[0], shapes[1])
         self.assertEqual(shapes[0], shapes[2])
+
+    def test_native_aot_parser_accepts_explicit_syntax_override(self) -> None:
+        generated = compile_source(
+            "let answer := 42", "source.rpr", syntax="classic"
+        )
+        self.assertIn("INT64_C(42)", generated)
 
     def test_ukrainian_most_and_classic_functions_share_runtime_semantics(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
