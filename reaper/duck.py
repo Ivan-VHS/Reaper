@@ -18,6 +18,8 @@ _CAPABILITIES: dict[str, tuple[str, ...]] = {
     "map": ("indexable", "iterable", "keyed", "sized", "structural"),
     "craft": ("callable",),
     "resource": ("resource",),
+    "result": ("inspectable", "matchable", "typed"),
+    "context": ("correlation", "metadata"),
 }
 
 
