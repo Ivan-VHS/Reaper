@@ -86,7 +86,6 @@ def _offset(text, pos):
 def _scan(snapshot):
     symbols, identifiers, diagnostics, stack = [], [], [], []
     buffer = SourceBuffer.from_text(snapshot.text, snapshot.uri)
-    line_offset = 0
     for row, source in enumerate(buffer.text.splitlines()):
         clean = re.sub(r'"(?:\\.|[^"\\])*"|#.*$', lambda m: " " * len(m.group()), source)
         for match in IDENT.finditer(clean):
@@ -101,7 +100,10 @@ def _scan(snapshot):
                 expected = {")":"(", "]":"[", "}":"{"}[char]
                 if stack and stack[-1][0] == expected: stack.pop()
                 else:
-                    source_span = buffer.span(line_offset + col, line_offset + col + 1)
+                    source_span = buffer.span(
+                        buffer.line_index.line_starts[row] + col,
+                        buffer.line_index.line_starts[row] + col + 1,
+                    )
                     diagnostics.append(Diagnostic(
                         "unexpected closing delimiter", "error",
                         Span(row, col, col + 1), "RPR-E0014",
@@ -119,7 +121,6 @@ def _scan(snapshot):
             "Add the matching closing delimiter, or remove the incomplete opener.",
             source_span, "parser", source_span.syntax_mode,
         ))
-    line_offset += len(source) + 1
     try:
         tree = parse(snapshot.text, snapshot.uri)
         from .typecheck import TypeChecker
