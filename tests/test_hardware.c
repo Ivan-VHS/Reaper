@@ -159,6 +159,45 @@ static void test_required_capability_and_ordering(void) {
     assert(fake.writes == 0);
 }
 
+static void test_unsupported_space_and_invalid_metadata(void) {
+    ReaperHwError error = {0};
+    uint64_t address = 0;
+    ReaperHwRegion region = { 0x6000, 0x40, REAPER_HW_SPACE_INVALID };
+    ReaperHwRegister reg = {
+        "DATA", 0, 32, REAPER_HW_ACCESS_READ_WRITE,
+        REAPER_HW_ENDIAN_NATIVE, 0
+    };
+
+    assert(reaper_hw_region_validate(&region, &error) == REAPER_HW_UNSUPPORTED_SPACE);
+    region.space = REAPER_HW_SPACE_MMIO;
+    reg.width_bits = 24;
+    assert(reaper_hw_register_validate(&region, &reg, &address, &error)
+           == REAPER_HW_INVALID_REGISTER);
+    reg.width_bits = 32;
+    reg.endian = (ReaperHwEndian)99;
+    assert(reaper_hw_register_validate(&region, &reg, &address, &error)
+           == REAPER_HW_INVALID_REGISTER);
+}
+
+static void test_write_one_to_clear_passes_mask_without_readback(void) {
+    FakeBus fake = {0};
+    ReaperHwBus bus = make_bus(&fake);
+    ReaperHwRegion region = { 0x7000, 0x40, REAPER_HW_SPACE_MMIO };
+    ReaperHwRegister reg = {
+        "INTERRUPT_STATUS", 0x10, 32, REAPER_HW_ACCESS_WRITE_ONE_TO_CLEAR,
+        REAPER_HW_ENDIAN_NATIVE, 0
+    };
+    ReaperHwError error = {0};
+    uint64_t clear_mask = UINT64_C(1) << 5;
+
+    assert(reaper_hw_write(&bus, &region, &reg,
+        REAPER_HW_CAP_MMIO_WRITE, REAPER_HW_ORDER_RELEASE,
+        clear_mask, &error) == REAPER_HW_OK);
+    assert(fake.value == clear_mask);
+    assert(fake.writes == 1);
+    assert(fake.reads == 0);
+}
+
 static void test_bus_failure(void) {
     FakeBus fake = {0};
     ReaperHwBus bus = make_bus(&fake);
@@ -183,6 +222,8 @@ int main(void) {
     test_region_and_register_bounds();
     test_permissions_and_access_policy();
     test_required_capability_and_ordering();
+    test_unsupported_space_and_invalid_metadata();
+    test_write_one_to_clear_passes_mask_without_readback();
     test_bus_failure();
     puts("hardware descriptor and MMIO adapter tests passed");
     return 0;
