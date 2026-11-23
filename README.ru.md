@@ -40,7 +40,7 @@ Reaper становится системным языком для прошив�
 | Компонент | Текущий объём | Граница |
 |---|---|---|
 | Python runtime | lexer, parser, interpreter, CLI, REPL, модули, closures, quotas и audit log | текущая исполняемая эталонная реализация |
-| Reaper Studio | основа Windows IDE: дерево проекта, редактор, подсветка синтаксиса, поиск, check/run и debugger | локальное desktop-приложение |
+| Reaper Studio | основа Windows IDE, дерево/редактор/debugger и обзор Systems/Hardware с MCU-профилями и границами доступа | локальное desktop-приложение; без live-инспектора устройств |
 | LSP | stdio JSON-RPC, diagnostics, completion, hover, symbols, лексическая навигация и форматирование документа | открытый документ; без межфайлового type inference |
 | Инвентаризация toolchain | поиск компиляторов, сборщиков, парсеров, форматтеров, отладчиков и WASM runtime с фиксацией SHA-256 | только PATH и SHA-256; найденные программы не запускаются |
 | DAP | stdio debug adapter, line breakpoints, stepping, stack и locals | отладка на границах операторов; только доверенные локальные программы |
