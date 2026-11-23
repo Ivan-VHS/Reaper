@@ -22,6 +22,7 @@ reaper-embedded = "reaper.embedded:main"
 reaper-noo-tah = "reaper.noo_tah:main"
 reaper-toolchain = "reaper.toolchain_inventory:main"
 reaper-duckos-audit = "reaper.duckos_bridge:main"
+reaper-backend = "reaper.backend:main"
 [project.gui-scripts]
 reaper-studio = "reaper.desktop:main"
 [tool.setuptools]
