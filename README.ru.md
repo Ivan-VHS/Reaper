@@ -42,6 +42,7 @@ Reaper — expression-oriented язык, в котором оператор `::`
 | DAP | stdio debug adapter, line breakpoints, stepping, stack и locals | отладка на границах операторов; только доверенные локальные программы |
 | NOO TAH | управление проектами/процессами вокруг официального Node.js, npm/npx и Inspector | Node/V8/libuv предоставляет upstream Node |
 | Native C17 | lexer, expression parser, owned AST, checked IR и ограниченный lowering | активное частичное направление, не parity с Python runtime |
+| DABI64 v1 runtime | 16-byte tagged values, ownership/drop frame, strings, arrays, iterators, host I/O и runtime-call table | новый C17 runtime slice; lowering из IR и полная интеграция `each` ещё впереди |
 | QCS / embedded tools | отдельный parser аппаратной области, JSON AST и ограниченные embedded-инструменты | справочный/аналитический инструментарий, не выполнение на оборудовании |
 | Kora | необязательные вспомогательные функции стандартной библиотеки в семи модулях | отдельно от runtime языка Reaper |
 
