@@ -8,8 +8,8 @@
 extern "C" {
 #endif
 
-#define REAPER_ELF64_SHN_UNDEF 0u
-#define REAPER_ELF64_SHN_ABS 0xfff1u
+#define REAPER_ELF64_NO_SECTION UINT32_MAX
+#define REAPER_ELF64_ABSOLUTE_SECTION (UINT32_MAX - 1u)
 
 typedef enum {
     REAPER_ELF64_OK = 0,
