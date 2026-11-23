@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 
 from reaper import Interpreter
 from reaper.typecheck import check_source
@@ -46,6 +47,26 @@ class DuckPipelineTests(unittest.TestCase):
             output,
             ["[[false, [INVALID_RECORD, channel record must be a map, []]]]"],
         )
+
+    def test_plain_record_instance_uses_instance_fields(self) -> None:
+        output: list[str] = []
+        interpreter = Interpreter(output=output.append)
+        interpreter.globals.define(
+            "channel",
+            SimpleNamespace(name=" Audio.Main ", level=75),
+        )
+
+        interpreter.run(
+            """
+            emit kind(channel)
+            emit has_key(channel, "level")
+            emit get(channel, "name", "")
+            emit to_int(get(channel, "level", -1), -1)
+            """,
+            filename="<duck-record-test>",
+        )
+
+        self.assertEqual(output, ["map", "true", " Audio.Main ", "75"])
 
     def test_map_access_and_conversion_builtins(self) -> None:
         output: list[str] = []
