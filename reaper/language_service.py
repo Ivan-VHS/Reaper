@@ -101,7 +101,18 @@ def _scan(snapshot):
                                       Span(row,col,col+1), "RPR-W0001",
                                       "Add the matching closing delimiter, or remove the incomplete opener."))
     try:
-        parse(snapshot.text, snapshot.uri)
+        tree = parse(snapshot.text, snapshot.uri)
+        from .typecheck import TypeChecker
+        checked = TypeChecker(snapshot.uri).check(tree)
+        for item in checked.diagnostics:
+            start = max(0, item.column - 1)
+            diagnostics.append(Diagnostic(
+                item.message,
+                item.severity,
+                Span(max(0, item.line - 1), start, start + 1),
+                item.code,
+                None,
+            ))
     except (ReaperError, ValueError) as error:
         parts = str(error).rsplit(":", 3)
         try:
