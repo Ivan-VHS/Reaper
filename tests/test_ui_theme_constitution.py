@@ -19,6 +19,16 @@ class UiThemeConstitutionTests(unittest.TestCase):
             self.assertGreaterEqual(contrast_ratio(palette["on_blue"], palette["blue"]), 4.5)
             self.assertGreaterEqual(contrast_ratio(palette["on_red"], palette["red"]), 4.5)
 
+    def test_mora_amber_palette_is_canonical_and_accessible(self) -> None:
+        palette = palette_for("mora")
+        self.assertEqual(palette["bg"], "#211913")
+        self.assertEqual(palette["blue"], "#D58B3D")
+        self.assertEqual(palette["brand"], "#D58B3D")
+        self.assertEqual(palette["red"], "#B64A40")
+        self.assertGreaterEqual(contrast_ratio(palette["fg"], palette["bg"]), 7.0)
+        self.assertGreaterEqual(contrast_ratio(palette["muted"], palette["bg"]), 4.5)
+        self.assertGreaterEqual(contrast_ratio(palette["on_brand"], palette["brand"]), 4.5)
+
     def test_atmospheric_profiles_are_resolved(self) -> None:
         self.assertEqual(palette_for("dawn")["bg"], "#F3F6FA")
         self.assertEqual(palette_for("sunset")["bg"], "#F5EFE8")
