@@ -219,7 +219,7 @@ class PolyglotStoreTests(unittest.TestCase):
             version = migrated.connection.execute(
                 "SELECT value FROM metadata WHERE key='schema_version'"
             ).fetchone()["value"]
-            self.assertEqual(version, "2")
+            self.assertEqual(version, "3")
 
     def test_session_report_and_json_export(self) -> None:
         self.store.log_session(self.profile, 25, "reading", "Article with written notes", 4)
@@ -231,7 +231,7 @@ class PolyglotStoreTests(unittest.TestCase):
         self.assertEqual(report["learning_phase"], "written_foundation")
         self.assertGreater(report["total_study_hours"], 0)
         exported = self.store.export_profile(self.profile)
-        self.assertEqual(exported["schema_version"], 2)
+        self.assertEqual(exported["schema_version"], 3)
         self.assertEqual(len(exported["sessions"]), 2)
         self.assertEqual(json.loads(json.dumps(exported))["profile"]["target_language"], "English")
 
