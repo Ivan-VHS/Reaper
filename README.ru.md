@@ -17,7 +17,7 @@
 
 <p align="center"><img src="assets/readme/workflow.svg" alt="Reaper implemented data flow" width="100%"></p>
 
-Рабочие пути: `.rpr` → Python reference runtime → CLI, Studio, LSP и DAP; отдельно — ограниченные i64-выражения → проверяемый native IR → assembly x86-64 System V ELF.
+Рабочие пути: `.rpr` → Python reference runtime → CLI, Studio, LSP и DAP; отдельно — scalar whole programs → native AST/HIR/MIR/LIR → DuckOS DABI64 assembly и DuckOS-marked ELF objects.
 
 
 [![Python CI](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/ci.yml?branch=main&label=Python%20CI)](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml)  [![Live Studio capture](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/readme-screenshots.yml?branch=main&label=Live%20Studio%20capture)](https://github.com/Ivan-VHS/Reaper/actions/workflows/readme-screenshots.yml)  [![License](https://img.shields.io/github/license/Ivan-VHS/Reaper)](LICENSE)
@@ -102,14 +102,14 @@ ctest --test-dir build --output-on-failure
 
 Эта сборка проверяет нативную подмножину compiler и её тесты. Она не заменяет Python runtime и не подтверждает полную языковую parity.
 
-На Linux x86-64 можно сгенерировать нативный assembly и объектный файл:
+На Linux x86-64 можно скомпилировать целую scalar-программу DuckOS DABI64 через AST → HIR → MIR → LIR:
 
 ```sh
-./build/reaper-c --emit-asm examples/native/arithmetic.rpr -o build/arithmetic.s
-cc -c build/arithmetic.s -o build/arithmetic.o
+./build/reaper-c --emit-asm --target duckos-dabi64-v1 examples/native/program.rpr -o build/program.s
+python scripts/duckos_assemble.py --cc cc --assembly build/program.s --object build/program.o
 ```
 
-Генерируемый assembly экспортирует `int reaper_program(int64_t *result)`. Для отдельного ABI DuckOS используй `--target duckos-dabi64-v1`. Объявления, функции, локальные переменные, вызовы и `::` теперь проходят HIR/MIR/LIR; `when`, `each` и `loop while` превращаются в проверяемые блоки управления. Существующие backend пока генерируют машинный код только для i64-выражений. Подробности: [native compiler](docs/NATIVE_COMPILER.md) и [HIR/MIR/LIR](docs/NATIVE_HIR.md).
+Входная функция получает frame через R10, result через R11 и возвращает статус через RAX. Для scalar-подмножества работают craft-функции, i64-параметры и локальные переменные, прямые вызовы, when/otherwise, loop while и `::`. `each`, коллекции, строки и `emit` пока требуют runtime-служб DuckOS. Объектный этап использует host assembler, проверяет ABI note и отмечает ELF EI_OSABI значением DuckOS; это ещё не собственный ELF writer или linker. Подробности: [native compiler](docs/NATIVE_COMPILER.md) и [HIR/MIR/LIR](docs/NATIVE_HIR.md).
 
 ### Необязательные проверки NOO TAH / Node.js
 
