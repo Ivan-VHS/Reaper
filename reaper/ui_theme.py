@@ -96,7 +96,7 @@ def _install_semantic_status_tokens() -> None:
                 "success": "#9EC39A", "warning": "#F0BE73",
                 "error": "#EF8E7C", "info": "#E8C99F",
                 "brand": "#D58B3D", "brand_hover": "#EAA653",
-                "on_brand": "#211913", "brand_secondary": "#6F8062",
+                "on_brand": "#211913", "brand_secondary": "#526347",
                 "on_brand_secondary": "#FFF3E2",
             })
             continue
