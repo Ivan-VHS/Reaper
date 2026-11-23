@@ -269,6 +269,7 @@ class PolyglotStore:
                 "tonal_language": "INTEGER NOT NULL DEFAULT 0",
                 "romanization_bridge": "INTEGER NOT NULL DEFAULT 0",
                 "phonetic_focus": "TEXT NOT NULL DEFAULT ''",
+                "orthography_focus": "TEXT NOT NULL DEFAULT ''",
             },
             "phrases": {
                 "personal_example": "TEXT NOT NULL DEFAULT ''",
