@@ -1032,30 +1032,43 @@ def run_source(
         if output is not None:
             output(value)
     emit = emit_line
-    if selected == "reaper":
-        from .runtime import Interpreter
-        remaining_steps = budget.limit - budget.steps
-        if remaining_steps < 1:
-            raise MultiSyntaxError(f"execution step limit ({budget.limit}) exceeded")
-        runtime = Interpreter(output=emit, max_steps=remaining_steps)
-        runtime.run(source, filename)
-        budget.tick(runtime.steps)
-        result: Any = None
-    elif selected == "python":
-        engine = _PythonSubset(source, filename, emit, budget)
-        result = engine.run()
-    elif selected == "pipeline":
-        result = _run_pipeline(source, emit, budget)
-    elif selected == "lisp":
-        result = _run_lisp(source, emit, budget)
-    elif selected == "forth":
-        result = _run_forth(source, emit, budget)
-    elif selected == "brainfuck":
-        result = _run_brainfuck(source, emit, budget, input_text, tape_size, cell_bits, eof_mode)
-    elif selected == "befunge93":
-        result = _run_befunge(source, emit, budget, input_text)
-    else:
-        raise MultiSyntaxError(f"syntax frontend {selected!r} is not available")
+    try:
+        if selected == "reaper":
+            from .runtime import Interpreter
+            remaining_steps = budget.limit - budget.steps
+            if remaining_steps < 1:
+                raise MultiSyntaxError(f"execution step limit ({budget.limit}) exceeded")
+            runtime = Interpreter(output=emit, max_steps=remaining_steps)
+            runtime.run(source, filename)
+            budget.tick(runtime.steps)
+            result: Any = None
+        elif selected == "python":
+            engine = _PythonSubset(source, filename, emit, budget)
+            result = engine.run()
+        elif selected == "pipeline":
+            result = _run_pipeline(source, emit, budget)
+        elif selected == "lisp":
+            result = _run_lisp(source, emit, budget)
+        elif selected == "forth":
+            result = _run_forth(source, emit, budget)
+        elif selected == "brainfuck":
+            result = _run_brainfuck(source, emit, budget, input_text, tape_size, cell_bits, eof_mode)
+        elif selected == "befunge93":
+            result = _run_befunge(source, emit, budget, input_text)
+        else:
+            raise MultiSyntaxError(f"syntax frontend {selected!r} is not available")
+    
+    except MultiSyntaxError:
+        raise
+    except Exception as error:
+        from .errors import ReaperError
+        expected = (
+            ReaperError, ArithmeticError, TypeError, ValueError, IndexError,
+            KeyError, NameError, RecursionError,
+        )
+        if isinstance(error, expected):
+            raise MultiSyntaxError(f"{selected} execution failed: {type(error).__name__}: {error}") from error
+        raise
     return {
         "schema": "reaper.multi-syntax-result.v1",
         "syntax": selected,
@@ -1177,6 +1190,8 @@ def validate_source(syntax: str, source: str, *, filename: str = "<memory>") -> 
             tree = ast.parse(source, filename=filename, mode="exec")
         except SyntaxError as error:
             raise MultiSyntaxError(f"{filename}:{error.lineno}:{error.offset}: {error.msg}") from error
+        except RecursionError as error:
+            raise MultiSyntaxError("Python syntax nesting limit exceeded") from error
         _validate_python_tree(tree)
     elif selected == "pipeline":
         stages = _split_pipeline(source)
