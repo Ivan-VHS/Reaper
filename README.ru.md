@@ -1,4 +1,4 @@
-# Reaper — flow-first язык программирования и Studio
+# Reaper — низкоуровневый системный язык и среда разработки аппаратуры
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
@@ -23,13 +23,17 @@
 [![Python CI](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/ci.yml?branch=main&label=Python%20CI)](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml)  [![Live Studio capture](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/readme-screenshots.yml?branch=main&label=Live%20Studio%20capture)](https://github.com/Ivan-VHS/Reaper/actions/workflows/readme-screenshots.yml)  [![License](https://img.shields.io/github/license/Ivan-VHS/Reaper)](LICENSE)
 
 
-> **Назначение:** Reaper — локальный язык программирования, интерпретатор, набор инструментов разработчика и desktop IDE для Windows. Это не hosted web demo и не production web service. Python runtime — текущая исполняемая эталонная реализация совместимости; нативный трек C17 реализован частично. Документация сверена с `main` **22.11.2026**.
+> **Назначение:** Reaper переориентируется в низкоуровневый системный язык и рабочую среду для прошивок, embedded-разработки и аппаратно-зависимого ПО, сохраняя совместимость с текущим .rpr и Python runtime. Это локальные инструменты и Windows desktop IDE, а не hosted web service. Состояние сверено **23.11.2026**.
 
 ## Назначение и состояние реализации
 
-Reaper — expression-oriented язык, в котором оператор `::` передаёт значение следующей операции. В состав входят Python reference runtime, CLI/REPL, Windows Studio, LSP/DAP через stdio и необязательная интеграция с официальным Node.js через NOO TAH.
+Reaper становится системным языком для прошивок, embedded-программ, платформенных компонентов и разработки ПО рядом с аппаратурой. Потоковая композиция через `::` остаётся частью языка; сохраняются Python reference runtime, CLI/REPL, Windows Studio, LSP/DAP и необязательная интеграция NOO TAH.
 
-Проект предназначен для разработчиков языков и tooling, инженеров приложений, QA, преподавателей и ревьюеров, которым нужно экспериментировать с файлами Reaper и проверять контракты языковых сервисов.
+**Уже доступно:** ограниченный native scalar AOT через C17, частичное C17-ядро lexer/parser/IR, QCS-проверка аппаратных описаний, MCU-профили с генерацией linker script и новый проверяемый MMIO API, который работает только через переданный платформенный адаптер.
+
+**Ещё разрабатывается:** полноценные типы, ownership/borrowing/effects, общий машинно-кодовый backend, аппаратные конструкции внутри `.rpr`, реальные OS/driver MMIO/IRQ/DMA-сервисы и полный аппаратный workspace Studio. Этапы и точные границы: [Hardware Language](docs/HARDWARE_LANGUAGE.md).
+
+Целевая аудитория — embedded- и firmware-разработчики, системные программисты, инженеры платформ/драйверов, разработчики компиляторов и преподаватели.
 
 ### Что реализовано
 
@@ -41,7 +45,7 @@ Reaper — expression-oriented язык, в котором оператор `::`
 | Инвентаризация toolchain | поиск компиляторов, сборщиков, парсеров, форматтеров, отладчиков и WASM runtime с фиксацией SHA-256 | только PATH и SHA-256; найденные программы не запускаются |
 | DAP | stdio debug adapter, line breakpoints, stepping, stack и locals | отладка на границах операторов; только доверенные локальные программы |
 | NOO TAH | управление проектами/процессами вокруг официального Node.js, npm/npx и Inspector | Node/V8/libuv предоставляет upstream Node |
-| Native C17 | lexer, expression parser, owned AST, checked IR и ограниченный lowering | активное частичное направление, не parity с Python runtime |
+| Native C17 + MMIO | lexer, expression parser, owned AST, checked i64 IR, ограниченный lowering и проверяемый MMIO adapter contract | экспериментальная частичная реализация; без физического mapping и parity с Python runtime |
 | QCS / embedded tools | отдельный parser аппаратной области, JSON AST и ограниченные embedded-инструменты | справочный/аналитический инструментарий, не выполнение на оборудовании |
 | Kora | необязательные вспомогательные функции стандартной библиотеки в семи модулях | отдельно от runtime языка Reaper |
 
