@@ -277,9 +277,9 @@ def result_recover(
     return _carry_context(_result(invoke(recover, [result.error.as_dict()])), result.context)
 
 
-def context_to_map(context: Any) -> dict[str, Any] | None:
+def context_to_map(context: Any) -> dict[str, Any]:
     if context is None:
-        return None
+        return {}
     if not isinstance(context, RequestContext):
         raise TypeError("context_to_map expects a RequestContext or nothing")
     return context.as_dict()
