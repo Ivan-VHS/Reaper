@@ -142,6 +142,7 @@ The checked-in examples are local source programs, not responses from a live API
 
 - `examples/flow.rpr` is the basic language smoke example.
 - `examples/device_audit.rpr` demonstrates a read-only audit path and produces a versioned JSON report when run.
+- `examples/duck_pipeline.rpr` demonstrates bounded channel normalization and inspection of JSON maps or plain host records.
 - `tests/` contains parser, runtime, language-service, debugger, registry and integration tests.
 - The NOO TAH conformance suite tests Node built-ins, ESM/CommonJS, streams, workers, child processes and loopback HTTP/TCP. It does not rely on a public test service.
 
