@@ -447,19 +447,38 @@ class Interpreter:
                 )
             return size
 
+        def record_fields(value: Any) -> dict[str, Any]:
+            if isinstance(value, dict):
+                return value
+            try:
+                fields = object.__getattribute__(value, "__dict__")
+            except (AttributeError, TypeError) as error:
+                raise TypeError("expected a map or an object with instance fields") from error
+            if not isinstance(fields, dict):
+                raise TypeError("record instance fields must be a map")
+            return fields
+
+        def is_record(value: Any) -> bool:
+            if isinstance(value, dict):
+                return True
+            try:
+                fields = object.__getattribute__(value, "__dict__")
+            except (AttributeError, TypeError):
+                return False
+            return isinstance(fields, dict)
+
         def map_has_key(value: Any, key: Any) -> bool:
-            if not isinstance(value, dict):
-                raise TypeError("has_key() expects a map")
             if not isinstance(key, str):
                 raise TypeError("has_key() key must be text")
-            return key in value
+            return key in record_fields(value)
 
         def map_get(value: Any, key: Any, default: Any = None) -> Any:
-            if not isinstance(value, dict):
-                raise TypeError("get() expects a map")
             if not isinstance(key, str):
                 raise TypeError("get() key must be text")
-            return value.get(key, default)
+            return record_fields(value).get(key, default)
+
+        def value_kind(value: Any) -> str:
+            return "map" if is_record(value) else self._kind(value)
 
         def to_integer(value: Any, fallback: Any = None) -> int:
             try:
@@ -593,7 +612,7 @@ class Interpreter:
         register("to_int", to_integer, 1, 2)
         register("has_key", map_has_key, 2, 2)
         register("get", map_get, 2, 3)
-        register("kind", self._kind, 1, 1)
+        register("kind", value_kind, 1, 1)
         register("range", bounded_range, 1, 3)
         register("push", push, 2, 2)
         register("first", lambda values: _first(sequence(values)), 1, 1)
