@@ -31,7 +31,8 @@
         "reaper/lexer.py",
         "reaper/parser.py",
         "reaper/runtime.py",
-        "reaper/cli.py"
+        "reaper/cli.py",
+        "tests/test_language.py"
       ]
     },
     {
@@ -41,7 +42,8 @@
       "evidence": [
         "reaper/ir.py",
         "reaper/vm.py",
-        "reaper/cli.py"
+        "reaper/cli.py",
+        "tests/test_engine_parity.py"
       ]
     },
     {
@@ -79,7 +81,8 @@
       "summary": "Optional typed bridge to Pytyliki C ABI v1; native loading is explicitly gated by the caller.",
       "evidence": [
         "reaper/ffi.py",
-        "docs/FEDERATED_INTEGRATION.md"
+        "docs/FEDERATED_INTEGRATION.md",
+        "tests/test_native.py"
       ]
     },
     {
