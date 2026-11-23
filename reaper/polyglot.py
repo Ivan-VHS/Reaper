@@ -765,7 +765,7 @@ def build_parser() -> argparse.ArgumentParser:
     add_phrase.add_argument("phrase")
     add_phrase.add_argument("--translation", required=True)
     add_phrase.add_argument("--context", default="")
-        add_phrase.add_argument("--source", default="")
+    add_phrase.add_argument("--source", default="")
     add_phrase.add_argument("--content-id", type=int)
     add_phrase.add_argument("--personal-example", default="", help="a sentence you can use about your own life")
     add_phrase.add_argument("--frequency-rank", type=int, help="optional manually supplied frequency rank")
