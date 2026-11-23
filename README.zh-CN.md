@@ -50,6 +50,8 @@ Reaper 是一种表达式导向语言，运算符 `::` 会将值传递给下一�
 下图是 Windows Studio 的实际桌面截屏，不是浏览器 Playground。
 
 
+Polyglot 仅处理文本：Reaper 不导入或播放音频/视频、不录音、不要求语音回答，也不生成音效。SRT/VTT 仅作为文本转录处理。音频设备与创作功能保留在 DuckOS 和 VentuSample。
+
 ## 快速开始
 
 ### 环境要求
