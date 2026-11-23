@@ -108,6 +108,54 @@ class NativeCompilerTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout, "-9223372036854775808\n")
 
+    def test_native_strings_arrays_maps_and_scoped_drops(self) -> None:
+        try:
+            compiler = find_c_compiler()
+        except NativeToolchainError:
+            self.skipTest("GCC-compatible C compiler is not installed")
+
+        source = '''\
+make values := [7, 8]
+emit len(values)
+emit values[1]
+change values := push(values, 9)
+emit values
+
+make stock := {"apples": 4, "pears": 2}
+emit stock["pears"]
+change stock := put(stock, "pears", 5)
+emit has(stock, "apples")
+emit len(stock)
+emit stock
+emit "Reaper" ++ " Native"
+
+when true {
+    make temporary := [4, 5]
+    emit len(temporary)
+}
+'''
+        with tempfile.TemporaryDirectory(prefix="reaper-native-collections-") as folder:
+            executable = build_executable(
+                source, Path(folder) / "collections",
+                filename="collections.rpr", compiler=compiler,
+            )
+            result = subprocess.run([str(executable)], capture_output=True, text=True, check=False)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, (
+            "2\\n8\\n[7, 8, 9]\\n2\\ntrue\\n2\\n"
+            "{\\\"apples\\\": 4, \\\"pears\\\": 5}\\n"
+            "Reaper Native\\n2\\n"
+        ))
+
+    def test_native_collections_reject_unsupported_element_types(self) -> None:
+        with self.assertRaisesRegex(NativeCompileError, "contain i64"):
+            compile_source('emit ["text"]\\n', "array-type.rpr")
+        with self.assertRaisesRegex(NativeCompileError, "keys must be strings"):
+            compile_source("emit {1: 2}\\n", "map-key-type.rpr")
+        with self.assertRaisesRegex(NativeCompileError, "values must be integers"):
+            compile_source('emit {"name": "value"}\\n', "map-value-type.rpr")
+
     def test_overflow_is_reported_at_runtime(self) -> None:
         try:
             compiler = find_c_compiler()

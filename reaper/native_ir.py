@@ -169,6 +169,9 @@ def verify_native_ir(module: NativeIRModule) -> None:
             actual_types = tuple(module.values[operand].result_type for operand in value.operands)
             if actual_types != descriptor.arguments:
                 raise NativeIRVerificationError(f"{where}: runtime-call argument types do not match {value.runtime_call}")
+            actual_ownership = tuple(module.values[operand].ownership for operand in value.operands)
+            if actual_ownership != descriptor.argument_ownership:
+                raise NativeIRVerificationError(f"{where}: runtime-call argument ownership does not match {value.runtime_call}")
             if value.result_type != descriptor.result:
                 raise NativeIRVerificationError(f"{where}: runtime-call result type does not match {value.runtime_call}")
             if value.ownership != descriptor.result_ownership:
