@@ -1,0 +1,18 @@
+# Duck profile smoke example: structural checks, safe inspection and bounded adaptation.
+make resources := resource_stats()
+make preflight := duck_probe(resources, ["open_files", "limit"])
+
+when preflight["ok"] {
+    emit "resource contract: ready"
+} otherwise {
+    emit "resource contract: incomplete"
+}
+
+make checked := resources :: duck_require(["open_files", "limit"])
+make report := duck_adapt(checked, heap_stats())
+
+emit duck_inspect(report)
+emit duck_supports(report, "keyed")
+emit duck_has(report, "open_files")
+emit duck_capabilities(range(0, 3))
+emit runtime_stats()
