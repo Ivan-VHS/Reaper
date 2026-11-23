@@ -22,6 +22,11 @@ import signal
 import sys
 import time
 import uuid
+
+try:
+    import resource as _resource
+except ImportError:  # Windows does not expose the resource module.
+    _resource = None
 from collections import Counter, deque
 from dataclasses import dataclass
 from functools import partial
@@ -205,8 +210,24 @@ class BackendMetrics:
         self._bytes_in += max(0, bytes_in)
         self._bytes_out += max(0, bytes_out)
 
-    def snapshot(self, active_connections: int, queued_capacity: int) -> dict[str, Any]:
+    def snapshot(
+        self,
+        *,
+        active_connections: int,
+        active_workers: int,
+        waiting_workers: int,
+        worker_capacity: int,
+        storage_bytes: int | None,
+    ) -> dict[str, Any]:
         values = sorted(self._latencies)
+        usage = _resource.getrusage(_resource.RUSAGE_SELF) if _resource is not None else None
+        max_rss = None
+        block_reads = None
+        block_writes = None
+        if usage is not None:
+            max_rss = int(usage.ru_maxrss if sys.platform == "darwin" else usage.ru_maxrss * 1024)
+            block_reads = int(usage.ru_inblock)
+            block_writes = int(usage.ru_oublock)
 
         def percentile(fraction: float) -> float:
             if not values:
@@ -217,14 +238,25 @@ class BackendMetrics:
         return {
             "requests": dict(self._counts),
             "active_connections": active_connections,
-            "worker_capacity": queued_capacity,
+            "workers": {
+                "active": active_workers,
+                "waiting": waiting_workers,
+                "capacity": worker_capacity,
+            },
             "latency_ms": {
                 "sample_count": len(values),
                 "p50": percentile(0.50),
                 "p95": percentile(0.95),
                 "p99": percentile(0.99),
             },
-            "bytes": {"received": self._bytes_in, "sent": self._bytes_out},
+            "process": {
+                "cpu_seconds": round(time.process_time(), 3),
+                "max_rss_bytes": max_rss,
+                "block_reads": block_reads,
+                "block_writes": block_writes,
+            },
+            "storage": {"sqlite_bytes": storage_bytes},
+            "network_bytes": {"received": self._bytes_in, "sent": self._bytes_out},
         }
 
 
@@ -256,6 +288,8 @@ class BackendServer:
         self._work_slots: asyncio.Semaphore | None = None
         self._tasks: set[asyncio.Task[Any]] = set()
         self._active_connections = 0
+        self._active_worker_jobs = 0
+        self._waiting_worker_jobs = 0
         self._recent_requests: deque[float] = deque()
         self._closing = False
         self._closed = False
@@ -538,9 +572,16 @@ class BackendServer:
                 },
             }, {}
         if request.path == "/v1/metrics" and request.method == "GET":
+            try:
+                storage_bytes = await self._run_blocking(self.store.storage_bytes)
+            except Exception:
+                storage_bytes = None
             return 200, self.metrics.snapshot(
-                self._active_connections,
-                self.config.max_workers + self.config.queue_depth,
+                active_connections=self._active_connections,
+                active_workers=self._active_worker_jobs,
+                waiting_workers=self._waiting_worker_jobs,
+                worker_capacity=self.config.max_workers + self.config.queue_depth,
+                storage_bytes=storage_bytes,
             ), {}
         if request.path == "/v1/check" and request.method == "POST":
             payload = self._decode_json(request.body)
@@ -746,6 +787,8 @@ class BackendServer:
     async def _run_blocking(self, function: Callable[..., Any], *args: Any) -> Any:
         if self._work_slots is None or self._closed:
             raise RequestFailure(503, "shutting_down", "backend is shutting down")
+
+        self._waiting_worker_jobs += 1
         try:
             await asyncio.wait_for(
                 self._work_slots.acquire(),
@@ -758,19 +801,32 @@ class BackendServer:
                 "backend worker capacity is exhausted",
                 {"Retry-After": "1"},
             ) from error
+        finally:
+            self._waiting_worker_jobs = max(0, self._waiting_worker_jobs - 1)
 
+        self._active_worker_jobs += 1
         loop = asyncio.get_running_loop()
-        future = loop.run_in_executor(self.executor, partial(function, *args))
+        try:
+            future = loop.run_in_executor(self.executor, partial(function, *args))
+        except Exception:
+            self._finish_worker_slot()
+            raise
+
         cancelled = False
         try:
             return await asyncio.shield(future)
         except asyncio.CancelledError:
             cancelled = True
-            future.add_done_callback(lambda _done: loop.call_soon_threadsafe(self._work_slots.release))
+            future.add_done_callback(lambda _done: loop.call_soon_threadsafe(self._finish_worker_slot))
             raise
         finally:
             if not cancelled:
-                self._work_slots.release()
+                self._finish_worker_slot()
+
+    def _finish_worker_slot(self) -> None:
+        self._active_worker_jobs = max(0, self._active_worker_jobs - 1)
+        if self._work_slots is not None:
+            self._work_slots.release()
 
     async def _write_response(
         self,
