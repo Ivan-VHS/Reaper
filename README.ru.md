@@ -45,6 +45,8 @@ Reaper — expression-oriented язык, в котором оператор `::`
 | QCS / embedded tools | отдельный parser аппаратной области, JSON AST и ограниченные embedded-инструменты | справочный/аналитический инструментарий, не выполнение на оборудовании |
 | Kora | необязательные вспомогательные функции стандартной библиотеки в семи модулях | отдельно от runtime языка Reaper |
 
+Отдельно добавлен первый C17 runtime slice DABI64 v1: tagged values, ownership/drop frame, строки, массивы, итераторы, host I/O и runtime-call table. Его границы и незавершённая интеграция с IR/`each` описаны в `docs/DABI64_RUNTIME.md`.
+
 Каталоги и реестры могут содержать предложенные или зарезервированные записи. Наличие записи в каталоге не означает, что функция реализована в runtime. Уровни зрелости и границы описаны в [Features](docs/FEATURES.md), [REAPER IDE](docs/REAPER_IDE.md), [NOO TAH](docs/NOO_TAH.md) и [Kora helpers](docs/KORA.md).
 
 Изображение ниже — снимок Windows Studio, а не браузерный playground.
