@@ -65,7 +65,7 @@ BUILTIN_RETURN: dict[str, str] = {
     "result_context": "Optional[Context]", "result_or": ANY,
     "result_map": "Result[Any]", "result_and_then": "Result[Any]",
     "result_recover": "Result[Any]", "request_context": "Context",
-    "context_with": "Context", "context_get": ANY, "context_to_map": "Optional[Map]",
+    "context_with": "Context", "context_get": ANY, "context_to_map": "Map",
     "push": "List[Any]", "first": ANY, "rest": "List[Any]", "sum": "Number",
     "sorted": "List[Any]", "sort_by": "List[Any]", "map": "List[Any]",
     "keep": "List[Any]", "filter": "List[Any]", "fold": ANY, "reduce": ANY,
