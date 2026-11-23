@@ -36,10 +36,14 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Validate example
         run: python -m reaper --check examples/flow.rpr
+      - name: Validate duck pipeline example
+        run: python -m reaper --check examples/duck_pipeline.rpr
       - name: Validate federated audit program
         run: python -m reaper --check examples/device_audit.rpr
       - name: Run example
         run: python -m reaper examples/flow.rpr
+      - name: Run duck pipeline example
+        run: python -m reaper examples/duck_pipeline.rpr
       - name: Run end-to-end read-only device audit example
         run: |
           python -m reaper examples/device_audit.rpr
