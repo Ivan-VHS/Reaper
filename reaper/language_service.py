@@ -5,10 +5,12 @@ from dataclasses import dataclass
 from difflib import SequenceMatcher
 from pathlib import Path
 import re, threading
-from .errors import LexError, ReaperError
+from .errors import ReaperError
+from .diagnostics import diagnostic_from_error
 from .diagnostic_catalog import explain_diagnostic
 from .lexer import KEYWORD_ALIASES
 from .parser import parse
+from .source import SourceBuffer, Span as SourceSpan
 
 IDENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*|[^\W\d]\w*", re.UNICODE)
 DECLARATIONS = {"make","vary","craft","fn","let","const","struct","enum","type"}
@@ -37,6 +39,9 @@ class Diagnostic:
     span: Span
     code: str
     help: str | None = None
+    source_span: SourceSpan | None = None
+    stage: str = "language-service"
+    syntax_mode: str | None = None
 
 @dataclass(frozen=True, slots=True)
 class Snapshot:
@@ -80,7 +85,9 @@ def _offset(text, pos):
 
 def _scan(snapshot):
     symbols, identifiers, diagnostics, stack = [], [], [], []
-    for row, source in enumerate(snapshot.text.splitlines()):
+    buffer = SourceBuffer.from_text(snapshot.text, snapshot.uri)
+    line_offset = 0
+    for row, source in enumerate(buffer.text.splitlines()):
         clean = re.sub(r'"(?:\\.|[^"\\])*"|#.*$', lambda m: " " * len(m.group()), source)
         for match in IDENT.finditer(clean):
             identifiers.append((match.group(), Span(row, match.start(), match.end())))
@@ -93,37 +100,82 @@ def _scan(snapshot):
             elif char in ")]}":
                 expected = {")":"(", "]":"[", "}":"{"}[char]
                 if stack and stack[-1][0] == expected: stack.pop()
-                else: diagnostics.append(Diagnostic("unexpected closing delimiter", "error",
-                                                     Span(row,col,col+1), "RPR-E0014",
-                                                     "Close the matching opener or remove the extra closing delimiter."))
-    for char,row,col in stack:
-        diagnostics.append(Diagnostic("unclosed delimiter " + char, "hint",
-                                      Span(row,col,col+1), "RPR-W0001",
-                                      "Add the matching closing delimiter, or remove the incomplete opener."))
+                else:
+                    source_span = buffer.span(line_offset + col, line_offset + col + 1)
+                    diagnostics.append(Diagnostic(
+                        "unexpected closing delimiter", "error",
+                        Span(row, col, col + 1), "RPR-E0014",
+                        "Close the matching opener or remove the extra closing delimiter.",
+                        source_span, "parser", source_span.syntax_mode,
+                    ))
+    for char, row, col in stack:
+        source_span = buffer.span(
+            buffer.line_index.line_starts[row] + col,
+            buffer.line_index.line_starts[row] + col + 1,
+        )
+        diagnostics.append(Diagnostic(
+            "unclosed delimiter " + char, "hint",
+            Span(row, col, col + 1), "RPR-W0001",
+            "Add the matching closing delimiter, or remove the incomplete opener.",
+            source_span, "parser", source_span.syntax_mode,
+        ))
+    line_offset += len(source) + 1
     try:
         tree = parse(snapshot.text, snapshot.uri)
         from .typecheck import TypeChecker
         checked = TypeChecker(snapshot.uri).check(tree)
         for item in checked.diagnostics:
-            start = max(0, item.column - 1)
+            source_span = item.span
+            if source_span is not None:
+                start_line, start_column = buffer.line_index.position(source_span.start_offset)
+                end_line, end_column = buffer.line_index.position(source_span.end_offset)
+                editor_span = Span(
+                    start_line - 1,
+                    start_column - 1,
+                    end_column - 1 if end_line == start_line else start_column,
+                )
+            else:
+                start = max(0, item.column - 1)
+                editor_span = Span(max(0, item.line - 1), start, start + 1)
             diagnostics.append(Diagnostic(
                 item.message,
                 item.severity,
-                Span(max(0, item.line - 1), start, start + 1),
+                editor_span,
                 item.code,
                 None,
+                source_span,
+                "typecheck",
+                source_span.syntax_mode if source_span is not None else buffer.syntax_mode,
             ))
     except (ReaperError, ValueError) as error:
-        parts = str(error).rsplit(":", 3)
-        try:
-            row, column, message = int(parts[-3]) - 1, int(parts[-2]) - 1, parts[-1].strip()
-        except (ValueError, IndexError):
-            row, column, message = 0, 0, str(error)
-        code = "RPR-E0001" if isinstance(error, LexError) else "RPR-E0013"
-        definition = explain_diagnostic(code)
-        diagnostics.append(Diagnostic(message, "error",
-                                      Span(max(0, row), max(0, column), max(0, column) + 1),
-                                      code, definition["help"] if definition else None))
+        structured = diagnostic_from_error(error, syntax_mode=buffer.syntax_mode)
+        source_span = structured.span
+        if source_span is not None:
+            row, column = buffer.line_index.position(source_span.start_offset)
+            end_row, end_column = buffer.line_index.position(source_span.end_offset)
+            editor_span = Span(
+                row - 1,
+                column - 1,
+                end_column - 1 if end_row == row else column,
+            )
+        else:
+            parts = str(error).rsplit(":", 3)
+            try:
+                row, column, _message = int(parts[-3]), int(parts[-2]), parts[-1].strip()
+            except (ValueError, IndexError):
+                row, column = 1, 1
+            editor_span = Span(max(0, row - 1), max(0, column - 1), max(0, column))
+        definition = explain_diagnostic(structured.code)
+        diagnostics.append(Diagnostic(
+            structured.message,
+            structured.severity,
+            editor_span,
+            structured.code,
+            definition["help"] if definition else None,
+            source_span,
+            structured.stage,
+            structured.syntax_mode,
+        ))
     return Analysis(snapshot, tuple(symbols), tuple(identifiers), tuple(diagnostics))
 
 class LanguageService:
