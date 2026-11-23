@@ -4,7 +4,7 @@ import unittest
 
 from reaper.multisyntax import (
     MultiSyntaxError, analyze_brainfuck, detect_syntax, list_syntaxes,
-    parse_polyglot, run_polyglot, run_source,
+    parse_polyglot, run_polyglot, run_source, validate_polyglot, validate_source,
 )
 
 
@@ -198,6 +198,27 @@ class PolyglotTests(unittest.TestCase):
             parse_polyglot("print(1)")
         with self.assertRaises(MultiSyntaxError):
             parse_polyglot("%% unknown\nbody")
+
+    def test_syntax_validation_does_not_execute_programs(self):
+        report = validate_source("python", "print('not executed')")
+        self.assertTrue(report["valid"])
+        self.assertFalse(report["execution_performed"])
+        self.assertEqual(report["syntax"], "python")
+
+    def test_polyglot_validation_checks_every_block_without_running(self):
+        source = "%% python\\nprint('no run')\\n%% brainfuck\\n[->+<]"
+        report = validate_polyglot(source)
+        self.assertEqual(report["block_count"], 2)
+        self.assertFalse(report["execution_performed"])
+        self.assertTrue(all(item["valid"] for item in report["blocks"]))
+
+    def test_brainfuck_static_validation_rejects_unmatched_brackets(self):
+        with self.assertRaisesRegex(MultiSyntaxError, "unmatched"):
+            validate_source("brainfuck", "++[>+")
+
+    def test_pipeline_and_befunge_static_validation(self):
+        self.assertTrue(validate_source("pipeline", "[1, 2] |> sum")["valid"])
+        self.assertTrue(validate_source("befunge93", "23+.@")["valid"])
 
     def test_native_reaper_syntax_remains_available(self):
         output = []
