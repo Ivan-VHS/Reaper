@@ -712,6 +712,8 @@ static int emit_terminator(
     FILE *output,
     ReaperCodegenError *error
 ) {
+    (void)module;
+
     switch (block->terminator) {
     case REAPER_LIR_TERM_JUMP:
         return fprintf(output, "    jmp .Lduck_fn_%u_block_%u\n",
