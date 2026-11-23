@@ -189,8 +189,17 @@ class _PythonSubset:
         self.scopes[-1][name] = value
 
     def _bounded(self, value: Any) -> Any:
-        if isinstance(value, (list, tuple, set, dict, range)) and len(value) > self.collection_limit:
-            raise MultiSyntaxError("collection item limit exceeded")
+        if isinstance(value, str) and len(value) > MAX_SOURCE_CHARS:
+            raise MultiSyntaxError("text value exceeds the 1,000,000-character limit")
+        if isinstance(value, float) and not math.isfinite(value):
+            raise MultiSyntaxError("non-finite floating-point results are not supported")
+        if isinstance(value, (list, tuple, set, dict, range)):
+            try:
+                size = len(value)
+            except OverflowError as error:
+                raise MultiSyntaxError("collection size cannot be represented safely") from error
+            if size > self.collection_limit:
+                raise MultiSyntaxError("collection item limit exceeded")
         return value
 
     def evaluate(self, node: ast.AST) -> Any:
@@ -216,7 +225,7 @@ class _PythonSubset:
         if isinstance(node, ast.BinOp) and type(node.op) in self._binary:
             left = self.evaluate(node.left)
             right = self.evaluate(node.right)
-            if isinstance(node.op, ast.Pow) and isinstance(right, (int, float)) and abs(right) > 10_000:
+            if isinstance(node.op, ast.Pow) and isinstance(right, (int, float)) and abs(right) > 1024:
                 raise MultiSyntaxError("power exponent exceeds the safe limit")
             return self._bounded(self._binary[type(node.op)](left, right))
         if isinstance(node, ast.UnaryOp) and type(node.op) in self._unary:
