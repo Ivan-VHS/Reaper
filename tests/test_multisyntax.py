@@ -229,7 +229,10 @@ class PolyglotTests(unittest.TestCase):
         self.assertFalse(report["execution_performed"])
         self.assertTrue(all(item["valid"] for item in report["blocks"]))
 
-    def test_brainfuck_static_validation_rejects_unmatched_brackets(self):
+    def test_native_reaper_syntax_validation_normalizes_parser_errors(self):
+        with self.assertRaises(MultiSyntaxError):
+            validate_source("reaper", "emit (")
+\n    def test_brainfuck_static_validation_rejects_unmatched_brackets(self):
         with self.assertRaisesRegex(MultiSyntaxError, "unmatched"):
             validate_source("brainfuck", "++[>+")
 
