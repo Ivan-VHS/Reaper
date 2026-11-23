@@ -14,6 +14,7 @@ from typing import Any
 
 from .errors import ReaperError
 from .parser import Node, parse
+from .source import Span
 
 
 ANY = "Any"
@@ -77,15 +78,20 @@ class TypeDiagnostic:
     line: int
     column: int
     severity: str = "error"
+    span: Span | None = None
 
     def as_dict(self) -> dict[str, Any]:
-        return {
+        payload = {
             "code": self.code,
             "message": self.message,
             "line": self.line,
             "column": self.column,
             "severity": self.severity,
         }
+        if self.span is not None:
+            payload["span"] = self.span.to_dict()
+            payload["syntax_mode"] = self.span.syntax_mode
+        return payload
 
 
 @dataclass(slots=True)
@@ -468,7 +474,10 @@ class TypeChecker:
         return f"Union[{left},{right}]"
 
     def _report(self, node: Node, code: str, message: str) -> None:
-        self.diagnostics.append(TypeDiagnostic(code, message, node.token.line, node.token.column))
+        self.diagnostics.append(TypeDiagnostic(
+            code, message, node.token.line, node.token.column,
+            span=node.span,
+        ))
 
 
 def check_source(source: str, filename: str = "<memory>") -> TypeCheckResult:
