@@ -175,6 +175,7 @@ class HttpRequest:
     headers: dict[str, str]
     body: bytes
     request_id: str
+    wire_bytes_received: int
 
 
 class RequestFailure(Exception):
@@ -365,7 +366,7 @@ class BackendServer:
         try:
             request = await self._read_request(reader)
             request_id = request.request_id
-            request_size = len(request.body)
+            request_size = request.wire_bytes_received
             status, payload, response_headers = await self._dispatch(request)
         except RequestFailure as error:
             status = error.status
@@ -512,7 +513,14 @@ class BackendServer:
 
         incoming_id = headers.get("x-request-id", "")
         request_id = incoming_id if _REQUEST_ID.fullmatch(incoming_id) else uuid.uuid4().hex
-        return HttpRequest(method, parsed_target.path, headers, body, request_id)
+        return HttpRequest(
+            method,
+            parsed_target.path,
+            headers,
+            body,
+            request_id,
+            wire_bytes_received=len(raw) + len(body),
+        )
 
     async def _dispatch(
         self,
