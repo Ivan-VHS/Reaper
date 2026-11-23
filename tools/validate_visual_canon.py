@@ -42,6 +42,12 @@ ALLOWED = {
     "#081522", "#10263B", "#17344D", "#EDF4FA", "#C4D5E4", "#A9C0D4", "#73B7FF",
     "#9ACBFF", "#FF7D78", "#FFA39B", "#31536B", "#FF8E86", "#174C7D", "#71899B", "#190B0B",
     "#EAF3FF",
+    # Mora shared desktop identity: indigo surfaces, violet action and teal focus.
+    "#10142A", "#191E39", "#252B4B", "#F5F4FF", "#D5D6EB", "#A8ADC8",
+    "#A78BFA", "#C1AEFF", "#1D1730", "#38D4B7", "#09231F",
+    "#3B4262", "#353054", "#FF8EAC", "#330A1A", "#FFB0C3",
+    "#F5F3FA", "#211F31", "#4E4B63", "#66627A", "#5B43B5",
+    "#49359D", "#006F68", "#FFFFFF",
 }
 HEX = re.compile(r"#[0-9A-Fa-f]{6}\b")
 RGB = re.compile(r"\bRGB\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)", re.IGNORECASE)
