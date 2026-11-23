@@ -6,7 +6,7 @@ Status: versioned C ABI contract and validation shim implemented. Platform dynam
 
 A DABI64 v1 module exports the descriptor entry point named reaper_dabi64_module_v1. The host validates ABI version, descriptor size, module name, invoke callback, argument count, and tagged-value invariants before calling the module.
 
-The value record is a fixed 24-byte structure: 32-bit kind, 32-bit flags, 64-bit payload, and 64-bit length. I64 values are passed by value. UTF-8 and byte strings use a pointer plus byte length. I64 arrays use a pointer plus element count. Opaque handles are module-defined.
+The value record is a fixed 24-byte structure: 32-bit kind, 32-bit flags, 64-bit payload, and 64-bit length. I64 values are passed by value. UTF-8 and byte strings use a pointer plus byte length. UTF-8 payloads are validated for correct encoding, excluding overlong sequences, surrogate encodings, truncated sequences and code points above U+10FFFF. I64 arrays use a pointer plus element count. Opaque handles are module-defined.
 
 Owned pointer-bearing results are released only through the host-provided release callback. Scalar results do not require release.
 

@@ -1,6 +1,50 @@
 #include "reaper/dabi64.h"
 #include <string.h>
 
+static int valid_utf8(const uint8_t *bytes, uint64_t length) {
+    uint64_t i = 0u;
+    while (i < length) {
+        uint8_t first = bytes[i++];
+        if (first <= 0x7fu) continue;
+        if (first >= 0xc2u && first <= 0xdfu) {
+            if (i >= length || (bytes[i++] & 0xc0u) != 0x80u) return 0;
+            continue;
+        }
+        if (first >= 0xe0u && first <= 0xefu) {
+            if (i + 1u >= length) return 0;
+            uint8_t second = bytes[i++];
+            uint8_t third = bytes[i++];
+            if ((third & 0xc0u) != 0x80u) return 0;
+            if (first == 0xe0u) {
+                if (second < 0xa0u || second > 0xbfu) return 0;
+            } else if (first == 0xedu) {
+                if (second < 0x80u || second > 0x9fu) return 0;
+            } else if ((second & 0xc0u) != 0x80u) {
+                return 0;
+            }
+            continue;
+        }
+        if (first >= 0xf0u && first <= 0xf4u) {
+            if (i + 2u >= length) return 0;
+            uint8_t second = bytes[i++];
+            uint8_t third = bytes[i++];
+            uint8_t fourth = bytes[i++];
+            if ((third & 0xc0u) != 0x80u || (fourth & 0xc0u) != 0x80u)
+                return 0;
+            if (first == 0xf0u) {
+                if (second < 0x90u || second > 0xbfu) return 0;
+            } else if (first == 0xf4u) {
+                if (second < 0x80u || second > 0x8fu) return 0;
+            } else if ((second & 0xc0u) != 0x80u) {
+                return 0;
+            }
+            continue;
+        }
+        return 0;
+    }
+    return 1;
+}
+
 uint32_t reaper_dabi64_abi_version(void) {
     return REAPER_DABI64_ABI_VERSION;
 }
@@ -48,6 +92,9 @@ ReaperDabi64Status reaper_dabi64_validate_value(const ReaperDabi64Value *value) 
         if (value->length > REAPER_DABI64_MAX_VALUE_BYTES ||
             (value->length != 0u && value->payload == 0u))
             return REAPER_DABI64_INVALID_VALUE;
+        if (value->kind == REAPER_DABI64_VALUE_UTF8 &&
+            !valid_utf8((const uint8_t *)(uintptr_t)value->payload, value->length))
+            return REAPER_DABI64_INVALID_VALUE;
         return REAPER_DABI64_OK;
     case REAPER_DABI64_VALUE_ARRAY_I64:
         if (value->length > REAPER_DABI64_MAX_ARRAY_ITEMS ||
@@ -62,7 +109,7 @@ ReaperDabi64Status reaper_dabi64_validate_value(const ReaperDabi64Value *value) 
 }
 
 void reaper_dabi64_value_release(const ReaperDabi64HostV1 *host, ReaperDabi64Value *value) {
-    if (host == NULL || value == NULL) return;
+    if (host == NULL || value == NULL || host->release == NULL) return;
     if ((value->flags & REAPER_DABI64_VALUE_OWNED) != 0u &&
         value->payload != 0u &&
         (value->kind == REAPER_DABI64_VALUE_UTF8 ||

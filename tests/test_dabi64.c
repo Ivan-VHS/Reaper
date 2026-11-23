@@ -102,6 +102,21 @@ static void test_rejects_invalid_values(void) {
     value.payload = 0u;
     value.length = 4u;
     assert(reaper_dabi64_validate_value(&value) == REAPER_DABI64_INVALID_VALUE);
+
+    static const uint8_t valid_text[] = {0x52u, 0xd0u, 0xb5u, 0xd0u, 0xb0u, 0xd0u, 0xb5u};
+    value.payload = (uint64_t)(uintptr_t)valid_text;
+    value.length = sizeof valid_text;
+    assert(reaper_dabi64_validate_value(&value) == REAPER_DABI64_OK);
+
+    static const uint8_t overlong_utf8[] = {0xc0u, 0xafu};
+    value.payload = (uint64_t)(uintptr_t)overlong_utf8;
+    value.length = sizeof overlong_utf8;
+    assert(reaper_dabi64_validate_value(&value) == REAPER_DABI64_INVALID_VALUE);
+
+    static const uint8_t surrogate_utf8[] = {0xedu, 0xa0u, 0x80u};
+    value.payload = (uint64_t)(uintptr_t)surrogate_utf8;
+    value.length = sizeof surrogate_utf8;
+    assert(reaper_dabi64_validate_value(&value) == REAPER_DABI64_INVALID_VALUE);
 }
 
 int main(void) {
