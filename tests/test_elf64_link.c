@@ -164,7 +164,8 @@ static void test_unresolved_symbol_and_wx_rejected(void) {
     ReaperElf64Buffer object = {0}, executable = {0};
     ReaperElf64Error error = {0};
     assert(reaper_elf64_write_object(&model, &object, &error) == REAPER_ELF64_OK);
-    ReaperElf64LinkInput input = {&object, "_start", 0x400000u, 4096u};
+    ReaperElf64Buffer input_objects[] = {object};
+    ReaperElf64LinkInput input = {input_objects, 1u, "_start", 0x400000u, 4096u};
     assert(reaper_elf64_link(&input, &executable, &error) == REAPER_ELF64_UNSUPPORTED);
     assert(executable.data == NULL);
 
