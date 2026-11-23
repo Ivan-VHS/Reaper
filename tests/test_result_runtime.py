@@ -47,6 +47,10 @@ class RequestContextTests(unittest.TestCase):
         self.assertEqual(context_get(updated, "attempt"), 2)
         self.assertEqual(context_to_map(updated)["metadata"]["region"], "eu")
 
+    def test_missing_optional_context_is_a_safe_empty_result(self):
+        self.assertIsNone(context_get(None, "request_id"))
+        self.assertIsNone(context_to_map(None))
+
     def test_invalid_context_data_is_rejected(self):
         with self.assertRaisesRegex(ResultContractError, "request_id"):
             request_context("")
@@ -147,6 +151,9 @@ class ResultValueTests(unittest.TestCase):
     def test_fallback_returns_payload_without_throwing(self):
         self.assertEqual(result_or(ok(3), 0), 3)
         self.assertEqual(result_or(err("APP-E005", "missing"), 0), 0)
+
+    def test_success_has_no_error_payload(self):
+        self.assertIsNone(result_error(ok(7)))
 
     def test_runtime_heap_tracks_payloads_inside_results(self):
         heap = MemoryManager(max_heap_bytes=4096)
