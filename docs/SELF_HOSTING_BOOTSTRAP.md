@@ -50,3 +50,9 @@ This is deliberately **not** a complete parser replacement: declarations, functi
 - Define a versioned canonical AST representation and compare parser output with the Python AST over a shared golden corpus.
 - Add differential tests for calls, indexes, list literals, operator precedence, nested blocks and malformed statements.
 - Move the CLI, diagnostics, semantic analysis and compiler pipeline into Reaper in dependency order.
+
+## Stage 2 — Reaper-written typed scalar IR (bootstrap slice)
+
+selfhost/typed_ir.rpr builds a deterministic three-instruction i64 addition program, checks stable IDs, operand dominance and supported operation/type tags, and evaluates that tiny program. tests/test_self_hosting.py runs the Reaper source on both the reference interpreter and bytecode VM and checks rejection of a forward SSA reference.
+
+This is a verified self-hosted language component, not a self-hosting compiler: lexer/parser and the rest of the compiler pipeline are still hosted by Python/C. The compiler reaches the self-hosting milestone only when Reaper source can rebuild its own frontend and compiler stages reproducibly from a clean bootstrap.
