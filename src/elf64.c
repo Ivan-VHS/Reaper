@@ -202,7 +202,6 @@ ReaperElf64Status reaper_elf64_write_object(
     ReaperElf64Buffer *output,
     ReaperElf64Error *error
 ) {
-    ByteBuffer symbol_names = {0};
     ByteBuffer symbol_table = {0};
     ByteBuffer string_table = {0};
     ByteBuffer section_names = {0};
@@ -212,14 +211,14 @@ ReaperElf64Status reaper_elf64_write_object(
     uint32_t *symbol_name_offsets = NULL;
     uint32_t *relocation_counts = NULL;
     uint32_t relocation_section_count = 0u;
-    uint32_t symbol_section_index;
-    uint32_t string_section_index;
-    uint32_t section_name_index;
-    uint32_t first_global_symbol;
-    uint32_t output_section_count;
-    uint64_t cursor;
-    uint64_t section_header_offset;
-    uint64_t file_size;
+    uint32_t symbol_section_index = 0u;
+    uint32_t string_section_index = 0u;
+    uint32_t section_name_index = 0u;
+    uint32_t first_global_symbol = 0u;
+    uint32_t output_section_count = 0u;
+    uint64_t cursor = 0u;
+    uint64_t section_header_offset = 0u;
+    uint64_t file_size = 0u;
     uint8_t *file = NULL;
     ReaperElf64Status status = REAPER_ELF64_OK;
 
@@ -276,8 +275,8 @@ ReaperElf64Status reaper_elf64_write_object(
                           "invalid symbol name, binding, type or visibility");
             goto done;
         }
-        if (symbol->section_index != REAPER_ELF64_SHN_UNDEF &&
-            symbol->section_index != REAPER_ELF64_SHN_ABS) {
+        if (symbol->section_index != REAPER_ELF64_NO_SECTION &&
+            symbol->section_index != REAPER_ELF64_ABSOLUTE_SECTION) {
             if (symbol->section_index >= object->section_count ||
                 symbol->value > object->sections[symbol->section_index].size) {
                 status = fail(error, i, REAPER_ELF64_RANGE_ERROR,
@@ -315,6 +314,7 @@ ReaperElf64Status reaper_elf64_write_object(
         if (relocation_counts[i] != 0u) relocation_section_count++;
 
     output_section_count = 1u + object->section_count + 3u + relocation_section_count;
+    section_name_index = output_section_count - 1u;
     if (output_section_count >= ELF64_SHN_LORESERVE) {
         status = fail(error, 0u, REAPER_ELF64_RANGE_ERROR,
                       "too many output sections for the non-extended ELF64 format");
@@ -385,9 +385,9 @@ ReaperElf64Status reaper_elf64_write_object(
             int is_local = symbol->binding == REAPER_ELF64_STB_LOCAL;
             if ((pass == 0u) != is_local) continue;
             uint16_t section_index = 0u;
-            if (symbol->section_index == REAPER_ELF64_SHN_ABS) {
+            if (symbol->section_index == REAPER_ELF64_ABSOLUTE_SECTION) {
                 section_index = (uint16_t)REAPER_ELF64_SHN_ABS;
-            } else if (symbol->section_index != REAPER_ELF64_SHN_UNDEF) {
+            } else if (symbol->section_index != REAPER_ELF64_NO_SECTION) {
                 section_index = (uint16_t)(symbol->section_index + 1u);
             }
             if (!string_table_add(&string_table, symbol->name,
@@ -470,7 +470,6 @@ ReaperElf64Status reaper_elf64_write_object(
         relocation_buffer_index++;
     }
 
-    section_name_index = output_section_count - 1u;
     sections[section_name_index].name = ".shstrtab";
     sections[section_name_index].type = ELF64_SHT_STRTAB;
     sections[section_name_index].alignment = 1u;
@@ -559,7 +558,7 @@ done:
         }
     }
     free(file);
-    cleanup(&symbol_names, &symbol_table, &string_table, &section_names,
+    cleanup(NULL, &symbol_table, &string_table, &section_names,
             sections, relocation_data, relocation_section_count,
             symbol_map, symbol_name_offsets, relocation_counts);
     return status;
