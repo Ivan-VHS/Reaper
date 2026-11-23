@@ -30,7 +30,7 @@ from typing import Any, Callable
 from urllib.parse import urlsplit
 
 from . import __version__ as REAPER_VERSION
-from .backend_service import API_VERSION, BackendService, OutputLimitExceeded
+from .backend_service import API_VERSION, BackendService
 from .backend_store import BackendStore, BackendStoreError
 
 _LOG = logging.getLogger("reaper.backend")
