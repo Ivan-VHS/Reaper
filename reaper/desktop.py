@@ -23,6 +23,7 @@ from reaper.embedded import (
     build_project as embedded_build_project,
     init_project as embedded_init_project,
     inspect_project as embedded_inspect_project,
+    list_profiles as list_embedded_profiles,
 )
 from reaper.errors import ReaperError
 from reaper.parser import parse
@@ -144,10 +145,12 @@ class ReaperStudio(tk.Tk):
         menu.add_cascade(label="NOO TAH / Node.js", menu=node_menu)
 
         embedded_menu = tk.Menu(menu, tearoff=False)
-        embedded_menu.add_command(label="Создать проект встроенной C…", command=self.embedded_new_project)
+        embedded_menu.add_command(label="Обзор системного языка и MMIO…", command=self.show_hardware_overview)
+        embedded_menu.add_separator()
+        embedded_menu.add_command(label="Создать embedded-проект…", command=self.embedded_new_project)
         embedded_menu.add_command(label="Проверить профиль микроконтроллера…", command=self.embedded_inspect_project)
         embedded_menu.add_command(label="Собрать прошивку…", command=self.embedded_build)
-        menu.add_cascade(label="Встроенная C", menu=embedded_menu)
+        menu.add_cascade(label="Системы / Hardware", menu=embedded_menu)
 
         plugin_menu = tk.Menu(menu, tearoff=False)
         plugin_menu.add_command(label="Менеджер плагинов…", command=self.show_plugins)
@@ -199,6 +202,9 @@ class ReaperStudio(tk.Tk):
             ("Проверить исходный код", self.check_source),
             ("Запустить программу", self.run_source),
             ("Запустить отладку", self.debug_source),
+            ("Системный язык и MMIO", self.show_hardware_overview),
+            ("Создать embedded-проект", self.embedded_new_project),
+            ("Проверить профиль MCU", self.embedded_inspect_project),
             ("Менеджер плагинов", self.show_plugins),
             ("Настройки движения", self.show_motion_settings),
             ("CODEX-66 — каталог возможностей", self.show_codex66),
@@ -1256,6 +1262,87 @@ class ReaperStudio(tk.Tk):
         except (tk.TclError, ValueError):
             pass
         self._redraw_line_numbers()
+
+    def show_hardware_overview(self) -> None:
+        """Show supported embedded profiles and the current hardware boundary."""
+        window = tk.Toplevel(self)
+        window.title("Reaper — Systems & Hardware")
+        window.geometry("880x560")
+        window.minsize(720, 440)
+        window.transient(self)
+
+        frame = ttk.Frame(window, padding=16)
+        frame.pack(fill="both", expand=True)
+        ttk.Label(
+            frame,
+            text="Системное программирование и аппаратные цели",
+            style="PaneTitle.TLabel",
+        ).pack(anchor="w", pady=(0, 6))
+        ttk.Label(
+            frame,
+            text=(
+                "Reaper развивается как системный язык для firmware, embedded и платформенного ПО. "
+                "Текущие профили помогают подготовить проект и linker layout; они не означают, "
+                "что плата подключена или физическое устройство доступно."
+            ),
+            wraplength=820,
+            justify="left",
+        ).pack(anchor="w", pady=(0, 14))
+
+        columns = ("target", "architecture", "clock", "flash", "sram", "compiler")
+        table = ttk.Treeview(frame, columns=columns, show="headings", height=6)
+        headings = {
+            "target": ("Профиль", 170),
+            "architecture": ("Архитектура", 130),
+            "clock": ("Частота", 110),
+            "flash": ("FLASH", 160),
+            "sram": ("SRAM", 150),
+            "compiler": ("Компилятор", 150),
+        }
+        for column, (label, width) in headings.items():
+            table.heading(column, text=label)
+            table.column(column, width=width, anchor="w")
+        table.pack(fill="x", expand=False)
+
+        for profile in list_embedded_profiles():
+            flash = profile["flash"]
+            sram = profile["sram"]
+            table.insert("", "end", values=(
+                profile["id"],
+                profile["architecture"],
+                f"{profile['clock_hz']:,} Hz",
+                f"0x{flash['base']:08X} · {flash['size']:,} B",
+                f"0x{sram['base']:08X} · {sram['size']:,} B",
+                profile["compiler"],
+            ))
+
+        ttk.Separator(frame).pack(fill="x", pady=14)
+        status = (
+            "ДОСТУПНО: MCU-профили, проверка Flash/SRAM, генерация linker.ld и вызов "
+            "установленного cross-compiler; MMIO descriptor API с проверкой границ, "
+            "выравнивания, доступа и capabilities через host adapter.\n\n"
+            "ОГРАНИЧЕНИЯ: Studio пока не читает физические регистры в реальном времени, "
+            "не регистрирует IRQ, не выделяет DMA-буферы, не устанавливает драйверы "
+            "и не прошивает платы автоматически. Текущий MMIO API сам по себе не "
+            "отображает физическую память."
+        )
+        details = ScrolledText(frame, height=7, wrap="word", padx=10, pady=8)
+        details.pack(fill="both", expand=True)
+        details.insert("1.0", status)
+        details.configure(state="disabled")
+
+        buttons = ttk.Frame(frame)
+        buttons.pack(fill="x", pady=(12, 0))
+        ttk.Button(
+            buttons, text="Создать embedded-проект",
+            command=lambda: (window.destroy(), self.embedded_new_project()),
+        ).pack(side="left")
+        ttk.Button(
+            buttons, text="Проверить существующий профиль",
+            command=lambda: (window.destroy(), self.embedded_inspect_project()),
+        ).pack(side="left", padx=(8, 0))
+        ttk.Button(buttons, text="Закрыть", command=window.destroy).pack(side="right")
+        window.grab_set()
 
     def embedded_new_project(self) -> None:
         directory = filedialog.askdirectory(parent=self, title="Создать проект встроенной C")

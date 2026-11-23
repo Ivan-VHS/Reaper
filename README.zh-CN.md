@@ -1,4 +1,4 @@
-# Reaper — flow-first 编程语言与 Studio
+# Reaper — 面向系统编程与硬件开发的低层语言及工作台
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
@@ -23,25 +23,29 @@
 [![Python CI](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/ci.yml?branch=main&label=Python%20CI)](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml)  [![Live Studio capture](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/readme-screenshots.yml?branch=main&label=Live%20Studio%20capture)](https://github.com/Ivan-VHS/Reaper/actions/workflows/readme-screenshots.yml)  [![License](https://img.shields.io/github/license/Ivan-VHS/Reaper)](LICENSE)
 
 
-> **项目范围：** Reaper 是一款本地编程语言、解释器、开发工具集合以及 Windows 桌面 IDE。它不是托管的 Web Demo，也不是生产 Web 服务。Python 是当前可执行的兼容性参考实现；原生 C17 路线仍为部分实现。文档已于 **2026-11-22** 对照 `main` 分支核对。
+> **项目范围：** Reaper 正在转向面向固件、嵌入式软件、平台组件和硬件邻近开发的低层系统语言，同时保留现有 .rpr 语言与 Python 兼容运行时。它是本地开发工具和 Windows 桌面 IDE，而不是托管 Web 服务。状态核对日期：**2026-11-23**。
 
 ## 项目用途与实现状态
 
-Reaper 是一种表达式导向语言，运算符 `::` 会将值传递给下一步操作。项目包含 Python 参考运行时、CLI/REPL、Windows Studio、stdio LSP/DAP 服务，以及通过 NOO TAH 对官方 Node.js 发行版的可选集成。
+Reaper 正在成为面向固件、嵌入式程序、平台组件和硬件相关软件的系统编程语言。现有的 `::` 流式组合语法仍会保留，同时继续维护 Python 参考运行时、CLI/REPL、Windows Studio、stdio LSP/DAP 和可选的 NOO TAH 集成。
 
-目标读者包括语言和工具链开发者、应用工程师、QA、教育工作者及代码审查者，他们需要试验 Reaper 源文件并检查语言服务合同。
+**当前已有：**受限的 C17 标量 AOT 编译路径、部分 C17 lexer/parser/IR 核心、用于验证硬件描述的 QCS 前端、带链接脚本生成的 MCU 配置文件，以及仅通过宿主适配器调用的受检 MMIO 描述符 API。
+
+**仍在开发：**完整的静态类型/所有权/效果检查、通用机器码后端、`.rpr` 硬件语法、实际 OS/驱动 MMIO/IRQ/DMA 服务，以及完整的硬件开发 Studio 工作区。阶段计划与准确边界见 [Hardware Language](docs/HARDWARE_LANGUAGE.md)。
+
+目标用户包括嵌入式和固件开发者、系统程序员、平台/驱动工程师、编译器开发者与教育工作者。
 
 ### 已实现的组件
 
 | 组件 | 当前范围 | 明确边界 |
 |---|---|---|
 | Python Runtime | lexer、parser、interpreter、CLI、REPL、模块、闭包、配额与审计日志 | 当前可执行参考实现 |
-| Reaper Studio | Windows IDE 基础：项目树、编辑器、语法着色、搜索、check/run 与 debugger | 本地桌面应用 |
+| Reaper Studio | Windows IDE 基础、项目树/编辑器/debugger，以及显示 MCU 配置和能力边界的 Systems/Hardware 概览 | 本地桌面应用；尚无实时设备寄存器查看器 |
 | LSP | stdio JSON-RPC、诊断、补全、hover、符号、词法导航和文档格式化 | 每个已打开文档独立；不提供跨文件类型推断 |
 | Toolchain 清单 | 通过 PATH 查找编译器、构建工具、解析器、格式化工具、调试器和 WASM 运行时，并固定 SHA-256 | 仅执行路径查找与哈希；不会运行找到的程序 |
 | DAP | stdio 调试适配器、行断点、单步、堆栈和局部变量 | 语句边界调试；仅适用于可信本地程序 |
 | NOO TAH | 管理官方 Node.js 运行时、项目/进程、npm/npx 和 Inspector | Node/V8/libuv 由上游 Node 提供 |
-| Native C17 | lexer、表达式 parser、owned AST、checked IR 和有限 lowering | 正在开发的部分实现；不等于 Python Runtime |
+| Native C17 + MMIO | lexer、表达式 parser、owned AST、checked i64 IR、有限 lowering 和受检 MMIO 适配器契约 | 实验性部分实现；不映射物理内存，也不等于 Python Runtime |
 | QCS / Embedded | 独立硬件领域 parser、JSON AST 和有界嵌入式辅助工具 | 参考/分析工具，不执行硬件操作 |
 | Kora | 七个清单模块中的可选标准库辅助函数 | 与 Reaper 语言运行时分离 |
 

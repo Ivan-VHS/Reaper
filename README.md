@@ -1,4 +1,4 @@
-# Reaper — flow-first programming language and Studio
+# Reaper — systems programming language and hardware development studio
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
@@ -23,25 +23,29 @@ Implemented path: `.rpr` source → lexer and parser → Python reference runtim
 [![Python CI](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/ci.yml?branch=main&label=Python%20CI)](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml)  [![Live Studio capture](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/readme-screenshots.yml?branch=main&label=Live%20Studio%20capture)](https://github.com/Ivan-VHS/Reaper/actions/workflows/readme-screenshots.yml)  [![License](https://img.shields.io/github/license/Ivan-VHS/Reaper)](LICENSE)
 
 
-> **Scope:** Reaper is a local programming language, interpreter, developer tooling set and Windows desktop IDE. It is not a hosted web demo or production web service. Python is the current executable compatibility reference; the C17 native track is partial. Documentation was checked against `main` on **2026-11-22**.
+> **Scope:** Reaper is evolving into a low-level systems language and hardware development workbench while preserving the existing .rpr language and Python compatibility runtime. It is a local developer tool and Windows desktop IDE, not a hosted web service. Documentation was checked against the feature branch on **2026-11-23**.
 
 ## Purpose and implementation status
 
-Reaper is an expression-oriented language in which `::` passes a value into the next operation. It includes a Python reference runtime, CLI/REPL, Windows Studio, stdio LSP/DAP services, and an optional integration with the official Node.js distribution through NOO TAH.
+Reaper is being reoriented around systems programming: firmware, embedded software, platform components and hardware-adjacent development. Its expression-oriented `::` composition remains available, as do the Python reference runtime, CLI/REPL, Windows Studio, stdio LSP/DAP and optional NOO TAH integration.
 
-The target audience is language and tooling developers, application engineers, QA, educators and reviewers who need to experiment with Reaper source files and inspect the language-service contracts.
+**Available today:** a limited native scalar AOT path through C17, a partial C17 lexer/parser/IR core, a QCS hardware-description validation frontend, MCU profile/linker tooling, and a new checked MMIO descriptor API that dispatches only through a supplied host adapter.
+
+**Still under development:** full native type/ownership/effect checking, a general machine-code/object backend, source-level hardware constructs, real OS-backed MMIO/IRQ/DMA services, and the complete hardware-focused Studio workspace. See [Hardware Language](docs/HARDWARE_LANGUAGE.md) for the staged migration and exact boundaries.
+
+The intended audience is embedded and firmware developers, systems programmers, platform/driver engineers, compiler developers and educators.
 
 ### What is implemented
 
 | Component | Current scope | Boundary |
 |---|---|---|
 | Python runtime | lexer, parser, interpreter, CLI, REPL, modules, closures, quotas and audit log | current executable reference |
-| Reaper Studio | Windows IDE foundation: project tree, editor, syntax coloring, search, check/run and debugger | local desktop application |
+| Reaper Studio | Windows IDE foundation, project tree/editor/debugger, plus systems/hardware overview with MCU profiles and capability boundaries | local desktop application; no live device inspector |
 | LSP | stdio JSON-RPC, diagnostics, completion, hover, symbols, lexical navigation, semantic tokens and document formatting | per-open-document; lexical highlighting, not cross-file type inference |
 | Toolchain inventory | discovers compilers, builders, parsers, formatters, debuggers and WASM runtimes; pins binary hashes | PATH and SHA-256 only; discovered tools are never executed by inventory |
 | DAP | stdio debug adapter, line breakpoints, stepping, stack and locals | statement-boundary debugging; trusted local programs only |
 | NOO TAH | project/process management around the official Node.js runtime, npm/npx and Inspector | Node/V8/libuv are supplied by upstream Node |
-| Native C17 | lexer, expression parser, owned AST, checked IR and limited lowering | active partial track; not Python-runtime parity |
+| Native C17 + MMIO | lexer, expression parser, owned AST, checked i64 IR, limited lowering and checked MMIO adapter contract | experimental partial track; no physical mapping or Python-runtime parity |
 | QCS / embedded tools | separate hardware-domain parser, JSON AST and bounded embedded helpers | reference/analysis tools, not hardware execution |
 | Kora | optional standard-library helpers in seven manifest-backed modules | separate from the Reaper language runtime |
 

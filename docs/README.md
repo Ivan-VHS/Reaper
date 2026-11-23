@@ -46,6 +46,7 @@
 | [FEATURES.md](FEATURES.md) | shipped, reference and proposed capability matrix |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | runtime and compiler stages |
 | [NATIVE_COMPILER.md](NATIVE_COMPILER.md) | checked scalar AOT compilation to C17 and the host toolchain |
+| [HARDWARE_LANGUAGE.md](HARDWARE_LANGUAGE.md) | systems-language architecture, MMIO contract, Studio hardware workbench and migration gates |
 | [NATIVE_COMPILER.md](NATIVE_COMPILER.md) | statically checked scalar AOT compilation to C17 and the host toolchain |
 | [ENGINEERING.md](ENGINEERING.md) | quality, effect and release gates |
 | [DIVISION_ENGINE.md](DIVISION_ENGINE.md) | checked division and workload allocation |
@@ -90,3 +91,9 @@ This is an illustrative personal-budgeting reference, not a claim that the host 
 ## Additional desktop profile
 
 [Mora Amber design system](MORA_AMBER_DESIGN_SYSTEM.md) describes the shared warm palette and its contrast, material and motion constraints for the Reaper Studio workbench.
+
+
+## Cross-project engineering
+
+- [Engineering Evolution Framework](ENGINEERING_EVOLUTION_FRAMEWORK.md) — shared machine-readable 20-domain contract, 40 practices and 20 execution directives.
+- [Repository-wide implementation directives](REPOSITORY_EVOLUTION_DIRECTIVES.md) — the 20 requested directions, their engineering meaning and acceptance rules.
