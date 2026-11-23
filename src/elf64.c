@@ -444,7 +444,9 @@ ReaperElf64Status reaper_elf64_write_object(
             slot++;
         }
         char *rela_name;
-        size_t name_length = strlen(object->sections[target].name);
+        const char *target_name = object->sections[target].name;
+        if (target_name[0] == '.') target_name++;
+        size_t name_length = strlen(target_name);
         if (name_length > SIZE_MAX - sizeof ".rela.") {
             status = fail(error, target, REAPER_ELF64_RANGE_ERROR,
                           "relocation section name is too long");
@@ -457,7 +459,7 @@ ReaperElf64Status reaper_elf64_write_object(
             goto done;
         }
         (void)snprintf(rela_name, sizeof ".rela." + name_length,
-                       ".rela.%s", object->sections[target].name);
+                       ".rela.%s", target_name);
         OutputSection *rela = &sections[relocation_output_index++];
         rela->name = rela_name;
         rela->type = ELF64_SHT_RELA;
