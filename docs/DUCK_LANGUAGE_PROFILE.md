@@ -37,6 +37,8 @@ The Duck profile turns the useful engineering ideas behind duck typing and the D
 | `list` / `range` | `indexable`, `iterable`, `sized` |
 | `map` | `indexable`, `iterable`, `keyed`, `sized`, `structural` |
 | `craft` | `callable` |
+| `result` | `inspectable`, `matchable`, `typed` |
+| `context` | `correlation`, `metadata` |
 | `number` | `numeric` |
 | `boolean` | `boolean` |
 | `resource` | `resource` |
