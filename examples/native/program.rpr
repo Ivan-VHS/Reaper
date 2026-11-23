@@ -1,0 +1,31 @@
+# A complete scalar program for the first DABI64 function backend.
+
+craft bump(value) {
+    yield value + 1
+}
+
+craft calculate(seed) {
+    make initial := bump(seed)
+    vary total := initial
+    change total := total :: bump()
+
+    when total < 10 {
+        change total := total * 2
+    } otherwise {
+        change total := total - 2
+    }
+
+    loop while total < 50 {
+        change total := total + 5
+    }
+
+    yield total
+}
+
+craft overflowing(value) {
+    yield value + 1
+}
+
+craft divide(value) {
+    yield 100 / value
+}
