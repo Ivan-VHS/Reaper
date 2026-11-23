@@ -48,6 +48,21 @@ class DuckProfileRuntimeTests(unittest.TestCase):
         self.assertFalse(runtime.globals.get("callable"))
         self.assertEqual(runtime.globals.get("range_kind"), "range")
 
+    def test_result_and_context_are_inspectable_capability_kinds(self):
+        runtime = self.interpreter()
+        runtime.run(
+            'make outcome := ok(42)\n'
+            'make context := request_context("req-duck")\n'
+            'make result_kind := kind(outcome)\n'
+            'make context_kind := kind(context)\n'
+            'make result_support := duck_supports(outcome, "matchable")\n'
+            'make context_support := duck_supports(context, "correlation")'
+        )
+        self.assertEqual(runtime.globals.get("result_kind"), "result")
+        self.assertEqual(runtime.globals.get("context_kind"), "context")
+        self.assertTrue(runtime.globals.get("result_support"))
+        self.assertTrue(runtime.globals.get("context_support"))
+
     def test_map_membership_counts_present_nothing_as_present(self):
         runtime = self.interpreter()
         runtime.globals.define("settings", {"optional": None})
