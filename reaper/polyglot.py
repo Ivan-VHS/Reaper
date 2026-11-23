@@ -18,10 +18,10 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterable
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 CEFR_LEVELS = ("A0", "A1", "A2", "B1", "B2", "C1", "C2")
-CONTENT_KINDS = ("text", "dialogue", "story", "article", "audio", "video")
-SESSION_MODES = ("listening", "reading", "speaking", "writing", "shadowing", "conversation", "review")
+CONTENT_KINDS = ("text", "dialogue", "story", "article")
+SESSION_MODES = ("reading", "writing", "analysis", "review", "reflection")
 SCRIPT_FAMILIES = ("auto", "latin", "cyrillic", "arabic", "devanagari", "han", "japanese", "hangul", "thai", "other")
 LANGUAGE_SCRIPT_CODES = {
     "zh": "han", "yue": "han", "ja": "japanese", "ko": "hangul",
@@ -75,33 +75,33 @@ def infer_tonal_language(language: str, language_code: str = "") -> bool:
     return code in TONAL_LANGUAGE_CODES or normalize_text(language).casefold() in TONAL_LANGUAGE_NAMES
 
 
-def default_phonetic_focus(script_family: str, tonal_language: bool) -> str:
+def default_orthography_focus(script_family: str, tonal_language: bool) -> str:
     if tonal_language:
-        return "tone contours, syllable pairs, and minimal-pair listening"
+        return "written tone marks, syllable boundaries, and minimal-pair spelling"
     return {
-        "japanese": "mora timing, pitch accent exposure, and kana-linked audio",
-        "han": "syllable pronunciation, tone awareness, and word-boundary listening",
-        "hangul": "batchim, sound changes, and connected-speech listening",
-        "arabic": "consonant contrasts, vowel length, and stress",
-        "devanagari": "aspiration, retroflex contrasts, and vowel length",
-        "cyrillic": "word stress, vowel reduction, and consonant softness",
-        "thai": "tone contours, vowel length, and final consonants",
-    }.get(script_family, "sound contrasts, stress, and connected speech")
+        "japanese": "kana and kanji spelling patterns, long-vowel notation, and small-kana combinations",
+        "han": "character forms, written tone marks, and word-boundary segmentation",
+        "hangul": "batchim spelling, syllable-block structure, and spacing rules",
+        "arabic": "letter forms, vowel marks, hamza spelling, and joined-letter rules",
+        "devanagari": "matras, conjunct letters, and retroflex spelling distinctions",
+        "cyrillic": "stress marks, spelling alternations, and soft-sign conventions",
+        "thai": "tone marks, vowel symbols, and consonant-class spelling",
+    }.get(script_family, "spelling contrasts, stress marks, and written word boundaries")
 
 
 def script_learning_notes(profile: dict[str, Any]) -> list[str]:
     script = profile.get("script_family", "latin")
     notes = {
-        "japanese": ["Study kana alongside audio; add kanji through recurring words and phrases."],
-        "han": ["Attach pronunciation and tone information to each new spoken word or phrase."],
-        "hangul": ["Pair Hangul syllable blocks with natural audio; notice sound changes across word boundaries."],
-        "arabic": ["Use vowelled examples early, then gradually remove reading aids."],
-        "devanagari": ["Learn native script and sound together; use transliteration only as a temporary bridge."],
-        "cyrillic": ["Mark stress in examples when it is not predictable from spelling."],
-        "thai": ["Learn tone and vowel length with the syllable, not as a separate decoration."],
-    }.get(script, ["Keep spelling, audio, and useful phrases linked from the beginning."])
+        "japanese": ["Study kana and kanji together through recurring written words and phrases."],
+        "han": ["Keep tone marks in written romanization and distinguish characters by their written forms."],
+        "hangul": ["Study Hangul syllable blocks, batchim spelling, and spacing rules."],
+        "arabic": ["Use written vowel marks early, then gradually remove reading aids."],
+        "devanagari": ["Learn the native script directly; use transliteration only as a temporary reading bridge."],
+        "cyrillic": ["Mark stress in written examples when it is not predictable from spelling."],
+        "thai": ["Study tone marks, vowel symbols, and consonant-class spelling together."],
+    }.get(script, ["Keep native spelling, written examples, and useful phrases linked from the beginning."])
     if profile.get("tonal_language"):
-        notes.append("Treat tone as part of the syllable; store it with pronunciation and review it in audio context.")
+        notes.append("Preserve tone marks in written examples and compare minimal spelling pairs.")
     if profile.get("romanization_bridge"):
         notes.append("Romanization is a temporary bridge: reduce it as native-script reading becomes comfortable.")
     return notes
@@ -212,6 +212,7 @@ class PolyglotStore:
                 tonal_language INTEGER NOT NULL DEFAULT 0,
                 romanization_bridge INTEGER NOT NULL DEFAULT 0,
                 phonetic_focus TEXT NOT NULL DEFAULT '',
+                orthography_focus TEXT NOT NULL DEFAULT '',
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
             );
@@ -298,10 +299,10 @@ class PolyglotStore:
                 (str(SCHEMA_VERSION),),
             )
 
-        # Profiles created by schema v1 had no script/phonetic metadata.
+        # Older profiles lacked script and written-orthography guidance.
         legacy_profiles = self.connection.execute(
             """SELECT id,target_language,language_code FROM profiles
-               WHERE script_family='auto' OR script_family=''"""
+               WHERE script_family='auto' OR script_family='' OR orthography_focus=''"""
         ).fetchall()
         for legacy in legacy_profiles:
             language = legacy["target_language"]
@@ -309,10 +310,10 @@ class PolyglotStore:
             script = infer_script_family(language, code)
             tonal = infer_tonal_language(language, code)
             bridge = script in {"han", "japanese", "hangul", "arabic", "devanagari", "thai"}
-            focus = default_phonetic_focus(script, tonal)
+            focus = default_orthography_focus(script, tonal)
             self.connection.execute(
                 """UPDATE profiles SET script_family=?,tonal_language=?,
-                   romanization_bridge=?,phonetic_focus=? WHERE id=?""",
+                   romanization_bridge=?,orthography_focus=? WHERE id=?""",
                 (script, int(tonal), int(bridge), focus, legacy["id"]),
             )
         self.connection.commit()
@@ -321,7 +322,7 @@ class PolyglotStore:
         self, target_language: str, native_language: str, level: str = "A0",
         goal: str = "", daily_minutes: int = 45, language_code: str = "",
         script_family: str = "auto", tonal_language: bool | None = None,
-        romanization_bridge: bool | None = None, phonetic_focus: str = "",
+        romanization_bridge: bool | None = None, orthography_focus: str = "",
     ) -> dict[str, Any]:
         target_language = normalize_text(target_language)
         native_language = normalize_text(native_language)
@@ -344,13 +345,13 @@ class PolyglotStore:
         tonal = inferred_tonal if tonal_language is None else tonal_language
         bridge_default = resolved_script in {"han", "japanese", "hangul", "arabic", "devanagari", "thai"}
         bridge = bridge_default if romanization_bridge is None else romanization_bridge
-        focus = phonetic_focus.strip() or default_phonetic_focus(resolved_script, tonal)
+        focus = orthography_focus.strip() or default_orthography_focus(resolved_script, tonal)
         now = utc_now()
         self.connection.execute(
             """
             INSERT INTO profiles(target_language,native_language,current_level,goal,
                                  daily_minutes,language_code,script_family,tonal_language,
-                                 romanization_bridge,phonetic_focus,created_at,updated_at)
+                                 romanization_bridge,orthography_focus,created_at,updated_at)
             VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
             ON CONFLICT(target_language) DO UPDATE SET
               native_language=excluded.native_language,
@@ -358,7 +359,7 @@ class PolyglotStore:
               daily_minutes=excluded.daily_minutes, language_code=excluded.language_code,
               script_family=excluded.script_family, tonal_language=excluded.tonal_language,
               romanization_bridge=excluded.romanization_bridge,
-              phonetic_focus=excluded.phonetic_focus, updated_at=excluded.updated_at
+              orthography_focus=excluded.orthography_focus, updated_at=excluded.updated_at
             """,
             (target_language, native_language, level, goal, daily_minutes, language_code,
              resolved_script, int(tonal), int(bridge), focus, now, now),
@@ -387,7 +388,7 @@ class PolyglotStore:
 
     def add_content(
         self, profile: dict[str, Any], title: str, body: str, kind: str = "text",
-        translation: str = "", source: str = "", media_path: str = "", level: str = "",
+        translation: str = "", source: str = "", level: str = "",
     ) -> int:
         if kind not in CONTENT_KINDS:
             raise PolyglotError(f"content kind must be one of: {', '.join(CONTENT_KINDS)}")
@@ -406,10 +407,10 @@ class PolyglotStore:
             cursor = self.connection.execute(
                 """
                 INSERT INTO content(profile_id,title,kind,body,translation,source,
-                                    media_path,level,word_count,fingerprint,created_at)
-                VALUES(?,?,?,?,?,?,?,?,?,?,?)
+                                    level,word_count,fingerprint,created_at)
+                VALUES(?,?,?,?,?,?,?,?,?,?)
                 """,
-                (profile["id"], title, kind, body, translation, source, media_path,
+                (profile["id"], title, kind, body, translation, source,
                  level, len(tokenize(body)), fingerprint, utc_now()),
             )
         except sqlite3.IntegrityError as error:
@@ -596,18 +597,18 @@ class PolyglotStore:
         for index in order[:remainder]:
             minutes[index] += 1
         tasks = [
-            ("listening", "Понятное аудио/видео с опорой на контекст"),
             ("reading", "Прочитать текст и сохранить 2–5 полезных фраз"),
+            ("writing", "Составить собственный короткий текст с новыми выражениями"),
             ("review", f"Повторить карточки с учётом контекста ({due} ожидают)"),
-            ("speaking", "Пересказ, shadowing или короткий монолог"),
-            ("reflection", "Отметить, что стало легче и что мешало пониманию"),
+            ("analysis", "Разобрать грамматику, написание и структуру примеров"),
+            ("reflection", "Отметить, что стало легче и какие письменные навыки требуют практики"),
         ]
         if profile.get("tonal_language"):
-            tasks[0] = (tasks[0][0], tasks[0][1] + "; проверяйте тон вместе со слогом")
+            tasks[3] = (tasks[3][0], tasks[3][1] + "; сохраняйте тоновые знаки в письменной транскрипции")
         if profile.get("romanization_bridge"):
             tasks[1] = (tasks[1][0], tasks[1][1] + "; постепенно переходите на родную письменность")
-        if profile.get("phonetic_focus"):
-            tasks[3] = (tasks[3][0], tasks[3][1] + f"; фокус: {profile['phonetic_focus']}")
+        if profile.get("orthography_focus"):
+            tasks[3] = (tasks[3][0], tasks[3][1] + f"; фокус: {profile['orthography_focus']}")
         return [
             {"mode": mode, "minutes": amount, "task": task}
             for (mode, task), amount in zip(tasks, minutes) if amount > 0
@@ -639,7 +640,7 @@ class PolyglotStore:
         if total_minutes == 0:
             phase = "setup"
         elif total_hours < 10:
-            phase = "sound_foundation"
+            phase = "written_foundation"
         elif total_hours < 40:
             phase = "comprehensible_input"
         elif total_hours < 100:
@@ -745,19 +746,18 @@ def build_parser() -> argparse.ArgumentParser:
     tonal.add_argument("--non-tonal", dest="tonal_language", action="store_false")
     init.set_defaults(tonal_language=None)
     init.add_argument("--romanization-bridge", choices=("on", "off"), default=None)
-    init.add_argument("--phonetic-focus", default="")
+    init.add_argument("--orthography-focus", default="")
     commands.add_parser("profile", help="list configured language profiles")
 
     content = commands.add_parser("content", help="manage contextual learning material")
     content_commands = content.add_subparsers(dest="content_command", required=True)
-    add_content = content_commands.add_parser("add", help="import UTF-8 TXT, Markdown, SRT or VTT")
+    add_content = content_commands.add_parser("add", help="import UTF-8 text, Markdown, SRT or VTT")
     add_content.add_argument("file", type=Path)
     add_content.add_argument("--title", default="")
     add_content.add_argument("--kind", choices=CONTENT_KINDS, default="text")
     add_content.add_argument("--level", default="", choices=("",) + CEFR_LEVELS)
     add_content.add_argument("--translation", default="")
     add_content.add_argument("--source", default="")
-    add_content.add_argument("--media", default="", help="optional local audio/video path")
     content_commands.add_parser("list", help="list imported material")
 
     phrase = commands.add_parser("phrase", help="manage phrase cards")
@@ -788,8 +788,8 @@ def build_parser() -> argparse.ArgumentParser:
     session.add_argument("--mode", choices=SESSION_MODES, required=True)
     session.add_argument("--notes", default="")
     session.add_argument("--score", type=int, choices=range(0, 6))
-    practice = commands.add_parser("practice", help="record a speaking or writing attempt")
-    practice.add_argument("--mode", choices=("speaking", "writing", "shadowing", "conversation"), default="speaking")
+    practice = commands.add_parser("practice", help="record a written composition attempt")
+    practice.add_argument("--mode", choices=("writing",), default="writing")
     practice.add_argument("--minutes", type=int, default=5)
     practice.add_argument("--score", type=int, choices=range(0, 6))
     practice.add_argument("--notes", default="")
@@ -809,7 +809,7 @@ def main(argv: list[str] | None = None) -> int:
                     language_code=args.code, script_family=args.script,
                     tonal_language=args.tonal_language,
                     romanization_bridge=(None if args.romanization_bridge is None else args.romanization_bridge == "on"),
-                    phonetic_focus=args.phonetic_focus,
+                    orthography_focus=args.orthography_focus,
                 )
                 print(
                     f"Профиль настроен: {profile['target_language']} ({profile['current_level']}), "
@@ -839,7 +839,7 @@ def main(argv: list[str] | None = None) -> int:
                     body = _read_content_file(args.file)
                     content_id = store.add_content(
                         profile, args.title or args.file.stem, body, args.kind,
-                        args.translation, args.source or str(args.file), args.media, args.level,
+                        args.translation, args.source or str(args.file), args.level,
                     )
                     print(f"Материал импортирован: id={content_id}, токенов={len(tokenize(body))}")
                 else:
