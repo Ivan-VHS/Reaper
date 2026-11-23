@@ -470,6 +470,19 @@ ReaperDabiStatus reaper_dabi_frame_release(ReaperDabiFrame *frame, uint64_t slot
     return REAPER_DABI_OK;
 }
 
+ReaperDabiStatus reaper_dabi_frame_set(ReaperDabiFrame *frame, uint64_t slot,
+                                     const ReaperDabiValue *value) {
+    if (frame == NULL || frame->runtime == NULL || value == NULL)
+        return REAPER_DABI_INVALID_ARGUMENT;
+    if (slot >= frame->count) return REAPER_DABI_RANGE_ERROR;
+    ReaperDabiValue replacement;
+    ReaperDabiStatus status = reaper_dabi_value_copy(frame->runtime, value, &replacement);
+    if (status != REAPER_DABI_OK) return status;
+    reaper_dabi_value_drop(frame->runtime, &frame->values[slot]);
+    frame->values[slot] = replacement;
+    return REAPER_DABI_OK;
+}
+
 void reaper_dabi_frame_drop_all(ReaperDabiFrame *frame) {
     if (frame == NULL || frame->runtime == NULL) return;
     for (uint64_t i = frame->count; i > 0u; --i)
