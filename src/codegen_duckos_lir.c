@@ -525,7 +525,6 @@ static int emit_call(
     if (fprintf(output,
         "    movq $0, -%zu(%%rbp)\n"
         "    movq $0, -%zu(%%rbp)\n"
-        "    movq $0, -%zu(%%rbp)\n"
         "    leaq -%zu(%%rbp), %%r11\n"
         "    call duck_fn_%u\n"
         "    testl %%eax, %%eax\n"
@@ -538,7 +537,6 @@ static int emit_call(
         "    movq %%rax, -%zu(%%rbp)\n",
         layout->result_offset,
         layout->result_offset - 8U,
-        layout->result_offset - 16U,
         layout->result_offset,
         target->id,
         caller->id,
