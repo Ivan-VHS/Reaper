@@ -11,6 +11,12 @@ from .decomposition import (
     euclidean_divmod, factor_pairs, recombine, split_evenly,
 )
 from .errors import ExecutionLimitError, LexError, ParseError, ReaperError, ReaperRuntimeError
+from .result import (
+    ErrorValue, RequestContext, ResultContractError, ResultValue,
+    context_get, context_to_map, context_with, err, is_err, is_ok, ok,
+    request_context, result_and_then, result_context, result_error,
+    result_map, result_or, result_recover, result_value,
+)
 from .evolution import EvolutionEngine, EvolutionReport
 from .runtime import Interpreter, run
 from .transactions import RuntimeTransaction, Snapshot, TransactionConflict, TransactionError, TransactionLimitError
@@ -27,7 +33,11 @@ from .embedded import EmbeddedError, McuProfile, RegisterBank, build_project as 
 
 __version__ = "0.1.0"
 __all__ = [
-    "DivisionResult", "ExecutionLimitError", "RuntimeTransaction", "Snapshot", "TransactionConflict", "TransactionError", "TransactionLimitError", "EvolutionEngine", "EvolutionReport",
+    "DivisionResult", "ExecutionLimitError", "ErrorValue", "RequestContext",
+    "ResultContractError", "ResultValue", "ok", "err", "is_ok", "is_err",
+    "result_value", "result_error", "result_context", "result_or", "result_map",
+    "result_and_then", "result_recover", "request_context", "context_get",
+    "context_with", "context_to_map", "RuntimeTransaction", "Snapshot", "TransactionConflict", "TransactionError", "TransactionLimitError", "EvolutionEngine", "EvolutionReport",
     "ThesisLedger", "ThesisLedgerError",
     "accumulate", "aggregate", "amplify", "cartesianize", "combine", "compute",
     "compound", "convolve", "couple", "cross_multiply", "expand", "exponentiate",
