@@ -8,6 +8,7 @@ from pathlib import Path
 
 from reaper.backend import BackendConfig, BackendServer
 from reaper.backend_store import BackendStore, BackendStoreError
+from reaper.backend_service import BackendService
 
 
 async def send_request(
@@ -54,6 +55,18 @@ async def send_request(
     writer.close()
     await writer.wait_closed()
     return status, response_headers, json.loads(response_body.decode("utf-8"))
+
+
+class BackendServiceTests(unittest.TestCase):
+    def test_json_result_serializer_handles_nested_values_and_non_finite_numbers(self) -> None:
+        result = BackendService._json_safe({"items": [1, 2], "invalid": float("nan")})
+        self.assertEqual(result["items"], [1, 2])
+        self.assertIsNone(result["invalid"])
+
+    def test_json_result_serializer_enforces_a_total_item_budget(self) -> None:
+        result = BackendService._json_safe([[0] * 10_000 for _ in range(3)])
+        self.assertIsInstance(result, list)
+        self.assertIn({"type": "item_limit"}, result[2])
 
 
 class BackendStoreTests(unittest.TestCase):
