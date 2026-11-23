@@ -231,6 +231,9 @@ int main(void) {{
         self._fail(node, f"'{kind}' is outside the native scalar subset")
 
     def _compile_function(self, node: Node) -> None:
+        body = self._children(node)[0] if self._children(node) else None
+        if body is None or not self._returns_on_all_paths(body):
+            self._fail(node, "native craft functions must yield on every control-flow path")
         if self._inside_function:
             self._fail(node, "nested craft declarations are not supported by the native backend")
         if not isinstance(node.value, tuple) or len(node.value) != 2:
@@ -294,6 +297,25 @@ int main(void) {{
         self._current_function = previous_function
         self._indent = previous_indent
 
+    @classmethod
+    def _returns_on_all_paths(cls, block: Node) -> bool:
+        if block.kind != "block":
+            return False
+        for statement in cls._children(block):
+            if statement.kind == "yield":
+                return True
+            if statement.kind == "when":
+                branches = cls._children(statement)
+                if (
+                    len(branches) == 3
+                    and cls._returns_on_all_paths(branches[1])
+                    and cls._returns_on_all_paths(branches[2])
+                ):
+                    return True
+            if statement.kind == "block" and cls._returns_on_all_paths(statement):
+                return True
+        return False
+
     def _compile_statement(self, node: Node, scope: Scope, output: list[str]) -> None:
         kind = node.kind
         if kind == "block":
@@ -327,13 +349,12 @@ int main(void) {{
             children = self._children(node)
             if len(children) > 1:
                 self._fail(node, "yield accepts at most one expression")
-            if not children:
-                output.append(self._line("return 0;"))
-            else:
-                expression, type_name = self._compile_expression(children[0], scope)
-                if type_name not in {_I64, _BOOL}:
-                    self._fail(node, "native craft functions can only yield an integer or boolean")
-                output.append(self._line(f"return (int64_t)({expression});"))
+            if len(children) != 1:
+                self._fail(node, "native craft functions must yield one integer expression")
+            expression, type_name = self._compile_expression(children[0], scope)
+            if type_name != _I64:
+                self._fail(node, "native craft functions must yield an integer")
+            output.append(self._line(f"return (int64_t)({expression});"))
             return
         if kind == "when":
             children = self._children(node)

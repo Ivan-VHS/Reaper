@@ -62,6 +62,12 @@ class NativeCompilerTests(unittest.TestCase):
         with self.assertRaisesRegex(NativeCompileError, "cannot be changed"):
             compile_source("make fixed := 1\nchange fixed := 2\n", "immutable.rpr")
 
+    def test_requires_a_value_return_on_every_function_path(self) -> None:
+        with self.assertRaisesRegex(NativeCompileError, "yield on every control-flow path"):
+            compile_source("craft unfinished() { make value := 1\n}\n", "missing-return.rpr")
+        with self.assertRaisesRegex(NativeCompileError, "must yield an integer"):
+            compile_source("craft flag() { yield true\n}\n", "boolean-return.rpr")
+
     def test_rejects_effects_inside_native_functions(self) -> None:
         with self.assertRaisesRegex(NativeCompileError, "cannot emit output"):
             compile_source("craft noisy() { emit 1\n yield 0\n}\n", "effect.rpr")

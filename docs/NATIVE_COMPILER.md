@@ -46,7 +46,7 @@ The compiler is launched with an argument vector, never through a shell. The gen
 | make / vary | Lexically scoped immutable/mutable bindings |
 | change | Assignment to a previously declared vary binding |
 | craft | Top-level functions with integer parameters; direct recursion is bounded; functions cannot emit or mutate globals |
-| yield | Integer or boolean result; bare yield returns zero |
+| yield | Integer result on every control-flow path |
 | emit | Integer, boolean, or string output at top level |
 | when / otherwise | Conditional blocks |
 | loop while | Bounded while loop |
@@ -55,7 +55,7 @@ The compiler is launched with an argument vector, never through a shell. The gen
 | Integers | Checked signed 64-bit arithmetic; floor division and modulo follow Reaper semantics, while overflow and division by zero fail at runtime |
 | Diagnostics | Unknown names, duplicate bindings, immutable assignment, bad arity and unsupported types are rejected before C generation |
 
-Boolean values are represented as int64_t at the C ABI boundary. Function arguments must be integers; functions may yield integers or booleans. Native functions cannot write output or mutate global bindings, keeping calls side-effect free. The generated runtime enforces a one-million-step limit and a 256-frame call-depth limit.
+Boolean values are represented as int64_t at the C ABI boundary. Function arguments and results are integers. Every function path must yield a value. Native functions cannot write output or mutate global bindings, keeping calls side-effect free. The generated runtime enforces a one-million-step limit and a 256-frame call-depth limit.
 
 ## Explicit native-backend limits
 
