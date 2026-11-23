@@ -11,7 +11,7 @@ from .governance import ConsentAuthority
 from .lexer import Token
 from .parser import Node, parse
 from .impact import catalog as impact_catalog, find_profile as impact_profile, rank_profiles as impact_rank, search_profiles as impact_search
-from . import arithmetic, metric_space, native as pytyliki_native
+from . import arithmetic, duck as duck_profile, metric_space, native as pytyliki_native
 from pathlib import Path
 
 from .debugger import RuntimeDebugger
@@ -552,7 +552,36 @@ class Interpreter:
         register("size", bounded_size, 1, 1)
         register("text", self._display, 1, 1)
         register("number", self._to_number, 1, 1)
+        def runtime_stats() -> dict[str, int]:
+            resources = self.resources.stats()
+            return {
+                "steps": self.steps,
+                "step_limit": self.max_steps,
+                "call_depth": self.call_depth,
+                "call_depth_limit": self.max_call_depth,
+                "open_resources": resources["open_files"],
+                "resource_limit": resources["limit"],
+            }
+
         register("kind", self._kind, 1, 1)
+        register("duck_capabilities", lambda value: duck_profile.capabilities(self._kind(value)), 1, 1)
+        register("duck_supports", lambda value, capability: duck_profile.supports(
+            self._kind(value), capability
+        ), 2, 2)
+        register("duck_has", duck_profile.has, 2, 2)
+        register("duck_probe", lambda value, fields: duck_profile.probe(
+            value, fields, self._kind(value), self.max_collection_items
+        ), 2, 2)
+        register("duck_require", lambda value, fields: duck_profile.require(
+            value, fields, self.max_collection_items
+        ), 2, 2)
+        register("duck_adapt", lambda value, defaults: duck_profile.adapt(
+            value, defaults, self.max_collection_items
+        ), 2, 2)
+        register("duck_inspect", lambda value: duck_profile.inspect(
+            value, self._kind(value), self.max_collection_items, self.max_text_length
+        ), 1, 1)
+        register("runtime_stats", runtime_stats, 0, 0)
         register("range", bounded_range, 1, 3)
         register("push", push, 2, 2)
         register("first", lambda values: _first(sequence(values)), 1, 1)
@@ -968,6 +997,8 @@ class Interpreter:
             return "text"
         if isinstance(value, list):
             return "list"
+        if isinstance(value, range):
+            return "range"
         if isinstance(value, dict):
             return "map"
         if isinstance(value, (UserFunction, Builtin, NativeFunction)) or getattr(value, "__reaper_bytecode__", False):
