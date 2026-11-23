@@ -86,7 +86,7 @@ def _scan(snapshot):
         if canonical in DECLARATIONS
     }
     declaration_pattern = re.compile(
-        r"\\b(" + "|".join(map(re.escape, sorted(declaration_spellings))) + r")\\s+([\\w]+)"
+        r"\b( + "|".join(map(re.escape, sorted(declaration_spellings))) + r")\s+([\w]+)"
     )
     symbols, identifiers, diagnostics, stack = [], [], [], []
     for row, source in enumerate(snapshot.text.splitlines()):
