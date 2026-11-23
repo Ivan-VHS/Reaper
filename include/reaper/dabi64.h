@@ -184,6 +184,8 @@ ReaperDabiStatus reaper_dabi_frame_hold(
     ReaperDabiFrame *frame, const ReaperDabiValue *value, uint64_t *slot_out
 );
 ReaperDabiStatus reaper_dabi_frame_release(ReaperDabiFrame *frame, uint64_t slot);
+ReaperDabiStatus reaper_dabi_frame_set(ReaperDabiFrame *frame, uint64_t slot,
+                                     const ReaperDabiValue *value);
 void reaper_dabi_frame_drop_all(ReaperDabiFrame *frame);
 void reaper_dabi_frame_destroy(ReaperDabiFrame *frame);
 
