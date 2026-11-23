@@ -97,9 +97,9 @@ static void test_object_with_symbols_and_relocations(void) {
         const char *name = section_name(output.data, shoff, shstrndx, i);
         uint32_t type = get32(header + 4u);
         if (strcmp(name, ".symtab") == 0) symtab_index = i;
-        if (strcmp(name, ".rela..text") == 0 || strcmp(name, ".rela.text") == 0)
+        if (strcmp(name, ".rela.text") == 0)
             rela_text_index = i;
-        if (strcmp(name, ".rela..data") == 0 || strcmp(name, ".rela.data") == 0)
+        if (strcmp(name, ".rela.data") == 0)
             rela_data_index = i;
         if (strcmp(name, ".bss") == 0) {
             bss_index = i;
@@ -114,9 +114,9 @@ static void test_object_with_symbols_and_relocations(void) {
 
     const uint8_t *symtab = output.data + (size_t)shoff +
                             (size_t)symtab_index * 64u;
-    assert(get32(symtab + 40u) == shstrndx - 1u);
+    assert(get32(symtab + 40u) == symtab_index + 1u);
     assert(get64(symtab + 56u) == 24u);
-    assert(get64(symtab + 32u) == 7u * 24u);
+    assert(get64(symtab + 32u) == 8u * 24u);
     assert(get32(symtab + 44u) == 6u);
 
     const uint8_t *rela_text = output.data + (size_t)shoff +
@@ -125,9 +125,9 @@ static void test_object_with_symbols_and_relocations(void) {
     assert(get32(rela_text + 44u) == 1u);
     assert(get64(rela_text + 32u) == 2u * 24u);
     uint64_t rela_text_offset = get64(rela_text + 24u);
-    assert(get32(output.data + (size_t)rela_text_offset + 8u) == 9u);
-    assert((uint32_t)get64(output.data + (size_t)rela_text_offset + 8u) ==
+    assert(get32(output.data + (size_t)rela_text_offset + 8u) ==
            REAPER_ELF64_R_X86_64_PLT32);
+    assert(get32(output.data + (size_t)rela_text_offset + 12u) == 7u);
     assert((int64_t)get64(output.data + (size_t)rela_text_offset + 16u) == -4);
 
     const uint8_t *rela_data = output.data + (size_t)shoff +
