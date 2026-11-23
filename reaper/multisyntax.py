@@ -1242,7 +1242,10 @@ def validate_polyglot(source: str, *, filename: str = "<polyglot>") -> dict[str,
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="reaper-multisyntax", description="Run Reaper and registered alternative syntax frontends.")
+    parser = argparse.ArgumentParser(
+        prog="reaper-multisyntax",
+        description="Run Reaper and registered alternative syntax frontends.",
+    )
     parser.add_argument("source", nargs="?", type=Path)
     parser.add_argument("--syntax", default="auto", help="reaper, python, pipeline, lisp, forth, brainfuck or befunge93")
     parser.add_argument("--polyglot", action="store_true", help="execute or validate %% syntax blocks in source order")
@@ -1257,20 +1260,39 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         if args.list:
+            if args.source or args.polyglot or args.check:
+                parser.error("--list cannot be combined with a source, --polyglot or --check")
             result: Any = {"schema": "reaper.syntax-registry.v1", "syntaxes": list_syntaxes()}
         else:
-            if args.source is None: parser.error("source is required unless --list is used")
-            if args.steps < 1: parser.error("--steps must be positive")
+            if args.source is None:
+                parser.error("source is required unless --list is used")
+            if args.steps < 1:
+                parser.error("--steps must be positive")
             source = args.source.read_text(encoding="utf-8")
-            if args.polyglot:
-                result = run_polyglot(source, filename=str(args.source), input_text=args.input, max_steps=args.steps)
+            if args.check:
+                result = (
+                    validate_polyglot(source, filename=str(args.source))
+                    if args.polyglot
+                    else validate_source(
+                        detect_syntax(args.source, args.syntax, source),
+                        re.sub(r"^\\s*#!syntax\\s+[a-z0-9_-]+\\s*(?:\\n|$)", "", source, count=1, flags=re.I),
+                        filename=str(args.source),
+                    )
+                )
+            elif args.polyglot:
+                result = run_polyglot(
+                    source, filename=str(args.source), input_text=args.input,
+                    max_steps=args.steps,
+                )
             else:
                 syntax = detect_syntax(args.source, args.syntax, source)
-                marker = re.match(r"\s*#!syntax\s+[a-z0-9_-]+\s*(?:\n|$)", source, re.I)
-                if marker: source = source[marker.end():]
+                marker = re.match(r"\\s*#!syntax\\s+[a-z0-9_-]+\\s*(?:\\n|$)", source, re.I)
+                if marker:
+                    source = source[marker.end():]
                 result = run_source(
                     syntax, source, filename=str(args.source), input_text=args.input,
-                    max_steps=args.steps, tape_size=args.tape_size, cell_bits=args.cell_bits, eof_mode=args.eof,
+                    max_steps=args.steps, tape_size=args.tape_size,
+                    cell_bits=args.cell_bits, eof_mode=args.eof,
                 )
         if args.json:
             print(json.dumps(result, ensure_ascii=False, indent=2, default=str))
@@ -1281,14 +1303,13 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Reaper syntax check: {result.get('block_count', 1)} block(s) valid")
         else:
             for line in result.get("output", []):
-                print(line, end="" if line.endswith("\n") else "\n")
+                print(line, end="" if line.endswith("\\n") else "\\n")
             if args.polyglot:
                 print(f"Reaper polyglot: {result['block_count']} blocks, {result['steps']} steps")
         return 0
     except (OSError, UnicodeError, MultiSyntaxError, SyntaxError) as error:
         print(f"reaper-multisyntax: {error}", file=sys.stderr)
         return 1
-
 
 if __name__ == "__main__":
     raise SystemExit(main())
