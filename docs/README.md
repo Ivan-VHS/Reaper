@@ -75,3 +75,5 @@ This is an illustrative personal-budgeting reference, not a claim that the host 
 [IVAN_VHS_ENGINEERING_PROFILE.md](IVAN_VHS_ENGINEERING_PROFILE.md) translates the project's direction into concrete architecture boundaries, implementation priorities, human-readable code conventions and acceptance tests. It is a development contract; it does not mark planned work as implemented.
 
 | [DABI64_ABI.md](DABI64_ABI.md) | versioned 64-bit native module ABI and value ownership contract |
+
+| [ELF64_OBJECT_WRITER.md](ELF64_OBJECT_WRITER.md) | deterministic x86-64 ET_REL writer, symbols and RELA records |
