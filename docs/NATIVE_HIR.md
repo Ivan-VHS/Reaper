@@ -50,17 +50,43 @@ The LIR verifier checks function/block ownership, stack-slot identities, paramet
 
 ## Current machine-code boundary
 
-The existing target emitters still consume the older verified i64 expression IR. They generate:
-- x86-64 System V ELF assembly;
-- x86-64 DuckOS DABI64 v1 assembly with the .note.duckos.abi note.
+The CLI now connects the full program front end to the DABI64 LIR backend:
 
-Those backends compile the checked no-argument i64 expression entry only. They do not yet consume general MIR/LIR functions, parameterized calls, local slots or control-flow graphs. The next implementation stage is LIR-to-DABI64 lowering and a runtime contract for collections, iteration, strings, output and failure propagation.
+~~~sh
+./build/reaper-c --emit-asm --target duckos-dabi64-v1 \
+    examples/native/program.rpr -o build/program.s
+~~~
 
-## Object files and DuckOS runtime boundary
+The pipeline is source → program AST → HIR → MIR → LIR → target-specific GNU assembly. The current scalar DABI64 backend emits:
 
-Reaper currently emits assembly text; the host assembler/linker creates the test objects. There is no native ELF relocatable-object writer or DuckOS static linker yet.
+- one duck_program entry and one duck_fn_N symbol per craft function;
+- i64 parameters and local stack slots for make, vary and change;
+- direct craft calls with checked argument counts and tagged i64 values;
+- checked signed arithmetic and division;
+- when/otherwise control-flow blocks and loop while back edges;
+- :: as an explicit pipe call whose left value becomes argument zero;
+- source-independent deterministic labels and a DuckOS ABI ELF note.
 
-DuckOS contains a versioned ABI header, frame/result validators and contract tests. The kernel syscall dispatcher, ELF loader, process startup, scheduler and user-space runtime are not implemented yet. A DABI64 host-call test verifies the register/frame contract only; it is not evidence of a bootable operating system.
+The end-to-end test assembles and links this generated code with a host harness. It calls the generated entry and functions using R10/R11 and verifies locals, nested calls, branching, a while loop, the flow operator, arithmetic overflow and division-by-zero propagation.
+
+The scalar backend deliberately rejects emit, each, list/index operations, dynamic calls, captures and collection built-ins. MIR/LIR can represent some of those operations, but a representation is not a runtime implementation. The next compiler work is the DuckOS string/list/iterator and I/O runtime, then ownership and effect-aware lowering.
+
+## DuckOS DABI64 v1
+
+DABI64 is a custom x86-64 DuckOS calling convention, not System V. Each externally visible entry receives R10 = DuckCallFrame pointer and R11 = DuckCallResult pointer; RAX returns a DuckAbiStatus. The caller aligns RSP to 32 bytes before CALL. Frame, result and non-empty argument arrays are 16-byte aligned.
+
+The stable 48-byte frame and 16-byte tagged value layouts, status codes, versioning and reference validator are defined in the companion repository:
+
+- DuckOS DABI64 header: https://github.com/Ivan-VHS/DuckOS/tree/feat/dabi64-abi-runtime/include/duckos/abi
+- DABI64 contract: https://github.com/Ivan-VHS/DuckOS/blob/feat/dabi64-abi-runtime/docs/abi/DABI64.md
+
+The DuckOS repository now has a host-buildable frame validator and typed result helpers. This is a reference ABI runtime component, not a kernel or a bootable operating system.
+
+## Object files and remaining OS boundary
+
+Reaper emits GNU assembly. The scripts/duckos_assemble.py helper asks the configured host assembler to create an ELF64 x86-64 ET_REL object, verifies the DABI64 note, and sets ELF EI_OSABI to the DuckOS value 0xD5. This is a reproducible assembler/finalization stage, not a hand-written ELF object writer or a DuckOS static linker.
+
+DuckOS still needs a kernel syscall dispatcher, ELF loader, process startup path, scheduler, address-space validation, allocator, I/O services and collection runtime. None of those should be marked complete until a booted or emulator-run DuckOS image executes a linked DABI64 program through those OS services.
 
 ## Acceptance rule
 
