@@ -41,6 +41,7 @@
 | [REAPER_UNIFIED_ARCHITECTURE.md](REAPER_UNIFIED_ARCHITECTURE.md) | native destination and language invariants |
 | [MOST_LANGUAGE_SPEC.md](MOST_LANGUAGE_SPEC.md) | exact Russian aliases |
 | [PROJECT_FEDERATION_MATRIX.md](PROJECT_FEDERATION_MATRIX.md) | peer-project boundaries and integrations |
+| [Mora integration](../integrations/mora/README.md) | optional launch manifest for the Mora desktop shell |
 | [THREADS_AND_FEDERATION.md](THREADS_AND_FEDERATION.md) | implementation and integration evidence |
 | [ATOMIC_QUANTUM_133.md](ATOMIC_QUANTUM_133.md) | 133 stable operation IDs, eight tested classical simulation kernels and hardware boundary |
 | [../LANGUAGE.md](../LANGUAGE.md) | syntax quick reference |
