@@ -602,16 +602,23 @@ rpr_cleanup:
         operands: tuple[int, ...] = ()
         symbol = None
         operation = {
-            "literal": "CONST", "name": "LOAD", "unary": "UNARY",
-            "binary": "BINARY", "call": "CALL", "list": "ARRAY_LITERAL",
-            "map": "MAP_LITERAL", "index": "INDEX",
+            "literal": "CONST",
+            "name": "LOAD",
+            "unary": "UNARY",
+            "binary": "BINARY",
+            "call": "CALL",
+            "list": "ARRAY_LITERAL",
+            "map": "MAP_LITERAL",
+            "index": "INDEX",
         }.get(node.kind)
         if operation is None:
             self._fail(node, f"native IR cannot represent expression kind {node.kind!r}")
 
         is_minimum_i64 = (
-            node.kind == "unary" and len(children) == 1
-            and children[0].kind == "literal" and children[0].value == (1 << 63)
+            node.kind == "unary"
+            and len(children) == 1
+            and children[0].kind == "literal"
+            and children[0].value == (1 << 63)
         )
         if is_minimum_i64:
             operation = "CONST"
@@ -625,8 +632,12 @@ rpr_cleanup:
         runtime_call_id = None
         if node.kind == "binary":
             runtime_call_id = {
-                "+": "i64.add", "-": "i64.sub", "*": "i64.mul",
-                "//": "i64.floor_div", "%": "i64.mod", "**": "i64.pow",
+                "+": "i64.add",
+                "-": "i64.sub",
+                "*": "i64.mul",
+                "//": "i64.floor_div",
+                "%": "i64.mod",
+                "**": "i64.pow",
                 "++": "string.concat",
             }.get(str(node.value))
         elif node.kind == "index" and operands:
@@ -644,7 +655,38 @@ rpr_cleanup:
             }.get(argument_type)
         elif node.kind == "call" and symbol == "push":
             runtime_call_id = "array.push"
-        elif node.kind == "call" and symbol == "    def _compile_expression_inner(self, node: Node, scope: Scope) -> tuple[str, str]:
+        elif node.kind == "call" and symbol == "put":
+            runtime_call_id = "map.put"
+        elif node.kind == "call" and symbol == "has":
+            runtime_call_id = "map.has"
+
+        ownership = Ownership.SCALAR
+        if result_type == NativeType.STRING:
+            ownership = Ownership.BORROWED
+        elif result_type in {NativeType.ARRAY, NativeType.MAP}:
+            ownership = Ownership.OWNED
+        if runtime_call_id is not None:
+            ownership = runtime_call(runtime_call_id).result_ownership
+
+        token = node.token
+        value_id = len(self._native_ir_values)
+        self._native_ir_values.append(NativeIRValue(
+            value_id=value_id,
+            operation=operation,
+            result_type=result_type,
+            operands=operands,
+            symbol=symbol if symbol is not None else (
+                str(node.value) if node.kind == "literal" or is_minimum_i64 else None
+            ),
+            runtime_call=runtime_call_id,
+            ownership=ownership,
+            source_line=token.line,
+            source_column=token.column,
+        ))
+        self._native_value_ids[id(node)] = value_id
+        return expression, type_name
+
+    def _compile_expression_inner(self, node: Node, scope: Scope) -> tuple[str, str]:
         kind = node.kind
         if kind == "literal":
             value = node.value
@@ -683,7 +725,10 @@ rpr_cleanup:
                 rendered.append(f"(int64_t)({expression})")
             if not rendered:
                 return "rpr_array_from((const int64_t *)NULL, 0U)", "array<i64>"
-            return f"rpr_array_from((const int64_t[]){{{', '.join(rendered)}}}, {len(rendered)}U)", "array<i64>"
+            return (
+                f"rpr_array_from((const int64_t[]){{{', '.join(rendered)}}}, {len(rendered)}U)",
+                "array<i64>",
+            )
 
         if kind == "map":
             children = self._children(node)
@@ -700,7 +745,10 @@ rpr_cleanup:
                 entries.append(f"{{{key_expression}, (int64_t)({value_expression})}}")
             if not entries:
                 return "rpr_map_from((const RprMapInit *)NULL, 0U)", "map<string,i64>"
-            return f"rpr_map_from((const RprMapInit[]){{{', '.join(entries)}}}, {len(entries)}U)", "map<string,i64>"
+            return (
+                f"rpr_map_from((const RprMapInit[]){{{', '.join(entries)}}}, {len(entries)}U)",
+                "map<string,i64>",
+            )
 
         if kind == "index":
             children = self._children(node)
@@ -743,7 +791,11 @@ rpr_cleanup:
                 if left_type not in {_I64, _BOOL} or right_type not in {_I64, _BOOL}:
                     self._fail(node, f"'{operator.lower()}' requires integer or boolean operands")
                 c_operator = "&&" if operator == "AND" else "||"
-                return f"(rpr_truthy((int64_t)({left})) {c_operator} rpr_truthy((int64_t)({right})))", _BOOL
+                return (
+                    f"(rpr_truthy((int64_t)({left})) {c_operator} "
+                    f"rpr_truthy((int64_t)({right})))",
+                    _BOOL,
+                )
             if operator in {"==", "!="} and left_type == right_type == _STRING:
                 comparison = "== 0" if operator == "==" else "!= 0"
                 return f"(strcmp({left}, {right}) {comparison})", _BOOL
@@ -759,8 +811,12 @@ rpr_cleanup:
                 self._require_type(node, left_type, _I64, f"operator '{operator}' requires integer operands")
                 self._require_type(node, right_type, _I64, f"operator '{operator}' requires integer operands")
                 helper = {
-                    "+": "rpr_add", "-": "rpr_sub", "*": "rpr_mul",
-                    "//": "rpr_floor_div", "%": "rpr_mod", "**": "rpr_pow",
+                    "+": "rpr_add",
+                    "-": "rpr_sub",
+                    "*": "rpr_mul",
+                    "//": "rpr_floor_div",
+                    "%": "rpr_mod",
+                    "**": "rpr_pow",
                 }[operator]
                 return f"{helper}((int64_t)({left}), (int64_t)({right}))", _I64
             self._fail(node, f"binary operator '{operator}' is outside the native scalar subset")
@@ -827,25 +883,6 @@ rpr_cleanup:
                 rendered.append(expression)
             return f"{info.c_name}({', '.join(rendered)})", _I64
 
-        self._fail(node, f"expression '{kind}' is outside the native scalar subset")
-
-, "native calls require a named craft function")
-            function_name = children[0].value
-            info = self.function_table.get(function_name)
-            if scope.find(function_name) is not None:
-                self._fail(node, f"'{function_name}' is a variable, not a function")
-            if function_name not in self._available_functions or info is None:
-                self._fail(node, f"function '{function_name}' is not declared at this point")
-            arguments = children[1:]
-            if len(arguments) != len(info.parameters):
-                self._fail(node, f"{function_name}() expects {len(info.parameters)} arguments, got {len(arguments)}")
-            rendered: list[str] = []
-            for argument in arguments:
-                expression, type_name = self._compile_expression(argument, scope)
-                if type_name != _I64:
-                    self._fail(argument, f"arguments to '{function_name}' must be integers")
-                rendered.append(expression)
-            return f"{info.c_name}({', '.join(rendered)})", _I64
         self._fail(node, f"expression '{kind}' is outside the native scalar subset")
 
     def _require_condition(self, node: Node, type_name: str) -> None:
