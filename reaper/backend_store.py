@@ -67,8 +67,18 @@ class BackendStore:
             self._connection.execute("PRAGMA journal_mode = WAL")
             self._connection.execute("PRAGMA synchronous = FULL")
             self._migrate()
-        except (OSError, sqlite3.Error) as error:
-            raise BackendStoreError(f"cannot open backend database: {error}") from error
+        except Exception as error:
+            connection = getattr(self, "_connection", None)
+            if connection is not None:
+                try:
+                    connection.close()
+                except sqlite3.Error:
+                    pass
+            if isinstance(error, BackendStoreError):
+                raise
+            if isinstance(error, (OSError, sqlite3.Error)):
+                raise BackendStoreError(f"cannot open backend database: {error}") from error
+            raise
 
     def _migrate(self) -> None:
         self._connection.execute("BEGIN EXCLUSIVE")
@@ -253,6 +263,8 @@ class BackendStore:
             )
         except (TypeError, ValueError, RecursionError) as error:
             raise BackendStoreError(f"response is not bounded JSON data: {error}") from error
+        if len(rendered.encode("utf-8")) > 4 * 1024 * 1024:
+            raise BackendStoreError("idempotency response exceeds the 4 MiB storage limit")
 
         now = time.time()
         with self._lock:
