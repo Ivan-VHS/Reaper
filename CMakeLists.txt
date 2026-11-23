@@ -129,6 +129,15 @@ if(REAPER_BUILD_TESTS)
                     --source ${CMAKE_CURRENT_SOURCE_DIR}/examples/native/program.rpr
                     --test-include ${CMAKE_CURRENT_SOURCE_DIR}/tests
             )
+            add_test(
+                NAME native-dabi64-object-smoke
+                COMMAND ${Python3_EXECUTABLE}
+                    ${CMAKE_CURRENT_SOURCE_DIR}/tests/native_dabi64_object_smoke.py
+                    --compiler $<TARGET_FILE:reaper-c>
+                    --cc ${CMAKE_C_COMPILER}
+                    --source ${CMAKE_CURRENT_SOURCE_DIR}/examples/native/program.rpr
+                    --assembler-script ${CMAKE_CURRENT_SOURCE_DIR}/scripts/duckos_assemble.py
+            )
         endif()
 
         add_test(NAME python-token-catalog COMMAND ${Python3_EXECUTABLE} -m unittest discover -s tests -p test_token_catalog.py)
@@ -178,6 +187,7 @@ if(REAPER_BUILD_TESTS)
             set_tests_properties(
                 native-codegen-smoke
                 native-dabi64-lir-smoke
+                native-dabi64-object-smoke
                 PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             )
         endif()
