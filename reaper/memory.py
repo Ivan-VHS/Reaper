@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any, Iterable
 
 from .errors import ReaperRuntimeError
+from .result import RequestContext, ResultValue
 
 
 class HeapLimitError(ReaperRuntimeError):
@@ -46,6 +47,17 @@ class MemoryManager:
         visited: set[int] = set()
         while pending:
             current = pending.pop()
+            if isinstance(current, ResultValue):
+                if current.succeeded:
+                    pending.append(current.value)
+                if current.error is not None:
+                    pending.append(current.error.details)
+                if current.context is not None:
+                    pending.append(current.context.metadata)
+                continue
+            if isinstance(current, RequestContext):
+                pending.append(current.metadata)
+                continue
             if not isinstance(current, (list, dict, bytearray)):
                 continue
             identity = id(current)
@@ -127,6 +139,15 @@ class MemoryManager:
                     pending.append(parent)
             elif hasattr(value, "value") and value.__class__.__name__ == "Binding":
                 pending.append(value.value)
+            elif isinstance(value, ResultValue):
+                if value.succeeded:
+                    pending.append(value.value)
+                if value.error is not None:
+                    pending.append(value.error.details)
+                if value.context is not None:
+                    pending.append(value.context.metadata)
+            elif isinstance(value, RequestContext):
+                pending.append(value.metadata)
             elif value.__class__.__name__ in {"UserFunction", "BytecodeFunction"}:
                 pending.append(value.closure)
         return marked
