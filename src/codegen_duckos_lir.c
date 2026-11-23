@@ -544,7 +544,7 @@ static int emit_call(
         caller->id,
         layout->result_offset - 8U,
         caller->id,
-        layout->result_offset - 4U,
+        layout->result_offset - 12U,
         caller->id,
         layout->result_offset,
         vreg_offset(instruction->destination)) < 0) {
