@@ -1,6 +1,7 @@
 #include "reaper/dabi64_program.h"
 
 #include <stdio.h>
+#include <string.h>
 #include <limits.h>
 
 static ReaperDabiStatus program_fail(ReaperDabiProgramError *error,
