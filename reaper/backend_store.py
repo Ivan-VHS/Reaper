@@ -70,16 +70,15 @@ class BackendStore:
             raise BackendStoreError(f"cannot open backend database: {error}") from error
 
     def _migrate(self) -> None:
-        version = int(self._connection.execute("PRAGMA user_version").fetchone()[0])
-        if version > self.SCHEMA_VERSION:
-            raise BackendStoreError(
-                f"database schema {version} is newer than supported schema {self.SCHEMA_VERSION}"
-            )
-        if version == self.SCHEMA_VERSION:
-            return
-
         self._connection.execute("BEGIN EXCLUSIVE")
         try:
+            # Re-read after acquiring the write lock: another process may have
+            # completed the first migration while this connection was waiting.
+            version = int(self._connection.execute("PRAGMA user_version").fetchone()[0])
+            if version > self.SCHEMA_VERSION:
+                raise BackendStoreError(
+                    f"database schema {version} is newer than supported schema {self.SCHEMA_VERSION}"
+                )
             if version < 1:
                 self._connection.execute(
                     """
