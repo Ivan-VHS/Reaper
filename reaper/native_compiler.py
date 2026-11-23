@@ -207,6 +207,7 @@ static inline int64_t rpr_pow(int64_t base, int64_t exponent) {{
 {functions}
 
 int main(void) {{
+    (void)rpr_call_depth;
 {main_text}
     return rpr_failed ? EXIT_FAILURE : EXIT_SUCCESS;
 }}
@@ -265,9 +266,9 @@ int main(void) {{
 
         signature = ", ".join(f"int64_t {name}" for name in parameter_names) or "void"
         call_arguments = ", ".join(parameter_names)
-        prototype = f"static int64_t {c_name}({signature});"
+        prototype = f"static inline int64_t {c_name}({signature});"
         implementation_name = c_name + "_impl"
-        implementation_prototype = f"static int64_t {implementation_name}({signature});"
+        implementation_prototype = f"static inline int64_t {implementation_name}({signature});"
         self.function_declarations.extend([prototype, implementation_prototype])
 
         previous_inside = self._inside_function
@@ -281,14 +282,14 @@ int main(void) {{
         self._compile_block(body, function_scope, body_lines, create_scope=False)
         body_text = "\n".join(body_lines)
         wrapper_arguments = call_arguments
-        wrapper = f'''static int64_t {c_name}({signature}) {{
+        wrapper = f'''static inline int64_t {c_name}({signature}) {{
     if (rpr_call_depth >= 256U) return rpr_fail("call-depth limit exceeded");
     ++rpr_call_depth;
     int64_t result = {implementation_name}({wrapper_arguments});
     --rpr_call_depth;
     return result;
 }}'''
-        implementation = f'''static int64_t {implementation_name}({signature}) {{
+        implementation = f'''static inline int64_t {implementation_name}({signature}) {{
 {body_text}
     return 0;
 }}'''
