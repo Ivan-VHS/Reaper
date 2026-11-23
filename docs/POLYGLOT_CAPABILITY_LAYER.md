@@ -53,7 +53,7 @@ python -m reaper typecheck path/to/program.rpr --json
 python -m reaper --check --syntax-only path/to/program.rpr
 ```
 
-`--check` now runs syntax parsing and the conservative type pass. `--syntax-only` is the explicit parser-only compatibility path. Normal program execution, tree-walk runtime and VM semantics remain unchanged. The checker is not yet a complete sound type system: parameters have no source-level annotations, generic user declarations are absent, and type inference across external module boundaries remains intentionally unknown.
+`--check` now runs syntax parsing and the conservative type pass by default. Use `--syntax-only` only when a parser-only check is needed for compatibility. Normal program execution, tree-walk runtime and VM semantics remain unchanged; static diagnostics never execute the selected source. The checker is not yet a complete sound type system: parameters have no source-level annotations, generic user declarations are absent, and type inference across external module boundaries remains intentionally unknown.
 
 ## Implementation order
 
