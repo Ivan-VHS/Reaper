@@ -40,8 +40,9 @@ Reaper розвивається як системна мова для проши
 | Компонент | Поточний обсяг | Межа |
 |---|---|---|
 | Python runtime | lexer, parser, interpreter, CLI, REPL, модулі, closures, quotas та audit log | поточна виконувана еталонна реалізація |
+| Static type analysis | виведення базових і list-типів, перевірка операторів/індексів, змінності та арності викликів | часткова реалізація; запуск через `reaper typecheck` |
 | Reaper Studio | основа Windows IDE, дерево/редактор/debugger та огляд Systems/Hardware з MCU-профілями й межами доступу | локальний desktop-застосунок; без live-інспектора пристроїв |
-| LSP | stdio JSON-RPC, diagnostics, completion, hover, symbols, лексична навігація та форматування документа | відкритий документ; без міжфайлового type inference |
+| LSP | stdio JSON-RPC, diagnostics, completion, hover, symbols, лексична навігація, форматування та локальна перевірка типів | відкритий документ; без міжфайлового type inference |
 | Інвентаризація toolchain | пошук компіляторів, систем збирання, парсерів, форматтерів, налагоджувачів і WASM runtime з фіксацією SHA-256 | лише PATH і SHA-256; знайдені програми не запускаються |
 | DAP | stdio debug adapter, line breakpoints, stepping, stack і locals | налагодження на межах операторів; лише довірені локальні програми |
 | NOO TAH | керування проєктами/процесами навколо офіційного Node.js, npm/npx та Inspector | Node/V8/libuv надає upstream Node |
@@ -49,7 +50,7 @@ Reaper розвивається як системна мова для проши
 | QCS / embedded tools | окремий parser апаратної області, JSON AST та обмежені embedded-інструменти | довідковий/аналітичний інструментарій, не виконання на обладнанні |
 | Kora | необов’язкові допоміжні функції стандартної бібліотеки у семи модулях | окремо від runtime мови Reaper |
 
-Каталоги та реєстри можуть містити запропоновані або зарезервовані записи. Запис у каталозі не означає, що функцію реалізовано в runtime. Рівень зрілості та межі описані у [Features](docs/FEATURES.md), [REAPER IDE](docs/REAPER_IDE.md), [NOO TAH](docs/NOO_TAH.md) і [Kora helpers](docs/KORA.md).
+Каталоги та реєстри можуть містити запропоновані або зарезервовані записи. Запис у каталозі не означає, що функцію реалізовано в runtime. Рівень зрілості та межі описані у [Features](docs/FEATURES.md), [Polyglot capability layer](docs/POLYGLOT_CAPABILITY_LAYER.md), [REAPER IDE](docs/REAPER_IDE.md), [NOO TAH](docs/NOO_TAH.md) і [Kora helpers](docs/KORA.md).
 
 Зображення нижче — знімок Windows Studio, а не браузерний playground.
 
@@ -85,6 +86,7 @@ python -m pip install -e .
 
 ```sh
 python -m reaper --check examples/flow.rpr
+python -m reaper typecheck examples/flow.rpr
 python -m reaper examples/flow.rpr
 python -m reaper --repl
 python reaper_desktop.py
