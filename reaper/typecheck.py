@@ -377,7 +377,7 @@ class TypeChecker:
                 if callback is not None and callback.kind == "name" and callback.value in self.functions:
                     return f"List[{self.functions[callback.value].return_type}]"
                 return "List[Any]"
-            if name in {"keep", "filter", "sorted", "sort_by", "take", "drop", "unique", "rest"}:
+            if name in {"keep", "filter", "sorted", "sort_by", "take", "drop", "unique", "rest", "duck_require"}:
                 return left_type
             if name == "sum":
                 return "Number"
