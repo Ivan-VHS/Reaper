@@ -33,7 +33,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--version", action="version", version="Reaper 0.1.0")
     parser.add_argument("--audit-log", metavar="PATH", help="append a hash-chained local execution journal")
     parser.add_argument("--verify-audit-log", metavar="PATH", help="verify a journal and exit")
-    parser.add_argument("--check", "--lint", dest="check", action="store_true", help="tokenize and parse without running the program")
+    parser.add_argument("--check", "--lint", dest="check", action="store_true", help="parse and run static type analysis without executing the program")
+    parser.add_argument("--syntax-only", action="store_true", help="limit --check to lexer/parser validation and skip static type analysis")
     parser.add_argument("--repl", action="store_true", help="start the interactive Reaper prompt")
     parser.add_argument("--json", action="store_true", help="emit the run result and diagnostics as JSON")
     parser.add_argument("--profile", action="store_true", help="report elapsed time and interpreter step count")
@@ -308,6 +309,8 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--heap-bytes must be a positive integer")
     if args.open_resources < 1:
         parser.error("--open-resources must be a positive integer")
+    if args.syntax_only and not args.check:
+        parser.error("--syntax-only requires --check")
     path = Path(args.source)
     output_lines: list[str] = []
     profile_data: dict[str, float | int] | None = None
@@ -321,18 +324,53 @@ def main(argv: list[str] | None = None) -> int:
             audit.record("source_loaded", source_name=path.name, source_sha256=source_sha256)
         if args.check:
             try:
-                parse(source, str(path))
+                tree = parse(source, str(path))
             except ReaperError as error:
                 if audit:
                     audit.record("syntax_check_failed", error_type=type(error).__name__)
                 raise
+
+            diagnostics = []
+            if not args.syntax_only:
+                from .typecheck import TypeChecker
+
+                checked = TypeChecker(str(path)).check(tree)
+                diagnostics = [item.as_dict() for item in checked.diagnostics]
+
+            errors = [item for item in diagnostics if item["severity"] == "error"]
             if audit:
-                audit.record("syntax_check_passed")
+                audit.record(
+                    "static_check_completed",
+                    syntax_only=args.syntax_only,
+                    type_errors=len(errors),
+                    type_diagnostics=len(diagnostics),
+                )
+
+            result = {
+                "ok": not errors,
+                "mode": "syntax-check" if args.syntax_only else "static-check",
+                "file": str(path),
+                "diagnostics": diagnostics,
+                "summary": {
+                    "errors": len(errors),
+                    "warnings": sum(item["severity"] == "warning" for item in diagnostics),
+                },
+            }
             if args.json:
-                print(json.dumps({"ok": True, "mode": "check", "file": str(path)}, ensure_ascii=False))
+                print(json.dumps(result, ensure_ascii=False))
             else:
-                print(f"Reaper: {path} is valid")
-            return 0
+                for item in diagnostics:
+                    print(
+                        f"{path}:{item['line']}:{item['column']}: "
+                        f"{item['severity']} {item['code']}: {item['message']}"
+                    )
+                if errors:
+                    print(f"Reaper: {path} failed static checks ({len(errors)} error(s))")
+                elif args.syntax_only:
+                    print(f"Reaper: {path} syntax is valid")
+                else:
+                    print(f"Reaper: {path} syntax and supported types are valid")
+            return 0 if not errors else 1
 
         def emit(line: str) -> None:
             output_lines.append(str(line))
