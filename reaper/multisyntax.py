@@ -1198,7 +1198,7 @@ def validate_source(syntax: str, source: str, *, filename: str = "<memory>") -> 
         rows = source.splitlines() or [""]
         if len(rows) > 25 or any(len(row) > 80 for row in rows):
             raise MultiSyntaxError("Befunge-93 playfield is limited to 80 columns by 25 rows")
-        supported = set('0123456789+-*/%!\`><^v?_|"\\:$.,#pg&~@ ')
+        supported = set("0123456789+-*/%!`><^v?_|\"\\:$.,#pg&~@ ")
         for row_index, row in enumerate(rows):
             for column, character in enumerate(row):
                 if character not in supported:
