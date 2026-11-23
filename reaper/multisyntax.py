@@ -50,7 +50,7 @@ class _Budget:
 
 
 SPECS = (
-    SyntaxSpec("reaper", "structured / flow-first", "Native Reaper syntax and runtime.", "native", (".rpr",)),
+    SyntaxSpec("reaper", "structured / flow-first", "Native Reaper syntax and runtime.", "native", (".rpr", ".most")),
     SyntaxSpec("python", "imperative / dynamic", "A safe, documented Python-like subset; not CPython.", "implemented_subset", (".py",)),
     SyntaxSpec("pipeline", "functional / dataflow", "Left-to-right |> and -> data transformation chains.", "implemented_subset", (".pipe", ".ppl")),
     SyntaxSpec("lisp", "homoiconic / functional", "Small S-expression language with lexical closures and list primitives.", "implemented_subset", (".lisp", ".lsp", ".scm")),
