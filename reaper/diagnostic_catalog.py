@@ -11,6 +11,9 @@ _DEFINITIONS = {
     "RPR-E0014": {"code":"RPR-E0014","severity":"error","title":"Unexpected closing delimiter","summary":"A closing parenthesis, bracket, or brace has no matching opener at this location.","causes":"An extra closing delimiter or an earlier opener closed in the wrong order.","help":"Match each closing delimiter to the most recent compatible opener; remove the extra closer or correct the nesting."},
     "RPR-E0100": {"code":"RPR-E0100","severity":"error","title":"Runtime operation rejected","summary":"The interpreter rejected an operation while evaluating the program.","causes":"Invalid operand types, division by zero, an unavailable value, or a violated runtime contract.","help":"Check the reported operation and its input values. Handle absent or invalid values explicitly before retrying."},
     "RPR-E0101": {"code":"RPR-E0101","severity":"error","title":"Execution budget exceeded","summary":"The program exceeded a configured instruction or resource limit.","causes":"An unexpectedly large workload, a non-terminating loop, or a limit that is too low for the intended input.","help":"Reduce the input or simplify the loop. Increase the specific budget only after reviewing the resource cost."},
+    "RPR-E0015": {"code":"RPR-E0015","severity":"error","title":"Unsupported syntax profile","summary":"The source requests a syntax mode without an executable frontend adapter.","causes":"A misspelled syntax directive or a declared DSL adapter that has not been registered.","help":"Use a registered syntax mode or register an executable frontend adapter before selecting this mode."},
+    "RPR-R0001": {"code":"RPR-R0001","severity":"error","title":"Runtime operation rejected","summary":"The interpreter rejected an operation while evaluating the program.","causes":"Invalid operand types, division by zero, an unavailable value, or a violated runtime contract.","help":"Check the reported operation and its input values. Handle absent or invalid values explicitly before retrying."},
+    "RPR-R0002": {"code":"RPR-R0002","severity":"error","title":"Execution budget exceeded","summary":"The program exceeded a configured instruction or resource limit.","causes":"An unexpectedly large workload, a non-terminating loop, or a limit that is too low for the intended input.","help":"Reduce the input or simplify the loop. Increase the specific budget only after reviewing the resource cost."},
     "RPR-W0001": {"code":"RPR-W0001","severity":"warning","title":"Incomplete delimiter","summary":"The document contains an opening delimiter without a matching closer.","causes":"The user may still be typing, or the closing delimiter may have been omitted.","help":"Add the matching closing delimiter. This warning is intentionally non-fatal while editing an incomplete document."},
 }
 _LOCATION = re.compile(r"^(?P<file>.+?):(?P<line>[0-9]+):(?P<column>[0-9]+):\s*(?P<message>.*)$")
@@ -23,6 +26,10 @@ class StructuredDiagnostic:
     file: str | None
     range: dict[str, dict[str, int]]
     help: str
+    stage: str = "compiler"
+    syntax_mode: str | None = None
+    span: dict[str, object] | None = None
+    details: dict[str, object] | None = None
 
     def to_dict(self) -> dict[str, object]:
         return asdict(self)
@@ -38,16 +45,18 @@ def diagnostic_definitions() -> tuple[dict[str, str], ...]:
 
 
 def diagnose_exception(error: ReaperError, fallback_file: str | None = None) -> StructuredDiagnostic:
-    if isinstance(error, LexError):
-        code = "RPR-E0001"
-    elif isinstance(error, ParseError):
-        code = "RPR-E0013"
-    elif isinstance(error, ExecutionLimitError):
-        code = "RPR-E0101"
-    elif isinstance(error, ReaperRuntimeError):
-        code = "RPR-E0100"
-    else:
-        code = "RPR-E0000"
+    code = getattr(error, "code", None)
+    if code not in _DEFINITIONS:
+        if isinstance(error, LexError):
+            code = "RPR-E0001"
+        elif isinstance(error, ParseError):
+            code = "RPR-E0013"
+        elif isinstance(error, ExecutionLimitError):
+            code = "RPR-R0002"
+        elif isinstance(error, ReaperRuntimeError):
+            code = "RPR-R0001"
+        else:
+            code = "RPR-E0000"
 
     raw = str(error)
     match = _LOCATION.match(raw)
@@ -61,10 +70,34 @@ def diagnose_exception(error: ReaperError, fallback_file: str | None = None) -> 
         line = column = 0
         message = raw
 
+    span = getattr(error, "span", None)
+    if span is not None:
+        filename = span.source_id
+        line = span.line - 1
+        column = span.column - 1
+        end_line = (span.end_line or span.line) - 1
+        end_column = (span.end_column or span.column) - 1
+        source_span = span.to_dict()
+    else:
+        end_line = line
+        end_column = column + 1
+        source_span = None
+
     definition = _DEFINITIONS[code]
     return StructuredDiagnostic(
-        code=code, severity=definition["severity"], message=message, file=filename,
+        code=code,
+        severity=definition["severity"],
+        message=message,
+        file=filename,
         range={"start":{"line":line,"character":column},
-               "end":{"line":line,"character":column + 1}},
+               "end":{"line":end_line,"character":end_column}},
         help=definition["help"],
+        stage=getattr(error, "stage", None) or (
+            "lexer" if isinstance(error, LexError) else
+            "parser" if isinstance(error, ParseError) else
+            "runtime" if isinstance(error, ReaperRuntimeError) else "compiler"
+        ),
+        syntax_mode=getattr(error, "syntax_mode", None),
+        span=source_span,
+        details=getattr(error, "details", None) or {},
     )
