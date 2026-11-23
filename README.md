@@ -262,3 +262,8 @@ The web-stand rules are reflected according to the actual local developer-toolin
 ## Unified report envelope
 
 Wrap JSON output in the shared ivan-vhs.report.v1 contract with: python tools/report_envelope.py --tool reaper --version VERSION < result.json. See docs/REPORT_ENVELOPE.md and schemas/ivan-vhs.report.v1.schema.json. The envelope preserves the tool-specific result and records limitations.
+
+
+## Documentation map
+
+Use the [documentation index](docs/README.md) as the entry point and the [information architecture map](docs/INFORMATION_ARCHITECTURE.md) for language, compiler, runtime, Studio and integration clusters. Topic hubs lead to detailed contracts; implementation status remains governed by source, tests and schemas.

@@ -264,3 +264,8 @@ JSON-вивід можна обгорнути в загальний формат
     python tools/report_envelope.py --tool reaper --version VERSION < result.json
 
 Див. docs/REPORT_ENVELOPE.md і schemas/ivan-vhs.report.v1.schema.json. Оболонка зберігає дані інструмента та фіксує обмеження результату.
+
+
+## Карта документації
+
+Використовуйте [індекс документації](docs/README.md) як точку входу, а [карту інформаційної архітектури](docs/INFORMATION_ARCHITECTURE.md) — для навігації кластерами мови, компілятора, runtime, Studio та інтеграцій. Хаби ведуть до детальних контрактів; стан реалізації підтверджується кодом, тестами та схемами.
