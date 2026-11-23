@@ -253,6 +253,7 @@ class TypeChecker:
                     "RPR-T0008",
                     f"cannot index a value of type {collection_type}",
                 )
+                return ANY
             return self._element_type(collection_type, node)
         if node.kind == "unary":
             operand = self._expression(children[0])
