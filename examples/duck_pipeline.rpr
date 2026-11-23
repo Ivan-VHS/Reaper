@@ -35,7 +35,7 @@ craft inspect_one(item) {
         make name := normalize_name(get(item, "name", ""))
 
         when len(name) == 0 {
-            yield err("EMPTY_NAME", "channel name is empty", [name])
+            yield err("EMPTY_NAME", "channel name is empty", [])
         } otherwise {
             make level := extract_level(item)
 
