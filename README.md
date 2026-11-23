@@ -85,6 +85,7 @@ python -m pip install -e .
 
 ```sh
 python -m reaper --check examples/flow.rpr
+python -m reaper typecheck examples/flow.rpr
 python -m reaper examples/flow.rpr
 python -m reaper --repl
 python reaper_desktop.py
