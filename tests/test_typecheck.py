@@ -72,6 +72,21 @@ class StaticTypeCheckerTests(unittest.TestCase):
         """)
         self.assertTrue(result.ok, result.as_dict())
 
+    def test_allows_text_keys_on_unknown_map_like_host_values(self):
+        result = check_source("""
+        make report := read_json("report.json")
+        emit report["schema"]
+        """)
+        self.assertTrue(result.ok, result.as_dict())
+
+    def test_rejects_indexing_a_scalar_value(self):
+        result = check_source("""
+        make count := 42
+        emit count[0]
+        """)
+        self.assertFalse(result.ok)
+        self.assertEqual(result.diagnostics[0].code, "RPR-T0008")
+
     def test_reports_non_iterable_values(self):
         result = check_source("""
         each item in 42 {
