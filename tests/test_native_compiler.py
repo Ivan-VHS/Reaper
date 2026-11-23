@@ -41,7 +41,7 @@ class NativeCompilerTests(unittest.TestCase):
         second = compile_source(PROGRAM, "native.rpr")
         self.assertEqual(first, second)
         self.assertIn("#include <inttypes.h>", first)
-        self.assertIn("static int64_t rpr_fn_0", first)
+        self.assertIn("static inline int64_t rpr_fn_0", first)
         self.assertIn("rpr_add(", first)
         self.assertIn("rpr_tick()", first)
 

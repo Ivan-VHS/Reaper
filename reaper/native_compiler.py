@@ -335,14 +335,20 @@ int main(void) {{
             if len(children) != 1:
                 self._fail(node, "emit requires one expression")
             expression, type_name = self._compile_expression(children[0], scope)
-            tick = self._line("if (!rpr_tick()) return 0;" if self._inside_function else "if (!rpr_tick()) return EXIT_FAILURE;")
-            output.append(tick)
+            output.append(self._line("if (!rpr_tick()) return EXIT_FAILURE;"))
+            temporary = self._name("emit")
             if type_name == _STRING:
-                output.append(self._line(f"(void)printf(\"%s\\n\", {expression});"))
+                output.append(self._line(f"const char *{temporary} = {expression};"))
+                output.append(self._line("if (rpr_failed) return EXIT_FAILURE;"))
+                output.append(self._line(f"(void)printf(\"%s\\n\", {temporary});"))
             elif type_name == _BOOL:
-                output.append(self._line(f"(void)printf(\"%s\\n\", rpr_truthy({expression}) ? \"true\" : \"false\");"))
+                output.append(self._line(f"int64_t {temporary} = (int64_t)({expression});"))
+                output.append(self._line("if (rpr_failed) return EXIT_FAILURE;"))
+                output.append(self._line(f"(void)printf(\"%s\\n\", rpr_truthy({temporary}) ? \"true\" : \"false\");"))
             else:
-                output.append(self._line(f"(void)printf(\"%\" PRId64 \"\\n\", (int64_t)({expression}));"))
+                output.append(self._line(f"int64_t {temporary} = (int64_t)({expression});"))
+                output.append(self._line("if (rpr_failed) return EXIT_FAILURE;"))
+                output.append(self._line(f"(void)printf(\"%\" PRId64 \"\\n\", {temporary});"))
             return
         if kind == "yield":
             if not self._inside_function:
@@ -612,10 +618,10 @@ def build_executable(
         raise ValueError("optimization must be one of 0, 1, 2, 3, or s")
     cc = find_c_compiler(compiler)
     destination = Path(output).expanduser().resolve()
-    if destination.suffix.lower() in {".c", ".h", ".rpr"}:
-        raise ValueError("native output must be an executable path, not a source-file path")
     if filename != "<memory>" and destination == Path(filename).expanduser().resolve():
         raise ValueError("native output must not overwrite its Reaper source file")
+    if destination.suffix.lower() in {".c", ".h", ".rpr"}:
+        raise ValueError("native output must be an executable path, not a source-file path")
     destination.parent.mkdir(parents=True, exist_ok=True)
     generated = compile_source(source, filename)
     # Build beside the requested output so the final replacement is atomic and
