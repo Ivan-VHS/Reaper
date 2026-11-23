@@ -35,6 +35,7 @@ Each Markdown page is linked here and from its topic hub, giving readers more th
 
 ### Language, compiler and runtime
 
+- [HARDWARE LANGUAGE](HARDWARE_LANGUAGE.md)
 - [C MIGRATION](C_MIGRATION.md)
 - [CONCATENATION ARCHITECTURE](CONCATENATION_ARCHITECTURE.md)
 - [FORMATTER AND TOOLCHAIN](FORMATTER_AND_TOOLCHAIN.md)
@@ -75,6 +76,7 @@ Each Markdown page is linked here and from its topic hub, giving readers more th
 
 ### Architecture and system contracts
 
+- [HARDWARE LANGUAGE](HARDWARE_LANGUAGE.md)
 - [ARCHITECTURE 66](ARCHITECTURE_66.md)
 - [ARCHITECTURE](ARCHITECTURE.md)
 - [ATOMIC QUANTUM 133](ATOMIC_QUANTUM_133.md)
