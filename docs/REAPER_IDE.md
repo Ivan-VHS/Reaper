@@ -32,7 +32,7 @@ Both services use Content-Length framed JSON-RPC over stdin/stdout. Stdout is re
 | Breakpoints and stepping | Implemented | Statement-boundary debugger; next and step-in share granularity |
 | Stack and locals | Implemented | Existing runtime debugger snapshots |
 | Conditional breakpoints / evaluate / step-out | Not implemented | Not advertised as supported |
-| Type inference, semantic graph, incremental AST | Planned | Requires canonical type/IR APIs |
+| Local inferred-type diagnostics | Partial — integrated | Shared AST checker feeds Studio, `reaper --check` and LSP; unresolved module/host values remain `Any` |
 | Native C17 language service | Planned | Python remains the compatibility reference |
 | Coverage, profiler UI, test explorer, integrated Git UI | Planned | Requires stable data contracts |
 
@@ -64,7 +64,7 @@ parser diagnostics                Interpreter
              REAPER language core
 ```
 
-LSP advertises only implemented handlers. Document edits use UTF-16 positions and monotonically increasing versions; stale edits are rejected. A cancellable background index publishes only results for the current snapshot. The index is per open document and lexical. Workspace symbol lookup and navigation aggregate those open-document indexes under explicit document/character limits; disk crawling, cross-file semantic resolution, type inference, semantic tokens and AST refactoring remain future work. DAP does not evaluate arbitrary host-language expressions or create an OS sandbox. Launch only trusted local programs.
+LSP advertises only implemented handlers. Document edits use UTF-16 positions and monotonically increasing versions; stale edits are rejected. A cancellable background index publishes only results for the current snapshot. The symbol index is per open document and lexical. The conservative type checker runs over the canonical AST and publishes local diagnostics through LSP and Studio; cross-file semantic resolution, disk crawling, full source annotations and AST refactoring remain future work. DAP does not evaluate arbitrary host-language expressions or create an OS sandbox. Launch only trusted local programs.
 
 ## Design constraints
 
