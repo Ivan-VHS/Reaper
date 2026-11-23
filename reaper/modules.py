@@ -98,7 +98,7 @@ class ModuleLoader:
     def graph_dict(self) -> dict[str, list[str]]:
         return {source: sorted(targets) for source, targets in sorted(self.graph.items())}
 
-    def scan(self, entry: str) -> dict[str, list[str]]:
+    def scan(self, entry: str, syntax: str | None = None) -> dict[str, list[str]]:
         """Parse imports recursively without executing any source."""
         self.graph.clear()
         self.loading.clear()
@@ -126,7 +126,7 @@ class ModuleLoader:
             if len(raw) > self.max_source_bytes:
                 raise ModuleError(f"module source limit ({self.max_source_bytes} bytes) exceeded: {path}")
             source = raw.decode("utf-8")
-            tree = parse(source, name)
+            tree = parse(source, name, syntax=syntax if name == root else None)
             imports: list[str] = []
 
             def visit(node: Node) -> None:
