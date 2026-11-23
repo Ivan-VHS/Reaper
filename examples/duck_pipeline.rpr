@@ -30,7 +30,7 @@ craft extract_level(item) {
 
 craft inspect_one(item) {
     when kind(item) != "map" {
-        yield err("INVALID_RECORD", "channel record must be a map", [])
+        yield err("INVALID_RECORD", "channel record must be a map or plain record", [])
     } otherwise {
         make name := normalize_name(get(item, "name", ""))
 
