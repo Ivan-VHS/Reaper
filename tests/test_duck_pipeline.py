@@ -37,7 +37,7 @@ class DuckPipelineTests(unittest.TestCase):
     def test_non_map_records_become_diagnostics(self) -> None:
         source = PROGRAM.read_text(encoding="utf-8")
         source = source.split('make raw_channels :=', 1)[0]
-        source += '\\nmake results := ["not-a-map"] :: map(inspect_one)\\nemit results\\n'
+        source += '\nmake results := ["not-a-map"] :: map(inspect_one)\nemit results\n'
         output: list[str] = []
 
         Interpreter(output=output.append).run(source, filename=str(PROGRAM))
