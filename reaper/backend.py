@@ -396,6 +396,10 @@ class BackendServer:
                     request_id,
                     response_headers,
                 )
+            except asyncio.CancelledError:
+                writer.close()
+                writer.transport.abort()
+                raise
             except (ConnectionError, asyncio.TimeoutError):
                 pass
             self.metrics.record(status, duration_ms, request_size, response_size)
@@ -418,6 +422,9 @@ class BackendServer:
             writer.close()
             try:
                 await asyncio.wait_for(writer.wait_closed(), timeout=self.config.request_timeout)
+            except asyncio.CancelledError:
+                writer.transport.abort()
+                raise
             except (asyncio.TimeoutError, ConnectionError):
                 writer.transport.abort()
 
@@ -911,37 +918,40 @@ def _configure_logging() -> None:
 
 async def _serve(config: BackendConfig) -> None:
     server = BackendServer(config)
-    await server.start()
-    _configure_logging()
-    host, port = server.address
-    print(f"Reaper local backend: {server.url}", file=sys.stderr)
-    print(f"Bearer token (shown once; do not share): {config.token}", file=sys.stderr)
-    print("Health: /healthz   Readiness: /readyz   API: /v1/info", file=sys.stderr)
-    _LOG.info(
-        json.dumps(
-            {
-                "event": "backend_started",
-                "host": host,
-                "port": port,
-                "api_version": API_VERSION,
-                "execution_enabled": config.allow_execution,
-            },
-            separators=(",", ":"),
-            sort_keys=True,
-        )
-    )
-
-    stop = asyncio.Event()
-    loop = asyncio.get_running_loop()
-    for signum in (signal.SIGINT, signal.SIGTERM):
-        try:
-            loop.add_signal_handler(signum, stop.set)
-        except (NotImplementedError, RuntimeError):
-            try:
-                signal.signal(signum, lambda _signum, _frame: loop.call_soon_threadsafe(stop.set))
-            except (ValueError, OSError):
-                pass
     try:
+        await server.start()
+        _configure_logging()
+        host, port = server.address
+        print(f"Reaper local backend: {server.url}", file=sys.stderr)
+        print(f"Bearer token (shown once; do not share): {config.token}", file=sys.stderr)
+        print("Health: /healthz   Readiness: /readyz   API: /v1/info", file=sys.stderr)
+        _LOG.info(
+            json.dumps(
+                {
+                    "event": "backend_started",
+                    "host": host,
+                    "port": port,
+                    "api_version": API_VERSION,
+                    "execution_enabled": config.allow_execution,
+                },
+                separators=(",", ":"),
+                sort_keys=True,
+            )
+        )
+
+        stop = asyncio.Event()
+        loop = asyncio.get_running_loop()
+        for signum in (signal.SIGINT, signal.SIGTERM):
+            try:
+                loop.add_signal_handler(signum, stop.set)
+            except (NotImplementedError, RuntimeError):
+                try:
+                    signal.signal(
+                        signum,
+                        lambda _signum, _frame: loop.call_soon_threadsafe(stop.set),
+                    )
+                except (ValueError, OSError):
+                    pass
         await stop.wait()
     finally:
         await server.close()
