@@ -66,7 +66,7 @@ class BackendServiceTests(unittest.TestCase):
     def test_json_result_serializer_enforces_a_total_item_budget(self) -> None:
         result = BackendService._json_safe([[0] * 10_000 for _ in range(3)])
         self.assertIsInstance(result, list)
-        self.assertIn({"type": "item_limit"}, result[2])
+        self.assertEqual(result[2], {"type": "item_limit"})
 
 
 class BackendStoreTests(unittest.TestCase):
