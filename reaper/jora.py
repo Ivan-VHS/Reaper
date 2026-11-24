@@ -27,6 +27,7 @@ MAX_GRAPH_VARIANTS = 6
 GRAPH_TOPOLOGIES = (
     "layered", "pipeline", "hub_spoke", "plugin_mesh", "event_driven", "hybrid",
 )
+GRAPH_OBJECTIVES = ("balanced", "low_latency", "modularity", "extensibility", "minimal_complexity")
 GRAPH_LABELS = {
     "layered": "Layered Composition",
     "pipeline": "Sequential Workflow",
@@ -228,7 +229,7 @@ def _normalize_graph_options(value: Any) -> dict[str, Any]:
         value = {}
     if not isinstance(value, dict):
         raise JoraError("graph must be an object")
-    allowed = {"topology", "seed", "variants", "variation"}
+    allowed = {"topology", "objective", "seed", "variants", "variation"}
     unknown = sorted(set(value) - allowed)
     if unknown:
         raise JoraError("unknown graph fields: " + ", ".join(unknown))
@@ -237,6 +238,9 @@ def _normalize_graph_options(value: Any) -> dict[str, Any]:
         raise JoraError(
             "unsupported graph topology; choose auto or: " + ", ".join(GRAPH_TOPOLOGIES)
         )
+    objective = _text(value.get("objective", "balanced"), "graph.objective", 32).casefold()
+    if objective not in GRAPH_OBJECTIVES:
+        raise JoraError("graph.objective must be one of: " + ", ".join(GRAPH_OBJECTIVES))
     seed = _text(value.get("seed", ""), "graph.seed", 64, optional=True)
     variants = value.get("variants", 3)
     variation = value.get("variation", 50)
@@ -246,6 +250,7 @@ def _normalize_graph_options(value: Any) -> dict[str, Any]:
         raise JoraError("graph.variation must be an integer from 0 to 100")
     return {
         "topology": topology,
+        "objective": objective,
         "seed": seed,
         "variants": variants,
         "variation": variation,
@@ -291,6 +296,7 @@ def _build_graph_variant(
     topology: str,
     seed: str,
     variation: int,
+    objective: str,
     variant_index: int,
 ) -> dict[str, Any]:
     nodes: list[dict[str, Any]] = []
@@ -552,6 +558,7 @@ def _build_graph_variant(
         "topology": topology,
         "seed": seed,
         "variation": variation,
+        "objective": objective,
         "layout_variant": layout_variant,
         "nodes": nodes,
         "edges": edges,
@@ -611,7 +618,7 @@ def _build_graph_variants(
         variant_seed = f"{base_seed}:{index}:{topology}"
         variants.append(_build_graph_variant(
             component_ids, dependency_order, locales, topology, variant_seed,
-            options["variation"], index,
+            options["variation"], options["objective"], index,
         ))
     selected_graph = max(
         variants,
@@ -628,6 +635,7 @@ def _build_graph_variants(
         "selected": selected_graph["id"],
         "selection_policy": "max_compatibility_then_capability_reuse_then_minimal_planned_nodes",
         "topology_mode": options["topology"],
+        "objective": options["objective"],
         "seed": base_seed,
         "variant_count": len(variants),
         "variants": variants,
