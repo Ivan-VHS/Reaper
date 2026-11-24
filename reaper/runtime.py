@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import math
+import re
+from datetime import datetime
 from dataclasses import dataclass
 from typing import Any, Callable
 
@@ -20,6 +22,7 @@ from .memory import HeapLimitError, MemoryManager, RegionError
 from .modules import ModuleError, ModuleLoader
 from .resources import ResourceError, ResourceHandle, ResourceManager
 from .token_catalog import token_catalog, token_info, token_is_reserved
+from .streaming import ResultValue, StreamValue
 
 
 @dataclass(slots=True)
@@ -231,12 +234,18 @@ class Interpreter:
                 return self._execute_block(children[2], environment)
         elif node.kind == "each":
             values = self._evaluate(children[0], environment)
-            if not isinstance(values, (list, tuple, str, range)):
-                raise self._error(node.token, "'each' needs a list, text, or range")
-            self._check_collection_size(values, node.token)
+            is_stream = isinstance(values, StreamValue)
+            if is_stream:
+                iterator = values.iter_fused()
+            else:
+                if not isinstance(values, (list, tuple, str, range)):
+                    raise self._error(node.token, "'each' needs a list, text, range, or Stream")
+                self._check_collection_size(values, node.token)
+                iterator = iter(values)
             result = None
-            for value in values:
-                self._tick(node.token)
+            for value in iterator:
+                if not is_stream:
+                    self._tick(node.token)
                 scope = Environment(environment)
                 scope.define(node.value, value)
                 result = self._execute_block(children[1], scope)
@@ -541,6 +550,213 @@ class Interpreter:
                 history.append(value)
             return history
 
+        stream_token = Token("BUILTIN", "stream", 1, 1)
+        map_token = Token("BUILTIN", "map", 1, 1)
+        filter_token = Token("BUILTIN", "filter", 1, 1)
+        fold_token = Token("BUILTIN", "fold", 1, 1)
+        map_alter_token = Token("BUILTIN", "map_alter", 1, 1)
+        result_token = Token("BUILTIN", "Result", 1, 1)
+
+        def make_stream(values: Any) -> StreamValue:
+            if isinstance(values, StreamValue):
+                return values
+            return StreamValue(
+                values,
+                max_items=self.max_collection_items,
+                on_step=lambda: self._tick(stream_token),
+            )
+
+        def map_values(values: Any, function: Any) -> Any:
+            callback(function)
+            if isinstance(values, StreamValue):
+                return values.map(
+                    lambda item: self._call(function, [item], map_token)
+                )
+            return self._map(sequence(values), callback, function)
+
+        def filter_values(values: Any, function: Any) -> Any:
+            callback(function)
+            if isinstance(values, StreamValue):
+                return values.filter(
+                    lambda item: self._truthy(
+                        self._call(function, [item], filter_token)
+                    )
+                )
+            return self._keep(sequence(values), callback, function)
+
+        def fold_values(values: Any, initial: Any, function: Any) -> Any:
+            callback(function)
+            if not isinstance(values, StreamValue):
+                return self._fold(sequence(values), initial, callback, function)
+            result = initial
+            for item in values.iter_fused():
+                result = self._call(function, [result, item], fold_token)
+            return result
+
+        def to_int_value(value: Any) -> int:
+            if isinstance(value, bool):
+                raise TypeError("booleans are not integers")
+            if isinstance(value, int):
+                return value
+            if not isinstance(value, str):
+                raise TypeError("expected text or a whole number")
+            normalized = value.strip()
+            digits = normalized[1:] if normalized[:1] in {"+", "-"} else normalized
+            if not digits or any(character < "0" or character > "9" for character in digits):
+                raise ValueError("expected ASCII decimal digits")
+            return int(normalized, 10)
+
+        def to_float_value(value: Any) -> float:
+            if isinstance(value, bool):
+                raise TypeError("booleans are not numbers")
+            if not isinstance(value, (int, float, str)):
+                raise TypeError("expected text or a number")
+            normalized = value.strip() if isinstance(value, str) else value
+            if isinstance(normalized, str) and not re.fullmatch(
+                r"[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?",
+                normalized,
+            ):
+                raise ValueError("expected a decimal number")
+            try:
+                result = float(normalized)
+            except (TypeError, ValueError, OverflowError) as error:
+                raise ValueError("expected a decimal number") from error
+            if not math.isfinite(result):
+                raise ValueError("number must be finite")
+            return result
+
+        def is_finite_value(value: Any) -> bool:
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                return False
+            return True if isinstance(value, int) else math.isfinite(value)
+
+        def parse_result(parser: Callable[[Any], Any], value: Any) -> ResultValue[Any, str]:
+            try:
+                return ResultValue.ok(parser(value))
+            except (TypeError, ValueError, OverflowError) as error:
+                return ResultValue.err(str(error))
+
+        def parse_rfc3339_value(value: Any) -> datetime:
+            value = self._require_text(value).strip()
+            pattern = (
+                r"^[0-9]{4}-[0-9]{2}-[0-9]{2}[Tt]"
+                r"[0-9]{2}:[0-9]{2}:[0-9]{2}"
+                r"(?:\.[0-9]+)?(?:[Zz]|[+-][0-9]{2}:[0-9]{2})$"
+            )
+            if not re.fullmatch(pattern, value):
+                raise ValueError("expected an RFC 3339 timestamp with an explicit timezone")
+            fraction = re.search(r"\\.([0-9]+)(?:[Zz]|[+-][0-9]{2}:[0-9]{2})$", value)
+            if fraction is not None and len(fraction.group(1)) > 6:
+                raise ValueError("fractional seconds exceed datetime precision (6 digits)")
+            normalized = value[:-1] + "+00:00" if value[-1:] in {"Z", "z"} else value
+            try:
+                parsed = datetime.fromisoformat(normalized)
+            except ValueError as error:
+                raise ValueError("invalid RFC 3339 calendar date or time") from error
+            if parsed.tzinfo is None or parsed.utcoffset() is None:
+                raise ValueError("RFC 3339 timestamps must include a timezone")
+            return parsed
+
+        def require_result(value: Any) -> ResultValue[Any, Any]:
+            if not isinstance(value, ResultValue):
+                raise TypeError("expected Result<T, E>")
+            return value
+
+        def result_map_ok(value: Any, function: Any) -> ResultValue[Any, Any]:
+            result = require_result(value)
+            callback(function)
+            if result.is_err:
+                return result
+            return ResultValue.ok(
+                self._call(function, [result.value], result_token)
+            )
+
+        def result_map_err(value: Any, function: Any) -> ResultValue[Any, Any]:
+            result = require_result(value)
+            callback(function)
+            if result.is_ok:
+                return result
+            return ResultValue.err(
+                self._call(function, [result.error], result_token)
+            )
+
+        def zip3_ok(first: Any, second: Any, third: Any) -> ResultValue[Any, Any]:
+            results = (require_result(first), require_result(second), require_result(third))
+            for result in results:
+                if result.is_err:
+                    return result
+            return ResultValue.ok(tuple(result.value for result in results))
+
+        def zip2_ok(first: Any, second: Any) -> ResultValue[Any, Any]:
+            results = (require_result(first), require_result(second))
+            for result in results:
+                if result.is_err:
+                    return result
+            return ResultValue.ok(tuple(result.value for result in results))
+
+        def map_new() -> dict[Any, Any]:
+            return {}
+
+        def map_alter(mapping: Any, key: Any, function: Any) -> dict[Any, Any]:
+            if not isinstance(mapping, dict):
+                raise TypeError("map_alter() expects a map")
+            try:
+                present = key in mapping
+            except TypeError as error:
+                raise TypeError("map_alter() key must be hashable") from error
+            callback(function)
+            if not present and len(mapping) >= self.max_collection_items:
+                raise ValueError(
+                    f"collection item limit ({self.max_collection_items}) exceeded"
+                )
+            current = mapping.get(key)
+            updated = self._call(function, [present, current], map_alter_token)
+            # Commit only after the callback succeeds, so a failed update
+            # leaves the original map unchanged.
+            mapping[key] = updated
+            return mapping
+
+        def map_values_transform(mapping: Any, function: Any) -> dict[Any, Any]:
+            if not isinstance(mapping, dict):
+                raise TypeError("map_values() expects a map")
+            callback(function)
+            return {
+                key: self._call(function, [value], map_alter_token)
+                for key, value in mapping.items()
+            }
+
+        def split_limit(value: Any, separator: Any, max_splits: Any) -> list[str]:
+            value = self._require_text(value)
+            separator = self._require_text(separator)
+            if not separator:
+                raise ValueError("split separator cannot be empty")
+            if isinstance(max_splits, bool) or not isinstance(max_splits, int) or max_splits < 0:
+                raise ValueError("max_splits must be a non-negative whole number")
+            if max_splits >= self.max_collection_items:
+                raise ValueError(
+                    f"max_splits must be below the collection item limit ({self.max_collection_items})"
+                )
+            result = value.split(separator, max_splits)
+            if len(result) > self.max_collection_items:
+                raise ValueError(
+                    f"collection item limit ({self.max_collection_items}) exceeded"
+                )
+            return result
+
+        def max_or(values: Any, fallback: Any) -> Any:
+            values = sequence(values)
+            return max(values) if values else fallback
+
+        def analysis_empty() -> dict[str, Any]:
+            return {
+                "total_lines": 0,
+                "valid_lines": 0,
+                "malformed_lines": 0,
+                "server_error_lines": 0,
+                "malformed_by_reason": {},
+                "by_service": {},
+            }
+
         register("divmod_euclidean", euclidean_divmod, 2, 2)
         register("euclidean_divmod", euclidean_divmod, 2, 2)
         register("quotient", lambda dividend, divisor: euclidean_divmod(dividend, divisor)[0], 2, 2)
@@ -560,11 +776,35 @@ class Interpreter:
         register("sum", lambda values: _sum(sequence(values)), 1, 1)
         register("sorted", lambda values, *options: self._sorted(sequence(values), callback, *options), 1, 3)
         register("sort_by", lambda values, fn, *direction: self._sort_by(sequence(values), callback, fn, direction[0] if direction else "asc"), 2, 3)
-        register("map", lambda values, fn: self._map(sequence(values), callback, fn), 2, 2)
-        register("keep", lambda values, fn: self._keep(sequence(values), callback, fn), 2, 2)
-        register("filter", lambda values, fn: self._keep(sequence(values), callback, fn), 2, 2)
-        register("fold", lambda values, initial, fn: self._fold(sequence(values), initial, callback, fn), 3, 3)
-        register("reduce", lambda values, initial, fn: self._fold(sequence(values), initial, callback, fn), 3, 3)
+        register("stream", make_stream, 1, 1)
+        register("map", map_values, 2, 2)
+        register("keep", filter_values, 2, 2)
+        register("filter", filter_values, 2, 2)
+        register("fold", fold_values, 3, 3)
+        register("reduce", fold_values, 3, 3)
+        register("map_new", map_new, 0, 0)
+        register("map_alter", map_alter, 3, 3)
+        register("map_values", map_values_transform, 2, 2)
+        register("split_limit", split_limit, 3, 3)
+        register("is_finite", is_finite_value, 1, 1)
+        register("to_int", to_int_value, 1, 1)
+        register("to_float", to_float_value, 1, 1)
+        register("try_int", lambda value: parse_result(to_int_value, value), 1, 1)
+        register("try_float", lambda value: parse_result(to_float_value, value), 1, 1)
+        register("parse_rfc3339", parse_rfc3339_value, 1, 1)
+        register("try_rfc3339", lambda value: parse_result(parse_rfc3339_value, value), 1, 1)
+        register("ok", ResultValue.ok, 1, 1)
+        register("err", ResultValue.err, 1, 1)
+        register("map_ok", result_map_ok, 2, 2)
+        register("map_err", result_map_err, 2, 2)
+        register("zip_ok", zip2_ok, 2, 2)
+        register("zip3_ok", zip3_ok, 3, 3)
+        register("result_is_ok", lambda value: require_result(value).is_ok, 1, 1)
+        register("result_is_err", lambda value: require_result(value).is_err, 1, 1)
+        register("result_value", lambda value: require_result(value).value, 1, 1)
+        register("result_error", lambda value: require_result(value).error, 1, 1)
+        register("max_or", max_or, 2, 2)
+        register("analysis_empty", analysis_empty, 0, 0)
         register("chunk", lambda values, width: self._chunk(sequence(values), width), 2, 2)
         register("take", lambda values, count: self._take(sequence(values), count), 2, 2)
         register("drop", lambda values, count: self._drop(sequence(values), count), 2, 2)
@@ -970,6 +1210,12 @@ class Interpreter:
             return "list"
         if isinstance(value, dict):
             return "map"
+        if isinstance(value, ResultValue):
+            return "result"
+        if isinstance(value, StreamValue):
+            return "stream"
+        if isinstance(value, datetime):
+            return "datetime"
         if isinstance(value, (UserFunction, Builtin, NativeFunction)) or getattr(value, "__reaper_bytecode__", False):
             return "craft"
         if isinstance(value, ResourceHandle):
@@ -1010,6 +1256,13 @@ class Interpreter:
             return value
         if isinstance(value, range):
             return f"range({value.start}, {value.stop}, {value.step})"
+        if isinstance(value, ResultValue):
+            label = "Ok" if value.is_ok else "Err"
+            return f"{label}({self._display(value._payload)})"
+        if isinstance(value, StreamValue):
+            return repr(value)
+        if isinstance(value, datetime):
+            return value.isoformat()
         return str(value)
 
     def _error(self, token: Token, message: str) -> ReaperRuntimeError:
