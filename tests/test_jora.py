@@ -89,7 +89,8 @@ class JoraCompositionTests(unittest.TestCase):
             [item["layout_variant"] for item in graphs],
             ["direct", "domain_grouped", "capability_routed", "stateful", "validated", "extensible"],
         )
-        self.assertEqual(len({(len(item["nodes"]), len(item["edges"])) for item in graphs}), 6)
+        node_sets = {tuple(sorted(node["id"] for node in item["nodes"])) for item in graphs}
+        self.assertEqual(len(node_sets), 6)
 
     def test_plugin_mesh_connects_only_compatible_capabilities(self):
         result = compose_application(self.request(graph={"topology": "plugin_mesh", "variants": 1, "variation": 0}))
