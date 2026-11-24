@@ -1,0 +1,27 @@
+{
+  "schema": "reaper.jora.request.v1",
+  "name": "Sonaris",
+  "description": "A unified workspace for editing text, working with audio and translating documents.",
+  "components": [
+    "text.editor",
+    "audio.editor",
+    "translation.workspace"
+  ],
+  "locales": [
+    "en",
+    "ru",
+    "uk",
+    "most"
+  ],
+  "preferred_locale": "ru",
+  "syntax_mode": "flow",
+  "language_targets": "auto",
+  "name_style": "balanced",
+  "graph": {
+    "topology": "auto",
+    "seed": "",
+    "variants": 4,
+    "variation": 50,
+    "objective": "balanced"
+  }
+}

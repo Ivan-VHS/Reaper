@@ -15,12 +15,12 @@ class OctaPyramidTests(unittest.TestCase):
  def test_executable_apex(self):self.bad(lambda x:x["apex"].update(executable=True))
  def test_missing_self_loop(self):self.bad(lambda x:x["self_loops"].pop())
  def test_wrong_transport(self):self.bad(lambda x:x["peer_links"][0].update(transport="none"))
- def test_pack_consumer_status_cannot_be_downgraded(self):self.bad(lambda x:x["peer_links"][6].update(status="planned"))
  def test_missing_fourth_self_loop(self):self.bad(lambda x:x["self_loops"].pop())
- def test_ventusample_pack_consumer_is_implemented(self):
+ def test_reaper_has_no_ventusample_runtime_integration(self):
   r=validate();self.assertTrue(r["valid"])
   x=json.loads(TOPOLOGY_PATH.read_text(encoding="utf-8"))
-  edge=next(link for link in x["peer_links"] if link["id"]=="ventusample-to-reaper")
-  self.assertEqual(edge["status"],"implemented")
-  self.assertTrue(x["semantics"]["reaper_pack_consumer_implemented"])
+  edges=[link for link in x["peer_links"] if {link["from"],link["to"]}=={"reaper","ventusample"}]
+  self.assertEqual(len(edges),2)
+  self.assertTrue(all(link["transport"]=="none" and link["status"]=="not_applicable" for link in edges))
+  self.assertFalse(x["semantics"]["reaper_ventusample_runtime_integration"])
 if __name__=="__main__":unittest.main()

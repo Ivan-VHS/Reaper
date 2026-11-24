@@ -30,7 +30,6 @@ Preferences are persisted separately from theme settings, and old preference fil
 
 - **Reduce Motion** also respects the native operating-system setting and `UI_REDUCED_MOTION`.
 - **Eco / Low-CPU Visuals** suppresses nonessential visual effects and secondary refresh work.
-- **Sync to Transport / BPM** is enabled only when a real project transport/tempo source exists. Reaper Studio has no audio transport, so BPM sync remains unavailable.
 
 All animation work stays on the Tk UI thread and must never block execution, embedded builds, debug pauses, worker, keyboard or drag operations.
 

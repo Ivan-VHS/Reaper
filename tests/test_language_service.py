@@ -16,6 +16,35 @@ class LanguageServiceTests(unittest.TestCase):
         self.assertTrue(any(item.code == "RPR-W0001" for item in analysis.diagnostics))
         self.assertTrue(any(item.code == "RPR-E0013" for item in analysis.diagnostics))
 
+    def test_local_type_diagnostics_are_published_with_source_spans(self):
+        uri = "file:///typed.rpr"
+        self.service.open(uri, 'emit "text" * 2')
+        analysis = self.service.analyze(uri)
+        diagnostic = next(item for item in analysis.diagnostics if item.code == "RPR-T0004")
+        self.assertEqual(diagnostic.severity, "error")
+        self.assertEqual(diagnostic.span.line, 0)
+
+    def test_cross_document_definition_and_references(self):
+        declaration_uri = "file:///project/model.rpr"
+        usage_uri = "file:///project/main.rpr"
+        self.service.open(declaration_uri, "make total := 7")
+        self.service.open(usage_uri, "emit total")
+        definitions = self.service.workspace_definitions("total")
+        references = self.service.workspace_references("total")
+        self.assertEqual([item.uri for item in definitions], [declaration_uri])
+        self.assertEqual({uri for uri, _ in references}, {declaration_uri, usage_uri})
+        self.assertEqual(len(references), 2)
+
+    def test_workspace_symbol_query_is_bounded_and_case_insensitive(self):
+        self.service.open("file:///a.rpr", "craft Render() { emit 1 }")
+        self.service.open("file:///b.rpr", "craft render_more() { emit 2 }")
+        self.assertEqual(
+            [item.name for item in self.service.workspace_symbols("RENDER")],
+            ["Render", "render_more"],
+        )
+        with self.assertRaises(ValueError):
+            self.service.workspace_symbols("", limit=501)
+
     def test_navigation_references_and_rename_validation(self):
         uri = "file:///x.rpr"
         self.service.open(uri, "make total := 1\nemit total")
@@ -112,6 +141,34 @@ class LspAdapterTests(unittest.TestCase):
         }})
         self.assertEqual(self.server.drain_notifications(), [])
 
+    def test_workspace_symbols_and_cross_document_definition(self):
+        declaration_uri = "file:///project/model.rpr"
+        usage_uri = "file:///project/main.rpr"
+        self.server.dispatch({"method": "textDocument/didOpen", "params": {
+            "textDocument": {"uri": declaration_uri, "version": 1,
+                             "text": "make total := 7"}
+        }})
+        self.server.dispatch({"method": "textDocument/didOpen", "params": {
+            "textDocument": {"uri": usage_uri, "version": 1,
+                             "text": "emit total"}
+        }})
+        symbols = self.server.dispatch({"jsonrpc": "2.0", "id": 20,
+            "method": "workspace/symbol", "params": {"query": "tot"}})
+        self.assertEqual(symbols["result"][0]["location"]["uri"], declaration_uri)
+
+        definition = self.server.dispatch({"jsonrpc": "2.0", "id": 21,
+            "method": "textDocument/definition",
+            "params": {"textDocument": {"uri": usage_uri},
+                       "position": {"line": 0, "character": 7}}})
+        self.assertEqual(definition["result"][0]["uri"], declaration_uri)
+
+        references = self.server.dispatch({"jsonrpc": "2.0", "id": 22,
+            "method": "textDocument/references",
+            "params": {"textDocument": {"uri": usage_uri},
+                       "position": {"line": 0, "character": 7}}})
+        self.assertEqual({item["uri"] for item in references["result"]},
+                         {declaration_uri, usage_uri})
+
     def test_close_clears_diagnostics(self):
         uri = "file:///x.rpr"
         self.server.dispatch({"method": "textDocument/didOpen", "params": {
@@ -122,6 +179,56 @@ class LspAdapterTests(unittest.TestCase):
             "textDocument": {"uri": uri}
         }})
         self.assertEqual(self.server.drain_notifications()[0]["params"]["diagnostics"], [])
+
+    def test_semantic_tokens_advertise_legend_and_classify_source(self):
+        initialized = self.server.dispatch({
+            "jsonrpc": "2.0", "id": 30, "method": "initialize"
+        })
+        provider = initialized["result"]["capabilities"]["semanticTokensProvider"]
+        self.assertTrue(provider["full"])
+        self.assertIn("function", provider["legend"]["tokenTypes"])
+        self.assertIn("keyword", provider["legend"]["tokenTypes"])
+
+        uri = "file:///semantic.rpr"
+        source = 'craft hello(name) {\n make title := "😀"\n emit title\n}'
+        self.server.dispatch({"method": "textDocument/didOpen", "params": {
+            "textDocument": {"uri": uri, "version": 1, "text": source}
+        }})
+        response = self.server.dispatch({
+            "jsonrpc": "2.0", "id": 31, "method": "textDocument/semanticTokens/full",
+            "params": {"textDocument": {"uri": uri}},
+        })
+        data = response["result"]["data"]
+        self.assertEqual(len(data) % 5, 0)
+
+        token_types = provider["legend"]["tokenTypes"]
+        seen = set()
+        string_lengths = []
+        declaration_modifiers = []
+        line = 0
+        start = 0
+        for index in range(0, len(data), 5):
+            delta_line, delta_start, length, token_type, modifiers = data[index:index + 5]
+            line += delta_line
+            start = start + delta_start if delta_line == 0 else delta_start
+            kind = token_types[token_type]
+            seen.add(kind)
+            if kind == "string":
+                string_lengths.append(length)
+            if modifiers & 1:
+                declaration_modifiers.append(kind)
+        self.assertTrue({"keyword", "function", "variable", "string"} <= seen)
+        self.assertEqual(string_lengths, [4])
+        self.assertIn("function", declaration_modifiers)
+        self.assertIn("variable", declaration_modifiers)
+
+    def test_semantic_tokens_reject_closed_documents(self):
+        response = self.server.dispatch({
+            "jsonrpc": "2.0", "id": 32, "method": "textDocument/semanticTokens/full",
+            "params": {"textDocument": {"uri": "file:///not-open.rpr"}},
+        })
+        self.assertEqual(response["error"]["code"], -32602)
+
 
 if __name__ == "__main__":
     unittest.main()
