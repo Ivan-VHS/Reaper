@@ -90,7 +90,8 @@
           "provides",
           "requires",
           "maturity",
-          "generated_unit"
+          "generated_unit",
+          "consumes"
         ],
         "properties": {
           "id": {
@@ -129,6 +130,12 @@
           },
           "generated_unit": {
             "type": "string"
+          },
+          "consumes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       }
