@@ -201,15 +201,19 @@ craft framebuffer_valid(base_high, base_low, size_high, size_low, width, height,
     }
 }
 
-craft boot_header_valid(struct_size, version, declared_regions, actual_regions) {
+craft boot_header_valid(struct_size, version) {
     when struct_size < 88 or version != 1 {
         yield 0
     } otherwise {
-        when actual_regions < 1 or actual_regions > 256 or declared_regions != actual_regions {
-            yield 0
-        } otherwise {
-            yield 1
-        }
+        yield 1
+    }
+}
+
+craft memory_count_valid(declared_regions, actual_regions) {
+    when actual_regions < 1 or actual_regions > 256 or declared_regions != actual_regions {
+        yield 0
+    } otherwise {
+        yield 1
     }
 }
 
@@ -230,9 +234,12 @@ craft ranges_overlap(first_high, first_low, first_length_high, first_length_low,
 }
 
 craft validate_boot_v1(struct_size, version, declared_regions, actual_regions, kernel_high, kernel_low, kernel_size_high, kernel_size_low, init_high, init_low, init_size_high, init_size_low, framebuffer_high, framebuffer_low, framebuffer_size_high, framebuffer_size_low, framebuffer_width, framebuffer_height, framebuffer_pitch, framebuffer_bpp, first_region_high, first_region_low, first_region_size_high, first_region_size_low, first_region_type, second_region_high, second_region_low, second_region_size_high, second_region_size_low, second_region_type) {
-    when not boot_header_valid(struct_size, version, declared_regions, actual_regions) {
+    when not boot_header_valid(struct_size, version) {
         yield -2
     } otherwise {
+        when not memory_count_valid(declared_regions, actual_regions) {
+            yield -6
+        } otherwise {
         when not u64_range_valid(kernel_high, kernel_low, kernel_size_high, kernel_size_low) {
             yield -3
         } otherwise {
@@ -262,6 +269,7 @@ craft validate_boot_v1(struct_size, version, declared_regions, actual_regions, k
                 }
             }
         }
+        }
     }
 }
 
@@ -282,6 +290,9 @@ emit validate_boot_v1(88, 1, 2, 2, 0, 1048576, 0, 1048576, 0, 0, 0, 4096, 0, 0, 
 
 # Framebuffer pitch is smaller than width * bytes_per_pixel.
 emit validate_boot_v1(88, 1, 2, 2, 0, 1048576, 0, 1048576, 0, 3145728, 0, 2097152, 0, 3758096384, 0, 16000, 80, 100, 100, 16, 0, 4096, 0, 651264, 1, 0, 1048576, 0, 7340032, 1)
+
+# Declared memory-region count does not match the supplied map.
+emit validate_boot_v1(88, 1, 1, 2, 0, 1048576, 0, 1048576, 0, 3145728, 0, 2097152, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4096, 0, 651264, 1, 0, 1048576, 0, 7340032, 1)
 
 # The two memory regions overlap.
 emit validate_boot_v1(88, 1, 2, 2, 0, 1048576, 0, 1048576, 0, 3145728, 0, 2097152, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4096, 0, 8192, 1, 0, 8192, 0, 4096, 1)
