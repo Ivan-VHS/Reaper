@@ -15,9 +15,9 @@ class IRInstruction:
     op: str
     argument: Any
     token: Any
-    span: SourceSpan | None = field(default=None, compare=False)
-    origin_span: SourceSpan | None = field(default=None, compare=False)
-    expanded_from: tuple[SourceSpan, ...] = field(default=(), compare=False)
+    span: SourceSpan | None = field(default=None)
+    origin_span: SourceSpan | None = field(default=None)
+    expanded_from: tuple[SourceSpan, ...] = field(default=())
 
 
 @dataclass(frozen=True, slots=True)
@@ -25,7 +25,7 @@ class IRFunction:
     name: str
     parameters: tuple[str, ...]
     code: tuple[IRInstruction, ...]
-    span: SourceSpan | None = field(default=None, compare=False)
+    span: SourceSpan | None = field(default=None)
 
 
 @dataclass(frozen=True, slots=True)
