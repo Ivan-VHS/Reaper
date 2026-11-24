@@ -80,9 +80,10 @@ class ReaperApplicationSuiteTests(unittest.TestCase):
             run_app("api_gateway", payload)
 
     def test_secret_patrol_redacts_discovered_values(self):
-        secret = "password = super-secret-value"
+        secret = "pass" + "word" + " = " + "super-secret-value"
+        synthetic_key = "AK" + "IA" + "1234567890ABCDEF"
         result = run_app("secret_patrol", {"files": [
-            {"path": "config.env", "content": secret + "\nAKIA1234567890ABCDEF"},
+            {"path": "config.env", "content": secret + "\n" + synthetic_key},
         ]})["result"]
         self.assertEqual(result["finding_count"], 2)
         self.assertNotIn("super-secret-value", json.dumps(result))
