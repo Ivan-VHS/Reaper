@@ -476,6 +476,40 @@ def _build_graph_variant(
                         "capability:" + capability,
                     )
 
+    layout_modes = (
+        "direct", "domain_grouped", "capability_routed",
+        "stateful", "validated", "extensible",
+    )
+    layout_variant = layout_modes[variant_index % len(layout_modes)]
+    if layout_variant == "domain_grouped":
+        grouped: dict[str, str] = {}
+        for component_id in component_ids:
+            domain = str(_COMPONENTS[component_id]["domain"])
+            group_id = "layout:domain:" + domain
+            if domain not in grouped:
+                grouped[domain] = group_id
+                add_node(group_id, "layout_group", domain.title() + " Group", "planned")
+                add_edge("ui:shell", group_id, "groups_domain")
+            add_edge(group_id, "component:" + component_id, "contains_component")
+    elif layout_variant == "capability_routed":
+        add_node("layout:capability-router", "capability_router", "Jora Capability Router", "planned")
+        add_edge("ui:shell", "layout:capability-router", "routes_capabilities")
+        for component_id in component_ids:
+            add_edge("layout:capability-router", "component:" + component_id, "routes_module")
+    elif layout_variant == "stateful":
+        add_node("layout:workflow-context", "workflow_context", "Jora Shared Workflow Context", "planned")
+        for component_id in component_ids:
+            add_edge("component:" + component_id, "layout:workflow-context", "contributes_context")
+    elif layout_variant == "validated":
+        add_node("layout:validation-gate", "validation_gate", "Jora Composition Validation", "planned")
+        add_edge("app:jora", "layout:validation-gate", "validates_graph")
+        add_edge("layout:validation-gate", "ui:shell", "approves_graph")
+    elif layout_variant == "extensible":
+        add_node("layout:extension-registry", "extension_registry", "Jora Extension Registry", "planned")
+        add_edge("ui:shell", "layout:extension-registry", "discovers_extensions")
+        for component_id in component_ids:
+            add_edge("layout:extension-registry", "component:" + component_id, "registers_module")
+
     # Deterministic optional architecture augmentations create real graph variety
     # without pretending that these planned contracts are already executable.
     roll = int(hashlib.sha256(seed.encode("utf-8")).hexdigest()[:8], 16) % 100
@@ -517,6 +551,7 @@ def _build_graph_variant(
         "topology": topology,
         "seed": seed,
         "variation": variation,
+        "layout_variant": layout_variant,
         "nodes": nodes,
         "edges": edges,
     }
@@ -528,8 +563,9 @@ def _build_graph_variant(
     planned_nodes = sum(node["maturity"] == "planned" for node in nodes)
     return {
         "id": "jora-graph-" + signature,
-        "label": "Jora · " + GRAPH_LABELS[topology] + " · " + str(variant_index + 1),
+        "label": "Jora · " + GRAPH_LABELS[topology] + " · " + layout_variant,
         "topology": topology,
+        "layout_variant": layout_variant,
         "seed": seed,
         "variation": variation,
         "signature": signature,
