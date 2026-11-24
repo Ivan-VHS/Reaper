@@ -89,8 +89,14 @@ jobs:
                 return 0
               else
                 local update_status=$?
-                if grep -q "HTTP 422" <<< "$update_output"; then
+                if grep -Fq "HTTP 422" <<< "$update_output"; then
                   echo "NOTICE PR #$number: GitHub rejected branch update because of a merge conflict; leaving it for maintainer resolution."
+                  echo "$update_output"
+                  return 0
+                fi
+                if grep -Fq "without 'workflows' permission" <<< "$update_output" ||
+                   grep -Fq "refusing to allow a GitHub App to create or update workflow" <<< "$update_output"; then
+                  echo "NOTICE PR #$number: GitHub App cannot update a workflow file with its current permissions; leaving the branch unchanged rather than escalating token permissions."
                   echo "$update_output"
                   return 0
                 fi
