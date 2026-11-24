@@ -24,6 +24,8 @@ MAX_COMPONENTS = 24
 MAX_LOCALES = 8
 MAX_OUTPUT_FILES = 64
 MAX_GRAPH_VARIANTS = 6
+MAX_GRAPH_NODES = 80
+MAX_GRAPH_EDGES = 256
 GRAPH_TOPOLOGIES = (
     "layered", "pipeline", "hub_spoke", "plugin_mesh", "event_driven", "hybrid",
 )
@@ -334,12 +336,16 @@ def _build_graph_variant(
     def add_node(node_id: str, kind: str, label: str, maturity: str = "contract") -> None:
         if node_id in node_ids:
             return
+        if len(nodes) >= MAX_GRAPH_NODES:
+            raise JoraError(f"generated graph exceeds {MAX_GRAPH_NODES} nodes")
         node_ids.add(node_id)
         nodes.append({"id": node_id, "kind": kind, "label": label, "maturity": maturity})
 
     def add_edge(source: str, target: str, relation: str, *, async_edge: bool = False) -> None:
         if source not in node_ids or target not in node_ids:
             raise JoraError(f"graph edge references an unknown node: {source} -> {target}")
+        if len(edges) >= MAX_GRAPH_EDGES:
+            raise JoraError(f"generated graph exceeds {MAX_GRAPH_EDGES} edges")
         record = {"from": source, "to": target, "relation": relation}
         if async_edge:
             record["delivery"] = "asynchronous"
