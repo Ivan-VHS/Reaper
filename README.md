@@ -17,6 +17,11 @@ Reaper is a systems-programming language and local development workbench for eng
 >
 > **Platforms:** Python runtime tests cover Python 3.10–3.12. The optional Node.js compatibility workflow tests Node 22/24 on Windows, Linux and macOS. Windows Studio requires Tkinter. Native C17 requires CMake 3.16+ and a C17 compiler.
 
+
+### DuckOS systems-language target
+
+The checked Reaper source target for DuckOS's boot handoff v1 contract is documented in [DuckOS target: boot-info v1](docs/DUCKOS_TARGET.md). It provides split-u64 range helpers, memory-region ordering, framebuffer validation and a two-region conformance model. The DuckOS CTest integration compares reference and native Reaper output with the C contract. This is an executable specification and migration gate, not a freestanding kernel replacement.
+
 ## Quick Start
 
 Create an environment and install the Python reference runtime:
