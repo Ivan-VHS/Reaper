@@ -40,6 +40,7 @@ The intended audience is embedded and firmware developers, systems programmers, 
 | Component | Current scope | Boundary |
 |---|---|---|
 | Python runtime | lexer, parser, interpreter, CLI, REPL, modules, closures, quotas and audit log | current executable reference |
+| Typed results and streaming | `ResultValue<T, E>`, `map_ok`, `map_err`, `zip3_ok`, bounded single-use `StreamValue`, lazy fused `map/filter/fold`, strict numeric/RFC 3339 parsing and bounded map aggregation | interpreter-level implementation; no compile-time generic checking or native C17 stream lowering yet |
 | Static type analysis | inferred primitive/list types, operator/index checks, mutability and call-arity diagnostics | partial; built into `reaper --check`, Studio and LSP |
 | Reaper Studio | Windows IDE foundation, project tree/editor/debugger, plus systems/hardware overview with MCU profiles and capability boundaries | local desktop application; no live device inspector |
 | LSP | stdio JSON-RPC, diagnostics, completion, hover, symbols, lexical navigation, semantic tokens, document formatting and local inferred-type checks | per-open-document; no cross-file type inference |
