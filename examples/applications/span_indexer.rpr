@@ -19,7 +19,7 @@ craft declaration_name(line) {
 }
 
 craft extract_symbols(source) {
-    make lines := split(source, "\\n")
+    make lines := split(source, "\n")
     vary symbols := []
     vary line_index := 0
     each line in lines {
@@ -43,5 +43,5 @@ craft index_file(path) {
     yield extract_symbols(source)
 }
 
-make sample_source := "craft alpha(value) {\\n    yield value\\n}\\n\\n    craft beta(value) {\\n        yield value * 2\\n}"
+make sample_source := "craft alpha(value) {\n    yield value\n}\n\n    craft beta(value) {\n        yield value * 2\n}"
 emit extract_symbols(sample_source)
