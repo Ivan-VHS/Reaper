@@ -36,3 +36,8 @@ docs/         architecture and capability contracts
 ~~~
 
 Keep the reference runtime, partial native work and host-specific services separate in documentation. A registry/catalog entry is not proof of runtime implementation; source, tests and explicit maturity statements are authoritative.
+
+## Implementation planning
+
+- [Implementation roadmap](IMPLEMENTATION_ROADMAP.md) — evidence-based status and acceptance gates for the reference runtime, native C17 track, Studio, Jora and federation.
+- [Feature matrix](FEATURES.md) — current capability surface and explicit limits.
