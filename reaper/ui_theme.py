@@ -358,6 +358,7 @@ def apply_theme(root: tk.Misc, app_key: str, theme: str | None = None) -> str:
     style.configure("TSeparator", background=palette["border"])
     style.configure("Horizontal.TProgressbar", background=palette["brand"], troughcolor=palette["elevated"])
     _paint_native_widgets(root, palette)
+    root._anatidae_native_backdrop = apply_native_backdrop(root)  # type: ignore[attr-defined]
     _save_theme(app_key, selected)
     return selected
 
@@ -376,3 +377,31 @@ def apply_ui_theme(root: tk.Misc, mode: str = "system") -> dict[str, str]:
     colors = palette_for(mode)
     apply_theme(root, "reaper-studio", colors["mode"])
     return colors
+
+
+def native_backdrop_policy(platform_name: str | None = None) -> str:
+    """Choose Windows 11 Mica when available; keep a solid cross-platform fallback."""
+    return "mica" if (platform_name or sys.platform) == "win32" else "opaque"
+
+
+def apply_native_backdrop(root: tk.Misc) -> bool:
+    """Request the Windows system Mica backdrop without making it a runtime dependency."""
+    if native_backdrop_policy() != "mica":
+        return False
+    try:
+        root.update_idletasks()
+        handle = root.winfo_id()
+        dwmapi = ctypes.WinDLL("dwmapi", use_last_error=True)
+        set_attribute = dwmapi.DwmSetWindowAttribute
+        set_attribute.argtypes = (
+            ctypes.c_void_p, ctypes.c_uint, ctypes.c_void_p, ctypes.c_uint,
+        )
+        set_attribute.restype = ctypes.c_long
+        backdrop_type = ctypes.c_int(2)  # DWMSBT_MAINWINDOW
+        result = set_attribute(
+            ctypes.c_void_p(handle), 38, ctypes.byref(backdrop_type),
+            ctypes.sizeof(backdrop_type),
+        )
+        return result == 0
+    except (AttributeError, OSError, tk.TclError, TypeError, ValueError):
+        return False
