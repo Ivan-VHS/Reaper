@@ -173,12 +173,38 @@ class ReaperApplicationSuiteTests(unittest.TestCase):
             }})
 
     def test_brainfuck_vm_runs_loops_and_enforces_tape_bounds(self):
-        result = run_app("bf_vm", {"code": "+++++++[>++++++++<-]>+."})["result"]
+        result = run_app("bf_vm", {"code": "++++++++[>++++++++<-]>+."})["result"]
         self.assertEqual(result["output"], "A")
         with self.assertRaisesRegex(ApplicationInputError, "tape_pointer_underflow"):
             run_app("bf_vm", {"code": "<"})
         with self.assertRaisesRegex(ApplicationInputError, "unmatched opening"):
             run_app("bf_vm", {"code": "["})
+
+
+    def test_rpr_frontend_runs_application_through_the_reference_runtime(self):
+        from unittest.mock import patch
+
+        from reaper.runtime import Interpreter
+
+        root = Path(__file__).resolve().parents[1]
+        wrapper = root / "examples" / "apps" / "telemetry_guard.rpr"
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "readings.json"
+            destination = Path(directory) / "result.json"
+            source.write_text(json.dumps({
+                "readings": [{"id": "runtime", "temp_c": 20, "voltage_v": 5, "current_a": 2}],
+            }), encoding="utf-8")
+            output: list[str] = []
+            with patch("builtins.input", side_effect=[str(source), str(destination)]):
+                Interpreter(output=output.append).run(
+                    wrapper.read_text(encoding="utf-8"),
+                    filename=str(wrapper),
+                )
+            result = json.loads(destination.read_text(encoding="utf-8"))
+            self.assertTrue(result["ok"])
+            self.assertEqual(result["app_id"], "telemetry_guard")
+            self.assertEqual(result["result"]["accepted"][0]["power_w"], 10)
+            self.assertTrue(any("Saved telemetry_guard" in line for line in output))
 
     def test_all_reaper_source_wrappers_parse_and_typecheck(self):
         from reaper.parser import parse
