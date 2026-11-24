@@ -14,7 +14,7 @@ The composition formula is:
 
 Example:
 
-\`Text Editor + Audio Editor + Translator = LexiTone 3D\`
+\`Text Editor + Audio Editor + Translator = Jora\`
 
 A formula composes capability contracts; it does not concatenate arbitrary executable binaries. Each component declares a stable ID, version, provided interfaces, required interfaces, conflicts and maturity.
 
@@ -22,10 +22,10 @@ A formula composes capability contracts; it does not concatenate arbitrary execu
 
 The canonical product name is always **Jora**. The naming engine does not create unrelated brands for combinations. Instead, it derives human-readable descriptors from component domains and produces four presentation variants under the Jora identity:
 
-- compact: `Jora · Documents · Audio & Media · Languages`;
-- balanced: `Jora — Documents & Audio & Media & Languages Workspace`;
-- descriptive: `Jora | Workspace for Documents & Audio & Media & Languages`;
-- formula: `Jora — Documents + Audio & Media + Languages`.
+- compact: `Jora · Documents · Audio · Languages`;
+- balanced: `Jora — Documents & Audio & Languages Workspace`;
+- descriptive: `Jora | Workspace for Documents & Audio & Languages`;
+- formula: `Jora — Documents + Audio + Languages`.
 
 The request selects `name_style` (`compact`, `balanced`, `descriptive` or `formula`). The manifest preserves `name = "Jora"`, the semantic descriptors, selected label and all suggestions. Labels are generated from the capability taxonomy rather than arbitrary syllable concatenation, and remain presentation metadata rather than independent application names.
 
@@ -48,7 +48,7 @@ Graph nodes carry identity, kind, label and maturity. Edges are typed (hosting, 
 
 The engine keeps every synchronous control/data edge acyclic. Event feedback is permitted only through an explicit asynchronous event bus; it is excluded from startup ordering. A per-stage validator cannot release the next stage through a shared node that would introduce a synchronous cycle. Optional extension registries and compatibility gates are marked `planned`, not falsely reported as implemented runtime services.
 
-The complete graph set is embedded in `jora.app.json` and exported separately as `jora.graphs.json`. The lock file records graph signatures and the selected graph for reproducible generation.
+The complete graph set is embedded in `jora.app.json` and exported separately as `jora.graphs.json`. Every graph variant also has a `graphs/variant-*.mmd` Mermaid diagram. Each topology supports distinct direct, domain-grouped, capability-routed, stateful, validated and extensible rewrites. The lock file records graph signatures and the selected naming/graph variants for reproducible generation.
 
 ## Repository ownership
 
