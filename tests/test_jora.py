@@ -324,6 +324,9 @@ class JoraCompositionTests(unittest.TestCase):
             graph={"topology": "hybrid", "variants": 2, "variation": 0},
         ))
         self.assertEqual(len(result["components"]), 21)
+        self.assertLessEqual(len(result["name"]), 80)
+        self.assertTrue(all(len(item["label"]) <= 80 for item in result["naming"]["suggestions"]))
+        self.assertTrue(all("jora" not in item["label"].casefold() for item in result["naming"]["suggestions"]))
         self.assertTrue(all(graph["growth_policy"]["clustered"] for graph in result["graphs"]["variants"]))
         self.assertTrue(all(graph["metrics"]["node_count"] <= 128 for graph in result["graphs"]["variants"]))
         self.assertTrue(all(graph["metrics"]["edge_count"] <= 512 for graph in result["graphs"]["variants"]))
