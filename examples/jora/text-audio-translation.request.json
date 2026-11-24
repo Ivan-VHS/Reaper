@@ -1,0 +1,19 @@
+{
+  "schema": "reaper.jora.request.v1",
+  "name": "",
+  "description": "A unified workspace for editing text, working with audio and translating documents.",
+  "components": [
+    "text.editor",
+    "audio.editor",
+    "translation.workspace"
+  ],
+  "locales": [
+    "en",
+    "ru",
+    "uk",
+    "most"
+  ],
+  "preferred_locale": "ru",
+  "syntax_mode": "flow",
+  "language_targets": "auto"
+}
