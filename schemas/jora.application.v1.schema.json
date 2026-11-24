@@ -573,15 +573,15 @@
                 "type": "object",
                 "additionalProperties": false,
                 "required": [
-                  "dependency_edges",
+                  "synchronous_edges",
                   "event_feedback"
                 ],
                 "properties": {
-                  "dependency_edges": {
-                    "const": "acyclic"
-                  },
                   "event_feedback": {
                     "type": "string"
+                  },
+                  "synchronous_edges": {
+                    "const": "acyclic"
                   }
                 }
               },
