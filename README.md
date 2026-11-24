@@ -55,6 +55,19 @@ Catalogues and registries may contain proposed or reserved entries. An item in a
 The image below is a capture of the Windows Studio application, not a browser-based playground.
 
 
+## First-party application suite
+
+Reaper now includes a 15-service application suite in `reaper/apps/`, with a versioned manifest, bounded JSON CLI, `.rpr` front-ends and regression tests. Start with [Application Suite](docs/APP_SUITE.md):
+
+```sh
+python -m reaper apps list
+python -m reaper apps describe telemetry_guard
+python -m reaper apps run telemetry_guard --input readings.json
+python -m unittest tests.test_apps -v
+```
+
+The services run on the Python reference runtime. Actions that would require OS/device/network privileges are deliberately plan-only; see the application contracts for the exact boundaries.
+
 ## Related OS product: DuckOS
 
 The seven-app **Mora** suite (Cockos, Kavun, Ka-bon, Gloverty, Po, Illidia and Unify) is specified in the separate [DuckOS project](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/PREINSTALLED_APPLICATIONS.md). It is an operating-system application layer, not a component of Reaper. This repository does not claim to ship those applications or provide their OS services. Its own capabilities and interfaces remain independently defined by this repository's source, tests and versioned contracts.

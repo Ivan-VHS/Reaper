@@ -1,0 +1,7 @@
+# Reaper application front-end: bf_vm.
+make input_path := ask("JSON input path: ")
+make payload := read_json(input_path)
+make result := app_run("bf_vm", payload)
+make output_path := ask("JSON output path: ")
+make saved := write_json(output_path, result)
+emit "Saved bf_vm: " ++ saved

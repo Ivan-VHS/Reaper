@@ -1,0 +1,22 @@
+{
+  "schema": "reaper.application-suite.v1",
+  "version": 1,
+  "runtime": "Reaper Python reference runtime",
+  "applications": [
+    {"id":"telemetry_guard","title":"Telemetry Guard","category":"data-quality","description":"Validate sensor ranges and derive power metrics.","input":"readings[]: id, temp_c, voltage_v, current_a","scope":"pure-json-transform"},
+    {"id":"log_sieve","title":"Log Sieve","category":"observability","description":"Parse delimited service logs and group HTTP 5xx responses.","input":"lines[]: timestamp | service | status | message","scope":"pure-json-transform"},
+    {"id":"game_tuner","title":"Game Tuner","category":"performance","description":"Recommend a thermal and resource profile from a hardware snapshot.","input":"hardware: gpu_temp_c, cpu_load_pct, vram_free_mb","scope":"recommendation-only"},
+    {"id":"table_cleaner","title":"Table Cleaner","category":"data-quality","description":"Normalize SKU, decimal price, quantity and currency fields.","input":"rows[]: sku, price, qty, currency?","scope":"pure-json-transform"},
+    {"id":"api_gateway","title":"API Gateway","category":"integration","description":"Create a route and idempotency decision for an HTTP/IPC request envelope.","input":"request, routes[], cache?","scope":"routing-plan-only"},
+    {"id":"secret_patrol","title":"Secret Patrol","category":"security","description":"Scan caller-supplied text snapshots for likely credentials and redact findings.","input":"files[]: path, content","scope":"caller-supplied-text-only"},
+    {"id":"latency_probe","title":"Latency Probe","category":"observability","description":"Calculate nearest-rank p50, p95 and p99 latency percentiles.","input":"samples_ms[]","scope":"pure-json-transform"},
+    {"id":"dag_runner","title":"DAG Runner","category":"build-tools","description":"Resolve task dependencies into a stable topological execution plan.","input":"tasks[]: id, deps[]","scope":"plan-only-no-task-execution"},
+    {"id":"span_indexer","title":"Span Indexer","category":"developer-tools","description":"Index Reaper craft declarations using the canonical lexer spans.","input":"source, source_id?","scope":"source-analysis-only"},
+    {"id":"ledger_reconcile","title":"Ledger Reconcile","category":"finance-tools","description":"Reconcile integer-cent payment records against invoice totals.","input":"payments[], invoices[]","scope":"offline-record-reconciliation"},
+    {"id":"driver_manifest","title":"Driver Manifest","category":"hardware-tools","description":"Build a read-only semantic-version driver update candidate list.","input":"devices[]: hw_id, name, enabled, driver_version, latest_version","scope":"read-only-plan-no-install"},
+    {"id":"most_build","title":"MOST Build","category":"build-tools","description":"Check required artifact metadata and SHA-256 format for release review.","input":"artifact: name, size_bytes, sha256","scope":"artifact-preflight-no-compile"},
+    {"id":"text_shield","title":"Text Shield","category":"security","description":"Score text messages using link, uppercase and banned-phrase signals.","input":"text, links?, banned_phrases?","scope":"moderation-recommendation"},
+    {"id":"physics_bench","title":"Physics Bench","category":"science","description":"Calculate kinetic energy, mechanical work and energy efficiency.","input":"run: mass_kg, speed_m_s, input_energy_j, force_n?, distance_m?","scope":"pure-numeric-calculation"},
+    {"id":"bf_vm","title":"Brainfuck VM","category":"developer-tools","description":"Run all eight Brainfuck instructions in a bounded 8-bit tape machine.","input":"code, input?, tape_size?, max_steps?","scope":"bounded-user-space-vm"}
+  ]
+}
