@@ -1,44 +1,43 @@
-# Documentation
+# Reaper documentation
 
-| File | Purpose |
+The root [README](../README.md) is the product entry point: it summarizes the executable reference runtime, partial native track, local developer tools, requirements and first commands. Detailed contracts live in the topic documents below.
+
+## Topic hubs
+
+| Hub | Scope |
 |---|---|
-| [VISUAL_DOCUMENTATION.md](VISUAL_DOCUMENTATION.md) | README graphics, SVG/raster assets, typography, Markdown/MDX, diagrams and rendering rules |
-| [CODEX_66_SHOWCASE.md](CODEX_66_SHOWCASE.md) | native CODEX-66 browser, local completion/navigation and honest feature status |
-| [IDE_666_IMPLEMENTATION.md](IDE_666_IMPLEMENTATION.md) | Studio IDE contract, canonical rule numbering and acceptance gates |
-| [REAPER_IDE.md](REAPER_IDE.md) | LSP/DAP protocol services, shipped editor capabilities and limitations |
-| [NOO_TAH.md](NOO_TAH.md) | official Node.js runtime management, V8/libuv, npm, Inspector and Studio bridge |
-| [KORA_REAPER.md](KORA_REAPER.md) | 66 Kora functions, seven modules and three Lua ReaScripts for Cockos REAPER |
-| [UI_MOTION.md](UI_MOTION.md) | accessible, persisted motion preferences and reduced-motion limits |
-| [ANATIDAE_MOTION_CONSTITUTION.md](ANATIDAE_MOTION_CONSTITUTION.md) | shared white/blue/red desktop motion and surface profile |
-| [PLUGINS.md](PLUGINS.md) | internal plugin host and extension lifecycle |
-| [INTERNAL_PRODUCTS.md](INTERNAL_PRODUCTS.md) | integrated product catalogue and service contracts |
-| [FEATURES.md](FEATURES.md) | shipped, reference and proposed capability matrix |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | runtime and compiler stages |
-| [ENGINEERING.md](ENGINEERING.md) | quality, effect and release gates |
-| [DIVISION_ENGINE.md](DIVISION_ENGINE.md) | checked division and workload allocation |
-| [REAPER_813_FEATURE_ARCHITECTURE.md](REAPER_813_FEATURE_ARCHITECTURE.md) | proposal ID ranges and registry boundaries |
-| [REAPER_PARSER_M1.md](REAPER_PARSER_M1.md) | native parser acceptance |
-| [RUNTIME_PLATFORM.md](RUNTIME_PLATFORM.md) | Python runtime boundaries |
-| [REAPER_UNIFIED_ARCHITECTURE.md](REAPER_UNIFIED_ARCHITECTURE.md) | native destination and language invariants |
-| [MOST_LANGUAGE_SPEC.md](MOST_LANGUAGE_SPEC.md) | exact Russian aliases |
-| [PROJECT_FEDERATION_MATRIX.md](PROJECT_FEDERATION_MATRIX.md) | peer-project boundaries and integrations |
-| [THREADS_AND_FEDERATION.md](THREADS_AND_FEDERATION.md) | implementation and integration evidence |
-| [ATOMIC_QUANTUM_133.md](ATOMIC_QUANTUM_133.md) | 133 stable operation IDs, eight tested classical simulation kernels and hardware boundary |
-| [../LANGUAGE.md](../LANGUAGE.md) | syntax quick reference |
-| [../editors/vscode/README.md](../editors/vscode/README.md) | editor grammar and external protocol-service notes |
+| [Language and toolchain](clusters/language-toolchain.md) | Syntax, type checking, interpreter, native compiler and embedded language |
+| [Architecture and systems](clusters/architecture-systems.md) | Runtime layers, data flow, memory, hardware and system contracts |
+| [Studio and IDE](clusters/studio-ide-ui.md) | Windows Studio, editor behavior, LSP/DAP and interaction |
+| [Quality and evidence](clusters/quality-evidence.md) | Tests, validation, reproducibility, security and evidence |
+| [Federation and integration](clusters/federation-integration.md) | NOO TAH, Kora, plugin and external project boundaries |
+| [Planning and governance](clusters/planning-governance.md) | Maturity, decisions, roadmap and project standards |
 
-Only tested behavior is labelled implemented. Registry counts are catalogued items, not feature-completion claims. Python remains the current compatibility reference; C17 parity requires separate conformance evidence.
+## Start with the owning contract
 
+- [Features](FEATURES.md) — current feature inventory and maturity.
+- [Architecture](ARCHITECTURE.md) — implemented runtime structure and data flow.
+- [Hardware Language](HARDWARE_LANGUAGE.md) — staged systems-language and hardware track.
+- [Reaper IDE](REAPER_IDE.md) — Studio and language-tool boundaries.
+- [NOO TAH](NOO_TAH.md) — Node.js process integration.
+- [Kora](KORA.md) — optional standard-library helpers.
+- [Contributing](../CONTRIBUTING.md) — local validation and review expectations.
 
-## Motion and embedded graphics
+## Repository map
 
-[Motion Constitution v2026](MOTION_CONSTITUTION_V2026.md) is the shared source for timing/easing tokens, adaptive motion, reduced-motion precedence, themes, the 2×2/focus-scene lab layout, SVG/Canvas telemetry rules and the four-domain capability matrix. [UI_MOTION.md](UI_MOTION.md) records the native behavior implemented in this repository; planned showcase features are not reported as shipped.
+~~~text
+reaper/       Python reference runtime and developer tools
+src/          partial native C17 implementation
+include/      native public headers
+tests/        runtime, protocol and native regression tests
+examples/     reproducible .rpr programs
+editors/      editor syntax support
+docs/         architecture and capability contracts
+~~~
 
+Keep the reference runtime, partial native work and host-specific services separate in documentation. A registry/catalog entry is not proof of runtime implementation; source, tests and explicit maturity statements are authoritative.
 
-## Bounded 500 UAH allocation reference
+## Implementation planning
 
-- [Multilingual specification](RESOURCE_ALLOCATION_500_UAH.md) — bounded budget model, scenarios and operating rules.
-- [Offline interactive simulator](resource-allocation-500-uah.html) — adjust category amounts and see the remainder or overrun.
-- [Example JSON](../examples/resource-allocation-500-uah.json) and [JSON Schema](../schemas/resource-allocation.v1.schema.json).
-
-This is an illustrative personal-budgeting reference, not a claim that the host project manages payments or live retail prices.
+- [Implementation roadmap](IMPLEMENTATION_ROADMAP.md) — evidence-based status and acceptance gates for the reference runtime, native C17 track, Studio, Jora and federation.
+- [Feature matrix](FEATURES.md) — current capability surface and explicit limits.

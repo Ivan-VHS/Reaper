@@ -13,7 +13,7 @@ This file is mirrored across the four repositories so each checkout remains self
 1. **One token vocabulary.** Timing, easing, motion scale, spring response, theme roles and domain accents use the names below. Native applications map them to their toolkit; CSS variables do not execute inside Win32, Tk or Qt.
 2. **Accessibility wins.** OS reduced-motion preferences and `UI_REDUCED_MOTION` override application presets. Reduced motion removes spatial/ambient movement and keeps essential acknowledgement immediate or at most 80 ms. The state change itself is never suppressed.
 3. **Specification before feature.** Every motion or graphic declares its trigger, state source, token/physics, reduced-motion path, theme behavior, data units and maturity before implementation.
-4. **Graphics represent real state.** A ring, waveform, chart, AST panel or progress stream is driven by the real application model, includes a readable textual/numeric equivalent and exposes stale/error/unknown states. No invented telemetry.
+4. **Graphics represent real state.** A ring, chart, AST panel or progress stream is driven by the real application model, includes a readable textual/numeric equivalent and exposes stale/error/unknown states. No invented telemetry.
 5. **Documentation is a contract.** Root and localized READMEs, feature matrix, motion contract, UI implementation and screenshots must agree. Mark every capability implemented, partial, planned or unavailable.
 
 ## 2. Canonical motion tokens
@@ -67,11 +67,11 @@ Clamp externally supplied scale values to `0.4–2.2`; never trust raw configura
 - Reduced Motion removes parallax, auto-pulsing, continuous beat indicators, ripples, particles, portal motion and spatial transforms. Essential selection/status feedback may change immediately; any retained fade is at most 80 ms.
 - Eco / Low-CPU mode suppresses ambient animation and optional refresh work, not telemetry required for safety or correctness.
 - OS settings and `UI_REDUCED_MOTION` outrank stored preferences. A user preference never overrides a stronger system preference.
-- Animation is UI-thread-only, bounded, cancellable and disposed with its widget. It must not enter DSP callbacks/audio buffers, processor benchmarks, driver/package scans, compiler/runtime execution or worker queues.
+- Animation is UI-thread-only, bounded, cancellable and disposed with its widget. It must not enter time-critical callbacks/data buffers, processor benchmarks, driver/package scans, compiler/runtime execution or worker queues.
 
 ## 4. Lab layout: 2×2 and focus scene
 
-- **2×2 overview:** four equal domain panels (IDE & AI workspace, drivers & peripherals, DAW & mixer, processors & telemetry). Each panel has a title, one primary live state, one visual sample and a textual value/status.
+- **2×2 overview:** four equal domain panels (IDE & AI workspace, drivers & peripherals, desktop application tools, processors & telemetry). Each panel has a title, one primary live state, one visual sample and a textual value/status.
 - **Focus scene:** the selected domain expands into the main stage; the other three remain compact, labelled navigation tiles. Keyboard users can change focus without drag or animation.
 
 Layout is presentation state only. It must not change device configuration, project settings, render parameters or processor behavior. Reflow at narrow widths rather than compressing labels or hiding critical actions. With reduced motion, switch immediately while preserving focus and selection.
@@ -87,7 +87,7 @@ Use SVG for vector indicators, icons, static curves and ring progress; use Canva
 - have a non-animated reduced-motion form and never rely on colour alone;
 - draw on the UI thread while collection remains in its existing safe model/worker path.
 
-A ring reflects actual operation state; a waveform uses actual audio samples or is labelled **demo data**; a curve plots sourced values with units. Never invent USB connection, OTA percentage, driver firmware status, pointer DPI/polling, CPU voltage, temperature, frequency or DAW level.
+A ring reflects actual operation state; a chart plots sourced values with units and includes a readable textual equivalent. Never invent USB connection, OTA percentage, driver firmware status, pointer DPI/polling, CPU voltage, temperature or frequency.
 
 ## 6. Domain matrix and truthful product mapping
 
@@ -95,8 +95,8 @@ A ring reflects actual operation state; a waveform uses actual audio samples or 
 |---|---|---|---|
 | **IDE & AI workspace** | command palette, editor/AST fold, diagnostics, diff timeline, tab focus | **Reaper:** native IDE, project tree/editor, local language tooling, CODEX-66 browser, LSP/DAP and debugger | no cloud AI agent, streamed AI diff or cross-file semantic inference unless implemented and tested |
 | **Drivers & peripherals** | device state, profile/status cards, package verification and (if supported) OTA progress | **OPlague:** read-only PnP inventory, INF/ZIP inspection, hashes and candidate compatibility graph | no driver install/load/modify, firmware OTA, device DPI/polling controls or live USB animation |
-| **DAW & mixer** | transport, bus/meter levels, waveform and parameter transitions | **VentuSample:** Qt generator, offline DSP/plugin lab, project BPM indicator and WAV export | not a real-time DAW, external transport link, VST/AU host or live mixer; no DSP callback animation |
-| **Processors & telemetry** | measured frequency/temperature charts, bounded V/F reference curve and workload flow | **Pytyliki:** processor discovery, bounded benchmarks/planning, static diagnostics and local DSP | no overclock/voltage writes or live thermal/V/F control unless a reviewed module and sensor source are added |
+| **Desktop application tools** | application-specific state, progress and settings | **VentuSample:** maintained as an independent product in its own repository | no runtime module or processing dependency is owned by Reaper |
+| **Processors & telemetry** | measured frequency/temperature charts, bounded V/F reference curve and workload flow | **Pytyliki:** processor discovery, bounded benchmarks/planning and static diagnostics | no overclock/voltage writes or live thermal/V/F control unless a reviewed module and sensor source are added |
 
 Domain names define shared showcase vocabulary; they do not imply every product implements every feature. Product source, schemas and tests remain authoritative for shipped behavior.
 

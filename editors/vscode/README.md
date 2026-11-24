@@ -1,30 +1,26 @@
-# REAPER / МОСТ editor support
+# Reaper VS Code syntax support
 
 This directory contains syntax-only VS Code language support for `.most` and `.rpr` files: language registration, bracket matching, comments, strings, indentation and TextMate syntax coloring.
 
-## Separate language and debug protocol services
+## Install and inspect
 
-The Reaper repository also provides dependency-free stdio services:
+Open `editors/vscode/` as an extension-development folder in VS Code and inspect its checked-in `package.json` and grammar configuration before packaging or publishing. This repository does not currently document a Marketplace publication.
 
-- `python -m reaper lsp` — UTF-16 incremental LSP, versioned documents, parser/structure diagnostics, completion, hover, symbols and lexical navigation.
-- `python -m reaper dap` — DAP launch, line breakpoints, statement-boundary stepping, stack and local-variable inspection.
+## Related language services
 
-These are Reaper runtime services, not a packaged VS Code extension client. They are not automatically activated by this syntax package. LSP indexing is per open document; it does not claim cross-file type inference or AST refactoring. DAP supports the documented runtime debugging subset only.
+The Reaper runtime separately provides stdio services:
 
-See [REAPER IDE architecture](../../docs/REAPER_IDE.md) for exact capabilities and maturity boundaries.
+- `python -m reaper lsp` — JSON-RPC language service with local diagnostics, completion, hover, symbols, lexical navigation and formatting.
+- `python -m reaper dap` — debugger adapter with the implemented line-breakpoint and statement-step subset.
 
-
-## Desktop motion contract
-
-The syntax package remains presentation-only. For the native Studio application's persisted Reduce Motion / Eco preferences and the explicit absence of BPM transport integration, see the [desktop UI motion contract](../../docs/UI_MOTION.md).
+These are runtime services, not a packaged VS Code client in this syntax folder. They are not automatically activated by this grammar package. LSP analysis is document-local; it does not claim cross-file type inference or AST refactoring. DAP supports only the documented debugging subset.
 
 ## Extension boundary
 
-- This package owns editor presentation only. It does not implement a separate language grammar or runtime.
-- Do not advertise semantic completion, diagnostics, rename, AST/IR views, debugging, profiling or project navigation as features of this VS Code package.
-- Do not advertise type inference, cross-file semantic indexing, conditional breakpoints, expression evaluation, step-out, profiling UI or native C17 language-service parity as implemented.
-- Keep editor grammar aligned with the canonical REAPER / МОСТ language contract.
-- Keep syntax cues readable and do not make color the only carrier of meaning. Respect keyboard, focus, theme and reduced-motion settings.
-- The extension does not grant runtime, hardware or driver permissions.
+- This folder owns editor presentation only; it does not provide another parser or runtime.
+- Do not advertise semantic completion, diagnostics, debugging, profiling or project navigation as features of the syntax package itself.
+- Do not imply cross-file semantic indexing, AST refactoring, conditional breakpoints, expression evaluation or full native C17 parity.
+- Keep grammar rules aligned with the canonical language contract and preserve keyboard/theme accessibility.
+- Editor syntax highlighting grants no runtime, hardware or driver permissions.
 
-See the [main Reaper documentation](../../README.md), [Anatidae design system](../../docs/ANATIDAE_DESKTOP_DESIGN_SYSTEM.md), [UI/UX architecture](../../docs/UI_UX_ARCHITECTURE.md) and [human-first governance](../../docs/HUMAN_FIRST_GOVERNANCE.md).
+See the [main Reaper README](../../README.md), [IDE contract](../../docs/REAPER_IDE.md) and [documentation index](../../docs/README.md).

@@ -9,6 +9,6 @@
 | QCS | independent parser/validator |
 | Registry | 666 function contracts, 20×20 matrix |
 | Governance | consent grants, quotas, audit |
-| Federation | OPlague snapshots, explicit Pytyliki ABI, VentuSample manifest consumer |
+| Federation | OPlague snapshots, explicit Pytyliki ABI and shared topology metadata |
 
-Planned render-request and direct VentuSample ABI links remain planned. See [OCTA-8](OCTA_PYRAMID_FEDERATION.md).
+VentuSample remains an independent peer in the shared topology; Reaper has no runtime adapter to it. See [OCTA-8](OCTA_PYRAMID_FEDERATION.md).
