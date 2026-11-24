@@ -4,6 +4,7 @@ import unittest
 
 from reaper.runtime import Interpreter
 from reaper.streaming import ResultValue, StreamValue
+from reaper.lexer import Token
 
 
 class StreamingRuntimeTests(unittest.TestCase):
@@ -102,14 +103,16 @@ make decimal := try_float("18.4")
 make invalid_decimal := try_float("NaN")
 make timestamp := try_rfc3339("2026-11-24T02:45:00Z")
 make invalid_timestamp := try_rfc3339("2026-02-30T02:45:00Z")
+make excessive_precision := try_rfc3339("2026-11-24T02:45:00.1234567Z")
 emit result_value(integer)
 emit result_value(decimal)
 emit result_is_err(invalid_decimal)
 emit kind(result_value(timestamp))
 emit result_is_err(invalid_timestamp)
+emit result_is_err(excessive_precision)
 """
         )
-        self.assertEqual(output, ["503", "18.4", "true", "datetime", "true"])
+        self.assertEqual(output, ["503", "18.4", "true", "datetime", "true", "true"])
 
     def test_map_alter_is_atomic_and_analysis_has_standard_empty_shape(self) -> None:
         output = self.run_source(
@@ -131,6 +134,28 @@ emit size(empty["by_service"])
 """
         )
         self.assertEqual(output, ["2", "0", "0"])
+
+    def test_map_alter_leaves_map_unchanged_when_callback_fails(self) -> None:
+        interpreter = Interpreter(output=lambda _: None)
+        interpreter.run(
+            """
+make stats := map_new()
+craft reject(present, current) {
+    assert(false, "reject update")
+    yield 1
+}
+"""
+        )
+        mapping = interpreter.globals.get("stats")
+        callback = interpreter.globals.get("reject")
+        builtin = interpreter.globals.get("map_alter")
+        with self.assertRaisesRegex(ReaperRuntimeError, "reject update"):
+            interpreter._call(
+                builtin,
+                [mapping, "auth", callback],
+                Token("BUILTIN", "test_map_alter", 1, 1),
+            )
+        self.assertEqual(mapping, {})
 
     def test_each_accepts_a_stream(self) -> None:
         output = self.run_source(
