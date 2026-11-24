@@ -81,6 +81,8 @@ class JoraCompositionTests(unittest.TestCase):
             self.assertTrue(result["ok"])
             self.assertFalse(result["installable"])
             self.assertFalse(result["source_executed"])
+            self.assertEqual(result["validation"]["status"], "passed")
+            self.assertEqual(result["validation"]["files_checked"], 4)
             self.assertTrue((output / "src/main.rpr").is_file())
             self.assertTrue((output / "src/components/text_editor.rpr").is_file())
             self.assertTrue((output / "locales/en.json").is_file())
