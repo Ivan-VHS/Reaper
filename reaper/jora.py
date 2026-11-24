@@ -571,6 +571,34 @@ def _build_graph_variant(
     planned_nodes = sum(node["maturity"] == "planned" for node in nodes)
     complexity_penalty = max(0, (len(edges) - len(nodes) + 1) // 8)
     compatibility_score = max(0, min(100, 100 + min(10, capability_edges * 2) - planned_nodes * 3 - complexity_penalty))
+
+    path_cache: dict[str, int] = {}
+    def longest_path(node_id: str) -> int:
+        if node_id not in path_cache:
+            path_cache[node_id] = 1 + max(
+                (longest_path(target) for target in dependency_graph[node_id]),
+                default=0,
+            )
+        return path_cache[node_id]
+
+    longest_sync_path = max((longest_path(node_id) for node_id in dependency_graph), default=0)
+    event_nodes = sum(node["kind"] in {"event_bus", "event_channel"} for node in nodes)
+    router_nodes = sum(node["kind"] in {"capability_router", "capability_broker", "capability_channel"} for node in nodes)
+    registry_nodes = sum(node["kind"] == "extension_registry" for node in nodes)
+    modular_nodes = sum(node["kind"] in {"domain_layer", "domain_orchestrator", "layout_group", "capability_channel"} for node in nodes)
+
+    latency_score = max(0, min(100, 100 - max(0, longest_sync_path - 3) * 12 - event_nodes * 6 - router_nodes * 3))
+    modularity_score = max(0, min(100, 55 + modular_nodes * 8 + capability_edges * 5))
+    extensibility_score = max(0, min(100, 40 + registry_nodes * 25 + router_nodes * 8 + event_nodes * 8))
+    complexity_score = max(0, min(100, 100 - planned_nodes * 7 - max(0, len(edges) - len(nodes) + 1) * 2))
+    objective_scores = {
+        "balanced": round(0.40 * compatibility_score + 0.20 * latency_score + 0.20 * modularity_score + 0.20 * extensibility_score),
+        "low_latency": round(0.75 * latency_score + 0.25 * compatibility_score),
+        "modularity": round(0.75 * modularity_score + 0.25 * compatibility_score),
+        "extensibility": round(0.75 * extensibility_score + 0.25 * compatibility_score),
+        "minimal_complexity": round(0.75 * complexity_score + 0.25 * compatibility_score),
+    }
+    objective_score = objective_scores[objective]
     return {
         "id": "jora-graph-" + signature,
         "label": "Jora · " + GRAPH_LABELS[topology] + " · " + layout_variant,
@@ -588,6 +616,12 @@ def _build_graph_variant(
             "capability_connections": capability_edges,
             "planned_nodes": planned_nodes,
             "compatibility_score": compatibility_score,
+            "objective_score": objective_score,
+            "latency_score": latency_score,
+            "modularity_score": modularity_score,
+            "extensibility_score": extensibility_score,
+            "complexity_score": complexity_score,
+            "longest_sync_path": longest_sync_path,
         },
         "cycle_policy": {
             "synchronous_edges": "acyclic",
@@ -623,6 +657,7 @@ def _build_graph_variants(
     selected_graph = max(
         variants,
         key=lambda item: (
+            item["metrics"]["objective_score"],
             item["metrics"]["compatibility_score"],
             item["metrics"]["capability_connections"],
             -item["metrics"]["planned_nodes"],
@@ -633,7 +668,7 @@ def _build_graph_variants(
     return {
         "schema": "reaper.jora.graph-set.v1",
         "selected": selected_graph["id"],
-        "selection_policy": "max_compatibility_then_capability_reuse_then_minimal_planned_nodes",
+        "selection_policy": "max_objective_score_then_compatibility_then_minimal_planned_nodes",
         "topology_mode": options["topology"],
         "objective": options["objective"],
         "seed": base_seed,
