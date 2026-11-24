@@ -34,9 +34,7 @@
       "pattern": "^[a-z0-9][a-z0-9-]{1,60}$"
     },
     "name": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 80
+      "const": "Jora"
     },
     "description": {
       "type": "string",
@@ -47,6 +45,7 @@
       "additionalProperties": false,
       "required": [
         "expression",
+        "result",
         "components"
       ],
       "properties": {
@@ -67,6 +66,9 @@
               "translation.workspace"
             ]
           }
+        },
+        "result": {
+          "const": "Jora"
         }
       }
     },
