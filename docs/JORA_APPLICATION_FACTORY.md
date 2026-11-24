@@ -27,12 +27,12 @@ A formula composes capability contracts; it does not concatenate arbitrary execu
 
 ## Composition pipeline
 
-1. Capture a selection of capability packs, optional product name, UI locales and preferred locale.
+1. Capture a selection of capability packs, fixed Jora identity, UI locales and preferred locale.
 2. Validate a versioned request, closed component IDs, unique selections and bounded collection sizes.
 3. Resolve dependency closure in deterministic dependency-first order; reject unknown edges and cycles.
 4. Check component conflicts and incompatible options.
 5. Choose Reaper as the canonical source generator. Other compiler targets are reported as pending until implemented and tested.
-6. Generate a stable application ID from canonical composition inputs and derive a readable product name from the selected formula.
+6. Generate a stable application ID from canonical composition inputs and keep the one fixed application identity: Jora.
 7. Write a project manifest, lock file, localized interface dictionaries, Reaper entry point and component contract stubs.
 8. Build into a sibling staging directory, then atomically rename it into a previously unused destination.
 9. Validate generated files and run a Reaper static check in the host integration before any future package can be promoted.
