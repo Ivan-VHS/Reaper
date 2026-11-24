@@ -1,5 +1,7 @@
 import unittest
-from reaper.plugins import PluginError, PluginManager, list_plugins
+from reaper.plugins import (
+    PluginError, PluginExecutionPolicy, PluginManager, list_plugins,
+)
 from reaper.products import PRODUCTS
 
 class PluginHostTests(unittest.TestCase):
@@ -33,6 +35,41 @@ class PluginHostTests(unittest.TestCase):
     def test_unknown_plugin_is_rejected(self):
         with self.assertRaisesRegex(PluginError, "unknown"):
             PluginManager().get_plugin("NotAPlugin")
+
+    def test_plugin_policy_bounds_inputs_outputs_and_configuration(self):
+        with self.assertRaises(PluginError):
+            PluginExecutionPolicy(max_concurrent_per_plugin=True)
+        limited_input = PluginManager(policy=PluginExecutionPolicy(max_input_bytes=8))
+        with self.assertRaisesRegex(PluginError, "input exceeds"):
+            limited_input.run("Dropaul", steps=[{"id": "a", "depends_on": []}])
+
+        limited_output = PluginManager(policy=PluginExecutionPolicy(max_output_bytes=8))
+        with self.assertRaisesRegex(PluginError, "output exceeds"):
+            limited_output.run("Dropaul", steps=[])
+
+    def test_plugin_health_reports_readiness_and_execution_metrics(self):
+        manager = PluginManager()
+        result = manager.run("Dropaul", steps=[
+            {"id": "compile", "depends_on": []},
+            {"id": "test", "depends_on": ["compile"]},
+        ])
+        self.assertTrue(result["dry_run"])
+        health = manager.health()
+        self.assertEqual(health["schema"], "reaper.plugin-health.v1")
+        self.assertTrue(health["ready"])
+        self.assertEqual(health["plugins"]["dropaul"]["invocations"], 1)
+        self.assertEqual(health["plugins"]["dropaul"]["successes"], 1)
+        self.assertEqual(health["plugins"]["dropaul"]["in_flight"], 0)
+
+    def test_plugin_concurrency_is_bounded_per_plugin(self):
+        manager = PluginManager(policy=PluginExecutionPolicy(max_concurrent_per_plugin=1))
+        semaphore = manager._semaphores["dropaul"]
+        self.assertTrue(semaphore.acquire(blocking=False))
+        try:
+            with self.assertRaisesRegex(PluginError, "concurrency limit"):
+                manager.run("Dropaul", steps=[])
+        finally:
+            semaphore.release()
 
 if __name__ == "__main__":
     unittest.main()
