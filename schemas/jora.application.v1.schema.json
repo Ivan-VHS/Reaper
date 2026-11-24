@@ -435,6 +435,7 @@
               "id",
               "label",
               "topology",
+              "layout_variant",
               "seed",
               "variation",
               "signature",
@@ -583,6 +584,16 @@
                     "type": "string"
                   }
                 }
+              },
+              "layout_variant": {
+                "enum": [
+                  "direct",
+                  "domain_grouped",
+                  "capability_routed",
+                  "stateful",
+                  "validated",
+                  "extensible"
+                ]
               }
             }
           }
