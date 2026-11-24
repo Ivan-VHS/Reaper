@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from reaper.duckos_bridge import (
     DuckOSInventoryError, REPORT_SCHEMA, audit_file, audit_snapshot, main,
@@ -111,6 +112,43 @@ class DuckOSBridgeTests(unittest.TestCase):
             source = Path(temporary) / "inventory.json"
             source.write_text(json.dumps(make_snapshot()), encoding="utf-8")
             self.assertEqual(main([str(source), "--output", str(source)]), 2)
+
+    def test_file_reader_rejects_duplicate_json_properties(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "duplicate.json"
+            source.write_text(
+                '{"schema":"duckos.hardware-inventory.v1","schema":"other"}',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(DuckOSInventoryError, "duplicate JSON property"):
+                audit_file(source)
+
+    def test_file_reader_rejects_non_finite_json_constants(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "non-finite.json"
+            source.write_text('{"value":NaN}', encoding="utf-8")
+            with self.assertRaisesRegex(DuckOSInventoryError, "non-finite"):
+                audit_file(source)
+
+    def test_file_reader_enforces_limit_during_read(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "oversized.json"
+            source.write_bytes(b" " * 65)
+            with patch("reaper.duckos_bridge.MAX_SNAPSHOT_BYTES", 64):
+                with self.assertRaisesRegex(DuckOSInventoryError, "input limit"):
+                    audit_file(source)
+
+    def test_file_reader_rejects_symbolic_links(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "inventory.json"
+            source.write_text(json.dumps(make_snapshot()), encoding="utf-8")
+            link = Path(temporary) / "inventory-link.json"
+            try:
+                link.symlink_to(source)
+            except (OSError, NotImplementedError):
+                self.skipTest("symbolic links are unavailable")
+            with self.assertRaisesRegex(DuckOSInventoryError, "non-symlink"):
+                audit_file(link)
 
 
 if __name__ == "__main__":
