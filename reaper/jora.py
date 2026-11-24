@@ -922,12 +922,12 @@ def _build_graph_variants(
     }
 
 
-def _generated_name(component_ids: list[str], requested_name: str = "") -> str:
+def _generated_name(component_ids: list[str], requested_name: str = "", style: str = "balanced") -> str:
     """Resolve an independent application name; Jora is only the platform."""
     if requested_name:
         name = _text(requested_name, "name", 80)
     else:
-        name = _naming_profile(component_ids, "balanced")["selected"]["label"]
+        name = _naming_profile(component_ids, style)["selected"]["label"]
     if re.search(r"jora", name, re.IGNORECASE):
         raise JoraError("application name must be independent and must not contain the platform name Jora")
     if not _NAME_RE.fullmatch(name):
@@ -971,10 +971,10 @@ def compose_application(request: dict[str, Any]) -> dict[str, Any]:
         raise JoraError("the current generated Reaper source supports only the 'flow' syntax profile")
 
     requested_name = _text(request.get("name", ""), "name", 80, optional=True)
-    display_name = _generated_name(component_ids, requested_name)
     name_style = _text(request.get("name_style", "balanced"), "name_style", 24).casefold()
     if name_style not in {"compact", "balanced", "descriptive", "formula"}:
         raise JoraError("name_style must be compact, balanced, descriptive or formula")
+    display_name = _generated_name(component_ids, requested_name, name_style)
     naming = _naming_profile(component_ids, name_style)
     description = _text(request.get("description", ""), "description", 500, optional=True)
     graph_options = _normalize_graph_options(request.get("graph"))
