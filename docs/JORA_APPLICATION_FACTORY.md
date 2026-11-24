@@ -18,6 +18,38 @@ Example:
 
 A formula composes capability contracts; it does not concatenate arbitrary executable binaries. Each component declares a stable ID, version, provided interfaces, required interfaces, conflicts and maturity.
 
+## Naming engine
+
+The canonical product name is always **Jora**. The naming engine does not create unrelated brands for combinations. Instead, it derives human-readable descriptors from component domains and produces four presentation variants under the Jora identity:
+
+- compact: `Jora · Documents · Audio & Media · Languages`;
+- balanced: `Jora — Documents & Audio & Media & Languages Workspace`;
+- descriptive: `Jora | Workspace for Documents & Audio & Media & Languages`;
+- formula: `Jora — Documents + Audio & Media + Languages`.
+
+The request selects `name_style` (`compact`, `balanced`, `descriptive` or `formula`). The manifest preserves `name = "Jora"`, the semantic descriptors, selected label and all suggestions. Labels are generated from the capability taxonomy rather than arbitrary syllable concatenation, and remain presentation metadata rather than independent application names.
+
+## Composition graph engine
+
+A formula can produce several valid graphs from the same modules. Graph generation is deterministic for the same request and seed, and can emit 1–6 alternatives with a variation budget from 0–100.
+
+Supported topologies:
+
+| Topology | Structure |
+|---|---|
+| `layered` | interface → modules → required services |
+| `pipeline` | modules connected in the selected workflow order |
+| `hub_spoke` | shared Jora orchestrator routes work to modules |
+| `plugin_mesh` | modules link when provided and consumed capabilities match |
+| `event_driven` | modules publish/subscribe through an asynchronous event bus |
+| `hybrid` | orchestrator plus compatible direct capability links |
+
+Graph nodes carry identity, kind, label and maturity. Edges are typed (hosting, execution, mounts, requirements, workflow steps, capability links, events, extension registration and validation). Each graph has a canonical signature and metrics for nodes, edges, hard dependencies, capability connections, planned services and compatibility.
+
+The engine keeps startup/dependency edges acyclic. Event feedback is permitted only through an explicit asynchronous event bus; it never becomes a hard dependency cycle. Optional extension registries and compatibility gates are marked `planned`, not falsely reported as implemented runtime services.
+
+The complete graph set is embedded in `jora.app.json` and exported separately as `jora.graphs.json`. The lock file records graph signatures and the selected graph for reproducible generation.
+
 ## Repository ownership
 
 - **Reaper** owns request validation, the component catalogue, dependency resolution, product composition, deterministic naming, Reaper source scaffolding, localization bundle generation and the Jora CLI.
@@ -27,13 +59,13 @@ A formula composes capability contracts; it does not concatenate arbitrary execu
 
 ## Composition pipeline
 
-1. Capture a selection of capability packs, fixed Jora identity, UI locales and preferred locale.
+1. Capture selected capability packs, the fixed Jora identity, naming style, UI locales and graph-generation preferences.
 2. Validate a versioned request, closed component IDs, unique selections and bounded collection sizes.
 3. Resolve dependency closure in deterministic dependency-first order; reject unknown edges and cycles.
 4. Check component conflicts and incompatible options.
 5. Choose Reaper as the canonical source generator. Other compiler targets are reported as pending until implemented and tested.
-6. Generate a stable application ID from canonical composition inputs and keep the one fixed application identity: Jora.
-7. Write a project manifest, lock file, localized interface dictionaries, Reaper entry point and component contract stubs.
+6. Generate a stable application ID from the canonical formula and graph settings. Jora remains the only product name; generated naming variants are descriptive labels such as `Jora — Documents & Languages Workspace`, never separately branded products.
+7. Write a project manifest, lock file, localized interface dictionaries, Reaper entry point, component contracts and a separate graph-set artifact.
 8. Build into a sibling staging directory, then atomically rename it into a previously unused destination.
 9. Validate generated files and run a Reaper static check in the host integration before any future package can be promoted.
 10. Publish only after implementation, tests, permissions, dependency/license inventory, provenance and rollback gates pass.
