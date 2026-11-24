@@ -668,13 +668,15 @@ def _build_graph_variant(
             for capability in _COMPONENTS[provider_id]["provides"]:
                 providers_by_capability.setdefault(capability, []).append(provider_id)
         matches: list[tuple[str, str, str]] = []
+        component_order = {identifier: index for index, identifier in enumerate(component_ids)}
         for consumer_id in component_ids:
             consumed = sorted(set(_COMPONENTS[consumer_id].get("consumes", [])))
             for capability in consumed:
-                # Keep the nearest deterministic provider set bounded as the
-                # component catalogue expands; no all-pairs scan is required.
+                # Keep the nearest deterministic provider set bounded. Orient
+                # every synchronous capability route from earlier to later
+                # components so even reciprocal contracts cannot create cycles.
                 for provider_id in providers_by_capability.get(capability, [])[:4]:
-                    if provider_id != consumer_id:
+                    if component_order[provider_id] < component_order[consumer_id]:
                         matches.append((provider_id, consumer_id, capability))
         if variant_index % 3 == 0:
             for provider_id, consumer_id, capability in matches:
@@ -684,19 +686,27 @@ def _build_graph_variant(
                     "capability:" + capability,
                 )
         elif variant_index % 3 == 1 and matches:
-            add_node("capability:broker", "capability_broker", "Jora Capability Broker", "planned")
             for provider_id, consumer_id, capability in matches:
-                add_edge("component:" + provider_id, "capability:broker", "provides_to_broker:" + capability)
-                add_edge("capability:broker", "component:" + consumer_id, "routes_to_consumer:" + capability)
+                broker_id = (
+                    "capability:broker:"
+                    + provider_id.replace(".", "_") + ":"
+                    + consumer_id.replace(".", "_") + ":"
+                    + capability.replace(".", "_")
+                )
+                add_node(broker_id, "capability_broker", capability + " Broker", "planned")
+                add_edge("component:" + provider_id, broker_id, "provides_to_broker:" + capability)
+                add_edge(broker_id, "component:" + consumer_id, "routes_to_consumer:" + capability)
         else:
-            brokers: dict[str, str] = {}
             for provider_id, consumer_id, capability in matches:
-                broker_id = "capability:" + capability.replace(".", "_")
-                if capability not in brokers:
-                    brokers[capability] = broker_id
-                    add_node(broker_id, "capability_channel", capability + " Channel", "planned")
-                add_edge("component:" + provider_id, broker_id, "publishes_capability")
-                add_edge(broker_id, "component:" + consumer_id, "consumes_capability")
+                channel_id = (
+                    "capability:channel:"
+                    + provider_id.replace(".", "_") + ":"
+                    + consumer_id.replace(".", "_") + ":"
+                    + capability.replace(".", "_")
+                )
+                add_node(channel_id, "capability_channel", capability + " Channel", "planned")
+                add_edge("component:" + provider_id, channel_id, "publishes_capability")
+                add_edge(channel_id, "component:" + consumer_id, "consumes_capability")
     elif topology == "event_driven":
         if variant_index % 2 == 0:
             add_node("events:jora", "event_bus", "Jora Event Bus", "planned")
