@@ -1,0 +1,103 @@
+{
+  "manifest_version": "1.0",
+  "app": {
+    "app_id": "jora.app.kontexa",
+    "display_name": "Kontexa",
+    "slug": "kontexa",
+    "version": "0.1.0",
+    "description": "Context-first translation workspace for long Markdown and technical documents up to 60,000 characters."
+  },
+  "formula": {
+    "revision": 1,
+    "expression": "document.parser@1 + semantic.chunker@1 + structural.shield@1 + terminology.contract@1 + translation.provider.openai-compatible@1 + consistency.audit@1",
+    "components": [
+      {
+        "id": "document.parser",
+        "version": "1.0.0"
+      },
+      {
+        "id": "semantic.chunker",
+        "version": "1.0.0"
+      },
+      {
+        "id": "structural.shield",
+        "version": "1.0.0"
+      },
+      {
+        "id": "terminology.contract",
+        "version": "1.0.0"
+      },
+      {
+        "id": "translation.provider.openai-compatible",
+        "version": "1.0.0"
+      },
+      {
+        "id": "consistency.audit",
+        "version": "1.0.0"
+      }
+    ]
+  },
+  "runtime": {
+    "primary_language": "python",
+    "language_plan": [
+      "html",
+      "css",
+      "javascript"
+    ],
+    "targets": [
+      "desktop",
+      "local-web"
+    ],
+    "required_toolchains": [
+      "python>=3.10"
+    ]
+  },
+  "capabilities": [
+    "translation.document.max_60000_unicode_code_points",
+    "translation.provider.openai_compatible",
+    "document.markdown.semantic_chunking",
+    "document.structural_shield",
+    "document.context_passport",
+    "terminology.hard_lock",
+    "translation.context_aware_cache",
+    "translation.numeric_integrity_audit",
+    "translation.local_quality_report",
+    "translation.job_cancellation",
+    "document.context_graph.sections_entities_relations",
+    "document.context_memory.rolling_five_segment_digest",
+    "translation.tone_register.audit",
+    "translation.ambiguity.alternative_suggestions",
+    "translation.semantic_backtranslation_audit",
+    "translation.incremental_cache.neighbourhood_fingerprint",
+    "translation.local_api.loopback_only"
+  ],
+  "permissions": [
+    "filesystem.user_config.read_write",
+    "filesystem.user_data.read_write",
+    "network.loopback.listen",
+    "network.provider.outbound_opt_in",
+    "clipboard.user_gesture"
+  ],
+  "dependencies": [],
+  "content": {
+    "packs": [],
+    "locales": [
+      "en-US",
+      "ru-RU",
+      "uk-UA"
+    ]
+  },
+  "generation": {
+    "generator_version": "manual",
+    "template_set": "1.0.0"
+  },
+  "verification": {
+    "status": "implemented_tested",
+    "report_ref": "tests/test_kontexa*.py"
+  },
+  "provenance": {
+    "source_digest": null,
+    "build_digest": null,
+    "note": "Digests are produced by release packaging, not hard-coded in the source manifest."
+  }
+}

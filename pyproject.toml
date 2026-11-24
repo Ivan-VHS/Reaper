@@ -22,10 +22,12 @@ reaper-embedded = "reaper.embedded:main"
 reaper-noo-tah = "reaper.noo_tah:main"
 reaper-toolchain = "reaper.toolchain_inventory:main"
 reaper-duckos-audit = "reaper.duckos_bridge:main"
+kontexa = "kontexa.server:main"
 [project.gui-scripts]
 reaper-studio = "reaper.desktop:main"
 [tool.setuptools]
-packages = ["reaper", "reaper.kora"]
+packages = ["reaper", "reaper.kora", "kontexa"]
 [tool.setuptools.package-data]
 "reaper" = ["systems_architectures.json", "systems_languages.json", "token_catalog.json", "atomic_quantum_catalogue.v1.json"]
 "reaper.kora" = ["manifest.json"]
+"kontexa" = ["README.md", "jora.manifest.json", "web/*.html", "web/*.css", "web/*.js"]

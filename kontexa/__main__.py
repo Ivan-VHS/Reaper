@@ -1,0 +1,5 @@
+"""Run Kontexa as a local desktop-first application."""
+from .server import main
+
+if __name__ == "__main__":
+    main()
