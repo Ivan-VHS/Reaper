@@ -1,6 +1,7 @@
 #include "reaper/lexer.h"
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 static int has(const ReaperTokenArray *t,const char *s,ReaperTokenKind k){for(size_t i=0;i<t->length;++i)if(t->items[i].kind==k&&!strcmp(t->items[i].text,s))return 1;return 0;}
 static int has_canonical(const ReaperTokenArray *t,const char *s){for(size_t i=0;i<t->length;++i)if(!strcmp(reaper_token_canonical_text(&t->items[i]),s))return 1;return 0;}
