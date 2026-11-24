@@ -13,6 +13,10 @@ The root [README](../README.md) is the product entry point: it summarizes the ex
 | [Federation and integration](clusters/federation-integration.md) | NOO TAH, Kora, plugin and external project boundaries |
 | [Planning and governance](clusters/planning-governance.md) | Maturity, decisions, roadmap and project standards |
 
+## Security policy contract
+
+[BAV policy runtime contract](BAV_POLICY_RUNTIME_CONTRACT.md) specifies Reaper's future deterministic/native policy-evaluation boundary for DuckOS BAV. It is a specification, not a shipped runtime.
+
 ## Start with the owning contract
 
 - [Features](FEATURES.md) — current feature inventory and maturity.
