@@ -291,6 +291,7 @@ def _build_graph_variant(
     topology: str,
     seed: str,
     variation: int,
+    variant_index: int,
 ) -> dict[str, Any]:
     nodes: list[dict[str, Any]] = []
     edges: list[dict[str, Any]] = []
@@ -351,61 +352,129 @@ def _build_graph_variant(
                 add_edge("service:" + dependency_id, "service:" + dependency, "requires")
 
     if topology == "layered":
-        for component_id in component_ids:
-            add_edge("ui:shell", "component:" + component_id, "mounts")
+        if variant_index % 2 == 0:
+            for component_id in component_ids:
+                add_edge("ui:shell", "component:" + component_id, "mounts")
+        else:
+            domain_nodes: dict[str, str] = {}
+            for component_id in component_ids:
+                domain = str(_COMPONENTS[component_id]["domain"])
+                layer_id = "layer:" + domain
+                if domain not in domain_nodes:
+                    domain_nodes[domain] = layer_id
+                    add_node(layer_id, "domain_layer", domain.title() + " Layer", "planned")
+                    add_edge("ui:shell", layer_id, "contains_layer")
+                add_edge(layer_id, "component:" + component_id, "mounts")
     elif topology == "pipeline":
         if component_ids:
             add_edge("ui:shell", "component:" + component_ids[0], "starts_workflow")
         for left, right in zip(component_ids, component_ids[1:]):
             add_edge("component:" + left, "component:" + right, "workflow_next")
+        if variant_index % 3 == 1:
+            add_node("workflow:state", "workflow_state", "Jora Workflow State", "planned")
+            for component_id in component_ids:
+                add_edge("component:" + component_id, "workflow:state", "updates_workflow_state")
+        elif variant_index % 3 == 2:
+            add_node("workflow:validator", "workflow_validator", "Jora Stage Validator", "planned")
+            for component_id in component_ids:
+                add_edge("component:" + component_id, "workflow:validator", "validates_output")
+            for left, right in zip(component_ids, component_ids[1:]):
+                add_edge("workflow:validator", "component:" + right, "releases_stage")
     elif topology == "hub_spoke":
-        add_node("orchestrator:jora", "orchestrator", "Jora Orchestrator", "planned")
-        add_edge("ui:shell", "orchestrator:jora", "dispatches_to")
-        for component_id in component_ids:
-            add_edge("orchestrator:jora", "component:" + component_id, "routes_to")
+        if variant_index % 2 == 0:
+            add_node("orchestrator:jora", "orchestrator", "Jora Orchestrator", "planned")
+            add_edge("ui:shell", "orchestrator:jora", "dispatches_to")
+            for component_id in component_ids:
+                add_edge("orchestrator:jora", "component:" + component_id, "routes_to")
+        else:
+            domain_hubs: dict[str, str] = {}
+            for component_id in component_ids:
+                domain = str(_COMPONENTS[component_id]["domain"])
+                hub_id = "orchestrator:" + domain
+                if domain not in domain_hubs:
+                    domain_hubs[domain] = hub_id
+                    add_node(hub_id, "domain_orchestrator", domain.title() + " Coordinator", "planned")
+                    add_edge("ui:shell", hub_id, "dispatches_to")
+                add_edge(hub_id, "component:" + component_id, "routes_to")
     elif topology == "plugin_mesh":
         for component_id in component_ids:
             add_edge("ui:shell", "component:" + component_id, "mounts")
+        matches: list[tuple[str, str, str]] = []
         for consumer_id in component_ids:
             consumed = set(_COMPONENTS[consumer_id].get("consumes", []))
-            if not consumed:
-                continue
             for provider_id in component_ids:
                 if provider_id == consumer_id:
                     continue
-                provided = set(_COMPONENTS[provider_id]["provides"])
-                for capability in sorted(consumed & provided):
-                    add_edge(
-                        "component:" + provider_id,
-                        "component:" + consumer_id,
-                        "capability:" + capability,
-                    )
+                for capability in sorted(consumed & set(_COMPONENTS[provider_id]["provides"])):
+                    matches.append((provider_id, consumer_id, capability))
+        if variant_index % 3 == 0:
+            for provider_id, consumer_id, capability in matches:
+                add_edge(
+                    "component:" + provider_id,
+                    "component:" + consumer_id,
+                    "capability:" + capability,
+                )
+        elif variant_index % 3 == 1 and matches:
+            add_node("capability:broker", "capability_broker", "Jora Capability Broker", "planned")
+            for provider_id, consumer_id, capability in matches:
+                add_edge("component:" + provider_id, "capability:broker", "provides_to_broker:" + capability)
+                add_edge("capability:broker", "component:" + consumer_id, "routes_to_consumer:" + capability)
+        else:
+            brokers: dict[str, str] = {}
+            for provider_id, consumer_id, capability in matches:
+                broker_id = "capability:" + capability.replace(".", "_")
+                if capability not in brokers:
+                    brokers[capability] = broker_id
+                    add_node(broker_id, "capability_channel", capability + " Channel", "planned")
+                add_edge("component:" + provider_id, broker_id, "publishes_capability")
+                add_edge(broker_id, "component:" + consumer_id, "consumes_capability")
     elif topology == "event_driven":
-        add_node("events:jora", "event_bus", "Jora Event Bus", "planned")
-        add_edge("ui:shell", "events:jora", "dispatches_events")
-        for component_id in component_ids:
-            component_node = "component:" + component_id
-            add_edge(component_node, "events:jora", "publishes", async_edge=True)
-            add_edge("events:jora", component_node, "subscribes", async_edge=True)
+        if variant_index % 2 == 0:
+            add_node("events:jora", "event_bus", "Jora Event Bus", "planned")
+            add_edge("ui:shell", "events:jora", "dispatches_events")
+            for component_id in component_ids:
+                component_node = "component:" + component_id
+                add_edge(component_node, "events:jora", "publishes", async_edge=True)
+                add_edge("events:jora", component_node, "subscribes", async_edge=True)
+        else:
+            domain_buses: dict[str, str] = {}
+            for component_id in component_ids:
+                domain = str(_COMPONENTS[component_id]["domain"])
+                bus_id = "events:" + domain
+                if domain not in domain_buses:
+                    domain_buses[domain] = bus_id
+                    add_node(bus_id, "event_channel", domain.title() + " Event Channel", "planned")
+                    add_edge("ui:shell", bus_id, "dispatches_events")
+                component_node = "component:" + component_id
+                add_edge(component_node, bus_id, "publishes", async_edge=True)
+                add_edge(bus_id, component_node, "subscribes", async_edge=True)
     elif topology == "hybrid":
-        add_node("orchestrator:jora", "orchestrator", "Jora Orchestrator", "planned")
-        add_edge("ui:shell", "orchestrator:jora", "dispatches_to")
-        for component_id in component_ids:
-            add_edge("orchestrator:jora", "component:" + component_id, "routes_to")
+        if variant_index % 2 == 0:
+            add_node("orchestrator:jora", "orchestrator", "Jora Orchestrator", "planned")
+            add_edge("ui:shell", "orchestrator:jora", "dispatches_to")
+            for component_id in component_ids:
+                add_edge("orchestrator:jora", "component:" + component_id, "routes_to")
+        else:
+            domain_hubs: dict[str, str] = {}
+            for component_id in component_ids:
+                domain = str(_COMPONENTS[component_id]["domain"])
+                hub_id = "orchestrator:" + domain
+                if domain not in domain_hubs:
+                    domain_hubs[domain] = hub_id
+                    add_node(hub_id, "domain_orchestrator", domain.title() + " Coordinator", "planned")
+                    add_edge("ui:shell", hub_id, "dispatches_to")
+                add_edge(hub_id, "component:" + component_id, "routes_to")
         for consumer_id in component_ids:
             consumed = set(_COMPONENTS[consumer_id].get("consumes", []))
             for provider_id in component_ids:
                 if provider_id == consumer_id:
                     continue
-                provided = set(_COMPONENTS[provider_id]["provides"])
-                for capability in sorted(consumed & provided):
+                for capability in sorted(consumed & set(_COMPONENTS[provider_id]["provides"])):
                     add_edge(
                         "component:" + provider_id,
                         "component:" + consumer_id,
                         "capability:" + capability,
                     )
-    else:
-        raise JoraError(f"unsupported graph topology: {topology}")
 
     # Deterministic optional architecture augmentations create real graph variety
     # without pretending that these planned contracts are already executable.
@@ -459,7 +528,7 @@ def _build_graph_variant(
     planned_nodes = sum(node["maturity"] == "planned" for node in nodes)
     return {
         "id": "jora-graph-" + signature,
-        "label": "Jora · " + GRAPH_LABELS[topology],
+        "label": "Jora · " + GRAPH_LABELS[topology] + " · " + str(variant_index + 1),
         "topology": topology,
         "seed": seed,
         "variation": variation,
@@ -502,7 +571,8 @@ def _build_graph_variants(
     for index, topology in enumerate(topologies):
         variant_seed = f"{base_seed}:{index}:{topology}"
         variants.append(_build_graph_variant(
-            component_ids, dependency_order, locales, topology, variant_seed, options["variation"]
+            component_ids, dependency_order, locales, topology, variant_seed,
+            options["variation"], index,
         ))
     return {
         "schema": "reaper.jora.graph-set.v1",
