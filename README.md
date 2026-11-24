@@ -62,7 +62,7 @@ The seven-app **Mora** suite (Cockos, Kavun, Ka-bon, Gloverty, Po, Illidia and U
 
 ### Jora application factory
 
-[DuckOS Jora](https://github.com/Ivan-VHS/DuckOS) is being integrated as the unified application catalogue and formula-based project composer. It composes versioned capability packs such as Text Editor + Audio Editor + Translator into a named product (for example, LexiTone 3D), then generates a Reaper project scaffold and EN/RU/UK/MOST interface dictionaries. See [Jora application factory](docs/JORA_APPLICATION_FACTORY.md). Current packs are specifications rather than functioning editors; the generated project is statically checked but is not installable. Reaper is the only integrated source generator in this increment; additional compiler targets remain pending.
+[DuckOS Jora](https://github.com/Ivan-VHS/DuckOS) is being integrated as the unified Jora product system: catalogue, formula composer, generator and all resulting applications share the name Jora. It composes capability packs such as Text Editor + Audio Editor + Translator into Jora, then generates a Reaper project scaffold and EN/RU/UK/MOST interface dictionaries. Semantic naming suggestions are descriptive Jora labels, not separate brands. See [Jora application factory](docs/JORA_APPLICATION_FACTORY.md). Current packs are specifications rather than functioning editors; the generated project is statically checked but is not installable. Reaper is the only integrated source generator in this increment; additional compiler targets remain pending.
 
 ## Quick Start
 
