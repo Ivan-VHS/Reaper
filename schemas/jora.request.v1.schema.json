@@ -28,7 +28,25 @@
         "enum": [
           "text.editor",
           "audio.editor",
-          "translation.workspace"
+          "translation.workspace",
+          "subtitle.editor",
+          "notes.workspace",
+          "task.board",
+          "calendar.scheduler",
+          "speech.synthesis",
+          "speech.recognition",
+          "code.editor",
+          "spreadsheet.editor",
+          "image.editor",
+          "video.editor",
+          "presentation.editor",
+          "file.manager",
+          "api.client",
+          "automation.engine",
+          "data.visualizer",
+          "database.manager",
+          "archive.manager",
+          "knowledge.graph"
         ]
       }
     },
