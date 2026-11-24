@@ -13,8 +13,7 @@
       "const": "reaper.jora.request.v1"
     },
     "name": {
-      "type": "string",
-      "maxLength": 80
+      "const": "Jora"
     },
     "description": {
       "type": "string",
