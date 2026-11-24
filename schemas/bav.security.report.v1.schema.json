@@ -1,0 +1,233 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ivan-vhs.github.io/reaper/schemas/bav.security.report.v1.schema.json",
+  "title": "BAV unified Java/Reaper security report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "scanner",
+    "repository",
+    "verdict",
+    "risk_score",
+    "findings_count",
+    "findings",
+    "components",
+    "policy",
+    "scan"
+  ],
+  "properties": {
+    "schema": {
+      "const": "bav.security.report.v1"
+    },
+    "scanner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      }
+    },
+    "repository": {
+      "type": "string"
+    },
+    "verdict": {
+      "enum": [
+        "blocked",
+        "review",
+        "clear"
+      ]
+    },
+    "risk_score": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "findings_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "rule_id",
+          "severity",
+          "enforcement",
+          "path",
+          "line",
+          "message",
+          "remediation",
+          "component"
+        ],
+        "properties": {
+          "rule_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "severity": {
+            "enum": [
+              "critical",
+              "high",
+              "medium",
+              "low",
+              "info"
+            ]
+          },
+          "enforcement": {
+            "enum": [
+              "block",
+              "review",
+              "governance",
+              "observe"
+            ]
+          },
+          "path": {
+            "type": "string"
+          },
+          "line": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1
+          },
+          "message": {
+            "type": "string"
+          },
+          "remediation": {
+            "type": "string"
+          },
+          "component": {
+            "enum": [
+              "beelzebul",
+              "java_guard"
+            ]
+          }
+        }
+      }
+    },
+    "components": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "beelzebul",
+        "java_guard"
+      ],
+      "properties": {
+        "beelzebul": {
+          "$ref": "#/$defs/component"
+        },
+        "java_guard": {
+          "$ref": "#/$defs/component"
+        }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "canonical",
+        "beelzebul_rules",
+        "java_guard_rules",
+        "secret_values_in_reports"
+      ],
+      "properties": {
+        "canonical": {
+          "type": "string"
+        },
+        "beelzebul_rules": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "java_guard_rules": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "secret_values_in_reports": {
+          "const": false
+        }
+      }
+    },
+    "scan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "root",
+        "tracked_paths",
+        "text_files_scanned",
+        "bytes_scanned",
+        "read_only",
+        "project_code_executed"
+      ],
+      "properties": {
+        "root": {
+          "type": "string"
+        },
+        "tracked_paths": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "text_files_scanned": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bytes_scanned": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "read_only": {
+          "const": true
+        },
+        "project_code_executed": {
+          "const": false
+        }
+      }
+    }
+  },
+  "$defs": {
+    "component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "verdict",
+        "risk_score",
+        "findings_count",
+        "rules_total"
+      ],
+      "properties": {
+        "verdict": {
+          "enum": [
+            "blocked",
+            "review",
+            "clear",
+            "unknown"
+          ]
+        },
+        "risk_score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "findings_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rules_total": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}
