@@ -113,8 +113,8 @@ class Lexer:
             source_bytes = len(self.source.encode("utf-8", errors="strict"))
         except UnicodeEncodeError as error:
             prefix = self.source[:error.start]
-            line = prefix.count("\\n") + 1
-            column = len(prefix.rsplit("\\n", 1)[-1]) + 1
+            line = prefix.count("\n") + 1
+            column = len(prefix.rsplit("\n", 1)[-1]) + 1
             raise LexError(
                 f"{self.filename}:{line}:{column}: source contains an invalid Unicode surrogate"
             ) from error
@@ -122,11 +122,11 @@ class Lexer:
             raise LexError(
                 f"{self.filename}: source exceeds the {MAX_SOURCE_BYTES}-byte UTF-8 limit"
             )
-        nul_index = self.source.find("\\0")
+        nul_index = self.source.find("\0")
         if nul_index >= 0:
             prefix = self.source[:nul_index]
-            line = prefix.count("\\n") + 1
-            column = len(prefix.rsplit("\\n", 1)[-1]) + 1
+            line = prefix.count("\n") + 1
+            column = len(prefix.rsplit("\n", 1)[-1]) + 1
             raise LexError(f"{self.filename}:{line}:{column}: NUL is not allowed in source text")
         while not self._at_end():
             char = self._peek()
