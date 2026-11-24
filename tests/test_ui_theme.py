@@ -1,5 +1,6 @@
 from reaper.ui_theme import (
-    PALETTES, palette_contrast_issues, palette_for,
+    PALETTES, apply_native_backdrop, native_backdrop_policy,
+    palette_contrast_issues, palette_for,
 )
 
 
@@ -30,3 +31,12 @@ def test_every_palette_meets_ui_ux_40026_text_contrast():
     for name, palette in PALETTES.items():
         assert required_status_tokens.issubset(palette), name
         assert palette_contrast_issues(palette) == [], name
+
+
+
+def test_native_backdrop_uses_windows_mica_with_portable_fallback():
+    assert native_backdrop_policy("win32") == "mica"
+    assert native_backdrop_policy("linux") == "opaque"
+    assert native_backdrop_policy("darwin") == "opaque"
+    if __import__("sys").platform != "win32":
+        assert apply_native_backdrop(object()) is False
