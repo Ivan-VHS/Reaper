@@ -26,11 +26,11 @@ class FrontendLimitTests(unittest.TestCase):
 
     def test_rejects_embedded_nul_with_source_location(self) -> None:
         with self.assertRaisesRegex(LexError, r"nul.*2:3"):
-            Lexer("a\nb\\0c", "nul.rpr").tokenize()
+            Lexer("a\nb\0c", "nul.rpr").tokenize()
 
     def test_rejects_unpaired_surrogates_before_tokenization(self) -> None:
         with self.assertRaisesRegex(LexError, "invalid Unicode surrogate"):
-            Lexer("emit \\ud800", "surrogate.rpr").tokenize()
+            Lexer("emit \ud800", "surrogate.rpr").tokenize()
 
     def test_normal_source_and_unicode_positions_are_unchanged(self) -> None:
         tokens = tokenize('emit "Привет"\nemit 2', "unicode.rpr")
