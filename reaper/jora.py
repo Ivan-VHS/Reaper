@@ -7,6 +7,7 @@ specification-only packs are executable applications.
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import json
 import re
@@ -224,7 +225,7 @@ def _safe_slug(value: str) -> str:
 
 def list_components() -> list[dict[str, Any]]:
     """Return the public catalogue as detached records."""
-    return [{"id": identifier, **dict(spec)} for identifier, spec in _COMPONENTS.items()]
+    return [{"id": identifier, **copy.deepcopy(spec)} for identifier, spec in _COMPONENTS.items()]
 
 
 def compose_application(request: dict[str, Any]) -> dict[str, Any]:
