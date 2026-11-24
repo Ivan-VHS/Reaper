@@ -385,8 +385,13 @@ def _validate_generated_sources(root: Path) -> dict[str, Any]:
     warnings = 0
     for source_path in sorted(root.rglob("*.rpr")):
         source = source_path.read_text(encoding="utf-8")
-        tree = parse(source, str(source_path))
-        result = TypeChecker(str(source_path)).check(tree)
+        try:
+            tree = parse(source, str(source_path))
+            result = TypeChecker(str(source_path)).check(tree)
+        except Exception as error:
+            raise JoraError(
+                f"generated Reaper source could not be parsed or checked: {error}"
+            ) from error
         errors = [item for item in result.diagnostics if item.severity == "error"]
         if errors:
             details = "; ".join(
