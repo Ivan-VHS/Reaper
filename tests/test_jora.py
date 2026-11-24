@@ -51,6 +51,9 @@ class JoraCompositionTests(unittest.TestCase):
         self.assertEqual(result["name"], "Documents Workspace")
 
     def test_application_names_are_independent_and_platform_name_is_rejected(self):
+        legacy_request = self.request()
+        legacy_request.pop("application_name_policy")
+        self.assertEqual(compose_application(legacy_request)["naming"]["product_name_policy"], APPLICATION_NAME_POLICY)
         self.assertEqual(compose_application(self.request(name="Sonaris"))["name"], "Sonaris")
         with self.assertRaisesRegex(JoraError, "must not contain the platform name"):
             compose_application(self.request(name="Jora Audio"))
