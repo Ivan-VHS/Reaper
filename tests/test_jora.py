@@ -23,9 +23,9 @@ class JoraCompositionTests(unittest.TestCase):
 
     def test_example_formula_and_dependency_closure(self):
         result = compose_application(self.request())
-        self.assertEqual(result["formula"]["expression"], "Text Editor + Audio Editor + Translator = Jora")
-        self.assertEqual(result["formula"]["result"], "Jora")
-        self.assertEqual(result["name"], "Jora")
+        self.assertEqual(result["formula"]["expression"], "Text Editor + Audio Editor + Translator → Documents, Media & Languages Workspace")
+        self.assertEqual(result["formula"]["result"], "Documents, Media & Languages Workspace")
+        self.assertEqual(result["name"], "Documents, Media & Languages Workspace")
         self.assertEqual(result["locales"], ["en", "ru", "uk", "most"])
         self.assertEqual(result["preferred_locale"], "ru")
         self.assertEqual(result["implementation"]["canonical_language"], "reaper")
@@ -45,28 +45,31 @@ class JoraCompositionTests(unittest.TestCase):
         self.assertEqual(first["id"], second["id"])
         self.assertNotEqual(first["id"], reverse["id"])
 
-    def test_single_component_is_still_named_jora(self):
+    def test_single_component_gets_an_independent_default_name(self):
         result = compose_application(self.request(components=["text.editor"]))
-        self.assertEqual(result["name"], "Jora")
+        self.assertEqual(result["name"], "Text Editor")
 
-    def test_component_combinations_never_create_separate_product_names(self):
-        with self.assertRaisesRegex(JoraError, "fixed application name"):
-            compose_application(self.request(name="OtherProduct"))
-        self.assertEqual(compose_application(self.request(name="Jora"))["name"], "Jora")
+    def test_application_names_are_independent_and_platform_name_is_rejected(self):
+        self.assertEqual(compose_application(self.request(name="Sonaris"))["name"], "Sonaris")
+        with self.assertRaisesRegex(JoraError, "must not contain the platform name"):
+            compose_application(self.request(name="Jora Audio"))
+        with self.assertRaisesRegex(JoraError, "must not contain the platform name"):
+            compose_application(self.request(name="Jora"))
 
-    def test_naming_variants_keep_the_single_jora_brand(self):
+    def test_naming_variants_are_independent_product_descriptors(self):
         result = compose_application(self.request(name_style="balanced"))
         naming = result["naming"]
-        self.assertEqual(naming["canonical_name"], "Jora")
+        self.assertEqual(naming["platform"], "Jora")
+        self.assertEqual(naming["product_name_policy"], "independent_application_brand")
         self.assertEqual(naming["version"], "jora-naming.v2")
         self.assertEqual(naming["selected"]["style"], "balanced")
-        self.assertEqual(naming["selected"]["label"], "Jora — Documents, Media & Languages Workspace")
+        self.assertEqual(naming["selected"]["label"], "Documents, Media & Languages Workspace")
         compact = compose_application(self.request(name_style="compact"))
-        self.assertEqual(compact["naming"]["selected"]["label"], "Jora · Docs / Audio / Translate")
+        self.assertEqual(compact["naming"]["selected"]["label"], "Docs / Audio / Translate Workspace")
         descriptive = compose_application(self.request(name_style="descriptive"))
-        self.assertEqual(descriptive["naming"]["selected"]["label"], "Jora | Workspace for writing, audio editing & translation")
+        self.assertEqual(descriptive["naming"]["selected"]["label"], "Workspace for writing, audio editing & translation")
         self.assertGreaterEqual(len(naming["suggestions"]), 3)
-        self.assertTrue(all(item["label"].startswith("Jora") for item in naming["suggestions"]))
+        self.assertTrue(all("Jora" not in item["label"] for item in naming["suggestions"]))
         self.assertIn("Media", naming["descriptors"])
 
     def test_graph_variants_are_distinct_deterministic_and_well_formed(self):
@@ -191,7 +194,7 @@ class JoraCompositionTests(unittest.TestCase):
 
     def test_build_writes_project_manifest_and_locales(self):
         with tempfile.TemporaryDirectory() as directory:
-            output = Path(directory) / "Jora"
+            output = Path(directory) / "Sonaris"
             result = build_application(self.request(), output)
             self.assertTrue(result["ok"])
             self.assertFalse(result["installable"])
@@ -212,8 +215,9 @@ class JoraCompositionTests(unittest.TestCase):
             manifest = json.loads((output / "jora.app.json").read_text(encoding="utf-8"))
             self.assertEqual(manifest["id"], result["application_id"])
             self.assertFalse(manifest["installable"])
-            self.assertEqual(manifest["name"], "Jora")
-            self.assertEqual(manifest["naming"]["canonical_name"], "Jora")
+            self.assertEqual(manifest["name"], "Documents, Media & Languages Workspace")
+            self.assertEqual(manifest["naming"]["platform"], "Jora")
+            self.assertNotIn("Jora", manifest["name"])
             lock = json.loads((output / "jora.lock.json").read_text(encoding="utf-8"))
             self.assertEqual(lock["name_style"], manifest["naming"]["style"])
             self.assertEqual(lock["naming_label"], manifest["naming"]["selected"]["label"])
