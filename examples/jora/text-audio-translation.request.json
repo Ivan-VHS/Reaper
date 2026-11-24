@@ -1,6 +1,6 @@
 {
   "schema": "reaper.jora.request.v1",
-  "name": "",
+  "name": "Jora",
   "description": "A unified workspace for editing text, working with audio and translating documents.",
   "components": [
     "text.editor",
