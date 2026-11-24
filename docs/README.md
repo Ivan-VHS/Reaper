@@ -48,6 +48,8 @@
 | [REAPER_UNIFIED_ARCHITECTURE.md](REAPER_UNIFIED_ARCHITECTURE.md) | native destination and language invariants |
 | [MOST_LANGUAGE_SPEC.md](MOST_LANGUAGE_SPEC.md) | exact Russian aliases |
 | [PROJECT_FEDERATION_MATRIX.md](PROJECT_FEDERATION_MATRIX.md) | peer-project boundaries and integrations |
+| [FEDERATED_INTEGRATION.md](FEDERATED_INTEGRATION.md) | OCTA-8 specialist mesh versus DuckOS host integration boundaries |
+| [DUCKOS_HARDWARE_AUDIT.md](DUCKOS_HARDWARE_AUDIT.md) | read-only DuckOS hardware snapshot validation and diagnostic report contract |
 | [THREADS_AND_FEDERATION.md](THREADS_AND_FEDERATION.md) | implementation and integration evidence |
 | [ATOMIC_QUANTUM_133.md](ATOMIC_QUANTUM_133.md) | 133 stable operation IDs, eight tested classical simulation kernels and hardware boundary |
 | [../LANGUAGE.md](../LANGUAGE.md) | syntax quick reference |\n| [POLYGLOT_CAPABILITY_LAYER.md](POLYGLOT_CAPABILITY_LAYER.md) | capability mapping inspired by 15 industrial languages, implementation status and migration gates |

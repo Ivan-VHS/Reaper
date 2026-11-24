@@ -196,7 +196,8 @@
               "reaper",
               "pytyliki",
               "oplague",
-              "ventusample"
+              "ventusample",
+              "duckos"
             ]
           },
           "interface": {
@@ -207,7 +208,8 @@
             "enum": [
               "native-ffi",
               "json-file",
-              "shared-contract"
+              "shared-contract",
+              "subprocess"
             ]
           },
           "status": {
