@@ -14,7 +14,7 @@ The composition formula is:
 
 Example:
 
-\`Text Editor + Audio Editor + Translator = Jora\`
+\`Text Editor + Audio Editor + Translator → Sonaris\`
 
 A formula composes capability contracts; it does not concatenate arbitrary executable binaries. Each component declares a stable ID, version, provided interfaces, required interfaces, conflicts and maturity.
 
@@ -22,10 +22,10 @@ A formula composes capability contracts; it does not concatenate arbitrary execu
 
 Jora is the platform identity, never the generated application name. The naming engine derives independent product-name candidates from component domains and produces four name styles:
 
-- compact: `Jora · Docs / Audio / Translate`;
-- balanced: `Jora — Documents & Audio & Languages Workspace`;
-- descriptive: `Jora | Workspace for Documents & Audio & Languages`;
-- formula: `Jora — Text + Audio + Translation`.
+- compact: `Docs / Audio / Translate Workspace`;
+- balanced: `Documents, Media & Languages Workspace`;
+- descriptive: `Workspace for writing, audio editing & translation`;
+- formula: `Text + Audio + Translation Workspace`.
 
 The request may supply an explicit `name`; otherwise the selected `name_style` (`compact`, `balanced`, `descriptive` or `formula`) chooses a deterministic candidate. Names containing `Jora` are rejected. The manifest preserves the independent application name, platform metadata, semantic descriptors, selected label and all suggestions.
 
