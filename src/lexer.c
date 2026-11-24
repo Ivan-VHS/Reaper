@@ -152,7 +152,7 @@ int reaper_lex(const char *source,ReaperTokenArray *out,ReaperLexError *error){
    if(!closed){free(decoded);reaper_tokens_free(out);return fail(error,sl,sc,"unterminated string literal");}
    decoded[used]='\0';if(!append_token(out, REAPER_TOK_STRING,decoded,used,sl,sc, &token_limit_exceeded)){free(decoded);goto oom;}free(decoded);continue;
   }
-  if(isdigit(c)){const char *s=p;size_t sc=col;while(isdigit((unsigned char)*p)){++p;++col;}if(*p=='.'&&isdigit((unsigned char)p[1])){++p;++col;while(isdigit((unsigned char)*p)){++p;++col;}}if(!append_token(out,REAPER_TOK_NUMBER,s,(size_t)(p-s),line,sc))goto oom;continue;}
+  if(isdigit(c)){const char *s=p;size_t sc=col;while(isdigit((unsigned char)*p)){++p;++col;}if(*p=='.'&&isdigit((unsigned char)p[1])){++p;++col;while(isdigit((unsigned char)*p)){++p;++col;}}if(!append_token(out,REAPER_TOK_NUMBER,s,(size_t)(p-s),line,sc,&token_limit_exceeded))goto oom;continue;}
   if(ident_start(c)){const char *s=p;size_t sc=col;while(ident_more((unsigned char)*p)){advance_column(&col,(unsigned char)*p);++p;}size_t n=(size_t)(p-s);char *w=malloc(n+1);if(!w)goto oom;memcpy(w,s,n);w[n]='\0';ReaperTokenKind k=is_keyword(w)?REAPER_TOK_KEYWORD:REAPER_TOK_IDENTIFIER;free(w);if(!append_token(out, k,s,n,line,sc, &token_limit_exceeded))goto oom;continue;}
   size_t sc=col;
   if(p[0]&&p[1]&&p[2]){
