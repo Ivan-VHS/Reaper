@@ -6,7 +6,7 @@ provenance; a later backend can lower it without losing source diagnostics.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any, ClassVar, Mapping
 
 from .parser import Node, parse
@@ -297,6 +297,7 @@ class IRDiagnostic:
 class IRTypeCheckResult:
     return_type: str
     diagnostics: tuple[IRDiagnostic, ...]
+    typed_module: SemanticIR
 
     @property
     def ok(self) -> bool:
@@ -314,12 +315,55 @@ class IRTypeChecker:
         self.variables = dict(variables or {})
         self.functions = dict(functions or {})
         self.diagnostics: list[IRDiagnostic] = []
+        self._inferred_types: dict[int, str] = {}
 
     def check(self, module: SemanticIR) -> IRTypeCheckResult:
         self.diagnostics.clear()
+        self._inferred_types.clear()
         verify_semantic_ir(module)
         inferred = self._infer(module.root)
-        return IRTypeCheckResult(inferred, tuple(self.diagnostics))
+        typed_root = self._annotate_types(module.root)
+        typed_module = SemanticIR(module.version, module.source_name, typed_root)
+        verify_semantic_ir(typed_module)
+        return IRTypeCheckResult(inferred, tuple(self.diagnostics), typed_module)
+
+    def _infer(self, node: IRNode) -> str:
+        cached = self._inferred_types.get(node.node_id)
+        if cached is not None:
+            return cached
+        inferred = self._infer_node(node)
+        self._inferred_types[node.node_id] = inferred
+        return inferred
+
+    def _annotate_types(self, node: IRNode) -> IRNode:
+        inferred = self._inferred_types.get(node.node_id, "Any")
+        if isinstance(node, IRVar):
+            return replace(node, inferred_type=inferred)
+        if isinstance(node, IRLiteral):
+            return replace(node, inferred_type=inferred)
+        if isinstance(node, IRIntrinsic):
+            return replace(node, inferred_type=inferred)
+        if isinstance(node, IRList):
+            return replace(
+                node,
+                inferred_type=inferred,
+                items=tuple(self._annotate_types(item) for item in node.items),
+            )
+        if isinstance(node, IRIndex):
+            return replace(
+                node,
+                inferred_type=inferred,
+                collection=self._annotate_types(node.collection),
+                index=self._annotate_types(node.index),
+            )
+        if isinstance(node, IRCall):
+            return replace(
+                node,
+                inferred_type=inferred,
+                callee=self._annotate_types(node.callee),
+                arguments=tuple(self._annotate_types(item) for item in node.arguments),
+            )
+        raise SemanticIRVerificationError(f"cannot attach inferred type to {node.kind}")
 
     def _report(self, node: IRNode, code: str, message: str) -> None:
         self.diagnostics.append(IRDiagnostic(code, message, node.span, node.node_id, node.kind))
@@ -367,7 +411,7 @@ class IRTypeChecker:
             return "Number"
         return f"Union[{left},{right}]"
 
-    def _infer(self, node: IRNode) -> str:
+    def _infer_node(self, node: IRNode) -> str:
         if isinstance(node, IRLiteral):
             if node.value is None:
                 return "Nothing"
@@ -408,8 +452,13 @@ class IRTypeChecker:
             return "Any"
         if isinstance(node, IRCall):
             if isinstance(node.callee, IRIntrinsic):
+                self._inferred_types[node.callee.node_id] = "Function"
                 return self._infer_intrinsic(node)
             if isinstance(node.callee, IRVar):
+                self._inferred_types[node.callee.node_id] = (
+                    self.variables.get(node.callee.name, "Function")
+                    if node.callee.name in self.variables else "Function"
+                )
                 return self._infer_named_call(node, node.callee.name)
             self._infer(node.callee)
             for argument in node.arguments:
