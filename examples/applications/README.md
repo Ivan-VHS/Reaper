@@ -10,7 +10,7 @@ python -m reaper examples/applications/telemetry_guard.rpr
 Run all application tests:
 
 ~~~sh
-python -m unittest tests.test_application_examples -v
+python -m unittest discover -s tests -p test_application_examples.py -v
 ~~~
 
 The executable language uses craft, make, vary, change, yield, emit, when, otherwise, each, loop while, lists, indexing, and the collection-flow operator ::. The applications intentionally use positional list records because the current grammar does not yet implement object/map literals, property access, anonymous functions, or the fn/match syntax shown in the original conceptual sketches.
