@@ -41,9 +41,8 @@ class LineIndex:
 
     def __init__(self, source: str) -> None:
         self.source = source
+        # str.split preserves the final empty line after a trailing LF.
         self._lines = source.split("\n")
-        if not self._lines or source.endswith("\n"):
-            self._lines.append("")
         self._line_start_chars = [0]
         self._line_start_bytes = [0]
         byte_offset = 0
