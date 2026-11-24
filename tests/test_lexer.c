@@ -122,7 +122,7 @@ static void test_source_size_limit_is_enforced(void){
  ReaperTokenArray tokens={0};ReaperLexError error={{0},0,0};
  assert(source!=NULL);
  memset(source,'a',(size_t)REAPER_MAX_SOURCE_BYTES+1u);
- source[(size_t)REAPER_MAX_SOURCE_BYTES+1u]='\\0';
+ source[(size_t)REAPER_MAX_SOURCE_BYTES+1u]='\0';
  assert(!reaper_lex(source,&tokens,&error));
  assert(tokens.length==0u);
  assert(strstr(error.message,"16 MiB")!=NULL);
