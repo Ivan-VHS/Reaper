@@ -838,6 +838,35 @@ def _validate_generated_sources(root: Path) -> dict[str, Any]:
     }
 
 
+def _mermaid_node_id(value: str) -> str:
+    safe = re.sub(r"[^A-Za-z0-9_]", "_", value)
+    suffix = hashlib.sha256(value.encode("utf-8")).hexdigest()[:8]
+    return "node_" + safe[:40] + "_" + suffix
+
+
+def _render_mermaid_graph(graph: dict[str, Any]) -> str:
+    """Render a graph variant as a deterministic Mermaid flowchart."""
+    lines = [
+        "flowchart LR",
+        f'  %% {graph["label"]} · {graph["signature"]}',
+    ]
+    for node in graph["nodes"]:
+        label = str(node["label"]).replace('"', "'").replace("\n", " ")
+        maturity = str(node["maturity"]).replace('"', "'")
+        lines.append(
+            f'  {_mermaid_node_id(node["id"])}["{label} · {maturity}"]'
+        )
+    for edge in graph["edges"]:
+        relation = re.sub(r"[^A-Za-z0-9 _:-]", "", str(edge["relation"])).strip()
+        if edge.get("delivery") == "asynchronous":
+            relation += " · async"
+        lines.append(
+            f'  {_mermaid_node_id(edge["from"])} -->|{relation}| '
+            f'{_mermaid_node_id(edge["to"])}'
+        )
+    return "\n".join(lines) + "\n"
+
+
 def build_application(request: dict[str, Any], output: str | Path) -> dict[str, Any]:
     application = compose_application(request)
     raw_output = Path(output).expanduser()
@@ -891,6 +920,9 @@ def build_application(request: dict[str, Any], output: str | Path) -> dict[str, 
             "jora.graphs.json",
             json.dumps(application["graphs"], ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         )
+        for index, graph in enumerate(application["graphs"]["variants"], start=1):
+            diagram_path = f"graphs/variant-{index:02d}.mmd"
+            _write_text(staging, diagram_path, _render_mermaid_graph(graph))
         lock = {
             "schema": "reaper.jora.lock.v1",
             "application_id": application["id"],
@@ -915,7 +947,8 @@ def build_application(request: dict[str, Any], output: str | Path) -> dict[str, 
             "- locales/: generated EN/RU/UK/MOST interface dictionaries.\n"
             "- jora.app.json: versioned application manifest.\n"
             "- jora.lock.json: resolved component, dependency, naming and graph versions.\n"
-            "- jora.graphs.json: reproducible graph variants, nodes, typed edges and compatibility metrics.\n\n"
+            "- jora.graphs.json: reproducible graph variants, nodes, typed edges and compatibility metrics.\n"
+            "- graphs/variant-*.mmd: readable Mermaid diagrams for each graph alternative.\n\n"
             "## Maturity\n\n"
             "This directory is a reproducible scaffold, not an installable application. "
             "The selected feature packs are specification-only. Storage, translation and "
