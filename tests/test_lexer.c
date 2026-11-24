@@ -129,6 +129,19 @@ static void test_source_size_limit_is_enforced(void){
  assert(strstr(error.message,"16 MiB")!=NULL);
  free(source);
 }
+
+static void test_token_count_limit_is_enforced(void){
+ const size_t count=(size_t)REAPER_MAX_TOKENS;
+ char *source=(char *)malloc(count*2u+1u);
+ ReaperTokenArray tokens={0};ReaperLexError error={{0},0,0};
+ assert(source!=NULL);
+ for(size_t i=0u;i<count;i++){source[i*2u]='x';source[i*2u+1u]=' ';}
+ source[count*2u]='\\0';
+ assert(!reaper_lex(source,&tokens,&error));
+ assert(tokens.length==0u);
+ assert(strstr(error.message,"262144-token limit")!=NULL);
+ free(source);
+}
 static void test_invalid_utf8_is_rejected(void){
  const char invalid[]="emit \xC0\xAF";
  ReaperTokenArray tokens={0};ReaperLexError error={{0},0,0};
@@ -153,4 +166,4 @@ static void test_utf8_columns_count_codepoints(void){
  }
  assert(found);reaper_tokens_free(&t);
 }
-int main(void){test_program();test_escape();test_bad_escape();test_unterminated();test_most_surface();test_most_operator_family();test_most_russian_vocabulary();test_most_extended_aliases();test_utf8_columns_count_codepoints();test_invalid_utf8_is_rejected();test_invalid_utf8_reports_line_and_column();test_source_size_limit_is_enforced();puts("native lexer tests: 12 groups passed");return 0;}
+int main(void){test_program();test_escape();test_bad_escape();test_unterminated();test_most_surface();test_most_operator_family();test_most_russian_vocabulary();test_most_extended_aliases();test_utf8_columns_count_codepoints();test_invalid_utf8_is_rejected();test_invalid_utf8_reports_line_and_column();test_source_size_limit_is_enforced();test_token_count_limit_is_enforced();puts("native lexer tests: 13 groups passed");return 0;}
