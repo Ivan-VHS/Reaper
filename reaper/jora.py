@@ -77,8 +77,6 @@ _COMPONENTS: dict[str, dict[str, Any]] = {
         "provides": ["text.document", "text.search", "text.formatting", "text.history"],
         "requires": ["document.model", "storage.local", "localization.catalog"],
         "conflicts": [],
-        "name_token": "Lexi",
-        "single_name": "LexiDesk",
         "maturity": "specification_only",
     },
     "audio.editor": {
@@ -89,8 +87,6 @@ _COMPONENTS: dict[str, dict[str, Any]] = {
         "provides": ["audio.asset", "audio.timeline", "audio.editing"],
         "requires": ["media.model", "timeline.model", "storage.local"],
         "conflicts": [],
-        "name_token": "Tone",
-        "single_name": "SonicLab",
         "maturity": "specification_only",
     },
     "translation.workspace": {
@@ -101,8 +97,6 @@ _COMPONENTS: dict[str, dict[str, Any]] = {
         "provides": ["translation.workspace", "translation.terminology", "translation.review"],
         "requires": ["document.model", "localization.catalog", "translation.provider"],
         "conflicts": [],
-        "name_token": "Lingua",
-        "single_name": "LinguaDesk",
         "maturity": "specification_only",
     },
 }
@@ -209,13 +203,9 @@ def _resolve_dependencies(component_ids: list[str]) -> list[str]:
     return ordered
 
 
-def _generated_name(component_ids: list[str]) -> str:
-    if len(component_ids) == 1:
-        return str(_COMPONENTS[component_ids[0]]["single_name"])
-    first = str(_COMPONENTS[component_ids[0]]["name_token"])
-    second = str(_COMPONENTS[component_ids[1]]["name_token"])
-    suffix = f" {len(component_ids)}D" if len(component_ids) > 2 else ""
-    return first + second + suffix
+def _generated_name() -> str:
+    """Every application composed by this unified product is named Jora."""
+    return "Jora"
 
 
 def _safe_slug(value: str) -> str:
@@ -253,10 +243,10 @@ def compose_application(request: dict[str, Any]) -> dict[str, Any]:
     if syntax_mode != "flow":
         raise JoraError("the current generated Reaper source supports only the 'flow' syntax profile")
 
-    custom_name = _text(request.get("name", ""), "name", 80, optional=True)
-    display_name = custom_name or _generated_name(component_ids)
-    if not _NAME_RE.fullmatch(display_name):
-        raise JoraError("name contains unsupported characters")
+    requested_name = _text(request.get("name", "Jora"), "name", 80, optional=True)
+    if requested_name and requested_name != "Jora":
+        raise JoraError("Jora is the fixed application name; component formulas do not create separately named products")
+    display_name = _generated_name()
     description = _text(request.get("description", ""), "description", 500, optional=True)
 
     raw_targets = request.get("language_targets", "auto")
@@ -343,7 +333,8 @@ def compose_application(request: dict[str, Any]) -> dict[str, Any]:
         "name": display_name,
         "description": description or " + ".join(_COMPONENTS[item]["name"] for item in component_ids),
         "formula": {
-            "expression": " + ".join(_COMPONENTS[item]["name"] for item in component_ids),
+            "expression": " + ".join(_COMPONENTS[item]["name"] for item in component_ids) + " = Jora",
+            "result": "Jora",
             "components": component_ids,
         },
         "components": components,
