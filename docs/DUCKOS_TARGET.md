@@ -37,6 +37,6 @@ Architecture-specific bootstrap assembly may remain as a small reviewed boundary
 
 A kernel milestone may be promoted from planned only after a real Reaper-generated target object exists, its sections/relocations/undefined symbols are inspected, the approved linker produces a reproducible image, and the image boots in the selected QEMU machine profile with a serial marker. Reference runtime execution and VM tests are necessary but insufficient evidence.
 
-See the DuckOS migration roadmap for the 19-source baseline, G0–G7 phase gates and the cross-repository CI loop.
+See the DuckOS migration roadmap for the 20-source baseline, G0–G7 phase gates and the cross-repository CI loop.
 
 The companion implementation record is in the [DuckOS repository migration roadmap](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/REAPER_MIGRATION.md) and its [machine-readable migration contract](https://github.com/Ivan-VHS/DuckOS/blob/main/duckos/reaper-migration.v1.json). The DuckOS submodule pin must be advanced to a reviewed Reaper commit before this target profile is consumed by that checkout.
