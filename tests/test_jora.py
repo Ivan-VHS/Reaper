@@ -54,6 +54,62 @@ class JoraCompositionTests(unittest.TestCase):
             compose_application(self.request(name="LexiTone"))
         self.assertEqual(compose_application(self.request(name="Jora"))["name"], "Jora")
 
+    def test_naming_variants_keep_the_single_jora_brand(self):
+        result = compose_application(self.request(name_style="balanced"))
+        naming = result["naming"]
+        self.assertEqual(naming["canonical_name"], "Jora")
+        self.assertEqual(naming["version"], "jora-naming.v2")
+        self.assertEqual(naming["selected"]["style"], "balanced")
+        self.assertGreaterEqual(len(naming["suggestions"]), 3)
+        self.assertTrue(all(item["label"].startswith("Jora") for item in naming["suggestions"]))
+        self.assertIn("Audio & Media", naming["descriptors"])
+
+    def test_graph_variants_are_distinct_deterministic_and_well_formed(self):
+        first = compose_application(self.request(graph={"topology": "auto", "seed": "demo", "variants": 4, "variation": 65}))
+        second = compose_application(self.request(graph={"topology": "auto", "seed": "demo", "variants": 4, "variation": 65}))
+        changed = compose_application(self.request(graph={"topology": "auto", "seed": "other", "variants": 4, "variation": 65}))
+        graphs = first["graphs"]["variants"]
+        self.assertEqual([item["signature"] for item in graphs],
+                         [item["signature"] for item in second["graphs"]["variants"]])
+        self.assertEqual(len({item["signature"] for item in graphs}), 4)
+        self.assertNotEqual(first["graphs"]["variants"][0]["signature"],
+                            changed["graphs"]["variants"][0]["signature"])
+        for graph in graphs:
+            node_ids = {node["id"] for node in graph["nodes"]}
+            self.assertEqual(len(node_ids), len(graph["nodes"]))
+            self.assertTrue(all(edge["from"] in node_ids and edge["to"] in node_ids for edge in graph["edges"]))
+            self.assertGreaterEqual(graph["metrics"]["compatibility_score"], 0)
+
+    def test_event_graph_marks_feedback_edges_as_async(self):
+        result = compose_application(self.request(graph={"topology": "event_driven", "variants": 1, "variation": 0}))
+        graph = result["graphs"]["variants"][0]
+        self.assertEqual(graph["topology"], "event_driven")
+        self.assertEqual(graph["cycle_policy"]["dependency_edges"], "acyclic")
+        self.assertIn("asynchronous", graph["cycle_policy"]["event_feedback"])
+        self.assertTrue(any(edge.get("delivery") == "asynchronous" for edge in graph["edges"]))
+
+    def test_pipeline_graph_respects_component_formula_order(self):
+        result = compose_application(self.request(graph={"topology": "pipeline", "variants": 1, "variation": 0}))
+        edges = result["graphs"]["variants"][0]["edges"]
+        self.assertIn({
+            "from": "component:text.editor",
+            "to": "component:audio.editor",
+            "relation": "workflow_next",
+        }, edges)
+        self.assertIn({
+            "from": "component:audio.editor",
+            "to": "component:translation.workspace",
+            "relation": "workflow_next",
+        }, edges)
+
+    def test_invalid_graph_options_are_rejected(self):
+        with self.assertRaisesRegex(JoraError, "unsupported graph topology"):
+            compose_application(self.request(graph={"topology": "random_mesh"}))
+        with self.assertRaisesRegex(JoraError, "graph.variants"):
+            compose_application(self.request(graph={"variants": True}))
+        with self.assertRaisesRegex(JoraError, "unknown graph fields"):
+            compose_application(self.request(graph={"topology": "auto", "shell_command": "no"}))
+
     def test_auto_locales_and_aliases(self):
         result = compose_application(self.request(locales="auto", preferred_locale="uk-UA"))
         self.assertEqual(result["locales"], ["en", "ru", "uk", "most"])
@@ -89,6 +145,9 @@ class JoraCompositionTests(unittest.TestCase):
             self.assertFalse(result["source_executed"])
             self.assertEqual(result["validation"]["status"], "passed")
             self.assertEqual(result["validation"]["files_checked"], 4)
+            self.assertTrue((output / "jora.graphs.json").is_file())
+            graph_payload = json.loads((output / "jora.graphs.json").read_text(encoding="utf-8"))
+            self.assertEqual(graph_payload["schema"], "reaper.jora.graph-set.v1")
             self.assertTrue((output / "src/main.rpr").is_file())
             self.assertTrue((output / "src/components/text_editor.rpr").is_file())
             self.assertTrue((output / "locales/en.json").is_file())
