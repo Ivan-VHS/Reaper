@@ -41,7 +41,7 @@ class LineIndex:
 
     def __init__(self, source: str) -> None:
         self.source = source
-        self._lines = source.splitlines()
+        self._lines = source.split("\\n")
         if not self._lines or source.endswith("\n"):
             self._lines.append("")
         self._line_start_chars = [0]
@@ -56,7 +56,8 @@ class LineIndex:
     def line_text(self, line: int) -> str:
         if line < 1 or line > len(self._lines):
             return ""
-        return self._lines[line - 1]
+        text = self._lines[line - 1]
+        return text[:-1] if text.endswith("\r") else text
 
     def byte_position(self, offset: int) -> tuple[int, int]:
         if offset < 0:
