@@ -27,7 +27,7 @@ Jora is the platform identity, never the generated application name. The naming 
 - descriptive: `Workspace for writing, audio editing & translation`;
 - formula: `Text + Audio + Translation Workspace`.
 
-The request may supply an explicit `name`; otherwise the selected `name_style` (`compact`, `balanced`, `descriptive` or `formula`) chooses a deterministic candidate. Names containing `Jora` are rejected. The manifest preserves the independent application name, platform metadata, semantic descriptors, selected label and all suggestions.
+The request may supply an explicit `name`; otherwise the selected `name_style` (`compact`, `balanced`, `descriptive` or `formula`) chooses a deterministic candidate. Every candidate and final application name is validated against the bound `application_name_policy`; any case or compatibility-normalized occurrence of `Jora` is rejected. The policy is carried by DuckOS in the request, revalidated by Reaper, and recorded in the generated manifest. Platform metadata, graph nodes and store labels may still identify Jora because they are not application product names. The manifest preserves the independent application name, platform metadata, semantic descriptors, selected label and all validated suggestions.
 
 ## Composition graph engine
 
@@ -59,8 +59,8 @@ The complete graph set is embedded in `jora.app.json` and exported separately as
 
 ## Composition pipeline
 
-1. Capture selected capability packs, the fixed Jora identity, naming style, UI locales and graph-generation preferences.
-2. Validate a versioned request, closed component IDs, unique selections and bounded collection sizes.
+1. Capture selected capability packs, the Jora platform identity, an independent application name, and graph-generation preferences. The request binds `application_name_policy=no_platform_brand_in_application_name`.
+2. Validate a versioned request, the immutable application-name policy, closed component IDs, unique selections and bounded collection sizes. Reaper independently rejects `Jora` in every application name, including case and compatibility-normalized variants.
 3. Resolve dependency closure in deterministic dependency-first order; reject unknown edges and cycles.
 4. Check component conflicts and incompatible options.
 5. Choose Reaper as the canonical source generator. Other compiler targets are reported as pending until implemented and tested.
