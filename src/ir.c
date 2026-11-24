@@ -26,6 +26,8 @@ int reaper_ir_verify(const ReaperIrModule *module, ReaperIrError *error) {
 
     for (size_t i = 0; i < module->length; ++i) {
         const ReaperIrNode *node = &module->nodes[i];
+        if (node->source_end_offset < node->source_start_offset)
+            return reject(error, i, "source span end precedes start");
         switch (node->opcode) {
         case REAPER_IR_OP_CONST_I64:
             if (node->type != REAPER_IR_TYPE_I64)

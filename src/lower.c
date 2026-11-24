@@ -75,7 +75,7 @@ static int lower_node(
         ReaperIrNode constant = {
             REAPER_IR_OP_CONST_I64, REAPER_IR_TYPE_I64,
             REAPER_IR_NO_VALUE, REAPER_IR_NO_VALUE, (int64_t)parsed,
-            line, column
+            line, column, node->start_offset, node->end_offset
         };
         return append_node(output, capacity, length, constant, result, error, ast_index);
     }
@@ -91,7 +91,8 @@ static int lower_node(
             return 0;
         }
         ReaperIrNode add = {
-            REAPER_IR_OP_ADD_I64, REAPER_IR_TYPE_I64, lhs, rhs, 0, line, column
+            REAPER_IR_OP_ADD_I64, REAPER_IR_TYPE_I64, lhs, rhs, 0, line, column,
+            node->start_offset, node->end_offset
         };
         return append_node(output, capacity, length, add, result, error, ast_index);
     }
@@ -132,7 +133,7 @@ int reaper_lower_ast_to_ir(
     }
     ReaperIrNode ret = {
         REAPER_IR_OP_RETURN, REAPER_IR_TYPE_UNIT, value,
-        REAPER_IR_NO_VALUE, 0, line, column
+        REAPER_IR_NO_VALUE, 0, line, column, root->start_offset, root->end_offset
     };
     uint32_t ignored = 0;
     if (!append_node(output, output_capacity, &length, ret, &ignored, error, ast->root)) {

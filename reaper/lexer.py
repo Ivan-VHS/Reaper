@@ -80,11 +80,50 @@ KEYWORD_ALIASES = {
 
 
 @dataclass(frozen=True, slots=True)
+class Span:
+    """Half-open source range; offsets are UTF-8 bytes, lines/columns are 1-based."""
+
+    source_name: str
+    start_offset: int
+    end_offset: int
+    start_line: int
+    start_column: int
+    end_line: int
+    end_column: int
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "file": self.source_name,
+            "start_offset": self.start_offset,
+            "end_offset": self.end_offset,
+            "start": {"line": self.start_line, "column": self.start_column},
+            "end": {"line": self.end_line, "column": self.end_column},
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class Token:
     kind: str
     value: str
     line: int
     column: int
+    start_offset: int = 0
+    end_offset: int = 0
+    end_line: int | None = None
+    end_column: int | None = None
+    source_name: str = "<memory>"
+
+    @property
+    def span(self) -> Span:
+        return Span(
+            self.source_name,
+            self.start_offset,
+            self.end_offset,
+            self.line,
+            self.column,
+            self.end_line if self.end_line is not None else self.line,
+            self.end_column if self.end_column is not None else self.column,
+        )
 
 
 class Lexer:
@@ -97,6 +136,7 @@ class Lexer:
         self.source = source
         self.filename = filename
         self.index = 0
+        self.byte_offset = 0
         self.line = 1
         self.column = 1
         self.tokens: list[Token] = []
@@ -111,8 +151,11 @@ class Lexer:
             if char in " \t\r":
                 self._advance()
             elif char == "\n":
-                self._token("NEWLINE", "\n")
+                start_offset, start_line, start_column = self.byte_offset, self.line, self.column
                 self._advance()
+                self._append_token(self._make_token(
+                    "NEWLINE", "\n", start_offset, start_line, start_column
+                ))
             elif char == "#":
                 self._skip_comment()
             elif char == '"':
@@ -123,7 +166,9 @@ class Lexer:
                 self._identifier()
             else:
                 self._operator_or_punctuation()
-        self._append_token(Token("EOF", "", self.line, self.column))
+        self._append_token(self._make_token(
+            "EOF", "", self.byte_offset, self.line, self.column
+        ))
         return self.tokens
 
     def _at_end(self) -> bool:
@@ -136,6 +181,7 @@ class Lexer:
     def _advance(self) -> str:
         char = self.source[self.index]
         self.index += 1
+        self.byte_offset += len(char.encode("utf-8"))
         if char == "\n":
             self.line += 1
             self.column = 1
@@ -151,14 +197,21 @@ class Lexer:
             )
         self.tokens.append(token)
 
-    def _token(self, kind: str, value: str) -> None:
-        self._append_token(Token(kind, value, self.line, self.column))
+    def _make_token(
+        self, kind: str, value: str,
+        start_offset: int, start_line: int, start_column: int,
+    ) -> Token:
+        return Token(
+            kind, value, start_line, start_column,
+            start_offset, self.byte_offset, self.line, self.column, self.filename,
+        )
 
     def _skip_comment(self) -> None:
         while not self._at_end() and self._peek() != "\n":
             self._advance()
 
     def _string(self) -> None:
+        start_offset = self.byte_offset
         start_line, start_column = self.line, self.column
         self._advance()
         value: list[str] = []
@@ -181,10 +234,13 @@ class Lexer:
         if self._at_end():
             raise LexError(f"{self.filename}:{start_line}:{start_column}: unterminated string literal")
         self._advance()
-        self._append_token(Token("STRING", "".join(value), start_line, start_column))
+        self._append_token(self._make_token(
+            "STRING", "".join(value), start_offset, start_line, start_column
+        ))
 
     def _number(self) -> None:
         start = self.index
+        start_offset = self.byte_offset
         start_line, start_column = self.line, self.column
         while self._peek().isdigit():
             self._advance()
@@ -192,10 +248,13 @@ class Lexer:
             self._advance()
             while self._peek().isdigit():
                 self._advance()
-        self._append_token(Token("NUMBER", self.source[start:self.index], start_line, start_column))
+        self._append_token(self._make_token(
+            "NUMBER", self.source[start:self.index], start_offset, start_line, start_column
+        ))
 
     def _identifier(self) -> None:
         start = self.index
+        start_offset = self.byte_offset
         start_line, start_column = self.line, self.column
         while self._peek().isalnum() or self._peek() == "_":
             self._advance()
@@ -204,26 +263,35 @@ class Lexer:
         kind = canonical.upper() if canonical is not None else (
             value.upper() if value in KEYWORDS else "IDENT"
         )
-        self._append_token(Token(kind, value, start_line, start_column))
+        self._append_token(self._make_token(
+            kind, value, start_offset, start_line, start_column
+        ))
 
     def _operator_or_punctuation(self) -> None:
+        start_offset = self.byte_offset
         start_line, start_column = self.line, self.column
         triplet = self.source[self.index:self.index + 3]
         if token_is_reserved(triplet):
             for _ in range(3):
                 self._advance()
-            self._append_token(Token("CATALOG_OPERATOR", triplet, start_line, start_column))
+            self._append_token(self._make_token(
+                "CATALOG_OPERATOR", triplet, start_offset, start_line, start_column
+            ))
             return
         pair = self._peek() + self._peek(1)
         if pair in self._TWO_CHAR:
             self._advance()
             self._advance()
-            self._append_token(Token(pair, pair, start_line, start_column))
+            self._append_token(self._make_token(
+                pair, pair, start_offset, start_line, start_column
+            ))
             return
         char = self._peek()
         if char in self._ONE_CHAR or char == "=":
             self._advance()
-            self._append_token(Token(char, char, start_line, start_column))
+            self._append_token(self._make_token(
+                char, char, start_offset, start_line, start_column
+            ))
             return
         raise LexError(f"{self.filename}:{self.line}:{self.column}: unexpected character {char!r}")
 

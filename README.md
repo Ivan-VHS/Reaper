@@ -4,7 +4,7 @@
 
 <p align="center"><img src="assets/readme/dashboard.svg" alt="Reaper project overview" width="100%"></p>
 
-[Source](https://github.com/Ivan-VHS/Reaper) · [Python CI](.github/workflows/ci.yml) · [Windows Studio build](.github/workflows/desktop-build.yml) · [Node.js compatibility](.github/workflows/noo-tah.yml) · [Docs index](docs/README.md) · [Apache-2.0](LICENSE)
+[Source](https://github.com/Ivan-VHS/Reaper) · [Python CI](.github/workflows/ci.yml) · [Windows Studio build](.github/workflows/desktop-build.yml) · [Node.js compatibility](.github/workflows/noo-tah.yml) · [Docs index](docs/README.md) · [Repository adoption standard](docs/REAPER_REPOSITORY_ADOPTION_STANDARD.md) · [Source spans](docs/SOURCE_SPANS.md) · [Apache-2.0](LICENSE)
 
 ## Live Studio capture
 
@@ -24,6 +24,12 @@ Implemented path: `.rpr` source → lexer and parser → Python reference runtim
 
 
 > **Scope:** Reaper is evolving into a low-level systems language and hardware development workbench while preserving the existing .rpr language and Python compatibility runtime. It is a local developer tool and Windows desktop IDE, not a hosted web service. Documentation was checked against the feature branch on **2026-11-23**.
+
+## Source provenance and unified lowering
+
+The Python frontend now carries half-open UTF-8 byte-range `Span` data from lexer tokens into the canonical stack IR. `CanonicalIR.source_map` provides a deterministic instruction-to-source mapping, including the original source name. The native C17 expression slice carries UTF-8 byte offsets from tokens through AST nodes into IR nodes, alongside the existing 1-based line/column coordinates. The coordinate and encoding contract is documented in [Source spans](docs/SOURCE_SPANS.md).
+
+`MOST` remains an exact lexical alias profile, not an independent grammar: aliases normalize to canonical Reaper tokens. The same source-provenance expectations apply to every syntax profile. This does not make the native C17 frontend a complete implementation of the Python language runtime; see the [repository adoption standard](docs/REAPER_REPOSITORY_ADOPTION_STANDARD.md) for supported boundaries and project-specific integration roles.
 
 ## Purpose and implementation status
 

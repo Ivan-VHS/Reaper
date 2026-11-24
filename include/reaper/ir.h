@@ -35,6 +35,9 @@ typedef struct {
     int64_t immediate;
     uint32_t source_line;
     uint32_t source_column;
+    /* Half-open UTF-8 byte offsets in the original source buffer. */
+    size_t source_start_offset;
+    size_t source_end_offset;
 } ReaperIrNode;
 
 typedef struct {

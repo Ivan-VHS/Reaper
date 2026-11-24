@@ -30,6 +30,10 @@ static void lowers_integer_addition(void) {
     assert(nodes[1].opcode == REAPER_IR_OP_CONST_I64 && nodes[1].immediate == 23);
     assert(nodes[2].opcode == REAPER_IR_OP_ADD_I64 && nodes[2].lhs == 0 && nodes[2].rhs == 1);
     assert(nodes[3].opcode == REAPER_IR_OP_RETURN && nodes[3].lhs == 2);
+    assert(nodes[0].source_start_offset == 0u && nodes[0].source_end_offset == 2u);
+    assert(nodes[1].source_start_offset == 5u && nodes[1].source_end_offset == 7u);
+    assert(nodes[2].source_start_offset == 0u && nodes[2].source_end_offset == 7u);
+    assert(nodes[3].source_start_offset == 0u && nodes[3].source_end_offset == 7u);
     ReaperIrModule module = { nodes, length };
     assert(reaper_ir_verify(&module, &error));
     reaper_ast_free(&ast);
