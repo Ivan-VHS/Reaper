@@ -114,6 +114,12 @@ class JoraCompositionTests(unittest.TestCase):
             with self.assertRaisesRegex(JoraError, "symbolic link"):
                 build_application(self.request(), link)
 
+    def test_catalog_records_do_not_mutate_internal_component_contracts(self):
+        items = list_components()
+        items[0]["provides"].append("tampered.capability")
+        refreshed = next(item for item in list_components() if item["id"] == "text.editor")
+        self.assertNotIn("tampered.capability", refreshed["provides"])
+
     def test_catalog_is_closed_and_first_party(self):
         items = list_components()
         self.assertEqual({item["id"] for item in items},
