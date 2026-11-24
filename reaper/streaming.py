@@ -79,6 +79,8 @@ class StreamValue:
         _state: _StreamState | None = None,
         _stages: tuple[tuple[str, Callable[[Any], Any]], ...] = (),
     ) -> None:
+        if isinstance(max_items, bool) or not isinstance(max_items, int) or max_items < 1:
+            raise ValueError("stream max_items must be a positive whole number")
         if _state is not None:
             self._state = _state
             self._stages = _stages
