@@ -411,7 +411,7 @@
               },
               "label": {
                 "type": "string",
-                "pattern": "^Jora"
+                "pattern": "^(?!.*[Jj][Oo][Rr][Aa]).+$"
               },
               "style": {
                 "enum": [
@@ -495,7 +495,7 @@
               },
               "label": {
                 "type": "string",
-                "pattern": "^Jora"
+                "pattern": "^(?!.*[Jj][Oo][Rr][Aa]).+$"
               },
               "topology": {
                 "enum": [
