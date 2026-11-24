@@ -613,7 +613,7 @@ class Interpreter:
                 raise TypeError("expected text or a number")
             normalized = value.strip() if isinstance(value, str) else value
             if isinstance(normalized, str) and not re.fullmatch(
-                r"[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?",
+                r"[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?",
                 normalized,
             ):
                 raise ValueError("expected a decimal number")
@@ -636,7 +636,7 @@ class Interpreter:
             pattern = (
                 r"^[0-9]{4}-[0-9]{2}-[0-9]{2}[Tt]"
                 r"[0-9]{2}:[0-9]{2}:[0-9]{2}"
-                r"(?:\\.[0-9]+)?(?:[Zz]|[+-][0-9]{2}:[0-9]{2})$"
+                r"(?:\.[0-9]+)?(?:[Zz]|[+-][0-9]{2}:[0-9]{2})$"
             )
             if not re.fullmatch(pattern, value):
                 raise ValueError("expected an RFC 3339 timestamp with an explicit timezone")
@@ -697,15 +697,16 @@ class Interpreter:
             except TypeError as error:
                 raise TypeError("map_alter() key must be hashable") from error
             callback(function)
-            current = mapping.get(key)
-            updated = self._call(function, [present, current], map_alter_token)
-            result = dict(mapping)
-            result[key] = updated
-            if len(result) > self.max_collection_items:
+            if not present and len(mapping) >= self.max_collection_items:
                 raise ValueError(
                     f"collection item limit ({self.max_collection_items}) exceeded"
                 )
-            return result
+            current = mapping.get(key)
+            updated = self._call(function, [present, current], map_alter_token)
+            # Commit only after the callback succeeds, so a failed update
+            # leaves the original map unchanged.
+            mapping[key] = updated
+            return mapping
 
         def map_values_transform(mapping: Any, function: Any) -> dict[Any, Any]:
             if not isinstance(mapping, dict):
