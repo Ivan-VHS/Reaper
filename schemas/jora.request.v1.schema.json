@@ -12,6 +12,9 @@
     "schema": {
       "const": "reaper.jora.request.v1"
     },
+    "application_name_policy": {
+      "const": "no_platform_brand_in_application_name"
+    },
     "name": {
       "type": "string",
       "minLength": 1,
