@@ -1,30 +1,30 @@
 # Documentation control
 
-| # | Gate | Acceptance |
-|---:|---|---|
-| 1 | Evidence | implemented claims point to code/tests |
-| 2 | Status | implemented / partial / planned / not applicable |
-| 3 | Privacy | no private files, secrets or local identifiers |
-| 4 | Contract | exact syntax, formats, limits and exclusions |
-| 5 | Compatibility | version public changes and migration |
-| 6 | Review | links, commands and numeric claims verified |
+**Scope:** Reaper README family, technical documentation, diagrams, screenshots and public language/runtime contracts.
 
-## Internal information architecture
+## Acceptance gates
 
-| # | Gate | Acceptance |
-|---:|---|---|
-| 7 | Topic ownership | Every important page belongs to one primary topic cluster and is listed in the central map. |
-| 8 | Navigation depth | Important contracts are reachable within three to four steps from the root README. |
-| 9 | No orphan pages | Each important page has at least two useful incoming paths, normally the catalog and its topic hub. |
-| 10 | Contextual relationships | Link language, compiler, runtime, IDE and integration pages where a real dependency or workflow exists. |
-| 11 | Descriptive anchors | Anchor text identifies the destination; do not use vague labels or over-optimized repeated keywords. |
-| 12 | Capability consistency | README, hub, detailed contract, source and tests agree on capability status, syntax, limits and compatibility. |
-| 13 | Canonical paths | Use direct relative links within the repository and canonical HTTPS links across repositories; avoid avoidable redirects and duplicates. |
-| 14 | Breadcrumbs | Topic hubs link to documentation home and the parent information map; add equivalent breadcrumbs to new deep-level pages. |
-| 15 | Link density | Add links where they help the reader; avoid repetitive blocks and link-heavy paragraphs. |
-| 16 | Publication propagation | Add new pages to the hub and catalog in the same change and link them from relevant existing material. |
-| 17 | Link maintenance | Check changed and moved paths; periodically audit for broken or obsolete links. |
-| 18 | Measurement | Track navigation only on supported published surfaces with privacy-respecting analytics; do not claim GitHub Markdown click telemetry. |
-| 19 | Accessibility | Use meaningful anchor text, normal same-tab internal navigation and rendered links that remain usable on small screens. |
+| Gate | Requirement |
+|---|---|
+| Evidence | Implemented claims link to source, tests, schemas or CI |
+| Maturity | Separate implemented, partial, specified, planned and verified |
+| Runtime parity | Python reference and native C17 status are never conflated |
+| Platform | State Windows-only Studio and local stdio service boundaries |
+| Trust | Document FFI opt-in, interpreter limitations and optional Node integration |
+| Localization | English, Ukrainian, Russian and Chinese entry points match in meaning and commands |
+| Visual provenance | Screenshots are real captures; workflow art is an illustration |
+| Adaptive hero | Light/dark SVGs share dimensions and have accessible fallback text |
+| Navigation | Important pages are reachable from the index and information map |
+| Review | Verify links, examples, Mermaid and git diff --check |
 
-The [information architecture map](INFORMATION_ARCHITECTURE.md) is the navigation source for this repository. It does not override implementation evidence or promote planned features to implemented status.
+## Maturity vocabulary
+
+- **Implemented:** behavior exists in current source.
+- **Partial:** only a subset exists.
+- **Specified:** contract/design exists, implementation is not complete.
+- **Planned:** future work without an available implementation.
+- **Verified:** a named test/check passed on a stated revision and environment.
+
+## Publication checklist
+
+Update the README and the owning language/runtime contract together when behavior changes. A catalog or design document does not prove compiler conformance. A passing Python test suite does not prove native C17 parity.

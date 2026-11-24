@@ -1,282 +1,125 @@
-# Reaper — 面向系统编程与硬件开发的低层语言及工作台
 
-[English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/hero-banner-dark.svg"><source media="(prefers-color-scheme: light)" srcset="assets/readme/hero-banner-light.svg"><img src="assets/readme/hero-banner-light.svg" alt="Reaper 系统编程语言与开发工作台" width="880"></picture></p>
+<h1 align="center">Reaper — 系统编程语言与开发工作台</h1>
+<p align="center"><strong>Flow-first 语言，提供 Python 参考运行时、CLI、Windows Studio、stdio LSP/DAP 服务，以及独立演进的部分 native C17 路径。</strong></p>
+<p align="center"><a href="https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml"><img alt="Python CI" src="https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/ci.yml?branch=main&style=flat-square&label=Python%20CI"></a> <a href="https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml"><img alt="Windows Studio" src="https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/desktop-build.yml?branch=main&style=flat-square&label=Windows%20Studio"></a> <a href="LICENSE"><img alt="Apache-2.0" src="https://img.shields.io/github/license/Ivan-VHS/Reaper?style=flat-square"></a></p>
 
-<p align="center"><img src="assets/readme/dashboard.svg" alt="Reaper 项目概览" width="100%"></p>
+[快速开始](#快速开始) · [Revival 更新](#文档-revival-更新) · [视觉概览](#视觉概览) · [架构](#架构) · [文档索引](docs/README.md)
 
-[源代码仓库](https://github.com/Ivan-VHS/Reaper) · [Python CI](.github/workflows/ci.yml) · [Windows Studio 构建](.github/workflows/desktop-build.yml) · [Node.js 兼容性](.github/workflows/noo-tah.yml) · [文档索引](docs/README.md) · [Apache-2.0](LICENSE)
-
-## Studio 实际截屏
-
-<p align="center"><a href="assets/screenshots/reaper-studio.png"><img src="assets/screenshots/reaper-studio.png" alt="Reaper 在 Windows 上运行的实际截屏" width="100%"></a></p>
-<p align="center"><sub>1920×1080 · 点击图片查看原始 PNG 文件。</sub></p>
-
-这是由本仓库 README 截图工作流从 Windows 上真实运行的 Reaper Studio 窗口截取的画面。横幅和流程图是原创 SVG 插图，并非软件截图。
-
-### 架构一览
-
-<p align="center"><img src="assets/readme/workflow.svg" alt="Reaper implemented data flow" width="100%"></p>
-
-实际流程：`.rpr` 源码 → lexer 与 parser → Python 参考运行时 → CLI、Studio、LSP 和 DAP。
-
-
-[![Python CI](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/ci.yml?branch=main&label=Python%20CI)](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml)  [![Live Studio capture](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/readme-screenshots.yml?branch=main&label=Live%20Studio%20capture)](https://github.com/Ivan-VHS/Reaper/actions/workflows/readme-screenshots.yml)  [![License](https://img.shields.io/github/license/Ivan-VHS/Reaper)](LICENSE)
-
-
-> **项目范围：** Reaper 正在转向面向固件、嵌入式软件、平台组件和硬件邻近开发的低层系统语言，同时保留现有 .rpr 语言与 Python 兼容运行时。它是本地开发工具和 Windows 桌面 IDE，而不是托管 Web 服务。状态核对日期：**2026-11-23**。
-
-## 项目用途与实现状态
-
-Reaper 正在成为面向固件、嵌入式程序、平台组件和硬件相关软件的系统编程语言。现有的 `::` 流式组合语法仍会保留，同时继续维护 Python 参考运行时、CLI/REPL、Windows Studio、stdio LSP/DAP 和可选的 NOO TAH 集成。
-
-**当前已有：**受限的 C17 标量 AOT 编译路径、部分 C17 lexer/parser/IR 核心、用于验证硬件描述的 QCS 前端、带链接脚本生成的 MCU 配置文件，以及仅通过宿主适配器调用的受检 MMIO 描述符 API。
-
-**仍在开发：**完整的静态类型/所有权/效果检查、通用机器码后端、`.rpr` 硬件语法、实际 OS/驱动 MMIO/IRQ/DMA 服务，以及完整的硬件开发 Studio 工作区。阶段计划与准确边界见 [Hardware Language](docs/HARDWARE_LANGUAGE.md)。
-
-目标用户包括嵌入式和固件开发者、系统程序员、平台/驱动工程师、编译器开发者与教育工作者。
-
-### 已实现的组件
-
-| 组件 | 当前范围 | 明确边界 |
-|---|---|---|
-| Python Runtime | lexer、parser、interpreter、CLI、REPL、模块、闭包、配额与审计日志 | 当前可执行参考实现 |
-| 静态类型分析 | 推断基础类型与列表元素类型，检查运算符、索引、可变性和调用参数数量 | 部分实现；已集成到 `reaper --check`、Studio 和 LSP |
-| Reaper Studio | Windows IDE 基础、项目树/编辑器/debugger，以及显示 MCU 配置和能力边界的 Systems/Hardware 概览 | 本地桌面应用；尚无实时设备寄存器查看器 |
-| LSP | stdio JSON-RPC、诊断、补全、hover、符号、词法导航、文档格式化和局部类型检查 | 每个已打开文档独立；不提供跨文件类型推断 |
-| Toolchain 清单 | 通过 PATH 查找编译器、构建工具、解析器、格式化工具、调试器和 WASM 运行时，并固定 SHA-256 | 仅执行路径查找与哈希；不会运行找到的程序 |
-| DAP | stdio 调试适配器、行断点、单步、堆栈和局部变量 | 语句边界调试；仅适用于可信本地程序 |
-| NOO TAH | 管理官方 Node.js 运行时、项目/进程、npm/npx 和 Inspector | Node/V8/libuv 由上游 Node 提供 |
-| Native C17 + MMIO | lexer、表达式 parser、owned AST、checked i64 IR、有限 lowering 和受检 MMIO 适配器契约 | 实验性部分实现；不映射物理内存，也不等于 Python Runtime |
-| QCS / Embedded | 独立硬件领域 parser、JSON AST 和有界嵌入式辅助工具 | 参考/分析工具，不执行硬件操作 |
-| Kora | 七个清单模块中的可选标准库辅助函数 | 与 Reaper 语言运行时分离 |
-
-目录和注册表可能包含提案或预留条目。出现在目录中不代表该功能已在运行时实现。成熟度和边界见 [Features](docs/FEATURES.md)、[Polyglot capability layer](docs/POLYGLOT_CAPABILITY_LAYER.md)、[REAPER IDE](docs/REAPER_IDE.md)、[NOO TAH](docs/NOO_TAH.md) 和 [Kora helpers](docs/KORA.md)。
-
-下图是 Windows Studio 的实际桌面截屏，不是浏览器 Playground。
-
-
-## 相关操作系统产品：DuckOS
-
-七款 Mora 应用（Cockos、Kavun、Ka-bon、Gloverty、Po、Illidia 和 Unify）在独立的 [DuckOS 项目](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/PREINSTALLED_APPLICATIONS.md)中定义。它们属于操作系统应用层，并不是 Reaper 的组成部分。本仓库不声称随附这些应用或提供其操作系统服务。Reaper 自身的能力和接口仍以本仓库的源代码、测试和版本化契约为准。
+> **实现边界：**Python runtime 是可执行的兼容参考实现。Native C17 lexer/parser/IR/lowering 仅部分实现，并非完整编译器或通用机器码后端。Studio 仅支持 Windows。LSP/DAP 是本地 stdio 服务，不是托管 API。
 
 ## 快速开始
 
-### 环境要求
+**环境要求：**Python 3.10+、Git。Studio 需要 Tkinter。仅构建部分 native 路径时才需要 CMake 3.16+ 和 C17 编译器。NOO TAH 可选 Node.js。
 
-- Python **3.10 或更高版本**。CI 当前测试 Python 3.10、3.11 和 3.12。
-- Studio 图形界面需要 Tkinter（通常包含在标准 Python 发行版中；某些精简 Linux Python 包会将其拆分）。
-- Git。
-- 只有在构建部分原生路线时才需要 CMake **3.16+** 和 C17 编译器。
-- NOO TAH 的 Node.js 是可选项。兼容性工作流测试 Node.js **22 和 24**；运行 Reaper `.rpr` 程序并不需要它。
-
-Python 包在 `pyproject.toml` 中声明 `setuptools>=68` 为构建系统要求，但没有声明第三方运行时依赖列表。
-
-### 安装 Python 参考运行时
-
-```sh
+~~~sh
+git clone https://github.com/Ivan-VHS/Reaper.git
+cd Reaper
 python -m venv .venv
-# 激活环境：
 # Windows PowerShell: .venv\Scripts\Activate.ps1
-# Linux / macOS:       source .venv/bin/activate
+# Linux/macOS: source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -e .
-```
-
-### 运行程序并打开 Studio
-
-```sh
 python -m reaper --check examples/flow.rpr
-python -m reaper --check --syntax-only examples/flow.rpr
-python -m reaper typecheck examples/flow.rpr --json
 python -m reaper examples/flow.rpr
-python -m reaper --repl
+~~~
+
+启动 Windows Studio：
+
+~~~sh
 python reaper_desktop.py
-```
+~~~
 
-完成 editable installation 后，还可使用 `reaper`、`reaper-studio` 和 `reaper-toolchain` 入口命令。
+运行测试：
 
-本地工具清单与 SHA-256 lock 创建不会运行所发现的程序：
-
-```sh
-reaper-toolchain --output toolchain-inventory.json
-```
-
-### 运行测试
-
-```sh
-python -m compileall -q reaper tests
+~~~sh
 python -m unittest discover -s tests -v
-```
+~~~
 
-首次安装可能从包索引下载已声明的构建后端；此后程序在本地运行。应用没有 HTTP 端口、浏览器 URL、数据库 seed 步骤或独立 Mock Server。
+## 文档 Revival 更新
 
-### 可选的 Native C17 路线
+| 之前 | Revival 文档 |
+|---|---|
+| 单一静态横幅 | 浅色/深色主题匹配的 SVG Hero |
+| Python runtime 与 native compiler 容易混淆 | 明确区分 Python 参考实现和部分 native C17 |
+| Studio 截图与数据流程图混在一起 | 真实 Windows Studio 截屏与单独标注的流程示意图 |
+| 功能描述过于笼统 | 明确服务、平台和语言工具的限制 |
+| 导航冗长 | 主题索引、信息架构地图和发布规范 |
 
-```sh
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DREAPER_BUILD_TESTS=ON
-cmake --build build --parallel
-ctest --test-dir build --output-on-failure
-```
+这是文档更新，**不代表新的 Reaper 语言版本或 Release**。功能成熟度以源代码、测试和 [FEATURES.md](docs/FEATURES.md) 为准。
 
-该构建验证当前原生编译器子集及其测试。它不会替代 Python Runtime，也不代表完整语言兼容性。
+## 当前实现
 
-### 可选的 NOO TAH / Node.js 检查
-
-安装官方 Node.js 发行版，并将 `node` 加入 `PATH`，然后运行：
-
-```sh
-reaper-noo-tah version
-reaper-noo-tah doctor
-reaper-noo-tah check app.mjs
-reaper-noo-tah run app.mjs
-reaper-noo-tah npm run build
-```
-
-这些命令操作所选的本地 Node 项目。如果项目本身启动 HTTP Server，端口由该项目控制；Reaper 自身不提供 Web Preview URL。
-
-## 可复现工作流、示例与数据
-
-仓库中的示例是本地源程序，不是来自实时 API 的响应：
-
-- `examples/flow.rpr` 是基础语言 Smoke 示例。
-- `examples/device_audit.rpr` 演示只读审计流程，运行后会生成带版本号的 JSON 报告。
-- `tests/` 包含 parser、runtime、语言服务、debugger、注册表和集成测试。
-- NOO TAH 一致性测试覆盖 Node built-ins、ESM/CommonJS、streams、workers、child processes 和 loopback HTTP/TCP，不依赖公共测试服务。
-
-可按以下场景验证：
-
-1. **仅检查语法：**`python -m reaper --check examples/flow.rpr`；检查语法但不运行程序。
-2. **运行示例：**`python -m reaper examples/flow.rpr`；检查输出结果。
-3. **替代执行引擎：**`python -m reaper --engine vm examples/flow.rpr`；与默认 tree-walk 引擎比较。
-4. **交互式提示符：**`python -m reaper --repl`；退出后当前内存会话结束。
-5. **LSP 服务：**`python -m reaper lsp`；从 stdin 读取带帧的 JSON-RPC，并将协议消息写入 stdout。
-6. **DAP 服务：**`python -m reaper dap`；使用可信本地程序进行启动和语句级调试。
-7. **Node 兼容性：**`node --test tests/noo_tah/conformance.test.mjs`；测试使用 loopback networking 和 Node built-ins。
-
-CLI 设有明确的资源限制：默认最多一百万个执行步骤、100,000 个集合元素、一百万个文本字符、64 MiB managed heap，以及同时打开 64 个 managed files。可通过文档化 CLI 参数修改这些值。它们是解释器保护措施，不是操作系统级 Sandbox。
-
-运行时状态存在于进程内及操作者选择的文件中。可选的 `--audit-log PATH` 会追加本地 hash-chained 执行日志；`--verify-audit-log PATH` 用于校验日志。关闭进程会结束当前内存会话，但不会删除源文件或日志。项目没有浏览器 localStorage、sessionStorage、IndexedDB 或 Cookie 状态。
-
-## 配置、环境与信任边界
-
-仓库根目录没有 `.env.example`、Docker Compose Web Stack、托管账号系统、Demo 登录、CORS 策略或应用 HTTPS 配置。Python Runtime 不需要 Node.js。NOO TAH 有三个已文档化的环境变量覆盖项：
-
-| 变量 | 用途 | 默认值 / 行为 |
+| 组件 | 当前能力 | 边界 |
 |---|---|---|
-| `NOO_TAH_NODE` | Node 可执行文件路径 | 否则在 `PATH` 中查找 `node` |
-| `NOO_TAH_NPM_CLI` | 显式指定 `npm-cli.js` 路径 | 否则在所选 Node 安装附近的常见路径中查找 |
-| `NOO_TAH_NPX_CLI` | 显式指定 `npx-cli.js` 路径 | 否则在所选 Node 安装附近的常见路径中查找 |
+| Python 参考运行时 | Lexer、parser、interpreter、scopes、values、quotas、CLI/REPL | 兼容性参考实现 |
+| 静态分析 | check、Studio 和 LSP 中的保守 AST/type diagnostics | 仅静态分析，不执行源代码 |
+| Studio | Windows 编辑器/调试器、命令面板、MCU 配置视图 | 没有实时设备检查器 |
+| LSP | stdio、UTF-16 positions、本地诊断、completion、hover、symbols | 单文档；无跨文件类型推断 |
+| DAP | Launch、行断点、语句级单步、stack 和 locals | 仅支持文档列出的运行时子集 |
+| Native C17 | Lexer、表达式 parser、owned AST、checked i64 IR、有限 lowering | 部分实现，不具备完整语言一致性 |
+| QCS / 硬件契约 | 语法验证和 checked MMIO descriptor API | 无物理映射或完整设备运行时 |
+| NOO TAH | 可选的官方 Node.js 集成 | 运行 .rpr 不需要 Node.js |
 
-这些值是可执行文件路径，不是秘密。不要将 credentials 存入 source control。找不到 Node 时会提示 `Node.js not found`；找不到 npm/npx CLI 时会指出需要设置的覆盖变量。
+## 视觉概览
 
-其他重要开关：
+<table><tr><td width="50%"><a href="assets/screenshots/reaper-studio.png"><img src="assets/screenshots/reaper-studio.png" alt="Reaper Studio 在 Windows 上运行的实际截屏" width="100%"></a><p><sub><strong>真实 Studio 截屏</strong> — Windows desktop，1920×1080。</sub></p></td><td width="50%"><img src="assets/readme/workflow.svg" alt="Reaper 源码、解析器、Python runtime 与开发服务流程图" width="100%"><p><sub><strong>架构示意图</strong> — 已实现的数据路径，不是 UI 截图。</sub></p></td></tr></table>
 
-- `--check` / `--lint` 只解析程序，不执行。
-- `--engine treewalk|vm` 选择 Runtime Engine。
-- `--allow-native-ffi` 显式允许加载原生 C ABI；仅使用可信库。
-- `--steps`、`--items`、`--text-length`、`--heap-bytes` 和 `--open-resources` 设置资源限制。
+## 架构
 
-语言解释器不是 OS Sandbox。DAP 会启动可信本地文件；FFI 允许执行原生代码；npm 包安装和 lifecycle scripts 会以当前用户权限执行第三方代码。不要仅仅因为某个程序或包出现在 Demo 中就运行未知代码。
+~~~mermaid
+flowchart LR
+  A[.rpr source] --> B[Lexer 和 parser]
+  B --> C[AST 与 source spans]
+  C --> D[Python reference runtime]
+  D --> E[CLI / REPL]
+  D --> F[Windows Studio]
+  D --> G[stdio LSP / DAP]
+  C -. 部分路径 .-> H[Native C17 IR 和有限 lowering]
+  I[可选 Node.js] --> J[NOO TAH adapter]
+~~~
 
-LSP 和 DAP 通过标准输入/输出使用 Content-Length framed JSON-RPC，并非托管 HTTP API。显式请求时，Node Inspector 可以开放本地调试端点；该端点属于所选 Node 进程，而不是公开的 Reaper Web Stand。
+Native C17 被单独标注为部分实现，不与 Python 参考运行时等同。
 
-## Studio 操作与快捷键
+## 配置与信任
 
-Windows Studio 编辑器通过标准语言服务提供本地源码导航：
+项目没有托管 Web 服务、账户系统或根目录 .env。NOO TAH 支持以下可选路径变量：
 
-| 快捷键 / 操作 | 行为 |
+| 变量 | 用途 |
 |---|---|
-| `Ctrl+Space` | 为 Reaper 关键字、内置函数和当前文档符号提供本地补全 |
-| `F12` | 跳转到当前文档中的声明 |
-| Find references | 查找当前文档中的词法标识符出现位置 |
-| `Ctrl+Shift+R` | 确认后重命名当前文档中的词法匹配项 |
-| `Ctrl+K` | 打开命令面板 |
-| `Ctrl+Alt+K` | 打开 CODEX-66 能力目录 |
+| NOO_TAH_NODE | 指定 Node 可执行文件路径 |
+| NOO_TAH_NPM_CLI | 指定 npm-cli.js 路径 |
+| NOO_TAH_NPX_CLI | 指定 npx-cli.js 路径 |
 
-这些操作仅限当前文档，不提供跨文件语义重构。Conditional breakpoints、evaluate、step-out、完整类型推断以及云端 AI 助手均未被声明为已实现。
+常用开关包括 --check / --lint、--engine treewalk|vm、--allow-native-ffi，以及 --steps、--items、--text-length、--heap-bytes、--open-resources 等资源限制。FFI 默认关闭，必须显式启用。解释器不是 OS sandbox；仅运行可信程序和库。
 
-## 架构与仓库目录
+## 仓库结构
 
-```text
-Reaper source (.rpr)
-  -> Python lexer / parser / runtime
-  -> CLI, REPL or Studio
-  -> optional LSP / DAP stdio services
-
-JavaScript project
-  -> NOO TAH process manager
-  -> official Node.js (V8, libuv, npm, Inspector)
-
-Native C17 track
-  -> lexer / parser / AST / IR / limited lowering
-```
-
-| 路径 | 内容 |
+| 路径 | 职责 |
 |---|---|
-| `reaper/` | Python 参考运行时、CLI、Studio、语言/调试服务和 NOO TAH |
-| `reaper/kora/` | Kora 标准库辅助函数 |
-| `src/`、`include/` | 部分原生 C17 路线 |
-| `tests/` | Python、协议、运行时和原生测试 |
-| `examples/` | 本地 `.rpr` 示例程序 |
-| `docs/` | 语言、IDE、架构和功能边界文档 |
-| `editors/` | 编辑器支持与协议说明 |
-| `.github/workflows/` | CI、原生/桌面构建和 Node 兼容性 |
+| reaper/ | Python 语言前端、运行时与命令服务 |
+| native/ / src/ | 部分 C17 实现和 native 契约 |
+| examples/ | 可运行的 .rpr 程序 |
+| tests/ | Runtime、parser、诊断与集成测试 |
+| editors/vscode/ | 仅提供 VS Code 语法支持 |
+| docs/ | 语言、编译器、运行时、IDE 和硬件契约 |
+| assets/readme/ | 主题适配 Hero 和流程示意图 |
+| .github/workflows/ | Python CI、Windows Studio 和集成工作流 |
 
-该项目没有被拆分为已部署的 frontend、backend 和 Mock API。浏览器兼容性、浏览器存储、公共端口、CORS 和 HTTPS 不适用于 Reaper Runtime 本身。
+## 验证与路线图
 
-## CI、桌面产物与回滚
+~~~sh
+python -m unittest discover -s tests -v
+python -m reaper --check examples/flow.rpr
+git diff --check
+~~~
 
-- [Reaper CI](.github/workflows/ci.yml) 测试 Python 3.10/3.11/3.12，并验证示例与合同。
-- [NOO TAH 兼容性](.github/workflows/noo-tah.yml) 在 Windows、Linux 和 macOS 上测试 Node 22 和 24。
-- 原生 C17 路线单独构建和测试。
-- [Desktop build](.github/workflows/desktop-build.yml) 将 Windows Studio 打包为 `Reaper-Studio-windows-x64.zip`。匹配 `v*` 的 Git Tag 会触发 Release 发布。
+修改 native 路径时还需运行 CMake/CTest。当前成熟度和阶段见 [架构](docs/ARCHITECTURE.md)、[功能矩阵](docs/FEATURES.md)、[Hardware Language](docs/HARDWARE_LANGUAGE.md)、[IDE contract](docs/REAPER_IDE.md) 与 [信息架构地图](docs/INFORMATION_ARCHITECTURE.md)。
 
-Workflow Artifact 是可下载的构建结果，不是在线托管 IDE。回滚已分发桌面版本时，使用此前带标签的 GitHub Release。没有需要回滚的在线 Web 服务。构建日志和测试诊断可在 GitHub Actions 查看。
+## 参与开发
 
-## 故障排查
+请阅读 [CONTRIBUTING.md](CONTRIBUTING.md)、[README Visual Standard](docs/README_VISUAL_STANDARD.md) 和 [SECURITY.md](SECURITY.md)。Grammar、diagnostics、runtime quotas、LSP/DAP 和 native contracts 的改动应包含针对性回归测试。
 
-| 现象 | 检查方法 |
-|---|---|
-| 找不到 `python -m reaper` | 激活虚拟环境，或从仓库根目录运行 |
-| Studio 无法打开 | 检查所安装的 Python 是否包含 Tkinter |
-| 找不到 Node | 安装 Node.js，或通过 `NOO_TAH_NODE` 指定可执行文件路径 |
-| 找不到 npm/npx | 设置 `NOO_TAH_NPM_CLI` 或 `NOO_TAH_NPX_CLI` |
-| Node 项目构建失败 | 运行 `reaper-noo-tah doctor`，并检查 Node/npm 输出；lifecycle scripts 可能执行第三方代码 |
-| 原生 C 测试失败 | 检查 CMake 3.16+、C17 编译器和完整 CTest 输出 |
-| LSP/DAP 输出格式异常 | stdout 只用于协议帧；应用日志应写入 stderr |
+## 许可证
 
-## 已知限制、贡献与许可证
-
-Python 仍是当前可执行的兼容性参考实现。Native C17 parsing/lowering 仅部分实现。LSP symbols/references/rename 是词法级且仅限当前文档；DAP stepping 以语句为粒度；IDE 不是 OS Sandbox。NOO TAH 将 JavaScript 行为交给官方 Node，而不是自行重实现 V8。
-
-仓库的贡献流程、变更验证和 Pull Request 要求见 [CONTRIBUTING.md](CONTRIBUTING.md)。请通过 [GitHub Issues](https://github.com/Ivan-VHS/Reaper/issues) 或 Pull Request 提交改进。附上可复现的 `.rpr` 示例、Python/Node/compiler 版本以及准确命令和输出。运行 Python 测试；修改原生路线时还应运行 CMake/CTest。
-
-许可证：[Apache-2.0](LICENSE)。
-
-## README 与 66 条规则的对应关系
-
-根据真实的本地开发工具产品，对 Web Stand 规则进行映射：
-
-| 规则范围 | README 覆盖内容 |
-|---|---|
-| 1–11 · 用途与边界 | 说明语言/IDE 的目标、读者、可执行与部分实现路线、本地范围和没有托管 Demo |
-| 12–22 · 快速开始 | 提供准确的 Python 安装、CLI、Studio、测试、原生 C17 和可选 Node 命令 |
-| 23–33 · 配置与访问 | 记录三个真实的 NOO TAH 路径覆盖项、CLI 开关和信任边界；不虚构 credentials 或 `.env` |
-| 34–44 · 数据与行为 | 本地示例、测试场景、执行配额、审计日志生命周期、仅 loopback 的一致性测试和调试限制 |
-| 45–55 · 架构与构建 | 列出包、原生源码、示例、测试、服务和 CI 产物 |
-| 56–66 · 运维与支持 | 链接构建/发布工作流，说明产物回滚、诊断、已知限制、贡献方式和许可证 |
-
-**Reaper 没有公开的 Web Playground URL。** Studio 截图和可下载 Windows Artifact 不等于在线 Web Stand。
-
-## 统一报告封装
-
-可以将 JSON 输出包装为通用的 ivan-vhs.report.v1 元数据格式，同时保留 Reaper 的原始结果：
-
-    python tools/report_envelope.py --tool reaper --version VERSION < result.json
-
-请参阅 docs/REPORT_ENVELOPE.md 和 schemas/ivan-vhs.report.v1.schema.json。该封装保留工具数据并记录结果限制。
-
-
-## 文档导航图
-
-请从[文档索引](docs/README.md)进入，并使用[信息架构图](docs/INFORMATION_ARCHITECTURE.md)浏览语言、编译器、Runtime、Studio 和集成主题集群。主题入口链接到详细契约；实现状态仍以源代码、测试和 Schema 为准。
+[Apache-2.0](LICENSE)。
