@@ -9,6 +9,8 @@
     "version",
     "id",
     "name",
+    "naming",
+    "graphs",
     "description",
     "formula",
     "components",
@@ -276,6 +278,308 @@
       "minItems": 1,
       "items": {
         "type": "string"
+      }
+    },
+    "naming": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "brand",
+        "canonical_name",
+        "style",
+        "descriptors",
+        "selected",
+        "suggestions",
+        "rule"
+      ],
+      "properties": {
+        "version": {
+          "const": "jora-naming.v2"
+        },
+        "brand": {
+          "const": "Jora"
+        },
+        "canonical_name": {
+          "const": "Jora"
+        },
+        "style": {
+          "enum": [
+            "compact",
+            "balanced",
+            "descriptive",
+            "formula"
+          ]
+        },
+        "descriptors": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "selected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "label",
+            "style"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string",
+              "pattern": "^Jora"
+            },
+            "style": {
+              "enum": [
+                "compact",
+                "balanced",
+                "descriptive",
+                "formula"
+              ]
+            }
+          }
+        },
+        "suggestions": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "label",
+              "style"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string",
+                "pattern": "^Jora"
+              },
+              "style": {
+                "enum": [
+                  "compact",
+                  "balanced",
+                  "descriptive",
+                  "formula"
+                ]
+              }
+            }
+          }
+        },
+        "rule": {
+          "type": "string"
+        }
+      }
+    },
+    "graphs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "selected",
+        "topology_mode",
+        "seed",
+        "variant_count",
+        "variants"
+      ],
+      "properties": {
+        "schema": {
+          "const": "reaper.jora.graph-set.v1"
+        },
+        "selected": {
+          "type": "string"
+        },
+        "topology_mode": {
+          "enum": [
+            "auto",
+            "layered",
+            "pipeline",
+            "hub_spoke",
+            "plugin_mesh",
+            "event_driven",
+            "hybrid"
+          ]
+        },
+        "seed": {
+          "type": "string"
+        },
+        "variant_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 6
+        },
+        "variants": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "label",
+              "topology",
+              "seed",
+              "variation",
+              "signature",
+              "nodes",
+              "edges",
+              "metrics",
+              "cycle_policy"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string",
+                "pattern": "^Jora"
+              },
+              "topology": {
+                "enum": [
+                  "layered",
+                  "pipeline",
+                  "hub_spoke",
+                  "plugin_mesh",
+                  "event_driven",
+                  "hybrid"
+                ]
+              },
+              "seed": {
+                "type": "string"
+              },
+              "variation": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "signature": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{16}$"
+              },
+              "nodes": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 80,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "kind",
+                    "label",
+                    "maturity"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "kind": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "maturity": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "edges": {
+                "type": "array",
+                "maxItems": 256,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "from",
+                    "to",
+                    "relation"
+                  ],
+                  "properties": {
+                    "from": {
+                      "type": "string"
+                    },
+                    "to": {
+                      "type": "string"
+                    },
+                    "relation": {
+                      "type": "string"
+                    },
+                    "delivery": {
+                      "const": "asynchronous"
+                    }
+                  }
+                }
+              },
+              "metrics": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "node_count",
+                  "edge_count",
+                  "dependency_edges",
+                  "capability_connections",
+                  "planned_nodes",
+                  "compatibility_score"
+                ],
+                "properties": {
+                  "node_count": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "edge_count": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "dependency_edges": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "capability_connections": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "planned_nodes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "compatibility_score": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  }
+                }
+              },
+              "cycle_policy": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "dependency_edges",
+                  "event_feedback"
+                ],
+                "properties": {
+                  "dependency_edges": {
+                    "const": "acyclic"
+                  },
+                  "event_feedback": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   }
