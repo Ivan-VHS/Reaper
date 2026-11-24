@@ -1,4 +1,4 @@
-name: Beelzebul security gate
+name: Unified BAV security gate
 
 on:
   pull_request:
@@ -11,53 +11,74 @@ permissions:
   contents: read
 
 concurrency:
-  group: beelzebul-${{ github.workflow }}-${{ github.ref }}
+  group: bav-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   scan:
-    name: Beelzebul 66-rule scan
+    name: BAV Java/Reaper security scan
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - name: Checkout exact candidate and base history
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-      - name: Validate policy JSON and Schema shape
+      - name: Validate canonical Beelzebul policy and BAV report contract
         run: |
           python3 - <<'PY'
           import json
           from pathlib import Path
           policy = json.loads(Path("security/beelzebul.v1.json").read_text(encoding="utf-8"))
           schema = json.loads(Path("schemas/beelzebul.security.v1.schema.json").read_text(encoding="utf-8"))
+          report_schema = json.loads(Path("schemas/bav.security.report.v1.schema.json").read_text(encoding="utf-8"))
           assert policy["schema"] == "beelzebul.security.v1"
           assert policy["rule_count"] == len(policy["rules"]) == 66
           assert schema["properties"]["rules"]["maxItems"] == 66
+          assert report_schema["properties"]["schema"]["const"] == "bav.security.report.v1"
           PY
       - name: Run Beelzebul regression tests
         run: python3 -m unittest discover -s tests -p "test_beelzebul.py" -v
-      - name: Run read-only repository scan
+      - name: Compile Java Guard and run its self-test
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/bav-classes"
+          javac --release 17 -encoding UTF-8 -d "$RUNNER_TEMP/bav-classes" \
+            security/java/src/main/java/org/ivanvhs/bav/Bav.java \
+            security/java/src/test/java/org/ivanvhs/bav/BavSelfTest.java
+          java -Xms16m -Xmx256m -Dfile.encoding=UTF-8 \
+            -cp "$RUNNER_TEMP/bav-classes" org.ivanvhs.bav.BavSelfTest
+      - name: Run Reaper BAV adapter regression tests
+        run: python3 -m unittest discover -s tests -p "test_bav.py" -v
+      - name: Run unified Java/Reaper BAV scan
         env:
           BASE_REF: ${{ github.event.pull_request.base.sha || '' }}
         run: |
           set -euo pipefail
           ARGS=()
           if [ -n "$BASE_REF" ]; then ARGS+=(--base-ref "$BASE_REF"); fi
-          python3 tools/beelzebul.py --json --output "$RUNNER_TEMP/beelzebul-report.json" "${ARGS[@]}"
+          python3 -m reaper security scan --root . --policy security/beelzebul.v1.json \
+            --json --output "$RUNNER_TEMP/bav-report.json" "${ARGS[@]}"
           python3 - <<'PY'
           import json
           import os
           from pathlib import Path
-          report = json.loads(Path(os.environ["RUNNER_TEMP"] + "/beelzebul-report.json").read_text(encoding="utf-8"))
+          report = json.loads(Path(os.environ["RUNNER_TEMP"] + "/bav-report.json").read_text(encoding="utf-8"))
+          assert report["schema"] == "bav.security.report.v1"
+          assert report["findings_count"] == len(report["findings"])
+          assert set(report["components"]) == {"beelzebul", "java_guard"}
+          assert report["scan"]["read_only"] is True
+          assert report["scan"]["project_code_executed"] is False
           summary = Path(os.environ["GITHUB_STEP_SUMMARY"])
           summary.write_text(
-              "# Beelzebul security scan\n\n"
-              f"- Verdict: **{report['verdict']}**\n"
-              f"- Risk score: **{report['risk_score']}/100**\n"
-              f"- Rules: **{report['policy']['rules_total']}**\n"
-              f"- Findings: **{report['findings_count']}**\n"
-              f"- Files scanned: **{report['scan']['text_files_scanned']}**\n",
+              "# BAV Java/Reaper security scan\\n\\n"
+              f"- Verdict: **{report['verdict']}**\\n"
+              f"- Risk score: **{report['risk_score']}/100**\\n"
+              f"- Beelzebul rules: **{report['components']['beelzebul']['rules_total']}**\\n"
+              f"- Java Guard rules: **{report['components']['java_guard']['rules_total']}**\\n"
+              f"- Findings: **{report['findings_count']}**\\n"
+              f"- Text files scanned: **{report['scan']['text_files_scanned']}**\\n"
+              "- Scan mode: **read-only; no project code execution**\\n",
               encoding="utf-8",
           )
           PY

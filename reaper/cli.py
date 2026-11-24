@@ -88,6 +88,12 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Typical causes\n  {definition['causes']}\n")
         print(f"How to fix it\n  {definition['help']}")
         return 0
+    if arguments and arguments[0] == "security":
+        if len(arguments) < 2 or arguments[1] != "scan":
+            print("Usage: reaper security scan [--root PATH] [--json] [--output PATH]", file=sys.stderr)
+            return 2
+        from .bav import main as bav_main
+        return bav_main(arguments[2:])
     if arguments and arguments[0] == "lsp":
         from .lsp import serve as lsp_serve
         return lsp_serve()
