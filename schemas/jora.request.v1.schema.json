@@ -95,6 +95,45 @@
           }
         }
       ]
+    },
+    "name_style": {
+      "enum": [
+        "compact",
+        "balanced",
+        "descriptive",
+        "formula"
+      ]
+    },
+    "graph": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "topology": {
+          "enum": [
+            "auto",
+            "layered",
+            "pipeline",
+            "hub_spoke",
+            "plugin_mesh",
+            "event_driven",
+            "hybrid"
+          ]
+        },
+        "seed": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "variants": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 6
+        },
+        "variation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
     }
   }
 }
