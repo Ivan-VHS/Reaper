@@ -330,10 +330,11 @@ class JoraCompositionTests(unittest.TestCase):
         graph = result["graphs"]["variants"][0]
         adjacency = {}
         for edge in graph["edges"]:
-            source = str(edge.get("source", ""))
-            target = str(edge.get("target", ""))
+            source = str(edge.get("source", edge.get("from", "")))
+            target = str(edge.get("target", edge.get("to", "")))
             if source.startswith("component:") and target.startswith("component:"):
                 adjacency.setdefault(source, []).append(target)
+        self.assertTrue(adjacency, "the plugin-mesh graph should contain component capability edges")
         visiting = set()
         visited = set()
 
