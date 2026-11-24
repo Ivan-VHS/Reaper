@@ -17,6 +17,10 @@ Reaper 是一款面向嵌入式软件、编译器工具、硬件相关程序和�
 >
 > **平台：** Python 测试覆盖 3.10–3.12。可选 Node.js 兼容工作流测试 Node 22/24，覆盖 Windows、Linux 和 macOS。Windows Studio 需要 Tkinter。原生 C17 路径需要 CMake 3.16+ 和 C17 编译器。
 
+### Jora 应用工厂
+
+[DuckOS Jora](https://github.com/Ivan-VHS/DuckOS) 正在作为 Jora 平台和应用商店集成。每个生成的应用都有独立的产品名称，名称中不得包含 Jora。系统将所选功能模块（例如文本编辑器、音频编辑器和翻译器）组合为独立产品，例如 Sonaris，然后生成 Reaper 项目脚手架和 EN/RU/UK/MOST 界面字典。名称候选由应用功能决定，不会复用平台品牌。图结构可针对均衡性、延迟、模块化、可扩展性或最低复杂度进行优化，并导出为 JSON 和 Mermaid。详情请参阅：[Jora 应用工厂](docs/JORA_APPLICATION_FACTORY.md)。当前功能包仍是规格说明，而不是可运行的编辑器；生成的项目会经过静态检查，但尚不可安装。在此版本中，Reaper 是唯一已集成的源代码生成器，其他编译器适配器仍待实现。
+
 ## 快速开始
 
 创建虚拟环境并安装 Python 参考运行时：
