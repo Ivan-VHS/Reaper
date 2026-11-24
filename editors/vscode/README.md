@@ -1,30 +1,34 @@
-# REAPER / МОСТ editor support
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="../../assets/readme/hero-banner-dark.svg"><source media="(prefers-color-scheme: light)" srcset="../../assets/readme/hero-banner-light.svg"><img src="../../assets/readme/hero-banner-light.svg" alt="Reaper language tooling" width="720"></picture></p>
 
-This directory contains syntax-only VS Code language support for `.most` and `.rpr` files: language registration, bracket matching, comments, strings, indentation and TextMate syntax coloring.
+# Reaper / МОСТ — VS Code syntax support
 
-## Separate language and debug protocol services
+This folder contains the syntax-only VS Code language package for .rpr and .most files: language registration, bracket matching, comments, strings, indentation and TextMate syntax coloring.
 
-The Reaper repository also provides dependency-free stdio services:
+## What this package does not include
 
-- `python -m reaper lsp` — UTF-16 incremental LSP, versioned documents, parser/structure diagnostics, completion, hover, symbols and lexical navigation.
-- `python -m reaper dap` — DAP launch, line breakpoints, statement-boundary stepping, stack and local-variable inspection.
+- No packaged LSP client or automatic LSP activation.
+- No semantic completion, cross-file type inference, AST/IR refactoring or project indexing.
+- No DAP client, debugger UI, profiler UI or native compiler integration.
+- No additional runtime, grammar implementation or hardware permissions.
 
-These are Reaper runtime services, not a packaged VS Code extension client. They are not automatically activated by this syntax package. LSP indexing is per open document; it does not claim cross-file type inference or AST refactoring. DAP supports the documented runtime debugging subset only.
+## Optional Reaper language services
 
-See [REAPER IDE architecture](../../docs/REAPER_IDE.md) for exact capabilities and maturity boundaries.
+The main Reaper repository provides local stdio services, which are separate runtime processes and are not activated by this syntax package:
 
+~~~sh
+python -m reaper lsp
+python -m reaper dap
+~~~
 
-## Desktop motion contract
+LSP capabilities and document-local limits are defined in the [Reaper IDE contract](../../docs/REAPER_IDE.md). DAP supports only the documented runtime subset.
 
-The syntax package remains presentation-only. For the native Studio application's persisted Reduce Motion / Eco preferences and the explicit absence of BPM transport integration, see the [desktop UI motion contract](../../docs/UI_MOTION.md).
+## Validation
 
-## Extension boundary
+Keep TextMate grammar aligned with the canonical language contract. Test comments, strings, brackets, indentation and syntax highlighting in both light and dark editor themes. Do not use color as the only signal.
 
-- This package owns editor presentation only. It does not implement a separate language grammar or runtime.
-- Do not advertise semantic completion, diagnostics, rename, AST/IR views, debugging, profiling or project navigation as features of this VS Code package.
-- Do not advertise type inference, cross-file semantic indexing, conditional breakpoints, expression evaluation, step-out, profiling UI or native C17 language-service parity as implemented.
-- Keep editor grammar aligned with the canonical REAPER / МОСТ language contract.
-- Keep syntax cues readable and do not make color the only carrier of meaning. Respect keyboard, focus, theme and reduced-motion settings.
-- The extension does not grant runtime, hardware or driver permissions.
+## Documentation
 
-See the [main Reaper documentation](../../README.md), [Anatidae design system](../../docs/ANATIDAE_DESKTOP_DESIGN_SYSTEM.md), [UI/UX architecture](../../docs/UI_UX_ARCHITECTURE.md) and [human-first governance](../../docs/HUMAN_FIRST_GOVERNANCE.md).
+- [Main Reaper README](../../README.md)
+- [Language and toolchain hub](../../docs/clusters/language-toolchain.md)
+- [IDE architecture](../../docs/REAPER_IDE.md)
+- [Contributing guide](../../CONTRIBUTING.md)
