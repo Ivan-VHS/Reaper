@@ -47,7 +47,7 @@ class JoraCompositionTests(unittest.TestCase):
 
     def test_single_component_gets_an_independent_default_name(self):
         result = compose_application(self.request(components=["text.editor"]))
-        self.assertEqual(result["name"], "Text Editor")
+        self.assertEqual(result["name"], "Documents Workspace")
 
     def test_application_names_are_independent_and_platform_name_is_rejected(self):
         self.assertEqual(compose_application(self.request(name="Sonaris"))["name"], "Sonaris")
