@@ -23,8 +23,9 @@ class JoraCompositionTests(unittest.TestCase):
 
     def test_example_formula_and_dependency_closure(self):
         result = compose_application(self.request())
-        self.assertEqual(result["formula"]["expression"], "Text Editor + Audio Editor + Translator")
-        self.assertEqual(result["name"], "LexiTone 3D")
+        self.assertEqual(result["formula"]["expression"], "Text Editor + Audio Editor + Translator = Jora")
+        self.assertEqual(result["formula"]["result"], "Jora")
+        self.assertEqual(result["name"], "Jora")
         self.assertEqual(result["locales"], ["en", "ru", "uk", "most"])
         self.assertEqual(result["preferred_locale"], "ru")
         self.assertEqual(result["implementation"]["canonical_language"], "reaper")
@@ -44,9 +45,14 @@ class JoraCompositionTests(unittest.TestCase):
         self.assertEqual(first["id"], second["id"])
         self.assertNotEqual(first["id"], reverse["id"])
 
-    def test_single_component_gets_a_product_name(self):
+    def test_single_component_is_still_named_jora(self):
         result = compose_application(self.request(components=["text.editor"]))
-        self.assertEqual(result["name"], "LexiDesk")
+        self.assertEqual(result["name"], "Jora")
+
+    def test_component_combinations_never_create_separate_product_names(self):
+        with self.assertRaisesRegex(JoraError, "fixed application name"):
+            compose_application(self.request(name="LexiTone"))
+        self.assertEqual(compose_application(self.request(name="Jora"))["name"], "Jora")
 
     def test_auto_locales_and_aliases(self):
         result = compose_application(self.request(locales="auto", preferred_locale="uk-UA"))
@@ -76,7 +82,7 @@ class JoraCompositionTests(unittest.TestCase):
 
     def test_build_writes_project_manifest_and_locales(self):
         with tempfile.TemporaryDirectory() as directory:
-            output = Path(directory) / "LexiTone"
+            output = Path(directory) / "Jora"
             result = build_application(self.request(), output)
             self.assertTrue(result["ok"])
             self.assertFalse(result["installable"])
