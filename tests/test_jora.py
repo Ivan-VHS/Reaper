@@ -253,8 +253,18 @@ class JoraCompositionTests(unittest.TestCase):
 
     def test_catalog_is_closed_and_first_party(self):
         items = list_components()
-        self.assertEqual({item["id"] for item in items},
-                         {"text.editor", "audio.editor", "translation.workspace"})
+        self.assertEqual(len(items), 21)
+        self.assertEqual(
+            {item["id"] for item in items},
+            {
+                "text.editor", "audio.editor", "translation.workspace",
+                "subtitle.editor", "notes.workspace", "task.board", "calendar.scheduler",
+                "speech.synthesis", "speech.recognition", "code.editor", "spreadsheet.editor",
+                "image.editor", "video.editor", "presentation.editor", "file.manager",
+                "api.client", "automation.engine", "data.visualizer", "database.manager",
+                "archive.manager", "knowledge.graph",
+            },
+        )
 
 
     def test_catalog_contains_twenty_one_canonical_capability_packs(self):
