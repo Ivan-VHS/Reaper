@@ -1027,6 +1027,7 @@ def compose_application(request: dict[str, Any]) -> dict[str, Any]:
             raise JoraError(f"{component_id} conflicts with: {', '.join(conflicts)}")
 
     canonical = {
+        "application_name_policy": APPLICATION_NAME_POLICY,
         "components": component_ids,
         "locales": locales,
         "preferred_locale": preferred,
