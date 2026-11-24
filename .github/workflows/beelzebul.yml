@@ -71,14 +71,14 @@ jobs:
           assert report["scan"]["project_code_executed"] is False
           summary = Path(os.environ["GITHUB_STEP_SUMMARY"])
           summary.write_text(
-              "# BAV Java/Reaper security scan\\n\\n"
-              f"- Verdict: **{report['verdict']}**\\n"
-              f"- Risk score: **{report['risk_score']}/100**\\n"
-              f"- Beelzebul rules: **{report['components']['beelzebul']['rules_total']}**\\n"
-              f"- Java Guard rules: **{report['components']['java_guard']['rules_total']}**\\n"
-              f"- Findings: **{report['findings_count']}**\\n"
-              f"- Text files scanned: **{report['scan']['text_files_scanned']}**\\n"
-              "- Scan mode: **read-only; no project code execution**\\n",
+              "# BAV Java/Reaper security scan\n\n"
+              f"- Verdict: **{report['verdict']}**\n"
+              f"- Risk score: **{report['risk_score']}/100**\n"
+              f"- Beelzebul rules: **{report['components']['beelzebul']['rules_total']}**\n"
+              f"- Java Guard rules: **{report['components']['java_guard']['rules_total']}**\n"
+              f"- Findings: **{report['findings_count']}**\n"
+              f"- Text files scanned: **{report['scan']['text_files_scanned']}**\n"
+              "- Scan mode: **read-only; no project code execution**\n",
               encoding="utf-8",
           )
           PY

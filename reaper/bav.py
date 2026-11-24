@@ -236,20 +236,25 @@ def scan(root: Path, policy: Path | None = None, base_ref: str | None = None) ->
     with tempfile.TemporaryDirectory(prefix="reaper-bav-") as temporary:
         classes = Path(temporary) / "classes"
         classes.mkdir()
-        compile_result = subprocess.run(
-            [javac, "--release", "17", "-encoding", "UTF-8", "-d", str(classes), str(JAVA_SOURCE)],
-            cwd=PROJECT_ROOT,
-            env=env,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            timeout=60,
-            check=False,
-            shell=False,
-        )
+        try:
+            compile_result = subprocess.run(
+                [javac, "--release", "17", "-proc:none", "-encoding", "UTF-8", "-d", str(classes), str(JAVA_SOURCE)],
+                cwd=PROJECT_ROOT,
+                env=env,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=60,
+                check=False,
+                shell=False,
+            )
+        except FileNotFoundError as exc:
+            raise BAVError("JDK 17 compiler (javac) is required for the Java Guard") from exc
+        except subprocess.TimeoutExpired as exc:
+            raise BAVError("Java Guard compilation exceeded its 60-second limit") from exc
         if compile_result.returncode != 0:
             details = compile_result.stderr.strip().splitlines()
             reason = details[-1] if details else "javac compilation failed"
