@@ -480,10 +480,10 @@ def _naming_profile(component_ids: list[str], style: str) -> dict[str, Any]:
     formula_terms = list(dict.fromkeys(terms[item]["formula"] for item in component_ids))
     natural_domains = _join_naming_terms(descriptors)
     natural_actions = _join_naming_terms(action_terms)
-    compact = "Jora · " + " / ".join(short_terms)
-    balanced = "Jora — " + natural_domains + " Workspace"
-    descriptive = "Jora | Workspace for " + natural_actions.lower()
-    formula = "Jora — " + " + ".join(formula_terms)
+    compact = " / ".join(short_terms) + " Workspace"
+    balanced = natural_domains + " Workspace"
+    descriptive = "Workspace for " + natural_actions.lower()
+    formula = " + ".join(formula_terms) + " Workspace"
     suggestions = [
         {"id": "jora.compact", "label": compact, "style": "compact"},
         {"id": "jora.balanced", "label": balanced, "style": "balanced"},
@@ -495,13 +495,13 @@ def _naming_profile(component_ids: list[str], style: str) -> dict[str, Any]:
         preferred = suggestions[1]
     return {
         "version": "jora-naming.v2",
-        "brand": "Jora",
-        "canonical_name": "Jora",
+        "platform": "Jora",
+        "product_name_policy": "independent_application_brand",
         "style": style,
         "descriptors": descriptors,
         "selected": preferred,
         "suggestions": suggestions,
-        "rule": "All suggestions retain Jora as the only product name; suffixes describe the selected capability composition and are not independent brands.",
+        "rule": "Application names are independent product identities and must not contain the platform name Jora.",
     }
 
 
@@ -922,14 +922,23 @@ def _build_graph_variants(
     }
 
 
-def _generated_name() -> str:
-    """Every application composed by this unified product is named Jora."""
-    return "Jora"
+def _generated_name(component_ids: list[str], requested_name: str = "") -> str:
+    """Resolve an independent application name; Jora is only the platform."""
+    if requested_name:
+        name = _text(requested_name, "name", 80)
+    else:
+        terms = [_COMPONENTS[item]["name"] for item in component_ids]
+        name = terms[0] if len(terms) == 1 else _join_naming_terms(terms[:3]) + " Workspace"
+    if re.search(r"jora", name, re.IGNORECASE):
+        raise JoraError("application name must be independent and must not contain the platform name Jora")
+    if not _NAME_RE.fullmatch(name):
+        raise JoraError("name contains unsupported characters")
+    return name
 
 
 def _safe_slug(value: str) -> str:
     normalized = re.sub(r"[^a-zA-Z0-9]+", "-", value.casefold()).strip("-")
-    return normalized or "jora-app"
+    return normalized or "application"
 
 
 def list_components() -> list[dict[str, Any]]:
@@ -962,10 +971,8 @@ def compose_application(request: dict[str, Any]) -> dict[str, Any]:
     if syntax_mode != "flow":
         raise JoraError("the current generated Reaper source supports only the 'flow' syntax profile")
 
-    requested_name = _text(request.get("name", "Jora"), "name", 80, optional=True)
-    if requested_name and requested_name != "Jora":
-        raise JoraError("Jora is the fixed application name; component formulas do not create separately named products")
-    display_name = _generated_name()
+    requested_name = _text(request.get("name", ""), "name", 80, optional=True)
+    display_name = _generated_name(component_ids, requested_name)
     name_style = _text(request.get("name_style", "balanced"), "name_style", 24).casefold()
     if name_style not in {"compact", "balanced", "descriptive", "formula"}:
         raise JoraError("name_style must be compact, balanced, descriptive or formula")
@@ -1088,8 +1095,8 @@ def compose_application(request: dict[str, Any]) -> dict[str, Any]:
         "graphs": graphs,
         "description": description or " + ".join(_COMPONENTS[item]["name"] for item in component_ids),
         "formula": {
-            "expression": " + ".join(_COMPONENTS[item]["name"] for item in component_ids) + " = Jora",
-            "result": "Jora",
+            "expression": " + ".join(_COMPONENTS[item]["name"] for item in component_ids) + " → " + display_name,
+            "result": display_name,
             "components": component_ids,
         },
         "components": components,
