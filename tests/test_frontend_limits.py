@@ -25,7 +25,7 @@ class FrontendLimitTests(unittest.TestCase):
                     Lexer("éé", "multibyte.rpr").tokenize()
 
     def test_rejects_embedded_nul_with_source_location(self) -> None:
-        with self.assertRaisesRegex(LexError, r"nul.*2:3"):
+        with self.assertRaisesRegex(LexError, r"NUL.*2:2"):
             Lexer("a\nb\0c", "nul.rpr").tokenize()
 
     def test_rejects_unpaired_surrogates_before_tokenization(self) -> None:
