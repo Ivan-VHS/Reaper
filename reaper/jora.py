@@ -560,7 +560,7 @@ def _build_graph_variant(
         json.dumps(canonical_graph, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
     ).hexdigest()[:16]
     dependency_edges = sum(edge["relation"] == "requires" for edge in edges)
-    capability_edges = sum(edge["relation"].startswith("capability:") for edge in edges)
+    capability_edges = sum("capability" in edge["relation"] for edge in edges)
     planned_nodes = sum(node["maturity"] == "planned" for node in nodes)
     return {
         "id": "jora-graph-" + signature,
@@ -930,6 +930,8 @@ def build_application(request: dict[str, Any], output: str | Path) -> dict[str, 
             "dependency_versions": {item["id"]: item["version"] for item in application["dependencies"]},
             "dependency_order": application["dependency_order"],
             "naming_version": application["naming"]["version"],
+            "name_style": application["naming"]["style"],
+            "naming_label": application["naming"]["selected"]["label"],
             "graph_set": application["graphs"]["schema"],
             "selected_graph": application["graphs"]["selected"],
             "graph_signatures": [item["signature"] for item in application["graphs"]["variants"]],
