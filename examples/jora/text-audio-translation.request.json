@@ -15,5 +15,12 @@
   ],
   "preferred_locale": "ru",
   "syntax_mode": "flow",
-  "language_targets": "auto"
+  "language_targets": "auto",
+  "name_style": "balanced",
+  "graph": {
+    "topology": "auto",
+    "seed": "",
+    "variants": 4,
+    "variation": 50
+  }
 }
