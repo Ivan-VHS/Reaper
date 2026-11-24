@@ -16,6 +16,11 @@ class Node:
     value: Any = None
     children: list["Node"] | None = None
 
+    @property
+    def span(self):
+        """Return the originating token span when the lexer supplies one."""
+        return getattr(self.token, "span", None)
+
 
 _PRECEDENCE = {
     "::": 1,
