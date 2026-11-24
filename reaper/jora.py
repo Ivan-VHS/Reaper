@@ -375,11 +375,12 @@ def _build_graph_variant(
             for component_id in component_ids:
                 add_edge("component:" + component_id, "workflow:state", "updates_workflow_state")
         elif variant_index % 3 == 2:
-            add_node("workflow:validator", "workflow_validator", "Jora Stage Validator", "planned")
-            for component_id in component_ids:
-                add_edge("component:" + component_id, "workflow:validator", "validates_output")
-            for left, right in zip(component_ids, component_ids[1:]):
-                add_edge("workflow:validator", "component:" + right, "releases_stage")
+            for index, component_id in enumerate(component_ids):
+                validator_id = "workflow:validator:" + component_id.replace(".", "_")
+                add_node(validator_id, "workflow_validator", "Jora Validator · " + component_id, "planned")
+                add_edge("component:" + component_id, validator_id, "validates_output")
+                if index + 1 < len(component_ids):
+                    add_edge(validator_id, "component:" + component_ids[index + 1], "releases_stage")
     elif topology == "hub_spoke":
         if variant_index % 2 == 0:
             add_node("orchestrator:jora", "orchestrator", "Jora Orchestrator", "planned")
@@ -524,11 +525,11 @@ def _build_graph_variant(
         add_edge("app:jora", "gate:jora", "validates_composition")
         add_edge("gate:jora", "ui:shell", "approves_layout")
 
-    # Only hard dependency edges must be acyclic. Event-mediated feedback loops
-    # are explicit asynchronous edges and can never participate in startup ordering.
+    # Every synchronous control/data edge must be acyclic. Event-mediated feedback
+    # loops are explicit asynchronous edges and are excluded from startup ordering.
     dependency_graph: dict[str, list[str]] = {node_id: [] for node_id in node_ids}
     for edge in edges:
-        if edge["relation"] == "requires":
+        if edge.get("delivery") != "asynchronous":
             dependency_graph[edge["from"]].append(edge["to"])
     visiting: set[str] = set()
     visited: set[str] = set()
