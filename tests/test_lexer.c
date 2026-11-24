@@ -117,6 +117,17 @@ static void test_most_extended_aliases(void){
  assert(has(&unknown,"структуры",REAPER_TOK_IDENTIFIER));
  reaper_tokens_free(&unknown);
 }
+static void test_source_size_limit_is_enforced(void){
+ char *source=(char *)malloc((size_t)REAPER_MAX_SOURCE_BYTES+2u);
+ ReaperTokenArray tokens={0};ReaperLexError error={{0},0,0};
+ assert(source!=NULL);
+ memset(source,'a',(size_t)REAPER_MAX_SOURCE_BYTES+1u);
+ source[(size_t)REAPER_MAX_SOURCE_BYTES+1u]='\\0';
+ assert(!reaper_lex(source,&tokens,&error));
+ assert(tokens.length==0u);
+ assert(strstr(error.message,"16 MiB")!=NULL);
+ free(source);
+}
 static void test_invalid_utf8_is_rejected(void){
  const char invalid[]="emit \xC0\xAF";
  ReaperTokenArray tokens={0};ReaperLexError error={{0},0,0};
@@ -141,4 +152,4 @@ static void test_utf8_columns_count_codepoints(void){
  }
  assert(found);reaper_tokens_free(&t);
 }
-int main(void){test_program();test_escape();test_bad_escape();test_unterminated();test_most_surface();test_most_operator_family();test_most_russian_vocabulary();test_most_extended_aliases();test_utf8_columns_count_codepoints();test_invalid_utf8_is_rejected();test_invalid_utf8_reports_line_and_column();puts("native lexer tests: 11 groups passed");return 0;}
+int main(void){test_program();test_escape();test_bad_escape();test_unterminated();test_most_surface();test_most_operator_family();test_most_russian_vocabulary();test_most_extended_aliases();test_utf8_columns_count_codepoints();test_invalid_utf8_is_rejected();test_invalid_utf8_reports_line_and_column();test_source_size_limit_is_enforced();puts("native lexer tests: 12 groups passed");return 0;}
