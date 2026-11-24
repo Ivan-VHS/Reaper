@@ -397,7 +397,8 @@
         "topology_mode",
         "seed",
         "variant_count",
-        "variants"
+        "variants",
+        "objective"
       ],
       "properties": {
         "schema": {
@@ -436,6 +437,7 @@
               "id",
               "label",
               "topology",
+              "objective",
               "layout_variant",
               "seed",
               "variation",
@@ -540,7 +542,13 @@
                   "dependency_edges",
                   "capability_connections",
                   "planned_nodes",
-                  "compatibility_score"
+                  "compatibility_score",
+                  "objective_score",
+                  "latency_score",
+                  "modularity_score",
+                  "extensibility_score",
+                  "complexity_score",
+                  "longest_sync_path"
                 ],
                 "properties": {
                   "node_count": {
@@ -567,6 +575,36 @@
                     "type": "integer",
                     "minimum": 0,
                     "maximum": 100
+                  },
+                  "objective_score": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "latency_score": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "modularity_score": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "extensibility_score": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "complexity_score": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "longest_sync_path": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 80
                   }
                 }
               },
@@ -595,12 +633,30 @@
                   "validated",
                   "extensible"
                 ]
+              },
+              "objective": {
+                "enum": [
+                  "balanced",
+                  "low_latency",
+                  "modularity",
+                  "extensibility",
+                  "minimal_complexity"
+                ]
               }
             }
           }
         },
         "selection_policy": {
-          "const": "max_compatibility_then_capability_reuse_then_minimal_planned_nodes"
+          "const": "max_objective_score_then_compatibility_then_minimal_planned_nodes"
+        },
+        "objective": {
+          "enum": [
+            "balanced",
+            "low_latency",
+            "modularity",
+            "extensibility",
+            "minimal_complexity"
+          ]
         }
       }
     }
