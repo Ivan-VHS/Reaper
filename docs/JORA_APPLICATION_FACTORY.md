@@ -22,10 +22,10 @@ A formula composes capability contracts; it does not concatenate arbitrary execu
 
 The canonical product name is always **Jora**. The naming engine does not create unrelated brands for combinations. Instead, it derives human-readable descriptors from component domains and produces four presentation variants under the Jora identity:
 
-- compact: `Jora · Documents · Audio · Languages`;
+- compact: `Jora · Docs / Audio / Translate`;
 - balanced: `Jora — Documents & Audio & Languages Workspace`;
 - descriptive: `Jora | Workspace for Documents & Audio & Languages`;
-- formula: `Jora — Documents + Audio + Languages`.
+- formula: `Jora — Text + Audio + Translation`.
 
 The request selects `name_style` (`compact`, `balanced`, `descriptive` or `formula`). The manifest preserves `name = "Jora"`, the semantic descriptors, selected label and all suggestions. Labels are generated from the capability taxonomy rather than arbitrary syllable concatenation, and remain presentation metadata rather than independent application names.
 
