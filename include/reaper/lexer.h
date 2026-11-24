@@ -5,7 +5,15 @@
 extern "C" {
 #endif
 typedef enum { REAPER_TOK_EOF=0, REAPER_TOK_NEWLINE, REAPER_TOK_IDENTIFIER, REAPER_TOK_KEYWORD, REAPER_TOK_NUMBER, REAPER_TOK_STRING, REAPER_TOK_OPERATOR, REAPER_TOK_CATALOG_OPERATOR, REAPER_TOK_PUNCTUATION } ReaperTokenKind;
-typedef struct { ReaperTokenKind kind; char *text; size_t line; size_t column; } ReaperToken;
+typedef struct {
+    ReaperTokenKind kind;
+    char *text;
+    size_t line;
+    size_t column;
+    /* Half-open UTF-8 byte offsets into the original source buffer. */
+    size_t start_offset;
+    size_t end_offset;
+} ReaperToken;
 typedef struct { ReaperToken *items; size_t length; size_t capacity; } ReaperTokenArray;
 typedef struct { char message[256]; size_t line; size_t column; } ReaperLexError;
 int reaper_lex(const char *source, ReaperTokenArray *out, ReaperLexError *error);
