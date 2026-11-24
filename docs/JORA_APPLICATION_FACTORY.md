@@ -31,7 +31,7 @@ The request selects `name_style` (`compact`, `balanced`, `descriptive` or `formu
 
 ## Composition graph engine
 
-A formula can produce several valid graphs from the same modules. Graph generation is deterministic for the same request and seed, and can emit 1–6 alternatives with a variation budget from 0–100.
+A formula can produce several valid graphs from the same modules. Graph generation is deterministic for the same request and seed, and can emit 1–6 alternatives with a variation budget from 0–100. The user selects an optimization objective: balanced, low latency, modularity, extensibility or minimal complexity. Jora computes objective-specific scores alongside compatibility, capability reuse, planned-node count, longest synchronous path and structural complexity, then selects the highest-ranked candidate with stable tie-breaks.
 
 Supported topologies:
 
@@ -48,7 +48,7 @@ Graph nodes carry identity, kind, label and maturity. Edges are typed (hosting, 
 
 The engine keeps every synchronous control/data edge acyclic. Event feedback is permitted only through an explicit asynchronous event bus; it is excluded from startup ordering. A per-stage validator cannot release the next stage through a shared node that would introduce a synchronous cycle. The selected graph is the highest-scoring candidate, ranked by compatibility, reusable capability links, fewer planned nodes and then a stable signature tie-break. Optional extension registries and compatibility gates are marked `planned`, not falsely reported as implemented runtime services.
 
-The complete graph set is embedded in `jora.app.json` and exported separately as `jora.graphs.json`. Every graph variant also has a `graphs/variant-*.mmd` Mermaid diagram. Each topology supports distinct direct, domain-grouped, capability-routed, stateful, validated and extensible rewrites. The lock file records graph signatures and the selected naming/graph variants for reproducible generation.
+The complete graph set is embedded in `jora.app.json` and exported separately as `jora.graphs.json`. Every graph variant also has a `graphs/variant-*.mmd` Mermaid diagram. Each topology supports distinct direct, domain-grouped, capability-routed, stateful, validated and extensible rewrites. The lock file records graph signatures, the selected naming label, optimization objective and winning graph score for reproducible generation.
 
 ## Repository ownership
 
