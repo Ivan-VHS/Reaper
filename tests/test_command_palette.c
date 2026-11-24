@@ -6,7 +6,7 @@
 int main(void) {
     const ReaperPaletteCommand commands[] = {
         {"open-file", "Open File", "project document load"},
-        {"open-settings", "Settings", "preferences configure"},
+        {"open-settings", "Settings", "open preferences configure"},
         {"run-tests", "Run Tests", "quality verify"},
         {"toggle-xray", "X-Ray Mode", "performance telemetry hud"}
     };
