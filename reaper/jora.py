@@ -272,7 +272,7 @@ def _naming_profile(component_ids: list[str], style: str) -> dict[str, Any]:
         "text.editor": {
             "short": "Docs",
             "domain": "Documents",
-            "action": "Writing & Editing",
+            "action": "Writing",
             "formula": "Text",
         },
         "audio.editor": {
