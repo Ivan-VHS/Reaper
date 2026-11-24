@@ -614,6 +614,7 @@ def compose_application(request: dict[str, Any]) -> dict[str, Any]:
             "domain": spec["domain"],
             "summary": spec["summary"],
             "provides": list(spec["provides"]),
+            "consumes": list(spec.get("consumes", [])),
             "requires": list(spec["requires"]),
             "maturity": spec["maturity"],
             "generated_unit": "src/components/" + component_id.replace(".", "_") + ".rpr",
