@@ -34,6 +34,18 @@ The language is not allowed to imply that user-space code can safely access arbi
 | Studio | Windows editor/debugger foundation plus a Systems/Hardware overview showing MCU profiles and current access limits | no live device inspector or complete hardware IDE |
 | Native capability catalogue | versioned module and operation descriptions with a small set of C primitives | catalogue entries are not automatically executable handlers |
 
+## DuckOS target profile
+
+The concrete DuckOS profile is maintained in [DUCKOS_TARGET.md](DUCKOS_TARGET.md) and the machine-readable [duckos-kernel.v1.json](../language/targets/duckos-kernel.v1.json). It records the current split between hosted reference/VM execution and experimental scalar C17 AOT, the constructs used by DuckOS that the AOT path cannot yet lower, and the compiler/ABI gates required before a freestanding kernel can be claimed. The initial architecture, target triple, boot protocol and ABI deliberately remain undecided until DuckOS approves their ADRs.
+
+Validate the profile with:
+
+~~~sh
+python tools/validate_system_target.py
+~~~
+
+A passing profile validation confirms only that the declared target contract is internally coherent. It does not establish compiler support, code generation or bootability.
+
 ## Target language layers
 
 1. **Core syntax and semantics.** Keep craft, make, vary, change, yield, emit and :: source compatibility. Add system constructs only through a versioned grammar and semantic contract.
