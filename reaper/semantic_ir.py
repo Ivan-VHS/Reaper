@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, ClassVar, Mapping
 
-from .parser import Node
+from .parser import Node, parse
 from .source import SourceSpan, format_source_diagnostic
 
 SEMANTIC_IR_VERSION = 1
@@ -255,6 +255,12 @@ def verify_semantic_ir(module: SemanticIR) -> None:
                 raise SemanticIRVerificationError("IRCall arguments must be an immutable tuple")
             if node.from_pipe and not node.arguments:
                 raise SemanticIRVerificationError("a lowered pipeline call must receive the piped value")
+            if isinstance(node.callee, IRIntrinsic):
+                expected_arity = 1 if node.callee.name in {"neg", "not"} else 2
+                if len(node.arguments) != expected_arity:
+                    raise SemanticIRVerificationError(
+                        f"intrinsic '{node.callee.name}' requires {expected_arity} operand(s)"
+                    )
             visit(node.callee)
             for argument in node.arguments:
                 visit(argument)
@@ -310,6 +316,7 @@ class IRTypeChecker:
         self.diagnostics: list[IRDiagnostic] = []
 
     def check(self, module: SemanticIR) -> IRTypeCheckResult:
+        self.diagnostics.clear()
         verify_semantic_ir(module)
         inferred = self._infer(module.root)
         return IRTypeCheckResult(inferred, tuple(self.diagnostics))
@@ -486,10 +493,11 @@ class IRTypeChecker:
         assert isinstance(intrinsic, IRIntrinsic)
         operand_types = [self._infer(argument) for argument in node.arguments]
         name = intrinsic.name
+        expected_arity = 1 if name in {"neg", "not"} else 2
+        if len(operand_types) != expected_arity:
+            self._report(node, "RPR-I0006", f"operator '{name}' expects {expected_arity} operand(s)")
+            return "Bool" if name in {"ge", "gt", "le", "lt", "eq", "ne", "and", "or", "not"} else "Any"
         if name in {"ge", "gt", "le", "lt"}:
-            if len(operand_types) != 2:
-                self._report(node, "RPR-I0006", f"operator '{name}' expects 2 operands")
-                return "Bool"
             left, right = operand_types
             compatible = (
                 left in {"Int", "Float", "Number", "Any"}
@@ -499,8 +507,13 @@ class IRTypeChecker:
                 self._report(node, "RPR-I0002", f"operator '{name}' cannot compare {left} with {right}")
             return "Bool"
         if name in {"eq", "ne"}:
-            if len(operand_types) != 2:
-                self._report(node, "RPR-I0006", f"operator '{name}' expects 2 operands")
+            left, right = operand_types
+            if not (
+                self._assignable(left, right)
+                or self._assignable(right, left)
+                or "Any" in {left, right}
+            ):
+                self._report(node, "RPR-I0002", f"operator '{name}' cannot compare {left} with {right}")
             return "Bool"
         if name in {"add", "sub", "mul", "div", "floor_div", "mod", "pow", "neg"}:
             if not operand_types or any(item not in {"Int", "Float", "Number", "Any"} for item in operand_types):
@@ -526,6 +539,30 @@ def typecheck_ir(
     functions: Mapping[str, FunctionSignature] | None = None,
 ) -> IRTypeCheckResult:
     return IRTypeChecker(variables, functions).check(module)
+
+
+@dataclass(frozen=True, slots=True)
+class SemanticAnalysisResult:
+    module: SemanticIR
+    type_check: IRTypeCheckResult
+
+    @property
+    def ok(self) -> bool:
+        return self.type_check.ok
+
+
+def analyze_expression_source(
+    source_text: str,
+    source_name: str = "<memory>",
+    *,
+    variables: Mapping[str, str] | None = None,
+    functions: Mapping[str, FunctionSignature] | None = None,
+) -> SemanticAnalysisResult:
+    """Run parse -> semantic lowering -> contract-aware type checking for one expression."""
+    tree = parse(source_text, source_name)
+    module = lower_expression(tree, source_name)
+    result = typecheck_ir(module, variables=variables, functions=functions)
+    return SemanticAnalysisResult(module, result)
 
 
 def format_diagnostic(
