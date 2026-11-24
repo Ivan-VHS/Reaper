@@ -69,6 +69,9 @@ class JoraCompositionTests(unittest.TestCase):
         second = compose_application(self.request(graph={"topology": "auto", "seed": "demo", "variants": 4, "variation": 65}))
         changed = compose_application(self.request(graph={"topology": "auto", "seed": "other", "variants": 4, "variation": 65}))
         graphs = first["graphs"]["variants"]
+        selected = next(item for item in graphs if item["id"] == first["graphs"]["selected"])
+        self.assertEqual(first["graphs"]["selection_policy"], "max_compatibility_then_capability_reuse_then_minimal_planned_nodes")
+        self.assertEqual(selected["metrics"]["compatibility_score"], max(item["metrics"]["compatibility_score"] for item in graphs))
         self.assertEqual([item["signature"] for item in graphs],
                          [item["signature"] for item in second["graphs"]["variants"]])
         self.assertEqual(len({item["signature"] for item in graphs}), 4)
