@@ -6,7 +6,7 @@
 
 ## Product definition
 
-Jora is one unified product: its catalogue, composer, generator and every composed application all carry the single name **Jora**. A user chooses reusable capability packs, locale profiles and a preferred implementation target. Jora resolves dependencies, writes a versioned manifest with the fixed product name Jora, and generates a Reaper project scaffold.
+Jora is the platform, application catalogue and generator. Every composed application is a separate product with its own independent name; application names must not contain `Jora`. A user chooses a product name, reusable capability packs, locale profiles and a preferred implementation target. The generator resolves dependencies, writes a versioned manifest with that application identity, and generates a Reaper project scaffold.
 
 The composition formula is:
 
@@ -20,14 +20,14 @@ A formula composes capability contracts; it does not concatenate arbitrary execu
 
 ## Naming engine
 
-The canonical product name is always **Jora**. The naming engine does not create unrelated brands for combinations. Instead, it derives human-readable descriptors from component domains and produces four presentation variants under the Jora identity:
+Jora is the platform identity, never the generated application name. The naming engine derives independent product-name candidates from component domains and produces four name styles:
 
 - compact: `Jora · Docs / Audio / Translate`;
 - balanced: `Jora — Documents & Audio & Languages Workspace`;
 - descriptive: `Jora | Workspace for Documents & Audio & Languages`;
 - formula: `Jora — Text + Audio + Translation`.
 
-The request selects `name_style` (`compact`, `balanced`, `descriptive` or `formula`). The manifest preserves `name = "Jora"`, the semantic descriptors, selected label and all suggestions. Labels are generated from the capability taxonomy rather than arbitrary syllable concatenation, and remain presentation metadata rather than independent application names.
+The request may supply an explicit `name`; otherwise the selected `name_style` (`compact`, `balanced`, `descriptive` or `formula`) chooses a deterministic candidate. Names containing `Jora` are rejected. The manifest preserves the independent application name, platform metadata, semantic descriptors, selected label and all suggestions.
 
 ## Composition graph engine
 
@@ -39,7 +39,7 @@ Supported topologies:
 |---|---|
 | `layered` | interface → modules → required services |
 | `pipeline` | modules connected in the selected workflow order |
-| `hub_spoke` | shared Jora orchestrator routes work to modules |
+| `hub_spoke` | shared application orchestrator routes work to modules |
 | `plugin_mesh` | modules link when provided and consumed capabilities match |
 | `event_driven` | modules publish/subscribe through an asynchronous event bus |
 | `hybrid` | orchestrator plus compatible direct capability links |
@@ -64,7 +64,7 @@ The complete graph set is embedded in `jora.app.json` and exported separately as
 3. Resolve dependency closure in deterministic dependency-first order; reject unknown edges and cycles.
 4. Check component conflicts and incompatible options.
 5. Choose Reaper as the canonical source generator. Other compiler targets are reported as pending until implemented and tested.
-6. Generate a stable application ID from the canonical formula and graph settings. Jora remains the only product name; generated naming variants are descriptive labels such as `Jora — Documents & Languages Workspace`, never separately branded products.
+6. Generate a stable application ID from the canonical formula and graph settings. The selected application name remains independent of the Jora platform; the name and graph settings form a stable application ID.
 7. Write a project manifest, lock file, localized interface dictionaries, Reaper entry point, component contracts and a separate graph-set artifact.
 8. Build into a sibling staging directory, then atomically rename it into a previously unused destination.
 9. Validate generated files and run a Reaper static check in the host integration before any future package can be promoted.
