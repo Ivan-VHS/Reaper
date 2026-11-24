@@ -1,0 +1,126 @@
+# Bounded Brainfuck VM. Tape cells and input/output are byte values (0..255).
+# State is held in local variables; output is returned as an array of byte values.
+craft zero_value(index) {
+    yield 0
+}
+
+craft replace_cell(tape, target, value) {
+    vary updated := []
+    vary index := 0
+    each cell in tape {
+        when index == target {
+            change updated := push(updated, value)
+        } otherwise {
+            change updated := push(updated, cell)
+        }
+        change index := index + 1
+    }
+    yield updated
+}
+
+craft valid_brackets(code) {
+    vary depth := 0
+    each command in code {
+        when command == "[" {
+            change depth := depth + 1
+        }
+        when command == "]" {
+            when depth == 0 {
+                yield false
+            }
+            change depth := depth - 1
+        }
+    }
+    yield depth == 0
+}
+
+craft find_forward(code, start) {
+    vary depth := 1
+    vary index := start + 1
+    loop while index < size(code) {
+        when code[index] == "[" {
+            change depth := depth + 1
+        }
+        when code[index] == "]" {
+            change depth := depth - 1
+            when depth == 0 {
+                yield index
+            }
+        }
+        change index := index + 1
+    }
+    yield -1
+}
+
+craft find_backward(code, start) {
+    vary depth := 1
+    vary index := start - 1
+    loop while index >= 0 {
+        when code[index] == "]" {
+            change depth := depth + 1
+        }
+        when code[index] == "[" {
+            change depth := depth - 1
+            when depth == 0 {
+                yield index
+            }
+        }
+        change index := index - 1
+    }
+    yield -1
+}
+
+craft run_bf(code, input_bytes) {
+    when not valid_brackets(code) {
+        yield ["error", "unbalanced_brackets"]
+    }
+    make tape_size := 256
+    make initial := range(0, tape_size) :: map(zero_value)
+    vary tape := initial
+    vary pointer := 0
+    vary input_index := 0
+    vary instruction := 0
+    vary output := []
+    loop while instruction < size(code) {
+        make command := code[instruction]
+        when command == ">" {
+            when pointer + 1 >= tape_size {
+                yield ["error", "pointer_out_of_bounds"]
+            }
+            change pointer := pointer + 1
+        }
+        when command == "<" {
+            when pointer == 0 {
+                yield ["error", "pointer_out_of_bounds"]
+            }
+            change pointer := pointer - 1
+        }
+        when command == "+" {
+            change tape := replace_cell(tape, pointer, (tape[pointer] + 1) % 256)
+        }
+        when command == "-" {
+            change tape := replace_cell(tape, pointer, (tape[pointer] + 255) % 256)
+        }
+        when command == "." {
+            change output := push(output, tape[pointer])
+        }
+        when command == "," {
+            when input_index < size(input_bytes) {
+                change tape := replace_cell(tape, pointer, input_bytes[input_index] % 256)
+                change input_index := input_index + 1
+            } otherwise {
+                change tape := replace_cell(tape, pointer, 0)
+            }
+        }
+        when command == "[" and tape[pointer] == 0 {
+            change instruction := find_forward(code, instruction)
+        }
+        when command == "]" and tape[pointer] != 0 {
+            change instruction := find_backward(code, instruction)
+        }
+        change instruction := instruction + 1
+    }
+    yield ["ok", output]
+}
+
+emit run_bf("+++++[>+++++++++<-]>.", [])
