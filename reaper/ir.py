@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from .lexer import Span
 from .parser import Node
 
 
@@ -12,6 +13,17 @@ class IRInstruction:
     op: str
     argument: Any
     token: Any
+
+    @property
+    def span(self) -> Span | None:
+        span = getattr(self.token, "span", None)
+        return span if isinstance(span, Span) else None
+
+
+@dataclass(frozen=True, slots=True)
+class IRSourceMapEntry:
+    instruction_index: int
+    span: Span
 
 
 @dataclass(frozen=True, slots=True)
@@ -25,6 +37,15 @@ class IRFunction:
 class CanonicalIR:
     code: tuple[IRInstruction, ...]
     source_name: str = "<memory>"
+
+    @property
+    def source_map(self) -> tuple[IRSourceMapEntry, ...]:
+        """Return a deterministic instruction-to-original-source map."""
+        return tuple(
+            IRSourceMapEntry(index, span)
+            for index, instruction in enumerate(self.code)
+            if (span := instruction.span) is not None
+        )
 
 
 class IRVerificationError(ValueError):
@@ -193,6 +214,9 @@ _ALLOWED = {
 def lower(tree: Node, source_name: str = "<memory>") -> CanonicalIR:
     compiler = _Lowerer()
     compiler.statements(tree.children)
+    token_source = getattr(getattr(tree, "token", None), "source_name", None)
+    if source_name == "<memory>" and isinstance(token_source, str) and token_source:
+        source_name = token_source
     module = CanonicalIR(tuple(compiler.code), source_name)
     verify(module)
     return module
