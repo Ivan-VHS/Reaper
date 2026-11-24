@@ -13,7 +13,10 @@
       "const": "reaper.jora.request.v1"
     },
     "name": {
-      "const": "Jora"
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "pattern": "^(?!.*[Jj][Oo][Rr][Aa]).+$"
     },
     "description": {
       "type": "string",
