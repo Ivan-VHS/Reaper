@@ -603,6 +603,7 @@ def _build_graph_variant(
         "id": "jora-graph-" + signature,
         "label": "Jora · " + GRAPH_LABELS[topology] + " · " + layout_variant,
         "topology": topology,
+        "objective": objective,
         "layout_variant": layout_variant,
         "seed": seed,
         "variation": variation,
