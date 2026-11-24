@@ -1,0 +1,45 @@
+# Telemetry records: [id, temperature_c, voltage_v, current_a].
+# Results: [accepted_records, rejected_records].
+craft accepted(result) {
+    yield result[0]
+}
+
+craft rejected(result) {
+    yield not result[0]
+}
+
+craft validate_reading(reading) {
+    when size(reading) != 4 {
+        yield [false, "reading_shape_invalid"]
+    }
+    when reading[1] < -50 or reading[1] > 150 {
+        yield [false, "temp_out_of_range"]
+    }
+    when reading[2] <= 0 or reading[2] > 48 {
+        yield [false, "voltage_invalid"]
+    }
+    when reading[3] < 0 {
+        yield [false, "current_invalid"]
+    }
+    yield [true, reading[0], reading[1], reading[2] * reading[3]]
+}
+
+craft process_stream(batch) {
+    make checked := batch :: map(validate_reading)
+    yield [
+        checked :: keep(accepted),
+        checked :: keep(rejected)
+    ]
+}
+
+make readings := [
+    ["sensor-01", 21.5, 12, 2],
+    ["sensor-02", 151, 12, 1],
+    ["sensor-03", 18, 0, 3],
+    ["sensor-04", -10, 5, 0.5]
+]
+make result := process_stream(readings)
+emit "accepted = " ++ text(size(result[0]))
+emit "rejected = " ++ text(size(result[1]))
+emit result[0]
+emit result[1]
