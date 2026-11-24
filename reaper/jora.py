@@ -581,7 +581,7 @@ def _build_graph_variant(
             "compatibility_score": max(0, 100 - planned_nodes * 3),
         },
         "cycle_policy": {
-            "dependency_edges": "acyclic",
+            "synchronous_edges": "acyclic",
             "event_feedback": "asynchronous and mediated by the Jora event bus"
             if topology == "event_driven" else "not used",
         },
