@@ -138,8 +138,15 @@ class Lexer:
 
     def _advance(self) -> str:
         char = self.source[self.index]
+        try:
+            byte_length = len(char.encode("utf-8"))
+        except UnicodeEncodeError as error:
+            raise LexError(
+                f"{self.filename}:{self.line}:{self.column}: "
+                "source contains an invalid Unicode scalar value"
+            ) from error
         self.index += 1
-        self.byte_index += len(char.encode("utf-8"))
+        self.byte_index += byte_length
         if char == "\n":
             self.line += 1
             self.column = 1
