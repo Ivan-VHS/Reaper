@@ -425,7 +425,7 @@ public final class Bav {
     }
 
     @SuppressWarnings("unchecked")
-    private static String toJson(Object value) {
+    static String toJson(Object value) {
         if (value == null) return "null";
         if (value instanceof String text) return "\"" + jsonEscape(text) + "\"";
         if (value instanceof Number || value instanceof Boolean) return value.toString();

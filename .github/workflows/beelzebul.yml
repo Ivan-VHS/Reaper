@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   scan:
-    name: BAV Java/Reaper security scan
+    name: Beelzebul 66-rule scan
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
