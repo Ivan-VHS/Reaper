@@ -70,8 +70,8 @@ class JoraCompositionTests(unittest.TestCase):
         changed = compose_application(self.request(graph={"topology": "auto", "seed": "other", "variants": 4, "variation": 65}))
         graphs = first["graphs"]["variants"]
         selected = next(item for item in graphs if item["id"] == first["graphs"]["selected"])
-        self.assertEqual(first["graphs"]["selection_policy"], "max_compatibility_then_capability_reuse_then_minimal_planned_nodes")
-        self.assertEqual(selected["metrics"]["compatibility_score"], max(item["metrics"]["compatibility_score"] for item in graphs))
+        self.assertEqual(first["graphs"]["selection_policy"], "max_objective_score_then_compatibility_then_minimal_planned_nodes")
+        self.assertEqual(selected["metrics"]["objective_score"], max(item["metrics"]["objective_score"] for item in graphs))
         self.assertEqual([item["signature"] for item in graphs],
                          [item["signature"] for item in second["graphs"]["variants"]])
         self.assertEqual(len({item["signature"] for item in graphs}), 4)
@@ -108,6 +108,25 @@ class JoraCompositionTests(unittest.TestCase):
             and edge["from"] == "component:audio.editor"
             for edge in edges
         ))
+
+    def test_graph_objectives_expose_distinct_architecture_metrics(self):
+        objectives = ["balanced", "low_latency", "modularity", "extensibility", "minimal_complexity"]
+        for objective in objectives:
+            result = compose_application(self.request(
+                graph={"topology": "auto", "seed": "objective-test", "variants": 4, "variation": 75, "objective": objective}
+            ))
+            self.assertEqual(result["graphs"]["objective"], objective)
+            for graph in result["graphs"]["variants"]:
+                self.assertEqual(graph["objective"], objective)
+                metrics = graph["metrics"]
+                for metric in ("objective_score", "latency_score", "modularity_score",
+                               "extensibility_score", "complexity_score", "longest_sync_path"):
+                    self.assertIn(metric, metrics)
+                    self.assertGreaterEqual(metrics[metric], 0)
+            selected = next(item for item in result["graphs"]["variants"]
+                            if item["id"] == result["graphs"]["selected"])
+            self.assertEqual(selected["metrics"]["objective_score"],
+                             max(item["metrics"]["objective_score"] for item in result["graphs"]["variants"]))
 
     def test_event_graph_marks_feedback_edges_as_async(self):
         result = compose_application(self.request(graph={"topology": "event_driven", "variants": 1, "variation": 0}))
