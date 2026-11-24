@@ -257,22 +257,50 @@ def _normalize_graph_options(value: Any) -> dict[str, Any]:
     }
 
 
+def _join_naming_terms(values: list[str]) -> str:
+    if len(values) <= 1:
+        return values[0] if values else "Workspace"
+    if len(values) == 2:
+        return values[0] + " & " + values[1]
+    return ", ".join(values[:-1]) + " & " + values[-1]
+
+
 def _naming_profile(component_ids: list[str], style: str) -> dict[str, Any]:
-    domains = sorted(
-        {_COMPONENTS[item]["domain"] for item in component_ids},
-        key=lambda item: ({"documents": 0, "media": 1, "language": 2}.get(item, 99), item),
-    )
-    descriptors = [DOMAIN_LABELS.get(domain, domain.replace("_", " ").title()) for domain in domains]
-    if not descriptors:
-        descriptors = ["Workspace"]
-    joined = " · ".join(descriptors)
-    plus_joined = " + ".join(descriptors)
-    natural = " & ".join(descriptors)
+    terms = {
+        "text.editor": {
+            "short": "Docs",
+            "domain": "Documents",
+            "action": "Writing & Editing",
+            "formula": "Text",
+        },
+        "audio.editor": {
+            "short": "Audio",
+            "domain": "Media",
+            "action": "Audio Editing",
+            "formula": "Audio",
+        },
+        "translation.workspace": {
+            "short": "Translate",
+            "domain": "Languages",
+            "action": "Translation",
+            "formula": "Translation",
+        },
+    }
+    short_terms = list(dict.fromkeys(terms[item]["short"] for item in component_ids))
+    descriptors = list(dict.fromkeys(terms[item]["domain"] for item in component_ids))
+    action_terms = list(dict.fromkeys(terms[item]["action"] for item in component_ids))
+    formula_terms = list(dict.fromkeys(terms[item]["formula"] for item in component_ids))
+    natural_domains = _join_naming_terms(descriptors)
+    natural_actions = _join_naming_terms(action_terms)
+    compact = "Jora · " + " / ".join(short_terms)
+    balanced = "Jora — " + natural_domains + " Workspace"
+    descriptive = "Jora | Workspace for " + natural_actions.lower()
+    formula = "Jora — " + " + ".join(formula_terms)
     suggestions = [
-        {"id": "jora.compact", "label": f"Jora · {joined}", "style": "compact"},
-        {"id": "jora.balanced", "label": f"Jora — {natural} Workspace", "style": "balanced"},
-        {"id": "jora.descriptive", "label": f"Jora | Workspace for {natural}", "style": "descriptive"},
-        {"id": "jora.formula", "label": f"Jora — {plus_joined}", "style": "formula"},
+        {"id": "jora.compact", "label": compact, "style": "compact"},
+        {"id": "jora.balanced", "label": balanced, "style": "balanced"},
+        {"id": "jora.descriptive", "label": descriptive, "style": "descriptive"},
+        {"id": "jora.formula", "label": formula, "style": "formula"},
     ]
     preferred = next((item for item in suggestions if item["style"] == style), None)
     if preferred is None:
