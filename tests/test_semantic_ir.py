@@ -7,6 +7,7 @@ from reaper.parser import parse
 from reaper.semantic_ir import (
     FunctionSignature,
     IRCall,
+    analyze_expression_source,
     IRIntrinsic,
     IRTypeChecker,
     IRVar,
@@ -107,6 +108,21 @@ class SemanticIRTests(unittest.TestCase):
         self.assertTrue(legacy.root.from_pipe)
         self.assertEqual(arrow.root.callee.name, legacy.root.callee.name)
         self.assertEqual(len(arrow.root.arguments), len(legacy.root.arguments))
+
+    def test_comparison_type_mismatch_uses_operator_span(self) -> None:
+        source = 'emit code >= "500"'
+        analysis = analyze_expression_source(
+            source,
+            "compare.rpr",
+            variables={"code": "Int"},
+        )
+        self.assertFalse(analysis.ok)
+        diagnostic = analysis.type_check.diagnostics[0]
+        self.assertEqual(diagnostic.code, "RPR-I0002")
+        self.assertEqual((diagnostic.span.line, diagnostic.span.column), (1, 11))
+        rendered = diagnostic.format(source)
+        self.assertIn("operator 'ge' cannot compare Int with Text", rendered)
+        self.assertIn("ir_node: IRCall", rendered)
 
     def test_utf8_byte_offsets_are_not_confused_with_character_columns(self) -> None:
         source = "# комментарий\nmake result := raw_lines -> missing_stage()"
