@@ -35,6 +35,8 @@ IRTypeChecker accepts explicit variable types and registered FunctionSignature c
 
 Type errors are structured IRDiagnostic values with stable codes, the originating node ID, stage and original-source span. format_diagnostic renders the same source excerpt and caret regardless of whether the expression used :: or ->.
 
+The `analyze_expression_source(source, source_name, variables=..., functions=...)` facade runs parse → lower → verify → type-check in one call and returns both the semantic module and the structured type-check result. The lower-level `lower_semantic_ir` and `typecheck_ir` APIs remain available when a compiler driver needs to schedule those stages independently.
+
 ## Current scope
 
 The current Reaper parser supports named calls, variables, literals, lists, indexing, unary/binary operators and collection pipes. It does not yet parse anonymous fn lambdas, record literals or field access such as entry.code; those require separate grammar, AST, runtime and conformance work. The semantic IR intentionally does not fabricate those capabilities.
