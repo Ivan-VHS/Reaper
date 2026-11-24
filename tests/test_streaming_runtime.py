@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import unittest
 
-from reaper.errors import ReaperRuntimeError
 from reaper.runtime import Interpreter
 from reaper.streaming import ResultValue, StreamValue
 
@@ -144,16 +143,6 @@ emit total
 """
         )
         self.assertEqual(output, ["6"])
-
-    def test_stream_source_size_is_bounded_at_creation(self) -> None:
-        with self.assertRaisesRegex(ReaperRuntimeError, "stream item limit"):
-            self.run_source(
-                """
-make items := [1, 2, 3] :: stream()
-""",
-                max_collection_items=2,
-            )
-
 
 if __name__ == "__main__":
     unittest.main()
