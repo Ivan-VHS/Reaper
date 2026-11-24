@@ -44,7 +44,7 @@ This is interpreter-level fusion: the stage chain is executed in one loop withou
 
 The language currently has no associated-function syntax or record type declarations, so the Reaper source-level equivalent of `Analysis.empty()` is `analysis_empty()`. The returned map uses string keys and can be inspected with normal map indexing.
 
-The timestamp parser returns Python's timezone-aware `datetime` representation. It rejects timezone-free timestamps, invalid dates and times, and leap seconds that the host datetime representation cannot express. Fractional precision follows the host datetime's microsecond representation.
+The timestamp parser returns Python's timezone-aware `datetime` representation. It rejects timezone-free timestamps, invalid dates and times, leap seconds that the host datetime representation cannot express, and fractional seconds with more than six digits rather than silently truncating precision.
 
 ## Example
 
