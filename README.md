@@ -59,6 +59,11 @@ The image below is a capture of the Windows Studio application, not a browser-ba
 
 The seven-app **Mora** suite (Cockos, Kavun, Ka-bon, Gloverty, Po, Illidia and Unify) is specified in the separate [DuckOS project](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/PREINSTALLED_APPLICATIONS.md). It is an operating-system application layer, not a component of Reaper. This repository does not claim to ship those applications or provide their OS services. Its own capabilities and interfaces remain independently defined by this repository's source, tests and versioned contracts.
 
+
+### DuckOS systems-language target
+
+The checked Reaper source target for DuckOS's boot handoff v1 contract is documented in [DuckOS target: boot-info v1](docs/DUCKOS_TARGET.md). It provides split-u64 range helpers, memory-region ordering, framebuffer validation and a two-region conformance model. The DuckOS CTest integration compares reference and native Reaper output with the C contract. This is an executable specification and migration gate, not a freestanding kernel replacement.
+
 ## Quick Start
 
 ### Requirements
