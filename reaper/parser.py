@@ -18,7 +18,7 @@ class Node:
 
 
 _PRECEDENCE = {
-    "::": 1,
+    "::": 1, "->": 1,
     "OR": 2,
     "AND": 3,
     "==": 4, "!=": 4, "<": 4, "<=": 4, ">": 4, ">=": 4,
@@ -142,6 +142,14 @@ class Parser:
     def _expression(self, minimum: int = 1) -> Node:
         left = self._prefix()
         while True:
+            # Newlines may separate flow stages, but remain statement
+            # boundaries when they are not followed by a pipe operator.
+            if self._check("NEWLINE"):
+                newline_position = self.current
+                self._skip_newlines()
+                if not self._check("::") and not self._check("->"):
+                    self.current = newline_position
+                    break
             if self._match("("):
                 left = self._call(left, self._previous())
                 continue
@@ -161,7 +169,8 @@ class Parser:
             self._skip_newlines()
             next_minimum = precedence if operator == "**" else precedence + 1
             right = self._expression(next_minimum)
-            left = Node("binary", token, value=operator, children=[left, right])
+            canonical_operator = "::" if operator == "->" else operator
+            left = Node("binary", token, value=canonical_operator, children=[left, right])
         return left
 
     def _call(self, callee: Node, token: Token) -> Node:
