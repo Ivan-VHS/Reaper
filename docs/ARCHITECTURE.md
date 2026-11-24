@@ -5,13 +5,15 @@
 | CLI / Studio | source input, run/check/debug, reports |
 | Lexer | deterministic tokens and source spans |
 | Python parser/runtime | reference semantics, scopes, values, quotas |
-| Native C17 | token stream, expression AST, checked IR, limited lowering |
+| Semantic IR | versioned typed expression graph, source provenance, contracts and diagnostics |
+| Execution IR | verified stack instructions consumed by the VM; kept separate from semantic IR |
+| Native C17 | token stream, expression AST, checked scalar IR, limited lowering |
 | MOST | exact keyword canonicalization before the same parser |
 | QCS | independent hardware-domain syntax validation |
 | Adapters | versioned JSON and explicitly selected native ABI |
 | Tests | syntax, semantics, bounds, negative cases and integrations |
 
-Reaper source → tokens → AST → bounded reference runtime → explicit output. The C17 track is separate until full language conformance. Studio is Windows-only.
+Reaper source → UTF-8 source spans → tokens → AST → semantic IR → analysis/contracts → execution IR → bounded reference runtime. The semantic graph is versioned and source-aware; the existing stack `CanonicalIR` remains the VM execution format. The C17 track is separate until full language conformance. Studio is Windows-only.
 
 ## Integrated product layer
 

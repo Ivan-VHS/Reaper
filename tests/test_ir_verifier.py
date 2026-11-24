@@ -27,6 +27,12 @@ class CanonicalIRVerificationTests(unittest.TestCase):
         verify(module)
         self.assertGreater(len(module.code), 0)
 
+    def test_arrow_pipe_keeps_the_existing_vm_instruction_contract(self) -> None:
+        tree = parse("emit [1, 2, 3] -> size()", "arrow.rpr")
+        module = lower(tree, "arrow.rpr")
+        verify(module)
+        self.assertIn("PIPE_CALL", [instruction.op for instruction in module.code])
+
     def test_jump_target_rejects_boolean_and_out_of_range_values(self) -> None:
         for target in (True, -1, 2):
             with self.subTest(target=target):

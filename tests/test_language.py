@@ -181,6 +181,15 @@ class RuntimeTests(unittest.TestCase):
         """
         self.assertEqual(self.capture(source), ["14"])
 
+    def test_arrow_pipeline_alias_executes_across_lines(self) -> None:
+        source = """
+        craft double(value) { yield value * 2 }
+        emit [1, 2, 3]
+            -> map(double)
+            -> sum()
+        """
+        self.assertEqual(self.capture(source), ["12"])
+
     def test_old_flow_operator_is_rejected(self) -> None:
         with self.assertRaises(LexError):
             tokenize("emit [1, 2] |> size()")

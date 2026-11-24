@@ -37,6 +37,7 @@
 | [INTERNAL_PRODUCTS.md](INTERNAL_PRODUCTS.md) | integrated product catalogue and service contracts |
 | [FEATURES.md](FEATURES.md) | shipped, reference and proposed capability matrix |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | runtime and compiler stages |
+| [SEMANTIC_IR.md](SEMANTIC_IR.md) | versioned semantic graph IR, source spans, lowering, type contracts and diagnostics |
 | [NATIVE_COMPILER.md](NATIVE_COMPILER.md) | checked scalar AOT compilation to C17 and the host toolchain |
 | [HARDWARE_LANGUAGE.md](HARDWARE_LANGUAGE.md) | systems-language architecture, MMIO contract, Studio hardware workbench and migration gates |
 | [NATIVE_COMPILER.md](NATIVE_COMPILER.md) | statically checked scalar AOT compilation to C17 and the host toolchain |

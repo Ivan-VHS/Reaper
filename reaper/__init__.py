@@ -15,6 +15,14 @@ from .evolution import EvolutionEngine, EvolutionReport
 from .runtime import Interpreter, run
 from .transactions import RuntimeTransaction, Snapshot, TransactionConflict, TransactionError, TransactionLimitError
 from .ir import CanonicalIR, IRVerificationError, lower as lower_to_ir
+from .source import LineIndex, SourceSpan, Span, format_source_diagnostic
+from .semantic_ir import (
+    FunctionSignature, IRCall, IRDiagnostic, IRIndex, IRIntrinsic, IRList,
+    IRLiteral, IRNode, IRTypeChecker, IRTypeCheckResult, IRVar, NodeOrigin,
+    SemanticAnalysisResult, SemanticIR, SemanticIRVerificationError,
+    analyze_expression_source, lower_expression as lower_semantic_ir,
+    typecheck_ir, verify_semantic_ir,
+)
 from .vm import BytecodeProgram, VirtualMachine, assemble as assemble_bytecode
 from .modules import ModuleCycleError, ModuleError, ModuleLoader
 from .memory import MemoryManager, HeapLimitError, RegionError
@@ -38,6 +46,12 @@ __all__ = [
     "euclidean_divmod", "factor_pairs", "recombine", "run", "split_evenly",
     "TOKEN_CATALOG_SIZE", "token_catalog", "token_info", "token_is_reserved",
     "CanonicalIR", "IRVerificationError", "lower_to_ir", "BytecodeProgram",
+    "SourceSpan", "Span", "LineIndex", "format_source_diagnostic",
+    "SemanticIR", "SemanticIRVerificationError", "IRNode", "IRVar", "IRLiteral",
+    "IRIntrinsic", "IRList", "IRIndex", "IRCall", "NodeOrigin", "FunctionSignature",
+    "IRDiagnostic", "IRTypeChecker", "IRTypeCheckResult", "lower_semantic_ir",
+    "typecheck_ir", "verify_semantic_ir", "SemanticAnalysisResult",
+    "analyze_expression_source",
     "VirtualMachine", "assemble_bytecode", "ModuleCycleError", "ModuleError",
     "ModuleLoader", "MemoryManager", "HeapLimitError", "RegionError",
     "ResourceManager", "ResourceHandle", "CAbiLibrary", "NativeFunction",
