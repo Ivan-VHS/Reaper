@@ -376,6 +376,35 @@ def _write_text(root: Path, relative_path: str, content: str) -> None:
     target.write_text(content, encoding="utf-8", newline="\n")
 
 
+def _validate_generated_sources(root: Path) -> dict[str, Any]:
+    """Parse and statically type-check every generated Reaper source file."""
+    from .parser import parse
+    from .typecheck import TypeChecker
+
+    checked_files = 0
+    warnings = 0
+    for source_path in sorted(root.rglob("*.rpr")):
+        source = source_path.read_text(encoding="utf-8")
+        tree = parse(source, str(source_path))
+        result = TypeChecker(str(source_path)).check(tree)
+        errors = [item for item in result.diagnostics if item.severity == "error"]
+        if errors:
+            details = "; ".join(
+                f"{item.code}: {item.message}" for item in errors[:5]
+            )
+            raise JoraError(f"generated Reaper source failed static validation: {details}")
+        warnings += sum(item.severity == "warning" for item in result.diagnostics)
+        checked_files += 1
+    if checked_files == 0:
+        raise JoraError("Jora did not generate any Reaper source files")
+    return {
+        "status": "passed",
+        "mode": "static-typecheck",
+        "files_checked": checked_files,
+        "warnings": warnings,
+    }
+
+
 def build_application(request: dict[str, Any], output: str | Path) -> dict[str, Any]:
     application = compose_application(request)
     raw_output = Path(output).expanduser()
@@ -451,6 +480,7 @@ def build_application(request: dict[str, Any], output: str | Path) -> dict[str, 
         )
         _write_text(staging, "README.md", readme)
 
+        validation = _validate_generated_sources(staging)
         files = sorted(
             str(path.relative_to(staging)).replace("\\", "/")
             for path in staging.rglob("*")
@@ -471,6 +501,7 @@ def build_application(request: dict[str, Any], output: str | Path) -> dict[str, 
         "name": application["name"],
         "output": str(destination),
         "files": files,
+        "validation": validation,
         "installable": False,
         "source_executed": False,
     }
