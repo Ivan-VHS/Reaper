@@ -4,7 +4,7 @@
     "id": "reaper",
     "name": "Reaper",
     "repository": "Ivan-VHS/Reaper",
-    "summary": "Flow-first programming language with a Python reference runtime, developing native C17 core and explicit tooling integrations in a four-project desktop federation.",
+    "summary": "Flow-first programming language with a Python reference runtime, developing native C17 core, four-project OCTA-8 peer federation and an explicit DuckOS user-space integration.",
     "documentation": "docs/UNIFIED_PROJECT_CONTRACT.md"
   },
   "implementation": {
@@ -153,6 +153,28 @@
         "federation/octa-pyramid.v1.json",
         "docs/OCTA_PYRAMID_FEDERATION.md"
       ]
+    },
+    {
+      "id": "reaper.cli.static-check.v1",
+      "format": "Separate-process CLI contract: python -m reaper --check --json <source>, bounded by the DuckOS host bridge.",
+      "direction": "provides",
+      "status": "implemented",
+      "evidence": [
+        "reaper/cli.py",
+        "docs/FEDERATED_INTEGRATION.md",
+        "docs/DUCKOS_HARDWARE_AUDIT.md"
+      ]
+    },
+    {
+      "id": "duckos.hardware-inventory.v1",
+      "format": "Versioned JSON hardware inventory snapshot with canonical SHA-256 digest.",
+      "direction": "consumes",
+      "status": "implemented",
+      "evidence": [
+        "schemas/duckos.hardware-inventory.v1.schema.json",
+        "reaper/duckos_bridge.py",
+        "docs/DUCKOS_HARDWARE_AUDIT.md"
+      ]
     }
   ],
   "integrations": [
@@ -195,6 +217,22 @@
       "status": "implemented",
       "opt_in": false,
       "summary": "Records membership in the shared four-project OCTA-8 topology without introducing a runtime dependency."
+    },
+    {
+      "project": "duckos",
+      "interface": "reaper.cli.static-check.v1",
+      "mode": "subprocess",
+      "status": "implemented",
+      "opt_in": true,
+      "summary": "DuckOS launches Reaper CLI/static checks as a separate user-space process through an explicit argument vector, timeout and bounded output; Reaper retains ownership of language semantics and execution."
+    },
+    {
+      "project": "duckos",
+      "interface": "duckos.hardware-inventory.v1",
+      "mode": "json-file",
+      "status": "implemented",
+      "opt_in": true,
+      "summary": "Reaper validates a caller-selected read-only DuckOS inventory artifact, including strict JSON parsing, schema fields, summary counts and content digest; it never changes devices or drivers."
     }
   ],
   "safety_boundaries": [
