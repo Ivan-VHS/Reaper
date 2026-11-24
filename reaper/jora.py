@@ -165,7 +165,7 @@ _COMPONENTS: dict[str, dict[str, Any]] = {
         "name": "Calendar Scheduler", "domain": "productivity", "version": "1.0.0",
         "summary": "Calendar events, deadlines, schedules and reminders.",
         "provides": ["calendar.events", "scheduling.deadlines"],
-        "consumes": ["tasks.workflow"],
+        "consumes": [],
         "requires": ["time.model", "storage.local"],
         "conflicts": [], "preferred_languages": [], "maturity": "specification_only",
     },

@@ -315,5 +315,43 @@ class JoraCompositionTests(unittest.TestCase):
         self.assertTrue(all(graph["metrics"]["edge_count"] <= 512 for graph in result["graphs"]["variants"]))
 
 
+    def test_plugin_mesh_keeps_component_capability_edges_acyclic(self):
+        component_ids = [
+            "text.editor", "audio.editor", "translation.workspace", "subtitle.editor",
+            "notes.workspace", "task.board", "calendar.scheduler", "speech.synthesis",
+            "speech.recognition", "code.editor", "spreadsheet.editor", "image.editor",
+            "video.editor",
+        ]
+        result = compose_application(self.request(
+            components=component_ids,
+            language_targets="auto",
+            graph={"topology": "plugin_mesh", "variants": 1, "variation": 0},
+        ))
+        graph = result["graphs"]["variants"][0]
+        adjacency = {}
+        for edge in graph["edges"]:
+            source = str(edge.get("source", ""))
+            target = str(edge.get("target", ""))
+            if source.startswith("component:") and target.startswith("component:"):
+                adjacency.setdefault(source, []).append(target)
+        visiting = set()
+        visited = set()
+
+        def visit(node):
+            if node in visiting:
+                return False
+            if node in visited:
+                return True
+            visiting.add(node)
+            for target in adjacency.get(node, []):
+                if not visit(target):
+                    return False
+            visiting.remove(node)
+            visited.add(node)
+            return True
+
+        self.assertTrue(all(visit(node) for node in adjacency))
+
+
 if __name__ == "__main__":
     unittest.main()
