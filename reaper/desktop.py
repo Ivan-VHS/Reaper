@@ -31,7 +31,7 @@ from reaper.parser import parse
 from reaper.runtime import Interpreter
 from reaper.debugger import DebuggerStopped, RuntimeDebugger
 from reaper.plugins import PluginError, PluginManager
-from reaper.ide_support import SOURCE_EXTENSIONS, highlight_spans, iter_project_entries
+from reaper.ide_support import SOURCE_EXTENSIONS, highlight_spans, iter_project_entries, normalize_diagnostics
 from reaper.language_service import LanguageService
 from reaper.codex66 import export_json as export_codex66_json
 from reaper.codex66_ui import Codex66Window
@@ -729,16 +729,24 @@ class ReaperStudio(tk.Tk):
         self.output.pack(fill="both", expand=True)
         self.type_view = ttk.Treeview(
             types_page,
-            columns=("line", "code", "message"),
+            columns=("file", "line", "column", "severity", "code", "message"),
             show="headings",
             selectmode="browse",
         )
-        self.type_view.heading("line", text="Строка")
-        self.type_view.heading("code", text="Код")
-        self.type_view.heading("message", text="Диагностика")
-        self.type_view.column("line", width=70, anchor="center", stretch=False)
-        self.type_view.column("code", width=110, anchor="w", stretch=False)
-        self.type_view.column("message", width=720, anchor="w", stretch=True)
+        for column, heading, width, stretch in (
+            ("file", "Файл", 190, False),
+            ("line", "Строка", 65, False),
+            ("column", "Колонка", 70, False),
+            ("severity", "Уровень", 95, False),
+            ("code", "Код", 110, False),
+            ("message", "Диагностика", 550, True),
+        ):
+            self.type_view.heading(column, text=heading)
+            self.type_view.column(
+                column, width=width,
+                anchor="w" if column in {"file", "code", "message"} else "center",
+                stretch=stretch,
+            )
         self.type_view.pack(fill="both", expand=True)
         self.type_view.bind("<Double-1>", self._open_type_diagnostic)
         self.variables_view = ttk.Treeview(variables_page, columns=("value",), show="tree headings")
@@ -947,29 +955,42 @@ class ReaperStudio(tk.Tk):
         if not values:
             return
         try:
-            line = max(1, int(values[0]))
-            self.editor.mark_set("insert", f"{line}.0")
-            self.editor.see(f"{line}.0")
+            line = max(1, int(values[1]))
+            column = max(1, int(values[2]))
+            location = f"{line}.{column - 1}"
+            self.editor.mark_set("insert", location)
+            self.editor.see(location)
             self.editor.focus_set()
             self._update_cursor_status()
-        except (tk.TclError, ValueError):
+        except (tk.TclError, ValueError, IndexError):
             return
 
-    def _show_type_diagnostics(self, diagnostics: list[Any]) -> int:
+    def _show_type_diagnostics(
+        self,
+        diagnostics: list[Any],
+        *,
+        source_file: str | Path | None = None,
+    ) -> int:
         self.type_view.delete(*self.type_view.get_children())
         errors = 0
-        for index, item in enumerate(diagnostics):
-            severity = getattr(item, "severity", "error")
-            if severity == "error":
+        records = normalize_diagnostics(
+            source_file if source_file is not None else self._source_name(),
+            diagnostics,
+        )
+        for index, item in enumerate(records):
+            if item.severity == "error":
                 errors += 1
             self.type_view.insert(
                 "",
                 "end",
                 iid=f"type-{index}",
                 values=(
-                    item.line,
+                    item.file,
+                    item.start_line,
+                    item.start_column,
+                    item.severity.upper(),
                     item.code,
-                    f"{severity.upper()}: {item.message}",
+                    item.message,
                 ),
             )
         return errors
@@ -990,7 +1011,7 @@ class ReaperStudio(tk.Tk):
             self.output_tabs.select(0)
             return
 
-        error_count = self._show_type_diagnostics(list(checked.diagnostics))
+        error_count = self._show_type_diagnostics(list(checked.diagnostics), source_file=self._source_name())
         self._append_output(
             f"CHECK: {self._source_name()} — синтаксис корректен; "
             f"типовых ошибок: {error_count}; диагностик: {len(checked.diagnostics)}"
