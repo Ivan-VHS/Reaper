@@ -94,4 +94,7 @@ This is an illustrative personal-budgeting reference, not a claim that the host 
 
 [ECOSYSTEM_ENGINEERING_STANDARD.md](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/ECOSYSTEM_ENGINEERING_STANDARD.md) defines the current five-repository ownership map, stack-specific build/test commands, shared quality requirements, audit sequence and release gates. It complements this repository's own architecture and engineering contracts; source, tests and CI remain the evidence for implementation status.
 
-| [DUCKOS_NATIVE_TARGET_PROFILE.md](DUCKOS_NATIVE_TARGET_PROFILE.md) | DuckOS target profile, compiler requirements, ABI gates and cross-repository integration policy |
+
+## DuckOS native target
+
+[DuckOS Native Target Profile](DUCKOS_NATIVE_TARGET_PROFILE.md) defines Reaper's compiler, runtime, ABI, freestanding and validation obligations for the DuckOS target. The larger cross-project migration plan remains owned by DuckOS.
