@@ -1,0 +1,57 @@
+# Message: [body_text, link_count].
+# Heuristic scorer: [decision, score]. It is a triage aid, not a universal spam verdict.
+craft uppercase_ratio(value) {
+    vary letters := 0
+    vary uppercase_letters := 0
+    each character in value {
+        when lower(character) != upper(character) {
+            change letters := letters + 1
+            when character == upper(character) {
+                change uppercase_letters := uppercase_letters + 1
+            }
+        }
+    }
+    when letters == 0 {
+        yield 0
+    }
+    yield uppercase_letters / letters
+}
+
+craft contains_banned_phrase(value) {
+    make normalized := lower(value)
+    yield contains(normalized, "buy followers") or contains(normalized, "guaranteed profit")
+}
+
+craft score_message(message) {
+    vary score := 0
+    when message[1] > 3 {
+        change score := score + 40
+    }
+    when uppercase_ratio(message[0]) > 0.75 {
+        change score := score + 25
+    }
+    when contains_banned_phrase(message[0]) {
+        change score := score + 80
+    }
+    yield score
+}
+
+craft moderate(message) {
+    make score := score_message(message)
+    when score >= 80 {
+        yield ["block", score]
+    }
+    when score >= 40 {
+        yield ["review", score]
+    }
+    yield ["allow", score]
+}
+
+make messages := [
+    ["Hello, could you review this release note?", 1],
+    ["LIMITED OFFER CLICK NOW", 5],
+    ["Buy followers today for guaranteed profit", 1]
+]
+each message in messages {
+    emit moderate(message)
+}
