@@ -36,7 +36,10 @@
       "pattern": "^[a-z0-9][a-z0-9-]{1,60}$"
     },
     "name": {
-      "const": "Jora"
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "pattern": "^(?!.*[Jj][Oo][Rr][Aa]).+$"
     },
     "description": {
       "type": "string",
@@ -88,7 +91,10 @@
           }
         },
         "result": {
-          "const": "Jora"
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "pattern": "^(?!.*[Jj][Oo][Rr][Aa]).+$"
         }
       }
     },
@@ -328,8 +334,8 @@
       "additionalProperties": false,
       "required": [
         "version",
-        "brand",
-        "canonical_name",
+        "platform",
+        "product_name_policy",
         "style",
         "descriptors",
         "selected",
@@ -340,11 +346,11 @@
         "version": {
           "const": "jora-naming.v2"
         },
-        "brand": {
+        "platform": {
           "const": "Jora"
         },
-        "canonical_name": {
-          "const": "Jora"
+        "product_name_policy": {
+          "const": "independent_application_brand"
         },
         "style": {
           "enum": [
@@ -375,7 +381,7 @@
             },
             "label": {
               "type": "string",
-              "pattern": "^Jora"
+              "pattern": "^(?!.*[Jj][Oo][Rr][Aa]).+$"
             },
             "style": {
               "enum": [
