@@ -54,6 +54,7 @@ The branch adds or strengthens the following usable foundations:
 | Embedded C workflows | implemented | existing project init, inspect and build actions retained |
 | Light/dark/system theme | implemented | existing Reaper theme services retained |
 | Language server (LSP) | implemented | versioned UTF-16 JSON-RPC, parser/structure diagnostics, background per-document symbol index |
+| Structured local diagnostics | implemented | `reaper/ide_support.py`, `tests/test_ide_support.py`; source file, one-based start/end position, severity and stable diagnostic code; UI jumps to exact line/column |
 | Completion, hover, rename, references | partial | keyword/symbol completion and lexical navigation/refactoring; no cross-file type resolution |
 | AST/IR visual explorer | deferred | requires stable public AST/IR inspection API |
 | Test explorer and coverage | deferred | requires test discovery and machine-readable test events |
@@ -114,7 +115,7 @@ The existing editor is a single-document workbench. Multi-tab sessions, cross-fi
 ## 6. Next implementation sequence
 
 1. **Stabilize editor core:** add UI-level smoke tests, scroll-synchronized line numbers, robust error-to-source navigation and multi-tab document state.
-2. **Diagnostics service:** expose parser diagnostics as structured records with file, range, severity and stable code.
+2. **Diagnostics service:** implemented for local type-check diagnostics; parser/LSP diagnostics retain their compiler-owned source spans. Extend the normalized contract to semantic cross-file diagnostics after the compiler-owned typed-IR API is stable.
 3. **Semantic protocol:** extend the implemented versioned JSON-RPC/LSP service with compiler-owned AST and typed-IR data.
 4. **Completion and navigation:** replace lexical-only resolution with scope-aware symbols, type-aware completion, semantic tokens and AST-safe refactoring.
 5. **Test and build panels:** machine-readable task events, cancellable subprocesses, progress, logs and artifact links.
