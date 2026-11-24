@@ -81,7 +81,7 @@ class IRLoweringError(ValueError):
     pass
 
 
-class IRVerificationError(ValueError):
+class SemanticIRVerificationError(ValueError):
     pass
 
 
@@ -210,40 +210,40 @@ def lower_expression(node: Node, source_name: str | None = None) -> SemanticIR:
 def verify_semantic_ir(module: SemanticIR) -> None:
     """Validate node identity, structure, and provenance before later passes consume IR."""
     if not isinstance(module, SemanticIR):
-        raise IRVerificationError("expected a SemanticIR module")
+        raise SemanticIRVerificationError("expected a SemanticIR module")
     if module.version != SEMANTIC_IR_VERSION:
-        raise IRVerificationError(f"unsupported semantic IR version: {module.version}")
+        raise SemanticIRVerificationError(f"unsupported semantic IR version: {module.version}")
     if not module.source_name:
-        raise IRVerificationError("semantic IR source_name must be non-empty")
+        raise SemanticIRVerificationError("semantic IR source_name must be non-empty")
     if not isinstance(module.root, IRNode):
-        raise IRVerificationError("semantic IR root must be an IR node")
+        raise SemanticIRVerificationError("semantic IR root must be an IR node")
 
     seen_ids: set[int] = set()
     active_ids: set[int] = set()
 
     def visit(node: IRNode) -> None:
         if not isinstance(node, IRNode):
-            raise IRVerificationError("IR child must be an IRNode")
+            raise SemanticIRVerificationError("IR child must be an IRNode")
         if type(node.node_id) is not int or node.node_id <= 0:
-            raise IRVerificationError("IR node id must be a positive integer")
+            raise SemanticIRVerificationError("IR node id must be a positive integer")
         if node.node_id in active_ids:
-            raise IRVerificationError("semantic IR graph contains a cycle")
+            raise SemanticIRVerificationError("semantic IR graph contains a cycle")
         if node.node_id in seen_ids:
-            raise IRVerificationError("semantic IR node ids must be unique")
+            raise SemanticIRVerificationError("semantic IR node ids must be unique")
         if not isinstance(node.span, SourceSpan) or not isinstance(node.origin, NodeOrigin):
-            raise IRVerificationError("every IR node must carry a source span and origin")
+            raise SemanticIRVerificationError("every IR node must carry a source span and origin")
         if node.origin.primary != node.span:
-            raise IRVerificationError("node origin primary span must match the node span")
+            raise SemanticIRVerificationError("node origin primary span must match the node span")
         seen_ids.add(node.node_id)
         active_ids.add(node.node_id)
         if isinstance(node, IRVar):
             if not isinstance(node.name, str) or not node.name:
-                raise IRVerificationError("IRVar requires a non-empty name")
+                raise SemanticIRVerificationError("IRVar requires a non-empty name")
         elif isinstance(node, IRLiteral):
             pass
         elif isinstance(node, IRIntrinsic):
             if not node.name:
-                raise IRVerificationError("IRIntrinsic requires a name")
+                raise SemanticIRVerificationError("IRIntrinsic requires a name")
         elif isinstance(node, IRList):
             for item in node.items:
                 visit(item)
@@ -252,14 +252,14 @@ def verify_semantic_ir(module: SemanticIR) -> None:
             visit(node.index)
         elif isinstance(node, IRCall):
             if not isinstance(node.arguments, tuple):
-                raise IRVerificationError("IRCall arguments must be an immutable tuple")
+                raise SemanticIRVerificationError("IRCall arguments must be an immutable tuple")
             if node.from_pipe and not node.arguments:
-                raise IRVerificationError("a lowered pipeline call must receive the piped value")
+                raise SemanticIRVerificationError("a lowered pipeline call must receive the piped value")
             visit(node.callee)
             for argument in node.arguments:
                 visit(argument)
         else:
-            raise IRVerificationError(f"unknown semantic IR node kind: {type(node).__name__}")
+            raise SemanticIRVerificationError(f"unknown semantic IR node kind: {type(node).__name__}")
         active_ids.remove(node.node_id)
 
     visit(module.root)
