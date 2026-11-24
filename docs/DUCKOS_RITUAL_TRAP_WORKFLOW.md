@@ -7,7 +7,7 @@
 
 ## Purpose
 
-DuckOS Concrete Thump can export a Reaper source timing helper. This example demonstrates Reaper as a small, inspectable systems-language tool in the existing DuckOS/Reaper process boundary. It calculates swung sixteenth-note offbeat marker times from BPM and swing values.
+DuckOS Concrete Thump can export a Reaper source timing helper. This example demonstrates Reaper as a small, inspectable systems-language tool in the existing DuckOS/Reaper process boundary. It calculates swung eighth-note offbeat markers on a sixteenth-note timing grid from BPM and swing values.
 
 The helper does **not** load samples, synthesize sound, render audio, access an audio device, create MIDI, or control a DAW. Reaper remains a systems programming language and hardware development studio; this companion example does not change that product identity.
 
@@ -39,7 +39,7 @@ For each offbeat index, the script reports a marker in milliseconds. These value
 
 1. Open Mora → Concrete Thump.
 2. Select the vocal tradition and chant/song sources independently.
-3. Import only audio you own, have permission to use, or can verify as public-domain/licensed. Imported files are previewed locally in the browser.
+3. Import only audio you own, have permission to use, or can verify as public-domain/licensed. Imported files can be auditioned, sequenced and rendered to a local four-bar WAV in the browser.
 4. Save the profile and export the Reaper timing helper.
 5. Run the DuckOS Reaper static check on the exported source; run typecheck where supported.
 6. Open Reaper Studio separately to inspect or edit the generated language source.
@@ -51,4 +51,5 @@ For each offbeat index, the script reports a marker in milliseconds. These value
 - Sample files are limited to eight entries, 25 MiB each and 80 MiB total per open Concrete Thump session.
 - The JSON profile export contains metadata, not embedded audio.
 - Orthodox liturgical repertoire and East Slavic folk/seasonal/ceremonial repertoire are separate selectable source families. Combining them is an arrangement choice, not a claim that they are the same historical tradition.
-- Full synthesis, MIDI, multitrack editing, waveform processing, native audio routing and kernel audio services remain outside this feature.
+- Reaper does not receive sample bytes or control the browser sequencer. Its helper only calculates timing markers.
+- Native audio drivers, system mixing, MIDI integration, advanced synthesis, multitrack editing, waveform editing and hardware routing remain outside this companion workflow.
