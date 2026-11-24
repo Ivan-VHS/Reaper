@@ -50,6 +50,10 @@ jobs:
             -cp "$RUNNER_TEMP/bav-classes" org.ivanvhs.bav.BavSelfTest
       - name: Run Reaper BAV adapter regression tests
         run: python3 -m unittest discover -s tests -p "test_bav.py" -v
+      - name: Run object-capability authority tests
+        run: python3 -m unittest discover -s tests -p "test_capabilities.py" -v
+      - name: Run capability-enforced plugin host tests
+        run: python3 -m unittest discover -s tests -p "test_plugins.py" -v
       - name: Run unified Java/Reaper BAV scan
         env:
           BASE_REF: ${{ github.event.pull_request.base.sha || '' }}

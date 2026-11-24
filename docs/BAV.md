@@ -86,7 +86,21 @@ Exit status:
 
 The adapter compiles the Java scanner into a temporary directory and removes it after execution. It uses argument vectors (never a shell), a minimalized child-process environment, bounded timeouts and no stdin. It then runs the canonical Beelzebul scanner and merges both reports. A failed/missing engine is an error, not a partial green scan.
 
-### 4. Unified report semantics
+### 4. Reaper Capability Forge
+
+The Reaper extension host now uses `reaper/capabilities.py` for application-level object capabilities:
+
+- Raw request mappings are parsed into immutable `CapabilityRequest` objects; principal, resource and action values pass explicit taint/refinement parsing before they reach the authority.
+- Grants are HMAC-SHA-256 authenticated, bound to one authority, one principal, one canonical resource subtree and a finite action set. Tokens are opaque, signatures are redacted from representations, and tokens deliberately cannot be serialized.
+- Every grant has a bounded lifetime (15 minutes by default for an individual request, one hour for built-in plugin grants by host policy), and the authority enforces a configurable active-token ceiling.
+- The authority supports token revocation, principal-wide revocation and global revocation. Expiry is purged during verification and active-count inspection.
+- Authorization checks use constant-time signature comparison and segment-bounded resource matching. A plugin cannot access a sibling resource by exploiting a textual prefix such as `plugins/app` versus `plugins/application`.
+- `PluginManager` issues each built-in plugin a separate principal/resource grant, requires both `invoke` and the plugin's registered primary operation, and revokes the grant when the plugin is disabled. Expired or externally revoked grants fail closed.
+- A protected plugin operation and revocation are serialized by the authority lock: once a revocation call returns, that grant cannot authorize a later operation. Plugin host state is also protected by a reentrant lock.
+
+This is a real Reaper host authorization boundary for the built-in plugin dispatch path. It is **not** an OS process sandbox: it does not confine arbitrary Python code, other direct in-process calls, filesystem access outside the plugin host, native FFI, network sockets or child processes. The signing key is ephemeral and process-local by default; durable cross-process tokens and managed key rotation are not part of this increment.
+
+### 5. Unified report semantics
 
 The report schema is versioned at `schemas/bav.security.report.v1.schema.json`. Each finding preserves `rule_id`, `severity`, `enforcement`, `path`, `line`, `message` and `remediation`, plus a `component` field identifying its scanner.
 
@@ -98,14 +112,14 @@ Verdict precedence is monotonic:
 
 The unified risk score is the maximum of the component scores, not a sum; this avoids double-counting the same underlying exposure when both scanners observe it. All distinct findings remain in the report.
 
-### 5. Safety and maturity boundaries
+### 6. Safety and maturity boundaries
 
 BAV is a repository/source security scanner and CI gate. It is **not yet** a general-purpose endpoint antivirus, kernel anti-malware driver, firewall, runtime EDR, process monitor, malware-signature cloud, disk quarantine service or operating-system sandbox. It does not claim to deliver those capabilities.
 
-The existing Reaper C capability registry and its `Kali` module are not re-labelled as an OS sandbox. Capability-based runtime isolation, signed permission tokens, revocation, secure secret storage, filesystem encryption and native process containment require separate runtime/OS implementations and dedicated integration tests.
+The existing Reaper C capability registry and its `Kali` module are not re-labelled as an OS sandbox. OS-level process isolation, kernel enforcement, native FFI confinement, secure secret storage, durable managed key rotation, filesystem encryption and native process containment still require separate runtime/OS implementations and dedicated integration tests. The application-level plugin grants do not replace those controls.
 
 The scanner itself is read-only with respect to inspected source. The optional `--output` path is the only intentional report write. CI runs with read-only repository permissions and does not grant scanned pull-request code access to secrets.
 
 ## Verification
 
-The BAV workflow validates the existing policy contract, runs the original Beelzebul regression suite, compiles and executes the Java self-test under JDK 17, runs the Reaper adapter tests, and finally executes the unified scan. The self-test verifies Java-specific detections, secret redaction and non-mutation of inspected files.
+The BAV workflow validates the existing policy contract, runs the original Beelzebul regression suite, compiles and executes the Java self-test under JDK 17, runs the capability-authority, plugin-host and Reaper adapter tests, and finally executes the unified scan. The self-test verifies Java-specific detections, secret redaction and non-mutation of inspected files.
