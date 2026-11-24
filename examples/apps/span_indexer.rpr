@@ -1,0 +1,7 @@
+# Reaper application front-end: span_indexer.
+make input_path := ask("JSON input path: ")
+make payload := read_json(input_path)
+make result := app_run("span_indexer", payload)
+make output_path := ask("JSON output path: ")
+make saved := write_json(output_path, result)
+emit "Saved span_indexer: " ++ saved

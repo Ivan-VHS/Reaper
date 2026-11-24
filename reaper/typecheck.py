@@ -39,6 +39,7 @@ BUILTIN_ARITY: dict[str, tuple[int, int | None]] = {
     "file_open": (1, 2), "file_read": (1, 1), "file_write": (2, 2),
     "file_close": (1, 1), "with_file": (3, 3), "resource_stats": (0, 0),
     "heap_stats": (0, 0), "heap_collect": (0, 0), "region_begin": (0, 0),
+    "read_json": (1, 1), "write_json": (2, 2), "app_run": (2, 2),
     "region_end": (1, 1), "ffi_open": (1, 1), "ffi_bind": (3, 4),
     "ffi_close": (1, 1), "pytyliki_open": (1, 1),
 }
@@ -63,6 +64,7 @@ BUILTIN_RETURN: dict[str, str] = {
     "file_write": "Nothing", "file_close": "Nothing", "with_file": ANY,
     "resource_stats": "Map", "heap_stats": "Map", "heap_collect": "Int",
     "region_begin": "Region", "region_end": "Nothing", "ffi_open": "Library",
+    "read_json": ANY, "write_json": "Text", "app_run": "Map",
     "ffi_bind": "Function", "ffi_close": "Nothing", "pytyliki_open": "Bridge",
 }
 

@@ -1,0 +1,7 @@
+# Reaper application front-end: physics_bench.
+make input_path := ask("JSON input path: ")
+make payload := read_json(input_path)
+make result := app_run("physics_bench", payload)
+make output_path := ask("JSON output path: ")
+make saved := write_json(output_path, result)
+emit "Saved physics_bench: " ++ saved

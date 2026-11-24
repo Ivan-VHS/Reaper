@@ -779,9 +779,11 @@ class Interpreter:
         register("convolve", lambda signal, kernel: arithmetic.convolve(sequence(signal), sequence(kernel)), 2, 2)
         register("cartesianize", lambda left, right: arithmetic.cartesianize(sequence(left), sequence(right)), 2, 2)
         from .federation import read_json, write_json, oplage_metrics, compare_oplage_snapshots
+        from .apps import run_app as run_application
         from .native import pytyliki_norm, pytyliki_dot, pytyliki_distance, pytyliki_orthogonal
         register("read_json", read_json, 1, 1)
         register("write_json", write_json, 2, 2)
+        register("app_run", run_application, 2, 2)
         register("oplage_metrics", oplage_metrics, 1, 1)
         register("oplage_compare", compare_oplage_snapshots, 2, 3)
         register("pytyliki_norm", pytyliki_norm, 2, 2)

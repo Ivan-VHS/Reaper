@@ -1,0 +1,7 @@
+# Reaper application front-end: latency_probe.
+make input_path := ask("JSON input path: ")
+make payload := read_json(input_path)
+make result := app_run("latency_probe", payload)
+make output_path := ask("JSON output path: ")
+make saved := write_json(output_path, result)
+emit "Saved latency_probe: " ++ saved

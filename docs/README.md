@@ -30,7 +30,8 @@
 | [LSP_SEMANTIC_TOKENS.md](LSP_SEMANTIC_TOKENS.md) | LSP semantic token legend, encoding and lexical limits |
 | [PROGRAM_CATALOG_1000.md](PROGRAM_CATALOG_1000.md) | adoption map, implementation status and verified first-wave capabilities |
 | [NOO_TAH.md](NOO_TAH.md) | official Node.js runtime management, V8/libuv, npm, Inspector and Studio bridge |
-| [KORA.md](KORA.md) | 66 standard-library functions in seven manifest-backed modules |
+| [KORA.md](KORA.md) |
+| [APP_SUITE.md](APP_SUITE.md) | Fifteen first-party JSON applications, Reaper entry points, CLI and integration boundaries | 66 standard-library functions in seven manifest-backed modules |
 | [UI_MOTION.md](UI_MOTION.md) | accessible, persisted motion preferences and reduced-motion limits |
 | [ANATIDAE_MOTION_CONSTITUTION.md](ANATIDAE_MOTION_CONSTITUTION.md) | shared white/blue/red desktop motion and surface profile |
 | [PLUGINS.md](PLUGINS.md) | internal plugin host and extension lifecycle |
