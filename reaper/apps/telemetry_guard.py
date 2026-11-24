@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from typing import Any
+import math
 
 from .common import require_array, require_number, require_object
 
@@ -25,10 +26,13 @@ def run(payload: dict[str, Any]) -> dict[str, Any]:
                 raise ValueError("voltage_invalid")
             if current < 0.0:
                 raise ValueError("current_invalid")
+            power = voltage * current
+            if not math.isfinite(power):
+                raise ValueError("power_overflow")
             accepted.append({
                 "id": record_id,
                 "temp_c": temperature,
-                "power_w": round(voltage * current, 6),
+                "power_w": round(power, 6),
             })
         except (TypeError, ValueError) as error:
             rejected.append({"id": record_id, "index": index, "reason": str(error)})

@@ -27,6 +27,10 @@ class ReaperApplicationSuiteTests(unittest.TestCase):
         self.assertEqual(result["counts"], {"received": 2, "accepted": 1, "rejected": 1})
         self.assertEqual(result["accepted"][0]["power_w"], 24)
         self.assertEqual(result["rejected"][0]["reason"], "temp_out_of_range")
+        overflow = run_app("telemetry_guard", {"readings": [
+            {"id": "overflow", "temp_c": 25, "voltage_v": 48, "current_a": 1e308},
+        ]})["result"]
+        self.assertEqual(overflow["rejected"][0]["reason"], "power_overflow")
 
     def test_log_sieve_groups_5xx_by_service(self):
         result = run_app("log_sieve", {"lines": [
@@ -172,6 +176,10 @@ class ReaperApplicationSuiteTests(unittest.TestCase):
         with self.assertRaisesRegex(ApplicationInputError, "invalid_output_energy"):
             run_app("physics_bench", {"run": {
                 "mass_kg": 2, "speed_m_s": 10, "input_energy_j": 10,
+            }})
+        with self.assertRaisesRegex(ApplicationInputError, "kinetic_energy_overflow"):
+            run_app("physics_bench", {"run": {
+                "mass_kg": 1e308, "speed_m_s": 1e308, "input_energy_j": 1e308,
             }})
 
     def test_brainfuck_vm_runs_loops_and_enforces_tape_bounds(self):

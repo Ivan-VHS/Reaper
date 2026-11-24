@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from typing import Any
+import math
 
 from .common import ApplicationInputError, optional_number, require_number, require_object
 
@@ -16,6 +17,8 @@ def run(payload: dict[str, Any]) -> dict[str, Any]:
     if input_energy == 0.0:
         raise ApplicationInputError("zero_input_energy")
     kinetic = 0.5 * mass * speed * speed
+    if not math.isfinite(kinetic):
+        raise ApplicationInputError("kinetic_energy_overflow")
     if kinetic > input_energy:
         raise ApplicationInputError("invalid_output_energy")
     efficiency = (kinetic / input_energy) * 100.0
@@ -26,6 +29,10 @@ def run(payload: dict[str, Any]) -> dict[str, Any]:
         force = require_number(run_data.get("force_n"), "run.force_n")
         distance = require_number(run_data.get("distance_m"), "run.distance_m")
         work = force * distance
+        if not math.isfinite(work):
+            raise ApplicationInputError("mechanical_work_overflow")
+    if not math.isfinite(efficiency):
+        raise ApplicationInputError("efficiency_overflow")
     return {
         "kinetic_energy_j": round(kinetic, 9),
         "work_j": None if work is None else round(work, 9),
