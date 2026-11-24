@@ -110,7 +110,7 @@ class JoraCompositionTests(unittest.TestCase):
         result = compose_application(self.request(graph={"topology": "event_driven", "variants": 1, "variation": 0}))
         graph = result["graphs"]["variants"][0]
         self.assertEqual(graph["topology"], "event_driven")
-        self.assertEqual(graph["cycle_policy"]["dependency_edges"], "acyclic")
+        self.assertEqual(graph["cycle_policy"]["synchronous_edges"], "acyclic")
         self.assertIn("asynchronous", graph["cycle_policy"]["event_feedback"])
         self.assertTrue(any(edge.get("delivery") == "asynchronous" for edge in graph["edges"]))
 
