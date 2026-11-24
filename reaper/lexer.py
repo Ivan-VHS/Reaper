@@ -4,9 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .source import SourceSpan
-
 from .errors import LexError
+from .source import SourceSpan
 from .token_catalog import token_is_reserved
 
 
@@ -219,7 +218,6 @@ class Lexer:
         ))
 
     def _identifier(self) -> None:
-        start = self.index
         start_line, start_column = self.line, self.column
         start, byte_start = self.index, self.byte_index
         while self._peek().isalnum() or self._peek() == "_":
