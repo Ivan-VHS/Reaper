@@ -61,10 +61,19 @@ def diagnose_exception(error: ReaperError, fallback_file: str | None = None) -> 
         line = column = 0
         message = raw
 
+    source_span = getattr(error, "span", None)
+    if source_span is not None:
+        filename = source_span.file
+        line = max(0, source_span.line - 1)
+        column = max(0, source_span.col - 1)
+        end_column = max(column, column + source_span.end - source_span.start)
+    else:
+        end_column = column + 1
+
     definition = _DEFINITIONS[code]
     return StructuredDiagnostic(
         code=code, severity=definition["severity"], message=message, file=filename,
         range={"start":{"line":line,"character":column},
-               "end":{"line":line,"character":column + 1}},
+               "end":{"line":line,"character":end_column}},
         help=definition["help"],
     )

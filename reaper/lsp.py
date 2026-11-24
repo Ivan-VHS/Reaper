@@ -54,11 +54,16 @@ class LspServer:
 
     def _range(self, text, span: Span):
         lines = text.splitlines()
-        line = lines[span.line] if span.line < len(lines) else ""
-        start = len(line[:span.start].encode("utf-16-le")) // 2
-        end = len(line[:span.end].encode("utf-16-le")) // 2
-        return {"start": {"line": span.line, "character": start},
-                "end": {"line": span.line, "character": end}}
+        start_line = span.line
+        end_line = span.end_line if span.end_line is not None else span.line
+        start_text = lines[start_line] if 0 <= start_line < len(lines) else ""
+        end_text = lines[end_line] if 0 <= end_line < len(lines) else ""
+        start = len(start_text[:span.start].encode("utf-16-le")) // 2
+        end = len(end_text[:span.end].encode("utf-16-le")) // 2
+        return {
+            "start": {"line": start_line, "character": start},
+            "end": {"line": end_line, "character": end},
+        }
 
     def _publish(self, uri):
         analysis = self.service.analyze(uri)

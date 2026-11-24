@@ -22,6 +22,7 @@ class Span:
     line: int
     start: int
     end: int
+    end_line: int | None = None
 
 @dataclass(frozen=True, slots=True)
 class Symbol:
@@ -78,6 +79,19 @@ def _offset(text, pos):
         index += 1
     return sum(map(len, lines[:line])) + index
 
+def _source_position(text, offset):
+    """Convert a Python code-point offset to a zero-based source position."""
+    offset = max(0, min(int(offset), len(text)))
+    row = text.count("\n", 0, offset)
+    line_start = text.rfind("\n", 0, offset) + 1
+    return row, offset - line_start
+
+
+def _span_from_offsets(text, start, end):
+    start_row, start_character = _source_position(text, start)
+    end_row, end_character = _source_position(text, end)
+    return Span(start_row, start_character, end_character, end_row)
+
 def _scan(snapshot):
     symbols, identifiers, diagnostics, stack = [], [], [], []
     for row, source in enumerate(snapshot.text.splitlines()):
@@ -105,25 +119,45 @@ def _scan(snapshot):
         from .typecheck import TypeChecker
         checked = TypeChecker(snapshot.uri).check(tree)
         for item in checked.diagnostics:
-            start = max(0, item.column - 1)
+            if item.span is not None:
+                source_span = _span_from_offsets(
+                    snapshot.text, item.span.start, item.span.end
+                )
+            else:
+                start = max(0, item.column - 1)
+                source_span = Span(max(0, item.line - 1), start, start + 1)
             diagnostics.append(Diagnostic(
                 item.message,
                 item.severity,
-                Span(max(0, item.line - 1), start, start + 1),
+                source_span,
                 item.code,
                 None,
             ))
     except (ReaperError, ValueError) as error:
-        parts = str(error).rsplit(":", 3)
+        raw = str(error)
+        parts = raw.rsplit(":", 3)
         try:
             row, column, message = int(parts[-3]) - 1, int(parts[-2]) - 1, parts[-1].strip()
         except (ValueError, IndexError):
-            row, column, message = 0, 0, str(error)
+            row, column, message = 0, 0, raw
+        source_span = getattr(error, "span", None)
+        if source_span is not None:
+            source_range = _span_from_offsets(
+                snapshot.text, source_span.start, source_span.end
+            )
+        else:
+            source_range = Span(
+                max(0, row), max(0, column), max(0, column) + 1
+            )
         code = "RPR-E0001" if isinstance(error, LexError) else "RPR-E0013"
         definition = explain_diagnostic(code)
-        diagnostics.append(Diagnostic(message, "error",
-                                      Span(max(0, row), max(0, column), max(0, column) + 1),
-                                      code, definition["help"] if definition else None))
+        diagnostics.append(Diagnostic(
+            message,
+            "error",
+            source_range,
+            code,
+            definition["help"] if definition else None,
+        ))
     return Analysis(snapshot, tuple(symbols), tuple(identifiers), tuple(diagnostics))
 
 class LanguageService:

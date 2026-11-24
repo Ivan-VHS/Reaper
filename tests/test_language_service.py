@@ -96,6 +96,27 @@ class LspAdapterTests(unittest.TestCase):
             "end": {"line": 0, "character": 8},
         })
 
+    def test_multiline_semantic_range_uses_utf16_only_at_lsp_boundary(self):
+        uri = "file:///unicode-flow.rpr"
+        source = 'emit "😀" ++ "x" *\n  2'
+        self.server.service.open(uri, source)
+        analysis = self.server.service.analyze(uri)
+        diagnostic = next(
+            item for item in analysis.diagnostics if item.code == "RPR-T0004"
+        )
+        self.assertEqual(diagnostic.span.line, 0)
+        self.assertEqual(diagnostic.span.end_line, 1)
+        line = source.splitlines()
+        expected_start = len(line[0][:line[0].index('"x"')].encode("utf-16-le")) // 2
+        expected_end = len(line[1].encode("utf-16-le")) // 2
+        self.assertEqual(
+            self.server._range(source, diagnostic.span),
+            {
+                "start": {"line": 0, "character": expected_start},
+                "end": {"line": 1, "character": expected_end},
+            },
+        )
+
     def test_initialize_advertises_incremental_sync(self):
         result = self.server.dispatch({"jsonrpc": "2.0", "id": 1, "method": "initialize"})
         capabilities = result["result"]["capabilities"]
