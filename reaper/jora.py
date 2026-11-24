@@ -927,8 +927,7 @@ def _generated_name(component_ids: list[str], requested_name: str = "") -> str:
     if requested_name:
         name = _text(requested_name, "name", 80)
     else:
-        terms = [_COMPONENTS[item]["name"] for item in component_ids]
-        name = terms[0] if len(terms) == 1 else _join_naming_terms(terms[:3]) + " Workspace"
+        name = _naming_profile(component_ids, "balanced")["selected"]["label"]
     if re.search(r"jora", name, re.IGNORECASE):
         raise JoraError("application name must be independent and must not contain the platform name Jora")
     if not _NAME_RE.fullmatch(name):
