@@ -132,6 +132,15 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 100
+        },
+        "objective": {
+          "enum": [
+            "balanced",
+            "low_latency",
+            "modularity",
+            "extensibility",
+            "minimal_complexity"
+          ]
         }
       }
     }
