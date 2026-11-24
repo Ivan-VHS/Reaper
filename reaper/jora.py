@@ -344,13 +344,14 @@ def _build_graph_variant(
     def add_edge(source: str, target: str, relation: str, *, async_edge: bool = False) -> None:
         if source not in node_ids or target not in node_ids:
             raise JoraError(f"graph edge references an unknown node: {source} -> {target}")
-        if len(edges) >= MAX_GRAPH_EDGES:
-            raise JoraError(f"generated graph exceeds {MAX_GRAPH_EDGES} edges")
         record = {"from": source, "to": target, "relation": relation}
         if async_edge:
             record["delivery"] = "asynchronous"
-        if record not in edges:
-            edges.append(record)
+        if record in edges:
+            return
+        if len(edges) >= MAX_GRAPH_EDGES:
+            raise JoraError(f"generated graph exceeds {MAX_GRAPH_EDGES} edges")
+        edges.append(record)
 
     add_node("app:jora", "application", "Jora", "scaffold")
     add_node("ui:shell", "interface", "Jora Interface", "planned")
