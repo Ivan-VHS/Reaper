@@ -10,7 +10,7 @@ int main(void) {
     uint64_t ordinal = 99u;
 
     assert(reaper_abi_version() == REAPER_ABI_VERSION);
-    assert(reaper_v1_eval_i64("(6 * 7) - 1", 10u, &result,
+    assert(reaper_v1_eval_i64("(6 * 7) - 1", 11u, &result,
                               diagnostic, sizeof diagnostic) == REAPER_ABI_OK);
     assert(result == 41);
     assert(reaper_v1_eval_i64("84 / 2", 6u, &result,
