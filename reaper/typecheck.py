@@ -14,6 +14,7 @@ from typing import Any
 
 from .errors import ReaperError
 from .parser import Node, parse
+from .source_profile import SourceSpan, localize_type_message, span_for_node
 
 
 ANY = "Any"
@@ -74,15 +75,29 @@ class TypeDiagnostic:
     line: int
     column: int
     severity: str = "error"
+    span: SourceSpan | None = None
+    syntax_mode: str = "classic"
+    locale: str = "en"
 
     def as_dict(self) -> dict[str, Any]:
-        return {
+        result = {
             "code": self.code,
             "message": self.message,
             "line": self.line,
             "column": self.column,
             "severity": self.severity,
+            "syntax_mode": self.syntax_mode,
+            "locale": self.locale,
         }
+        if self.span is not None:
+            result["span"] = {
+                "file": self.span.file,
+                "line": self.span.line,
+                "col": self.span.col,
+                "start": self.span.start,
+                "end": self.span.end,
+            }
+        return result
 
 
 @dataclass(slots=True)
@@ -346,11 +361,18 @@ class TypeChecker:
         return ANY
 
     def _flow_type(self, left_node: Node, right_node: Node, left_type: str) -> str:
-        if right_node.kind != "call":
+        # A line-leading flow step may use a bare callee (-> sum) or a normal
+        # call (-> map(callback)); runtime composition injects the left value
+        # as argument zero in either case.
+        if right_node.kind == "call":
+            children = right_node.children or []
+            callee = children[0]
+            extra_nodes = children[1:]
+        elif right_node.kind == "name":
+            callee = right_node
+            extra_nodes = []
+        else:
             return ANY
-        children = right_node.children or []
-        callee = children[0]
-        extra_nodes = children[1:]
         extra_types = [self._expression(item) for item in extra_nodes]
         if callee.kind != "name":
             return ANY
@@ -465,7 +487,18 @@ class TypeChecker:
         return f"Union[{left},{right}]"
 
     def _report(self, node: Node, code: str, message: str) -> None:
-        self.diagnostics.append(TypeDiagnostic(code, message, node.token.line, node.token.column))
+        localized = localize_type_message(node.token.locale, code, message)
+        self.diagnostics.append(
+            TypeDiagnostic(
+                code,
+                localized,
+                node.token.line,
+                node.token.column,
+                span=span_for_node(node, self.filename),
+                syntax_mode=node.token.syntax_mode,
+                locale=node.token.locale,
+            )
+        )
 
 
 def check_source(source: str, filename: str = "<memory>") -> TypeCheckResult:

@@ -7,6 +7,7 @@ from typing import Any
 
 from .errors import ParseError
 from .lexer import Token, tokenize
+from .source_profile import localize_parse_message, span_for_token
 
 
 @dataclass(slots=True)
@@ -15,6 +16,8 @@ class Node:
     token: Token
     value: Any = None
     children: list["Node"] | None = None
+    end_token: Token | None = None
+    start_token: Token | None = None
 
 
 _PRECEDENCE = {
@@ -36,12 +39,49 @@ class Parser:
         self.current = 0
 
     def parse(self) -> Node:
+        statements = self._parse_statements("EOF")
+        eof = self._peek()
+        return Node("program", eof, children=statements, end_token=eof)
+
+    def _parse_statements(self, terminator: str) -> list[Node]:
         statements: list[Node] = []
         self._skip_newlines()
-        while not self._check("EOF"):
-            statements.append(self._statement())
+        while not self._check(terminator) and not self._check("EOF"):
+            if self._check("PIPE"):
+                raise self._error(
+                    self._peek(),
+                    "flow step requires a preceding expression",
+                )
+            statement = self._statement()
+            statement.end_token = self._previous()
+            self._attach_flow_continuations(statement)
+            statements.append(statement)
             self._statement_end()
-        return Node("program", self._peek(), children=statements)
+        return statements
+
+    def _attach_flow_continuations(self, statement: Node) -> None:
+        """Attach indented, line-leading flow steps to the previous expression."""
+        if statement.kind not in {"declare", "change", "emit", "yield", "expression"}:
+            return
+        if not statement.children:
+            return
+
+        target = statement.children[0]
+        while True:
+            saved = self.current
+            self._skip_newlines()
+            if not self._check("PIPE"):
+                self.current = saved
+                return
+
+            pipe = self._advance()
+            step = self._expression()
+            target = Node(
+                "binary", pipe, value="::", children=[target, step],
+                end_token=step.end_token or step.token,
+            )
+            statement.children[0] = target
+            statement.end_token = target.end_token
 
     def _statement(self) -> Node:
         if self._match("IMPORT"):
@@ -130,14 +170,18 @@ class Parser:
         return Node("each", token, value=name.value, children=[iterable, body])
 
     def _block(self) -> Node:
-        self._consume("{", "expected '{' to start a block")
-        statements: list[Node] = []
-        self._skip_newlines()
-        while not self._check("}") and not self._check("EOF"):
-            statements.append(self._statement())
-            self._statement_end()
-        self._consume("}", "expected '}' after block")
-        return Node("block", self._previous(), children=statements)
+        opening = self._consume("{", "expected '{' to start a block")
+        statements = self._parse_statements("}")
+        closing = self._consume("}", "expected '}' after block")
+        # Preserve the historical node.token = closing-brace convention while
+        # retaining the opening brace for complete source-span construction.
+        return Node(
+            "block",
+            closing,
+            children=statements,
+            end_token=closing,
+            start_token=opening,
+        )
 
     def _expression(self, minimum: int = 1) -> Node:
         left = self._prefix()
@@ -161,7 +205,11 @@ class Parser:
             self._skip_newlines()
             next_minimum = precedence if operator == "**" else precedence + 1
             right = self._expression(next_minimum)
-            left = Node("binary", token, value=operator, children=[left, right])
+            left = Node(
+                "binary", token, value=operator, children=[left, right],
+                end_token=right.end_token or right.token,
+            )
+        left.end_token = self._previous()
         return left
 
     def _call(self, callee: Node, token: Token) -> Node:
@@ -254,7 +302,21 @@ class Parser:
         return self.tokens[self.current - 1]
 
     def _error(self, token: Token, message: str) -> ParseError:
-        return ParseError(f"{self.filename}:{token.line}:{token.column}: {message} (found {token.value or token.kind})")
+        detail = localize_parse_message(token.locale, message)
+        found = token.value or token.kind
+        language = "ru" if token.locale == "most" else token.locale
+        if language == "ru":
+            suffix = f"(обнаружено {found})"
+        elif language == "uk":
+            suffix = f"(виявлено {found})"
+        else:
+            suffix = f"(found {found})"
+        return ParseError(
+            f"{self.filename}:{token.line}:{token.column}: {detail} {suffix}",
+            span=span_for_token(token, self.filename),
+            syntax_mode=token.syntax_mode,
+            locale=token.locale,
+        )
 
 
 def parse(source: str, filename: str = "<memory>") -> Node:

@@ -19,7 +19,16 @@ make total := [1, 2, 3] :: map(double) :: sum()
 emit "total = " ++ text(total)
 ```
 
-Rules: explicit effects; no implicit file/network/clock access in ordinary expressions; no silent coercion; bounded steps, call depth and collections. See [runtime limits](docs/RUNTIME_PLATFORM.md).\n\n## Static type analysis\n\nThe optional `reaper typecheck program.rpr` command runs conservative type inference over the existing AST. It checks supported numeric and text operators, collection indexes and iteration, mutable bindings, and known call arity. Unknown values at module and host boundaries remain `Any`. This is a first semantic-analysis slice, not yet a complete sound type system with source annotations, user generics, null-flow refinement or exhaustive pattern matching. See [Polyglot capability layer](docs/POLYGLOT_CAPABILITY_LAYER.md) for the capability map and implementation status.
+Rules: explicit effects; no implicit file/network/clock access in ordinary expressions; no silent coercion; bounded steps, call depth and collections. See [runtime limits](docs/RUNTIME_PLATFORM.md).\n\n## Mixed syntax and locale profiles
+
+A single .rpr file can switch between compatible `classic` and `flow` input
+profiles and select English, Russian, Ukrainian or MOST diagnostics with
+`@use`, `@mode` and `@locale`. Flow mode adds line-leading `->` and `|>`
+continuations while preserving the canonical `::` composition model. See
+[Mixed syntax and locale profiles](docs/POLYGLOT_SOURCE_PROFILES.md) for the
+directive grammar, examples, source spans and compatibility rules.
+
+## Static type analysis\n\nThe optional `reaper typecheck program.rpr` command runs conservative type inference over the existing AST. It checks supported numeric and text operators, collection indexes and iteration, mutable bindings, and known call arity. Unknown values at module and host boundaries remain `Any`. This is a first semantic-analysis slice, not yet a complete sound type system with source annotations, user generics, null-flow refinement or exhaustive pattern matching. See [Polyglot capability layer](docs/POLYGLOT_CAPABILITY_LAYER.md) for the capability map and implementation status.
 
 ## Integrated product layer
 
