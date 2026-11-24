@@ -83,7 +83,7 @@ The \`.rpr\` entry point and component files are valid scaffolding records, not 
 \`\`\`sh
 reaper jora catalog --json
 reaper jora compose --request ./jora-request.json --json
-reaper jora build --request ./jora-request.json --output ./LexiTone --json
+reaper jora build --request ./lexitone-3d.jora-request.json --output ./LexiTone-3D --json
 \`\`\`
 
 Example request: \`examples/jora/text-audio-translation.request.json\`.
