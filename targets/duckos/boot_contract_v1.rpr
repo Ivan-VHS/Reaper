@@ -1,0 +1,290 @@
+# DuckOS boot-info v1 conformance model.
+#
+# This file deliberately uses only Reaper's checked scalar subset. A u64 value
+# is represented as (high_u32, low_u32), so address arithmetic never relies on
+# signed i64 overflow. The final validator models the two-region C conformance
+# fixtures; reusable region helpers are independent of that fixture limit.
+#
+# This is an executable specification and test oracle, not a freestanding kernel
+# object. The C boot ABI remains authoritative until Reaper gains records,
+# collections, unsigned native types and a freestanding object backend.
+
+craft u32_valid(value) {
+    when value >= 0 and value <= 4294967295 {
+        yield 1
+    } otherwise {
+        yield 0
+    }
+}
+
+craft u64_is_zero(high, low) {
+    when high == 0 and low == 0 {
+        yield 1
+    } otherwise {
+        yield 0
+    }
+}
+
+craft u64_is_nonzero(high, low) {
+    when u64_is_zero(high, low) {
+        yield 0
+    } otherwise {
+        yield 1
+    }
+}
+
+craft u64_less(first_high, first_low, second_high, second_low) {
+    when first_high < second_high {
+        yield 1
+    } otherwise {
+        when first_high > second_high {
+            yield 0
+        } otherwise {
+            when first_low < second_low {
+                yield 1
+            } otherwise {
+                yield 0
+            }
+        }
+    }
+}
+
+craft u64_less_equal(first_high, first_low, second_high, second_low) {
+    when u64_less(second_high, second_low, first_high, first_low) {
+        yield 0
+    } otherwise {
+        yield 1
+    }
+}
+
+craft u64_range_valid(base_high, base_low, length_high, length_low) {
+    when not (u32_valid(base_high) and u32_valid(base_low) and u32_valid(length_high) and u32_valid(length_low)) {
+        yield 0
+    } otherwise {
+        when u64_is_zero(length_high, length_low) {
+            yield 0
+        } otherwise {
+            make low_sum := base_low + length_low
+            vary carry := 0
+            when low_sum >= 4294967296 {
+                change carry := 1
+            }
+            make high_sum := base_high + length_high + carry
+            when high_sum <= 4294967295 {
+                yield 1
+            } otherwise {
+                yield 0
+            }
+        }
+    }
+}
+
+craft u64_end_high(base_high, base_low, length_high, length_low) {
+    make low_sum := base_low + length_low
+    vary carry := 0
+    when low_sum >= 4294967296 {
+        change carry := 1
+    }
+    yield base_high + length_high + carry
+}
+
+craft u64_end_low(base_high, base_low, length_high, length_low) {
+    yield (base_low + length_low) % 4294967296
+}
+
+craft memory_type_valid(kind) {
+    when kind >= 1 and kind <= 6 {
+        yield 1
+    } otherwise {
+        yield 0
+    }
+}
+
+craft memory_region_valid(base_high, base_low, length_high, length_low, kind) {
+    when memory_type_valid(kind) and u64_range_valid(base_high, base_low, length_high, length_low) {
+        yield 1
+    } otherwise {
+        yield 0
+    }
+}
+
+craft regions_ordered(previous_high, previous_low, previous_length_high, previous_length_low, current_high, current_low, current_length_high, current_length_low, current_kind) {
+    when not (u64_range_valid(previous_high, previous_low, previous_length_high, previous_length_low) and memory_region_valid(current_high, current_low, current_length_high, current_length_low, current_kind)) {
+        yield 0
+    } otherwise {
+        make previous_end_high := u64_end_high(previous_high, previous_low, previous_length_high, previous_length_low)
+        make previous_end_low := u64_end_low(previous_high, previous_low, previous_length_high, previous_length_low)
+        when u64_less(current_high, current_low, previous_end_high, previous_end_low) {
+            yield 0
+        } otherwise {
+            yield 1
+        }
+    }
+}
+
+craft u32_product_high(first, second) {
+    make first_high := first // 65536
+    make first_low := first % 65536
+    make second_high := second // 65536
+    make second_low := second % 65536
+    make p00 := first_low * second_low
+    make p01 := first_low * second_high
+    make p10 := first_high * second_low
+    make p11 := first_high * second_high
+    make low_accumulator := p00 + ((p01 % 65536) + (p10 % 65536)) * 65536
+    yield p11 + (p01 // 65536) + (p10 // 65536) + (low_accumulator // 4294967296)
+}
+
+craft u32_product_low(first, second) {
+    make first_high := first // 65536
+    make first_low := first % 65536
+    make second_high := second // 65536
+    make second_low := second % 65536
+    make p00 := first_low * second_low
+    make p01 := first_low * second_high
+    make p10 := first_high * second_low
+    make low_accumulator := p00 + ((p01 % 65536) + (p10 % 65536)) * 65536
+    yield low_accumulator % 4294967296
+}
+
+craft framebuffer_empty(base_high, base_low, size_high, size_low, width, height, pitch, bpp) {
+    when base_high == 0 and base_low == 0 and size_high == 0 and size_low == 0 and width == 0 and height == 0 and pitch == 0 and bpp == 0 {
+        yield 1
+    } otherwise {
+        yield 0
+    }
+}
+
+craft framebuffer_valid(base_high, base_low, size_high, size_low, width, height, pitch, bpp) {
+    when framebuffer_empty(base_high, base_low, size_high, size_low, width, height, pitch, bpp) {
+        yield 1
+    } otherwise {
+        when u64_is_zero(base_high, base_low) or u64_is_zero(size_high, size_low) or width == 0 or height == 0 or pitch == 0 {
+            yield 0
+        } otherwise {
+            when not (u32_valid(width) and u32_valid(height) and u32_valid(pitch)) {
+                yield 0
+            } otherwise {
+                vary bytes_per_pixel := 0
+                when bpp == 16 {
+                    change bytes_per_pixel := 2
+                } otherwise {
+                    when bpp == 24 {
+                        change bytes_per_pixel := 3
+                    } otherwise {
+                        when bpp == 32 {
+                            change bytes_per_pixel := 4
+                        }
+                    }
+                }
+                when bytes_per_pixel == 0 {
+                    yield 0
+                } otherwise {
+                    when pitch < width * bytes_per_pixel {
+                        yield 0
+                    } otherwise {
+                        make required_high := u32_product_high(pitch, height)
+                        make required_low := u32_product_low(pitch, height)
+                        when not u64_range_valid(base_high, base_low, size_high, size_low) {
+                            yield 0
+                        } otherwise {
+                            when u64_less_equal(required_high, required_low, size_high, size_low) {
+                                yield 1
+                            } otherwise {
+                                yield 0
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+craft boot_header_valid(struct_size, version, declared_regions, actual_regions) {
+    when struct_size < 88 or version != 1 {
+        yield 0
+    } otherwise {
+        when actual_regions < 1 or actual_regions > 256 or declared_regions != actual_regions {
+            yield 0
+        } otherwise {
+            yield 1
+        }
+    }
+}
+
+craft ranges_overlap(first_high, first_low, first_length_high, first_length_low, second_high, second_low, second_length_high, second_length_low) {
+    when not (u64_range_valid(first_high, first_low, first_length_high, first_length_low) and u64_range_valid(second_high, second_low, second_length_high, second_length_low)) {
+        yield 0
+    } otherwise {
+        make first_end_high := u64_end_high(first_high, first_low, first_length_high, first_length_low)
+        make first_end_low := u64_end_low(first_high, first_low, first_length_high, first_length_low)
+        make second_end_high := u64_end_high(second_high, second_low, second_length_high, second_length_low)
+        make second_end_low := u64_end_low(second_high, second_low, second_length_high, second_length_low)
+        when u64_less(first_high, first_low, second_end_high, second_end_low) and u64_less(second_high, second_low, first_end_high, first_end_low) {
+            yield 1
+        } otherwise {
+            yield 0
+        }
+    }
+}
+
+craft validate_boot_v1(struct_size, version, declared_regions, actual_regions, kernel_high, kernel_low, kernel_size_high, kernel_size_low, init_high, init_low, init_size_high, init_size_low, framebuffer_high, framebuffer_low, framebuffer_size_high, framebuffer_size_low, framebuffer_width, framebuffer_height, framebuffer_pitch, framebuffer_bpp, first_region_high, first_region_low, first_region_size_high, first_region_size_low, first_region_type, second_region_high, second_region_low, second_region_size_high, second_region_size_low, second_region_type) {
+    when not boot_header_valid(struct_size, version, declared_regions, actual_regions) {
+        yield -2
+    } otherwise {
+        when not u64_range_valid(kernel_high, kernel_low, kernel_size_high, kernel_size_low) {
+            yield -3
+        } otherwise {
+            when (u64_is_zero(init_high, init_low) and u64_is_nonzero(init_size_high, init_size_low)) or (u64_is_nonzero(init_high, init_low) and u64_is_zero(init_size_high, init_size_low)) {
+                yield -4
+            } otherwise {
+                when u64_is_nonzero(init_size_high, init_size_low) and not u64_range_valid(init_high, init_low, init_size_high, init_size_low) {
+                    yield -4
+                } otherwise {
+                    when not framebuffer_valid(framebuffer_high, framebuffer_low, framebuffer_size_high, framebuffer_size_low, framebuffer_width, framebuffer_height, framebuffer_pitch, framebuffer_bpp) {
+                        yield -5
+                    } otherwise {
+                        when actual_regions != 2 {
+                            yield -6
+                        } otherwise {
+                            when not (memory_region_valid(first_region_high, first_region_low, first_region_size_high, first_region_size_low, first_region_type) and memory_region_valid(second_region_high, second_region_low, second_region_size_high, second_region_size_low, second_region_type) and regions_ordered(first_region_high, first_region_low, first_region_size_high, first_region_size_low, second_region_high, second_region_low, second_region_size_high, second_region_size_low, second_region_type)) {
+                                yield -6
+                            } otherwise {
+                                when u64_is_nonzero(init_size_high, init_size_low) and ranges_overlap(kernel_high, kernel_low, kernel_size_high, kernel_size_low, init_high, init_low, init_size_high, init_size_low) {
+                                    yield -7
+                                } otherwise {
+                                    yield 0
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+# Valid v1 handoff with no framebuffer.
+emit validate_boot_v1(88, 1, 2, 2, 0, 1048576, 0, 1048576, 0, 3145728, 0, 2097152, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4096, 0, 651264, 1, 0, 1048576, 0, 7340032, 1)
+
+# Valid framebuffer: 80x100, RGB565, 160-byte pitch and 16,000-byte buffer.
+emit validate_boot_v1(88, 1, 2, 2, 0, 1048576, 0, 1048576, 0, 3145728, 0, 2097152, 0, 3758096384, 0, 16000, 80, 100, 160, 16, 0, 4096, 0, 651264, 1, 0, 1048576, 0, 7340032, 1)
+
+# Unsupported structure size.
+emit validate_boot_v1(1, 1, 2, 2, 0, 1048576, 0, 1048576, 0, 3145728, 0, 2097152, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4096, 0, 651264, 1, 0, 1048576, 0, 7340032, 1)
+
+# Kernel physical range overflows UINT64_MAX.
+emit validate_boot_v1(88, 1, 2, 2, 4294967295, 4294967280, 0, 32, 0, 3145728, 0, 2097152, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4096, 0, 651264, 1, 0, 1048576, 0, 7340032, 1)
+
+# An initramfs size without a physical base is invalid.
+emit validate_boot_v1(88, 1, 2, 2, 0, 1048576, 0, 1048576, 0, 0, 0, 4096, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4096, 0, 651264, 1, 0, 1048576, 0, 7340032, 1)
+
+# Framebuffer pitch is smaller than width * bytes_per_pixel.
+emit validate_boot_v1(88, 1, 2, 2, 0, 1048576, 0, 1048576, 0, 3145728, 0, 2097152, 0, 3758096384, 0, 16000, 80, 100, 100, 16, 0, 4096, 0, 651264, 1, 0, 1048576, 0, 7340032, 1)
+
+# The two memory regions overlap.
+emit validate_boot_v1(88, 1, 2, 2, 0, 1048576, 0, 1048576, 0, 3145728, 0, 2097152, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4096, 0, 8192, 1, 0, 8192, 0, 4096, 1)
+
+# Kernel and initramfs overlap.
+emit validate_boot_v1(88, 1, 2, 2, 0, 1048576, 0, 1048576, 0, 1572864, 0, 1048576, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4096, 0, 651264, 1, 0, 1048576, 0, 7340032, 1)
