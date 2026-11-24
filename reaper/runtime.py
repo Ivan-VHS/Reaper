@@ -645,6 +645,9 @@ class Interpreter:
             )
             if not re.fullmatch(pattern, value):
                 raise ValueError("expected an RFC 3339 timestamp with an explicit timezone")
+            fraction = re.search(r"\\.([0-9]+)(?:[Zz]|[+-][0-9]{2}:[0-9]{2})$", value)
+            if fraction is not None and len(fraction.group(1)) > 6:
+                raise ValueError("fractional seconds exceed datetime precision (6 digits)")
             normalized = value[:-1] + "+00:00" if value[-1:] in {"Z", "z"} else value
             try:
                 parsed = datetime.fromisoformat(normalized)
