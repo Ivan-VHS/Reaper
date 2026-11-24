@@ -64,7 +64,7 @@ class JoraCompositionTests(unittest.TestCase):
         compact = compose_application(self.request(name_style="compact"))
         self.assertEqual(compact["naming"]["selected"]["label"], "Jora · Docs / Audio / Translate")
         descriptive = compose_application(self.request(name_style="descriptive"))
-        self.assertEqual(descriptive["naming"]["selected"]["label"], "Jora | Workspace for writing & editing, audio editing & translation")
+        self.assertEqual(descriptive["naming"]["selected"]["label"], "Jora | Workspace for writing, audio editing & translation")
         self.assertGreaterEqual(len(naming["suggestions"]), 3)
         self.assertTrue(all(item["label"].startswith("Jora") for item in naming["suggestions"]))
         self.assertIn("Media", naming["descriptors"])
