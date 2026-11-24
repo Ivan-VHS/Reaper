@@ -152,3 +152,12 @@ A catalogue entry, scaffold generation or successful JSON validation is not evid
 4. Deliver actual text editing, audio editing and translation modules.
 5. Add Java/Kotlin/TypeScript/native emitters with differential tests before advertising them as generated targets.
 6. Connect the store to a DuckOS native package manager only after signature verification, process isolation, capability enforcement and rollback are implemented.
+
+
+## Expanded capability registry and bounded composition
+
+The first-party catalogue now contains 21 canonical capability packs across document editing, audio, translation, subtitles, notes, task boards, calendars, speech, code, spreadsheets, image/video, presentations, files, APIs, automation, analytics, databases, archives and knowledge graphs. These are versioned specification contracts, not claims that all corresponding application engines are executable.
+
+For formulas above 12 components, every graph variant adds domain cluster gateways and routes component membership through those gateways. Capability providers are indexed once and each consumed capability resolves to at most four deterministic local providers. This avoids all-pairs capability scans and bounds the direct integration neighbourhood. Per-generation limits are finite: 24 components, 128 graph nodes, 512 edges, six variants and the existing request/output byte limits.
+
+When `language_targets` is `auto`, Reaper remains the generated core. Additional targets are selected from declared component preferences (Python for text/data/content work, Rust for systems/media work, TypeScript for selected visual interfaces). Toolchain presence is reported separately; all additional targets stay `adapter_pending` until a tested generator backend exists. Selection does not imply that an auxiliary source module has been generated.

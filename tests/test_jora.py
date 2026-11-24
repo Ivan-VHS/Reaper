@@ -257,5 +257,53 @@ class JoraCompositionTests(unittest.TestCase):
                          {"text.editor", "audio.editor", "translation.workspace"})
 
 
+    def test_catalog_contains_twenty_one_canonical_capability_packs(self):
+        items = list_components()
+        self.assertEqual(len(items), 21)
+        ids = {item["id"] for item in items}
+        self.assertTrue({
+            "subtitle.editor", "notes.workspace", "task.board", "calendar.scheduler",
+            "speech.synthesis", "speech.recognition", "code.editor", "spreadsheet.editor",
+            "image.editor", "video.editor", "presentation.editor", "file.manager",
+            "api.client", "automation.engine", "data.visualizer", "database.manager",
+            "archive.manager", "knowledge.graph",
+        }.issubset(ids))
+
+    def test_thirteen_component_formula_uses_clustered_graph_and_auto_languages(self):
+        component_ids = [
+            "text.editor", "audio.editor", "translation.workspace", "subtitle.editor",
+            "notes.workspace", "task.board", "calendar.scheduler", "speech.synthesis",
+            "speech.recognition", "code.editor", "spreadsheet.editor", "image.editor",
+            "video.editor",
+        ]
+        result = compose_application(self.request(
+            components=component_ids,
+            language_targets="auto",
+            graph={"topology": "plugin_mesh", "variants": 3, "variation": 0},
+        ))
+        self.assertEqual(len(result["components"]), 13)
+        self.assertTrue(all(graph["growth_policy"]["clustered"] for graph in result["graphs"]["variants"]))
+        self.assertTrue(all(graph["clusters"] for graph in result["graphs"]["variants"]))
+        targets = result["implementation"]["targets"]
+        self.assertEqual(targets[0]["id"], "reaper")
+        self.assertIn("python", [item["id"] for item in targets])
+        self.assertIn("rust", [item["id"] for item in targets])
+        self.assertTrue(all(item["status"] in {"generated", "adapter_pending"} for item in targets))
+        self.assertTrue(all(graph["metrics"]["node_count"] <= 128 for graph in result["graphs"]["variants"]))
+        self.assertTrue(all(graph["metrics"]["edge_count"] <= 512 for graph in result["graphs"]["variants"]))
+
+    def test_all_twenty_one_components_compose_with_bounded_graph_budget(self):
+        component_ids = [item["id"] for item in list_components()]
+        result = compose_application(self.request(
+            components=component_ids,
+            language_targets="auto",
+            graph={"topology": "hybrid", "variants": 2, "variation": 0},
+        ))
+        self.assertEqual(len(result["components"]), 21)
+        self.assertTrue(all(graph["growth_policy"]["clustered"] for graph in result["graphs"]["variants"]))
+        self.assertTrue(all(graph["metrics"]["node_count"] <= 128 for graph in result["graphs"]["variants"]))
+        self.assertTrue(all(graph["metrics"]["edge_count"] <= 512 for graph in result["graphs"]["variants"]))
+
+
 if __name__ == "__main__":
     unittest.main()

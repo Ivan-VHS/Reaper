@@ -24,8 +24,8 @@ MAX_COMPONENTS = 24
 MAX_LOCALES = 8
 MAX_OUTPUT_FILES = 64
 MAX_GRAPH_VARIANTS = 6
-MAX_GRAPH_NODES = 80
-MAX_GRAPH_EDGES = 256
+MAX_GRAPH_NODES = 128
+MAX_GRAPH_EDGES = 512
 GRAPH_TOPOLOGIES = (
     "layered", "pipeline", "hub_spoke", "plugin_mesh", "event_driven", "hybrid",
 )
@@ -42,6 +42,18 @@ DOMAIN_LABELS = {
     "documents": "Documents",
     "media": "Audio",
     "language": "Languages",
+    "productivity": "Productivity",
+    "runtime": "Runtime",
+    "audio": "Speech",
+    "development": "Development",
+    "data": "Data",
+    "visual": "Visual",
+    "video": "Video",
+    "system": "System",
+    "network": "Network",
+    "automation": "Automation",
+    "analytics": "Analytics",
+    "knowledge": "Knowledge",
 }
 
 LOCALES: dict[str, dict[str, str]] = {
@@ -98,6 +110,7 @@ _COMPONENTS: dict[str, dict[str, Any]] = {
         "consumes": [],
         "requires": ["document.model", "storage.local", "localization.catalog"],
         "conflicts": [],
+        "preferred_languages": ["python"],
         "maturity": "specification_only",
     },
     "audio.editor": {
@@ -109,6 +122,7 @@ _COMPONENTS: dict[str, dict[str, Any]] = {
         "consumes": [],
         "requires": ["media.model", "timeline.model", "storage.local"],
         "conflicts": [],
+        "preferred_languages": ["rust"],
         "maturity": "specification_only",
     },
     "translation.workspace": {
@@ -120,7 +134,152 @@ _COMPONENTS: dict[str, dict[str, Any]] = {
         "consumes": ["text.document"],
         "requires": ["document.model", "localization.catalog", "translation.provider"],
         "conflicts": [],
+        "preferred_languages": ["python"],
         "maturity": "specification_only",
+    },
+    "subtitle.editor": {
+        "name": "Subtitle Editor", "domain": "language", "version": "1.0.0",
+        "summary": "Timed subtitle authoring, validation and export.",
+        "provides": ["subtitle.document", "subtitle.timing", "subtitle.export"],
+        "consumes": ["text.document", "audio.timeline"],
+        "requires": ["document.model", "timeline.model", "localization.catalog"],
+        "conflicts": [], "preferred_languages": ["python"], "maturity": "specification_only",
+    },
+    "notes.workspace": {
+        "name": "Notes Workspace", "domain": "productivity", "version": "1.0.0",
+        "summary": "Linked notes, tags, references and project annotations.",
+        "provides": ["notes.collection", "notes.links", "notes.annotations"],
+        "consumes": ["text.document"],
+        "requires": ["document.model", "storage.local"],
+        "conflicts": [], "preferred_languages": [], "maturity": "specification_only",
+    },
+    "task.board": {
+        "name": "Task Board", "domain": "productivity", "version": "1.0.0",
+        "summary": "Tasks, workflow states, priorities and project queues.",
+        "provides": ["tasks.board", "tasks.workflow"],
+        "consumes": ["calendar.events"],
+        "requires": ["document.model", "storage.local"],
+        "conflicts": [], "preferred_languages": [], "maturity": "specification_only",
+    },
+    "calendar.scheduler": {
+        "name": "Calendar Scheduler", "domain": "productivity", "version": "1.0.0",
+        "summary": "Calendar events, deadlines, schedules and reminders.",
+        "provides": ["calendar.events", "scheduling.deadlines"],
+        "consumes": ["tasks.workflow"],
+        "requires": ["time.model", "storage.local"],
+        "conflicts": [], "preferred_languages": [], "maturity": "specification_only",
+    },
+    "speech.synthesis": {
+        "name": "Speech Synthesis", "domain": "audio", "version": "1.0.0",
+        "summary": "Text-to-speech jobs, voice profiles and speech assets.",
+        "provides": ["speech.audio", "speech.voice"],
+        "consumes": ["text.document", "translation.workspace"],
+        "requires": ["media.model", "speech.provider"],
+        "conflicts": [], "preferred_languages": ["python"], "maturity": "specification_only",
+    },
+    "speech.recognition": {
+        "name": "Speech Recognition", "domain": "audio", "version": "1.0.0",
+        "summary": "Speech-to-text, transcription and speaker segmentation.",
+        "provides": ["speech.transcription", "speech.diarization"],
+        "consumes": ["audio.asset"],
+        "requires": ["media.model", "speech.provider"],
+        "conflicts": [], "preferred_languages": ["python", "rust"], "maturity": "specification_only",
+    },
+    "code.editor": {
+        "name": "Code Editor", "domain": "development", "version": "1.0.0",
+        "summary": "Source editing, diagnostics, project structure and code search.",
+        "provides": ["code.workspace", "code.diagnostics", "code.search"],
+        "consumes": [],
+        "requires": ["code.model", "storage.local", "localization.catalog"],
+        "conflicts": [], "preferred_languages": ["rust"], "maturity": "specification_only",
+    },
+    "spreadsheet.editor": {
+        "name": "Spreadsheet Editor", "domain": "data", "version": "1.0.0",
+        "summary": "Tabular data, formulas, sorting and data transformations.",
+        "provides": ["data.table", "data.formula", "data.filter"],
+        "consumes": [],
+        "requires": ["data.model", "storage.local"],
+        "conflicts": [], "preferred_languages": ["python"], "maturity": "specification_only",
+    },
+    "image.editor": {
+        "name": "Image Editor", "domain": "visual", "version": "1.0.0",
+        "summary": "Image assets, layers, masks and visual export.",
+        "provides": ["image.asset", "image.layers", "image.export"],
+        "consumes": [],
+        "requires": ["image.model", "storage.local"],
+        "conflicts": [], "preferred_languages": ["rust"], "maturity": "specification_only",
+    },
+    "video.editor": {
+        "name": "Video Editor", "domain": "video", "version": "1.0.0",
+        "summary": "Video assets, sequences, timeline editing and rendering jobs.",
+        "provides": ["video.asset", "video.timeline", "video.render"],
+        "consumes": ["audio.asset", "subtitle.document"],
+        "requires": ["video.model", "timeline.model", "storage.local"],
+        "conflicts": [], "preferred_languages": ["rust"], "maturity": "specification_only",
+    },
+    "presentation.editor": {
+        "name": "Presentation Editor", "domain": "documents", "version": "1.0.0",
+        "summary": "Slide decks, speaker notes, layouts and document export.",
+        "provides": ["presentation.deck", "presentation.slides"],
+        "consumes": ["text.document", "image.asset"],
+        "requires": ["document.model", "image.model", "storage.local"],
+        "conflicts": [], "preferred_languages": ["python"], "maturity": "specification_only",
+    },
+    "file.manager": {
+        "name": "File Manager", "domain": "system", "version": "1.0.0",
+        "summary": "File navigation, metadata, collections and workspace paths.",
+        "provides": ["files.navigation", "files.metadata"],
+        "consumes": [],
+        "requires": ["files.provider", "storage.local"],
+        "conflicts": [], "preferred_languages": ["rust"], "maturity": "specification_only",
+    },
+    "api.client": {
+        "name": "API Client", "domain": "network", "version": "1.0.0",
+        "summary": "HTTP API requests, response schemas and request collections.",
+        "provides": ["api.requests", "api.schemas", "network.http"],
+        "consumes": [],
+        "requires": ["api.transport", "storage.local"],
+        "conflicts": [], "preferred_languages": ["python"], "maturity": "specification_only",
+    },
+    "automation.engine": {
+        "name": "Automation Engine", "domain": "automation", "version": "1.0.0",
+        "summary": "Triggers, rules, scheduled workflows and event actions.",
+        "provides": ["automation.workflows", "automation.events"],
+        "consumes": ["tasks.workflow", "calendar.events", "api.requests"],
+        "requires": ["event.bus", "storage.local"],
+        "conflicts": [], "preferred_languages": ["python"], "maturity": "specification_only",
+    },
+    "data.visualizer": {
+        "name": "Data Visualizer", "domain": "analytics", "version": "1.0.0",
+        "summary": "Charts, dashboards, aggregates and interactive data views.",
+        "provides": ["charts.render", "analytics.dashboard"],
+        "consumes": ["data.table"],
+        "requires": ["data.model"],
+        "conflicts": [], "preferred_languages": ["python", "typescript"], "maturity": "specification_only",
+    },
+    "database.manager": {
+        "name": "Database Manager", "domain": "data", "version": "1.0.0",
+        "summary": "Database schemas, queries, migrations and table inspection.",
+        "provides": ["database.schema", "database.queries"],
+        "consumes": [],
+        "requires": ["database.provider", "storage.local"],
+        "conflicts": [], "preferred_languages": ["rust"], "maturity": "specification_only",
+    },
+    "archive.manager": {
+        "name": "Archive Manager", "domain": "system", "version": "1.0.0",
+        "summary": "Archive inspection, extraction, packaging and integrity checks.",
+        "provides": ["archive.read", "archive.write", "archive.index"],
+        "consumes": ["files.navigation"],
+        "requires": ["archive.provider", "storage.local"],
+        "conflicts": [], "preferred_languages": ["rust"], "maturity": "specification_only",
+    },
+    "knowledge.graph": {
+        "name": "Knowledge Graph", "domain": "knowledge", "version": "1.0.0",
+        "summary": "Knowledge entities, relations, backlinks and semantic references.",
+        "provides": ["knowledge.entities", "knowledge.relations", "knowledge.index"],
+        "consumes": ["text.document", "notes.collection"],
+        "requires": ["knowledge.index", "document.model", "storage.local"],
+        "conflicts": [], "preferred_languages": ["python"], "maturity": "specification_only",
     },
 }
 
@@ -131,6 +290,18 @@ _DEPENDENCIES: dict[str, dict[str, Any]] = {
     "storage.local": {"version": "1.0.0", "maturity": "host_adapter_required", "requires": []},
     "localization.catalog": {"version": "1.0.0", "maturity": "generated", "requires": []},
     "translation.provider": {"version": "1.0.0", "maturity": "provider_required", "requires": []},
+    "time.model": {"version": "1.0.0", "maturity": "contract_only", "requires": []},
+    "speech.provider": {"version": "1.0.0", "maturity": "provider_required", "requires": ["media.model"]},
+    "code.model": {"version": "1.0.0", "maturity": "contract_only", "requires": ["document.model"]},
+    "data.model": {"version": "1.0.0", "maturity": "contract_only", "requires": ["storage.local"]},
+    "image.model": {"version": "1.0.0", "maturity": "contract_only", "requires": ["media.model"]},
+    "video.model": {"version": "1.0.0", "maturity": "contract_only", "requires": ["media.model", "timeline.model"]},
+    "files.provider": {"version": "1.0.0", "maturity": "host_adapter_required", "requires": ["storage.local"]},
+    "api.transport": {"version": "1.0.0", "maturity": "provider_required", "requires": []},
+    "event.bus": {"version": "1.0.0", "maturity": "contract_only", "requires": []},
+    "database.provider": {"version": "1.0.0", "maturity": "provider_required", "requires": ["storage.local"]},
+    "archive.provider": {"version": "1.0.0", "maturity": "provider_required", "requires": ["storage.local"]},
+    "knowledge.index": {"version": "1.0.0", "maturity": "contract_only", "requires": ["storage.local"]},
 }
 
 _LOCALE_ALIASES = {
@@ -282,11 +453,26 @@ def _naming_profile(component_ids: list[str], style: str) -> dict[str, Any]:
             "formula": "Audio",
         },
         "translation.workspace": {
-            "short": "Translate",
-            "domain": "Languages",
-            "action": "Translation",
-            "formula": "Translation",
+            "short": "Translate", "domain": "Languages", "action": "Translation", "formula": "Translation",
         },
+        "subtitle.editor": {"short": "Captions", "domain": "Media", "action": "Subtitle Editing", "formula": "Subtitles"},
+        "notes.workspace": {"short": "Notes", "domain": "Productivity", "action": "Note Taking", "formula": "Notes"},
+        "task.board": {"short": "Tasks", "domain": "Productivity", "action": "Task Management", "formula": "Tasks"},
+        "calendar.scheduler": {"short": "Calendar", "domain": "Productivity", "action": "Scheduling", "formula": "Calendar"},
+        "speech.synthesis": {"short": "Voice", "domain": "Audio", "action": "Speech Synthesis", "formula": "Voice"},
+        "speech.recognition": {"short": "Speech", "domain": "Audio", "action": "Speech Recognition", "formula": "Transcription"},
+        "code.editor": {"short": "Code", "domain": "Development", "action": "Code Editing", "formula": "Code"},
+        "spreadsheet.editor": {"short": "Sheets", "domain": "Data", "action": "Spreadsheet Editing", "formula": "Sheets"},
+        "image.editor": {"short": "Images", "domain": "Visual", "action": "Image Editing", "formula": "Images"},
+        "video.editor": {"short": "Video", "domain": "Media", "action": "Video Editing", "formula": "Video"},
+        "presentation.editor": {"short": "Slides", "domain": "Documents", "action": "Presentation Design", "formula": "Slides"},
+        "file.manager": {"short": "Files", "domain": "System", "action": "File Management", "formula": "Files"},
+        "api.client": {"short": "API", "domain": "Development", "action": "API Integration", "formula": "API"},
+        "automation.engine": {"short": "Flow", "domain": "Automation", "action": "Workflow Automation", "formula": "Automation"},
+        "data.visualizer": {"short": "Charts", "domain": "Analytics", "action": "Data Visualization", "formula": "Charts"},
+        "database.manager": {"short": "Database", "domain": "Data", "action": "Database Management", "formula": "Database"},
+        "archive.manager": {"short": "Archive", "domain": "System", "action": "Archive Management", "formula": "Archive"},
+        "knowledge.graph": {"short": "Knowledge", "domain": "Knowledge", "action": "Knowledge Mapping", "formula": "Knowledge"},
     }
     short_terms = list(dict.fromkeys(terms[item]["short"] for item in component_ids))
     descriptors = list(dict.fromkeys(terms[item]["domain"] for item in component_ids))
@@ -380,6 +566,18 @@ def _build_graph_variant(
     add_edge("app:jora", "ui:shell", "exposes")
     for locale in locales:
         add_edge("ui:shell", "locale:" + locale, "localizes_with")
+    # Large formulae route through bounded domain gateways. Direct pairwise meshes
+    # are not materialized for N > 12, keeping integration graph growth linear.
+    domain_clusters: dict[str, str] = {}
+    if len(component_ids) > 12:
+        for component_id in component_ids:
+            domain = str(_COMPONENTS[component_id]["domain"])
+            gateway_id = "cluster:" + domain
+            if domain not in domain_clusters:
+                domain_clusters[domain] = gateway_id
+                add_node(gateway_id, "domain_gateway", DOMAIN_LABELS.get(domain, domain.title()) + " Gateway", "planned")
+                add_edge("ui:shell", gateway_id, "routes_domain")
+            add_edge(gateway_id, "component:" + component_id, "routes_component")
     for component_id in component_ids:
         component_node = "component:" + component_id
         for dependency in _COMPONENTS[component_id]["requires"]:
@@ -441,14 +639,19 @@ def _build_graph_variant(
     elif topology == "plugin_mesh":
         for component_id in component_ids:
             add_edge("ui:shell", "component:" + component_id, "mounts")
+        providers_by_capability: dict[str, list[str]] = {}
+        for provider_id in component_ids:
+            for capability in _COMPONENTS[provider_id]["provides"]:
+                providers_by_capability.setdefault(capability, []).append(provider_id)
         matches: list[tuple[str, str, str]] = []
         for consumer_id in component_ids:
-            consumed = set(_COMPONENTS[consumer_id].get("consumes", []))
-            for provider_id in component_ids:
-                if provider_id == consumer_id:
-                    continue
-                for capability in sorted(consumed & set(_COMPONENTS[provider_id]["provides"])):
-                    matches.append((provider_id, consumer_id, capability))
+            consumed = sorted(set(_COMPONENTS[consumer_id].get("consumes", [])))
+            for capability in consumed:
+                # Keep the nearest deterministic provider set bounded as the
+                # component catalogue expands; no all-pairs scan is required.
+                for provider_id in providers_by_capability.get(capability, [])[:4]:
+                    if provider_id != consumer_id:
+                        matches.append((provider_id, consumer_id, capability))
         if variant_index % 3 == 0:
             for provider_id, consumer_id, capability in matches:
                 add_edge(
@@ -506,17 +709,15 @@ def _build_graph_variant(
                     add_node(hub_id, "domain_orchestrator", domain.title() + " Coordinator", "planned")
                     add_edge("ui:shell", hub_id, "dispatches_to")
                 add_edge(hub_id, "component:" + component_id, "routes_to")
+        providers_by_capability: dict[str, list[str]] = {}
+        for provider_id in component_ids:
+            for capability in _COMPONENTS[provider_id]["provides"]:
+                providers_by_capability.setdefault(capability, []).append(provider_id)
         for consumer_id in component_ids:
-            consumed = set(_COMPONENTS[consumer_id].get("consumes", []))
-            for provider_id in component_ids:
-                if provider_id == consumer_id:
-                    continue
-                for capability in sorted(consumed & set(_COMPONENTS[provider_id]["provides"])):
-                    add_edge(
-                        "component:" + provider_id,
-                        "component:" + consumer_id,
-                        "capability:" + capability,
-                    )
+            for capability in sorted(set(_COMPONENTS[consumer_id].get("consumes", []))):
+                for provider_id in providers_by_capability.get(capability, [])[:4]:
+                    if provider_id != consumer_id:
+                        add_edge("component:" + provider_id, "component:" + consumer_id, "capability:" + capability)
 
     layout_modes = (
         "direct", "domain_grouped", "capability_routed",
@@ -595,6 +796,7 @@ def _build_graph_variant(
         "variation": variation,
         "objective": objective,
         "layout_variant": layout_variant,
+        "domain_clusters": domain_clusters,
         "nodes": nodes,
         "edges": edges,
     }
@@ -645,6 +847,13 @@ def _build_graph_variant(
         "signature": signature,
         "nodes": nodes,
         "edges": edges,
+        "clusters": domain_clusters,
+        "growth_policy": {
+            "component_count": len(component_ids),
+            "clustered": len(component_ids) > 12,
+            "max_direct_provider_neighbors": 4,
+            "topology": "cluster-gateway-and-bounded-local-capability-edges" if len(component_ids) > 12 else "selected-graph-topology",
+        },
         "metrics": {
             "node_count": len(nodes),
             "edge_count": len(edges),
@@ -765,8 +974,17 @@ def compose_application(request: dict[str, Any]) -> dict[str, Any]:
     graph_options = _normalize_graph_options(request.get("graph"))
 
     raw_targets = request.get("language_targets", "auto")
+    target_reasons: dict[str, list[str]] = {}
     if raw_targets == "auto":
         target_ids = ["reaper"]
+        for component_id in component_ids:
+            for language_id in _COMPONENTS[component_id].get("preferred_languages", []):
+                if language_id not in _LANGUAGE_TARGETS or language_id == "reaper":
+                    continue
+                target_reasons.setdefault(language_id, []).append(component_id)
+        for language_id in ("python", "rust", "typescript", "c", "java", "kotlin"):
+            if language_id in target_reasons:
+                target_ids.append(language_id)
     elif isinstance(raw_targets, list) and raw_targets:
         target_ids = []
         for raw in raw_targets:
@@ -841,14 +1059,23 @@ def compose_application(request: dict[str, Any]) -> dict[str, Any]:
     language_targets = []
     for target_id in target_ids:
         generated = target_id == "reaper"
+        selected_by = target_reasons.get(target_id, [])
         language_targets.append({
             "id": target_id,
             "language": _LANGUAGE_TARGETS[target_id],
             "status": "generated" if generated else "adapter_pending",
+            "selection": "canonical_core" if generated else ("automatic" if raw_targets == "auto" else "explicit"),
+            "selected_for_components": selected_by,
             "reason": (
                 "Canonical Reaper source is generated from the validated application request."
                 if generated else
-                "No Jora code-generation backend is integrated for this target."
+                ("Automatically selected from component capability preferences; adapter implementation remains pending for: "
+                 + ", ".join(selected_by) + ".")
+                if raw_targets == "auto" else
+                "Explicitly requested; no Jora code-generation backend is integrated for this target."
+            ),
+            "toolchain": (
+                "available" if generated or target_id == "python" or shutil.which({"rust": "rustc", "typescript": "tsc", "c": "cc", "java": "javac", "kotlin": "kotlinc"}.get(target_id, "")) else "not_detected"
             ),
         })
 
