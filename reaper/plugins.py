@@ -189,17 +189,23 @@ class PluginManager:
 
     def run(self, name: str, **arguments: Any) -> Any:
         spec = self._resolve(name)
+        input_size = _encoded_size(arguments)
+        if input_size > self.policy.max_input_bytes:
+            raise PluginError(
+                f"{spec.name} input exceeds {self.policy.max_input_bytes} bytes"
+            )
+        started = time.perf_counter()
+        semaphore = self._semaphores[spec.plugin_id]
+        # Reserve admission and read enabled state atomically with set_enabled().
         with self._lock:
             if spec.plugin_id not in self._enabled:
                 raise PluginError(f"plugin {spec.name} is disabled")
-        input_size = _encoded_size(arguments)
-        if input_size > self.policy.max_input_bytes:
-            raise PluginError(f"{spec.name} input exceeds {self.policy.max_input_bytes} bytes")
-        semaphore = self._semaphores[spec.plugin_id]
-        if not semaphore.acquire(blocking=False):
-            raise PluginError(f"{spec.name} concurrency limit reached")
-        started = time.perf_counter()
-        with self._lock:
+            if not semaphore.acquire(blocking=False):
+                stats = self._stats[spec.plugin_id]
+                stats.failures += 1
+                stats.last_status = "concurrency_limited"
+                stats.last_error = f"{spec.name} concurrency limit reached"
+                raise PluginError(f"{spec.name} concurrency limit reached")
             stats = self._stats[spec.plugin_id]
             stats.invocations += 1
             stats.in_flight += 1
@@ -226,7 +232,7 @@ class PluginManager:
                 stats.last_status = "rejected"
                 stats.last_error = str(error)[:500]
             raise
-        except (TypeError, ValueError) as error:
+        except (TypeError, ValueError, OSError) as error:
             message = f"invalid arguments for {spec.name}: {error}"
             with self._lock:
                 stats.failures += 1
