@@ -319,7 +319,7 @@ _LANGUAGE_TARGETS = {
     "rust": "Rust",
     "c": "C",
 }
-_NAME_RE = re.compile(r"^[A-Za-z0-9\u0400-\u04ff\u4e00-\u9fff][A-Za-z0-9\u0400-\u04ff\u4e00-\u9fff .,_&+\-]{0,79}$")
+_NAME_RE = re.compile(r"^[A-Za-z0-9\u0400-\u04ff\u4e00-\u9fff][A-Za-z0-9\u0400-\u04ff\u4e00-\u9fff .,_&+/\-]{0,79}$")
 
 
 class JoraError(ValueError):
@@ -494,11 +494,23 @@ def _naming_profile(component_ids: list[str], style: str) -> dict[str, Any]:
     balanced = natural_domains + " Workspace"
     descriptive = "Workspace for " + natural_actions.lower()
     formula = " + ".join(formula_terms) + " Workspace"
+
+    def bounded_label(candidate: str) -> str:
+        if len(candidate) <= 80:
+            return candidate
+        # Large compositions need a readable independent name within the
+        # public 80-character contract. Keep a deterministic compact identity.
+        for count in range(len(short_terms), 0, -1):
+            compact_candidate = " / ".join(short_terms[:count]) + " Workspace"
+            if len(compact_candidate) <= 80:
+                return compact_candidate
+        return "Workspace"
+
     suggestions = [
-        {"id": "jora.compact", "label": compact, "style": "compact"},
-        {"id": "jora.balanced", "label": balanced, "style": "balanced"},
-        {"id": "jora.descriptive", "label": descriptive, "style": "descriptive"},
-        {"id": "jora.formula", "label": formula, "style": "formula"},
+        {"id": "jora.compact", "label": bounded_label(compact), "style": "compact"},
+        {"id": "jora.balanced", "label": bounded_label(balanced), "style": "balanced"},
+        {"id": "jora.descriptive", "label": bounded_label(descriptive), "style": "descriptive"},
+        {"id": "jora.formula", "label": bounded_label(formula), "style": "formula"},
     ]
     preferred = next((item for item in suggestions if item["style"] == style), None)
     if preferred is None:
