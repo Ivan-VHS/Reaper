@@ -1,5 +1,6 @@
 #ifndef REAPER_LEXER_H
 #define REAPER_LEXER_H
+#define REAPER_MAX_SOURCE_BYTES (16u * 1024u * 1024u)
 #include <stddef.h>
 #ifdef __cplusplus
 extern "C" {

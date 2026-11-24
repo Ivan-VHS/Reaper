@@ -124,6 +124,10 @@ static int is_pair_operator(const char *p){
 }
 int reaper_lex(const char *source,ReaperTokenArray *out,ReaperLexError *error){
  if(!source||!out)return fail(error,1,1,"source and output are required");memset(out,0,sizeof *out);if(error)memset(error,0,sizeof *error);
+ size_t source_bytes=0u;
+ while(source_bytes<=REAPER_MAX_SOURCE_BYTES && source[source_bytes]!='\0')++source_bytes;
+ if(source_bytes>REAPER_MAX_SOURCE_BYTES)
+  return fail(error,1,1,"source exceeds the 16 MiB lexer input limit");
  size_t bad_line=1u,bad_column=1u;
  if(!validate_utf8_source((const unsigned char *)source,&bad_line,&bad_column))
   return fail(error,bad_line,bad_column,"source is not valid UTF-8");
