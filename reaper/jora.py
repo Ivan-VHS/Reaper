@@ -23,6 +23,23 @@ MAX_REQUEST_BYTES = 1_048_576
 MAX_COMPONENTS = 24
 MAX_LOCALES = 8
 MAX_OUTPUT_FILES = 64
+MAX_GRAPH_VARIANTS = 6
+GRAPH_TOPOLOGIES = (
+    "layered", "pipeline", "hub_spoke", "plugin_mesh", "event_driven", "hybrid",
+)
+GRAPH_LABELS = {
+    "layered": "Layered Composition",
+    "pipeline": "Sequential Workflow",
+    "hub_spoke": "Shared Orchestrator",
+    "plugin_mesh": "Capability Mesh",
+    "event_driven": "Event-Driven",
+    "hybrid": "Hybrid Composition",
+}
+DOMAIN_LABELS = {
+    "documents": "Documents",
+    "media": "Audio & Media",
+    "language": "Languages",
+}
 
 LOCALES: dict[str, dict[str, str]] = {
     "en": {
@@ -75,6 +92,7 @@ _COMPONENTS: dict[str, dict[str, Any]] = {
         "version": "1.0.0",
         "summary": "Structured text editing, search, formatting and document history.",
         "provides": ["text.document", "text.search", "text.formatting", "text.history"],
+        "consumes": [],
         "requires": ["document.model", "storage.local", "localization.catalog"],
         "conflicts": [],
         "maturity": "specification_only",
@@ -85,6 +103,7 @@ _COMPONENTS: dict[str, dict[str, Any]] = {
         "version": "1.0.0",
         "summary": "Audio asset organisation, timeline editing and non-destructive operations.",
         "provides": ["audio.asset", "audio.timeline", "audio.editing"],
+        "consumes": [],
         "requires": ["media.model", "timeline.model", "storage.local"],
         "conflicts": [],
         "maturity": "specification_only",
@@ -95,6 +114,7 @@ _COMPONENTS: dict[str, dict[str, Any]] = {
         "version": "1.0.0",
         "summary": "Translation workspace, terminology, parallel text and locale review.",
         "provides": ["translation.workspace", "translation.terminology", "translation.review"],
+        "consumes": ["text.document"],
         "requires": ["document.model", "localization.catalog", "translation.provider"],
         "conflicts": [],
         "maturity": "specification_only",
@@ -203,6 +223,297 @@ def _resolve_dependencies(component_ids: list[str]) -> list[str]:
     return ordered
 
 
+def _normalize_graph_options(value: Any) -> dict[str, Any]:
+    if value is None:
+        value = {}
+    if not isinstance(value, dict):
+        raise JoraError("graph must be an object")
+    allowed = {"topology", "seed", "variants", "variation"}
+    unknown = sorted(set(value) - allowed)
+    if unknown:
+        raise JoraError("unknown graph fields: " + ", ".join(unknown))
+    topology = _text(value.get("topology", "auto"), "graph.topology", 32).casefold()
+    if topology != "auto" and topology not in GRAPH_TOPOLOGIES:
+        raise JoraError(
+            "unsupported graph topology; choose auto or: " + ", ".join(GRAPH_TOPOLOGIES)
+        )
+    seed = _text(value.get("seed", ""), "graph.seed", 64, optional=True)
+    variants = value.get("variants", 3)
+    variation = value.get("variation", 50)
+    if isinstance(variants, bool) or not isinstance(variants, int) or not 1 <= variants <= MAX_GRAPH_VARIANTS:
+        raise JoraError(f"graph.variants must be an integer from 1 to {MAX_GRAPH_VARIANTS}")
+    if isinstance(variation, bool) or not isinstance(variation, int) or not 0 <= variation <= 100:
+        raise JoraError("graph.variation must be an integer from 0 to 100")
+    return {
+        "topology": topology,
+        "seed": seed,
+        "variants": variants,
+        "variation": variation,
+    }
+
+
+def _naming_profile(component_ids: list[str], style: str) -> dict[str, Any]:
+    domains = sorted(
+        {_COMPONENTS[item]["domain"] for item in component_ids},
+        key=lambda item: ({"documents": 0, "media": 1, "language": 2}.get(item, 99), item),
+    )
+    descriptors = [DOMAIN_LABELS.get(domain, domain.replace("_", " ").title()) for domain in domains]
+    if not descriptors:
+        descriptors = ["Workspace"]
+    joined = " · ".join(descriptors)
+    plus_joined = " + ".join(descriptors)
+    natural = " & ".join(descriptors)
+    suggestions = [
+        {"id": "jora.compact", "label": f"Jora · {joined}", "style": "compact"},
+        {"id": "jora.balanced", "label": f"Jora — {natural} Workspace", "style": "balanced"},
+        {"id": "jora.descriptive", "label": f"Jora | Workspace for {natural}", "style": "descriptive"},
+        {"id": "jora.formula", "label": f"Jora — {plus_joined}", "style": "formula"},
+    ]
+    preferred = next((item for item in suggestions if item["style"] == style), None)
+    if preferred is None:
+        preferred = suggestions[1]
+    return {
+        "version": "jora-naming.v2",
+        "brand": "Jora",
+        "canonical_name": "Jora",
+        "style": style,
+        "descriptors": descriptors,
+        "selected": preferred,
+        "suggestions": suggestions,
+        "rule": "All suggestions retain Jora as the only product name; suffixes describe the selected capability composition and are not independent brands.",
+    }
+
+
+def _build_graph_variant(
+    component_ids: list[str],
+    dependency_order: list[str],
+    locales: list[str],
+    topology: str,
+    seed: str,
+    variation: int,
+) -> dict[str, Any]:
+    nodes: list[dict[str, Any]] = []
+    edges: list[dict[str, Any]] = []
+    node_ids: set[str] = set()
+
+    def add_node(node_id: str, kind: str, label: str, maturity: str = "contract") -> None:
+        if node_id in node_ids:
+            return
+        node_ids.add(node_id)
+        nodes.append({"id": node_id, "kind": kind, "label": label, "maturity": maturity})
+
+    def add_edge(source: str, target: str, relation: str, *, async_edge: bool = False) -> None:
+        if source not in node_ids or target not in node_ids:
+            raise JoraError(f"graph edge references an unknown node: {source} -> {target}")
+        record = {"from": source, "to": target, "relation": relation}
+        if async_edge:
+            record["delivery"] = "asynchronous"
+        if record not in edges:
+            edges.append(record)
+
+    add_node("app:jora", "application", "Jora", "scaffold")
+    add_node("ui:shell", "interface", "Jora Interface", "planned")
+    add_node("runtime:reaper", "runtime", "Reaper Runtime", "available")
+    for locale in locales:
+        add_node("locale:" + locale, "locale", locale.upper(), "generated")
+    for component_id in component_ids:
+        spec = _COMPONENTS[component_id]
+        add_node(
+            "component:" + component_id,
+            "component",
+            str(spec["name"]),
+            str(spec["maturity"]),
+        )
+    for dependency_id in dependency_order:
+        if dependency_id in _DEPENDENCIES:
+            spec = _DEPENDENCIES[dependency_id]
+            add_node(
+                "service:" + dependency_id,
+                "service",
+                dependency_id,
+                str(spec["maturity"]),
+            )
+
+    add_edge("app:jora", "runtime:reaper", "executes_on")
+    add_edge("app:jora", "ui:shell", "exposes")
+    for locale in locales:
+        add_edge("ui:shell", "locale:" + locale, "localizes_with")
+    for component_id in component_ids:
+        component_node = "component:" + component_id
+        for dependency in _COMPONENTS[component_id]["requires"]:
+            if dependency in _DEPENDENCIES:
+                add_edge(component_node, "service:" + dependency, "requires")
+    for dependency_id in dependency_order:
+        if dependency_id not in _DEPENDENCIES:
+            continue
+        for dependency in _DEPENDENCIES[dependency_id]["requires"]:
+            if dependency in _DEPENDENCIES:
+                add_edge("service:" + dependency_id, "service:" + dependency, "requires")
+
+    if topology == "layered":
+        for component_id in component_ids:
+            add_edge("ui:shell", "component:" + component_id, "mounts")
+    elif topology == "pipeline":
+        if component_ids:
+            add_edge("ui:shell", "component:" + component_ids[0], "starts_workflow")
+        for left, right in zip(component_ids, component_ids[1:]):
+            add_edge("component:" + left, "component:" + right, "workflow_next")
+    elif topology == "hub_spoke":
+        add_node("orchestrator:jora", "orchestrator", "Jora Orchestrator", "planned")
+        add_edge("ui:shell", "orchestrator:jora", "dispatches_to")
+        for component_id in component_ids:
+            add_edge("orchestrator:jora", "component:" + component_id, "routes_to")
+    elif topology == "plugin_mesh":
+        for component_id in component_ids:
+            add_edge("ui:shell", "component:" + component_id, "mounts")
+        for consumer_id in component_ids:
+            consumed = set(_COMPONENTS[consumer_id].get("consumes", []))
+            if not consumed:
+                continue
+            for provider_id in component_ids:
+                if provider_id == consumer_id:
+                    continue
+                provided = set(_COMPONENTS[provider_id]["provides"])
+                for capability in sorted(consumed & provided):
+                    add_edge(
+                        "component:" + provider_id,
+                        "component:" + consumer_id,
+                        "capability:" + capability,
+                    )
+    elif topology == "event_driven":
+        add_node("events:jora", "event_bus", "Jora Event Bus", "planned")
+        add_edge("ui:shell", "events:jora", "dispatches_events")
+        for component_id in component_ids:
+            component_node = "component:" + component_id
+            add_edge(component_node, "events:jora", "publishes", async_edge=True)
+            add_edge("events:jora", component_node, "subscribes", async_edge=True)
+    elif topology == "hybrid":
+        add_node("orchestrator:jora", "orchestrator", "Jora Orchestrator", "planned")
+        add_edge("ui:shell", "orchestrator:jora", "dispatches_to")
+        for component_id in component_ids:
+            add_edge("orchestrator:jora", "component:" + component_id, "routes_to")
+        for consumer_id in component_ids:
+            consumed = set(_COMPONENTS[consumer_id].get("consumes", []))
+            for provider_id in component_ids:
+                if provider_id == consumer_id:
+                    continue
+                provided = set(_COMPONENTS[provider_id]["provides"])
+                for capability in sorted(consumed & provided):
+                    add_edge(
+                        "component:" + provider_id,
+                        "component:" + consumer_id,
+                        "capability:" + capability,
+                    )
+    else:
+        raise JoraError(f"unsupported graph topology: {topology}")
+
+    # Deterministic optional architecture augmentations create real graph variety
+    # without pretending that these planned contracts are already executable.
+    roll = int(hashlib.sha256(seed.encode("utf-8")).hexdigest()[:8], 16) % 100
+    if variation and roll < variation:
+        add_node("extension:jora", "extension_registry", "Jora Extension Registry", "planned")
+        add_edge("ui:shell", "extension:jora", "discovers_extensions")
+        for component_id in component_ids:
+            add_edge("extension:jora", "component:" + component_id, "registers")
+    gate_roll = int(hashlib.sha256((seed + ":gate").encode("utf-8")).hexdigest()[:8], 16) % 100
+    if variation >= 50 and gate_roll < variation:
+        add_node("gate:jora", "validation_gate", "Jora Compatibility Gate", "planned")
+        add_edge("app:jora", "gate:jora", "validates_composition")
+        add_edge("gate:jora", "ui:shell", "approves_layout")
+
+    # Only hard dependency edges must be acyclic. Event-mediated feedback loops
+    # are explicit asynchronous edges and can never participate in startup ordering.
+    dependency_graph: dict[str, list[str]] = {node_id: [] for node_id in node_ids}
+    for edge in edges:
+        if edge["relation"] == "requires":
+            dependency_graph[edge["from"]].append(edge["to"])
+    visiting: set[str] = set()
+    visited: set[str] = set()
+
+    def visit(node_id: str) -> None:
+        if node_id in visiting:
+            raise JoraError(f"generated graph contains a dependency cycle at {node_id}")
+        if node_id in visited:
+            return
+        visiting.add(node_id)
+        for target in dependency_graph[node_id]:
+            visit(target)
+        visiting.remove(node_id)
+        visited.add(node_id)
+
+    for node_id in sorted(dependency_graph):
+        visit(node_id)
+
+    canonical_graph = {
+        "topology": topology,
+        "seed": seed,
+        "variation": variation,
+        "nodes": nodes,
+        "edges": edges,
+    }
+    signature = hashlib.sha256(
+        json.dumps(canonical_graph, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()[:16]
+    dependency_edges = sum(edge["relation"] == "requires" for edge in edges)
+    capability_edges = sum(edge["relation"].startswith("capability:") for edge in edges)
+    planned_nodes = sum(node["maturity"] == "planned" for node in nodes)
+    return {
+        "id": "jora-graph-" + signature,
+        "label": "Jora · " + GRAPH_LABELS[topology],
+        "topology": topology,
+        "seed": seed,
+        "variation": variation,
+        "signature": signature,
+        "nodes": nodes,
+        "edges": edges,
+        "metrics": {
+            "node_count": len(nodes),
+            "edge_count": len(edges),
+            "dependency_edges": dependency_edges,
+            "capability_connections": capability_edges,
+            "planned_nodes": planned_nodes,
+            "compatibility_score": max(0, 100 - planned_nodes * 3),
+        },
+        "cycle_policy": {
+            "dependency_edges": "acyclic",
+            "event_feedback": "asynchronous and mediated by the Jora event bus"
+            if topology == "event_driven" else "not used",
+        },
+    }
+
+
+def _build_graph_variants(
+    component_ids: list[str],
+    dependency_order: list[str],
+    locales: list[str],
+    options: dict[str, Any],
+    fallback_seed: str,
+) -> dict[str, Any]:
+    base_seed = options["seed"] or fallback_seed[:24]
+    if options["topology"] == "auto":
+        start = int(hashlib.sha256(base_seed.encode("utf-8")).hexdigest()[:8], 16) % len(GRAPH_TOPOLOGIES)
+        topologies = [
+            GRAPH_TOPOLOGIES[(start + index) % len(GRAPH_TOPOLOGIES)]
+            for index in range(options["variants"])
+        ]
+    else:
+        topologies = [options["topology"]] * options["variants"]
+    variants = []
+    for index, topology in enumerate(topologies):
+        variant_seed = f"{base_seed}:{index}:{topology}"
+        variants.append(_build_graph_variant(
+            component_ids, dependency_order, locales, topology, variant_seed, options["variation"]
+        ))
+    return {
+        "schema": "reaper.jora.graph-set.v1",
+        "selected": variants[0]["id"],
+        "topology_mode": options["topology"],
+        "seed": base_seed,
+        "variant_count": len(variants),
+        "variants": variants,
+    }
+
+
 def _generated_name() -> str:
     """Every application composed by this unified product is named Jora."""
     return "Jora"
@@ -226,7 +537,7 @@ def compose_application(request: dict[str, Any]) -> dict[str, Any]:
 
     allowed = {
         "schema", "name", "description", "components", "locales",
-        "preferred_locale", "syntax_mode", "language_targets",
+        "preferred_locale", "syntax_mode", "language_targets", "name_style", "graph",
     }
     unknown = sorted(set(request) - allowed)
     if unknown:
@@ -247,7 +558,12 @@ def compose_application(request: dict[str, Any]) -> dict[str, Any]:
     if requested_name and requested_name != "Jora":
         raise JoraError("Jora is the fixed application name; component formulas do not create separately named products")
     display_name = _generated_name()
+    name_style = _text(request.get("name_style", "balanced"), "name_style", 24).casefold()
+    if name_style not in {"compact", "balanced", "descriptive", "formula"}:
+        raise JoraError("name_style must be compact, balanced, descriptive or formula")
+    naming = _naming_profile(component_ids, name_style)
     description = _text(request.get("description", ""), "description", 500, optional=True)
+    graph_options = _normalize_graph_options(request.get("graph"))
 
     raw_targets = request.get("language_targets", "auto")
     if raw_targets == "auto":
@@ -280,6 +596,8 @@ def compose_application(request: dict[str, Any]) -> dict[str, Any]:
         "syntax_mode": syntax_mode,
         "name": display_name,
         "language_targets": target_ids,
+        "name_style": name_style,
+        "graph": graph_options,
     }
     digest = hashlib.sha256(
         json.dumps(canonical, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
@@ -312,6 +630,14 @@ def compose_application(request: dict[str, Any]) -> dict[str, Any]:
                 "requires": list(spec["requires"]),
             })
 
+    graphs = _build_graph_variants(
+        component_ids,
+        dependency_order,
+        locales,
+        graph_options,
+        hashlib.sha256(json.dumps(canonical, sort_keys=True).encode("utf-8")).hexdigest(),
+    )
+
     language_targets = []
     for target_id in target_ids:
         generated = target_id == "reaper"
@@ -331,6 +657,8 @@ def compose_application(request: dict[str, Any]) -> dict[str, Any]:
         "version": 1,
         "id": application_id,
         "name": display_name,
+        "naming": naming,
+        "graphs": graphs,
         "description": description or " + ".join(_COMPONENTS[item]["name"] for item in component_ids),
         "formula": {
             "expression": " + ".join(_COMPONENTS[item]["name"] for item in component_ids) + " = Jora",
