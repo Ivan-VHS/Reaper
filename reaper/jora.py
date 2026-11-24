@@ -562,6 +562,8 @@ def _build_graph_variant(
     dependency_edges = sum(edge["relation"] == "requires" for edge in edges)
     capability_edges = sum("capability" in edge["relation"] for edge in edges)
     planned_nodes = sum(node["maturity"] == "planned" for node in nodes)
+    complexity_penalty = max(0, (len(edges) - len(nodes) + 1) // 8)
+    compatibility_score = max(0, min(100, 100 + min(10, capability_edges * 2) - planned_nodes * 3 - complexity_penalty))
     return {
         "id": "jora-graph-" + signature,
         "label": "Jora · " + GRAPH_LABELS[topology] + " · " + layout_variant,
@@ -578,7 +580,7 @@ def _build_graph_variant(
             "dependency_edges": dependency_edges,
             "capability_connections": capability_edges,
             "planned_nodes": planned_nodes,
-            "compatibility_score": max(0, 100 - planned_nodes * 3),
+            "compatibility_score": compatibility_score,
         },
         "cycle_policy": {
             "synchronous_edges": "acyclic",
@@ -611,9 +613,20 @@ def _build_graph_variants(
             component_ids, dependency_order, locales, topology, variant_seed,
             options["variation"], index,
         ))
+    selected_graph = max(
+        variants,
+        key=lambda item: (
+            item["metrics"]["compatibility_score"],
+            item["metrics"]["capability_connections"],
+            -item["metrics"]["planned_nodes"],
+            -item["metrics"]["edge_count"],
+            item["signature"],
+        ),
+    )
     return {
         "schema": "reaper.jora.graph-set.v1",
-        "selected": variants[0]["id"],
+        "selected": selected_graph["id"],
+        "selection_policy": "max_compatibility_then_capability_reuse_then_minimal_planned_nodes",
         "topology_mode": options["topology"],
         "seed": base_seed,
         "variant_count": len(variants),
