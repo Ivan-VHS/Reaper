@@ -44,6 +44,16 @@ class FrontendLimitTests(unittest.TestCase):
         with self.assertRaisesRegex(ParseError, "block nesting limit"):
             parse(source, "deep-blocks.rpr")
 
+    def test_identifier_limit_is_enforced_during_lexing(self) -> None:
+        with patch("reaper.lexer.MAX_IDENTIFIER_CHARS", 4):
+            with self.assertRaisesRegex(LexError, "identifier exceeds the 4-character limit"):
+                Lexer("abcdef", "long-name.rpr").tokenize()
+
+    def test_numeric_literal_limit_is_enforced_during_lexing(self) -> None:
+        with patch("reaper.lexer.MAX_NUMERIC_LITERAL_CHARS", 4):
+            with self.assertRaisesRegex(LexError, "numeric literal exceeds the 4-character limit"):
+                Lexer("12345", "long-number.rpr").tokenize()
+
     def test_normal_source_and_unicode_positions_are_unchanged(self) -> None:
         tokens = tokenize('emit "Привет"\nemit 2', "unicode.rpr")
         self.assertEqual(tokens[0].kind, "EMIT")
