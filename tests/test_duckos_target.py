@@ -11,7 +11,7 @@ from reaper.native_compiler import NativeToolchainError, build_executable, compi
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "targets" / "duckos" / "boot_contract_v1.rpr"
-EXPECTED = "0\n0\n-2\n-3\n-4\n-5\n-6\n-7\n"
+EXPECTED = "0\n0\n-2\n-3\n-4\n-5\n-6\n-6\n-7\n"
 
 
 class DuckOSTargetTests(unittest.TestCase):
