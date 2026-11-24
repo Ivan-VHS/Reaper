@@ -34,6 +34,30 @@ The language is not allowed to imply that user-space code can safely access arbi
 | Studio | Windows editor/debugger foundation plus a Systems/Hardware overview showing MCU profiles and current access limits | no live device inspector or complete hardware IDE |
 | Native capability catalogue | versioned module and operation descriptions with a small set of C primitives | catalogue entries are not automatically executable handlers |
 
+## Shared source-coordinate contract — implemented in the Python reference path
+
+The Python `.rpr` lexer now attaches a shared `SourceSpan` to every token,
+including EOF. Parser nodes expose the span of their originating token, and
+lowered canonical-IR instructions retain that span through jump patching.
+Instructions also carry an explicit `origin_span` and an immutable
+`expanded_from` provenance tuple for future macro/lowering expansions.
+
+The coordinate convention is fixed:
+
+- character offsets are zero-based Unicode code-point offsets with half-open
+  `[start, end)` ranges;
+- UTF-8 byte offsets are stored independently in `[byte_start, byte_end)`;
+- line and column positions are one-based, with exclusive end coordinates;
+- deterministic `CanonicalIR.as_dict()` / `to_json()` output includes a
+  versioned IR projection and an instruction-indexed source map.
+
+This is an implemented source-traceability slice of the Python compatibility
+compiler, not yet a claim that native C17 IR, optimization passes, macro
+expansion or every backend preserves full provenance. The C17 IR currently
+has its own limited line/column fields and requires a separate versioned
+migration. Existing manually constructed tokens and IR instructions without a
+span remain accepted for compatibility.
+
 ## Target language layers
 
 1. **Core syntax and semantics.** Keep craft, make, vary, change, yield, emit and :: source compatibility. Add system constructs only through a versioned grammar and semantic contract.
