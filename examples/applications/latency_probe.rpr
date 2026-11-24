@@ -5,7 +5,7 @@ craft non_negative(value) {
 
 craft quantile(sorted_samples, percentile) {
     make rank := ((size(sorted_samples) * percentile) + 99) // 100
-    make index := rank - 1
+    vary index := rank - 1
     when index < 0 {
         change index := 0
     }
