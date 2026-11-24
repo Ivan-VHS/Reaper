@@ -37,7 +37,7 @@ GRAPH_LABELS = {
 }
 DOMAIN_LABELS = {
     "documents": "Documents",
-    "media": "Audio & Media",
+    "media": "Audio",
     "language": "Languages",
 }
 
