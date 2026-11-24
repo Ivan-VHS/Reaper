@@ -124,7 +124,14 @@ class Lexer:
             )
         while not self._at_end():
             char = self._peek()
-            if char in " \t\r":
+            if char == "\r" and self._peek(1) == "\n":
+                start_line, start_column, start_byte = self.line, self.column, self.byte_index
+                self.index += 2
+                self.byte_index += 2
+                self.line += 1
+                self.column = 1
+                self._emit_token("NEWLINE", "\r\n", start_line, start_column, start_byte)
+            elif char in " \t\r":
                 self._advance()
             elif char == "\n":
                 start_line, start_column, start_byte = self.line, self.column, self.byte_index
