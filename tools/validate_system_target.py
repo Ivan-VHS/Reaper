@@ -124,7 +124,21 @@ def validate_files(profile_path: str | Path = DEFAULT_PROFILE, schema_path: str 
         raise TargetProfileError(f"cannot read target contract: {error}") from error
     except json.JSONDecodeError as error:
         raise TargetProfileError(f"invalid target contract JSON: {error}") from error
-    return validate_profile(_object(profile, "profile"), _object(schema, "schema"))
+    profile_object = _object(profile, "profile")
+    schema_object = _object(schema, "schema")
+    try:
+        import jsonschema
+    except ImportError:
+        # Core target safety invariants are still checked by validate_profile.
+        pass
+    else:
+        try:
+            jsonschema.validate(instance=profile_object, schema=schema_object)
+        except jsonschema.ValidationError as error:
+            raise TargetProfileError(f"target profile does not satisfy its JSON Schema: {error.message}") from error
+        except jsonschema.SchemaError as error:
+            raise TargetProfileError(f"target profile JSON Schema is invalid: {error.message}") from error
+    return validate_profile(profile_object, schema_object)
 
 
 def main(argv: list[str] | None = None) -> int:
