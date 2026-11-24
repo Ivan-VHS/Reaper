@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 from reaper.jora import (
-    JoraError, REQUEST_SCHEMA, build_application, compose_application, list_components,
+    APPLICATION_NAME_POLICY, JoraError, REQUEST_SCHEMA, build_application, compose_application, list_components,
 )
 
 
@@ -14,6 +14,7 @@ class JoraCompositionTests(unittest.TestCase):
     def request(self, **changes):
         value = {
             "schema": REQUEST_SCHEMA,
+            "application_name_policy": APPLICATION_NAME_POLICY,
             "components": ["text.editor", "audio.editor", "translation.workspace"],
             "locales": ["en", "ru", "uk", "most"],
             "preferred_locale": "ru",
@@ -55,12 +56,18 @@ class JoraCompositionTests(unittest.TestCase):
             compose_application(self.request(name="Jora Audio"))
         with self.assertRaisesRegex(JoraError, "must not contain the platform name"):
             compose_application(self.request(name="Jora"))
+        with self.assertRaisesRegex(JoraError, "must not contain the platform name"):
+            compose_application(self.request(name="myjOrAapp"))
+        with self.assertRaisesRegex(JoraError, "must not contain the platform name"):
+            compose_application(self.request(name="ＪＯＲＡ Suite"))
+        with self.assertRaisesRegex(JoraError, "application_name_policy"):
+            compose_application(self.request(application_name_policy="allow_platform_brand"))
 
     def test_naming_variants_are_independent_product_descriptors(self):
         result = compose_application(self.request(name_style="balanced"))
         naming = result["naming"]
         self.assertEqual(naming["platform"], "Jora")
-        self.assertEqual(naming["product_name_policy"], "independent_application_brand")
+        self.assertEqual(naming["product_name_policy"], APPLICATION_NAME_POLICY)
         self.assertEqual(naming["version"], "jora-naming.v2")
         self.assertEqual(naming["selected"]["style"], "balanced")
         self.assertEqual(naming["selected"]["label"], "Documents, Media & Languages Workspace")
