@@ -6,7 +6,9 @@ from datetime import datetime
 import hashlib
 import hmac
 import json
+import os
 from pathlib import Path
+import stat
 import re
 import sys
 from typing import Any
@@ -201,18 +203,57 @@ def audit_snapshot(snapshot: Any) -> dict[str, Any]:
     }
 
 
+def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    """Reject duplicate properties instead of silently accepting the last value."""
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise DuckOSInventoryError(f"duplicate JSON property: {key}")
+        result[key] = value
+    return result
+
+
+def _reject_constant(value: str) -> None:
+    raise DuckOSInventoryError(f"non-finite JSON constant is not permitted: {value}")
+
+
 def audit_file(path: str | Path) -> dict[str, Any]:
     source = Path(path).expanduser()
-    if source.is_symlink() or not source.is_file():
+    if source.is_symlink():
         raise DuckOSInventoryError("snapshot path must be a regular, non-symlink file")
+
+    descriptor: int | None = None
     try:
-        if source.stat().st_size > MAX_SNAPSHOT_BYTES:
-            raise DuckOSInventoryError("snapshot exceeds the 16 MiB input limit")
-        snapshot = json.loads(source.read_text(encoding="utf-8"))
+        # O_NOFOLLOW closes the symlink race on platforms that expose it. The
+        # bounded read remains the final guard on every supported platform.
+        flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0)
+        descriptor = os.open(source, flags)
+        with os.fdopen(descriptor, "rb") as stream:
+            descriptor = None
+            if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
+                raise DuckOSInventoryError("snapshot path must be a regular file")
+            raw = stream.read(MAX_SNAPSHOT_BYTES + 1)
+        if len(raw) > MAX_SNAPSHOT_BYTES:
+            raise DuckOSInventoryError(
+                f"snapshot exceeds the {MAX_SNAPSHOT_BYTES}-byte input limit"
+            )
+        try:
+            snapshot = json.loads(
+                raw.decode("utf-8"),
+                object_pairs_hook=_unique_object,
+                parse_constant=_reject_constant,
+            )
+        except UnicodeDecodeError as error:
+            raise DuckOSInventoryError("snapshot is not valid UTF-8") from error
+        except json.JSONDecodeError as error:
+            raise DuckOSInventoryError(f"snapshot is not valid JSON: {error}") from error
+    except DuckOSInventoryError:
+        raise
     except OSError as error:
         raise DuckOSInventoryError(f"cannot read snapshot: {error}") from error
-    except json.JSONDecodeError as error:
-        raise DuckOSInventoryError(f"snapshot is not valid JSON: {error}") from error
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
     return audit_snapshot(snapshot)
 
 
