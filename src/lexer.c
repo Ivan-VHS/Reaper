@@ -81,6 +81,39 @@ static int append_token(ReaperTokenArray *o,ReaperTokenKind k,const char *s,size
  char *v=malloc(n+1);if(!v)return 0;memcpy(v,s,n);v[n]='\0';o->items[o->length++]=(ReaperToken){k,v,l,c};return 1;
 }
 static int fail(ReaperLexError *e,size_t l,size_t c,const char *m){if(e){snprintf(e->message,sizeof e->message,"%s",m);e->line=l;e->column=c;}return 0;}
+
+/* Reject overlong encodings, surrogate code points and values beyond U+10FFFF. */
+static int validate_utf8_source(const unsigned char *source, size_t *bad_line, size_t *bad_column) {
+ size_t line=1u,column=1u;
+ for(size_t i=0u;source[i]!='\0';){
+  const unsigned char lead=source[i];
+  size_t width=0u;
+  if(lead<0x80u) width=1u;
+  else if(lead>=0xC2u&&lead<=0xDFu) width=2u;
+  else if(lead>=0xE0u&&lead<=0xEFu) width=3u;
+  else if(lead>=0xF0u&&lead<=0xF4u) width=4u;
+  else goto invalid;
+  for(size_t j=1u;j<width;++j){
+   const unsigned char next=source[i+j];
+   if(next=='\0'||(next&0xC0u)!=0x80u) goto invalid;
+   if(j==1u){
+    if(lead==0xE0u&&next<0xA0u) goto invalid;
+    if(lead==0xEDu&&next>0x9Fu) goto invalid;
+    if(lead==0xF0u&&next<0x90u) goto invalid;
+    if(lead==0xF4u&&next>0x8Fu) goto invalid;
+   }
+  }
+  if(width==1u&&lead=='\n'){++line;column=1u;}
+  else ++column;
+  i+=width;
+  continue;
+invalid:
+  if(bad_line)*bad_line=line;
+  if(bad_column)*bad_column=column;
+  return 0;
+ }
+ return 1;
+}
 static int ident_start(unsigned char c){return isalpha(c)||c=='_'||c>=0x80;}
 static int ident_more(unsigned char c){return isalnum(c)||c=='_'||c>=0x80;}
 static int one_op(char c){return strchr("+-*/%<>(){}[],=:;.!?@|~&^",c)!=NULL;}
@@ -91,6 +124,9 @@ static int is_pair_operator(const char *p){
 }
 int reaper_lex(const char *source,ReaperTokenArray *out,ReaperLexError *error){
  if(!source||!out)return fail(error,1,1,"source and output are required");memset(out,0,sizeof *out);if(error)memset(error,0,sizeof *error);
+ size_t bad_line=1u,bad_column=1u;
+ if(!validate_utf8_source((const unsigned char *)source,&bad_line,&bad_column))
+  return fail(error,bad_line,bad_column,"source is not valid UTF-8");
  const char *p=source;size_t line=1,col=1;
  while(*p){unsigned char c=(unsigned char)*p;
   if(c==' '||c=='\t'||c=='\r'){++p;++col;continue;}
