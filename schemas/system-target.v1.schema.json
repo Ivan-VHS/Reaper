@@ -1,0 +1,265 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Ivan-VHS/Reaper/blob/main/schemas/system-target.v1.schema.json",
+  "title": "Reaper system target profile",
+  "type": "object",
+  "required": [
+    "schema",
+    "version",
+    "target_id",
+    "name",
+    "purpose",
+    "maturity",
+    "target",
+    "current_toolchain",
+    "duckos_reference_contract",
+    "required_compiler_capabilities",
+    "target_decisions",
+    "safety_policy",
+    "promotion_rules"
+  ],
+  "properties": {
+    "schema": {
+      "const": "reaper.system-target.v1"
+    },
+    "version": {
+      "const": 1
+    },
+    "target_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "purpose": {
+      "type": "string",
+      "minLength": 20
+    },
+    "maturity": {
+      "enum": [
+        "planned",
+        "experimental",
+        "available"
+      ]
+    },
+    "target": {
+      "type": "object",
+      "required": [
+        "architecture",
+        "triple",
+        "abi",
+        "boot_protocol",
+        "endianness",
+        "pointer_width_bits",
+        "decision_status"
+      ],
+      "properties": {
+        "architecture": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "triple": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "abi": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "boot_protocol": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "endianness": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pointer_width_bits": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "decision_status": {
+          "enum": [
+            "undecided",
+            "proposed",
+            "approved"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "current_toolchain": {
+      "type": "object",
+      "required": [
+        "reference_runtime",
+        "vm",
+        "native_aot",
+        "native_c_core",
+        "hardware_adapter",
+        "embedded_workbench"
+      ],
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "status",
+          "scope"
+        ],
+        "properties": {
+          "status": {
+            "enum": [
+              "implemented",
+              "partial",
+              "experimental",
+              "planned"
+            ]
+          },
+          "scope": {
+            "type": "string"
+          },
+          "backend": {
+            "type": "string"
+          },
+          "target_profile": {
+            "type": "string"
+          },
+          "freestanding": {
+            "type": "boolean"
+          },
+          "emits_object_directly": {
+            "type": "boolean"
+          },
+          "writes_linker_sections": {
+            "type": "boolean"
+          },
+          "supports_duckos_source": {
+            "type": "boolean"
+          },
+          "supported_surface": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "excluded_surface": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "duckos_reference_contract": {
+      "type": "object",
+      "required": [
+        "status",
+        "execution",
+        "scope"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "implemented",
+            "partial",
+            "planned"
+          ]
+        },
+        "execution": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "scope": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "required_compiler_capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "acceptance"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "implemented",
+              "partial",
+              "planned"
+            ]
+          },
+          "acceptance": {
+            "type": "string",
+            "minLength": 10
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "target_decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "owner"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "open",
+              "proposed",
+              "approved"
+            ]
+          },
+          "owner": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "safety_policy": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "boolean"
+      }
+    },
+    "promotion_rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 20
+      }
+    }
+  },
+  "additionalProperties": false
+}
