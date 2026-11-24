@@ -1,0 +1,188 @@
+{
+  "schema": "reaper.system-target.v1",
+  "version": 1,
+  "target_id": "duckos-kernel",
+  "name": "DuckOS freestanding kernel",
+  "purpose": "Define the compiler and runtime gates required before Reaper can produce executable DuckOS kernel code.",
+  "maturity": "planned",
+  "target": {
+    "architecture": null,
+    "triple": null,
+    "abi": null,
+    "boot_protocol": null,
+    "endianness": null,
+    "pointer_width_bits": null,
+    "decision_status": "undecided"
+  },
+  "current_toolchain": {
+    "reference_runtime": {
+      "status": "implemented",
+      "scope": "hosted Python reference semantics; not available in a freestanding kernel"
+    },
+    "vm": {
+      "status": "implemented",
+      "scope": "hosted bytecode VM; depends on a host runtime and is not kernel startup code"
+    },
+    "native_aot": {
+      "status": "experimental",
+      "backend": "generated C17 compiled by host GCC/Clang-compatible toolchain",
+      "target_profile": "hosted-scalar",
+      "freestanding": false,
+      "emits_object_directly": false,
+      "writes_linker_sections": false,
+      "supports_duckos_source": false,
+      "supported_surface": [
+        "make",
+        "vary",
+        "change",
+        "craft",
+        "yield",
+        "emit",
+        "when",
+        "otherwise",
+        "loop while",
+        "scalar integer/boolean/text subset"
+      ],
+      "excluded_surface": [
+        "lists",
+        "indexing",
+        "each",
+        "imports",
+        "exports",
+        "collection built-ins",
+        ":: pipelines",
+        "dynamic values",
+        "closures",
+        "FFI"
+      ]
+    },
+    "native_c_core": {
+      "status": "experimental",
+      "scope": "C17 lexer, expression parser, owned AST, checked scalar IR and limited lowering; not complete Reaper source-language code generation"
+    },
+    "hardware_adapter": {
+      "status": "partial",
+      "scope": "checked MMIO descriptors and host-supplied bus callbacks; no physical mapping, privileged instruction, real IRQ or DMA runtime"
+    },
+    "embedded_workbench": {
+      "status": "partial",
+      "scope": "MCU profiles, linker-script generation and external C toolchain invocation; not an x86_64 DuckOS kernel target"
+    }
+  },
+  "duckos_reference_contract": {
+    "status": "implemented",
+    "execution": [
+      "reference-runtime",
+      "vm"
+    ],
+    "scope": "DuckOS policy modules and contract suite; host execution only"
+  },
+  "required_compiler_capabilities": [
+    {
+      "id": "fixed-width-integers",
+      "status": "planned",
+      "acceptance": "u8/u16/u32/u64, i8/i16/i32/i64, usize/isize with checked layout and overflow semantics"
+    },
+    {
+      "id": "aggregate-layout",
+      "status": "planned",
+      "acceptance": "struct/enum layout, field offsets, align/packed and ABI layout assertions"
+    },
+    {
+      "id": "pointer-and-slice-model",
+      "status": "planned",
+      "acceptance": "typed pointers, references, slices, address spaces and explicit unsafe boundaries"
+    },
+    {
+      "id": "freestanding-profile",
+      "status": "planned",
+      "acceptance": "no host libc/runtime, explicit entry point, panic handler, allocator hooks and deterministic startup"
+    },
+    {
+      "id": "native-collections",
+      "status": "planned",
+      "acceptance": "native IR and lowering for lists, indexing, iteration, imports and collection pipelines used by existing DuckOS contracts"
+    },
+    {
+      "id": "ownership-and-lifetimes",
+      "status": "planned",
+      "acceptance": "static initialization, borrowing, aliasing, lifetime, drop/defer and resource-release checks"
+    },
+    {
+      "id": "effects-and-capabilities",
+      "status": "planned",
+      "acceptance": "typed memory, io, mmio, irq, dma, process and unsafe effects checked before code generation"
+    },
+    {
+      "id": "atomics-and-mmio",
+      "status": "planned",
+      "acceptance": "volatile width-aware register access, explicit ordering, atomic operations, fences and DMA synchronization"
+    },
+    {
+      "id": "interrupt-and-assembly-abi",
+      "status": "planned",
+      "acceptance": "interrupt entry/exit, preserved register sets, naked/assembly boundary and context-switch calling convention"
+    },
+    {
+      "id": "target-object-linker",
+      "status": "planned",
+      "acceptance": "target object emission, relocations, linker scripts, sections, symbol visibility and undefined-symbol audit"
+    },
+    {
+      "id": "debug-information",
+      "status": "planned",
+      "acceptance": "source maps, DWARF or target debugger metadata, panic stack traces and symbolized emulator logs"
+    },
+    {
+      "id": "cross-target-qualification",
+      "status": "planned",
+      "acceptance": "pinned compiler/linker, deterministic artifacts, differential tests and versioned QEMU boot profile"
+    }
+  ],
+  "target_decisions": [
+    {
+      "id": "cpu-architecture",
+      "status": "open",
+      "owner": "DuckOS architecture ADR"
+    },
+    {
+      "id": "boot-protocol",
+      "status": "open",
+      "owner": "DuckOS architecture ADR"
+    },
+    {
+      "id": "kernel-abi",
+      "status": "open",
+      "owner": "DuckOS ABI ADR"
+    },
+    {
+      "id": "memory-map",
+      "status": "open",
+      "owner": "DuckOS architecture ADR"
+    },
+    {
+      "id": "interrupt-controller-and-timer",
+      "status": "open",
+      "owner": "DuckOS architecture ADR"
+    },
+    {
+      "id": "initial-emulator-machine",
+      "status": "open",
+      "owner": "DuckOS architecture ADR"
+    }
+  ],
+  "safety_policy": {
+    "physical_memory_access_requires_platform_adapter": true,
+    "privileged_operations_require_explicit_capability": true,
+    "mmio_volatile_is_not_atomic": true,
+    "no_implicit_host_runtime_in_kernel": true,
+    "unsupported_constructs_must_fail_before_codegen": true,
+    "target_profile_does_not_claim_bootability": true
+  },
+  "promotion_rules": [
+    "A target feature is available only when grammar, AST, type/effect rule, runtime, native lowering, negative tests and target evidence agree.",
+    "Reference-runtime or VM success is not native-code generation or privileged execution.",
+    "The target architecture and boot protocol must be approved before ABI layout or entry code is frozen.",
+    "No kernel migration milestone is complete without reproducible object/linker output and emulator evidence."
+  ]
+}
