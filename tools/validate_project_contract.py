@@ -20,7 +20,10 @@ REPOSITORIES = {
     "oplague": "Ivan-VHS/OPlague",
     "ventusample": "Ivan-VHS/VentuSample",
 }
+# DuckOS is an integration host, not a fifth OCTA-8 specialist peer.
+INTEGRATION_REPOSITORIES = {**REPOSITORIES, "duckos": "Ivan-VHS/DuckOS"}
 STATUSES = {"implemented", "partial"}
+INTEGRATION_MODES = {"native-ffi", "json-file", "shared-contract", "subprocess"}
 INTEGRATION_STATUSES = STATUSES | {"optional", "planned", "not_applicable"}
 ID_PATTERN = re.compile(r"^[a-z0-9]+(?:[.-][a-z0-9]+)*$")
 
@@ -159,12 +162,12 @@ def validate() -> dict[str, Any]:
         _require(isinstance(item, dict), f"{label} must be an object")
         _require(set(item) == {"project", "interface", "mode", "status", "opt_in", "summary"},
                  f"{label} fields do not match contract v1")
-        _require(item["project"] in REPOSITORIES and item["project"] != project_id,
+        _require(item["project"] in INTEGRATION_REPOSITORIES and item["project"] != project_id,
                  f"{label}.project must identify another ecosystem project")
         _string(item["interface"], f"{label}.interface")
         _require(ID_PATTERN.fullmatch(item["interface"]) is not None,
                  f"{label}.interface is not canonical")
-        _require(item["mode"] in {"native-ffi", "json-file", "shared-contract"},
+        _require(item["mode"] in INTEGRATION_MODES,
                  f"{label}.mode is invalid")
         _require(item["status"] in INTEGRATION_STATUSES, f"{label}.status is invalid")
         _require(isinstance(item["opt_in"], bool), f"{label}.opt_in must be boolean")
