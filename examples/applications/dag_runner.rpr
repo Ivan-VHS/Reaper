@@ -43,11 +43,11 @@ craft resolve_order(tasks) {
 }
 
 make build_tasks := [
-    ["prepare", []],
-    ["compile", ["prepare"]],
-    ["test", ["compile"]],
+    ["release", ["package", "docs"]],
     ["package", ["test"]],
+    ["test", ["compile"]],
     ["docs", ["prepare"]],
-    ["release", ["package", "docs"]]
+    ["compile", ["prepare"]],
+    ["prepare", []]
 ]
 emit resolve_order(build_tasks)
