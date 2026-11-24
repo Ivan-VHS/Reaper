@@ -27,3 +27,7 @@ The audit verifies the exact v1 field set, supported platform, per-device values
 Both commands are read-only. The Reaper report sets `execution_performed`, `disk_writes_performed` and `drivers_changed` to false. A missing driver is a diagnostic finding, not permission to download or install a driver. Before any later installation workflow exists, DuckOS still needs verified vendor provenance, signature validation, kernel-ABI and architecture matching, privilege separation, rollback and physical-device testing.
 
 A passing file audit proves that the snapshot matches its declared contract. It does not prove that a driver is correct, that a device works, or that DuckOS has native kernel support.
+
+## Reaper native target roadmap
+
+The read-only hardware inventory audit remains a host-side file contract; it does not load drivers or provide kernel privileges. Reaper's longer-term obligations for DuckOS are specified in [the DuckOS Native Target Profile](DUCKOS_NATIVE_TARGET_PROFILE.md), while the cross-project architecture and migration stages are tracked in the [DuckOS migration blueprint](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/REAPER_DUCKOS_FULL_MIGRATION.md). Neither document changes the current audit's read-only behavior or implies a finished freestanding backend.
