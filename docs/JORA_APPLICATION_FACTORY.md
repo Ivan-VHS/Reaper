@@ -6,7 +6,7 @@
 
 ## Product definition
 
-Jora unifies an application marketplace with a compositional application factory. A user chooses reusable capability packs, locale profiles and a preferred implementation target. Jora resolves their dependencies, derives a product identity, writes a versioned manifest and generates a Reaper project scaffold.
+Jora is one unified product: its catalogue, composer, generator and every composed application all carry the single name **Jora**. A user chooses reusable capability packs, locale profiles and a preferred implementation target. Jora resolves dependencies, writes a versioned manifest with the fixed product name Jora, and generates a Reaper project scaffold.
 
 The composition formula is:
 
@@ -83,7 +83,7 @@ The \`.rpr\` entry point and component files are valid scaffolding records, not 
 \`\`\`sh
 reaper jora catalog --json
 reaper jora compose --request ./jora-request.json --json
-reaper jora build --request ./lexitone-3d.jora-request.json --output ./LexiTone-3D --json
+reaper jora build --request ./jora-request.json --output ./Jora --json
 \`\`\`
 
 Example request: \`examples/jora/text-audio-translation.request.json\`.
