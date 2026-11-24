@@ -778,13 +778,22 @@ def build_application(request: dict[str, Any], output: str | Path) -> dict[str, 
             "jora.app.json",
             json.dumps(application, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         )
+        _write_text(
+            staging,
+            "jora.graphs.json",
+            json.dumps(application["graphs"], ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        )
         lock = {
             "schema": "reaper.jora.lock.v1",
             "application_id": application["id"],
             "component_versions": {item["id"]: item["version"] for item in application["components"]},
             "dependency_versions": {item["id"]: item["version"] for item in application["dependencies"]},
             "dependency_order": application["dependency_order"],
-            "generator": "Reaper Jora 1.0",
+            "naming_version": application["naming"]["version"],
+            "graph_set": application["graphs"]["schema"],
+            "selected_graph": application["graphs"]["selected"],
+            "graph_signatures": [item["signature"] for item in application["graphs"]["variants"]],
+            "generator": "Reaper Jora 2.0",
         }
         _write_text(staging, "jora.lock.json", json.dumps(lock, ensure_ascii=False, indent=2) + "\n")
 
@@ -797,7 +806,8 @@ def build_application(request: dict[str, Any], output: str | Path) -> dict[str, 
             "- src/components/: one contract stub per selected component.\n"
             "- locales/: generated EN/RU/UK/MOST interface dictionaries.\n"
             "- jora.app.json: versioned application manifest.\n"
-            "- jora.lock.json: resolved component and dependency versions.\n\n"
+            "- jora.lock.json: resolved component, dependency, naming and graph versions.\n"
+            "- jora.graphs.json: reproducible graph variants, nodes, typed edges and compatibility metrics.\n\n"
             "## Maturity\n\n"
             "This directory is a reproducible scaffold, not an installable application. "
             "The selected feature packs are specification-only. Storage, translation and "
