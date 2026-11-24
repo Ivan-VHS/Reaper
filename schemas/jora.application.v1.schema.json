@@ -393,6 +393,7 @@
       "required": [
         "schema",
         "selected",
+        "selection_policy",
         "topology_mode",
         "seed",
         "variant_count",
@@ -597,6 +598,9 @@
               }
             }
           }
+        },
+        "selection_policy": {
+          "const": "max_compatibility_then_capability_reuse_then_minimal_planned_nodes"
         }
       }
     }
