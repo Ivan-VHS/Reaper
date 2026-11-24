@@ -121,6 +121,14 @@
         "tests/test_octa_pyramid.py",
         "docs/OCTA_PYRAMID_FEDERATION.md"
       ]
+    },
+    {
+      "id": "security.bav-red-sparrow-policy",
+      "status": "specified",
+      "summary": "Defines the deterministic local policy-evaluation contract for DuckOS BAV; no native evaluator, malware enforcement or operating-system security service is claimed.",
+      "evidence": [
+        "docs/BAV_POLICY_RUNTIME_CONTRACT.md"
+      ]
     }
   ],
   "interfaces": [
@@ -201,7 +209,8 @@
     "Execution quotas are resource guardrails, not a security sandbox for untrusted programs.",
     "Filesystem, process, network, clock, shell and native-library effects remain explicit or opt-in rather than ambient expression behavior.",
     "Native FFI executes in-process native code and must only load trusted ABI-compatible libraries.",
-    "The native C17 implementation and self-hosting frontend remain partial; Python is the compatibility reference."
+    "The native C17 implementation and self-hosting frontend remain partial; Python is the compatibility reference.",
+    "The BAV Red Sparrow policy runtime is specified only; Reaper does not implement weapon design, targeting, fire control, military network access or autonomous containment."
   ],
   "extension_points": [
     "Canonical IR and selectable execution engines.",
