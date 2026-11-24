@@ -47,7 +47,7 @@ For each offbeat index, the script reports a marker in milliseconds. These value
 ## Boundaries and privacy
 
 - Audio import is local and user initiated. No file is uploaded or transmitted.
-- The browser profile stores rhythm settings and sample metadata only, not audio bytes. Re-select files after reopening Mora to preview them again.
+- The browser profile stores rhythm settings, the 16-step sequence and sample metadata only, not audio bytes. Re-select files after reopening Mora to preview them again.
 - Sample files are limited to eight entries, 25 MiB each and 80 MiB total per open Concrete Thump session.
 - The JSON profile export contains metadata, not embedded audio.
 - Orthodox liturgical repertoire and East Slavic folk/seasonal/ceremonial repertoire are separate selectable source families. Combining them is an arrangement choice, not a claim that they are the same historical tradition.
