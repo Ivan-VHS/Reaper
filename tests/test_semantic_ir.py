@@ -124,6 +124,13 @@ class SemanticIRTests(unittest.TestCase):
         self.assertIn("operator 'ge' cannot compare Int with Text", rendered)
         self.assertIn("ir_node: IRCall", rendered)
 
+    def test_crlf_newlines_keep_byte_and_line_coordinates_consistent(self) -> None:
+        source = "make value := 1\r\nemit value"
+        tokens = tokenize(source, "windows.rpr")
+        emit = next(token for token in tokens if token.value == "emit")
+        self.assertEqual((emit.line, emit.column), (2, 1))
+        self.assertEqual(emit.start_byte, len("make value := 1\r\n".encode("utf-8")))
+
     def test_utf8_byte_offsets_are_not_confused_with_character_columns(self) -> None:
         source = "# комментарий\nmake result := raw_lines -> missing_stage()"
         tokens = tokenize(source, "unicode.rpr")
