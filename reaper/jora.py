@@ -14,11 +14,13 @@ import re
 import shutil
 import sys
 import tempfile
+import unicodedata
 from pathlib import Path
 from typing import Any
 
 REQUEST_SCHEMA = "reaper.jora.request.v1"
 APPLICATION_SCHEMA = "reaper.jora.application.v1"
+APPLICATION_NAME_POLICY = "no_platform_brand_in_application_name"
 MAX_REQUEST_BYTES = 1_048_576
 MAX_COMPONENTS = 24
 MAX_LOCALES = 8
@@ -337,6 +339,14 @@ def _text(value: Any, field: str, maximum: int, *, optional: bool = False) -> st
     return value
 
 
+def _validate_application_name(value: str) -> str:
+    """Reject the platform brand in every generated or supplied product name."""
+    normalized = unicodedata.normalize("NFKC", value).casefold()
+    if "jora" in normalized:
+        raise JoraError("application name must be independent and must not contain the platform name Jora")
+    return value
+
+
 def _normalize_locales(value: Any) -> list[str]:
     if value is None or value == "auto":
         return ["en", "ru", "uk", "most"]
@@ -493,10 +503,12 @@ def _naming_profile(component_ids: list[str], style: str) -> dict[str, Any]:
     preferred = next((item for item in suggestions if item["style"] == style), None)
     if preferred is None:
         preferred = suggestions[1]
+    for candidate in suggestions:
+        _validate_application_name(candidate["label"])
     return {
         "version": "jora-naming.v2",
         "platform": "Jora",
-        "product_name_policy": "independent_application_brand",
+        "product_name_policy": APPLICATION_NAME_POLICY,
         "style": style,
         "descriptors": descriptors,
         "selected": preferred,
@@ -928,8 +940,7 @@ def _generated_name(component_ids: list[str], requested_name: str = "", style: s
         name = _text(requested_name, "name", 80)
     else:
         name = _naming_profile(component_ids, style)["selected"]["label"]
-    if re.search(r"jora", name, re.IGNORECASE):
-        raise JoraError("application name must be independent and must not contain the platform name Jora")
+    _validate_application_name(name)
     if not _NAME_RE.fullmatch(name):
         raise JoraError("name contains unsupported characters")
     return name
@@ -950,9 +961,12 @@ def compose_application(request: dict[str, Any]) -> dict[str, Any]:
         raise JoraError("request must be a JSON object")
     if request.get("schema", REQUEST_SCHEMA) != REQUEST_SCHEMA:
         raise JoraError(f"expected request schema {REQUEST_SCHEMA}")
+    name_policy = request.get("application_name_policy", APPLICATION_NAME_POLICY)
+    if name_policy != APPLICATION_NAME_POLICY:
+        raise JoraError(f"application_name_policy must be {APPLICATION_NAME_POLICY!r}")
 
     allowed = {
-        "schema", "name", "description", "components", "locales",
+        "schema", "application_name_policy", "name", "description", "components", "locales",
         "preferred_locale", "syntax_mode", "language_targets", "name_style", "graph",
     }
     unknown = sorted(set(request) - allowed)
