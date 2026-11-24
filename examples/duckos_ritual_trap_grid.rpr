@@ -1,0 +1,19 @@
+# DuckOS Concrete Thump companion example.
+# Calculates swung eighth-note offbeat markers on a sixteenth-note grid for a 160 BPM / 60% profile.
+# This is a timing worksheet, not an audio engine or a sample player.
+
+make bpm := 160
+make swing_percent := 60
+make sixteenth_ms := 60000 / bpm / 4
+make swing_delay_ms := sixteenth_ms * (swing_percent - 50) / 50
+
+craft offbeat_time(index) {
+    yield ((index * 2 + 1) * sixteenth_ms) + swing_delay_ms
+}
+
+make offbeat_markers := range(0, 8) :: map(offbeat_time)
+emit "BPM=" ++ text(bpm) ++ " swing=" ++ text(swing_percent)
+
+each marker in offbeat_markers {
+    emit "offbeat_ms=" ++ text(marker)
+}
