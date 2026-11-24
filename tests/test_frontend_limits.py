@@ -18,6 +18,20 @@ class FrontendLimitTests(unittest.TestCase):
             with self.assertRaisesRegex(LexError, "token limit"):
                 tokenize("make value := 1", "too-many-tokens.rpr")
 
+    def test_utf8_byte_budget_is_independent_of_character_budget(self) -> None:
+        with patch("reaper.lexer.MAX_SOURCE_CHARS", 100):
+            with patch("reaper.lexer.MAX_SOURCE_BYTES", 3):
+                with self.assertRaisesRegex(LexError, "3-byte UTF-8 limit"):
+                    Lexer("éé", "multibyte.rpr").tokenize()
+
+    def test_rejects_embedded_nul_with_source_location(self) -> None:
+        with self.assertRaisesRegex(LexError, r"nul.*2:3"):
+            Lexer("a\nb\\0c", "nul.rpr").tokenize()
+
+    def test_rejects_unpaired_surrogates_before_tokenization(self) -> None:
+        with self.assertRaisesRegex(LexError, "invalid Unicode surrogate"):
+            Lexer("emit \\ud800", "surrogate.rpr").tokenize()
+
     def test_normal_source_and_unicode_positions_are_unchanged(self) -> None:
         tokens = tokenize('emit "Привет"\nemit 2', "unicode.rpr")
         self.assertEqual(tokens[0].kind, "EMIT")
