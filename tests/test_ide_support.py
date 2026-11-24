@@ -8,6 +8,56 @@ import unittest
 from reaper.ide_support import highlight_spans, iter_project_entries
 
 
+class StructuredDiagnosticTests(unittest.TestCase):
+    def test_normalizes_file_range_severity_and_stable_code(self) -> None:
+        from reaper.ide_support import normalize_diagnostics
+
+        records = normalize_diagnostics("/tmp/project/main.rpr", [{
+            "line": 3, "column": 7, "severity": "warning",
+            "code": "RPR-W1001", "message": "unused binding",
+        }])
+        self.assertEqual(len(records), 1)
+        record = records[0]
+        self.assertEqual(record.file, "/tmp/project/main.rpr")
+        self.assertEqual((record.start_line, record.start_column), (3, 7))
+        self.assertEqual((record.end_line, record.end_column), (3, 7))
+        self.assertEqual(record.severity, "warning")
+        self.assertEqual(record.code, "RPR-W1001")
+        self.assertEqual(record.as_dict()["range"]["start"], {"line": 3, "column": 7})
+
+    def test_accepts_compiler_diagnostic_objects(self) -> None:
+        from reaper.ide_support import normalize_diagnostics
+        from reaper.typecheck import TypeDiagnostic
+
+        record = normalize_diagnostics("src/main.rpr", [
+            TypeDiagnostic("RPR-T0004", "incompatible multiplication", 2, 5, "error")
+        ])[0]
+        self.assertEqual(record.file, "src/main.rpr")
+        self.assertEqual(record.code, "RPR-T0004")
+        self.assertEqual((record.start_line, record.start_column), (2, 5))
+
+    def test_invalid_positions_and_severity_are_normalized_safely(self) -> None:
+        from reaper.ide_support import normalize_diagnostics
+
+        record = normalize_diagnostics("untitled.rpr", [{
+            "line": 0, "column": "invalid", "end_line": -5, "end_column": 0,
+            "severity": "fatal", "code": "", "message": "bad location",
+        }])[0]
+        self.assertEqual((record.start_line, record.start_column), (1, 1))
+        self.assertEqual((record.end_line, record.end_column), (1, 1))
+        self.assertEqual(record.severity, "error")
+        self.assertEqual(record.code, "RPR-UNKNOWN")
+
+    def test_diagnostics_are_sorted_by_source_location(self) -> None:
+        from reaper.ide_support import normalize_diagnostics
+
+        records = normalize_diagnostics("main.rpr", [
+            {"line": 4, "column": 1, "code": "RPR-E2", "message": "later"},
+            {"line": 1, "column": 8, "code": "RPR-E1", "message": "earlier"},
+        ])
+        self.assertEqual([item.code for item in records], ["RPR-E1", "RPR-E2"])
+
+
 class HighlightTests(unittest.TestCase):
     def test_highlights_keywords_strings_numbers_and_comments(self) -> None:
         source = 'make count := 42\nemit "make 99" // yield 12\n'

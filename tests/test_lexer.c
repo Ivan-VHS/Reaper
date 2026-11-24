@@ -1,6 +1,7 @@
 #include "reaper/lexer.h"
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 static int has(const ReaperTokenArray *t,const char *s,ReaperTokenKind k){for(size_t i=0;i<t->length;++i)if(t->items[i].kind==k&&!strcmp(t->items[i].text,s))return 1;return 0;}
 static int has_canonical(const ReaperTokenArray *t,const char *s){for(size_t i=0;i<t->length;++i)if(!strcmp(reaper_token_canonical_text(&t->items[i]),s))return 1;return 0;}
@@ -117,6 +118,30 @@ static void test_most_extended_aliases(void){
  assert(has(&unknown,"структуры",REAPER_TOK_IDENTIFIER));
  reaper_tokens_free(&unknown);
 }
+static void test_source_size_limit_is_enforced(void){
+ char *source=(char *)malloc((size_t)REAPER_MAX_SOURCE_BYTES+2u);
+ ReaperTokenArray tokens={0};ReaperLexError error={{0},0,0};
+ assert(source!=NULL);
+ memset(source,'a',(size_t)REAPER_MAX_SOURCE_BYTES+1u);
+ source[(size_t)REAPER_MAX_SOURCE_BYTES+1u]='\0';
+ assert(!reaper_lex(source,&tokens,&error));
+ assert(tokens.length==0u);
+ assert(strstr(error.message,"16 MiB")!=NULL);
+ free(source);
+}
+
+static void test_token_count_limit_is_enforced(void){
+ const size_t count=(size_t)REAPER_MAX_TOKENS;
+ char *source=(char *)malloc(count*2u+1u);
+ ReaperTokenArray tokens={0};ReaperLexError error={{0},0,0};
+ assert(source!=NULL);
+ for(size_t i=0u;i<count;i++){source[i*2u]='x';source[i*2u+1u]=' ';}
+ source[count*2u]='\\0';
+ assert(!reaper_lex(source,&tokens,&error));
+ assert(tokens.length==0u);
+ assert(strstr(error.message,"262144-token limit")!=NULL);
+ free(source);
+}
 static void test_invalid_utf8_is_rejected(void){
  const char invalid[]="emit \xC0\xAF";
  ReaperTokenArray tokens={0};ReaperLexError error={{0},0,0};
@@ -141,4 +166,4 @@ static void test_utf8_columns_count_codepoints(void){
  }
  assert(found);reaper_tokens_free(&t);
 }
-int main(void){test_program();test_escape();test_bad_escape();test_unterminated();test_most_surface();test_most_operator_family();test_most_russian_vocabulary();test_most_extended_aliases();test_utf8_columns_count_codepoints();test_invalid_utf8_is_rejected();test_invalid_utf8_reports_line_and_column();puts("native lexer tests: 11 groups passed");return 0;}
+int main(void){test_program();test_escape();test_bad_escape();test_unterminated();test_most_surface();test_most_operator_family();test_most_russian_vocabulary();test_most_extended_aliases();test_utf8_columns_count_codepoints();test_invalid_utf8_is_rejected();test_invalid_utf8_reports_line_and_column();test_source_size_limit_is_enforced();test_token_count_limit_is_enforced();puts("native lexer tests: 13 groups passed");return 0;}
