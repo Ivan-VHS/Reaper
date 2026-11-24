@@ -141,6 +141,7 @@ These commands operate on the selected local Node project. If the project starts
 The checked-in examples are local source programs, not responses from a live API:
 
 - `examples/flow.rpr` is the basic language smoke example.
+- `examples/duckos_ritual_trap_grid.rpr` is a DuckOS Concrete Thump companion that calculates swing timing markers; it does not render audio or create MIDI.
 - `examples/device_audit.rpr` demonstrates a read-only audit path and produces a versioned JSON report when run.
 - `tests/` contains parser, runtime, language-service, debugger, registry and integration tests.
 - The NOO TAH conformance suite tests Node built-ins, ESM/CommonJS, streams, workers, child processes and loopback HTTP/TCP. It does not rely on a public test service.
