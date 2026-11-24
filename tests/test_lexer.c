@@ -118,7 +118,7 @@ static void test_most_extended_aliases(void){
  reaper_tokens_free(&unknown);
 }
 static void test_invalid_utf8_is_rejected(void){
- const char invalid[]="emit \\xC0\\xAF";
+ const char invalid[]="emit \xC0\xAF";
  ReaperTokenArray tokens={0};ReaperLexError error={{0},0,0};
  assert(!reaper_lex(invalid,&tokens,&error));
  assert(tokens.length==0u);
