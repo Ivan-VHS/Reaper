@@ -26,6 +26,10 @@ jobs:
         run: python -m compileall -q reaper tests
       - name: Validate localized README links
         run: python .github/scripts/check_readme_links.py
+      - name: Validate every tracked Markdown document and local anchor
+        run: python tools/validate_markdown_inventory.py
+      - name: Test Markdown integrity validator
+        run: python -m unittest discover -s tests -p "test_markdown_inventory.py" -v
       - name: Validate Duck Sovereign Canon palette
         run: python tools/validate_visual_canon.py reaper/ui_theme.py
       - name: Validate MOST 666 function registry
