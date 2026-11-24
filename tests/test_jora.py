@@ -80,6 +80,20 @@ class JoraCompositionTests(unittest.TestCase):
             self.assertTrue(all(edge["from"] in node_ids and edge["to"] in node_ids for edge in graph["edges"]))
             self.assertGreaterEqual(graph["metrics"]["compatibility_score"], 0)
 
+    def test_plugin_mesh_connects_only_compatible_capabilities(self):
+        result = compose_application(self.request(graph={"topology": "plugin_mesh", "variants": 1, "variation": 0}))
+        edges = result["graphs"]["variants"][0]["edges"]
+        self.assertIn({
+            "from": "component:text.editor",
+            "to": "component:translation.workspace",
+            "relation": "capability:text.document",
+        }, edges)
+        self.assertFalse(any(
+            edge["relation"].startswith("capability:")
+            and edge["from"] == "component:audio.editor"
+            for edge in edges
+        ))
+
     def test_event_graph_marks_feedback_edges_as_async(self):
         result = compose_application(self.request(graph={"topology": "event_driven", "variants": 1, "variation": 0}))
         graph = result["graphs"]["variants"][0]
@@ -148,6 +162,7 @@ class JoraCompositionTests(unittest.TestCase):
             self.assertTrue((output / "jora.graphs.json").is_file())
             graph_payload = json.loads((output / "jora.graphs.json").read_text(encoding="utf-8"))
             self.assertEqual(graph_payload["schema"], "reaper.jora.graph-set.v1")
+            self.assertEqual(len(graph_payload["variants"]), 3)
             self.assertTrue((output / "src/main.rpr").is_file())
             self.assertTrue((output / "src/components/text_editor.rpr").is_file())
             self.assertTrue((output / "locales/en.json").is_file())
@@ -155,6 +170,11 @@ class JoraCompositionTests(unittest.TestCase):
             manifest = json.loads((output / "jora.app.json").read_text(encoding="utf-8"))
             self.assertEqual(manifest["id"], result["application_id"])
             self.assertFalse(manifest["installable"])
+            self.assertEqual(manifest["name"], "Jora")
+            self.assertEqual(manifest["naming"]["canonical_name"], "Jora")
+            lock = json.loads((output / "jora.lock.json").read_text(encoding="utf-8"))
+            self.assertEqual(lock["selected_graph"], manifest["graphs"]["selected"])
+            self.assertEqual(lock["graph_signatures"], [item["signature"] for item in manifest["graphs"]["variants"]])
 
     def test_existing_directory_is_never_overwritten(self):
         with tempfile.TemporaryDirectory() as directory:
