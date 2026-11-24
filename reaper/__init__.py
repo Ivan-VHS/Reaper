@@ -19,7 +19,8 @@ from .source import LineIndex, SourceSpan, Span, format_source_diagnostic
 from .semantic_ir import (
     FunctionSignature, IRCall, IRDiagnostic, IRIndex, IRIntrinsic, IRList,
     IRLiteral, IRNode, IRTypeChecker, IRTypeCheckResult, IRVar, NodeOrigin,
-    SemanticIR, SemanticIRVerificationError, lower_expression as lower_semantic_ir,
+    SemanticAnalysisResult, SemanticIR, SemanticIRVerificationError,
+    analyze_expression_source, lower_expression as lower_semantic_ir,
     typecheck_ir, verify_semantic_ir,
 )
 from .vm import BytecodeProgram, VirtualMachine, assemble as assemble_bytecode
@@ -49,7 +50,8 @@ __all__ = [
     "SemanticIR", "SemanticIRVerificationError", "IRNode", "IRVar", "IRLiteral",
     "IRIntrinsic", "IRList", "IRIndex", "IRCall", "NodeOrigin", "FunctionSignature",
     "IRDiagnostic", "IRTypeChecker", "IRTypeCheckResult", "lower_semantic_ir",
-    "typecheck_ir", "verify_semantic_ir",
+    "typecheck_ir", "verify_semantic_ir", "SemanticAnalysisResult",
+    "analyze_expression_source",
     "VirtualMachine", "assemble_bytecode", "ModuleCycleError", "ModuleError",
     "ModuleLoader", "MemoryManager", "HeapLimitError", "RegionError",
     "ResourceManager", "ResourceHandle", "CAbiLibrary", "NativeFunction",
