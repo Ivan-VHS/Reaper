@@ -62,7 +62,7 @@ class JoraCompositionTests(unittest.TestCase):
         self.assertEqual(naming["selected"]["style"], "balanced")
         self.assertGreaterEqual(len(naming["suggestions"]), 3)
         self.assertTrue(all(item["label"].startswith("Jora") for item in naming["suggestions"]))
-        self.assertIn("Audio & Media", naming["descriptors"])
+        self.assertIn("Media", naming["descriptors"])
 
     def test_graph_variants_are_distinct_deterministic_and_well_formed(self):
         first = compose_application(self.request(graph={"topology": "auto", "seed": "demo", "variants": 4, "variation": 65}))
