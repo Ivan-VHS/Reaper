@@ -125,6 +125,13 @@ static void test_invalid_utf8_is_rejected(void){
  assert(error.line==1u&&error.column==6u);
  assert(strstr(error.message,"UTF-8")!=NULL);
 }
+static void test_invalid_utf8_reports_line_and_column(void){
+ const char invalid[]="emit 1\n\xF5";
+ ReaperTokenArray tokens={0};ReaperLexError error={{0},0,0};
+ assert(!reaper_lex(invalid,&tokens,&error));
+ assert(tokens.length==0u);
+ assert(error.line==2u&&error.column==1u);
+}
 static void test_utf8_columns_count_codepoints(void){
  const char *source="вывести утка + 1";
  ReaperTokenArray t={0};ReaperLexError e={{0},0,0};assert(reaper_lex(source,&t,&e));
@@ -134,4 +141,4 @@ static void test_utf8_columns_count_codepoints(void){
  }
  assert(found);reaper_tokens_free(&t);
 }
-int main(void){test_program();test_escape();test_bad_escape();test_unterminated();test_most_surface();test_most_operator_family();test_most_russian_vocabulary();test_most_extended_aliases();test_utf8_columns_count_codepoints();test_invalid_utf8_is_rejected();puts("native lexer tests: 10 groups passed");return 0;}
+int main(void){test_program();test_escape();test_bad_escape();test_unterminated();test_most_surface();test_most_operator_family();test_most_russian_vocabulary();test_most_extended_aliases();test_utf8_columns_count_codepoints();test_invalid_utf8_is_rejected();test_invalid_utf8_reports_line_and_column();puts("native lexer tests: 11 groups passed");return 0;}
