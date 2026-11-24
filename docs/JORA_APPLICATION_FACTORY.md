@@ -46,7 +46,7 @@ Supported topologies:
 
 Graph nodes carry identity, kind, label and maturity. Edges are typed (hosting, execution, mounts, requirements, workflow steps, capability links, events, extension registration and validation). Each graph has a canonical signature and metrics for nodes, edges, hard dependencies, capability connections, planned services and compatibility.
 
-The engine keeps startup/dependency edges acyclic. Event feedback is permitted only through an explicit asynchronous event bus; it never becomes a hard dependency cycle. Optional extension registries and compatibility gates are marked `planned`, not falsely reported as implemented runtime services.
+The engine keeps every synchronous control/data edge acyclic. Event feedback is permitted only through an explicit asynchronous event bus; it is excluded from startup ordering. A per-stage validator cannot release the next stage through a shared node that would introduce a synchronous cycle. Optional extension registries and compatibility gates are marked `planned`, not falsely reported as implemented runtime services.
 
 The complete graph set is embedded in `jora.app.json` and exported separately as `jora.graphs.json`. The lock file records graph signatures and the selected graph for reproducible generation.
 
