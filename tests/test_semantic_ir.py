@@ -99,6 +99,9 @@ class SemanticIRTests(unittest.TestCase):
         ).check(module)
         self.assertTrue(result.ok, result.diagnostics)
         self.assertEqual(result.return_type, "List[Int]")
+        self.assertEqual(result.typed_module.root.inferred_type, "List[Int]")
+        self.assertEqual(result.typed_module.root.callee.inferred_type, "Function")
+        self.assertEqual(result.typed_module.root.arguments[0].inferred_type, "List[Int]")
 
     def test_arrow_is_an_alias_for_existing_double_colon_pipe(self) -> None:
         arrow = lower_expression(parse("emit values -> size()", "arrow.rpr"), "arrow.rpr")
