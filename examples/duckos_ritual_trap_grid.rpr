@@ -1,5 +1,5 @@
 # DuckOS Concrete Thump companion example.
-# Calculates swung sixteenth-note offbeat markers for a 160 BPM / 60% profile.
+# Calculates swung eighth-note offbeat markers on a sixteenth-note grid for a 160 BPM / 60% profile.
 # This is a timing worksheet, not an audio engine or a sample player.
 
 make bpm := 160
