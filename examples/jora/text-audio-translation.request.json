@@ -21,6 +21,7 @@
     "topology": "auto",
     "seed": "",
     "variants": 4,
-    "variation": 50
+    "variation": 50,
+    "objective": "balanced"
   }
 }
