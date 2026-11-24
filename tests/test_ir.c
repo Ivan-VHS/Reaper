@@ -30,6 +30,20 @@ static void test_forward_reference_rejected(void) {
     assert(strstr(error.message, "earlier") != NULL);
 }
 
+static void test_invalid_source_range_rejected(void) {
+    const ReaperIrNode nodes[] = {
+        { REAPER_IR_OP_CONST_I64, REAPER_IR_TYPE_I64, REAPER_IR_NO_VALUE,
+          REAPER_IR_NO_VALUE, 1, 1, 1, 9, 4 },
+        { REAPER_IR_OP_RETURN, REAPER_IR_TYPE_UNIT, 0, REAPER_IR_NO_VALUE,
+          0, 1, 2, 9, 9 }
+    };
+    const ReaperIrModule module = { nodes, 2 };
+    ReaperIrError error;
+    assert(!reaper_ir_verify(&module, &error));
+    assert(error.node_index == 0);
+    assert(strstr(error.message, "source span") != NULL);
+}
+
 static void test_type_mismatch_rejected(void) {
     const ReaperIrNode nodes[] = {
         { REAPER_IR_OP_CONST_I64, REAPER_IR_TYPE_I64, REAPER_IR_NO_VALUE, REAPER_IR_NO_VALUE, 1, 1, 1 },
@@ -106,6 +120,7 @@ static void test_execution_contract(void) {
 int main(void) {
     test_valid_module();
     test_forward_reference_rejected();
+    test_invalid_source_range_rejected();
     test_type_mismatch_rejected();
     test_null_module_rejected();
     test_deterministic_execution();
