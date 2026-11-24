@@ -20,14 +20,14 @@ python -m reaper --check examples/duckos_ritual_trap_grid.rpr
 python -m reaper examples/duckos_ritual_trap_grid.rpr
 ~~~
 
-For a DuckOS checkout with the Reaper submodule initialized:
+From a DuckOS checkout that has the native Reaper bridge installed, the same helper can be checked after it is saved to a local path visible to the selected Reaper checkout:
 
 ~~~sh
-duckos reaper check examples/duckos_ritual_trap_grid.rpr
-duckos reaper typecheck examples/duckos_ritual_trap_grid.rpr
+duckos reaper check /path/to/duckos_ritual_trap_grid.rpr
+duckos reaper typecheck /path/to/duckos_ritual_trap_grid.rpr
 ~~~
 
-The DuckOS bridge runs static checks on a user-selected Reaper source file. It does not automatically launch the program, import samples or grant file/device access.
+The DuckOS bridge runs static checks on a user-selected Reaper source file. It does not automatically launch the program, import samples or grant file/device access. The Reaper submodule remains independently versioned; this example does not silently update DuckOS's pinned submodule.
 
 ## Timing model
 
