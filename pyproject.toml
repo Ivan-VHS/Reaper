@@ -27,5 +27,5 @@ reaper-studio = "reaper.desktop:main"
 [tool.setuptools]
 packages = ["reaper", "reaper.kora"]
 [tool.setuptools.package-data]
-"reaper" = ["systems_architectures.json", "systems_languages.json", "token_catalog.json", "atomic_quantum_catalogue.v1.json"]
+"reaper" = ["systems_architectures.json", "systems_languages.json", "token_catalog.json", "atomic_quantum_catalogue.v1.json", "java/src/main/java/**/*.java"]
 "reaper.kora" = ["manifest.json"]

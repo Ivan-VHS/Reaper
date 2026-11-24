@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-JAVA_SOURCE = PROJECT_ROOT / "security" / "java" / "src" / "main" / "java" / "org" / "ivanvhs" / "bav" / "Bav.java"
+JAVA_SOURCE = Path(__file__).resolve().parent / "java" / "src" / "main" / "java" / "org" / "ivanvhs" / "bav" / "Bav.java"
 PYTHON_SCANNER = PROJECT_ROOT / "tools" / "beelzebul.py"
 JAVA_MAIN = "org.ivanvhs.bav.Bav"
 SEVERITY_WEIGHT = {"critical": 25, "high": 12, "medium": 5, "low": 2, "info": 1}

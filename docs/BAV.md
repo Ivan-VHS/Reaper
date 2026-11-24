@@ -40,7 +40,7 @@ The existing scanner remains responsible for repository-wide checks such as secr
 
 ### 2. Java Guard
 
-The Java component is implemented using the JDK standard library only. It has no third-party runtime dependency, does not load classes from the inspected project and does not execute application code. It walks without following symbolic links, applies deterministic ordering, enforces bounded file/byte limits, decodes UTF-8 strictly, redacts credential values and emits JSON.
+The Java component is implemented using the JDK standard library only. It has no third-party runtime dependency, does not load classes from the inspected project and does not execute application code. Its source is shipped inside the `reaper` Python package at `reaper/java/src/main/java/org/ivanvhs/bav/Bav.java`, so the guard remains available from an installed wheel rather than only from a source checkout. It walks without following symbolic links, applies deterministic ordering, enforces bounded file/byte limits, decodes UTF-8 strictly, redacts credential values and emits JSON.
 
 Supplementary Java checks:
 
