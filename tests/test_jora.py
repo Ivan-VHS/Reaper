@@ -212,7 +212,9 @@ class JoraCompositionTests(unittest.TestCase):
             lock = json.loads((output / "jora.lock.json").read_text(encoding="utf-8"))
             self.assertEqual(lock["name_style"], manifest["naming"]["style"])
             self.assertEqual(lock["naming_label"], manifest["naming"]["selected"]["label"])
+            self.assertEqual(lock["graph_objective"], manifest["graphs"]["objective"])
             self.assertEqual(lock["selected_graph"], manifest["graphs"]["selected"])
+            self.assertEqual(lock["selected_graph_score"], next(item["metrics"]["objective_score"] for item in manifest["graphs"]["variants"] if item["id"] == lock["selected_graph"]))
             self.assertEqual(lock["graph_signatures"], [item["signature"] for item in manifest["graphs"]["variants"]])
 
     def test_existing_directory_is_never_overwritten(self):
