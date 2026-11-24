@@ -57,7 +57,8 @@
         "expression": {
           "type": "string",
           "minLength": 1,
-          "maxLength": 1000
+          "maxLength": 1000,
+          "pattern": "^(?!.*[Jj][Oo][Rr][Aa]).+$"
         },
         "components": {
           "type": "array",
@@ -350,7 +351,7 @@
           "const": "Jora"
         },
         "product_name_policy": {
-          "const": "independent_application_brand"
+          "const": "no_platform_brand_in_application_name"
         },
         "style": {
           "enum": [
