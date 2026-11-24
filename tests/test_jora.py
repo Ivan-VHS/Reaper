@@ -80,6 +80,17 @@ class JoraCompositionTests(unittest.TestCase):
             self.assertTrue(all(edge["from"] in node_ids and edge["to"] in node_ids for edge in graph["edges"]))
             self.assertGreaterEqual(graph["metrics"]["compatibility_score"], 0)
 
+    def test_same_topology_variants_use_distinct_graph_rewrites(self):
+        result = compose_application(self.request(
+            graph={"topology": "pipeline", "seed": "repeatable", "variants": 6, "variation": 0}
+        ))
+        graphs = result["graphs"]["variants"]
+        self.assertEqual(
+            [item["layout_variant"] for item in graphs],
+            ["direct", "domain_grouped", "capability_routed", "stateful", "validated", "extensible"],
+        )
+        self.assertEqual(len({(len(item["nodes"]), len(item["edges"])) for item in graphs}), 6)
+
     def test_plugin_mesh_connects_only_compatible_capabilities(self):
         result = compose_application(self.request(graph={"topology": "plugin_mesh", "variants": 1, "variation": 0}))
         edges = result["graphs"]["variants"][0]["edges"]
