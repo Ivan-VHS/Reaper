@@ -37,6 +37,8 @@
 | [INTERNAL_PRODUCTS.md](INTERNAL_PRODUCTS.md) | integrated product catalogue and service contracts |
 | [FEATURES.md](FEATURES.md) | shipped, reference and proposed capability matrix |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | runtime and compiler stages |
+| [LOCAL_BACKEND.md](LOCAL_BACKEND.md) | opt-in loopback backend, HTTP v1 API, resource limits, SQLite idempotency and operations |
+| [BACKEND_API_V1.yaml](BACKEND_API_V1.yaml) | machine-readable OpenAPI 3.1 contract for the local backend API |
 | [NATIVE_COMPILER.md](NATIVE_COMPILER.md) | checked scalar AOT compilation to C17 and the host toolchain |
 | [HARDWARE_LANGUAGE.md](HARDWARE_LANGUAGE.md) | systems-language architecture, MMIO contract, Studio hardware workbench and migration gates |
 | [NATIVE_COMPILER.md](NATIVE_COMPILER.md) | statically checked scalar AOT compilation to C17 and the host toolchain |

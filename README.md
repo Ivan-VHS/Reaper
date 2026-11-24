@@ -110,7 +110,7 @@ python -m compileall -q reaper tests
 python -m unittest discover -s tests -v
 ```
 
-The first install may retrieve the declared build backend from the package index; subsequent program execution is local. There is no application HTTP port, browser URL, database seed step or separate mock server.
+The first install may retrieve the declared build backend from the package index; ordinary program execution is local and offline. No HTTP service starts by default; an optional loopback-only backend can be launched explicitly with `reaper-backend serve`. There is no browser URL or database seed step.
 
 ### Optional native C17 track
 
@@ -161,7 +161,7 @@ Runtime state lives in the process and in files the operator chooses. An optiona
 
 ## Configuration, environment and trust
 
-There is no root `.env.example`, Docker Compose web stack, hosted account system, demo login, CORS policy or application HTTPS setup. The Python runtime works without Node.js. NOO TAH has three documented environment overrides:
+There is no root `.env.example`, Docker Compose web stack, hosted account system or demo login. The optional local backend has its own loopback-only bearer-token and API configuration; it does not enable CORS or application HTTPS. The Python runtime works without Node.js. NOO TAH has three documented environment overrides:
 
 | Variable | Purpose | Default / behavior |
 |---|---|---|

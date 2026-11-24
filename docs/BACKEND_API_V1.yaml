@@ -1,0 +1,429 @@
+openapi: 3.1.0
+info:
+  title: Reaper Local Backend API
+  version: 1.0.0
+  description: >
+    Version 1 of the explicitly started Reaper loopback backend. It is a local
+    adapter around the Python reference runtime, not a hosted or LAN service.
+servers:
+  - url: http://127.0.0.1:8765
+    description: Default loopback listener; the runtime may use another configured port.
+tags:
+  - name: Health
+  - name: Runtime
+security:
+  - BearerAuth: []
+paths:
+  /healthz:
+    get:
+      tags: [Health]
+      security: []
+      summary: Process liveness
+      responses:
+        "200":
+          description: The process is alive.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+  /readyz:
+    get:
+      tags: [Health]
+      security: []
+      summary: Local storage readiness
+      responses:
+        "200":
+          description: The local SQLite store is available.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadyResponse"
+        "503":
+          description: SQLite is not ready.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotReadyResponse"
+  /v1/info:
+    get:
+      tags: [Runtime]
+      summary: API version, capabilities and effective resource limits
+      responses:
+        "200":
+          description: Runtime metadata.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InfoResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /v1/metrics:
+    get:
+      tags: [Runtime]
+      summary: Bounded in-memory operational metrics
+      responses:
+        "200":
+          description: Request counters and rolling latency sample.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MetricsResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /v1/check:
+    post:
+      tags: [Runtime]
+      summary: Parse and statically analyze Reaper source
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/RequestId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckRequest"
+      responses:
+        "200":
+          description: Source was processed; ok and diagnostics describe its result.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "413":
+          $ref: "#/components/responses/ContentTooLarge"
+        "422":
+          description: Source could not be parsed or validated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /v1/run:
+    post:
+      tags: [Runtime]
+      summary: Execute source using the restricted local runtime profile
+      description: >
+        Disabled unless the backend process is started with --allow-execution.
+        Execution is not an operating-system sandbox. Use only with trusted
+        local clients and trusted source.
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/RequestId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RunRequest"
+      responses:
+        "200":
+          description: Program completed under the configured runtime budgets.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RunResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: Execution is disabled or the restricted effect was denied.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "413":
+          $ref: "#/components/responses/ContentTooLarge"
+        "422":
+          description: Source, type checking or runtime execution failed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque-token
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: Replays a completed result for the same normalized request payload.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 128
+        pattern: "^[A-Za-z0-9._:-]+$"
+    RequestId:
+      name: X-Request-ID
+      in: header
+      required: false
+      description: Optional caller-supplied correlation ID; invalid values are replaced.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 96
+        pattern: "^[A-Za-z0-9._:-]+$"
+  responses:
+    BadRequest:
+      description: Malformed HTTP request or JSON body.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Missing or invalid bearer token.
+      headers:
+        WWW-Authenticate:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Conflict:
+      description: Idempotency key is in progress or belongs to a different request payload.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ContentTooLarge:
+      description: Request or source exceeds its configured byte limit.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    RateLimited:
+      description: Request rate limit reached.
+      headers:
+        Retry-After:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ServiceUnavailable:
+      description: Worker capacity or local persistent storage is unavailable.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    MethodNotAllowed:
+      description: The method is not supported on this path.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+  schemas:
+    HealthResponse:
+      type: object
+      required: [request_id, status]
+      properties:
+        request_id:
+          type: string
+        status:
+          const: alive
+    ReadyResponse:
+      type: object
+      required: [request_id, status]
+      properties:
+        request_id:
+          type: string
+        status:
+          const: ready
+    NotReadyResponse:
+      type: object
+      required: [request_id, status]
+      properties:
+        request_id:
+          type: string
+        status:
+          const: not_ready
+    ErrorResponse:
+      type: object
+      required: [request_id, error]
+      properties:
+        request_id:
+          type: string
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+    CheckRequest:
+      type: object
+      additionalProperties: false
+      required: [source]
+      properties:
+        source:
+          type: string
+          description: Reaper source text, limited by max_source_bytes UTF-8 bytes.
+    RunRequest:
+      type: object
+      additionalProperties: false
+      required: [source]
+      properties:
+        source:
+          type: string
+          description: Reaper source text, limited by max_source_bytes UTF-8 bytes.
+        engine:
+          type: string
+          enum: [treewalk, vm]
+          default: treewalk
+    CheckResponse:
+      type: object
+      required: [request_id, api_version, ok]
+      properties:
+        request_id:
+          type: string
+        api_version:
+          const: 1
+        ok:
+          type: boolean
+        diagnostics:
+          type: array
+          items: {}
+      additionalProperties: true
+    RunResponse:
+      type: object
+      required: [request_id, api_version, ok, engine, output, steps]
+      properties:
+        request_id:
+          type: string
+        api_version:
+          const: 1
+        ok:
+          type: boolean
+        engine:
+          type: string
+          enum: [treewalk, vm]
+        output:
+          type: array
+          maxItems: 10000
+          items:
+            type: string
+        result: {}
+        steps:
+          type: integer
+          minimum: 0
+      additionalProperties: true
+    InfoResponse:
+      type: object
+      required: [request_id, api_version, reaper_version, service, capabilities, limits]
+      properties:
+        request_id:
+          type: string
+        api_version:
+          const: 1
+        reaper_version:
+          type: string
+        service:
+          const: reaper-local-backend
+        capabilities:
+          type: object
+          additionalProperties:
+            type: boolean
+        limits:
+          type: object
+          additionalProperties:
+            type: integer
+    MetricsResponse:
+      type: object
+      required: [request_id, requests, active_connections, workers, latency_ms, process, storage, network_bytes]
+      properties:
+        request_id:
+          type: string
+        requests:
+          type: object
+          additionalProperties:
+            type: integer
+        active_connections:
+          type: integer
+          minimum: 0
+        workers:
+          type: object
+          required: [active, waiting, capacity]
+          properties:
+            active:
+              type: integer
+              minimum: 0
+            waiting:
+              type: integer
+              minimum: 0
+            capacity:
+              type: integer
+              minimum: 0
+        latency_ms:
+          type: object
+          required: [sample_count, p50, p95, p99]
+          properties:
+            sample_count:
+              type: integer
+              minimum: 0
+            p50:
+              type: number
+              minimum: 0
+            p95:
+              type: number
+              minimum: 0
+            p99:
+              type: number
+              minimum: 0
+        process:
+          type: object
+          required: [cpu_seconds, max_rss_bytes, block_reads, block_writes]
+          properties:
+            cpu_seconds:
+              type: number
+              minimum: 0
+            max_rss_bytes:
+              type: [integer, "null"]
+              minimum: 0
+            block_reads:
+              type: [integer, "null"]
+              minimum: 0
+            block_writes:
+              type: [integer, "null"]
+              minimum: 0
+        storage:
+          type: object
+          required: [sqlite_bytes]
+          properties:
+            sqlite_bytes:
+              type: [integer, "null"]
+              minimum: 0
+        network_bytes:
+          type: object
+          required: [received, sent]
+          properties:
+            received:
+              type: integer
+              minimum: 0
+            sent:
+              type: integer
+              minimum: 0

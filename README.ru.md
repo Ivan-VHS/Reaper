@@ -108,7 +108,7 @@ python -m compileall -q reaper tests
 python -m unittest discover -s tests -v
 ```
 
-При первой установке может скачиваться объявленный build backend из package index; дальнейший запуск программ локальный. Нет HTTP-порта приложения, браузерного URL, шага seed базы данных или отдельного mock-сервера.
+При первой установке может скачиваться объявленный build backend из package index; обычный запуск программ локальный и офлайн. HTTP-служба не запускается по умолчанию; дополнительный backend, доступный только через loopback, можно включить явной командой `reaper-backend serve`. Браузерного URL и шага seed базы данных нет.
 
 ### Необязательный native C17 track
 
@@ -159,7 +159,7 @@ CLI применяет явные resource limits: по умолчанию од�
 
 ## Конфигурация, окружение и доверие
 
-Корневого `.env.example`, Docker Compose web stack, hosted-аккаунтов, demo login, CORS policy или настройки HTTPS самого приложения нет. Python runtime работает без Node.js. У NOO TAH есть три документированных environment override:
+Корневого `.env.example`, Docker Compose web stack, hosted-аккаунтов или demo login нет. Необязательный локальный backend использует отдельную loopback-only конфигурацию bearer-токена и API; CORS и HTTPS самого приложения он не включает. Python runtime работает без Node.js. У NOO TAH есть три документированных environment override:
 
 | Переменная | Назначение | Значение по умолчанию / поведение |
 |---|---|---|
