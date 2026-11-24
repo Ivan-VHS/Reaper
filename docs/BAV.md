@@ -34,13 +34,13 @@ tools/beelzebul.py                  JDK-only static scanner
 
 ### 1. Canonical Beelzebul policy
 
-The existing `security/beelzebul.v1.json` remains the single source of truth for 66 repository rules (15 + 15 + 15 + 15 + 6). Its policy schema, severity, enforcement, exceptions and limits are not copied into a second mutable Java catalogue.
+The repository-level `security/beelzebul.v1.json` remains the canonical source of truth for 66 rules (15 + 15 + 15 + 15 + 6). The distributable mirror `reaper/security/beelzebul.v1.json` is byte-for-byte checked against it in CI, so installed Reaper wheels carry the same policy. Its policy schema, severity, enforcement, exceptions and limits are not copied into a second mutable Java catalogue.
 
 The existing scanner remains responsible for repository-wide checks such as secrets, path metadata, unsafe dynamic execution, dependency changes, workflow isolation, CI policy, change correlation, rule coherence and governance signals.
 
 ### 2. Java Guard
 
-The Java component is implemented using the JDK standard library only. It has no third-party runtime dependency, does not load classes from the inspected project and does not execute application code. Its source is shipped inside the `reaper` Python package at `reaper/java/src/main/java/org/ivanvhs/bav/Bav.java`, so the guard remains available from an installed wheel rather than only from a source checkout. It walks without following symbolic links, applies deterministic ordering, enforces bounded file/byte limits, decodes UTF-8 strictly, redacts credential values and emits JSON.
+The Java component is implemented using the JDK standard library only. It has no third-party runtime dependency, does not load classes from the inspected project and does not execute application code. Its source is shipped inside the `reaper` Python package at `reaper/java/src/main/java/org/ivanvhs/bav/Bav.java`, so the guard remains available from an installed wheel rather than only from a source checkout. The Beelzebul engine and its policy mirror are packaged alongside it under `reaper/security/`. It walks without following symbolic links, applies deterministic ordering, enforces bounded file/byte limits, decodes UTF-8 strictly, redacts credential values and emits JSON.
 
 Supplementary Java checks:
 
@@ -59,7 +59,7 @@ These are conservative static heuristics, not proofs of exploitability. A findin
 
 ### 3. Reaper integration
 
-The Reaper CLI exposes the complete system as one command:
+The Reaper CLI exposes the complete system as one command. The `Kali` built-in plugin delegates to this same BAV pipeline; it no longer maintains a separate reduced secret-pattern scanner:
 
 ```sh
 python -m reaper security scan --root . --policy security/beelzebul.v1.json

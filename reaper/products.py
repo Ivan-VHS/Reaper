@@ -34,7 +34,7 @@ PRODUCTS: tuple[ProductSpec, ...] = (
     ProductSpec("Dilly", "Interface & experience", "UI token and interface-contract consistency.", ("design token lint", "label inventory", "theme contract checks"), "lint_design_tokens"),
     ProductSpec("Baplap", "Data infrastructure", "Local metadata indexing and deterministic data catalogs.", ("file catalog", "content fingerprints", "metadata index"), "index_files"),
     ProductSpec("Sretuo", "Quality engineering", "Test discovery and verification planning.", ("test discovery", "coverage target inventory", "test plan"), "plan_tests"),
-    ProductSpec("Kali", "Security", "Static security hygiene checks for project source.", ("secret-pattern scan", "unsafe API inventory", "security findings"), "scan_security"),
+    ProductSpec("Kali", "Security", "Unified Java/Reaper BAV source and repository security scan.", ("66-rule Beelzebul policy scan", "Java-specific SAST", "credential redaction", "unified verdict report"), "scan_security"),
     ProductSpec("Zalam", "Connectivity", "Versioned internal API and integration contract inspection.", ("contract validation", "integration inventory", "schema checks"), "inspect_contracts"),
     ProductSpec("Liur", "Runtime resources", "Bounded source and process resource observations.", ("source size metrics", "resource budget report", "runtime metadata"), "measure_resources"),
     ProductSpec("Keel Koh", "Knowledge", "Searchable documentation index and cross-reference inventory.", ("documentation index", "heading extraction", "link inventory"), "index_knowledge"),
@@ -213,18 +213,11 @@ _SECRET_PATTERNS = (
 
 
 def scan_security(path: str | Path) -> dict[str, Any]:
+    """Run the unified Java/Reaper BAV pipeline for the Kali security product."""
     root = _root(path)
-    findings = []
-    for file in _files(root, (".py", ".toml", ".yml", ".yaml", ".json", ".env")):
-        try:
-            content = _read_bounded(file).decode("utf-8")
-        except (OSError, UnicodeError):
-            continue
-        for label, pattern in _SECRET_PATTERNS:
-            for match in pattern.finditer(content):
-                findings.append({"rule": label, "path": file.relative_to(root).as_posix(), "line": content.count("\n", 0, match.start()) + 1})
-    return {"findings": findings, "finding_count": len(findings), "scope": "static pattern scan; not a complete security audit"}
+    from .bav import scan as scan_bav
 
+    return scan_bav(root)
 
 def inspect_contracts(contracts: list[dict[str, Any]]) -> dict[str, Any]:
     if not isinstance(contracts, list):

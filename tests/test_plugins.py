@@ -1,4 +1,6 @@
 import unittest
+from pathlib import Path
+from unittest.mock import patch
 from reaper.plugins import PluginError, PluginManager, list_plugins
 from reaper.products import PRODUCTS
 
@@ -72,6 +74,17 @@ class PluginHostTests(unittest.TestCase):
             )
         manager.close()
         authority.close()
+
+    def test_kali_dispatches_to_unified_java_reaper_bav(self):
+        report = {"schema": "bav.security.report.v1", "verdict": "clear"}
+        manager = PluginManager(enabled=["Kali"])
+        try:
+            with patch("reaper.bav.scan", return_value=report) as bav_scan:
+                result = manager.run("Kali", path=Path.cwd())
+            self.assertEqual(result, report)
+            bav_scan.assert_called_once_with(Path.cwd().resolve())
+        finally:
+            manager.close()
 
     def test_unknown_plugin_is_rejected(self):
         with self.assertRaisesRegex(PluginError, "unknown"):

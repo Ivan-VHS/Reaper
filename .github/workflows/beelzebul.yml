@@ -32,6 +32,8 @@ jobs:
           policy = json.loads(Path("security/beelzebul.v1.json").read_text(encoding="utf-8"))
           schema = json.loads(Path("schemas/beelzebul.security.v1.schema.json").read_text(encoding="utf-8"))
           report_schema = json.loads(Path("schemas/bav.security.report.v1.schema.json").read_text(encoding="utf-8"))
+          packaged_policy = json.loads(Path("reaper/security/beelzebul.v1.json").read_text(encoding="utf-8"))
+          assert policy == packaged_policy, "packaged BAV policy mirror drifted from the canonical repository policy"
           assert policy["schema"] == "beelzebul.security.v1"
           assert policy["rule_count"] == len(policy["rules"]) == 66
           assert schema["properties"]["rules"]["maxItems"] == 66
@@ -67,8 +69,14 @@ jobs:
           wheels = glob.glob(str(Path(os.environ["RUNNER_TEMP"]) / "bav-wheel" / "*.whl"))
           assert wheels, "wheel build did not produce a wheel"
           with zipfile.ZipFile(wheels[0]) as wheel:
-              source = "reaper/java/src/main/java/org/ivanvhs/bav/Bav.java"
-              assert source in wheel.namelist(), f"{source} is missing from the wheel"
+              required = (
+                  "reaper/java/src/main/java/org/ivanvhs/bav/Bav.java",
+                  "reaper/security/beelzebul.py",
+                  "reaper/security/beelzebul.v1.json",
+              )
+              names = set(wheel.namelist())
+              for source in required:
+                  assert source in names, f"{source} is missing from the wheel"
           PY
       - name: Run unified Java/Reaper BAV scan
         env:

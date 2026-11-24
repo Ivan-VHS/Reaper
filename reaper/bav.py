@@ -17,7 +17,7 @@ from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 JAVA_SOURCE = Path(__file__).resolve().parent / "java" / "src" / "main" / "java" / "org" / "ivanvhs" / "bav" / "Bav.java"
-PYTHON_SCANNER = PROJECT_ROOT / "tools" / "beelzebul.py"
+PYTHON_SCANNER = Path(__file__).resolve().parent / "security" / "beelzebul.py"
 JAVA_MAIN = "org.ivanvhs.bav.Bav"
 SEVERITY_WEIGHT = {"critical": 25, "high": 12, "medium": 5, "low": 2, "info": 1}
 
@@ -223,7 +223,7 @@ def scan(root: Path, policy: Path | None = None, base_ref: str | None = None) ->
     root = root.expanduser().resolve(strict=True)
     if not root.is_dir():
         raise BAVError("scan root must be an existing directory")
-    policy_path = (policy or (root / "security" / "beelzebul.v1.json")).expanduser().resolve(strict=True)
+    policy_path = (policy or (Path(__file__).resolve().parent / "security" / "beelzebul.v1.json")).expanduser().resolve(strict=True)
     if not policy_path.is_file():
         raise BAVError("canonical Beelzebul policy is not a regular file")
     if not JAVA_SOURCE.is_file() or not PYTHON_SCANNER.is_file():
