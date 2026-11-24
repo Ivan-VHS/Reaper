@@ -18,14 +18,14 @@ static void nesting_limit_test(void){
  for(size_t i=0u;i<accepted_size;i++)accepted[i]='(';
  accepted[accepted_size]='1';
  for(size_t i=0u;i<accepted_size;i++)accepted[accepted_size+1u+i]=')';
- accepted[2u*accepted_size+1u]='\\0';
+ accepted[2u*accepted_size+1u]='\0';
  assert(parse(accepted,&ast,&error));
  reaper_ast_free(&ast);
 
  for(size_t i=0u;i<rejected_size;i++)rejected[i]='(';
  rejected[rejected_size]='1';
  for(size_t i=0u;i<rejected_size;i++)rejected[rejected_size+1u+i]=')';
- rejected[2u*rejected_size+1u]='\\0';
+ rejected[2u*rejected_size+1u]='\0';
  assert(!parse(rejected,&ast,&error));
  assert(strstr(error.message,"nesting limit")!=NULL);
  assert(ast.items==NULL&&ast.length==0u);
