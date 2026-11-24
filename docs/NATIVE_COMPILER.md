@@ -87,3 +87,5 @@ The backend does not infer that an unsupported construct is safe, and it does no
 5. Do not describe the backend as a direct ELF linker, a full native interpreter, or self-hosting. Those milestones require their own implementation and acceptance tests.
 
 The next compiler milestones are typed collection lowering, explicit runtime-call contracts, ownership and deterministic drop, a versioned canonical native IR, and a direct object/ELF backend. Each remains separate from this first AOT slice until its conformance tests pass.
+
+The DuckOS system-target profile in [DUCKOS_TARGET.md](DUCKOS_TARGET.md) maps this compiler's current limits to the actual .rpr constructs used by DuckOS. In particular, the current native path cannot compile those collection, iteration, import and pipeline contracts, and it is not freestanding. A DuckOS kernel target must not be promoted until the profile's native lowering, startup, ABI, object/linker and emulator gates have passing evidence.
