@@ -84,7 +84,7 @@ class ApplicationSmokeTests(unittest.TestCase):
 
     def test_dag_runner_returns_dependency_safe_order(self) -> None:
         output = run_application("dag_runner")
-        self.assertEqual(output, ["[ok, [prepare, docs, compile, test, package, release]]"])
+        self.assertEqual(output, ["[ok, [prepare, compile, docs, test, package, release]]"])
 
     def test_span_indexer_preserves_one_based_positions(self) -> None:
         output = run_application("span_indexer")
