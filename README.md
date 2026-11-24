@@ -59,6 +59,10 @@ The image below is a capture of the Windows Studio application, not a browser-ba
 
 The seven-app **Mora** suite (Cockos, Kavun, Ka-bon, Gloverty, Po, Illidia and Unify) is specified in the separate [DuckOS project](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/PREINSTALLED_APPLICATIONS.md). It is an operating-system application layer, not a component of Reaper. This repository does not claim to ship those applications or provide their OS services. Its own capabilities and interfaces remain independently defined by this repository's source, tests and versioned contracts.
 
+## Plugin runtime policy
+
+The built-in product host now supports bounded input/output, per-plugin concurrency admission, observed deadlines and local readiness/metrics. See [Plugin execution policy](docs/PLUGIN_EXECUTION_POLICY.md). The Python deadline is observational, not forced cancellation.
+
 ## Quick Start
 
 ### Requirements
