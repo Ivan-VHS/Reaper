@@ -317,7 +317,7 @@ _LANGUAGE_TARGETS = {
     "rust": "Rust",
     "c": "C",
 }
-_NAME_RE = re.compile(r"^[A-Za-z0-9\u0400-\u04ff\u4e00-\u9fff][A-Za-z0-9\u0400-\u04ff\u4e00-\u9fff ._-]{0,79}$")
+_NAME_RE = re.compile(r"^[A-Za-z0-9\u0400-\u04ff\u4e00-\u9fff][A-Za-z0-9\u0400-\u04ff\u4e00-\u9fff .,_&+\-]{0,79}$")
 
 
 class JoraError(ValueError):
