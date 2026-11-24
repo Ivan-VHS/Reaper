@@ -625,6 +625,11 @@ class Interpreter:
                 raise ValueError("number must be finite")
             return result
 
+        def is_finite_value(value: Any) -> bool:
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                return False
+            return True if isinstance(value, int) else math.isfinite(value)
+
         def parse_result(parser: Callable[[Any], Any], value: Any) -> ResultValue[Any, str]:
             try:
                 return ResultValue.ok(parser(value))
@@ -724,6 +729,10 @@ class Interpreter:
                 raise ValueError("split separator cannot be empty")
             if isinstance(max_splits, bool) or not isinstance(max_splits, int) or max_splits < 0:
                 raise ValueError("max_splits must be a non-negative whole number")
+            if max_splits >= self.max_collection_items:
+                raise ValueError(
+                    f"max_splits must be below the collection item limit ({self.max_collection_items})"
+                )
             result = value.split(separator, max_splits)
             if len(result) > self.max_collection_items:
                 raise ValueError(
@@ -774,7 +783,7 @@ class Interpreter:
         register("map_alter", map_alter, 3, 3)
         register("map_values", map_values_transform, 2, 2)
         register("split_limit", split_limit, 3, 3)
-        register("is_finite", lambda value: isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value), 1, 1)
+        register("is_finite", is_finite_value, 1, 1)
         register("to_int", to_int_value, 1, 1)
         register("to_float", to_float_value, 1, 1)
         register("try_int", lambda value: parse_result(to_int_value, value), 1, 1)
