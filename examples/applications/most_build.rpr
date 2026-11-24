@@ -1,0 +1,18 @@
+# МОСТ uses the executable Russian aliases already registered by Reaper.
+# This file intentionally avoids the unsupported #syntax directive and fn/lambda forms.
+функция проверить_артефакт(пакет) {
+    если size(пакет) != 3 {
+        вернуть [ложь, "invalid_artifact_shape"]
+    }
+    если пакет[1] <= 0 {
+        вернуть [ложь, "empty_artifact"]
+    }
+    если пакет[2] == "" {
+        вернуть [ложь, "missing_checksum"]
+    }
+    вернуть [истина, пакет[0], "ready_for_release", пакет[2]]
+}
+
+пусть пакет := ["reaper-cli", 18432, "sha256:example-digest"]
+пусть результат := проверить_артефакт(пакет)
+вывести результат
