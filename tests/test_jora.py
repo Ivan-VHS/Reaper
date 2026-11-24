@@ -51,7 +51,7 @@ class JoraCompositionTests(unittest.TestCase):
 
     def test_component_combinations_never_create_separate_product_names(self):
         with self.assertRaisesRegex(JoraError, "fixed application name"):
-            compose_application(self.request(name="LexiTone"))
+            compose_application(self.request(name="OtherProduct"))
         self.assertEqual(compose_application(self.request(name="Jora"))["name"], "Jora")
 
     def test_naming_variants_keep_the_single_jora_brand(self):
