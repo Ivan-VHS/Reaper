@@ -4,6 +4,7 @@ import unittest
 
 from reaper.lexer import tokenize
 from reaper.parser import parse
+from reaper.source import LineIndex
 from reaper.semantic_ir import (
     FunctionSignature,
     IRCall,
@@ -123,6 +124,15 @@ class SemanticIRTests(unittest.TestCase):
         rendered = diagnostic.format(source)
         self.assertIn("operator 'ge' cannot compare Int with Text", rendered)
         self.assertIn("ir_node: IRCall", rendered)
+
+    def test_line_index_handles_crlf_and_trailing_newlines(self) -> None:
+        source = "one\r\ntwo\n"
+        index = LineIndex(source)
+        self.assertEqual(index.line_text(1), "one")
+        self.assertEqual(index.line_text(2), "two")
+        self.assertEqual(index.line_text(3), "")
+        self.assertEqual(index.byte_position(len("one\r\n".encode("utf-8"))), (2, 1))
+        self.assertEqual(index.byte_position(len(source.encode("utf-8"))), (3, 1))
 
     def test_crlf_newlines_keep_byte_and_line_coordinates_consistent(self) -> None:
         source = "make value := 1\r\nemit value"
