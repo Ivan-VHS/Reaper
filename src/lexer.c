@@ -85,7 +85,7 @@ static int fail(ReaperLexError *e,size_t l,size_t c,const char *m){if(e){snprint
 /* Reject overlong encodings, surrogate code points and values beyond U+10FFFF. */
 static int validate_utf8_source(const unsigned char *source, size_t *bad_line, size_t *bad_column) {
  size_t line=1u,column=1u;
- for(size_t i=0u;source[i]!='\\0';){
+ for(size_t i=0u;source[i]!='\0';){
   const unsigned char lead=source[i];
   size_t width=0u;
   if(lead<0x80u) width=1u;
@@ -95,7 +95,7 @@ static int validate_utf8_source(const unsigned char *source, size_t *bad_line, s
   else goto invalid;
   for(size_t j=1u;j<width;++j){
    const unsigned char next=source[i+j];
-   if(next=='\\0'||(next&0xC0u)!=0x80u) goto invalid;
+   if(next=='\0'||(next&0xC0u)!=0x80u) goto invalid;
    if(j==1u){
     if(lead==0xE0u&&next<0xA0u) goto invalid;
     if(lead==0xEDu&&next>0x9Fu) goto invalid;
@@ -103,7 +103,7 @@ static int validate_utf8_source(const unsigned char *source, size_t *bad_line, s
     if(lead==0xF4u&&next>0x8Fu) goto invalid;
    }
   }
-  if(width==1u&&lead=='\\n'){++line;column=1u;}
+  if(width==1u&&lead=='\n'){++line;column=1u;}
   else ++column;
   i+=width;
   continue;
