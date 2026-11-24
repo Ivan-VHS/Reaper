@@ -25,7 +25,7 @@ Each semantic IR node has:
 - a typed node kind (IRVar, IRLiteral, IRList, IRIndex, IRIntrinsic or IRCall);
 - a primary SourceSpan;
 - a NodeOrigin with the primary range, related source ranges and optional transformation name;
-- an optional inferred type, populated by later immutable analysis results rather than mutating the source AST.
+- an optional inferred type. Type checking returns a second immutable, type-annotated SemanticIR graph; it preserves node IDs and source provenance rather than mutating the original graph.
 
 Spans use half-open UTF-8 byte ranges and 1-based line/code-point columns. The lexer records byte offsets directly; it does not reconstruct them from Unicode character indices. Pipeline calls point primarily at the stage function name, while the original pipe operator and call delimiter remain related spans. Operator expressions normalize to intrinsic calls such as ge, with the operator token as their primary location.
 
