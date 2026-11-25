@@ -58,10 +58,16 @@ static void test_syscall_catalogue_and_return_state(void) {
         REAPER_DABI64_PROCESS_INVALID_USER_RETURN);
 
     frame = make_frame();
-    frame.user_rsp += 8U;
+    frame.user_rsp += 1U;
     assert(reaper_dabi64_process_frame_validate(
         &frame, sizeof(frame), REAPER_DABI64_PROCESS_ABI_VERSION) ==
         REAPER_DABI64_PROCESS_INVALID_USER_RETURN);
+
+    frame = make_frame();
+    frame.user_rsp += 8U; /* 8 mod 16 is valid at a syscall boundary. */
+    assert(reaper_dabi64_process_frame_validate(
+        &frame, sizeof(frame), REAPER_DABI64_PROCESS_ABI_VERSION) ==
+        REAPER_DABI64_PROCESS_OK);
 
     frame = make_frame();
     frame.user_cs = 0x08U;
