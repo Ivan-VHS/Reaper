@@ -18,6 +18,7 @@ The root [README](../README.md) is the product entry point: it summarizes the ex
 - [Features](FEATURES.md) — current feature inventory and maturity.
 - [Architecture](ARCHITECTURE.md) — implemented runtime structure and data flow.
 - [Hardware Language](HARDWARE_LANGUAGE.md) — staged systems-language and hardware track.
+- [Declarative file formats and extension registry](FILE_FORMATS_AND_EXTENSIONS_V1.md) — eleven Reaper-owned format specifications, their invariants, dependencies and implementation sequence; the DuckOS-owned .bav bundle remains external.
 - [Java Capability Adoption](JAVA_CAPABILITY_ADOPTION.md) — clean-room capability map, 2026 Java baseline, licensing rules and staged Reaper integration.
 - [Reaper IDE](REAPER_IDE.md) — Studio and language-tool boundaries.
 - [NOO TAH](NOO_TAH.md) — Node.js process integration.
