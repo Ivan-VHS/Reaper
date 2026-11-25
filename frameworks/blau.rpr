@@ -1,0 +1,92 @@
+# Blau: immutable, versioned state snapshots for local-first components.
+# Snapshot format: [version, [[key, value], ...]].
+
+craft find_entry(entries, key) {
+    vary found := false
+    vary value := nothing
+    each entry in entries {
+        when size(entry) == 2 and entry[0] == key {
+            change found := true
+            change value := entry[1]
+        }
+    }
+    yield [found, value]
+}
+
+craft put_entry(entries, key, value) {
+    vary result := []
+    vary inserted := false
+    each entry in entries {
+        when size(entry) == 2 and entry[0] == key {
+            when not inserted {
+                change result := push(result, [key, value])
+                change inserted := true
+            }
+        } otherwise {
+            change result := push(result, entry)
+        }
+    }
+    when not inserted {
+        change result := push(result, [key, value])
+    }
+    yield result
+}
+
+export craft empty() {
+    yield [0, []]
+}
+
+export craft version(snapshot) {
+    yield snapshot[0]
+}
+
+export craft read(snapshot, key) {
+    make result := find_entry(snapshot[1], key)
+    yield [result[0], result[1], snapshot[0]]
+}
+
+export craft write(snapshot, key, value) {
+    make next_entries := put_entry(snapshot[1], key, value)
+    yield [snapshot[0] + 1, next_entries]
+}
+
+export craft compare_and_set(snapshot, expected_version, key, value) {
+    when snapshot[0] != expected_version {
+        yield [false, snapshot, "version-conflict"]
+    }
+    yield [true, write(snapshot, key, value), "committed"]
+}
+
+export craft apply(snapshot, writes) {
+    vary next_entries := snapshot[1]
+    each operation in writes {
+        when size(operation) == 2 {
+            change next_entries := put_entry(next_entries, operation[0], operation[1])
+        }
+    }
+    yield [snapshot[0] + 1, next_entries]
+}
+
+export craft diff(before_snapshot, after_snapshot) {
+    vary changes := []
+
+    each entry in after_snapshot[1] {
+        make previous := find_entry(before_snapshot[1], entry[0])
+        when not previous[0] {
+            change changes := push(changes, [entry[0], nothing, entry[1]])
+        } otherwise {
+            when previous[1] != entry[1] {
+                change changes := push(changes, [entry[0], previous[1], entry[1]])
+            }
+        }
+    }
+
+    each entry in before_snapshot[1] {
+        make current := find_entry(after_snapshot[1], entry[0])
+        when not current[0] {
+            change changes := push(changes, [entry[0], entry[1], nothing])
+        }
+    }
+
+    yield changes
+}
