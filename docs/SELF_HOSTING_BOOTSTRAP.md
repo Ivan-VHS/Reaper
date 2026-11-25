@@ -29,13 +29,15 @@ The following executable Reaper source modules extend the bootstrap beyond token
 | selfhost/source_map.rpr | Code-point-based line starts, offset lookup, half-open spans, containment and span merging | Offsets are not UTF-8 byte offsets; backend conversion and full Unicode normalization remain separate |
 | selfhost/diagnostics.rpr | Versioned diagnostic records, stable RPR- codes, severities and source-located notes | Host rendering, localization and fix-it application are not implemented here |
 | selfhost/module_graph.rpr | Bounded local manifest validation and deterministic topological ordering; unknown, duplicate and cyclic dependencies are rejected | No file discovery, package registry, semantic-version solver or network access |
+| selfhost/semantic.rpr | Conservative expression type analysis for literals, names, lists, unary and binary operators; errors use stable RPR-T codes | Calls/indexes and host values remain Any; declaration checking, full scope resolution and complete type inference are not implemented |
+| selfhost/effects.rpr | Validates function effect declarations, required capabilities, caller-to-callee effect compatibility and manifest grants | Validation does not grant permissions or execute host operations; OS broker integration remains separate |
 | selfhost/ir.rpr | Expression-subset lowering into canonical IR v1 and a verifier for register definitions, operand reads and block termination | One entry block only; complete typed AST lowering, CFG, effects, ownership and serialized IR remain pending |
 | selfhost/bytecode.rpr | Expression-subset lowering into stack bytecode v1 and a verifier that simulates stack depth and validates termination | Structural verifier only; bytecode serialization, VM execution, type verification and native parity remain pending |
 | selfhost/optimizer.rpr | Conservative constant folding for boolean logic and string concatenation; unsupported numeric operations remain untouched | No numeric folding, code motion, dead-code removal or CFG optimization until typed semantics are available |
 
 IR registers are function-local non-negative integer identifiers. The current IR slice rejects duplicate definitions, undefined reads, malformed operands, unknown instructions and unterminated blocks. Bytecode verification rejects stack underflow, bad argument indices and instructions after RETURN. The optimizer folds only literal boolean operations and string concatenation; numeric text is not parsed or guessed. Unsupported AST forms fail with explicit RPR-E diagnostic identifiers rather than being silently discarded.
 
-These modules are intentionally small executable building blocks. They are not yet wired through a source-level import system, and their independent assertions do not substitute for a full end-to-end compile test.
+These modules are intentionally small executable building blocks. They are not yet wired through a source-level import system, and their independent assertions do not substitute for a full end-to-end compile test. The semantic analyzer deliberately keeps unresolved calls and host-defined values as Any; the effect checker validates declarations but never grants filesystem, process, network, MMIO, IRQ or DMA authority.
 
 ## Bootstrap stages
 
@@ -43,7 +45,7 @@ These modules are intentionally small executable building blocks. They are not y
 |---|---|---|
 | 0 | Lexer | Token-by-token parity for the supported language, Unicode and error locations included |
 | 1 | Pratt expression parser (partial) | Complete declaration/block grammar, canonical AST parity and shared golden corpus |
-| 2 | Source-map, diagnostic and local module-graph contracts (partial) | Semantic analysis, name/type resolution and differential runtime conformance |
+| 2 | Source-map, diagnostic, module-graph, expression typing and effect-contract slices | Declaration and block semantics, complete name/type resolution and differential runtime conformance |
 | 3 | Expression-subset canonical IR and stack-bytecode construction/verifiers | Full AST lowering, CFG/effects/ownership verification, serialization and malformed-input coverage |
 | 4 | Conservative Reaper-native constant-folding slice | Numeric semantics, CFG-aware data flow, fixed-point budgets and differential equivalence |
 | 5 | Complete optimizer passes | Differential semantics, bounded fixed-point behavior and reproducible output |
