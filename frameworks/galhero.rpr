@@ -87,7 +87,8 @@ export craft topological_order(nodes, edges) {
         change pending := next_pending
     }
 
-    yield [true, ordered, []]
+    make no_errors := []
+    yield [true, ordered, no_errors]
 }
 
 export craft transitive_dependencies(nodes, edges, root) {
@@ -116,5 +117,6 @@ export craft transitive_dependencies(nodes, edges, root) {
         }
     }
 
-    yield [true, visited, []]
+    make no_errors := []
+    yield [true, visited, no_errors]
 }
