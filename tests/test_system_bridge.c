@@ -118,7 +118,7 @@ static void test_capability_and_operation_checks(void) {
     reaper_system_host_detach();
 }
 
-static void test_json_dispatch_and_thread_local_result(void) {
+static void test_json_dispatch_and_status(void) {
     FakeHost fake = {0};
     ReaperSystemHost host = make_host(
         &fake,
