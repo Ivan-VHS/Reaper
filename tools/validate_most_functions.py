@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the 666-entry MOST function registry."""
+"""Validate the MOST Function Atlas against its machine-readable registry."""
 from __future__ import annotations
 import json
 import sys
@@ -7,7 +7,7 @@ from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_PATH = ROOT / "language" / "functions_666.json"
+DEFAULT_PATH = ROOT / "language" / "functions.json"
 ALLOWED_IMPL = {"specified_only", "partial_outside_most", "planned"}
 
 def validate(data):

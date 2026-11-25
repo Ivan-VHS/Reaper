@@ -55,9 +55,9 @@ Reaper Studio is a programming workbench for the MOST/Reaper language. Its core 
 - Keyboard shortcuts continue to invoke their original commands.
 - Text and selection remain readable in both palettes.
 
-## 40026 Codex
+## Stage 0.5 — Product Experience
 
-The normative six-cycle / 666-rule contract is maintained in [UI/UX Codex 40026](UI_UX_CODEX_40026.md). Theme palettes now expose semantic Success/Warning/Error/Info roles and are rejected when required WCAG AA text pairs fall below 4.5:1. Automated checks cover every supported palette. Full keyboard walkthrough, 200% scaling and long-session ergonomics remain release-level manual checks.
+The lifecycle vocabulary is defined by the [Product Stage Naming Standard](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/STAGE_NAMING_STANDARD.md). The shared interaction and accessibility foundation is [Duck UI/UX Foundation — Stage 0.1](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/UI_UX_STAGE_0_1.md); Reaper's toolkit-specific implementation notes are in [Reaper UI/UX Profile — Stage 0.5](UI_UX_PROFILE_STAGE_0_5.md). Theme palettes now expose semantic Success/Warning/Error/Info roles and are rejected when required WCAG AA text pairs fall below 4.5:1. Automated checks cover every supported palette. Full keyboard walkthrough, 200% scaling and long-session ergonomics remain release-level manual checks.
 
 ## UI/UX 2026 convergence
 

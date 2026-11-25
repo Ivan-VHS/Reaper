@@ -25,7 +25,7 @@ def test_unknown_theme_is_rejected():
         raise AssertionError("unknown themes must be rejected")
 
 
-def test_every_palette_meets_ui_ux_40026_text_contrast():
+def test_every_palette_meets_stage_0_1_text_contrast():
     required_status_tokens = {"success", "warning", "error", "info"}
     for name, palette in PALETTES.items():
         assert required_status_tokens.issubset(palette), name

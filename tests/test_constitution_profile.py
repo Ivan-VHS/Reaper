@@ -1,11 +1,11 @@
-"""Validate that the 666-rule implementation profile stays complete and explicit."""
+"""Validate that the Reaper Constitution Stage 0.3 profile stays complete and explicit."""
 
 from pathlib import Path
 import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PROFILE = ROOT / "docs" / "CONSTITUTION_666_PROFILE.md"
+PROFILE = ROOT / "docs" / "REAPER_CONSTITUTION_PROFILE_STAGE_0_3.md"
 
 
 class ConstitutionProfileTests(unittest.TestCase):

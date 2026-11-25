@@ -1,4 +1,4 @@
-# REAPER / MOST — 813 feature proposal IDs
+# REAPER / MOST — Feature Proposal Atlas — Stage 0.2
 
 The registry contains proposals and acceptance areas; it does not claim 813 implemented capabilities.
 
@@ -15,4 +15,4 @@ The registry contains proposals and acceptance areas; it does not claim 813 impl
 
 Stable IDs are never reused. Status: proposed → specified → implemented → tested, or deprecated. An implemented status requires source plus positive/negative acceptance tests.
 
-Separate counts: 666 API contracts = 147 specifications + 519 proposals; 666 symbolic token lexemes; these are not the same registry.
+The function-contract registry and symbolic-token catalogue are separate inventories; each retains its own exact count and stable identifiers.

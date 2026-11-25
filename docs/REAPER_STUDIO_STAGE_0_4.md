@@ -1,10 +1,10 @@
-# Reaper Studio — IDE implementation contract
+# Reaper Studio — Stage 0.4: IDE Implementation Contract
 
 **Status:** implementation baseline, not a claim of full IDE parity  
 **Product:** Reaper Studio  
 **Runtime:** existing Reaper interpreter and debugger APIs  
 **Desktop UI:** Python standard-library Tkinter  
-**Rulebook:** 666 engineering requirements, normalized into seven non-overlapping domains
+**Rulebook:** Reaper Psychoporter — Stage 0.1; stable requirement IDs are grouped into seven non-overlapping domains
 
 ## 1. Canonical numbering
 
