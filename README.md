@@ -44,6 +44,32 @@ flowchart TB
 
 Source code, schemas, build files, tests and CI are the evidence for implemented behavior. Roadmap entries and catalogue records describe plans or inventories, not shipped functionality.
 
+## Flow-first example
+
+The checked-in `examples/flow.rpr` demonstrates the `::` operator, named `craft` functions, collection transforms and a bounded loop:
+
+```reaper
+craft double(value) {
+    yield value * 2
+}
+
+craft add(total, value) {
+    yield total + value
+}
+
+make values := [1, 2, 3, 4, 5]
+make result := values :: map(double) :: keep(is_large) :: fold(0, add)
+emit "flow result = " ++ text(result)
+
+vary counter := 0
+each item in range(1, 4) {
+    change counter := counter + item
+}
+emit "loop result = " ++ text(counter)
+```
+
+Run the repository example with `python -m reaper examples/flow.rpr` after installing the reference package. The native C17 track remains a separate, partial implementation.
+
 ## Requirements
 
 Python 3.10+ for the reference runtime and package tools; CMake 3.16+ plus a C17 compiler for the native track; Node.js 22/24 for optional compatibility checks; Tkinter for the Windows Studio GUI.
