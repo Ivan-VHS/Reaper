@@ -280,3 +280,47 @@ ReaperFrameworkStatus reaper_framework_registry_stats(
     stats->reaper_source_bindings = 0U;
     return REAPER_FRAMEWORK_OK;
 }
+
+ReaperFrameworkStatus reaper_framework_invoke(
+    const char *framework_id,
+    const char *function_name,
+    uint32_t argument_count,
+    const void *request_payload,
+    uint32_t request_size,
+    void *response_payload,
+    uint32_t response_capacity,
+    uint32_t *response_size,
+    ReaperFrameworkHostDispatch host_dispatch,
+    void *host_context
+) {
+    const ReaperFramework *framework;
+    const ReaperFrameworkFunction *function = NULL;
+    uint32_t produced = 0U;
+    ReaperFrameworkStatus status;
+
+    if (response_size == NULL) return REAPER_FRAMEWORK_INVALID_ARGUMENT;
+    *response_size = 0U;
+    if (host_dispatch == NULL || framework_id == NULL || function_name == NULL ||
+        (request_size > 0U && request_payload == NULL) ||
+        (response_capacity > 0U && response_payload == NULL))
+        return REAPER_FRAMEWORK_INVALID_ARGUMENT;
+    if (request_size > REAPER_FRAMEWORK_MAX_PAYLOAD_BYTES ||
+        response_capacity > REAPER_FRAMEWORK_MAX_PAYLOAD_BYTES)
+        return REAPER_FRAMEWORK_OUT_OF_RANGE;
+
+    framework = reaper_framework_find(framework_id);
+    if (framework == NULL) return REAPER_FRAMEWORK_NOT_FOUND;
+
+    status = reaper_framework_validate_arity(
+        framework, function_name, argument_count, &function);
+    if (status != REAPER_FRAMEWORK_OK) return status;
+
+    status = host_dispatch(
+        framework, function, request_payload, request_size,
+        response_payload, response_capacity, &produced, host_context);
+    if (status != REAPER_FRAMEWORK_OK) return REAPER_FRAMEWORK_DISPATCH_FAILED;
+    if (produced > response_capacity) return REAPER_FRAMEWORK_OUT_OF_RANGE;
+
+    *response_size = produced;
+    return REAPER_FRAMEWORK_OK;
+}

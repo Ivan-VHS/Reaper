@@ -16,30 +16,39 @@
     "framework_count": 20,
     "functions_per_framework": 6,
     "function_contract_count": 120,
-    "maturity": "catalogue-and-signature-validation"
+    "maturity": "catalogue-and-signature-validation",
+    "registry_api_functions": 8,
+    "dispatch_api": {
+      "function": "reaper_framework_invoke",
+      "max_request_bytes": 1048576,
+      "max_response_bytes": 1048576,
+      "payload_encoding": "caller-defined versioned payload",
+      "callback": "explicit host-owned C ABI callback",
+      "callback_error": "normalized to REAPER_FRAMEWORK_DISPATCH_FAILED"
+    }
   },
   "language_adapters": [
     {
       "language": "Reaper",
-      "status": "metadata-modules",
-      "scope": "Importable .rpr module metadata; native operation dispatch is not yet bound to source-level calls."
+      "status": "metadata-and-helper-functions",
+      "scope": "Each .rpr module exports framework_manifest() and operation_key(index); the example calls these functions through Reaper's module runtime. These helpers do not invoke native domain handlers."
     },
     {
       "language": "C17",
       "status": "implemented",
-      "scope": "Shared C ABI registry enumeration, lookup, signature validation and public registry statistics."
+      "scope": "Shared C ABI registry enumeration, lookup, signature validation, bounded callback dispatch and public registry statistics."
     },
     {
       "language": "Other C-ABI languages",
-      "status": "consumer-ready",
-      "scope": "The shared C ABI can be consumed by compatible hosts; dedicated language SDKs and operation handlers are not shipped."
+      "status": "adapter-ready",
+      "scope": "Compatible foreign hosts can inspect descriptors and invoke a trusted host-owned callback through the shared C ABI. Dedicated language SDKs and built-in operation handlers are not shipped."
     }
   ],
   "public_statistics": {
     "source": "Computed by reaper_framework_registry_stats() from the native registry.",
     "registered_frameworks": 20,
     "registered_function_contracts": 120,
-    "registry_api_functions": 7,
+    "registry_api_functions": 8,
     "executable_domain_handlers": 0,
     "reaper_source_bindings": 0,
     "privacy": "Registry metadata only; no user telemetry or runtime activity is collected."

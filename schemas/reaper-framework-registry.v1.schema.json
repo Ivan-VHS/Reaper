@@ -36,7 +36,8 @@
         "framework_count",
         "functions_per_framework",
         "function_contract_count",
-        "maturity"
+        "maturity",
+        "dispatch_api"
       ],
       "properties": {
         "abi": {
@@ -74,6 +75,41 @@
         },
         "maturity": {
           "const": "catalogue-and-signature-validation"
+        },
+        "registry_api_functions": {
+          "const": 8
+        },
+        "dispatch_api": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "function",
+            "max_request_bytes",
+            "max_response_bytes",
+            "payload_encoding",
+            "callback",
+            "callback_error"
+          ],
+          "properties": {
+            "function": {
+              "const": "reaper_framework_invoke"
+            },
+            "max_request_bytes": {
+              "const": 1048576
+            },
+            "max_response_bytes": {
+              "const": 1048576
+            },
+            "payload_encoding": {
+              "type": "string"
+            },
+            "callback": {
+              "type": "string"
+            },
+            "callback_error": {
+              "type": "string"
+            }
+          }
         }
       }
     },
@@ -122,7 +158,7 @@
           "const": 120
         },
         "registry_api_functions": {
-          "const": 7
+          "const": 8
         },
         "executable_domain_handlers": {
           "const": 0

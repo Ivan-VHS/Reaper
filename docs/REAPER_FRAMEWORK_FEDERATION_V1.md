@@ -44,14 +44,15 @@ Include `reaper/framework_suite.h` and link `reaper_frameworks`.
 - `reaper_framework_function_find()` resolves an operation descriptor.
 - `reaper_framework_validate_arity()` validates a call shape before dispatch.
 - `reaper_framework_registry_stats()` computes the public registry counters.
+- `reaper_framework_invoke()` validates a framework/function key and arity, enforces 1 MiB request/response ceilings, and calls an explicit host-owned callback. Callback failures are normalized; output-size over-reporting is rejected.
 
-The shared library exports a platform C ABI for compatible foreign-language hosts. These exports cover registry metadata and arity validation only; they do **not** execute the framework operations. Dedicated Rust, Zig, Go, Swift, JVM, .NET or other SDK wrappers are not included in this increment.
+The shared library exports a platform C ABI for compatible foreign-language hosts. `reaper_framework_invoke()` is a callback-based inter-language call gate: a caller supplies the payload encoding and a trusted host callback. The registry validates the operation signature and buffer sizes, but does not load code, grant capabilities, or provide domain handlers. The host callback remains responsible for typed marshalling, authorization, ownership and operation behavior. Dedicated Rust, Zig, Go, Swift, JVM, .NET or other SDK wrappers are not included in this increment.
 
 ## Reaper source modules
 
-Each namespace has an importable `.rpr` metadata module under `examples/frameworks/modules/`. The modules expose the canonical ID, display name, feature key, operation keys and maturity state. `examples/frameworks/manifest_client.rpr` imports all twenty modules and exercises Reaper's existing module/export semantics.
+Each namespace has an importable `.rpr` module under `examples/frameworks/modules/`. Besides stable metadata, each module exports `operation_key(index)` and `framework_manifest()` as executable Reaper functions. `examples/frameworks/manifest_client.rpr` imports all twenty modules, invokes their exported helper functions and prints stable public keys.
 
-These are metadata facades, not hidden host calls. Language-level dispatch from Reaper expressions into the C registry is a separate compiler/FFI milestone.
+These helpers are implemented in Reaper, but they do not call native domain handlers. Binding Reaper expressions to `reaper_framework_invoke()` remains a separate compiler/FFI milestone.
 
 ## Public statistics and maturity
 
@@ -69,7 +70,7 @@ The statistics are computed from the compiled registry and intentionally disting
 |---|---:|
 | Registered frameworks | 20 |
 | Registered function contracts | 120 |
-| Native registry API functions | 7 |
+| Native registry API functions | 8 |
 | Executable domain operation handlers | 0 |
 | Reaper source-level native bindings | 0 |
 
@@ -77,8 +78,8 @@ The zeroes are intentional and important. A registered signature is not an imple
 
 ## Cross-language boundary
 
-The shared library provides a versioned C ABI metadata surface so a trusted host written in a C-ABI-compatible language can inspect the registry. It is not a wire protocol and does not authorize native execution. Any future invocation bridge must add typed values, ownership/lifetime rules, effect declarations, capability checks, structured errors and per-language conformance tests before operation handlers are marked implemented.
+The shared library provides a versioned C ABI for registry inspection and explicit host callback dispatch. The dispatcher accepts caller-defined, versioned payload bytes and enforces 1 MiB request/response limits; it is not a wire protocol. The host callback must perform typed marshalling, capability/authorization checks, handle ownership and structured error mapping. No ambient library loading or automatic privilege grant is performed. Reaper source-level calls are not yet connected to this bridge.
 
 ## Verification
 
-The native C test verifies registry cardinality, stable IDs, function keys, case-insensitive lookup, arity rejection and public statistics. The CMake target also installs the shared library and public header.
+The native C test verifies registry cardinality, stable IDs, function keys, case-insensitive lookup, arity rejection, callback dispatch, payload bounds and public statistics. The CMake target also installs the shared library and public header.
