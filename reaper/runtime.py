@@ -396,8 +396,6 @@ class Interpreter:
                 base = int(left)
                 result = 1
                 remaining = exponent
-                while remaining and not fixed_integer_fits(result, fixed_type):
-                    raise self._error(token, f"numeric result overflows {fixed_type}")
                 while remaining:
                     if remaining & 1:
                         result *= base
