@@ -191,12 +191,7 @@ class VirtualMachine:
                     raise self.interpreter._error(token, f"cannot read this index: {error}") from error
             elif name == "UNARY":
                 value = stack.pop()
-                if instruction.argument == "NOT":
-                    stack.append(not self.interpreter._truthy(value))
-                elif instruction.argument == "-" and self.interpreter._is_number(value):
-                    stack.append(-value)
-                else:
-                    raise self.interpreter._error(token, "unary '-' expects a number")
+                stack.append(self.interpreter._unary(instruction.argument, value, token))
             elif name == "CALL":
                 count = instruction.argument
                 arguments = stack[-count:] if count else []
