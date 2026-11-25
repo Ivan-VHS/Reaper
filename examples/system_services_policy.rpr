@@ -1,0 +1,90 @@
+# Reaper policy reference for DuckOS system-service operations 111–130.
+# Pure validation only: this file does not issue syscalls or claim native AOT parity.
+# Request layout: [operation_id, abi_major, abi_minor, request_id,
+#                 deadline_ms, input_bytes, output_bytes].
+
+craft operation_capability(operation_id) {
+    when operation_id == 111 { yield "process.detach" }
+    when operation_id == 112 { yield "service.registry" }
+    when operation_id == 113 { yield "scheduler.calendar" }
+    when operation_id == 114 { yield "log.append" }
+    when operation_id == 115 { yield "service.start" }
+    when operation_id == 116 { yield "system.shutdown" }
+    when operation_id == 117 { yield "system.recovery" }
+    when operation_id == 118 { yield "device.events" }
+    when operation_id == 119 { yield "firmware.stage" }
+    when operation_id == 120 { yield "acpi.read" }
+    when operation_id == 121 { yield "compute.npu" }
+    when operation_id == 122 { yield "compute.tensor" }
+    when operation_id == 123 { yield "model.infer" }
+    when operation_id == 124 { yield "model.load" }
+    when operation_id == 125 { yield "model.secure-infer" }
+    when operation_id == 126 { yield "container.spawn" }
+    when operation_id == 127 { yield "hypervisor.vm" }
+    when operation_id == 128 { yield "package.import" }
+    when operation_id == 129 { yield "package.install" }
+    when operation_id == 130 { yield "toolchain.cross-build" }
+    yield ""
+}
+
+craft service_request_valid(request) {
+    when size(request) != 7 { yield false }
+    when request[0] < 111 or request[0] > 130 { yield false }
+    when request[1] != 1 or request[2] < 0 or request[2] > 255 { yield false }
+    when request[3] <= 0 { yield false }
+    when request[4] <= 0 or request[4] > 30000 { yield false }
+    when request[5] < 0 or request[5] > 1048576 { yield false }
+    when request[6] < 0 or request[6] > 1048576 { yield false }
+    yield operation_capability(request[0]) != ""
+}
+
+craft capability_set_contains(granted, required) {
+    vary found := false
+    each capability in granted {
+        when capability == required {
+            change found := true
+        }
+    }
+    yield found
+}
+
+craft service_request_authorized(request, granted) {
+    when not service_request_valid(request) { yield false }
+    make required := operation_capability(request[0])
+    yield capability_set_contains(granted, required)
+}
+
+craft service_transition_valid(current, next) {
+    when current == "registered" and next == "starting" { yield true }
+    when current == "stopped" and next == "starting" { yield true }
+    when current == "starting" and (next == "active" or next == "failed") { yield true }
+    when current == "active" and (next == "stopping" or next == "failed") { yield true }
+    when current == "stopping" and (next == "stopped" or next == "failed") { yield true }
+    when current == "failed" and next == "stopped" { yield true }
+    yield false
+}
+
+craft log_record_valid(record) {
+    # [severity 0..7, payload_bytes, request_id, monotonic_timestamp_ms]
+    when size(record) != 4 { yield false }
+    when record[0] < 0 or record[0] > 7 { yield false }
+    when record[1] < 0 or record[1] > 4096 { yield false }
+    when record[2] <= 0 or record[3] <= 0 { yield false }
+    yield true
+}
+
+make valid_request := [114, 1, 0, 1001, 1000, 128, 0]
+make valid_grants := ["log.append", "service.registry"]
+make denied_grants := ["service.registry"]
+make invalid_request := [114, 1, 0, 0, 1000, 128, 0]
+
+assert(service_request_valid(valid_request), "service request shape and limits")
+assert(service_request_authorized(valid_request, valid_grants), "granted log capability")
+assert(not service_request_authorized(valid_request, denied_grants), "missing capability is denied")
+assert(not service_request_valid(invalid_request), "zero request ID is rejected")
+assert(service_transition_valid("starting", "active"), "valid service activation")
+assert(not service_transition_valid("active", "registered"), "illegal lifecycle jump is rejected")
+assert(log_record_valid([3, 256, 1001, 9000]), "bounded structured log record")
+assert(not log_record_valid([9, 256, 1001, 9000]), "invalid log severity is rejected")
+
+emit "REAPER_DUCKOS_SERVICE_POLICY:PASS"

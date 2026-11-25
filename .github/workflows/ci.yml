@@ -42,6 +42,12 @@ jobs:
         run: python -m reaper --check examples/flow.rpr
       - name: Validate federated audit program
         run: python -m reaper --check examples/device_audit.rpr
+      - name: Validate DuckOS system-service policy example
+        run: python -m reaper --check examples/system_services_policy.rpr
+      - name: Execute DuckOS system-service policy example
+        run: |
+          python -m reaper examples/system_services_policy.rpr | tee system-services-policy.txt
+          grep -qx "REAPER_DUCKOS_SERVICE_POLICY:PASS" system-services-policy.txt
       - name: Run example
         run: python -m reaper examples/flow.rpr
       - name: Run end-to-end read-only device audit example
