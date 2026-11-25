@@ -3,6 +3,7 @@
 | Layer | Responsibility |
 |---|---|
 | CLI / Studio | source input, run/check/debug, reports |
+| Reaper self-hosting frontend | Reaper-written tokenization, expression parsing, semantic checks and expression IR/bytecode lowering | partial bootstrap; reference-hosted |
 | Lexer | deterministic tokens and source spans |
 | Python parser/runtime | reference semantics, scopes, values, quotas |
 | Native C17 | token stream, expression AST, checked IR, limited lowering |
