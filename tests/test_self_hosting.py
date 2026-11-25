@@ -37,6 +37,12 @@ class SelfHostingBootstrapTests(unittest.TestCase):
     def test_reaper_written_optimizer_runs_on_the_reference_runtime(self) -> None:
         self._run_selfhost_program("selfhost/optimizer.rpr", "SELFHOST_OPTIMIZER_OK")
 
+    def test_reaper_written_semantic_analyzer_runs_on_the_reference_runtime(self) -> None:
+        self._run_selfhost_program("selfhost/semantic.rpr", "SELFHOST_SEMANTICS_OK")
+
+    def test_reaper_written_effect_checker_runs_on_the_reference_runtime(self) -> None:
+        self._run_selfhost_program("selfhost/effects.rpr", "SELFHOST_EFFECTS_OK")
+
 
 if __name__ == "__main__":
     unittest.main()
