@@ -389,6 +389,26 @@ class Interpreter:
                 raise self._error(token, f"'{operator}' needs two numbers")
             if operator in {"/", "//", "%"} and right == 0:
                 raise self._error(token, "division by zero")
+            if fixed_type is not None and operator == "**":
+                exponent = int(right)
+                if exponent < 0:
+                    raise self._error(token, f"negative exponent is not supported for {fixed_type}")
+                base = int(left)
+                result = 1
+                remaining = exponent
+                while remaining and not fixed_integer_fits(result, fixed_type):
+                    raise self._error(token, f"numeric result overflows {fixed_type}")
+                while remaining:
+                    if remaining & 1:
+                        result *= base
+                        if not fixed_integer_fits(result, fixed_type):
+                            raise self._error(token, f"numeric result overflows {fixed_type}")
+                    remaining >>= 1
+                    if remaining:
+                        base *= base
+                        if not fixed_integer_fits(base, fixed_type):
+                            raise self._error(token, f"numeric result overflows {fixed_type}")
+                return FixedInteger(result, fixed_type)
             try:
                 result = {
                     "+": lambda: left + right,
