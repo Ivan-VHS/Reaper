@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111316">
+  <meta name="description" content="Kontexa — контекстный перевод длинных документов до 60 000 символов">
+  <title>Kontexa — Context Translation Workspace</title>
+  <link rel="stylesheet" href="/assets/app.css">
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <a class="brand" href="#workspace" aria-label="Kontexa workspace">
+        <span class="brand-mark"><i></i><i></i><i></i></span>
+        <span><strong>kontexa</strong><small>CONTEXT TRANSLATION</small></span>
+      </a>
+      <div class="workspace-chip"><span class="live-dot"></span><span>Local workspace</span><span class="chip-lock">⌑</span></div>
+      <nav class="side-nav" aria-label="Main navigation">
+        <span class="nav-caption">WORKSPACE</span>
+        <button class="nav-item active" data-view="translate"><span class="nav-icon">↗</span> Перевод</button>
+        <button class="nav-item" data-view="glossary"><span class="nav-icon">⌘</span> Глоссарий <span class="nav-count" id="glossary-count">0</span></button>
+        <button class="nav-item" data-view="history"><span class="nav-icon">◷</span> История</button>
+        <span class="nav-caption nav-caption-spaced">INTELLIGENCE</span>
+        <button class="nav-item" data-view="insights"><span class="nav-icon">◇</span> Карта документа</button>
+        <button class="nav-item" data-view="report"><span class="nav-icon">▤</span> Контроль качества</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="privacy-card"><span class="privacy-icon">◈</span><div><strong>Локальный контроль</strong><small>Документы не сохраняются на сервере Kontexa. Внешний запрос идёт только к выбранному вами провайдеру.</small></div></div>
+        <button class="profile-button" id="settings-open"><span class="avatar">K</span><span><strong>Настройки движка</strong><small id="provider-status">Провайдер не настроен</small></span><span class="profile-dots">···</span></button>
+      </div>
+    </aside>
+
+    <main class="main" id="workspace">
+      <header class="topbar">
+        <div class="breadcrumbs"><span>Workspace</span><b>/</b><strong id="view-title">Перевод документа</strong></div>
+        <div class="top-actions"><span class="secure-label"><span class="live-dot"></span> LOCAL ENGINE</span><button class="icon-button" id="help-button" title="Справка">?</button><button class="primary-small" id="new-document">＋ Новый документ</button></div>
+      </header>
+
+      <section class="view active-view" id="view-translate">
+        <div class="page-heading">
+          <div><div class="eyebrow">KONTEXA DOCUMENT INTELLIGENCE</div><h1>Перевод без потери контекста<span class="heading-period">.</span></h1><p>Один документ. Единая терминология. Целостная структура — от первой строки до последней.</p></div>
+          <div class="document-meter"><div class="meter-top"><span>DOCUMENT CAPACITY</span><strong id="capacity-label">0 / 60 000</strong></div><div class="meter-track"><div class="meter-fill" id="capacity-fill"></div></div><div class="meter-bottom"><span>Максимум на один документ</span><span>60K characters</span></div></div>
+        </div>
+
+        <div class="translation-controls">
+          <div class="language-control"><label for="source-language">SOURCE LANGUAGE</label><select id="source-language"><option>Автоопределение</option><option>Английский</option><option>Русский</option><option>Украинский</option><option>Немецкий</option><option>Французский</option><option>Испанский</option><option>Китайский (упрощённый)</option><option>Японский</option><option>Польский</option><option>Итальянский</option><option>Португальский</option></select></div>
+          <button class="swap-button" id="swap-languages" title="Поменять языки местами">⇄</button>
+          <div class="language-control"><label for="target-language">TARGET LANGUAGE</label><select id="target-language"><option>Украинский</option><option>Английский</option><option>Русский</option><option>Немецкий</option><option>Французский</option><option>Испанский</option><option>Китайский (упрощённый)</option><option>Японский</option><option>Польский</option><option>Итальянский</option><option>Португальский</option></select></div>
+          <div class="control-divider"></div>
+          <div class="style-control"><label for="translation-style">TONE & REGISTER</label><select id="translation-style"><option>Точный, профессиональный</option><option>Строгий технический</option><option>Юридический, нормативный</option><option>Академический</option><option>Деловой, нейтральный</option><option>Естественный, литературный</option><option>Дружелюбный продуктовый</option></select></div>
+          <div class="style-control domain-control"><label for="translation-domain">DOMAIN</label><select id="translation-domain"><option>Общий</option><option>Разработка ПО</option><option>Право и договоры</option><option>Инженерия</option><option>Наука</option><option>Медицина</option><option>Маркетинг</option><option>Финансы</option></select></div>
+        </div>
+
+        <div class="editor-toolbar"><div class="editor-label"><span class="document-icon">▤</span><input id="document-name" value="Untitled document" aria-label="Название документа"><span class="saved-indicator" id="saved-indicator">● локально</span></div><div class="toolbar-actions"><label class="toolbar-button" for="file-import">↥ Импорт .md / .txt</label><input id="file-import" type="file" accept=".md,.markdown,.txt,.rst,.html,.htm,text/plain,text/markdown,text/html" hidden><button class="toolbar-button" id="analyze-button">⌁ Анализ</button><button class="toolbar-button" id="export-source">↓ Экспорт</button></div></div>
+
+        <div class="editor-grid">
+          <section class="editor-panel source-panel">
+            <div class="panel-heading"><div><span class="panel-dot source-dot"></span><strong>Оригинал</strong><span class="panel-subtitle">SOURCE DOCUMENT</span></div><button class="subtle-button" id="clear-source">Очистить</button></div>
+            <textarea id="source-text" spellcheck="false" placeholder="# Вставьте или перетащите документ сюда…&#10;&#10;Kontexa сохранит Markdown, структуру заголовков, кодовые блоки, ссылки и переменные.&#10;&#10;Лимит одного документа — 60 000 символов."></textarea>
+            <div class="panel-footer"><span id="source-stats">0 символов · 0 слов</span><span id="source-encoding">UTF-8 · Markdown-aware</span></div>
+          </section>
+          <section class="editor-panel target-panel">
+            <div class="panel-heading"><div><span class="panel-dot target-dot"></span><strong>Перевод</strong><span class="panel-subtitle">TRANSLATED DOCUMENT</span></div><div class="output-actions"><button class="subtle-button" id="copy-output">Копировать</button><button class="subtle-button" id="export-output">↓ .md</button></div></div>
+            <textarea id="target-text" spellcheck="false" placeholder="Здесь появится перевод с сохранённой структурой и сквозной терминологией…"></textarea>
+            <div class="panel-footer"><span id="target-stats">Ожидание перевода</span><span id="output-state">READY</span></div>
+          </section>
+        </div>
+
+        <div class="action-row"><div class="preflight"><span class="preflight-icon">✳</span><span><strong>Context preflight</strong><small id="preflight-message">Анализ документа перед запуском не выполнялся</small><label class="audit-toggle"><input id="semantic-audit" type="checkbox"> Back-translation + tone drift audit · отдельный запрос модели на каждый сегмент</label></span></div><div class="run-actions"><button class="secondary-button" id="cancel-translation" disabled>Отменить</button><button class="translate-button" id="translate-button"><span>Перевести документ</span><span class="button-arrow">→</span></button></div></div>
+
+        <section class="progress-panel hidden" id="progress-panel"><div class="progress-head"><div><span class="live-dot"></span><strong id="progress-title">Подготовка контекста</strong></div><span id="progress-count">0 / 0 сегментов</span></div><div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div><div class="progress-foot"><span id="progress-message">Строим паспорт документа…</span><span id="progress-percent">0%</span></div></section>
+
+        <div class="feature-strip"><div class="feature-item"><span class="feature-icon">⌘</span><div><strong>Terminology Lock</strong><small>Сквозной контракт терминов</small></div><span class="feature-state" id="glossary-feature-state">READY</span></div><div class="feature-item"><span class="feature-icon">▦</span><div><strong>Structural Shield</strong><small>Защита кода и разметки</small></div><span class="feature-state">ACTIVE</span></div><div class="feature-item"><span class="feature-icon">◈</span><div><strong>Context Memory</strong><small>Паспорт каждого сегмента</small></div><span class="feature-state">ACTIVE</span></div><div class="feature-item"><span class="feature-icon">⌁</span><div><strong>Delta Cache</strong><small>Повторное использование сегментов</small></div><span class="feature-state">LOCAL</span></div></div>
+      </section>
+
+      <section class="view" id="view-glossary"><div class="section-heading"><div><div class="eyebrow">TERMINOLOGY CONTRACT</div><h1>Глоссарий</h1><p>Зафиксируйте перевод терминов, разрешите варианты или запретите перевод имени.</p></div><button class="primary-small" id="add-term">＋ Добавить термин</button></div><div class="table-card"><div class="table-head"><span>ИСХОДНЫЙ ТЕРМИН</span><span>ПЕРЕВОД / ПРАВИЛО</span><span>РЕЖИМ</span><span></span></div><div id="glossary-rows" class="glossary-rows"><div class="empty-state">Пока нет терминов. Запустите анализ документа или добавьте термин вручную.</div></div></div><div class="glossary-note"><span>◈</span><div><strong>Hard Lock — жёсткий контракт</strong><p>При переводе движок требует использовать утверждённую формулировку. После сборки документа проводится отдельная проверка частотности совпадений.</p></div></div></section>
+
+      <section class="view" id="view-insights"><div class="section-heading"><div><div class="eyebrow">GLOBAL DOCUMENT CONTEXT GRAPH</div><h1>Карта документа</h1><p>Структура, сущности, термины и защищённые фрагменты исходного текста.</p></div><span class="view-badge">LOCAL ANALYSIS</span></div><div id="insights-content" class="insights-grid"><div class="insight-card empty-insight">Загрузите документ и нажмите «Анализ», чтобы построить карту контекста.</div></div></section>
+
+      <section class="view" id="view-report"><div class="section-heading"><div><div class="eyebrow">CONSISTENCY & SEMANTIC QA</div><h1>Контроль качества</h1><p>Проверяемые инварианты отдельно от эвристических предупреждений.</p></div><button class="toolbar-button" id="download-report">↓ Отчёт JSON</button></div><div id="report-content" class="report-content"><div class="insight-card empty-insight">Отчёт появится после перевода документа.</div></div></section>
+
+      <section class="view" id="view-history"><div class="section-heading"><div><div class="eyebrow">LOCAL SESSION ARCHIVE</div><h1>История</h1><p>Последние документы хранятся в текущем профиле браузера.</p></div><button class="toolbar-button" id="clear-history">Очистить историю</button></div><div id="history-content" class="history-list"><div class="empty-state">История пока пуста.</div></div></section>
+
+      <footer class="app-footer"><span>Kontexa <b>0.1.0</b> · Context-first translation</span><span>Local workspace · <a href="#settings" id="footer-settings">Provider settings</a></span></footer>
+    </main>
+  </div>
+
+  <div class="modal-backdrop hidden" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title"><div class="modal"><div class="modal-top"><div><div class="eyebrow">MODEL CONNECTION</div><h2 id="settings-title">Настройки провайдера</h2><p>Kontexa обращается к выбранному вами OpenAI-compatible API. Можно использовать локальный Ollama или совместимый сервер.</p></div><button class="modal-close" id="settings-close" aria-label="Закрыть">×</button></div><div class="settings-form"><label>API Base URL<input id="provider-url" value="http://127.0.0.1:11434/v1" placeholder="https://api.example.com/v1"></label><label>Model ID<input id="provider-model" placeholder="Например, qwen2.5:14b"></label><label>API key<input id="provider-key" type="password" autocomplete="off" placeholder="Ключ не отображается после сохранения"><small id="key-hint">Оставьте пустым для локального провайдера без ключа.</small></label><label>Timeout, seconds<input id="provider-timeout" type="number" min="15" max="300" value="150"></label><label class="remember-key"><input id="remember-key" type="checkbox"> Сохранить API-ключ в локальном профиле приложения</label><label class="remember-key"><input id="cache-enabled" type="checkbox" checked> Использовать локальный кэш сегментов для повторного перевода</label><div class="settings-warning"><span>!</span><p>Ключ хранится только на этом устройстве. Без флажка ключ остаётся в памяти до закрытия Kontexa. Для удалённых провайдеров используйте HTTPS.</p></div><div class="settings-actions"><button class="secondary-button" id="clear-cache">Очистить кэш</button><button class="secondary-button" id="test-provider">Проверить соединение</button><button class="translate-button" id="save-settings">Сохранить настройки <span class="button-arrow">→</span></button></div><div class="settings-feedback" id="settings-feedback"></div></div></div></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="/assets/app.js" defer></script>
+</body>
+</html>
