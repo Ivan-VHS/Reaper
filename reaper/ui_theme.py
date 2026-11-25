@@ -22,20 +22,20 @@ PALETTES: dict[str, dict[str, str]] = {
         "selection": "#D9E8FF", "selection_fg": "#122C45", "disabled": "#6B7C90",
     },
     "dark": {
-        "bg": "#071A2D", "surface": "#0F2A45", "elevated": "#173A5E",
-        "fg": "#E8EDF2", "secondary": "#D0DCE8", "muted": "#B3C4D6",
+        "bg": "#050505", "surface": "#101010", "elevated": "#181818",
+        "fg": "#FFFFFF", "secondary": "#E5E5E5", "muted": "#A6A6A6",
         "heading": "#FFFFFF", "blue": "#70A5FF", "blue_hover": "#8AB6FF", "on_blue": "#071A2D",
         "red": "#FF7B86", "red_hover": "#FF9AA2", "on_red": "#071A2D",
-        "border": "#31516F", "focus": "#8AB6FF",
-        "selection": "#244F82", "selection_fg": "#FFFFFF", "disabled": "#9BAFC4",
+        "border": "#3A3A3A", "focus": "#8AB6FF",
+        "selection": "#244F82", "selection_fg": "#FFFFFF", "disabled": "#A6A6A6",
     },
     "mora": {
-        "bg": "#211913", "surface": "#33261D", "elevated": "#493326",
-        "fg": "#FFF3E2", "secondary": "#E7D2B8", "muted": "#C4A98A",
-        "heading": "#FFD9A1", "blue": "#D58B3D", "blue_hover": "#EAA653", "on_blue": "#211913",
-        "red": "#B64A40", "red_hover": "#C85C50", "on_red": "#FFF3E2",
-        "border": "#75543A", "focus": "#F3C16B",
-        "selection": "#60442E", "selection_fg": "#FFF3E2", "disabled": "#B09A83",
+        "bg": "#050505", "surface": "#101010", "elevated": "#181818",
+        "fg": "#FFFFFF", "secondary": "#E5E5E5", "muted": "#A6A6A6",
+        "heading": "#FFFFFF", "blue": "#70A5FF", "blue_hover": "#8AB6FF", "on_blue": "#071A2D",
+        "red": "#FF7B86", "red_hover": "#FF9AA2", "on_red": "#071A2D",
+        "border": "#3A3A3A", "focus": "#8AB6FF",
+        "selection": "#244F82", "selection_fg": "#FFFFFF", "disabled": "#A6A6A6",
     },
 }
 
@@ -59,12 +59,12 @@ PALETTES.update({
         "selection_fg": "#FFFFFF", "disabled": "#887D74",
     },
     "night": {
-        "bg": "#081522", "surface": "#10263B", "elevated": "#17344D",
-        "fg": "#EDF4FA", "secondary": "#C4D5E4", "muted": "#A9C0D4",
-        "heading": "#EAF3FF", "blue": "#73B7FF", "blue_hover": "#9ACBFF", "on_blue": "#081522",
+        "bg": "#050505", "surface": "#101010", "elevated": "#181818",
+        "fg": "#FFFFFF", "secondary": "#E5E5E5", "muted": "#A6A6A6",
+        "heading": "#FFFFFF", "blue": "#73B7FF", "blue_hover": "#9ACBFF", "on_blue": "#071A2D",
         "red": "#FF7D78", "red_hover": "#FFA39B", "on_red": "#190B0B",
-        "border": "#31536B", "focus": "#FF8E86", "selection": "#174C7D",
-        "selection_fg": "#FFFFFF", "disabled": "#71899B",
+        "border": "#3A3A3A", "focus": "#9ACBFF", "selection": "#174C7D",
+        "selection_fg": "#FFFFFF", "disabled": "#A6A6A6",
     },
 })
 
@@ -89,26 +89,23 @@ def contrast_ratio(foreground: str, background: str) -> float:
 
 
 def _install_semantic_status_tokens() -> None:
-    """Add high-contrast status roles without changing the product's blue/red identity."""
+    """Add distinct status roles while preserving Reaper's blue/red interaction identity."""
     for theme_name, palette in PALETTES.items():
+        dark = theme_name in {"dark", "night", "mora"}
+        palette.update({
+            "success": "#2EAD68" if dark else "#187A45",
+            "warning": "#FFD700" if dark else "#8A5A00",
+            "error": "#FF6B72" if dark else "#B5122D",
+            "info": "#6CA8FF" if dark else "#0039A6",
+        })
         if theme_name == "mora":
             palette.update({
-                "success": "#9EC39A", "warning": "#F0BE73",
-                "error": "#EF8E7C", "info": "#E8C99F",
-                "brand": "#D58B3D", "brand_hover": "#EAA653",
-                "on_brand": "#211913", "brand_secondary": "#526347",
-                "on_brand_secondary": "#FFF3E2",
+                "brand": "#70A5FF", "brand_hover": "#8AB6FF",
+                "on_brand": "#071A2D", "brand_secondary": "#6CA8FF",
+                "on_brand_secondary": "#071A2D",
             })
             continue
 
-        dark = theme_name in {"dark", "night"}
-        palette.update({
-            # Status meaning is carried by text/icon; hues stay inside the shared brand canon.
-            "success": "#73B7FF" if dark else "#0039A6",
-            "warning": "#FF7D78" if dark else "#B51A10",
-            "error": "#FF7D78" if dark else "#B51A10",
-            "info": "#FFFFFF" if dark else "#0A1E46",
-        })
         palette.update({
             "brand": "#A78BFA" if dark else "#5B43B5",
             "brand_hover": "#C1AEFF" if dark else "#49359D",
