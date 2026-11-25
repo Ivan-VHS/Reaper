@@ -105,7 +105,7 @@ def _normalize_gpu(gpu: Any, index: int) -> list[Any]:
 
 
 def normalize_oplage_gpu_snapshot(snapshot: Any) -> list[Any]:
-    """Validate raw OPlague v1 JSON and return the DuckOS Reaper record.
+    """Validate raw OPlague v1 JSON and return the DAK Reaper record.
 
     Normalized record:
       [schema, snapshot_id, captured_at, provider, mode, available, reason,
