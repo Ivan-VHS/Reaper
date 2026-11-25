@@ -1,0 +1,233 @@
+# Reaper-native semantic analysis for the expression AST subset.
+#
+# The result vocabulary follows the existing reference checker:
+# Any, Nothing, Int, Float, Bool, Text and List[T].
+# This module is conservative: unknown call/host boundaries remain Any.
+# It never invents runtime behavior and never performs implicit coercion.
+
+craft semantic_is_numeric(type_name) {
+    yield type_name == "Int" or type_name == "Float" or type_name == "Number" or type_name == "Any"
+}
+
+craft semantic_type_is_valid(type_name) {
+    when type_name == "Any" or type_name == "Nothing" or type_name == "Int" or type_name == "Float" or type_name == "Bool" or type_name == "Text" or type_name == "Map" {
+        yield true
+    }
+    when size(type_name) > 6 and type_name[0] == "L" and type_name[1] == "i" and type_name[2] == "s" and type_name[3] == "t" and type_name[4] == "[" and type_name[size(type_name) - 1] == "]" {
+        yield true
+    }
+    yield false
+}
+
+craft semantic_environment_find(environment, name) {
+    vary index := 0
+    loop while index < size(environment) {
+        make binding := environment[index]
+        when size(binding) == 2 and binding[0] == name {
+            yield ["OK", binding[1]]
+        }
+        change index := index + 1
+    }
+    yield ["ERROR", "RPR-T0010 unknown name " ++ name]
+}
+
+craft semantic_environment_validate(environment) {
+    vary names := []
+    vary index := 0
+    loop while index < size(environment) {
+        make binding := environment[index]
+        when size(binding) != 2 or size(binding[0]) == 0 {
+            yield ["ERROR", "RPR-T0011 malformed environment binding"]
+        }
+        when not semantic_type_is_valid(binding[1]) {
+            yield ["ERROR", "RPR-T0012 unsupported environment type " ++ binding[1]]
+        }
+        vary name_index := 0
+        loop while name_index < size(names) {
+            when names[name_index] == binding[0] {
+                yield ["ERROR", "RPR-T0013 duplicate environment binding " ++ binding[0]]
+            }
+            change name_index := name_index + 1
+        }
+        change names := push(names, binding[0])
+        change index := index + 1
+    }
+    yield ["OK", size(names)]
+}
+
+craft semantic_unify(left_type, right_type) {
+    when left_type == right_type { yield left_type }
+    when left_type == "Any" or right_type == "Any" { yield "Any" }
+    when semantic_is_numeric(left_type) and semantic_is_numeric(right_type) {
+        when left_type == "Number" or right_type == "Number" { yield "Number" }
+        when left_type == "Float" or right_type == "Float" { yield "Float" }
+        yield "Int"
+    }
+    yield "Any"
+}
+
+craft semantic_numeric_result(left_type, right_type, operator) {
+    when not semantic_is_numeric(left_type) or not semantic_is_numeric(right_type) {
+        yield ["ERROR", "RPR-T0004 operator " ++ operator ++ " requires numeric operands, got " ++ left_type ++ " and " ++ right_type]
+    }
+    when left_type == "Any" or right_type == "Any" {
+        yield ["OK", "Number"]
+    }
+    when operator == "/" or left_type == "Float" or right_type == "Float" {
+        yield ["OK", "Float"]
+    }
+    yield ["OK", "Int"]
+}
+
+craft semantic_type_of(node, environment) {
+    when size(node) == 0 {
+        yield ["ERROR", "RPR-T0014 empty expression node"]
+    }
+
+    when node[0] == "literal" {
+        when size(node) < 3 { yield ["ERROR", "RPR-T0015 malformed literal node"] }
+        when node[1] == "NUMBER" {
+            vary index := 0
+            loop while index < size(node[2]) {
+                when node[2][index] == "." { yield ["OK", "Float"] }
+                change index := index + 1
+            }
+            yield ["OK", "Int"]
+        }
+        when node[1] == "STRING" { yield ["OK", "Text"] }
+        when node[1] == "TRUE" or node[1] == "FALSE" { yield ["OK", "Bool"] }
+        when node[1] == "NOTHING" { yield ["OK", "Nothing"] }
+        yield ["ERROR", "RPR-T0016 unsupported literal token " ++ node[1]]
+    }
+
+    when node[0] == "name" {
+        when size(node) < 2 { yield ["ERROR", "RPR-T0017 malformed name node"] }
+        yield semantic_environment_find(environment, node[1])
+    }
+
+    when node[0] == "list" {
+        when size(node) < 2 { yield ["ERROR", "RPR-T0018 malformed list node"] }
+        make items := node[1]
+        vary item_type := "Nothing"
+        vary index := 0
+        loop while index < size(items) {
+            make item_result := semantic_type_of(items[index], environment)
+            when item_result[0] == "ERROR" { yield item_result }
+            change item_type := semantic_unify(item_type, item_result[1])
+            change index := index + 1
+        }
+        yield ["OK", "List[" ++ item_type ++ "]"]
+    }
+
+    when node[0] == "unary" {
+        when size(node) < 3 { yield ["ERROR", "RPR-T0019 malformed unary node"] }
+        make operand := semantic_type_of(node[2], environment)
+        when operand[0] == "ERROR" { yield operand }
+        when node[1] == "-" or node[1] == "+" {
+            when not semantic_is_numeric(operand[1]) {
+                yield ["ERROR", "RPR-T0004 unary " ++ node[1] ++ " requires a number, got " ++ operand[1]]
+            }
+            yield operand
+        }
+        when node[1] == "NOT" or node[1] == "not" or node[1] == "!" {
+            when operand[1] != "Bool" and operand[1] != "Any" {
+                yield ["ERROR", "RPR-T0020 logical negation requires Bool, got " ++ operand[1]]
+            }
+            yield ["OK", "Bool"]
+        }
+        yield ["ERROR", "RPR-T0021 unknown unary operator " ++ node[1]]
+    }
+
+    when node[0] == "binary" {
+        when size(node) < 4 { yield ["ERROR", "RPR-T0022 malformed binary node"] }
+        make left := semantic_type_of(node[2], environment)
+        when left[0] == "ERROR" { yield left }
+        make right := semantic_type_of(node[3], environment)
+        when right[0] == "ERROR" { yield right }
+        make op := node[1]
+
+        when op == "+" or op == "-" or op == "*" or op == "/" or op == "//" or op == "%" or op == "**" {
+            yield semantic_numeric_result(left[1], right[1], op)
+        }
+
+        when op == "++" {
+            when (left[1] != "Text" and left[1] != "Any") or (right[1] != "Text" and right[1] != "Any") {
+                yield ["ERROR", "RPR-T0005 operator ++ requires Text operands, got " ++ left[1] ++ " and " ++ right[1]]
+            }
+            yield ["OK", "Text"]
+        }
+
+        when op == "AND" or op == "OR" or op == "and" or op == "or" {
+            when (left[1] != "Bool" and left[1] != "Any") or (right[1] != "Bool" and right[1] != "Any") {
+                yield ["ERROR", "RPR-T0023 logical operators require Bool operands"]
+            }
+            yield ["OK", "Bool"]
+        }
+
+        when op == "<" or op == "<=" or op == ">" or op == ">=" {
+            when not ((semantic_is_numeric(left[1]) and semantic_is_numeric(right[1])) or (left[1] == "Text" and right[1] == "Text") or left[1] == "Any" or right[1] == "Any") {
+                yield ["ERROR", "RPR-T0006 incompatible comparison operands " ++ left[1] ++ " and " ++ right[1]]
+            }
+            yield ["OK", "Bool"]
+        }
+
+        when op == "==" or op == "!=" {
+            yield ["OK", "Bool"]
+        }
+
+        when op == "::" {
+            yield ["OK", "Any"]
+        }
+
+        yield ["ERROR", "RPR-T0024 unknown binary operator " ++ op]
+    }
+
+    # Calls and indexing are retained as Any until their symbol and collection
+    # contracts are available in this bootstrap semantic environment.
+    when node[0] == "call" or node[0] == "index" {
+        yield ["OK", "Any"]
+    }
+
+    yield ["ERROR", "RPR-T0025 unsupported AST node " ++ node[0]]
+}
+
+craft semantic_analyze(expression_result, environment) {
+    when size(expression_result) != 2 or expression_result[0] != "OK" {
+        yield ["ERROR", "RPR-T0026 parser result is not successful"]
+    }
+    make checked_environment := semantic_environment_validate(environment)
+    when checked_environment[0] == "ERROR" { yield checked_environment }
+    yield semantic_type_of(expression_result[1], environment)
+}
+
+make integer_add := ["OK", ["binary", "+", ["literal", "NUMBER", "2", 1, 1], ["literal", "NUMBER", "3", 1, 5], 1, 3]]
+assert(semantic_analyze(integer_add, []) == ["OK", "Int"], "integer arithmetic inference mismatch")
+
+make float_add := ["OK", ["binary", "+", ["literal", "NUMBER", "2.5", 1, 1], ["literal", "NUMBER", "3", 1, 7], 1, 5]]
+assert(semantic_analyze(float_add, []) == ["OK", "Float"], "mixed numeric inference mismatch")
+
+make text_join := ["OK", ["binary", "++", ["literal", "STRING", "hello", 1, 1], ["literal", "STRING", "world", 1, 10], 1, 7]]
+assert(semantic_analyze(text_join, []) == ["OK", "Text"], "text concatenation inference mismatch")
+
+make invalid_join := ["OK", ["binary", "++", ["literal", "NUMBER", "1", 1, 1], ["literal", "STRING", "x", 1, 5], 1, 3]]
+assert(semantic_analyze(invalid_join, [])[0] == "ERROR", "incompatible concatenation accepted")
+
+make logical_not := ["OK", ["unary", "NOT", ["literal", "TRUE", "true", 1, 1], 1, 1]]
+assert(semantic_analyze(logical_not, []) == ["OK", "Bool"], "logical negation inference mismatch")
+
+make unknown_name := ["OK", ["name", "missing", 1, 1]]
+assert(semantic_analyze(unknown_name, [])[0] == "ERROR", "unknown variable was not diagnosed")
+
+make parameter_expression := ["OK", ["binary", "*", ["name", "count", 1, 1], ["literal", "NUMBER", "2", 1, 9], 1, 7]]
+assert(semantic_analyze(parameter_expression, [["count", "Int"]]) == ["OK", "Int"], "parameter type inference mismatch")
+
+make list_expression := ["OK", ["list", [
+    ["literal", "NUMBER", "1", 1, 2],
+    ["literal", "NUMBER", "2", 1, 5]
+], 1, 1]]
+assert(semantic_analyze(list_expression, []) == ["OK", "List[Int]"], "list element inference mismatch")
+
+assert(semantic_analyze(integer_add, [["value", "InvalidType"]])[0] == "ERROR", "invalid environment type accepted")
+assert(semantic_analyze(integer_add, [["value", "Int"], ["value", "Text"]])[0] == "ERROR", "duplicate environment name accepted")
+
+emit "SELFHOST_SEMANTICS_OK"
