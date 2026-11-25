@@ -1,15 +1,17 @@
 # Ivan-VHS Code Style
 
 **Status:** active engineering standard  
-**Version:** 1.0  
+**Version:** 1.1  
 **Established:** 2026-11-25  
-**Scope:** Ivan-VHS repositories and their cross-repository interfaces
+**Scope:** Reaper source, native tooling, developer services and cross-repository interfaces
 
 ## Purpose
 
-This standard turns recurring preferences from the personal engineering profile into rules that can be reviewed in code. It is not a personality diagnosis and does not infer engineering ability or character from a photograph. The photo is visual context; the rules below come from stated preferences and repeated project decisions.
+This standard turns recurring engineering preferences into rules that can be reviewed in code. It is not a personality diagnosis and does not infer engineering ability or character from a photograph.
 
 The working character is **собранная ясность**: independent thinking, deliberate architecture, natural code, exact boundaries and evidence of working behavior.
+
+The shared cognitive-ergonomics profile is [Psychoporter Code Style](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/PSYCHOPORTER_CODE_STYLE.md). It adds reader-centred naming, linear control flow, honest error language, behavior-focused tests and small refactoring steps. This document keeps the Reaper-specific implementation rules.
 
 The short rule is:
 
@@ -114,10 +116,23 @@ Follow the repository's formatter and language conventions first. Where a reposi
 - C and C++ control flow uses braces consistently, one statement per line and explicit conversions at meaningful type boundaries.
 - Python uses standard Python naming and formatting; it is not a default implementation or test-runner choice for DuckOS work.
 - Reaper examples use the canonical language syntax and the documented semantic meaning of each operator.
+- Prefer the shortest name that remains unambiguous in its scope; avoid both context-free names and sentence-length identifiers.
+- Do not soften or disguise the actual behavior of destructive, terminating or privileged operations.
 
 Do not perform a repository-wide formatting sweep as a side effect of a targeted fix.
 
-## 9. Review and delivery
+## 9. Reaper language and native compiler profile
+
+- The canonical source extension is `.rpr`; keep examples faithful to the parser and documented language semantics.
+- The primary flow/composition operator is `::`. Do not substitute `|>` in canonical examples unless a separate compatibility mode explicitly requires it.
+- Use the actual Reaper vocabulary such as `craft`, `make`, `vary`, `change`, `yield` and `emit` where applicable.
+- Keep the reference runtime, native C17 compiler track, self-hosting bootstrap and future freestanding target as distinct maturity levels.
+- A language feature is not native merely because it works in the reference runtime.
+- Keep source spans, diagnostic identity, IR invariants and ABI assumptions explicit.
+- Do not invent or demonstrate unsupported syntax as if it compiles. Proposed syntax must be labelled as proposed.
+- For DuckOS-targeted code, prefer Reaper as the implementation language when the required compiler/backend capability exists. Until then, use only the narrow, documented platform bridge and do not claim the Reaper-native part is delivered.
+
+## 10. Review and delivery
 
 A reviewable change states:
 
@@ -129,7 +144,7 @@ A reviewable change states:
 
 Use a dedicated branch and a focused pull request. Keep main protected. Separate unrelated concerns into separate reviewable changes. Do not mark a planned, prototype or partially implemented feature as verified.
 
-## 10. Definition of done
+## 11. Definition of done
 
 A change is complete only when:
 
