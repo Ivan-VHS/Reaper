@@ -223,7 +223,7 @@ def palette_for(mode: str = "system", *, system_dark: bool | None = None) -> dic
     result = dict(PALETTES[requested])
     issues = palette_contrast_issues(result)
     if issues:
-        raise ValueError("Theme palette fails UI/UX 40026 contrast contract: " + "; ".join(issues))
+        raise ValueError("Theme palette fails Stage 0.1 UI/UX contrast contract: " + "; ".join(issues))
     result.update({
         "mode": requested, "page": result["bg"], "surface_alt": result["elevated"],
         "text": result["fg"], "accent": result["brand"], "accent_hover": result["brand_hover"],
