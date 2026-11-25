@@ -10,6 +10,7 @@ Reaper is a flow-first programming language with a Python reference runtime and 
 4. Keep diagnostic codes stable. Add a new code instead of repurposing an old one, and update `docs/errors/DIAGNOSTICS.md`.
 5. Keep FFI disabled unless a user explicitly opts in.
 6. Apply [Ivan-VHS Code Style](docs/IVAN_VHS_CODE_STYLE.md) and the shared [Psychoporter profile](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/PSYCHOPORTER_CODE_STYLE.md). Preserve Reaper syntax, C/C++ idioms and the owning subsystem's established naming and formatting conventions.
+7. Consult [CONSTITUTION.md](CONSTITUTION.md) for principles relevant to the change. Cite only materially applicable rules; roadmap and cultural rules are not compiler feature claims or automatic lint failures.
 
 ## Local verification
 
