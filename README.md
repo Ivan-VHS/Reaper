@@ -15,6 +15,7 @@ Reaper is a systems-programming language and local development workbench for com
 - Reaper source language, lexer/parser, reference runtime and diagnostics.
 - CLI, REPL, Windows Studio foundation, LSP and DAP services.
 - Experimental native C17 implementation; it is not yet feature-equivalent to the reference runtime.
+- Versioned native system-runtime contracts for operations 111–130, with bounded validators and adapter-owned privileged effects.
 - NOO TAH delegates JavaScript execution to the official Node.js runtime.
 - Jora application scaffolding and capability composition; catalog packs remain specifications, not installable editors.
 

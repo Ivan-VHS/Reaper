@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:reaper:system-runtime:v1",
+  "title": "Reaper system runtime contract v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "api_version",
+    "operation_count",
+    "status",
+    "execution_state",
+    "safety_policy",
+    "profiles",
+    "operations"
+  ],
+  "properties": {
+    "schema": {
+      "const": "reaper.system-runtime.v1"
+    },
+    "api_version": {
+      "const": 1
+    },
+    "operation_count": {
+      "const": 20
+    },
+    "status": {
+      "enum": [
+        "partial"
+      ]
+    },
+    "execution_state": {
+      "const": "contracts-and-validators-only"
+    },
+    "safety_policy": {
+      "type": "string",
+      "minLength": 1
+    },
+    "profiles": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "hosted",
+          "kernel",
+          "boot",
+          "hypervisor",
+          "freestanding",
+          "simulator"
+        ]
+      }
+    },
+    "operations": {
+      "type": "array",
+      "minItems": 20,
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "subsystem",
+          "name",
+          "effects",
+          "adapter",
+          "profiles",
+          "maturity",
+          "native_checks",
+          "boundary"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^(11[0-9]|12[0-9]|130)$"
+          },
+          "subsystem": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*([.][a-z][a-z0-9_]*)+$"
+          },
+          "effects": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "adapter": {
+            "type": "string",
+            "minLength": 1
+          },
+          "profiles": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "hosted",
+                "kernel",
+                "boot",
+                "hypervisor",
+                "freestanding",
+                "simulator"
+              ]
+            }
+          },
+          "maturity": {
+            "enum": [
+              "contract-only",
+              "validators-available"
+            ]
+          },
+          "native_checks": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "boundary": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

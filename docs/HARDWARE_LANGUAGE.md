@@ -70,6 +70,10 @@ craft set_pin(pin: u5, enabled: bool) -> Result<(), DeviceError>
 
 The compiler must reject a register whose address, width, access policy or target mapping is invalid. The driver or platform adapter owns the actual mapping and performs the transaction.
 
+## Current native system-runtime foundation
+
+The [System runtime contract](SYSTEM_RUNTIME.md) adds a versioned registry for operations 111–130 and bounded C17 validators for cron expressions, dependency ordering, journal queues, ACPI tables, firmware signatures (via a caller-supplied verifier), tensor layouts, container policy, VM profiles, package manifests and target triples. Registry authorization is a preflight check only; all operation entries remain non-dispatchable until a reviewed host/OS adapter and execution tests exist.
+
 ## Current native MMIO foundation
 
 The C API in include/reaper/hardware.h provides:

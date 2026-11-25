@@ -18,6 +18,7 @@ This hub groups related specifications and implementation references. The linked
 - [DIVISION DECOMPOSITION ENGINE](../DIVISION_DECOMPOSITION_ENGINE.md)
 - [DIVISION ENGINE](../DIVISION_ENGINE.md)
 - [NATIVE CAPABILITY SUITE](../NATIVE_CAPABILITY_SUITE.md)
+- [SYSTEM RUNTIME](../SYSTEM_RUNTIME.md) — service, hardware, AI, isolation, virtualization, package and cross-target contracts for operations 111–130.
 - [REAPER 813 FEATURE ARCHITECTURE](../REAPER_813_FEATURE_ARCHITECTURE.md)
 - [REAPER UNIFIED ARCHITECTURE](../REAPER_UNIFIED_ARCHITECTURE.md)
 - [TRANSACTIONAL RUNTIME](../TRANSACTIONAL_RUNTIME.md)
