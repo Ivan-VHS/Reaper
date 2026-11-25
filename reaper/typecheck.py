@@ -293,7 +293,7 @@ class TypeChecker:
             return self._element_type(collection_type, node)
         if node.kind == "unary":
             operand = self._expression(children[0])
-            if node.value == "-" and operand not in NUMERIC | {ANY, "Number"}:
+            if node.value == "-" and operand not in NUMERIC | {ANY, "Number"} | {"i8", "i16", "i32", "i64"}:
                 self._report(node, "RPR-T0004", f"unary '-' requires a number, not {operand}")
                 return ANY
             return "Bool" if node.value == "NOT" else operand
@@ -328,7 +328,7 @@ class TypeChecker:
                     return ANY
                 if is_fixed_integer_type(left) or is_fixed_integer_type(right):
                     if left == right and is_fixed_integer_type(left):
-                        return left
+                        return "Float" if operator == "/" else left
                     self._report(node, "RPR-T0012", f"fixed-width arithmetic requires matching operand types, got {left} and {right}")
                     return ANY
                 if ANY in {left, right}:
@@ -338,12 +338,27 @@ class TypeChecker:
                 if left not in {"Text", ANY} or right not in {"Text", ANY}:
                     self._report(node, "RPR-T0005", f"operator '++' requires Text operands, got {left} and {right}")
                 return "Text"
-            if operator in {"<", "<=", ">", ">="}:
-                compatible = (self._numeric(left) and self._numeric(right)) or (left == right == "Text") or ANY in {left, right}
-                if not compatible:
-                    self._report(node, "RPR-T0006", f"operator '{operator}' cannot compare {left} with {right}")
-                return "Bool"
-            if operator in {"==", "!="}:
+            if operator in {"<", "<=", ">", ">="} or operator in {"==", "!="}:
+                right_literal = _integer_literal_value(children[1])
+                left_literal = _integer_literal_value(children[0])
+                if is_fixed_integer_type(left) and right == "Int" and right_literal is not None:
+                    if fixed_integer_fits(right_literal, left):
+                        right = left
+                    else:
+                        self._report(node, "RPR-T0011", f"integer literal is outside the {left} range")
+                elif is_fixed_integer_type(right) and left == "Int" and left_literal is not None:
+                    if fixed_integer_fits(left_literal, right):
+                        left = right
+                    else:
+                        self._report(node, "RPR-T0011", f"integer literal is outside the {right} range")
+                if is_fixed_integer_type(left) or is_fixed_integer_type(right):
+                    if left != right:
+                        self._report(node, "RPR-T0012", f"fixed-width comparison requires matching operand types, got {left} and {right}")
+                    return "Bool"
+                if operator in {"<", "<=", ">", ">="}:
+                    compatible = (self._numeric(left) and self._numeric(right)) or (left == right == "Text") or ANY in {left, right}
+                    if not compatible:
+                        self._report(node, "RPR-T0006", f"operator '{operator}' cannot compare {left} with {right}")
                 return "Bool"
         return ANY
 
