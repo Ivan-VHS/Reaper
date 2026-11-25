@@ -9,6 +9,8 @@ Start with the [project README](../README.md) for installation, first commands a
 - [Hardware language track](HARDWARE_LANGUAGE.md)
 - [Implementation roadmap](IMPLEMENTATION_ROADMAP.md)
 - [Studio and IDE](REAPER_IDE.md)
+- [Ivan-VHS Code Style](IVAN_VHS_CODE_STYLE.md)
+- [Psychoporter cognitive-ergonomics profile](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/PSYCHOPORTER_CODE_STYLE.md)
 
 ## Browse by topic
 
