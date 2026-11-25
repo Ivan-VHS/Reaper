@@ -18,7 +18,7 @@ No Rust or C++ implementation is introduced by this integration. Existing Python
 The integration has four explicit boundaries:
 
 1. **Reaper source contract.** A typed Reaper declaration names the operation, input/output types, error set, target and required effects. System operations are never implicit built-ins.
-2. **Compiler and IR.** Type checking validates widths, ownership, lifetimes, effect grants and target compatibility. A versioned system-call IR operation lowers to the selected target ABI. An unsupported operation is a compile-time diagnostic, never a fallback to a host shell command.
+2. **Compiler and IR.** Type checking validates widths, ownership, lifetimes, effect grants and target compatibility. A versioned system-service IR operation lowers through a dedicated service-call boundary. DABI64 v1 is the user-entry/value/call-frame ABI; it is not itself a syscall dispatcher or the system-service ABI. The service contract in this document is versioned separately and will be connected only through an implemented DuckOS provider. An unsupported operation is a compile-time diagnostic, never a fallback to a host shell command.
 3. **DuckOS ABI provider.** The kernel, service manager, filesystem, device manager, accelerator driver or hypervisor owns privileged work. User code receives bounded handles and explicit results, not raw kernel pointers.
 4. **Capability policy.** The manifest requests named capabilities. The kernel/service manager grants the minimum set for the process. Revocation, audit identity and resource quotas are part of the provider contract.
 
@@ -76,7 +76,7 @@ All twenty operations are currently **Planned** at the executable Reaper ABI lev
 
 ## Shared ABI rules
 
-- **Versioning:** every request carries ABI major/minor and structure size. Unknown major versions fail closed; additive minor extensions are explicitly negotiated.
+- **Versioning:** the DABI64 v1 calling/value contract and this system-service contract have separate version identities. Every service request carries service ABI major/minor and structure size. Unknown major versions fail closed; additive minor extensions are explicitly negotiated. Do not overload DABI64 register conventions with undocumented syscall numbers.
 - **Types:** fixed-width integers, checked size arithmetic, explicit byte order and alignment. Pointers do not cross privilege boundaries; use typed handles and bounded buffers.
 - **Errors:** every fallible operation returns `Result<T, SysError>`; partial success and cleanup failures are represented explicitly.
 - **Ownership:** handles, mappings, DMA buffers, fences, registrations and model storage have a single documented owner and deterministic release. No borrowed pointer may outlive its provider.
@@ -99,4 +99,4 @@ No gate is complete because its API is named. Each gate requires the Reaper fron
 
 ## Known implementation boundary
 
-This integration adds the specification and machine-readable inventory only. It does not add runtime stubs, pretend syscalls, unsafe FFI shortcuts, Linux compatibility shims or non-compiling `.rpr` examples. The next code change must begin at S0 and add one vertical slice end to end before marking any operation Partial or Delivered.
+This integration adds the specification and machine-readable inventory only. DuckOS DABI64 v1 is being developed as a call-frame/value ABI, while the DuckOS kernel syscall dispatcher and service providers are not yet present on the current mainline; see the separate [DuckOS DABI64 draft](https://github.com/Ivan-VHS/DuckOS/pull/14). Reaper's native DuckOS compiler work is also tracked separately and is not yet a general system-call frontend; see [Reaper native compiler draft](https://github.com/Ivan-VHS/Reaper/pull/225). Neither draft is treated as proof of an implemented OS service. This integration does not add runtime stubs, pretend syscalls, unsafe FFI shortcuts, Linux compatibility shims or non-compiling `.rpr` examples. The next code change must begin at S0 and add one vertical slice end to end before marking any operation Partial or Delivered.
