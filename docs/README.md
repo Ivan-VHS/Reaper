@@ -32,3 +32,5 @@ Start with the [project README](../README.md) for installation, first commands a
 - [Repository evolution directives](REPOSITORY_EVOLUTION_DIRECTIVES.md)
 
 Treat the Python reference runtime, native compiler track, System Runtime host ABI and privileged hardware work as separate maturity levels. Source, tests and CI are the evidence for implemented behavior.
+
+- [OPlague GPU telemetry v1 ingestion](OPLAGE_GPU_TELEMETRY.md)
