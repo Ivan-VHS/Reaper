@@ -149,6 +149,26 @@ class NativeCompiler:
         return node.children or []
 
     @staticmethod
+    def _known_expression_type(node: Node, scope: Scope) -> str | None:
+        if node.kind == "name":
+            symbol = scope.find(str(node.value))
+            return symbol.type_name if symbol is not None else None
+        if node.kind == "literal":
+            if isinstance(node.value, bool):
+                return _BOOL
+            if isinstance(node.value, int):
+                return _I64
+            if isinstance(node.value, str):
+                return _STRING
+        if node.kind == "unary" and len(node.children or []) == 1:
+            child_type = NativeCompiler._known_expression_type((node.children or [])[0], scope)
+            if node.value in {"-", "MINUS"}:
+                return child_type if child_type == _I64 or child_type in {"i8", "i16", "i32"} else None
+            if node.value in {"NOT", "not", "!"}:
+                return _BOOL
+        return None
+
+    @staticmethod
     def _quote_c_string(value: str) -> str:
         # Octal escapes avoid the variable-length parsing rules of hexadecimal
         # escapes and preserve UTF-8 bytes independently of source characters.
@@ -690,9 +710,26 @@ int main(void) {{
             children = self._children(node)
             if len(children) != 2:
                 self._fail(node, "malformed binary expression")
-            left, left_type = self._compile_expression(children[0], scope)
-            right, right_type = self._compile_expression(children[1], scope)
             operator = str(node.value)
+            left_node, right_node = children
+            left_literal = _integer_literal_value(left_node)
+            right_literal = _integer_literal_value(right_node)
+            left_known = self._known_expression_type(left_node, scope)
+            right_known = self._known_expression_type(right_node, scope)
+            if is_fixed_integer_type(right_known) and left_literal is not None:
+                if not fixed_integer_fits(left_literal, right_known):
+                    self._fail(left_node, f"integer literal is outside the {right_known} range")
+                left = _fixed_integer_c_literal(left_literal, right_known)
+                left_type = right_known
+            else:
+                left, left_type = self._compile_expression(left_node, scope)
+            if is_fixed_integer_type(left_type) and right_literal is not None:
+                if not fixed_integer_fits(right_literal, left_type):
+                    self._fail(right_node, f"integer literal is outside the {left_type} range")
+                right = _fixed_integer_c_literal(right_literal, left_type)
+                right_type = left_type
+            else:
+                right, right_type = self._compile_expression(right_node, scope)
             if operator in {"AND", "OR"}:
                 if left_type not in {_I64, _BOOL} and not is_fixed_integer_type(left_type):
                     self._fail(node, f"'{operator.lower()}' requires integer or boolean operands")
@@ -714,16 +751,6 @@ int main(void) {{
                     self._fail(node, f"operator '{operator}' requires matching integer operands")
                 return f"(({left}) {operator} ({right}))", _BOOL
             if operator in {"+", "-", "*", "//", "%", "**"}:
-                if is_fixed_integer_type(left_type) and right_type == _I64:
-                    literal_value = _integer_literal_value(children[1])
-                    if literal_value is not None and fixed_integer_fits(literal_value, left_type):
-                        right = _fixed_integer_c_literal(literal_value, left_type)
-                        right_type = left_type
-                if is_fixed_integer_type(right_type) and left_type == _I64:
-                    literal_value = _integer_literal_value(children[0])
-                    if literal_value is not None and fixed_integer_fits(literal_value, right_type):
-                        left = _fixed_integer_c_literal(literal_value, right_type)
-                        left_type = right_type
                 if left_type == right_type and left_type in {"u8", "u16", "u32", "u64"}:
                     maximum = _C_MAX[left_type]
                     helper = {
