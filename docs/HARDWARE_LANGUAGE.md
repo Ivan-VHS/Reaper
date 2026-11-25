@@ -83,6 +83,18 @@ The C API in include/reaper/hardware.h provides:
 
 The API does **not** map physical memory, execute privileged instructions, register real interrupts, allocate DMA memory or communicate with a real device by itself. A trusted OS driver/HAL must supply the adapter and enforce platform-specific mapping, cache, barrier and privilege rules. W1C/W1S writes are passed as explicit values; clients must not implement them as an implicit read-modify-write sequence.
 
+## Current native hardware graph planner
+
+The native C17 hardware graph planner is implemented in:
+
+- include/reaper/hw_graph.h
+- src/hw_graph.c
+- tests/test_hw_graph.c
+
+It validates a bounded dependency DAG and emits an advisory plan assigning nodes to CPU/GPU queue lanes using caller-supplied throughput and memory profiles. It reports estimated timing and cross-backend synchronization edges. The current limits are 256 nodes and 32 queues per backend; memory reservations are conservatively summed for the whole graph.
+
+This is a planning API only. It does not enumerate devices, validate telemetry provenance, map physical memory, allocate DMA buffers, submit GPU work, register interrupts, install drivers or perform privileged operations. The caller-supplied rates determine the estimate, and the greedy queue policy is not a globally optimal scheduler. Real execution requires a separate trusted platform adapter, versioned DABI64 contract, capability grants, device-loss handling and hardware-in-the-loop qualification.
+
 ## Reaper Studio: hardware workbench direction
 
 The Studio roadmap is centered on a target workspace, not decorative widgets:
