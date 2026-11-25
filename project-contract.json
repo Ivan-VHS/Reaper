@@ -121,6 +121,69 @@
         "tests/test_octa_pyramid.py",
         "docs/OCTA_PYRAMID_FEDERATION.md"
       ]
+    },
+    {
+      "id": "framework.versioned-registry",
+      "status": "implemented",
+      "summary": "Twenty stable framework namespaces and 120 versioned operation contracts are exposed by a native C ABI registry with lookup, arity validation and public maturity statistics.",
+      "evidence": [
+        "include/reaper/framework_suite.h",
+        "src/framework_suite.c",
+        "language/frameworks.v1.json",
+        "schemas/reaper-framework-registry.v1.schema.json",
+        "tests/test_framework_suite.c",
+        "docs/REAPER_FRAMEWORK_FEDERATION_V1.md"
+      ]
+    },
+    {
+      "id": "framework.reaper-module-helpers",
+      "status": "implemented",
+      "summary": "All twenty framework namespaces provide importable .rpr modules with executable operation_key(index) and framework_manifest() helpers.",
+      "evidence": [
+        "examples/frameworks/modules/codex_no.rpr",
+        "examples/frameworks/modules/joint_baby.rpr",
+        "examples/frameworks/modules/correpse.rpr",
+        "examples/frameworks/modules/allocate_purpose.rpr",
+        "examples/frameworks/modules/collillioi.rpr",
+        "examples/frameworks/modules/aspdoi.rpr",
+        "examples/frameworks/modules/asjiop.rpr",
+        "examples/frameworks/modules/alllll.rpr",
+        "examples/frameworks/modules/zabor.rpr",
+        "examples/frameworks/modules/vjinz.rpr",
+        "examples/frameworks/modules/supreme_boy.rpr",
+        "examples/frameworks/modules/chee_now.rpr",
+        "examples/frameworks/modules/humble_bumble.rpr",
+        "examples/frameworks/modules/hub2.rpr",
+        "examples/frameworks/modules/kloz.rpr",
+        "examples/frameworks/modules/co.rpr",
+        "examples/frameworks/modules/cripplebo.rpr",
+        "examples/frameworks/modules/ripplecripple.rpr",
+        "examples/frameworks/modules/secator.rpr",
+        "examples/frameworks/modules/pollatia.rpr",
+        "examples/frameworks/manifest_client.rpr",
+        ".github/workflows/ci.yml"
+      ]
+    },
+    {
+      "id": "interop.bounded-host-callback-dispatch",
+      "status": "implemented",
+      "summary": "A versioned C ABI validates framework/function identity, arity and 1 MiB request/response bounds before invoking an explicitly supplied host-owned callback.",
+      "evidence": [
+        "include/reaper/framework_suite.h",
+        "src/framework_suite.c",
+        "tests/test_framework_suite.c",
+        "docs/REAPER_FRAMEWORK_FEDERATION_V1.md"
+      ]
+    },
+    {
+      "id": "framework.domain-operation-handlers",
+      "status": "partial",
+      "summary": "The 120 domain operation signatures are registered contracts; built-in native handlers and Reaper-to-native source-level dispatch remain unimplemented and are reported as zero in public statistics.",
+      "evidence": [
+        "language/frameworks.v1.json",
+        "src/framework_suite.c",
+        "tests/test_framework_suite.c"
+      ]
     }
   ],
   "interfaces": [
@@ -152,6 +215,39 @@
       "evidence": [
         "federation/octa-pyramid.v1.json",
         "docs/OCTA_PYRAMID_FEDERATION.md"
+      ]
+    },
+    {
+      "id": "reaper.framework-registry.v1",
+      "format": "Versioned JSON registry manifest with framework IDs, feature keys, function keys, arity bounds, adapters and public maturity statistics",
+      "direction": "provides",
+      "status": "implemented",
+      "evidence": [
+        "language/frameworks.v1.json",
+        "schemas/reaper-framework-registry.v1.schema.json"
+      ]
+    },
+    {
+      "id": "reaper.framework-cabi.v1",
+      "format": "Platform C ABI for framework and function descriptor lookup, arity validation, registry statistics and host dispatch",
+      "direction": "both",
+      "status": "implemented",
+      "evidence": [
+        "include/reaper/framework_suite.h",
+        "src/framework_suite.c",
+        "tests/test_framework_suite.c"
+      ]
+    },
+    {
+      "id": "reaper.framework-host-dispatch.v1",
+      "format": "Bounded caller-defined payload request/response through an explicit host-owned C ABI callback",
+      "direction": "provides",
+      "status": "implemented",
+      "evidence": [
+        "include/reaper/framework_suite.h",
+        "src/framework_suite.c",
+        "tests/test_framework_suite.c",
+        "docs/REAPER_FRAMEWORK_FEDERATION_V1.md"
       ]
     }
   ],
@@ -201,13 +297,19 @@
     "Execution quotas are resource guardrails, not a security sandbox for untrusted programs.",
     "Filesystem, process, network, clock, shell and native-library effects remain explicit or opt-in rather than ambient expression behavior.",
     "Native FFI executes in-process native code and must only load trusted ABI-compatible libraries.",
-    "The native C17 implementation and self-hosting frontend remain partial; Python is the compatibility reference."
+    "The native C17 implementation and self-hosting frontend remain partial; Python is the compatibility reference.",
+    "Framework registration and stable function signatures are contracts, not proof of built-in domain handlers; public counters distinguish registered contracts from executable handlers.",
+    "The cross-language dispatcher invokes only an explicit callback supplied by the caller; it does not load libraries, grant capabilities or authenticate requests. The trusted host callback owns authorization, typed marshalling, resource lifetime and operation behavior.",
+    "Cross-language request and response payloads are caller-defined and capped at 1 MiB each; the bridge is not a network protocol."
   ],
   "extension_points": [
     "Canonical IR and selectable execution engines.",
     "Versioned .rpr module interfaces and explicit import/export boundaries.",
     "Opt-in C ABI adapters and validated versioned JSON interchange.",
     "Native C17 frontend stages with Python reference behavior as the compatibility oracle.",
-    "Bounded vertical self-composition for deterministic compiler and data-flow transformation pipelines."
+    "Bounded vertical self-composition for deterministic compiler and data-flow transformation pipelines.",
+    "Versioned framework namespace, feature and function keys under reaper.framework-registry/v1.",
+    "Caller-owned host callback adapters through reaper.framework-cabi.v1 with bounded payload buffers.",
+    "Reaper framework metadata helper modules, with source-level native dispatch reserved for a future compiler/FFI stage."
   ]
 }
