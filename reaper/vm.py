@@ -9,6 +9,7 @@ from .errors import ReaperRuntimeError
 from .ir import CanonicalIR, IRFunction, IRInstruction, verify
 from .runtime import Builtin, Environment
 from .lexer import Token
+from .ir import SourceMapEntry
 
 
 _OPCODES = {
@@ -33,6 +34,7 @@ class BytecodeInstruction:
 class BytecodeProgram:
     code: tuple[BytecodeInstruction, ...]
     source_name: str
+    source_map: tuple[SourceMapEntry, ...] = ()
 
 
 @dataclass(slots=True)
@@ -57,7 +59,7 @@ def assemble(module: CanonicalIR) -> BytecodeProgram:
             result.append(BytecodeInstruction(_OPCODES[instruction.op], argument, instruction.token))
         return tuple(result)
 
-    return BytecodeProgram(encode(module.code), module.source_name)
+    return BytecodeProgram(encode(module.code), module.source_name, module.source_map)
 
 
 class VirtualMachine:
@@ -114,8 +116,11 @@ class VirtualMachine:
                 stack.append(environment.get(instruction.argument))
             elif name == "DEFINE":
                 value = stack.pop()
-                variable, mutable = instruction.argument
-                environment.define(variable, self.interpreter.memory.track(value), mutable)
+                variable, mutable = instruction.argument[:2]
+                declared_type = instruction.argument[2] if len(instruction.argument) > 2 else None
+                environment.define(
+                    variable, self.interpreter.memory.track(value), mutable, declared_type
+                )
             elif name == "ASSIGN":
                 environment.change(instruction.argument, self.interpreter.memory.track(stack.pop()))
             elif name == "EMIT":
