@@ -224,6 +224,7 @@ ReaperSystemStatus reaper_system_container_policy_validate(
 typedef struct {
     const char *guest_architecture;
     uint64_t memory_bytes;
+    uint32_t page_size_bytes;
     uint32_t virtual_cpu_count;
     uint8_t host_virtualization_available;
     uint8_t device_passthrough;
