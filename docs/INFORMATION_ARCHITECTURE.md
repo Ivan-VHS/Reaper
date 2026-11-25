@@ -27,7 +27,7 @@ The neighboring projects have distinct responsibilities. Shared vocabulary or in
 - [Pytyliki documentation map](https://github.com/Ivan-VHS/Pytyliki/blob/main/docs/INFORMATION_ARCHITECTURE.md) — processor-system workstation and bounded C11 modules.
 - [OPlague documentation map](https://github.com/Ivan-VHS/OPlague/blob/main/docs/INFORMATION_ARCHITECTURE.md) — read-only device and driver inspection.
 - [VentuSample documentation map](https://github.com/Ivan-VHS/VentuSample/blob/main/docs/INFORMATION_ARCHITECTURE.md) — procedural audio and DSP workstation.
-- [DuckOS documentation map](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/INFORMATION_ARCHITECTURE.md) — repository entry-point map.
+- [DAK documentation map](https://github.com/Ivan-VHS/DAK/blob/main/docs/INFORMATION_ARCHITECTURE.md) — repository entry-point map.
 
 ## Full document catalog
 
