@@ -37,6 +37,7 @@ The review uses two different Java baselines, not an arbitrary mixture of previe
 Important Java 25 capabilities to study include module import declarations, compact source files and instance main methods, flexible constructor bodies, scoped values, structured concurrency, stable values, compact object headers, AOT method profiling, and JFR observability. Preview/incubator status is part of the evidence: it is not a reason to copy an unstable API wholesale.
 
 Reference release notes:
+- [Java downloads and release status](https://www.oracle.com/java/technologies/downloads/) — current feature and LTS release families.
 - [JDK 25 release notes](https://www.oracle.com/java/technologies/javase/25all-relnotes.html)
 - [JDK 26 release notes](https://www.oracle.com/java/technologies/javase/26all-relnotes.html)
 - [Java 26 announcement](https://www.oracle.com/news/announcement/oracle-releases-java-26-2026-03-17/)
@@ -94,7 +95,7 @@ Required capabilities:
 - safe references, nullable/optional references and checked pointer arithmetic;
 - escape/lifetime analysis, stack allocation and scalar replacement;
 - compact value layouts and cache-aware collections;
-- optional tracing/ generational/concurrent collection for application profiles only after latency and memory benchmarks;
+- optional tracing, generational and concurrent collection for application profiles only after latency and memory benchmarks;
 - allocation tracing, leak diagnostics and memory pressure observability.
 
 A garbage collector must never be silently enabled in an interrupt handler, boot path, kernel subsystem or `no_alloc` function. GC and deterministic ownership are complementary profile-specific tools, not mutually exclusive ideologies.
@@ -245,6 +246,20 @@ Review frameworks and tools by capability rather than importing whole frameworks
 - data-processing pipelines and batch execution.
 
 A candidate from Spring, Jakarta EE, Micronaut, Quarkus, Vert.x, Netty, Kafka, Hadoop, JUnit, Maven or Gradle is a reference for a specific Reaper problem. It is not automatically a dependency or a requirement to reproduce an entire ecosystem. Evaluate maintenance, security, license, footprint, offline behavior and value to Duck OS before accepting a capability.
+
+### 4.10 Java interoperability as an optional adapter
+
+Existing Java applications and libraries may remain useful during migration, but interoperability is not the Reaper execution model.
+
+- Prefer a documented process/IPC boundary or a narrow native C ABI when a stable native library exists.
+- Where an application genuinely requires a JAR/JVM dependency, use an explicit, separately deployed sidecar/host adapter with its own JVM version, permissions, dependency lock and license inventory.
+- Define schema-based value conversion, ownership transfer, timeout, cancellation, error and shutdown behavior at the boundary.
+- Never let Reaper silently load arbitrary JARs, execute Java code, start a JVM, download dependencies or inherit the sidecar's permissions.
+- Bytecode/class-file compatibility, JNI and direct JVM embedding require separate proposals and acceptance criteria. They are not implied by this plan.
+
+### 4.11 Application and framework patterns
+
+For application-layer productivity, evaluate the useful ideas from dependency injection, inversion of control, configuration profiles, lifecycle hooks, routing, middleware, declarative validation, service discovery and observability. Reaper should express these as small composable packages with explicit effects and typed contracts. They must remain optional and must not enter kernel/firmware builds by default.
 
 ## 5. Mapping to Reaper and Duck OS
 
