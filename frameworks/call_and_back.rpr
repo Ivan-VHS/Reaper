@@ -1,0 +1,73 @@
+# Call-and-Back: synchronous event callbacks with stable priority ordering.
+# Handler format: [event, priority, once, callback].
+
+craft priority_of(handler) {
+    yield handler[1]
+}
+
+export craft subscribe(registry, event, priority, once, callback) {
+    when kind(callback) != "craft" {
+        yield [false, registry, "callback must be a Reaper craft"]
+    }
+    when kind(event) != "text" {
+        yield [false, registry, "event name must be text"]
+    }
+    when kind(priority) != "number" {
+        yield [false, registry, "priority must be a number"]
+    }
+    when kind(once) != "boolean" {
+        yield [false, registry, "once must be boolean"]
+    }
+
+    yield [true, push(registry, [event, priority, once, callback]), "ok"]
+}
+
+export craft dispatch(registry, event, payload) {
+    vary matching := []
+    vary remaining := []
+
+    each handler in registry {
+        when size(handler) == 4 and handler[0] == event {
+            change matching := push(matching, handler)
+        } otherwise {
+            change remaining := push(remaining, handler)
+        }
+    }
+
+    make ordered := sort_by(matching, priority_of, "asc")
+    vary results := []
+
+    each handler in ordered {
+        change results := push(results, handler[3](payload))
+        when not handler[2] {
+            change remaining := push(remaining, handler)
+        }
+    }
+
+    yield [results, remaining]
+}
+
+export craft call_chain(registry, event, initial_value) {
+    vary matching := []
+    vary remaining := []
+
+    each handler in registry {
+        when size(handler) == 4 and handler[0] == event {
+            change matching := push(matching, handler)
+        } otherwise {
+            change remaining := push(remaining, handler)
+        }
+    }
+
+    make ordered := sort_by(matching, priority_of, "asc")
+    vary current := initial_value
+
+    each handler in ordered {
+        change current := handler[3](current)
+        when not handler[2] {
+            change remaining := push(remaining, handler)
+        }
+    }
+
+    yield [current, remaining]
+}
