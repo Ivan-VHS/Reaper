@@ -14,11 +14,11 @@ The Python test suite executes the Reaper source and checks its internal asserti
 
 ### Stage 1: Pratt expression parser (partial)
 
-`selfhost/parser.rpr` now implements a Pratt parser in Reaper source. It consumes the same token-array shape emitted by the bootstrap lexer and builds compact array-form expression nodes. Implemented forms are literals, names, unary expressions, grouping, list literals, function calls, indexing and infix operators. The precedence table matches the reference parser, including the actual `::` flow operator and right-associative `**`.
+`selfhost/parser.rpr` implements a Pratt expression parser in Reaper source. It consumes the token-array shape emitted by the bootstrap lexer and builds compact array-form expression nodes. The implemented expression slice covers literals, names, unary expressions, grouping, list literals, function calls, indexing and infix operators, including `::` and right-associative `**`.
 
-The bootstrap assertions cover arithmetic precedence, exponentiation associativity, source-located unary nodes, flow composition, nested call/list/index expressions, missing delimiters and trailing-token errors. The Python test suite executes both `selfhost/lexer.rpr` and `selfhost/parser.rpr`; the same tests are registered with CTest when Python is available.
+`selfhost/program_parser.rpr` adds a Reaper-written statement parser and a stable array AST shape `[kind, token, value, children]`. It covers declarations and reassignment, functions and parameters, imports/exports, `emit`, `yield`, `when`/`otherwise`, `each`, `loop while`, blocks, expression statements and Pratt expressions. Its embedded assertions cover precedence, source positions, nested branches, iteration, imports/exports and malformed statement boundaries. `tests/test_self_hosting.py` now invokes this source through the reference runtime; CTest already runs that test module when Python is available.
 
-This is deliberately **not** a complete parser replacement: declarations, function definitions, control-flow statements, block grammar and parity with the Python `Node` AST are not yet implemented. The parser output is a stage-local representation, not the canonical AST contract. The Python parser remains the reference frontend.
+This is still **not** a complete parser replacement. Unicode identifier parity, full token-by-token conformance, exact Python `Node` AST parity, semantic analysis, canonical IR lowering and self-rebuild are not yet established. The Python parser remains the compatibility oracle.
 
 ## Bootstrap stages
 
@@ -46,7 +46,9 @@ This is deliberately **not** a complete parser replacement: declarations, functi
 
 - Close Unicode identifier parity in the self-hosted lexer.
 - Expand token conformance to every keyword, operator, escape, whitespace and malformed-source case.
-- Extend the Reaper-written frontend with declarations, function definitions, blocks, conditionals, iteration and loop statements.
+- Close Unicode identifier parity and complete token-by-token lexer conformance.
+- Compare the Reaper-written statement AST against the Python `Node` AST over the same golden source corpus.
+- Add semantic analysis and canonical IR construction in Reaper after AST parity is demonstrated.
 - Define a versioned canonical AST representation and compare parser output with the Python AST over a shared golden corpus.
 - Add differential tests for calls, indexes, list literals, operator precedence, nested blocks and malformed statements.
 - Move the CLI, diagnostics, semantic analysis and compiler pipeline into Reaper in dependency order.
