@@ -21,7 +21,7 @@ static const ReaperSystemOperation OPERATIONS[REAPER_SYSTEM_OPERATION_COUNT] = {
        "Callbacks require an owning service object, stable lifetime and serialized state transitions."),
     OP("113", "system-services", "scheduler.cron_schedule",
        REAPER_SYSTEM_EFFECT_SCHEDULE,
-       REAPER_SYSTEM_ADAPTER_SCHEDULER, HOSTED_KERNEL, REAPER_SYSTEM_MATURITY_VALIDATORS_AVAILABLE,
+       REAPER_SYSTEM_ADAPTER_SCHEDULER, HOSTED, REAPER_SYSTEM_MATURITY_VALIDATORS_AVAILABLE,
        "Cron syntax validation is native; timer persistence and dispatch belong to a scheduler adapter."),
     OP("114", "system-services", "logging.append",
        REAPER_SYSTEM_EFFECT_LOG_WRITE,
