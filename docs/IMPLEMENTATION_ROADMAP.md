@@ -130,3 +130,16 @@ A public hosted API, cloud deployment, kernel driver, privileged device manager 
 ## Change protocol
 
 For each capability change, update together: owning source, regression tests, feature matrix, relevant architecture/contract page, documentation index and CI. Record the exact acceptance command and CI run. Keep Partial/Planned status when any required gate is missing.
+
+## Fixed-width source scalars — partial implementation
+
+The initial fixed-width scalar slice is implemented across the parser/AST, Canonical IR metadata, typechecker, reference tree-walk, bytecode VM and scalar C17 AOT lowering. It covers `i8/u8/i16/u16/i32/u32/i64/u64` bindings, checked literal conversion, fixed-width arithmetic and source-location mapping.
+
+The next native compiler gates remain:
+1. Typed function parameter and return contracts, with reference-runtime/VM/native differential tests.
+2. Record declarations, validated field layout and bounded aggregate/collection types.
+3. Ownership and borrow/region semantics, including deterministic drop and failure cleanup.
+4. Target triples, freestanding C/runtime profile and explicit startup/linker contract.
+5. Direct relocatable object/ELF output and DABI64 conformance, with reproducible linker and QEMU fixtures.
+
+Until those stages pass, the native compiler remains an experimental host AOT scalar subset, not a freestanding systems compiler.
