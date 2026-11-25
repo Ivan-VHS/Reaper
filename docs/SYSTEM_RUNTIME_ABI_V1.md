@@ -1,6 +1,6 @@
 # Reaper System Runtime ABI v1
 
-**Status:** native C17 host-dispatch boundary implemented; per-platform syscall adapters and source-language bindings remain separate gates.  
+**Status:** native C17 host-dispatch boundary and bounded Reaper source bridge implemented; per-platform syscall adapters and native compiler lowering remain separate gates.  
 **Scope:** process and thread lifecycle, synchronization, filesystem, clocks, networking and cryptographic services.  
 **Compatibility:** additive ABI; the existing Reaper FFI v1 symbols and the 18-module capability suite remain unchanged.
 
@@ -71,7 +71,7 @@ A host should grant the smallest possible mask. A zero mask is valid. There is n
 
 ## Language and compiler boundary
 
-This release provides the native host ABI and operation catalogue. It does not claim that the current .rpr parser, reference runtime or scalar AOT compiler can yet type-check or lower all 42 operations directly. Source-level effect, ownership, handle-lifetime and typed payload bindings are the next compiler gate. Until then, a native Reaper integration may use this C ABI only through a separately reviewed adapter boundary.
+This release provides the native host ABI, operation catalogue and a bounded bridge callable from interpreted .rpr programs through the existing opt-in FFI. It does not claim that the .rpr parser, reference runtime or scalar AOT compiler can type-check or lower all 42 operations directly. Source-level effect, ownership, handle-lifetime and typed payload bindings remain compiler work. The bridge is not a DuckOS syscall provider; it only forwards requests to a trusted host adapter.
 
 The intended language contract is:
 
@@ -97,3 +97,33 @@ The native-system-abi test covers catalogue cardinality and lookup, ABI/version/
 - OPlague: use only read-only filesystem/clock/crypto capabilities for package evidence workflows unless a separately reviewed capability is approved; never use this ABI to install, remove, enable, disable or flash drivers.
 
 Each adopter must add its own adapter tests and cross-repository contract checks before describing an operation as available on that platform.
+
+
+## Reaper source binding bridge
+
+The shared `reaper_system_bridge` library exposes a narrow C surface that the current Reaper reference runtime can call through its existing explicit native FFI:
+
+- `reaper_system_host_attach` copies a validated host descriptor into thread-local storage;
+- `reaper_system_host_detach` removes the provider from the current thread;
+- `reaper_system_call_json` resolves a registered operation name and forwards a bounded UTF-8 JSON request to the host dispatcher;
+- `reaper_system_last_status` and `reaper_system_last_error` expose the result of the most recent bridge call on the current thread.
+
+The bridge uses a 64 KiB request/response limit. Responses must be non-empty and contain no embedded NUL bytes. The provider is responsible for validating the operation-specific JSON schema, identifiers, handles, paths, endpoint policy and all other payload semantics. The bridge does not infer a schema from an operation name.
+
+### Host attachment lifecycle
+
+A trusted OS embedder must attach a host before running an .rpr program on each execution thread. Attachment is not inherited by newly created threads. The bridge copies the `ReaperSystemHost` descriptor, but the host-owned context and any state it references must remain valid until that thread detaches. Re-attaching on an already attached thread is rejected. The OS embedder must detach before destroying the provider context.
+
+No host is attached by default. Calls without an attachment fail with `access-denied`. The bridge does not search for a provider, load a provider automatically, or grant capabilities. The embedder controls the capability mask and should begin with the minimum rights needed for the program.
+
+### .rpr example
+
+See [examples/system_runtime.rpr](../examples/system_runtime.rpr). It uses the existing `ffi_open` and `ffi_bind` functions, so it must be run with `--allow-native-ffi` and an explicit absolute library path. Loading a native library executes trusted native code; do not load an untrusted bridge.
+
+The current scalar AOT compiler deliberately rejects FFI and does not lower this example to native code. This is an interpreted reference-runtime binding, not native compiler or DABI64 parity.
+
+### Verification and limits
+
+`tests/test_system_bridge.c` uses a fake host and verifies attachment, missing-capability denial before dispatch, unknown operation rejection, JSON forwarding, per-thread result handling, empty/embedded-NUL/oversized response rejection and the 64 KiB request bound. It does not launch a process, open a real file, create a socket or access a device.
+
+The next platform milestone is a reviewed DuckOS host provider that translates these stable operation IDs into approved kernel services. Until that provider and its integration tests exist, process, filesystem, networking and other operations are available as contracts and dispatch points only—not as working DuckOS services.
