@@ -60,3 +60,6 @@ The current integration branch adds two deliberately bounded stages:
 - `selfhost/ir_verify.rpr` validates a versioned `reaper.ir.v1` instruction-array format. It checks opcodes, operands, non-empty names, operation counts and jump targets. It is a bootstrap verifier slice, not yet the production canonical IR verifier and not yet a replacement for `reaper.ir.verify`.
 
 Both sources contain positive and negative assertions and are executed directly by CI using the reference bootstrap runtime. The integration intentionally makes no claim of full parser parity, complete semantic soundness, canonical IR parity or compiler self-rebuild. The next acceptance gate is differential comparison against the Python type checker and IR verifier over a shared golden corpus.
+
+
+The branch also adds `selfhost/bytecode.rpr`, an expression-level Reaper-to-stack-IR lowering slice for literals, names, lists, indexing, unary/binary expressions, calls and the `::` flow operator. It emits deterministic instruction arrays and rejects unsupported expression nodes. CI executes its positive and negative assertions. Statement lowering, source-map parity and integration with the production VM remain future gates.
