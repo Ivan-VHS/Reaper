@@ -76,6 +76,11 @@ class FixedWidthRuntimeTests(unittest.TestCase):
             with self.subTest(engine=engine):
                 with self.assertRaisesRegex(ReaperRuntimeError, "outside the u8 range"):
                     self.run_program("vary value: u8 := 1\nchange value := 256", engine)
+
+    def test_real_division_remains_real_for_fixed_width_inputs(self) -> None:
+        source = "make value: u32 := 9\nemit value / 2"
+        self.assertEqual(self.run_program(source, "treewalk"), ["4.5"])
+        self.assertEqual(self.run_program(source, "vm"), ["4.5"])
  
     def test_checked_exponentiation_stops_at_the_declared_width(self) -> None:
         source = "make value: u8 := 2\nemit value ** 7"
