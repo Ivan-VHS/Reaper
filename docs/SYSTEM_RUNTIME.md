@@ -47,7 +47,7 @@ Implemented bounded primitives:
 - `reaper_system_firmware_verify`: checks bounded image input and delegates signature verification to an explicitly supplied trusted verifier. No cryptography is implemented here and no firmware is flashed.
 - `reaper_system_tensor_matmul_validate`: checks dimensions, supported element format, overflow-safe storage sizes and output capacity. It does not perform matrix multiplication or DMA.
 - `reaper_system_container_policy_validate`: requires user/mount/PID isolation, read-only root, no-new-privileges, seccomp and nonzero memory/CPU/process quotas; network access requires a network namespace.
-- `reaper_system_vm_profile_validate`: validates the declared guest architecture, host virtualization availability, vCPU/memory bounds and IOMMU requirement for device passthrough.
+- `reaper_system_vm_profile_validate`: validates the declared guest architecture, host virtualization availability, vCPU/memory bounds against an explicit 4–64 KiB power-of-two host base page size, and the IOMMU requirement for device passthrough.
 - `reaper_system_package_manifest_validate`: checks package identifier, numeric `major.minor.patch` version, 64-hex image digest, manifest-size bound, rollback/isolation policy and an external signature-verifier callback.
 - `reaper_system_target_validate`: validates a bounded target triple from x86_64, AArch64, RISC-V 64, e2k, ARMv7 or WASM32 families plus safe toolchain/sysroot identifiers. It does not launch a compiler.
 
