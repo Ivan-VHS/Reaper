@@ -545,11 +545,17 @@ ReaperSystemStatus reaper_system_vm_profile_validate(
     if (profile->virtual_cpu_count == 0U || profile->virtual_cpu_count > 256U)
         return fail(error, REAPER_SYSTEM_OUT_OF_RANGE,
                     "virtual CPU count must be between 1 and 256");
+    if (profile->page_size_bytes < 4096U || profile->page_size_bytes > 65536U)
+        return fail(error, REAPER_SYSTEM_OUT_OF_RANGE,
+                    "host base page size must be between 4 KiB and 64 KiB");
+    if ((profile->page_size_bytes & (profile->page_size_bytes - 1U)) != 0U)
+        return fail(error, REAPER_SYSTEM_INVALID_FORMAT,
+                    "host base page size must be a power of two");
     if (profile->memory_bytes < UINT64_C(16777216) ||
         profile->memory_bytes > UINT64_C(1099511627776) ||
-        (profile->memory_bytes % UINT64_C(4096)) != 0U)
+        (profile->memory_bytes % profile->page_size_bytes) != 0U)
         return fail(error, REAPER_SYSTEM_OUT_OF_RANGE,
-                    "VM memory must be page-aligned and between 16 MiB and 1 TiB");
+                    "VM memory must align to the host base page size and be between 16 MiB and 1 TiB");
     if (profile->device_passthrough && !profile->iommu_available)
         return fail(error, REAPER_SYSTEM_PERMISSION_DENIED,
                     "device passthrough requires an available IOMMU");
