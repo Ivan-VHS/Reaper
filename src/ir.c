@@ -173,7 +173,7 @@ int reaper_ir_execute_i64(const ReaperIrModule *module, int64_t *values,
 int reaper_ir_execute_u32(const ReaperIrModule *module, uint32_t *values,
                           size_t value_capacity, uint32_t *result,
                           ReaperIrError *error) {
-    if (error != NULL) { error->node_index = 0; error->message[0] = '\\0'; }
+    if (error != NULL) { error->node_index = 0; error->message[0] = '\0'; }
     if (!reaper_ir_verify(module, error)) return 0;
     if (module->length == 0u)
         return execute_error(error, 0u, "executable IR must contain a RETURN");
