@@ -5,7 +5,7 @@
  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#050505"/><stop offset=".55" stop-color="#101010"/><stop offset="1" stop-color="#181818"/></linearGradient>
  <radialGradient id="halo"><stop stop-color="#FFD700" stop-opacity=".22"/><stop offset="1" stop-color="#FFD700" stop-opacity="0"/></radialGradient>
  <linearGradient id="rail" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#FFD700"/><stop offset=".52" stop-color="#79B8FF"/><stop offset="1" stop-color="#6EDAA3"/></linearGradient>
- <pattern id="grid" width="36" height="36" patternUnits="userSpaceOnUse"><path d="M36 0H0V36" fill="none" stroke="#B8D0E8" stroke-opacity=".055"/></pattern>
+ <pattern id="grid" width="36" height="36" patternUnits="userSpaceOnUse"><path d="M36 0H0V36" fill="none" stroke="#FFFFFF" stroke-opacity=".055"/></pattern>
  <style>
  .eyebrow{font:600 11px ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:2.3px;fill:#FFD700}
  .brand{font:750 72px Inter,Segoe UI,Arial,sans-serif;letter-spacing:-2.7px;fill:#FFFFFF}
