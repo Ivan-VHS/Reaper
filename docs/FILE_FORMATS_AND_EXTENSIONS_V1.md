@@ -20,7 +20,7 @@ The new format definitions must preserve explicit effects, bounded resources, de
 
 The buffer description in OS(2).txt assigned .bav to **Buffer Allocation & Validation**, while the same document also assigns .bav to BAV antivirus/security bundles.
 
-One suffix cannot identify two unrelated formats. The namespace is fixed as follows:
+One suffix cannot identify two unrelated formats. The source also contains a one-off .baw spelling in the extension-family heading, while its table, buffer section and examples use .bav. Treat .baw as a heading typo, not a third format or alias. The namespace is fixed as follows:
 
 | Suffix | Owner | Meaning | Current status |
 |---|---|---|---|
