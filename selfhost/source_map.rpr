@@ -1,0 +1,98 @@
+# Reaper-native source coordinates and half-open spans.
+# Offsets and columns count Unicode code points, not UTF-8 bytes.
+# A future byte-oriented backend must convert through an explicit source map.
+
+craft source_line_starts(source) {
+    vary starts := [0]
+    vary offset := 0
+    make source_length := size(source)
+
+    loop while offset < source_length {
+        when source[offset] == "\n" {
+            change starts := push(starts, offset + 1)
+        }
+        change offset := offset + 1
+    }
+
+    yield starts
+}
+
+craft source_location(starts, offset, source_length) {
+    when size(starts) == 0 {
+        yield ["ERROR", "source map has no line starts"]
+    }
+    when offset < 0 or offset > source_length {
+        yield ["ERROR", "source offset is outside the source"]
+    }
+
+    vary low := 0
+    vary high := size(starts) - 1
+    vary best := 0
+
+    # Find the last line start that does not exceed the offset.
+    loop while low <= high {
+        make middle := (low + high) // 2
+        when starts[middle] <= offset {
+            change best := middle
+            change low := middle + 1
+        } otherwise {
+            change high := middle - 1
+        }
+    }
+
+    yield ["OK", best + 1, offset - starts[best] + 1]
+}
+
+craft source_span(start_offset, end_offset, source_length) {
+    when start_offset < 0 or end_offset < start_offset or end_offset > source_length {
+        yield ["ERROR", "invalid half-open source span"]
+    }
+    yield ["SPAN", start_offset, end_offset]
+}
+
+craft source_span_is_valid(span, source_length) {
+    when size(span) != 3 { yield false }
+    when span[0] != "SPAN" { yield false }
+    when span[1] < 0 { yield false }
+    when span[2] < span[1] { yield false }
+    when span[2] > source_length { yield false }
+    yield true
+}
+
+craft source_span_contains(span, offset, source_length) {
+    when not source_span_is_valid(span, source_length) { yield false }
+    yield offset >= span[1] and offset < span[2]
+}
+
+craft source_span_merge(left, right, source_length) {
+    when not source_span_is_valid(left, source_length) or not source_span_is_valid(right, source_length) {
+        yield ["ERROR", "cannot merge an invalid source span"]
+    }
+
+    vary start_offset := left[1]
+    vary end_offset := left[2]
+
+    when right[1] < start_offset {
+        change start_offset := right[1]
+    }
+    when right[2] > end_offset {
+        change end_offset := right[2]
+    }
+
+    yield ["SPAN", start_offset, end_offset]
+}
+
+make sample_source := "alpha\nβeta\n"
+make sample_starts := source_line_starts(sample_source)
+assert(sample_starts == [0, 6, 11], "line starts must count Unicode code points")
+assert(source_location(sample_starts, 0, size(sample_source)) == ["OK", 1, 1], "first source coordinate mismatch")
+assert(source_location(sample_starts, 6, size(sample_source)) == ["OK", 2, 1], "Unicode line coordinate mismatch")
+assert(source_location(sample_starts, size(sample_source), size(sample_source)) == ["OK", 3, 1], "EOF coordinate mismatch")
+assert(source_span(2, 5, 8) == ["SPAN", 2, 5], "half-open span construction mismatch")
+assert(source_span_is_valid(["SPAN", 2, 5], 8), "valid span rejected")
+assert(not source_span_is_valid(["SPAN", 5, 2], 8), "reversed span accepted")
+assert(source_span_contains(["SPAN", 2, 5], 2, 8), "span start must be included")
+assert(not source_span_contains(["SPAN", 2, 5], 5, 8), "span end must be excluded")
+assert(source_span_merge(["SPAN", 4, 7], ["SPAN", 1, 5], 8) == ["SPAN", 1, 7], "span merge mismatch")
+
+emit "SELFHOST_SOURCE_MAP_OK"
