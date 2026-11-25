@@ -19,6 +19,21 @@ class SelfHostingBootstrapTests(unittest.TestCase):
     def test_reaper_written_parser_runs_on_the_reference_runtime(self) -> None:
         self._run_selfhost_program("selfhost/parser.rpr", "SELFHOST_PARSER_OK")
 
+    def test_reaper_written_source_map_runs_on_the_reference_runtime(self) -> None:
+        self._run_selfhost_program("selfhost/source_map.rpr", "SELFHOST_SOURCE_MAP_OK")
+
+    def test_reaper_written_diagnostics_run_on_the_reference_runtime(self) -> None:
+        self._run_selfhost_program("selfhost/diagnostics.rpr", "SELFHOST_DIAGNOSTICS_OK")
+
+    def test_reaper_written_ir_lowerer_and_verifier_run_on_the_reference_runtime(self) -> None:
+        self._run_selfhost_program("selfhost/ir.rpr", "SELFHOST_IR_OK")
+
+    def test_reaper_written_bytecode_lowerer_and_verifier_run_on_the_reference_runtime(self) -> None:
+        self._run_selfhost_program("selfhost/bytecode.rpr", "SELFHOST_BYTECODE_OK")
+
+    def test_reaper_written_module_graph_resolver_runs_on_the_reference_runtime(self) -> None:
+        self._run_selfhost_program("selfhost/module_graph.rpr", "SELFHOST_MODULE_GRAPH_OK")
+
 
 if __name__ == "__main__":
     unittest.main()
