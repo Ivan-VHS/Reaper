@@ -303,7 +303,7 @@ craft parse_program(tokens) {
         when check("IMPORT") {
             make token := advance()
             make specifier := consume("STRING", "expected a quoted .rpr path after 'import'")
-            vary alias := ""
+            vary alias := nothing
             when not failed and match_kind("AS") {
                 change alias := consume("IDENT", "expected an import alias after 'as'")[1]
             }
