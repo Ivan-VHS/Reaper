@@ -1,14 +1,39 @@
-# 666-rule implementation profile
+# Psychoporter 666 — профиль внедрения и доказательств
 
-This profile does not claim the full constitution is shipped; it maps the six ranges to evidence-backed implementation states.
+**Канонический текст:** [Кодекс Psychoporter 666](PSYCHOPORTER_666.md).  
+**Назначение:** связать 666 принципов с зонами применения и требуемыми доказательствами. Этот профиль не утверждает, что все правила или все возможности языка уже реализованы.
 
-| Range | Domain | Current interpretation |
-|---|---|---|
-| 1–111 | execution model | local runtime; future backends |
-| 112–222 | clarity | grammar, diagnostics, bounds |
-| 223–333 | types | runtime values; static system future |
-| 334–444 | effects | explicit I/O and safety boundary |
-| 445–555 | concurrency | sequential reference runtime |
-| 556–666 | ergonomics | docs, tests and reproducible delivery |
+| Диапазон | Сфера | Применение в Reaper | Доказательство для статуса verified |
+|---|---|---|---|
+| 1–60 | Имя и сущность | Словарь терминов, имена .rpr, API, диагностик и ABI. | Review публичных имён, тесты разрешения символов и отсутствие коллизий. |
+| 61–120 | Синтаксис и поток | Действующая грамматика, craft, make, vary, change, yield, emit, when, otherwise, each, loop while, ::. | Позитивные и негативные grammar fixtures, стабильные Span. |
+| 121–180 | Архитектура | Границы frontend, runtime, IR, native C17, Studio, LSP/DAP и host capabilities. | Проверки контрактов, зависимости и целевые интеграционные тесты. |
+| 181–240 | Ошибки и восстановление | Диагностические коды, пределы ресурсов, отказоустойчивость и cleanup. | Negative, boundary, fault-injection и regression tests. |
+| 241–300 | Комментарии и документация | Причины решений, API-контракты, ограничения и источники формул. | Ссылки, runnable examples, актуальность документации и Markdown CI. |
+| 301–360 | Тесты и доказательства | Поведение reference runtime и отдельная проверка native track. | Unit, integration, property/fuzz и parity tests по применимости. |
+| 361–420 | Рефакторинг и эволюция | Малые совместимые изменения, удаление мёртвого кода, контроль технического долга. | Регрессионные тесты, сравнение поведения и review diff. |
+| 421–480 | Инструменты и воспроизводимость | Formatter/linter, CLI, CI, сборки, IDE и артефакты. | Повторяемые команды, CI logs, build artifacts и security scans. |
+| 481–540 | Сотрудничество и Human Layer | Review, поддержка, доступность, локализация, автономия и баланс. | Review checklist, accessibility/localization tests и прозрачные решения. |
+| 541–600 | Этика, безопасность и ресурсы | Untrusted input, capabilities, память, MMIO/DMA, приватность и supply chain. | Threat-specific tests, static analysis, fuzzing и аппаратная qualification там, где применимо. |
+| 601–660 | Практика конструктора | Вертикальные срезы, завершение, фокус, авторство и человеческая устойчивость. | Review подтверждает реальный законченный сценарий и явно называет ограничения. |
+| 661–666 | Шесть заповедей | Сводный приоритет ясности, контракта, безопасности, человека и завершения. | Применение через review и проверяемую поставку; автоматический тест не подменяет суждение. |
 
-Statuses: implemented, partial, planned, not applicable. Promotion requires exact PR head, tests and CI evidence.
+## Статусы зрелости
+
+- **documented** — правило или контракт записан.
+- **reviewed** — применимость проверена при review конкретного изменения.
+- **automated** — конкретный структурный или поведенческий инвариант проверяется инструментом/CI.
+- **implemented** — соответствующее поведение присутствует в коде.
+- **verified** — реализация прошла заявленные positive, negative и integration checks на указанной цели.
+- **planned** — принято как направление, но реализация не доказана.
+- **not applicable** — правило не относится к выбранному модулю или target; причина записана.
+
+CURRENT, TARGET и HOST обозначают, где живёт контракт: в текущем языке, в целевой эволюции языка или в host/OS/platform adapter. Это не синонимы статуса реализации.
+
+## Что уже внедрено автоматически
+
+CI проверяет, что канонический документ содержит последовательность 1–666 без пропусков и дубликатов, одиннадцать сфер, шесть итоговых заповедей и согласованные диапазоны этого профиля.
+
+Эта проверка **не** доказывает, что каждый PR соблюдает каждое содержательное правило, не подтверждает реализацию запланированных возможностей и не заменяет code review, компиляторные тесты или аппаратную проверку. Соблюдение конкретных правил оценивается по применимости и доказательствам изменения.
+
+Повышение статуса до verified требует точной версии/commit, воспроизводимых команд, результатов тестов и обозначенной целевой платформы. Непроверенный или недоступный этап остаётся planned, partial либо not applicable с пояснением.
