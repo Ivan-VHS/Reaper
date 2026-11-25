@@ -1,0 +1,97 @@
+# Integration checks for the eight Reaper framework modules.
+
+import "../frameworks/galhero.rpr" as galhero
+import "../frameworks/call_and_back.rpr" as call_back
+import "../frameworks/stacked_options.rpr" as options
+import "../frameworks/perenosimost.rpr" as perenosimost
+import "../frameworks/most.rpr" as most
+import "../frameworks/blau.rpr" as blau
+import "../frameworks/shashio.rpr" as shashio
+import "../frameworks/showel_fleppery_code.rpr" as showel
+
+craft increment(value) {
+    yield value + 1
+}
+
+craft double(value) {
+    yield value * 2
+}
+
+craft uppercase_text(value) {
+    yield upper(value)
+}
+
+craft non_empty_text(value) {
+    yield size(trim(value)) > 0
+}
+
+# GalHero: stable dependency order and cycle rejection.
+make graph_nodes := ["desktop", "core", "compiler"]
+make graph_edges := [["compiler", "core"], ["desktop", "compiler"]]
+make graph_plan := galhero["topological_order"](graph_nodes, graph_edges)
+assert(graph_plan[0], "GalHero should accept an acyclic graph")
+assert(graph_plan[1] == ["core", "compiler", "desktop"], "GalHero order must be stable")
+make graph_cycle := galhero["topological_order"](["a", "b"], [["a", "b"], ["b", "a"]])
+assert(not graph_cycle[0], "GalHero must reject cycles")
+
+# Call-and-Back: ascending priority, one-shot removal and callback return values.
+make subscribed_a := call_back["subscribe"]([], "value", 20, false, double)
+make subscribed_b := call_back["subscribe"](subscribed_a[1], "value", 10, true, increment)
+assert(subscribed_a[0] and subscribed_b[0], "callbacks should register")
+make delivered := call_back["dispatch"](subscribed_b[1], "value", 4)
+assert(delivered[0] == [5, 8], "callbacks should run by ascending priority")
+assert(size(delivered[1]) == 1, "one-shot callback should be removed")
+
+# Stacked Options: request overrides all lower-priority layers.
+make resolved := options["resolve"](
+    [["mode", "safe"], ["timeout", 20]],
+    [["timeout", 30]],
+    [["mode", "strict"]],
+    [["timeout", 45]]
+)
+assert(options["lookup"](resolved, "mode")[1] == "strict", "request layers should override")
+assert(options["lookup"](resolved, "timeout")[1] == 45, "right-most layer should win")
+make checked_options := options["validate"](resolved, [
+    ["mode", "text", true, nothing],
+    ["timeout", "number", true, 10]
+])
+assert(checked_options[0], "valid options should pass schema checks")
+
+# PerenosiMOST and MOST: exact aliases only; reserved forms stay reserved.
+assert(perenosimost["canonical"]("функция") == "craft", "runtime alias should map")
+assert(perenosimost["support"]("область") == "reserved", "reserved alias must stay reserved")
+assert(perenosimost["canonical"]("функциональный") == "функциональный", "no stemming is allowed")
+assert(most["classify"]("процедура") == ["fn", "reserved"], "MOST facade should preserve support state")
+assert(size(most["runtime_aliases"]()) == 21, "MOST executable alias count should be 21")
+assert(size(most["reserved_aliases"]()) == 33, "MOST reserved alias count should be 33")
+
+# Blau: versioned immutable snapshots and compare-and-set conflict handling.
+make empty_store := blau["empty"]()
+make stored := blau["write"](empty_store, "theme", "noir")
+assert(blau["version"](stored) == 1, "write should advance snapshot version")
+assert(blau["read"](stored, "theme")[1] == "noir", "write should be readable")
+make committed := blau["compare_and_set"](stored, 1, "theme", "amber")
+assert(committed[0], "matching version should commit")
+make rejected := blau["compare_and_set"](stored, 0, "theme", "unsafe-overwrite")
+assert(not rejected[0], "stale version should be rejected")
+assert(blau["read"](rejected[1], "theme")[1] == "noir", "conflict must preserve the old snapshot")
+
+# Shashio: state transitions and all-or-nothing event batches.
+make states := ["idle", "running"]
+make transitions := [["idle", "start", "running"], ["running", "stop", "idle"]]
+make state_check := shashio["validate"](states, transitions, "idle")
+assert(state_check[0], "valid state machine should pass")
+make state_run := shashio["apply_atomic"]("idle", ["start", "stop"], transitions)
+assert(state_run[0] and state_run[1] == "idle", "valid event batch should commit")
+make state_fail := shashio["apply_atomic"]("idle", ["start", "pause"], transitions)
+assert(not state_fail[0] and state_fail[1] == "idle", "failed batch should roll back")
+
+# Showel Fleppery CODE: staged transformation, validation and template rendering.
+make step_result := showel["add_step"]([], "uppercase", uppercase_text, non_empty_text)
+assert(step_result[0], "valid pipeline step should register")
+make pipeline_result := showel["run"](step_result[1], "reaper")
+assert(pipeline_result[0] and pipeline_result[1] == "REAPER", "pipeline should transform source")
+make generated := showel["render"]("craft {{NAME}}(value)", [["NAME", "double"]])
+assert(generated == "craft double(value)", "template replacement should be deterministic")
+
+emit "framework smoke checks passed"
