@@ -156,12 +156,14 @@ craft compiler_optimize(node) {
             when operator == "+" { change folded := a + b } otherwise {
                 when operator == "-" { change folded := a - b } otherwise {
                     when operator == "*" { change folded := a * b } otherwise {
-                        when operator == "//" and b != 0 { change folded := a // b } otherwise {
-                            when operator == "%" and b != 0 { change folded := a % b } otherwise {
-                                when operator == "**" and b >= 0 and b <= 32 and b % 1 == 0 {
-                                    change folded := a ** b
-                                } otherwise {
-                                    change can_fold := false
+                        when operator == "/" and b != 0 { change folded := a / b } otherwise {
+                            when operator == "//" and b != 0 { change folded := a // b } otherwise {
+                                when operator == "%" and b != 0 { change folded := a % b } otherwise {
+                                    when operator == "**" and b >= 0 and b <= 32 and b % 1 == 0 {
+                                        change folded := a ** b
+                                    } otherwise {
+                                        change can_fold := false
+                                    }
                                 }
                             }
                         }
@@ -177,7 +179,7 @@ craft compiler_optimize(node) {
             yield ["literal", "STRING", left[2] ++ right[2], node[4], node[5]]
         }
 
-        when left[0] == "literal" and right[0] == "literal" and left[1] == "TRUE" or left[1] == "FALSE" {
+        when left[0] == "literal" and right[0] == "literal" and (left[1] == "TRUE" or left[1] == "FALSE") {
             when right[1] == "TRUE" or right[1] == "FALSE" {
                 make a := left[2] == "true"
                 make b := right[2] == "true"
