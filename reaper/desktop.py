@@ -105,7 +105,7 @@ class ReaperStudio(tk.Tk):
             style.theme_use("clam")
         except tk.TclError:
             pass
-        style.configure("Treeview", rowheight=34)
+        style.configure("Treeview", rowheight=42)
         try:
             installed = {family.casefold(): family for family in tkfont.families(self)}
         except tk.TclError:
@@ -224,6 +224,9 @@ class ReaperStudio(tk.Tk):
             ("Проверить исходный код", self.check_source),
             ("Запустить программу", self.run_source),
             ("Запустить отладку", self.debug_source),
+            ("Увеличить текст редактора", lambda: self.adjust_editor_font(1)),
+            ("Уменьшить текст редактора", lambda: self.adjust_editor_font(-1)),
+            ("Сбросить размер текста", self.reset_editor_font),
             ("Системный язык и MMIO", self.show_hardware_overview),
             ("Создать embedded-проект", self.embedded_new_project),
             ("Проверить профиль MCU", self.embedded_inspect_project),
@@ -728,6 +731,9 @@ class ReaperStudio(tk.Tk):
         self.editor.bind("<Control-equal>", lambda _event: (self.adjust_editor_font(1), "break")[1])
         self.editor.bind("<Control-minus>", lambda _event: (self.adjust_editor_font(-1), "break")[1])
         self.editor.bind("<Control-0>", lambda _event: (self.reset_editor_font(), "break")[1])
+        self.editor.bind("<Control-MouseWheel>", self._editor_zoom_wheel)
+        self.editor.bind("<Control-Button-4>", lambda _event: (self.adjust_editor_font(1), "break")[1])
+        self.editor.bind("<Control-Button-5>", lambda _event: (self.adjust_editor_font(-1), "break")[1])
 
         header = ttk.Frame(output_frame)
         header.pack(fill="x")
@@ -784,6 +790,12 @@ class ReaperStudio(tk.Tk):
         bar.pack(fill="x")
         ttk.Label(bar, textvariable=self.status, anchor="w").pack(side="left", fill="x", expand=True)
         ttk.Label(bar, textvariable=self.cursor_status, anchor="e").pack(side="right")
+
+    def _editor_zoom_wheel(self, event: tk.Event) -> str:
+        if getattr(event, "delta", 0) == 0:
+            return "break"
+        self.adjust_editor_font(1 if event.delta > 0 else -1)
+        return "break"
 
     def adjust_editor_font(self, delta: int) -> None:
         """Adjust code readability without changing source or panel geometry."""
