@@ -35,7 +35,7 @@ The Reaper repository's Beelzebul 66-rule scanner remains a read-only repository
 
 ## 3. Proposed Reaper formats
 
-All ten Reaper-owned format entries below plus .bufspec are contract specifications only. The registry records their boundaries and intended dependencies; those dependencies are not yet executable module imports.
+All eleven Reaper-owned format entries, including .bufspec, are contract specifications only. The registry records their boundaries and intended dependencies; those dependencies are not yet executable module imports.
 
 ### 3.1 .tpr — Topology / Thread Pipeline Registry
 
