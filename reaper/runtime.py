@@ -8,6 +8,18 @@ from typing import Any, Callable
 
 from .errors import ExecutionLimitError, ReaperRuntimeError
 from .fixed_width import fixed_integer_fits, is_fixed_integer_type
+
+
+class FixedInteger(int):
+    """A checked integer that retains its declared Reaper width at runtime."""
+
+    def __new__(cls, value: int, type_name: str):
+        if not fixed_integer_fits(value, type_name):
+            raise ValueError(f"value is outside the {type_name} range")
+        instance = int.__new__(cls, value)
+        instance.type_name = type_name
+        return instance
+
 from .governance import ConsentAuthority
 from .lexer import Token
 from .parser import Node, parse
@@ -46,6 +58,8 @@ class Environment:
                 raise ReaperRuntimeError(f"unsupported fixed-width integer type '{type_name}'")
             if not fixed_integer_fits(value, type_name):
                 raise ReaperRuntimeError(f"value is outside the {type_name} range")
+        if type_name is not None:
+            value = FixedInteger(value, type_name)
         self.values[name] = Binding(value, mutable, type_name)
 
     def get(self, name: str) -> Any:
@@ -60,8 +74,10 @@ class Environment:
             binding = self.values[name]
             if not binding.mutable:
                 raise ReaperRuntimeError(f"'{name}' was declared with 'make' and cannot be changed; use 'vary'")
-            if binding.type_name is not None and not fixed_integer_fits(value, binding.type_name):
-                raise ReaperRuntimeError(f"assigned value is outside the {binding.type_name} range")
+            if binding.type_name is not None:
+                if not fixed_integer_fits(value, binding.type_name):
+                    raise ReaperRuntimeError(f"assigned value is outside the {binding.type_name} range")
+                value = FixedInteger(value, binding.type_name)
             binding.value = value
             return
         if self.parent is not None:
@@ -298,6 +314,13 @@ class Interpreter:
             if node.value == "NOT":
                 return not self._truthy(value)
             if node.value == "-" and self._is_number(value):
+                if isinstance(value, FixedInteger):
+                    if value.type_name.startswith("u"):
+                        raise self._error(node.token, f"unary '-' is not valid for {value.type_name}")
+                    result = -int(value)
+                    if not fixed_integer_fits(result, value.type_name):
+                        raise self._error(node.token, f"unary '-' overflows {value.type_name}")
+                    return FixedInteger(result, value.type_name)
                 return -value
             raise self._error(node.token, "unary '-' expects a number")
         if node.kind == "call":
@@ -324,6 +347,20 @@ class Interpreter:
         raise self._error(node.token, f"unknown expression kind '{node.kind}'")
 
     def _binary(self, operator: str, left: Any, right: Any, token: Token) -> Any:
+        left_fixed = left.type_name if isinstance(left, FixedInteger) else None
+        right_fixed = right.type_name if isinstance(right, FixedInteger) else None
+        fixed_type = left_fixed or right_fixed
+        if fixed_type is not None:
+            if left_fixed is not None and right_fixed is not None and left_fixed != right_fixed:
+                raise self._error(token, f"fixed-width operation requires matching types, got {left_fixed} and {right_fixed}")
+            if left_fixed is None:
+                if not fixed_integer_fits(left, fixed_type):
+                    raise self._error(token, f"left operand is outside the {fixed_type} range")
+                left = FixedInteger(left, fixed_type)
+            if right_fixed is None:
+                if not fixed_integer_fits(right, fixed_type):
+                    raise self._error(token, f"right operand is outside the {fixed_type} range")
+                right = FixedInteger(right, fixed_type)
         if operator == "==":
             return self._equal(left, right)
         if operator == "!=":
@@ -368,6 +405,12 @@ class Interpreter:
                 raise self._error(token, "numeric operations must produce real numbers")
             if isinstance(result, float) and not math.isfinite(result):
                 raise self._error(token, "numeric result is not finite")
+            if fixed_type is not None:
+                if operator == "/" or isinstance(result, float):
+                    raise self._error(token, f"operator '{operator}' does not produce a {fixed_type} value")
+                if not fixed_integer_fits(result, fixed_type):
+                    raise self._error(token, f"numeric result overflows {fixed_type}")
+                return FixedInteger(result, fixed_type)
             return result
         raise self._error(token, f"unknown operator '{operator}'")
 
