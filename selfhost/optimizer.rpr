@@ -1,0 +1,196 @@
+# Conservative Reaper-native constant folding for canonical IR v1.
+#
+# This pass folds only operations whose semantics are unambiguous in the
+# current typed subset: boolean not/and/or/equality and string concatenation.
+# It does not parse numeric text, assume purity, reorder instructions or remove
+# code. Numeric folding waits for the language's checked literal conversion.
+
+craft optimizer_type_is_valid(type_name) {
+    yield type_name == "i64" or type_name == "u64" or type_name == "f64" or type_name == "bool" or type_name == "string" or type_name == "unit"
+}
+
+craft optimizer_find_constant(constants, register) {
+    vary index := 0
+    loop while index < size(constants) {
+        when constants[index][0] == register {
+            yield ["OK", constants[index][1], constants[index][2]]
+        }
+        change index := index + 1
+    }
+    yield ["NO_CONSTANT"]
+}
+
+craft optimizer_record_constant(constants, register, type_name, value) {
+    yield push(constants, [register, type_name, value])
+}
+
+craft optimizer_resolve_operand(operand, constants) {
+    when size(operand) == 3 and operand[0] == "IMM" {
+        when optimizer_type_is_valid(operand[1]) {
+            yield ["OK", operand[1], operand[2]]
+        }
+        yield ["NO_CONSTANT"]
+    }
+    when size(operand) == 2 and operand[0] == "REG" {
+        yield optimizer_find_constant(constants, operand[1])
+    }
+    yield ["NO_CONSTANT"]
+}
+
+craft optimizer_fold_unary(op, operand) {
+    when operand[0] != "OK" { yield ["NO_FOLD"] }
+    when operand[1] == "bool" and (op == "not" or op == "!") {
+        when operand[2] == "true" { yield ["OK", "bool", "false"] }
+        when operand[2] == "false" { yield ["OK", "bool", "true"] }
+    }
+    yield ["NO_FOLD"]
+}
+
+craft optimizer_fold_binary(op, left, right) {
+    when left[0] != "OK" or right[0] != "OK" { yield ["NO_FOLD"] }
+    when left[1] != right[1] { yield ["NO_FOLD"] }
+
+    when left[1] == "bool" {
+        when op == "and" {
+            when left[2] == "true" and right[2] == "true" {
+                yield ["OK", "bool", "true"]
+            }
+            when (left[2] == "true" or left[2] == "false") and (right[2] == "true" or right[2] == "false") {
+                yield ["OK", "bool", "false"]
+            }
+        }
+        when op == "or" {
+            when left[2] == "true" or right[2] == "true" {
+                yield ["OK", "bool", "true"]
+            }
+            when left[2] == "false" and right[2] == "false" {
+                yield ["OK", "bool", "false"]
+            }
+        }
+        when op == "==" {
+            yield ["OK", "bool", left[2] == right[2]]
+        }
+        when op == "!=" {
+            yield ["OK", "bool", left[2] != right[2]]
+        }
+    }
+
+    when left[1] == "string" and op == "++" {
+        yield ["OK", "string", left[2] ++ right[2]]
+    }
+    yield ["NO_FOLD"]
+}
+
+craft optimizer_run(instructions) {
+    vary constants := []
+    vary optimized := []
+    vary folded_count := 0
+    vary index := 0
+
+    loop while index < size(instructions) {
+        make instruction := instructions[index]
+        when size(instruction) == 0 {
+            yield ["ERROR", "optimizer received an empty instruction"]
+        }
+
+        when instruction[0] == "CONST" {
+            when size(instruction) != 4 or not optimizer_type_is_valid(instruction[2]) {
+                yield ["ERROR", "optimizer received a malformed CONST"]
+            }
+            change constants := optimizer_record_constant(constants, instruction[1], instruction[2], instruction[3])
+            change optimized := push(optimized, instruction)
+        } otherwise {
+            when instruction[0] == "COPY" {
+                when size(instruction) != 3 {
+                    yield ["ERROR", "optimizer received a malformed COPY"]
+                }
+                make source := optimizer_resolve_operand(instruction[2], constants)
+                when source[0] == "OK" {
+                    make replacement := ["CONST", instruction[1], source[1], source[2]]
+                    change constants := optimizer_record_constant(constants, instruction[1], source[1], source[2])
+                    change optimized := push(optimized, replacement)
+                    change folded_count := folded_count + 1
+                } otherwise {
+                    change optimized := push(optimized, instruction)
+                }
+            } otherwise {
+                when instruction[0] == "UNARY" {
+                    when size(instruction) != 4 {
+                        yield ["ERROR", "optimizer received a malformed UNARY"]
+                    }
+                    make operand := optimizer_resolve_operand(instruction[3], constants)
+                    make folded := optimizer_fold_unary(instruction[2], operand)
+                    when folded[0] == "OK" {
+                        change constants := optimizer_record_constant(constants, instruction[1], folded[1], folded[2])
+                        change optimized := push(optimized, ["CONST", instruction[1], folded[1], folded[2]])
+                        change folded_count := folded_count + 1
+                    } otherwise {
+                        change optimized := push(optimized, instruction)
+                    }
+                } otherwise {
+                    when instruction[0] == "BINARY" {
+                        when size(instruction) != 5 {
+                            yield ["ERROR", "optimizer received a malformed BINARY"]
+                        }
+                        make left := optimizer_resolve_operand(instruction[3], constants)
+                        make right := optimizer_resolve_operand(instruction[4], constants)
+                        make folded := optimizer_fold_binary(instruction[2], left, right)
+                        when folded[0] == "OK" {
+                            change constants := optimizer_record_constant(constants, instruction[1], folded[1], folded[2])
+                            change optimized := push(optimized, ["CONST", instruction[1], folded[1], folded[2]])
+                            change folded_count := folded_count + 1
+                        } otherwise {
+                            change optimized := push(optimized, instruction)
+                        }
+                    } otherwise {
+                        when instruction[0] == "RETURN" {
+                            when size(instruction) != 2 {
+                                yield ["ERROR", "optimizer received a malformed RETURN"]
+                            }
+                            change optimized := push(optimized, instruction)
+                        } otherwise {
+                            yield ["ERROR", "optimizer does not recognize this IR instruction"]
+                        }
+                    }
+                }
+            }
+        }
+        change index := index + 1
+    }
+
+    yield ["OK", optimized, folded_count]
+}
+
+make boolean_program := [
+    ["CONST", 0, "bool", "true"],
+    ["CONST", 1, "bool", "false"],
+    ["BINARY", 2, "and", ["REG", 0], ["REG", 1]],
+    ["UNARY", 3, "not", ["REG", 2]],
+    ["RETURN", ["REG", 3]]
+]
+make boolean_optimized := optimizer_run(boolean_program)
+assert(boolean_optimized[0] == "OK", "boolean constant-folding pass failed")
+assert(boolean_optimized[2] == 2, "boolean fold count mismatch")
+assert(boolean_optimized[1][2] == ["CONST", 2, "bool", "false"], "boolean and was not folded")
+assert(boolean_optimized[1][3] == ["CONST", 3, "bool", "true"], "boolean not was not folded")
+
+make string_program := [
+    ["CONST", 4, "string", "Rea"],
+    ["CONST", 5, "string", "per"],
+    ["BINARY", 6, "++", ["REG", 4], ["REG", 5]],
+    ["RETURN", ["REG", 6]]
+]
+make string_optimized := optimizer_run(string_program)
+assert(string_optimized[0] == "OK", "string constant-folding pass failed")
+assert(string_optimized[1][2] == ["CONST", 6, "string", "Reaper"], "string concatenation was not folded")
+
+make unknown_program := [
+    ["CONST", 7, "i64", "2"],
+    ["BINARY", 8, "+", ["REG", 7], ["IMM", "i64", "3"]],
+    ["RETURN", ["REG", 8]]
+]
+make unknown_optimized := optimizer_run(unknown_program)
+assert(unknown_optimized[0] == "OK", "unsupported numeric fold must remain a valid pass-through")
+assert(unknown_optimized[2] == 0, "numeric folding must not be claimed before checked literal conversion")
+
+emit "SELFHOST_OPTIMIZER_OK"
