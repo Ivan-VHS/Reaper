@@ -22,6 +22,7 @@ The root [README](../README.md) is the product entry point: it summarizes the ex
 - [Reaper IDE](REAPER_IDE.md) — Studio and language-tool boundaries.
 - [NOO TAH](NOO_TAH.md) — Node.js process integration.
 - [Kora](KORA.md) — optional standard-library helpers.
+- [Defensive security doctrine and BAV context taxonomy](DEFENSIVE_SECURITY_DOCTRINE.md) — read-only repository assurance, context-only labels and the DuckOS .bav bundle boundary.
 - [Contributing](../CONTRIBUTING.md) — local validation and review expectations.
 
 ## Repository map
