@@ -1,6 +1,6 @@
-<p align="center">[English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)</p>
+# ⚙️ Reaper — Systems Language & Workbench
 
-<h1 align="center"><strong>⚙️ Reaper — Systems Language & Workbench</strong></h1>
+<p align="center">[English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)</p>
 
 [![CI](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/ci.yml?branch=main&label=CI)](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml) [![Native C17](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/native-c.yml?branch=main&label=Native%20C17)](https://github.com/Ivan-VHS/Reaper/actions/workflows/native-c.yml) [![Apache-2.0](https://img.shields.io/github/license/Ivan-VHS/Reaper)](LICENSE)
 
@@ -134,7 +134,7 @@ Cross-project integrations use documented versioned interfaces and explicit adap
 
 ## Contributing
 
-Read CONTRIBUTING.md before changing code or contracts. Keep changes reviewable, add deterministic tests and use Conventional Commits where required by the repository guide.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before changing code or contracts. Keep changes reviewable, add deterministic tests and use Conventional Commits where required by the repository guide.
 
 ## License & legal
 
