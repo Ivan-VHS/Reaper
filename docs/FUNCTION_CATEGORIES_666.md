@@ -1,7 +1,7 @@
 # Psychoporter 666 — function categories
 
 **Canonical registry:** [`language/functions_666.json`](../language/functions_666.json)  
-**Category scheme:** `duckos-reaper-architecture/v1`  
+**Category scheme:** `dak-reaper-architecture/v1`  
 **Registry size:** 666 stable function IDs
 
 This page is the human-readable category view. The JSON registry remains the source of truth for function names, contracts, implementation states, source references and acceptance criteria. The 13 original MOST registry groups are preserved; every entry is additionally assigned to exactly one of the seven architecture categories below.
@@ -767,10 +767,10 @@ A reference-runtime helper or an external project's implementation does not auto
 
 ## Ownership
 
-- `kernel-runtime`: DuckOS kernel/runtime contracts, with Reaper as the systems-language and policy owner.
+- `kernel-runtime`: DAK kernel/runtime contracts, with Reaper as the systems-language and policy owner.
 - `language-compiler`: Reaper language, frontend, type system, compiler and toolchain.
-- `desktop-ui`: Mora and the DuckOS native desktop track.
-- `network-distributed`: DuckOS network services and Reaper protocol adapters.
-- `storage-data`: DuckOS storage interfaces and Reaper data/serialization libraries.
-- `security-resilience`: DuckOS security and BAV policy; enforcement must remain evidence-backed.
+- `desktop-ui`: Mora and the DAK native desktop track.
+- `network-distributed`: DAK network services and Reaper protocol adapters.
+- `storage-data`: DAK storage interfaces and Reaper data/serialization libraries.
+- `security-resilience`: DAK security and BAV policy; enforcement must remain evidence-backed.
 - `ecosystem-tooling`: Reaper tooling and versioned Ivan-VHS federation adapters.

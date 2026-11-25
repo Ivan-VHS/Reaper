@@ -159,7 +159,7 @@ typedef struct {
 } ReaperSystemOperationInfo;
 
 /*
- * The host is trusted platform code: DuckOS, an OS adapter, a simulator or a
+ * The host is trusted platform code: DAK, an OS adapter, a simulator or a
  * reviewed system library. Reaper validates the ABI, operation, capability
  * grant and bounded buffers before entering the adapter. The adapter must
  * validate operation-specific payloads and must not retain input/output

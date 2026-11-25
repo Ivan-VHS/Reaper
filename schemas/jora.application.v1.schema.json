@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://duckos.local/schemas/jora.application.v1.schema.json",
+  "$id": "https://dak.local/schemas/jora.application.v1.schema.json",
   "title": "Jora Application Manifest",
   "type": "object",
   "additionalProperties": false,

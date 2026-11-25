@@ -794,7 +794,7 @@ emit "result = " ++ text(result)
 ### Применение к существующему репозиторию
 
 - `.rpr` — основной авторский формат языковой логики и self-hosted компонентов по мере прохождения parity gates.
-- Python reference runtime сохраняется как текущая совместимостная реализация и oracle; это не повод писать новые системные реализации DuckOS на Python.
+- Python reference runtime сохраняется как текущая совместимостная реализация и oracle; это не повод писать новые системные реализации DAK на Python.
 - Native C17 track остаётся отдельной низкоуровневой реализацией, пока не достигнет подтверждённой функциональной эквивалентности.
 - Studio, LSP и DAP используют общие lexer/parser/diagnostic contracts и не объявляют неподдерживаемые возможности.
 - Любое расширение языка проходит grammar fixtures, positive/negative tests, stable Span diagnostics, IR validation и migration notes.
