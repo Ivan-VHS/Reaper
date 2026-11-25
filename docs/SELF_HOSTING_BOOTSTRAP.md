@@ -14,7 +14,7 @@ The bootstrap tests execute Reaper source and check its internal assertions. Thi
 
 ### Stage 1: Pratt expression parser (partial)
 
-**selfhost/parser.rpr** implements a Pratt parser in Reaper source. It consumes the same token-array shape emitted by the bootstrap lexer and builds compact array-form expression nodes. Implemented forms are literals, names, unary expressions, grouping, list literals, function calls, indexing and infix operators. The precedence table matches the reference parser, including the **::** operator and right-associative **.
+**selfhost/parser.rpr** implements a Pratt parser in Reaper source. It consumes the same token-array shape emitted by the bootstrap lexer and builds compact array-form expression nodes. Implemented forms are literals, names, unary expressions, grouping, list literals, function calls, indexing and infix operators. The precedence table matches the reference parser, including the **::** operator and right-associative exponentiation.
 
 The bootstrap assertions cover arithmetic precedence, exponentiation associativity, source-located unary nodes, flow composition, nested call/list/index expressions, missing delimiters and trailing-token errors.
 
@@ -31,8 +31,9 @@ The following executable Reaper source modules extend the bootstrap beyond token
 | selfhost/module_graph.rpr | Bounded local manifest validation and deterministic topological ordering; unknown, duplicate and cyclic dependencies are rejected | No file discovery, package registry, semantic-version solver or network access |
 | selfhost/ir.rpr | Expression-subset lowering into canonical IR v1 and a verifier for register definitions, operand reads and block termination | One entry block only; complete typed AST lowering, CFG, effects, ownership and serialized IR remain pending |
 | selfhost/bytecode.rpr | Expression-subset lowering into stack bytecode v1 and a verifier that simulates stack depth and validates termination | Structural verifier only; bytecode serialization, VM execution, type verification and native parity remain pending |
+| selfhost/optimizer.rpr | Conservative constant folding for boolean logic and string concatenation; unsupported numeric operations remain untouched | No numeric folding, code motion, dead-code removal or CFG optimization until typed semantics are available |
 
-IR registers are function-local non-negative integer identifiers. The current IR slice rejects duplicate definitions, undefined reads, malformed operands, unknown instructions and unterminated blocks. Bytecode verification rejects stack underflow, bad argument indices and instructions after RETURN. Unsupported AST forms fail with explicit RPR-E diagnostic identifiers rather than being silently discarded.
+IR registers are function-local non-negative integer identifiers. The current IR slice rejects duplicate definitions, undefined reads, malformed operands, unknown instructions and unterminated blocks. Bytecode verification rejects stack underflow, bad argument indices and instructions after RETURN. The optimizer folds only literal boolean operations and string concatenation; numeric text is not parsed or guessed. Unsupported AST forms fail with explicit RPR-E diagnostic identifiers rather than being silently discarded.
 
 These modules are intentionally small executable building blocks. They are not yet wired through a source-level import system, and their independent assertions do not substitute for a full end-to-end compile test.
 
@@ -44,9 +45,10 @@ These modules are intentionally small executable building blocks. They are not y
 | 1 | Pratt expression parser (partial) | Complete declaration/block grammar, canonical AST parity and shared golden corpus |
 | 2 | Source-map, diagnostic and local module-graph contracts (partial) | Semantic analysis, name/type resolution and differential runtime conformance |
 | 3 | Expression-subset canonical IR and stack-bytecode construction/verifiers | Full AST lowering, CFG/effects/ownership verification, serialization and malformed-input coverage |
-| 4 | Optimizer passes | Differential semantics, bounded fixed-point behavior and reproducible output |
-| 5 | Native code-generation frontend | Generated output builds and passes the complete conformance suite |
-| 6 | Bootstrap closure | Reaper compiler rebuilds itself reproducibly from a clean Stage-0 toolchain |
+| 4 | Conservative Reaper-native constant-folding slice | Numeric semantics, CFG-aware data flow, fixed-point budgets and differential equivalence |
+| 5 | Complete optimizer passes | Differential semantics, bounded fixed-point behavior and reproducible output |
+| 6 | Native code-generation frontend | Generated output builds and passes the complete conformance suite |
+| 7 | Bootstrap closure | Reaper compiler rebuilds itself reproducibly from a clean Stage-0 toolchain |
 
 ## Non-negotiable rules
 
