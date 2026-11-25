@@ -1,6 +1,6 @@
 {
   "schema": "most.function-registry/v1",
-  "title": "MOST Function Registry 666",
+  "title": "MOST Function Contract Registry",
   "edition": "0.2-draft",
   "generated_on": "2026-11-20",
   "repository": "Ivan-VHS/Reaper",
