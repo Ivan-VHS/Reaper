@@ -1,7 +1,7 @@
 # Ivan-VHS Code Style
 
 **Status:** active engineering standard  
-**Version:** 1.1  
+**Version:** 1.2  
 **Established:** 2026-11-25  
 **Scope:** Reaper source, native tooling, developer services and cross-repository interfaces
 
@@ -11,7 +11,7 @@ This standard turns recurring engineering preferences into rules that can be rev
 
 The working character is **собранная ясность**: independent thinking, deliberate architecture, natural code, exact boundaries and evidence of working behavior.
 
-The shared cognitive-ergonomics profile is [Psychoporter Code Style](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/PSYCHOPORTER_CODE_STYLE.md). It adds reader-centred naming, linear control flow, honest error language, behavior-focused tests and small refactoring steps. This document keeps the Reaper-specific implementation rules.
+The shared cognitive-ergonomics profile is [Psychoporter Code Style](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/PSYCHOPORTER_CODE_STYLE.md). Reaper's [666-rule Constitution](../CONSTITUTION.md) adds the language's wider identity, systems direction, authorial craft, ethics and governance. The Constitution distinguishes binding invariants from style guidance, target profiles, roadmap goals and cultural values; it does not promote unimplemented capabilities.
 
 The short rule is:
 
