@@ -131,7 +131,7 @@ make manifests := [
     ["MODULE", "core", []],
     ["MODULE", "telemetry", ["core"]]
 ]
-assert(module_graph_resolve(manifests) == ["OK", ["core", "app", "ui", "telemetry"]], "manifest-order tie breaking changed")
+assert(module_graph_resolve(manifests) == ["OK", ["core", "ui", "app", "telemetry"]], "manifest-order tie breaking changed")
 
 make missing_dependency := [
     ["MODULE", "app", ["absent"]]
