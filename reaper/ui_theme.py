@@ -36,7 +36,17 @@ PALETTES: dict[str, dict[str, str]] = {
         "red": "#FF7777", "red_hover": "#FF9A9A", "on_red": "#070707",
         "border": "#343434", "focus": "#FFD700",
         "selection": "#3B3000", "selection_fg": "#FFFFFF", "disabled": "#858585",
-    },0", "red_hover": "#D52B1E", "on_red": "#FFFFFF",
+    },
+}
+
+# Preserve the previously shipped atmospheric theme presets alongside the
+# 2026 light/dark semantic defaults. They remain selectable via REAPER_UI_THEME.
+PALETTES.update({
+    "dawn": {
+        "bg": "#F3F6FA", "surface": "#FFFFFF", "elevated": "#EAF0F8",
+        "fg": "#10243A", "secondary": "#365A83", "muted": "#526A82",
+        "heading": "#0039A6", "blue": "#0039A6", "blue_hover": "#0A1E46", "on_blue": "#FFFFFF",
+        "red": "#B51A10", "red_hover": "#D52B1E", "on_red": "#FFFFFF",
         "border": "#CBD6E4", "focus": "#D52B1E", "selection": "#0039A6",
         "selection_fg": "#FFFFFF", "disabled": "#74849A",
     },
