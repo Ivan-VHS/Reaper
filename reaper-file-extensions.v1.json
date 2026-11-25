@@ -1,0 +1,231 @@
+{
+  "schema": "reaper.file-extensions.v1",
+  "version": 1,
+  "scope": "Proposed declarative file formats for Reaper stream, storage, I/O and self-host contracts. This planning registry is not consumed by the compiler or runtime.",
+  "authority": "docs/FILE_FORMATS_AND_EXTENSIONS_V1.md",
+  "extensions": [
+    {
+      "id": "reaper.stream.topology.v1",
+      "extension": ".tpr",
+      "role": "Topology / Thread Pipeline Registry",
+      "domain": "stream-topology",
+      "contract_state": "specified",
+      "implementation_state": "planned",
+      "parser_status": "not_implemented",
+      "invariants": [
+        "Every channel declares an element type and finite capacity.",
+        "Every node declares an explicit full-channel policy: block, drop-newest, drop-oldest or spill-to-swap.",
+        "Graph dependencies and cycles are checked before execution."
+      ],
+      "depends_on": [
+        "reaper.memory.bufferspec.v1",
+        "reaper.io.async.v1",
+        "reaper.events.output.v1"
+      ],
+      "hot_reload": false
+    },
+    {
+      "id": "reaper.memory.bufferspec.v1",
+      "extension": ".bufspec",
+      "role": "Buffer Allocation & Validation",
+      "domain": "memory-buffer-contracts",
+      "contract_state": "specified",
+      "implementation_state": "planned",
+      "parser_status": "not_implemented",
+      "invariants": [
+        "Alignment, header size, payload size and frame bounds are explicit.",
+        "High-water and low-water thresholds are explicit and ordered.",
+        "Overflow, truncation and integrity violations are contract errors.",
+        "No hidden allocation is allowed in a declared hot path."
+      ],
+      "depends_on": [],
+      "hot_reload": false
+    },
+    {
+      "id": "reaper.io.async.v1",
+      "extension": ".aio",
+      "role": "Asynchronous Input / Output",
+      "domain": "asynchronous-io",
+      "contract_state": "specified",
+      "implementation_state": "planned",
+      "parser_status": "not_implemented",
+      "invariants": [
+        "Every operation declares a timeout or a cancellable wait state.",
+        "Partial reads and writes are represented explicitly.",
+        "Pending operation count and queue capacity are bounded."
+      ],
+      "depends_on": [
+        "reaper.io.external.v1",
+        "reaper.stream.topology.v1"
+      ],
+      "hot_reload": true
+    },
+    {
+      "id": "reaper.events.output.v1",
+      "extension": ".oie",
+      "role": "Output Ingress Engine / Event",
+      "domain": "output-events-and-observability",
+      "contract_state": "specified",
+      "implementation_state": "planned",
+      "parser_status": "not_implemented",
+      "invariants": [
+        "Output frames have a fixed schema and monotonic sequence or timestamp.",
+        "Sink failure does not crash the primary processing path.",
+        "Event and telemetry queues have explicit capacity and overflow behavior."
+      ],
+      "depends_on": [
+        "reaper.io.async.v1"
+      ],
+      "hot_reload": true
+    },
+    {
+      "id": "reaper.io.external.v1",
+      "extension": ".eio",
+      "role": "Egress / External Input Output",
+      "domain": "external-io-boundary",
+      "contract_state": "specified",
+      "implementation_state": "planned",
+      "parser_status": "not_implemented",
+      "invariants": [
+        "External inputs are validated for format, size, identity and capability at the boundary.",
+        "External dependencies are explicitly listed.",
+        "No implicit network, filesystem, device or subprocess permission is granted."
+      ],
+      "depends_on": [],
+      "hot_reload": false
+    },
+    {
+      "id": "reaper.stream.ordering.v1",
+      "extension": ".sor",
+      "role": "Stream Ordering & Reduction",
+      "domain": "deterministic-ordering-and-reduction",
+      "contract_state": "specified",
+      "implementation_state": "planned",
+      "parser_status": "not_implemented",
+      "invariants": [
+        "Ordering, watermarks and aggregation windows are explicit.",
+        "Reduction is deterministic for identical ordered inputs and conflict rules.",
+        "Late-frame behavior is explicit: accept, side-output or counted drop."
+      ],
+      "depends_on": [
+        "reaper.stream.topology.v1"
+      ],
+      "hot_reload": false
+    },
+    {
+      "id": "reaper.stream.coalescing.v1",
+      "extension": ".col",
+      "role": "Collection / Coalescing Layout",
+      "domain": "batching-and-memory-layout",
+      "contract_state": "specified",
+      "implementation_state": "planned",
+      "parser_status": "not_implemented",
+      "invariants": [
+        "Batch count and byte thresholds are bounded.",
+        "A maximum linger/flush time is explicit.",
+        "Memory layout and alignment are declared.",
+        "Batching may not silently violate downstream latency budgets."
+      ],
+      "depends_on": [
+        "reaper.memory.bufferspec.v1",
+        "reaper.stream.topology.v1"
+      ],
+      "hot_reload": true
+    },
+    {
+      "id": "reaper.storage.wal.v1",
+      "extension": ".wal",
+      "role": "Write-Ahead Log",
+      "domain": "durability-and-recovery",
+      "contract_state": "specified",
+      "implementation_state": "planned",
+      "parser_status": "not_implemented",
+      "invariants": [
+        "Journal intent is durably recorded before the target mutation.",
+        "Records include sequence and integrity markers/checksums.",
+        "Torn tails have deterministic recovery behavior.",
+        "Flush and fsync durability boundaries are explicit."
+      ],
+      "depends_on": [
+        "reaper.memory.bufferspec.v1"
+      ],
+      "hot_reload": false
+    },
+    {
+      "id": "reaper.memory.swap.v1",
+      "extension": ".swap",
+      "role": "State Swap / Staging Page",
+      "domain": "cold-state-eviction",
+      "contract_state": "specified",
+      "implementation_state": "planned",
+      "parser_status": "not_implemented",
+      "invariants": [
+        "Evicted state is versioned and integrity checked.",
+        "Restore validates schema and content identity.",
+        "Swap must not enter a hard real-time path unless explicitly authorized.",
+        "Backpressure and memory-pressure behavior are bounded."
+      ],
+      "depends_on": [
+        "reaper.memory.bufferspec.v1",
+        "reaper.storage.wal.v1"
+      ],
+      "hot_reload": true
+    },
+    {
+      "id": "reaper.stream.switch.v1",
+      "extension": ".sw",
+      "role": "Stream Wire / Switch",
+      "domain": "stream-routing",
+      "contract_state": "specified",
+      "implementation_state": "planned",
+      "parser_status": "not_implemented",
+      "invariants": [
+        "Every input frame has an explicit route, counted drop or declared fallback.",
+        "Fan-out and fan-in semantics are explicit.",
+        "Unmanaged routing cycles are rejected."
+      ],
+      "depends_on": [
+        "reaper.stream.topology.v1",
+        "reaper.events.output.v1"
+      ],
+      "hot_reload": true
+    },
+    {
+      "id": "reaper.selfhost.verified-rewrite.v1",
+      "extension": ".svpr",
+      "role": "Selfhost Verified Pipeline Rewrite",
+      "domain": "self-hosted-rewrite-transactions",
+      "contract_state": "specified",
+      "implementation_state": "planned",
+      "parser_status": "not_implemented",
+      "invariants": [
+        "Rewrite follows verify, stage, compile/check and commit phases.",
+        "A rollback point exists before mutation.",
+        "Safety, ABI and repeatability contracts cannot be silently weakened.",
+        "No arbitrary shell or embedded executable payload is accepted."
+      ],
+      "depends_on": [
+        "reaper.stream.topology.v1",
+        "reaper.memory.bufferspec.v1",
+        "reaper.storage.wal.v1"
+      ],
+      "hot_reload": false
+    },
+    {
+      "id": "duckos.bav.security-bundle.v1",
+      "extension": ".bav",
+      "role": "BAV Security Bundle v1",
+      "domain": "external-duckos-security-bundle",
+      "contract_state": "external_contract",
+      "implementation_state": "external",
+      "parser_status": "external_not_supported",
+      "invariants": [
+        "Owned by DuckOS BAV Security, not by Reaper buffer allocation.",
+        "Signed declarative policy only; no embedded executable code.",
+        "Reaper context taxonomy is informational and never a malware verdict."
+      ],
+      "depends_on": [],
+      "hot_reload": false
+    }
+  ]
+}
