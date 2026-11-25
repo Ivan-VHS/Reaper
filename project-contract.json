@@ -105,7 +105,9 @@
         "selfhost/bytecode.rpr",
         "selfhost/optimizer.rpr",
         "tests/test_self_hosting.py",
-        "docs/SELF_HOSTING_BOOTSTRAP.md"
+        "docs/SELF_HOSTING_BOOTSTRAP.md",
+        "selfhost/semantic.rpr",
+        "selfhost/effects.rpr"
       ]
     },
     {
@@ -132,11 +134,13 @@
     {
       "id": "selfhosting.compiler-foundations",
       "status": "partial",
-      "summary": "Reaper-native source maps, structured diagnostics, deterministic local dependency ordering, expression-subset canonical IR and stack-bytecode lowering/verifiers, and conservative boolean/string constant folding. These are independently tested bootstrap slices, not a complete parser, VM or native compiler.",
+      "summary": "Reaper-native source maps, structured diagnostics, deterministic local dependency ordering, conservative expression-subset type analysis, explicit effect/capability contract checks, canonical IR and stack-bytecode lowering/verifiers, and conservative boolean/string constant folding. These are independently tested bootstrap slices, not a complete parser, VM or native compiler.",
       "evidence": [
         "selfhost/source_map.rpr",
         "selfhost/diagnostics.rpr",
         "selfhost/module_graph.rpr",
+        "selfhost/semantic.rpr",
+        "selfhost/effects.rpr",
         "selfhost/ir.rpr",
         "selfhost/bytecode.rpr",
         "selfhost/optimizer.rpr",
@@ -197,6 +201,17 @@
         "tests/test_self_hosting.py",
         "docs/SELF_HOSTING_BOOTSTRAP.md"
       ]
+    },
+    {
+      "id": "reaper.effect-contract.v1",
+      "format": "Reaper-native function effect and capability contract records",
+      "direction": "both",
+      "status": "partial",
+      "evidence": [
+        "selfhost/effects.rpr",
+        "tests/test_self_hosting.py",
+        "docs/SELF_HOSTING_BOOTSTRAP.md"
+      ]
     }
   ],
   "integrations": [
@@ -246,7 +261,8 @@
     "Filesystem, process, network, clock, shell and native-library effects remain explicit or opt-in rather than ambient expression behavior.",
     "Native FFI executes in-process native code and must only load trusted ABI-compatible libraries.",
     "The native C17 implementation and self-hosting frontend remain partial; Python is the compatibility reference.",
-    "Reaper-native bootstrap IR and bytecode modules cover a verified expression subset; they are not a production VM, full type/effect verifier, or native compiler backend."
+    "Reaper-native bootstrap IR and bytecode modules cover a verified expression subset; they are not a production VM, full type/effect verifier, or native compiler backend.",
+    "The Reaper-native semantic analyzer covers a conservative expression subset; calls and host-defined values remain Any until complete name, module, function and built-in contracts are available."
   ],
   "extension_points": [
     "Canonical IR and selectable execution engines.",
