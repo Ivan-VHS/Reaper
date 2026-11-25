@@ -198,6 +198,7 @@ craft bc_lower_expression(node, parameters) {
     }
 
     when node[0] == "literal" {
+        when size(node) < 3 { yield ["ERROR", "RPR-E5308 malformed literal node"] }
         make token_kind := node[1]
         make literal_value := node[2]
         vary literal_type := "unit"
@@ -224,6 +225,7 @@ craft bc_lower_expression(node, parameters) {
     }
 
     when node[0] == "name" {
+        when size(node) < 2 { yield ["ERROR", "RPR-E5309 malformed name node"] }
         make resolved := bc_parameter_index(parameters, node[1])
         when resolved[0] == "ERROR" {
             yield ["ERROR", "RPR-E5303 " ++ resolved[1]]
@@ -232,6 +234,7 @@ craft bc_lower_expression(node, parameters) {
     }
 
     when node[0] == "unary" {
+        when size(node) < 3 { yield ["ERROR", "RPR-E5310 malformed unary node"] }
         when not bc_unary_operator_is_valid(node[1]) {
             yield ["ERROR", "RPR-E5304 unsupported unary operator"]
         }
@@ -241,6 +244,7 @@ craft bc_lower_expression(node, parameters) {
     }
 
     when node[0] == "binary" {
+        when size(node) < 4 { yield ["ERROR", "RPR-E5311 malformed binary node"] }
         when not bc_binary_operator_is_valid(node[1]) {
             yield ["ERROR", "RPR-E5305 unsupported binary operator"]
         }
@@ -286,6 +290,11 @@ make underflow_bytecode := ["REAPER_BC", 1, [
     ["FUNCTION", "bad", [], [["BINARY", "+"], ["RETURN"]]]
 ]]
 assert(bc_verify(underflow_bytecode)[0] == "ERROR", "stack underflow accepted")
+
+make bad_parameter_bytecode := ["REAPER_BC", 1, [
+    ["FUNCTION", "bad", [["PARAM", "left", 0], ["PARAM", "right", 0]], [["PUSH_ARG", 0], ["RETURN"]]]
+]]
+assert(bc_verify(bad_parameter_bytecode)[0] == "ERROR", "duplicate bytecode parameter index accepted")
 
 make early_return_bytecode := ["REAPER_BC", 1, [
     ["FUNCTION", "bad", [], [["PUSH_CONST", "i64", "1"], ["RETURN"], ["PUSH_CONST", "i64", "2"]]]
