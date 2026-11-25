@@ -12,7 +12,7 @@ Reaper's System Runtime operation catalogue supplies stable operation IDs and ca
 
 - RAX: Reaper System operation ID.
 - RDI, RSI, RDX, R10, R8, R9: six 64-bit arguments, in that order.
-- RCX and R11: volatile across the x86-64 SYSCALL instruction.
+- RCX and R11: architecturally overwritten by SYSCALL with the return RIP and user RFLAGS; original caller values are volatile and are not preserved.
 - RAX: result on return; errors use the DABI64 status convention defined by the kernel host.
 - User RIP is captured from RCX and user RFLAGS from R11 by the architecture entry stub.
 - User RSP must be saved before switching to the per-CPU kernel stack.
@@ -46,7 +46,7 @@ The C representation is exactly 160 bytes:
 | 144 | 8 | user CS |
 | 152 | 8 | user SS |
 
-v1 uses fixed user selectors CS=0x23 and SS=0x1b. User RIP and RSP must lie in the lower canonical half; RSP is 16-byte aligned. RFLAGS bit 1 must be set and IOPL, NT and VM must remain clear.
+v1 uses fixed user selectors CS=0x23 and SS=0x1b. User RIP and RSP must lie in the lower canonical half; RSP must be 8-byte aligned. A syscall may occur with RSP at 8 modulo 16 under the ordinary x86-64 function-entry convention, so the kernel must not impose a 16-byte boundary here. RFLAGS bit 1 must be set and IOPL, NT and VM must remain clear.
 
 ## User memory
 
