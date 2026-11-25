@@ -1,0 +1,338 @@
+{
+  "schema": "ivan-vhs.duckos-system-services.v1",
+  "version": 1,
+  "project": "Reaper",
+  "target_os": "DuckOS",
+  "primary_architecture": "x86_64",
+  "source_language": "Reaper",
+  "implementation_status": "planned",
+  "statement": "Versioned API contract only. No executable handlers are registered by this manifest.",
+  "current_compiler_boundary": {
+    "parser_accepts_system_declarations": false,
+    "native_aot_supports_system_calls": false,
+    "privileged_duckos_provider_present": false,
+    "proposed_typed_surface_is_current_syntax": false
+  },
+  "abi_rules": {
+    "versioning": "major-minor with structure_size",
+    "errors": "Result<T, SysError>",
+    "pointers_across_privilege_boundary": false,
+    "explicit_capabilities": true,
+    "implicit_linux_syscalls": false,
+    "implicit_shell_execution": false,
+    "deterministic_resource_release": true,
+    "bounded_inputs_and_work": true,
+    "calling_abi": "DABI64 v1: user-entry, call-frame and value layout contract; separate from kernel syscall dispatch",
+    "system_service_abi": "ivan-vhs.duckos-system-services.v1",
+    "dabi64_is_syscall_dispatcher": false
+  },
+  "modules": [
+    {
+      "id": "SysCore",
+      "first": 111,
+      "last": 120,
+      "count": 10
+    },
+    {
+      "id": "NeuroLink",
+      "first": 121,
+      "last": 125,
+      "count": 5
+    },
+    {
+      "id": "VirtHost",
+      "first": 126,
+      "last": 130,
+      "count": 5
+    }
+  ],
+  "operations": [
+    {
+      "id": 111,
+      "name": "sys_become_daemon",
+      "module": "SysCore",
+      "implementation_status": "planned",
+      "source_language": "Reaper",
+      "required_capabilities": [
+        "process.control",
+        "process.fd"
+      ],
+      "contract": "supervisor lifecycle; descriptors must be verified"
+    },
+    {
+      "id": 112,
+      "name": "svc_register",
+      "module": "SysCore",
+      "implementation_status": "planned",
+      "source_language": "Reaper",
+      "required_capabilities": [
+        "service.registry",
+        "service.callback"
+      ],
+      "contract": "owned versioned descriptor; duplicate rejection and safe unregister"
+    },
+    {
+      "id": 113,
+      "name": "cron_add_job",
+      "module": "SysCore",
+      "implementation_status": "planned",
+      "source_language": "Reaper",
+      "required_capabilities": [
+        "scheduler.job",
+        "clock.monotonic",
+        "clock.calendar"
+      ],
+      "contract": "validated calendar schedule and monotonic deadlines"
+    },
+    {
+      "id": 114,
+      "name": "log_emit",
+      "module": "SysCore",
+      "implementation_status": "planned",
+      "source_language": "Reaper",
+      "required_capabilities": [
+        "log.append",
+        "process.identity",
+        "clock.monotonic"
+      ],
+      "contract": "bounded structured record with explicit backpressure"
+    },
+    {
+      "id": 115,
+      "name": "init_activate_unit",
+      "module": "SysCore",
+      "implementation_status": "planned",
+      "source_language": "Reaper",
+      "required_capabilities": [
+        "service.registry",
+        "process.spawn"
+      ],
+      "contract": "cycle-safe dependency activation and rollback"
+    },
+    {
+      "id": 116,
+      "name": "sys_shutdown_graceful",
+      "module": "SysCore",
+      "implementation_status": "planned",
+      "source_language": "Reaper",
+      "required_capabilities": [
+        "system.shutdown",
+        "fs.sync",
+        "fs.unmount"
+      ],
+      "contract": "staged shutdown with bounded deadlines"
+    },
+    {
+      "id": 117,
+      "name": "sys_enter_emergency",
+      "module": "SysCore",
+      "implementation_status": "planned",
+      "source_language": "Reaper",
+      "required_capabilities": [
+        "kernel.emergency",
+        "console.diagnostics"
+      ],
+      "contract": "safe emergency transition; no shell under disabled interrupts"
+    },
+    {
+      "id": 118,
+      "name": "udev_process_event",
+      "module": "SysCore",
+      "implementation_status": "planned",
+      "source_language": "Reaper",
+      "required_capabilities": [
+        "device.hotplug",
+        "device.registry",
+        "fs.device-node"
+      ],
+      "contract": "validated transactional device lifecycle"
+    },
+    {
+      "id": 119,
+      "name": "fw_load",
+      "module": "SysCore",
+      "implementation_status": "planned",
+      "source_language": "Reaper",
+      "required_capabilities": [
+        "fs.read",
+        "device.firmware.load",
+        "crypto.verify"
+      ],
+      "contract": "bounded verified firmware load through a driver"
+    },
+    {
+      "id": 120,
+      "name": "acpi_bootstrap",
+      "module": "SysCore",
+      "implementation_status": "planned",
+      "source_language": "Reaper",
+      "required_capabilities": [
+        "firmware.acpi.read",
+        "mmio.map"
+      ],
+      "contract": "validated ACPI/AML parsing via platform provider"
+    },
+    {
+      "id": 121,
+      "name": "npu_ctx_create",
+      "module": "NeuroLink",
+      "implementation_status": "planned",
+      "source_language": "Reaper",
+      "required_capabilities": [
+        "device.accelerator",
+        "device.dma"
+      ],
+      "contract": "capability-bound accelerator context and driver-owned DMA"
+    },
+    {
+      "id": 122,
+      "name": "tensor_mul",
+      "module": "NeuroLink",
+      "implementation_status": "planned",
+      "source_language": "Reaper",
+      "required_capabilities": [
+        "device.accelerator",
+        "device.dma",
+        "clock.monotonic"
+      ],
+      "contract": "shape-safe, fenced accelerator dispatch"
+    },
+    {
+      "id": 123,
+      "name": "ai_run_inference",
+      "module": "NeuroLink",
+      "implementation_status": "planned",
+      "source_language": "Reaper",
+      "required_capabilities": [
+        "compute.tensor",
+        "mem.region"
+      ],
+      "contract": "bounded graph execution with deterministic ownership"
+    },
+    {
+      "id": 124,
+      "name": "model_load_onnx",
+      "module": "NeuroLink",
+      "implementation_status": "planned",
+      "source_language": "Reaper",
+      "required_capabilities": [
+        "fs.read",
+        "model.onnx.parse",
+        "mem.region"
+      ],
+      "contract": "bounded parser and retained/copy-owned weight storage"
+    },
+    {
+      "id": 125,
+      "name": "ai_secure_infer",
+      "module": "NeuroLink",
+      "implementation_status": "planned",
+      "source_language": "Reaper",
+      "required_capabilities": [
+        "crypto.he.evaluate",
+        "mem.region"
+      ],
+      "contract": "scheme-specific ciphertext evaluation and budget reporting"
+    },
+    {
+      "id": 126,
+      "name": "container_spawn",
+      "module": "VirtHost",
+      "implementation_status": "planned",
+      "source_language": "Reaper",
+      "required_capabilities": [
+        "process.namespace",
+        "fs.mount",
+        "net.namespace",
+        "resource.limit"
+      ],
+      "contract": "DuckOS-native isolated process tree"
+    },
+    {
+      "id": 127,
+      "name": "kvm_vm_create",
+      "module": "VirtHost",
+      "implementation_status": "planned",
+      "source_language": "Reaper",
+      "required_capabilities": [
+        "hypervisor.vm",
+        "mem.guest",
+        "storage.block"
+      ],
+      "contract": "target-neutral hypervisor contract; KVM optional host adapter"
+    },
+    {
+      "id": 128,
+      "name": "flatpak_install",
+      "module": "VirtHost",
+      "implementation_status": "planned",
+      "source_language": "Reaper",
+      "required_capabilities": [
+        "package.import",
+        "crypto.verify",
+        "fs.transaction"
+      ],
+      "contract": "optional Flatpak import; not DuckOS native package format"
+    },
+    {
+      "id": 129,
+      "name": "pkg_install",
+      "module": "VirtHost",
+      "implementation_status": "planned",
+      "source_language": "Reaper",
+      "required_capabilities": [
+        "package.install",
+        "package.verify",
+        "package.repository"
+      ],
+      "contract": "native transactional package service; never shell interpolation"
+    },
+    {
+      "id": 130,
+      "name": "build_cross",
+      "module": "VirtHost",
+      "implementation_status": "planned",
+      "source_language": "Reaper",
+      "required_capabilities": [
+        "toolchain.resolve",
+        "process.spawn",
+        "fs.read",
+        "fs.write"
+      ],
+      "contract": "pinned target manifest and isolated argument-vector build"
+    }
+  ],
+  "gates": [
+    {
+      "id": "S0",
+      "name": "Reaper language/IR boundary",
+      "status": "planned"
+    },
+    {
+      "id": "S1",
+      "name": "SysCore process and service providers",
+      "status": "planned"
+    },
+    {
+      "id": "S2",
+      "name": "device, firmware and ACPI providers",
+      "status": "planned"
+    },
+    {
+      "id": "S3",
+      "name": "NeuroLink accelerator and inference",
+      "status": "planned"
+    },
+    {
+      "id": "S4",
+      "name": "VirtHost isolation, hypervisor, packages and toolchains",
+      "status": "planned"
+    }
+  ],
+  "dependencies": {
+    "duckos_dabi64_v1": "Call/entry/value ABI; current draft does not provide a kernel syscall dispatcher",
+    "duckos_kernel_syscall_dispatcher": "not_present_on_mainline",
+    "reaper_typed_system_effects_and_lowering": "not_present_on_mainline",
+    "integration_rule": "Do not mark any operation Partial or Delivered until Reaper compiler, DABI64/runtime bridge, DuckOS provider and tests agree"
+  }
+}

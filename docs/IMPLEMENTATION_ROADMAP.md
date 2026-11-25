@@ -1,6 +1,6 @@
 # Reaper implementation roadmap
 
-**Reviewed:** 2026-11-24  
+**Reviewed:** 2026-11-25  
 **Authority:** source code, tests, build configuration and required CI checks.  
 **Product boundary:** Reaper is an executable Python reference language and local developer workbench with a partial native C17 track. It is not currently a complete native compiler, kernel runtime or unrestricted hardware execution environment.
 
@@ -19,7 +19,7 @@ Never move a row to Delivered because a registry, design, README, schema or gene
 
 | Track | Current state | Main evidence |
 |---|---|---|
-| Python language | Delivered compatibility baseline: lexer, parser, interpreter, modules, CLI and REPL | `reaper/`, `tests/`, `examples/` |
+| Python language | Delivered compatibility baseline: lexer, parser, interpreter, modules, CLI and REPL | `reaper/`, `tests/` |
 | Resource controls | Delivered reference-runtime quotas and explicit audit/effect boundaries | Runtime source and quota/security regression tests |
 | Static analysis | Partial conservative type and call diagnostics | `reaper --check`, Studio and LSP tests |
 | Studio | Delivered Windows editor/debugger foundation | `reaper_desktop.py`, desktop workflow |
@@ -27,6 +27,7 @@ Never move a row to Delivered because a registry, design, README, schema or gene
 | NOO TAH | Process-isolated Node.js integration through the installed upstream Node runtime | NOO TAH implementation and compatibility workflow |
 | Native C17 | Partial lexer/parser/AST/checked-i64 IR/limited lowering | `src/`, `include/`, `tests/`, native C workflow |
 | Native MMIO | Descriptor validation and callback contract only | Native headers, source and negative tests |
+| DuckOS system services 111–130 | Planned; versioned Reaper-facing contract and operation inventory only | `docs/DUCKOS_SYSTEM_SERVICES.md`, `.architecture/duckos-system-services.v1.json` |
 | Jora factory | Deterministic request validation, catalogue/composition and scaffold generation | `docs/JORA_APPLICATION_FACTORY.md`, CLI tests; generated packs remain non-installable |
 | Federation | Versioned metadata/adapters for OPlague, VentuSample and optional Pytyliki ABI | Federation manifests and integration tests |
 | МОСТ | 21 executable aliases and 33 reserved aliases | `docs/MOST_IMPLEMENTATION_STATUS.md`, registry validator |
@@ -123,10 +124,18 @@ Never move a row to Delivered because a registry, design, README, schema or gene
 
 **Acceptance:** reproducible archive inventory, verified checksums, passing required CI for the tagged commit and a maintainer-approved release.
 
+### R9 — DuckOS system services 111–130
+
+**Status: Planned; contract baseline integrated separately from executable code.**
+
+- Keep the three source domains explicit: SysCore (111–120), NeuroLink (121–125) and VirtHost (126–130).
+- Implement S0 first: typed Reaper declarations, Result/error semantics, ownership, effect checking, target ABI and canonical system-call IR.
+- Add one end-to-end operation at a time: Reaper source → type/effect validation → native lowering → DuckOS provider → negative and fault-injection tests.
+- Do not expose raw Linux syscall numbers, `clone` flags, KVM descriptors, apt/dnf shell commands or implicit POSIX daemon assumptions in the DuckOS contract.
+- Preserve capability checks, deterministic cleanup, bounded resource usage, audit identity and device-removal handling.
+
+**Acceptance:** S0–S4 in [DuckOS system services](DUCKOS_SYSTEM_SERVICES.md) pass with the same versioned ABI on the compiler and DuckOS provider. Catalogue entries and prose specifications do not count as delivered runtime behavior.
+
 ## Not a Reaper workstream
 
-A public hosted API, cloud deployment, kernel driver, privileged device manager and production control plane are not current Reaper product targets. They must not be marked Planned as if they were missing parts of the language unless a separately approved product decision establishes ownership and a concrete target.
-
-## Change protocol
-
-For each capability change, update together: owning source, regression tests, feature matrix, relevant architecture/contract page, documentation index and CI. Record the exact acceptance command and CI run. Keep Partial/Planned status when any required gate is missing.
+A public hosted API, cloud deployment, kernel driver, privileged device manager and production control plane are not current Reaper product targets. Their existence in a catalogue or example must not be presented as a shipped feature.
