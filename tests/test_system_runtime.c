@@ -48,6 +48,14 @@ static void test_registry_and_authorization(void) {
     assert(reaper_system_authorize(cron, REAPER_SYSTEM_PROFILE_HOSTED,
         REAPER_SYSTEM_EFFECT_SCHEDULE, 0U, &authorization, &error)
         == REAPER_SYSTEM_ADAPTER_UNAVAILABLE);
+    ReaperSystemOperation forged = *cron;
+    assert(reaper_system_authorize(&forged, REAPER_SYSTEM_PROFILE_HOSTED,
+        REAPER_SYSTEM_EFFECT_SCHEDULE, REAPER_SYSTEM_ADAPTER_SCHEDULER,
+        &authorization, &error) == REAPER_SYSTEM_INVALID_ARGUMENT);
+    assert(reaper_system_authorize(cron,
+        REAPER_SYSTEM_PROFILE_HOSTED | REAPER_SYSTEM_PROFILE_SIMULATOR,
+        REAPER_SYSTEM_EFFECT_SCHEDULE, REAPER_SYSTEM_ADAPTER_SCHEDULER,
+        &authorization, &error) == REAPER_SYSTEM_INVALID_ARGUMENT);
     assert(reaper_system_authorize(NULL, REAPER_SYSTEM_PROFILE_HOSTED, 0U, 0U,
         &authorization, &error) == REAPER_SYSTEM_INVALID_ARGUMENT);
 }
@@ -112,6 +120,10 @@ static void test_bounded_log_ring(void) {
     assert(output.length == 4U && strcmp(output.message, "boot") == 0);
     assert(reaper_system_log_ring_pop(&ring, &output, &error) == REAPER_SYSTEM_OK);
     assert(output.timestamp_ns == 43U);
+    input.timestamp_ns = 44U;
+    assert(reaper_system_log_ring_push(&ring, &input, &error) == REAPER_SYSTEM_OK);
+    assert(reaper_system_log_ring_pop(&ring, &output, &error) == REAPER_SYSTEM_OK);
+    assert(output.timestamp_ns == 44U);
 }
 
 static void test_acpi_table_validation(void) {
@@ -195,7 +207,7 @@ static void test_container_and_vm_policy_validation(void) {
     assert(reaper_system_container_policy_validate(&policy, &error) == REAPER_SYSTEM_OK);
 
     ReaperSystemVmProfile vm = {
-        "x86_64", UINT64_C(1073741824), 4U, 1U, 0U, 0U
+        "x86_64", UINT64_C(1073741824), 4096U, 4U, 1U, 0U, 0U
     };
     assert(reaper_system_vm_profile_validate(&vm, &error) == REAPER_SYSTEM_OK);
     vm.device_passthrough = 1U;
@@ -203,6 +215,10 @@ static void test_container_and_vm_policy_validation(void) {
            == REAPER_SYSTEM_PERMISSION_DENIED);
     vm.iommu_available = 1U;
     assert(reaper_system_vm_profile_validate(&vm, &error) == REAPER_SYSTEM_OK);
+    vm.page_size_bytes = 16384U;
+    assert(reaper_system_vm_profile_validate(&vm, &error) == REAPER_SYSTEM_OK);
+    vm.page_size_bytes = 3000U;
+    assert(reaper_system_vm_profile_validate(&vm, &error) == REAPER_SYSTEM_OUT_OF_RANGE);
 }
 
 static void test_cross_target_validation(void) {
