@@ -5,7 +5,7 @@ from reaper.lexer import tokenize
 from reaper.token_catalog import CATALOG_GROUPS, TOKEN_ALPHABET, TOKEN_CATALOG_SIZE, catalog_summary, token_catalog, token_info, token_is_reserved, validate_token_catalog
 
 class TokenCatalogTests(unittest.TestCase):
-    def test_666_unique_digit_free_lexemes(self):
+    def test_unique_digit_free_lexemes(self):
         validate_token_catalog()
         entries = token_catalog()
         self.assertEqual(len(entries), 666)

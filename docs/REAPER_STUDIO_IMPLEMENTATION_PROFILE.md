@@ -4,7 +4,7 @@
 **Product:** Reaper Studio  
 **Runtime:** existing Reaper interpreter and debugger APIs  
 **Desktop UI:** Python standard-library Tkinter  
-**Rulebook:** 666 engineering requirements, normalized into seven non-overlapping domains
+**Rulebook:** complete engineering requirement set, normalized into seven non-overlapping domains
 
 ## 1. Canonical numbering
 

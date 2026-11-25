@@ -1,4 +1,4 @@
-"""Canonical 666-entry Reaper symbolic-token catalogue."""
+"""Canonical complete Reaper symbolic-token catalogue."""
 from __future__ import annotations
 import json
 from importlib.resources import files

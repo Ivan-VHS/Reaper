@@ -5,7 +5,7 @@ Start with the [project README](../README.md) for installation, first commands a
 ## Key pages
 
 - [Features and maturity](FEATURES.md)
-- [Psychoporter 666 function categories](FUNCTION_CATEGORIES_666.md)
+- [Psychoporter Engineering Code function categories](FUNCTION_CATEGORIES_666.md)
 - [Architecture](ARCHITECTURE.md)
 - [Hardware language track](HARDWARE_LANGUAGE.md)
 - [System Runtime ABI v1](SYSTEM_RUNTIME_ABI_V1.md)
@@ -17,7 +17,7 @@ Start with the [project README](../README.md) for installation, first commands a
 ## Browse by topic
 
 - [Language and toolchain](clusters/language-toolchain.md)
-- [Psychoporter 666 function categories](FUNCTION_CATEGORIES_666.md)
+- [Psychoporter Engineering Code function categories](FUNCTION_CATEGORIES_666.md)
 - [Architecture and systems](clusters/architecture-systems.md)
 - [Studio and IDE](clusters/studio-ide-ui.md)
 - [Quality and evidence](clusters/quality-evidence.md)
@@ -26,7 +26,7 @@ Start with the [project README](../README.md) for installation, first commands a
 
 ## Shared rules
 
-- [Psychoporter 666 coding and human-layer standard](PSYCHOPORTER_666.md)
+- [Psychoporter Engineering Code coding and human-layer standard](PSYCHOPORTER_666.md)
 - [Documentation standard](UNIFIED_DOCUMENTATION_STANDARD.md)
 - [Engineering evolution framework](ENGINEERING_EVOLUTION_FRAMEWORK.md)
 - [Repository evolution directives](REPOSITORY_EVOLUTION_DIRECTIVES.md)

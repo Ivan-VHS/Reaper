@@ -18,10 +18,10 @@ class MostFunctionCategoryTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.data = json.loads(
-            (ROOT / "language" / "functions_666.json").read_text(encoding="utf-8")
+            (ROOT / "language" / "function_registry.v1.json").read_text(encoding="utf-8")
         )
 
-    def test_registry_has_exactly_666_categorized_entries(self):
+    def test_registry_has_expected_categorized_entry_count(self):
         count, _, _ = validator.validate(self.data)
         self.assertEqual(count, 666)
         self.assertEqual(len(self.data["functions"]), 666)

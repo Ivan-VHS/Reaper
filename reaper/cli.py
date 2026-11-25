@@ -58,7 +58,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--architecture-profile", choices=("pytyliki", "reaper", "oplague"), help="rank target architectures for a project profile")
     parser.add_argument("--available-architectures", action="store_true", help="show only architecture toolchain candidates found on PATH")
     parser.add_argument("--architectures-json", action="store_true", help="emit the architecture matrix as JSON")
-    parser.add_argument("--catalog", action="store_true", help="print all 666 reserved symbolic tokens as JSON")
+    parser.add_argument("--catalog", action="store_true", help="print all reserved symbolic tokens as JSON")
     parser.add_argument("--catalog-group", choices=CATALOG_GROUPS, help="filter --catalog by domain")
     parser.add_argument("--catalog-token", metavar="LEXEME", help="show metadata for one token lexeme")
     parser.add_argument("--products", action="store_true", help="list integrated internal Reaper products")
