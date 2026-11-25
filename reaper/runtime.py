@@ -423,9 +423,7 @@ class Interpreter:
                 raise self._error(token, "numeric operations must produce real numbers")
             if isinstance(result, float) and not math.isfinite(result):
                 raise self._error(token, "numeric result is not finite")
-            if fixed_type is not None:
-                if operator == "/" or isinstance(result, float):
-                    raise self._error(token, f"operator '{operator}' does not produce a {fixed_type} value")
+            if fixed_type is not None and operator != "/" and not isinstance(result, float):
                 if not fixed_integer_fits(result, fixed_type):
                     raise self._error(token, f"numeric result overflows {fixed_type}")
                 return FixedInteger(result, fixed_type)
