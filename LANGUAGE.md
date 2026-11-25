@@ -35,3 +35,9 @@ python -m reaper program.rpr --native program
 ```
 
 Lists, `each`, collection pipelines, closures, modules, decimals, `nothing`, dynamic dispatch, async/effects, and arbitrary FFI are deliberately outside this first native slice. The Python runtime remains authoritative for those constructs. The C17 MMIO adapter validates descriptors and capability grants through a host-supplied bus; it does not map physical memory. QCS remains a separate validation frontend. See [Native AOT Compiler](docs/NATIVE_COMPILER.md) and [Hardware Language](docs/HARDWARE_LANGUAGE.md).
+
+## System Runtime bridge
+
+Interpreted `.rpr` programs can call the capability-gated System Runtime through the explicit `ffi_open` / `ffi_bind` bridge. The trusted host must attach a provider to the current execution thread before the program starts. Without an attachment or the required capability, the request fails closed.
+
+See [the ABI and bridge contract](docs/SYSTEM_RUNTIME_ABI_V1.md) and [the Reaper example](examples/system_runtime.rpr). This path requires `--allow-native-ffi` and an absolute library path. The scalar AOT backend does not yet lower FFI, and this bridge does not by itself implement DuckOS system calls.

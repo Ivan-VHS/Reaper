@@ -15,10 +15,21 @@ target_include_directories(reaper_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/includ
 
 add_library(reaper_system STATIC src/system.c)
 target_include_directories(reaper_system PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set_target_properties(reaper_system PROPERTIES POSITION_INDEPENDENT_CODE ON)
 if(MSVC)
  target_compile_options(reaper_system PRIVATE /W4)
 else()
  target_compile_options(reaper_system PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
+
+add_library(reaper_system_bridge SHARED src/system_bridge.c)
+target_include_directories(reaper_system_bridge PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(reaper_system_bridge PRIVATE reaper_system)
+set_target_properties(reaper_system_bridge PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
+if(MSVC)
+ target_compile_options(reaper_system_bridge PRIVATE /W4)
+else()
+ target_compile_options(reaper_system_bridge PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
 endif()
 
 add_library(reaper_ffi STATIC src/ffi.c)
@@ -73,6 +84,10 @@ if(REAPER_BUILD_TESTS)
  target_link_libraries(reaper-system-tests PRIVATE reaper_system)
  add_test(NAME native-system-abi COMMAND reaper-system-tests)
 
+ add_executable(reaper-system-bridge-tests tests/test_system_bridge.c)
+ target_link_libraries(reaper-system-bridge-tests PRIVATE reaper_system_bridge)
+ add_test(NAME native-system-reaper-bridge COMMAND reaper-system-bridge-tests)
+
  add_executable(reaper-command-palette-tests tests/test_command_palette.c)
  target_link_libraries(reaper-command-palette-tests PRIVATE reaper_core)
  add_test(NAME native-command-palette COMMAND reaper-command-palette-tests)
@@ -107,4 +122,9 @@ endif()
 install(TARGETS reaper-c RUNTIME DESTINATION bin)
 install(TARGETS reaper_ffi ARCHIVE DESTINATION lib)
 install(TARGETS reaper_system ARCHIVE DESTINATION lib)
-install(FILES include/reaper/ffi.h include/reaper/system.h DESTINATION include/reaper)
+install(TARGETS reaper_system_bridge
+        LIBRARY DESTINATION lib
+        RUNTIME DESTINATION bin
+        ARCHIVE DESTINATION lib)
+install(FILES include/reaper/ffi.h include/reaper/system.h
+              include/reaper/system_bridge.h DESTINATION include/reaper)

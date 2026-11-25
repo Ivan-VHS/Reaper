@@ -1,0 +1,22 @@
+# Reaper System Runtime bridge.
+#
+# Requirements:
+# - run with --allow-native-ffi;
+# - replace the path with the absolute library path (use .so/.dylib on Unix);
+# - a trusted OS embedder must attach a capability-limited host to this
+#   execution thread before this program starts.
+
+make system_library := ffi_open("C:/absolute/path/to/reaper_system_bridge.dll")
+make system_call_raw := ffi_bind(system_library, "reaper_system_call_json", "cstr", "cstr,cstr")
+make system_status := ffi_bind(system_library, "reaper_system_last_status", "i32")
+make system_error := ffi_bind(system_library, "reaper_system_last_error", "cstr")
+
+make current_process := system_call_raw("process.current_id", "{}")
+
+when system_status() == 0 {
+    emit "process.current_id = " ++ current_process
+} otherwise {
+    emit "system request rejected (" ++ text(system_status()) ++ "): " ++ system_error()
+}
+
+ffi_close(system_library)
