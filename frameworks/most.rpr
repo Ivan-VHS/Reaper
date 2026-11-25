@@ -1,0 +1,49 @@
+# MOST: stable API facade over the canonical exact-alias profile.
+# The Reaper grammar, AST and runtime remain the single semantic authority.
+
+import "perenosimost.rpr" as bridge
+
+export craft alias_table() {
+    yield bridge["alias_table"]()
+}
+
+export craft canonical(word) {
+    yield bridge["canonical"](word)
+}
+
+export craft classify(word) {
+    yield [bridge["canonical"](word), bridge["support"](word)]
+}
+
+export craft runtime_aliases() {
+    yield bridge["runtime_aliases"]()
+}
+
+export craft reserved_aliases() {
+    yield bridge["reserved_aliases"]()
+}
+
+export craft normalize_words(words) {
+    yield bridge["normalize_words"](words)
+}
+
+export craft check_runtime_words(words) {
+    vary rejected := []
+    each word in words {
+        when bridge["support"](word) != "runtime" {
+            change rejected := push(rejected, [word, bridge["support"](word)])
+        }
+    }
+    yield [size(rejected) == 0, rejected]
+}
+
+export craft profile_contract() {
+    yield [
+        "МОСТ",
+        "REAPER",
+        "exact-match",
+        size(runtime_aliases()),
+        size(reserved_aliases()),
+        "one parser and one runtime"
+    ]
+}
