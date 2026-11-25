@@ -6,6 +6,7 @@ Start with the [project README](../README.md) for installation, first commands a
 - [NEXUS system-service boundaries](NEXUS_SYSTEM_SERVICE_BOUNDARIES_V1.md) — service ownership and evidence limits.
 
 - [Features and maturity](FEATURES.md)
+- [Psychoporter 666 function categories](FUNCTION_CATEGORIES_666.md)
 - [Architecture](ARCHITECTURE.md)
 - [Hardware language track](HARDWARE_LANGUAGE.md)
 - [Implementation roadmap](IMPLEMENTATION_ROADMAP.md)
@@ -15,6 +16,7 @@ Start with the [project README](../README.md) for installation, first commands a
 ## Browse by topic
 
 - [Language and toolchain](clusters/language-toolchain.md)
+- [Psychoporter 666 function categories](FUNCTION_CATEGORIES_666.md)
 - [Architecture and systems](clusters/architecture-systems.md)
 - [Studio and IDE](clusters/studio-ide-ui.md)
 - [Quality and evidence](clusters/quality-evidence.md)
