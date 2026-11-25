@@ -66,11 +66,19 @@ craft ir_verify_function(function_item) {
     }
 
     vary registers := []
+    vary parameter_names := []
     vary parameter_index := 0
     loop while parameter_index < size(parameters) {
         make parameter := parameters[parameter_index]
         when size(parameter) != 3 or parameter[0] != "PARAM" or size(parameter[1]) == 0 {
             yield ["ERROR", "invalid function parameter"]
+        }
+        when ir_has_register(parameter_names, parameter[1]) {
+            yield ["ERROR", "function parameter name is duplicated"]
+        }
+        change parameter_names := push(parameter_names, parameter[1])
+        when parameter[2] < 0 {
+            yield ["ERROR", "parameter register must be non-negative"]
         }
         make added := ir_add_register(registers, parameter[2])
         when added[0] == "ERROR" { yield added }
@@ -274,7 +282,19 @@ craft ir_compile_expression(expression_result, parameters) {
         yield ["ERROR", "RPR-E5206 parser result is not successful"]
     }
 
-    make lowered := ir_lower_expression(expression_result[1], parameters, 0)
+    vary first_free_register := 0
+    vary parameter_index := 0
+    loop while parameter_index < size(parameters) {
+        make parameter := parameters[parameter_index]
+        when size(parameter) != 3 or parameter[0] != "PARAM" {
+            yield ["ERROR", "RPR-E5208 malformed parameter binding"]
+        }
+        when parameter[2] >= first_free_register {
+            change first_free_register := parameter[2] + 1
+        }
+        change parameter_index := parameter_index + 1
+    }
+    make lowered := ir_lower_expression(expression_result[1], parameters, first_free_register)
     when lowered[0] == "ERROR" { yield lowered }
 
     make with_return := push(lowered[1], ["RETURN", ["REG", lowered[2]]])
