@@ -108,12 +108,18 @@ craft semantic_type_of(node, environment) {
     when node[0] == "list" {
         when size(node) < 2 { yield ["ERROR", "RPR-T0018 malformed list node"] }
         make items := node[1]
-        vary item_type := "Nothing"
+        vary item_type := "Any"
+        vary has_item := false
         vary index := 0
         loop while index < size(items) {
             make item_result := semantic_type_of(items[index], environment)
             when item_result[0] == "ERROR" { yield item_result }
-            change item_type := semantic_unify(item_type, item_result[1])
+            when not has_item {
+                change item_type := item_result[1]
+                change has_item := true
+            } otherwise {
+                change item_type := semantic_unify(item_type, item_result[1])
+            }
             change index := index + 1
         }
         yield ["OK", "List[" ++ item_type ++ "]"]
