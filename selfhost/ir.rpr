@@ -1,0 +1,350 @@
+# Reaper-native typed expression lowering and canonical IR verification.
+#
+# Canonical subset v1:
+#   module   = ["REAPER_IR", 1, [function, ...]]
+#   function = ["FUNCTION", name, [["PARAM", name, register], ...], block]
+#   block    = ["BLOCK", "entry", [instruction, ...]]
+#   CONST    = ["CONST", destination, type, value]
+#   COPY     = ["COPY", destination, ["REG", source]]
+#   UNARY    = ["UNARY", destination, operator, operand]
+#   BINARY   = ["BINARY", destination, operator, left, right]
+#   RETURN   = ["RETURN", operand]
+#
+# Register identifiers are non-negative integers. Each function has one entry
+# block in this bootstrap slice. Control-flow graphs and block arguments are
+# intentionally reserved for a later IR revision.
+
+craft ir_type_is_valid(type_name) {
+    yield type_name == "i64" or type_name == "u64" or type_name == "f64" or type_name == "bool" or type_name == "string" or type_name == "unit"
+}
+
+craft ir_binary_operator_is_valid(op) {
+    yield op == "+" or op == "-" or op == "*" or op == "/" or op == "//" or op == "%" or op == "**" or op == "==" or op == "!=" or op == "<" or op == "<=" or op == ">" or op == ">=" or op == "and" or op == "or" or op == "++" or op == "::"
+}
+
+craft ir_unary_operator_is_valid(op) {
+    yield op == "+" or op == "-" or op == "not" or op == "!"
+}
+
+craft ir_has_register(registers, wanted) {
+    vary index := 0
+    loop while index < size(registers) {
+        when registers[index] == wanted { yield true }
+        change index := index + 1
+    }
+    yield false
+}
+
+craft ir_add_register(registers, wanted) {
+    when wanted < 0 { yield ["ERROR", "register identifiers must be non-negative"] }
+    when ir_has_register(registers, wanted) { yield ["ERROR", "register is defined more than once"] }
+    yield push(registers, wanted)
+}
+
+craft ir_operand_is_valid(operand, registers) {
+    when size(operand) == 2 and operand[0] == "REG" {
+        yield ir_has_register(registers, operand[1])
+    }
+    when size(operand) == 3 and operand[0] == "IMM" {
+        yield ir_type_is_valid(operand[1])
+    }
+    yield false
+}
+
+craft ir_verify_function(function_item) {
+    when size(function_item) != 4 or function_item[0] != "FUNCTION" {
+        yield ["ERROR", "invalid function record"]
+    }
+    when size(function_item[1]) == 0 {
+        yield ["ERROR", "function name must not be empty"]
+    }
+
+    make parameters := function_item[2]
+    make block := function_item[3]
+    when size(block) != 3 or block[0] != "BLOCK" or block[1] != "entry" {
+        yield ["ERROR", "IR v1 requires one entry block"]
+    }
+
+    vary registers := []
+    vary parameter_index := 0
+    loop while parameter_index < size(parameters) {
+        make parameter := parameters[parameter_index]
+        when size(parameter) != 3 or parameter[0] != "PARAM" or size(parameter[1]) == 0 {
+            yield ["ERROR", "invalid function parameter"]
+        }
+        make added := ir_add_register(registers, parameter[2])
+        when added[0] == "ERROR" { yield added }
+        change parameter_index := parameter_index + 1
+    }
+
+    make instructions := block[2]
+    when size(instructions) == 0 {
+        yield ["ERROR", "entry block must end with a return"]
+    }
+
+    vary instruction_index := 0
+    vary terminated := false
+
+    loop while instruction_index < size(instructions) {
+        make instruction := instructions[instruction_index]
+        when terminated {
+            yield ["ERROR", "instruction appears after a terminator"]
+        }
+        when size(instruction) == 0 {
+            yield ["ERROR", "empty IR instruction"]
+        }
+
+        when instruction[0] == "CONST" {
+            when size(instruction) != 4 or not ir_type_is_valid(instruction[2]) {
+                yield ["ERROR", "invalid CONST instruction"]
+            }
+            make added := ir_add_register(registers, instruction[1])
+            when added[0] == "ERROR" { yield added }
+        } otherwise {
+            when instruction[0] == "COPY" {
+                when size(instruction) != 3 or not ir_operand_is_valid(instruction[2], registers) {
+                    yield ["ERROR", "COPY reads an undefined register or malformed operand"]
+                }
+                when size(instruction[2]) != 2 or instruction[2][0] != "REG" {
+                    yield ["ERROR", "COPY requires a register source"]
+                }
+                make added := ir_add_register(registers, instruction[1])
+                when added[0] == "ERROR" { yield added }
+            } otherwise {
+                when instruction[0] == "UNARY" {
+                    when size(instruction) != 4 or not ir_unary_operator_is_valid(instruction[2]) {
+                        yield ["ERROR", "invalid UNARY instruction"]
+                    }
+                    when not ir_operand_is_valid(instruction[3], registers) {
+                        yield ["ERROR", "UNARY reads an undefined register or malformed operand"]
+                    }
+                    make added := ir_add_register(registers, instruction[1])
+                    when added[0] == "ERROR" { yield added }
+                } otherwise {
+                    when instruction[0] == "BINARY" {
+                        when size(instruction) != 5 or not ir_binary_operator_is_valid(instruction[2]) {
+                            yield ["ERROR", "invalid BINARY instruction"]
+                        }
+                        when not ir_operand_is_valid(instruction[3], registers) or not ir_operand_is_valid(instruction[4], registers) {
+                            yield ["ERROR", "BINARY reads an undefined register or malformed operand"]
+                        }
+                        make added := ir_add_register(registers, instruction[1])
+                        when added[0] == "ERROR" { yield added }
+                    } otherwise {
+                        when instruction[0] == "RETURN" {
+                            when size(instruction) != 2 or not ir_operand_is_valid(instruction[1], registers) {
+                                yield ["ERROR", "RETURN reads an undefined register or malformed operand"]
+                            }
+                            change terminated := true
+                        } otherwise {
+                            yield ["ERROR", "unknown IR instruction"]
+                        }
+                    }
+                }
+            }
+        }
+        change instruction_index := instruction_index + 1
+    }
+
+    when not terminated {
+        yield ["ERROR", "entry block has no terminator"]
+    }
+    yield ["OK", size(registers)]
+}
+
+craft ir_verify(module_item) {
+    when size(module_item) != 3 or module_item[0] != "REAPER_IR" or module_item[1] != 1 {
+        yield ["ERROR", "unsupported canonical IR header or version"]
+    }
+    when size(module_item[2]) == 0 {
+        yield ["ERROR", "IR module must contain at least one function"]
+    }
+
+    vary function_index := 0
+    vary function_names := []
+    loop while function_index < size(module_item[2]) {
+        make function_item := module_item[2][function_index]
+        when size(function_item) != 4 or function_item[0] != "FUNCTION" {
+            yield ["ERROR", "invalid function record in module"]
+        }
+        when ir_has_register(function_names, function_item[1]) {
+            yield ["ERROR", "function name is duplicated"]
+        }
+        change function_names := push(function_names, function_item[1])
+        make checked := ir_verify_function(function_item)
+        when checked[0] == "ERROR" { yield checked }
+        change function_index := function_index + 1
+    }
+    yield ["OK", size(module_item[2])]
+}
+
+craft ir_parameter_register(parameters, name) {
+    vary index := 0
+    loop while index < size(parameters) {
+        make parameter := parameters[index]
+        when parameter[1] == name {
+            yield ["OK", parameter[2]]
+        }
+        change index := index + 1
+    }
+    yield ["ERROR", "unknown variable " ++ name]
+}
+
+craft ir_lower_expression(node, parameters, next_register) {
+    when size(node) == 0 {
+        yield ["ERROR", "RPR-E5200 empty expression node"]
+    }
+
+    when node[0] == "literal" {
+        make token_kind := node[1]
+        make literal_value := node[2]
+        vary literal_type := "unit"
+
+        when token_kind == "NUMBER" {
+            change literal_type := "i64"
+            vary digit_index := 0
+            loop while digit_index < size(literal_value) {
+                when literal_value[digit_index] == "." {
+                    change literal_type := "f64"
+                }
+                change digit_index := digit_index + 1
+            }
+        } otherwise {
+            when token_kind == "STRING" { change literal_type := "string" } otherwise {
+                when token_kind == "TRUE" or token_kind == "FALSE" { change literal_type := "bool" }
+            }
+        }
+
+        when not ir_type_is_valid(literal_type) {
+            yield ["ERROR", "RPR-E5202 unsupported literal type"]
+        }
+        yield ["OK", [["CONST", next_register, literal_type, literal_value]], next_register, next_register + 1]
+    }
+
+    when node[0] == "name" {
+        make resolved := ir_parameter_register(parameters, node[1])
+        when resolved[0] == "ERROR" {
+            yield ["ERROR", "RPR-E5203 " ++ resolved[1]]
+        }
+        yield ["OK", [], resolved[1], next_register]
+    }
+
+    when node[0] == "unary" {
+        when not ir_unary_operator_is_valid(node[1]) {
+            yield ["ERROR", "RPR-E5204 unsupported unary operator"]
+        }
+        make operand_result := ir_lower_expression(node[2], parameters, next_register)
+        when operand_result[0] == "ERROR" { yield operand_result }
+        make destination := operand_result[3]
+        make operation := ["UNARY", destination, node[1], ["REG", operand_result[2]]]
+        make instructions := push(operand_result[1], operation)
+        yield ["OK", instructions, destination, destination + 1]
+    }
+
+    when node[0] == "binary" {
+        when not ir_binary_operator_is_valid(node[1]) {
+            yield ["ERROR", "RPR-E5205 unsupported binary operator"]
+        }
+        make left_result := ir_lower_expression(node[2], parameters, next_register)
+        when left_result[0] == "ERROR" { yield left_result }
+        make right_result := ir_lower_expression(node[3], parameters, left_result[3])
+        when right_result[0] == "ERROR" { yield right_result }
+        make destination := right_result[3]
+        make operation := ["BINARY", destination, node[1], ["REG", left_result[2]], ["REG", right_result[2]]]
+        make instructions := push(right_result[1], operation)
+        vary combined := []
+        vary index := 0
+        loop while index < size(left_result[1]) {
+            change combined := push(combined, left_result[1][index])
+            change index := index + 1
+        }
+        change index := 0
+        loop while index < size(instructions) {
+            change combined := push(combined, instructions[index])
+            change index := index + 1
+        }
+        yield ["OK", combined, destination, destination + 1]
+    }
+
+    yield ["ERROR", "RPR-E5201 expression form is not supported by the bootstrap lowerer"]
+}
+
+craft ir_compile_expression(expression_result, parameters) {
+    when size(expression_result) != 2 or expression_result[0] != "OK" {
+        yield ["ERROR", "RPR-E5206 parser result is not successful"]
+    }
+
+    make lowered := ir_lower_expression(expression_result[1], parameters, 0)
+    when lowered[0] == "ERROR" { yield lowered }
+
+    make with_return := push(lowered[1], ["RETURN", ["REG", lowered[2]]])
+    make function_item := ["FUNCTION", "expression", parameters, ["BLOCK", "entry", with_return]]
+    make module_item := ["REAPER_IR", 1, [function_item]]
+    make checked := ir_verify(module_item)
+
+    when checked[0] == "ERROR" {
+        yield ["ERROR", "RPR-E5207 generated IR failed verification: " ++ checked[1]]
+    }
+    yield ["OK", module_item]
+}
+
+make valid_module := ["REAPER_IR", 1, [
+    ["FUNCTION", "sum", [["PARAM", "left", 0], ["PARAM", "right", 1]],
+        ["BLOCK", "entry", [
+            ["BINARY", 2, "+", ["REG", 0], ["REG", 1]],
+            ["RETURN", ["REG", 2]]
+        ]]
+    ]
+]]
+assert(ir_verify(valid_module) == ["OK", 1], "valid SSA expression module rejected")
+
+make undefined_read := ["REAPER_IR", 1, [
+    ["FUNCTION", "bad", [], ["BLOCK", "entry", [
+        ["BINARY", 1, "+", ["REG", 7], ["IMM", "i64", 2]],
+        ["RETURN", ["REG", 1]]
+    ]]]
+]]
+assert(ir_verify(undefined_read)[0] == "ERROR", "undefined register read accepted")
+
+make duplicate_definition := ["REAPER_IR", 1, [
+    ["FUNCTION", "bad", [], ["BLOCK", "entry", [
+        ["CONST", 0, "i64", 1],
+        ["CONST", 0, "i64", 2],
+        ["RETURN", ["REG", 0]]
+    ]]]
+]]
+assert(ir_verify(duplicate_definition)[0] == "ERROR", "duplicate register definition accepted")
+
+make missing_return := ["REAPER_IR", 1, [
+    ["FUNCTION", "bad", [], ["BLOCK", "entry", [
+        ["CONST", 0, "i64", 1]
+    ]]]
+]]
+assert(ir_verify(missing_return)[0] == "ERROR", "unterminated block accepted")
+
+make expression_ast := ["OK", ["binary", "+",
+    ["literal", "NUMBER", "2", 1, 1],
+    ["binary", "*",
+        ["literal", "NUMBER", "3", 1, 5],
+        ["literal", "NUMBER", "4", 1, 9],
+        1, 7
+    ],
+    1, 3
+]]
+make compiled := ir_compile_expression(expression_ast, [])
+assert(compiled[0] == "OK", "expression AST failed to lower into canonical IR")
+assert(ir_verify(compiled[1]) == ["OK", 1], "lowered expression IR failed verification")
+
+make parameter_ast := ["OK", ["binary", "+",
+    ["name", "input", 1, 1],
+    ["literal", "NUMBER", "1", 1, 9],
+    1, 7
+]]
+make parameterized := ir_compile_expression(parameter_ast, [["PARAM", "input", 0]])
+assert(parameterized[0] == "OK", "declared function parameter failed to resolve")
+assert(ir_verify(parameterized[1]) == ["OK", 1], "parameterized IR failed verification")
+
+make unsupported_ast := ["OK", ["call", ["name", "f", 1, 1], [], 1, 2]]
+assert(ir_compile_expression(unsupported_ast, [])[0] == "ERROR", "unsupported call lowering must fail explicitly")
+
+emit "SELFHOST_IR_OK"
