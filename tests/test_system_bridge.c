@@ -98,7 +98,7 @@ static void test_requires_attachment(void) {
 
     assert(reaper_system_call_json("process.current_id", "{}") == NULL);
     assert(reaper_system_last_status() == REAPER_SYSTEM_ACCESS_DENIED);
-    assert(strstr(reaper_system_last_error(), "not attached") != NULL);
+    assert(strstr(reaper_system_last_error(), "attached to this thread") != NULL);
 }
 
 static void test_capability_and_operation_checks(void) {
