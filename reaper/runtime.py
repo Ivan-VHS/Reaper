@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any, Callable
 
 from .errors import ExecutionLimitError, ReaperRuntimeError
+from .fixed_width import fixed_integer_fits, is_fixed_integer_type
 from .governance import ConsentAuthority
 from .lexer import Token
 from .parser import Node, parse
@@ -26,6 +27,7 @@ from .token_catalog import token_catalog, token_info, token_is_reserved
 class Binding:
     value: Any
     mutable: bool
+    type_name: str | None = None
 
 
 class Environment:
@@ -34,10 +36,17 @@ class Environment:
         self.values: dict[str, Binding] = {}
         self.exports: set[str] = set()
 
-    def define(self, name: str, value: Any, mutable: bool = False) -> None:
+    def define(
+        self, name: str, value: Any, mutable: bool = False, type_name: str | None = None
+    ) -> None:
         if name in self.values:
             raise ReaperRuntimeError(f"'{name}' is already defined in this scope")
-        self.values[name] = Binding(value, mutable)
+        if type_name is not None:
+            if not is_fixed_integer_type(type_name):
+                raise ReaperRuntimeError(f"unsupported fixed-width integer type '{type_name}'")
+            if not fixed_integer_fits(value, type_name):
+                raise ReaperRuntimeError(f"value is outside the {type_name} range")
+        self.values[name] = Binding(value, mutable, type_name)
 
     def get(self, name: str) -> Any:
         if name in self.values:
@@ -51,6 +60,8 @@ class Environment:
             binding = self.values[name]
             if not binding.mutable:
                 raise ReaperRuntimeError(f"'{name}' was declared with 'make' and cannot be changed; use 'vary'")
+            if binding.type_name is not None and not fixed_integer_fits(value, binding.type_name):
+                raise ReaperRuntimeError(f"assigned value is outside the {binding.type_name} range")
             binding.value = value
             return
         if self.parent is not None:
@@ -212,8 +223,10 @@ class Interpreter:
                 raise self._error(node.token, f"cannot export undefined local name '{name}'")
             environment.exports.add(name)
         elif node.kind == "declare":
-            name, mutable = node.value
-            environment.define(name, self._evaluate(children[0], environment), mutable)
+            name, mutable = node.value[:2]
+            declared_type = node.value[2] if len(node.value) > 2 else None
+            value = self._evaluate(children[0], environment)
+            environment.define(name, value, mutable, declared_type)
         elif node.kind == "change":
             environment.change(node.value, self._evaluate(children[0], environment))
         elif node.kind == "emit":
