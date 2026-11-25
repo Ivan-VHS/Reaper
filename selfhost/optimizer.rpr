@@ -68,10 +68,12 @@ craft optimizer_fold_binary(op, left, right) {
             }
         }
         when op == "==" {
-            yield ["OK", "bool", left[2] == right[2]]
+            when left[2] == right[2] { yield ["OK", "bool", "true"] }
+            yield ["OK", "bool", "false"]
         }
         when op == "!=" {
-            yield ["OK", "bool", left[2] != right[2]]
+            when left[2] != right[2] { yield ["OK", "bool", "true"] }
+            yield ["OK", "bool", "false"]
         }
     }
 
