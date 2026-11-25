@@ -110,6 +110,7 @@ const char *reaper_system_call_json(
     size_t request_length;
     size_t response_length = 0U;
     ReaperSystemStatus status;
+    ReaperSystemError error;
 
     response_buffer[0] = '\0';
 
