@@ -14,7 +14,8 @@ typedef enum {
     REAPER_IR_TYPE_INVALID = 0,
     REAPER_IR_TYPE_I64,
     REAPER_IR_TYPE_BOOL,
-    REAPER_IR_TYPE_UNIT
+    REAPER_IR_TYPE_UNIT,
+    REAPER_IR_TYPE_U32
 } ReaperIrType;
 
 typedef enum {
@@ -24,7 +25,12 @@ typedef enum {
     REAPER_IR_OP_RETURN,
     REAPER_IR_OP_SUB_I64,
     REAPER_IR_OP_MUL_I64,
-    REAPER_IR_OP_DIV_I64
+    REAPER_IR_OP_DIV_I64,
+    REAPER_IR_OP_CONST_U32,
+    REAPER_IR_OP_ADD_U32,
+    REAPER_IR_OP_SUB_U32,
+    REAPER_IR_OP_MUL_U32,
+    REAPER_IR_OP_DIV_U32
 } ReaperIrOpcode;
 
 typedef struct {
@@ -55,6 +61,12 @@ int reaper_ir_verify(const ReaperIrModule *module, ReaperIrError *error);
  * The result output is written only after the final RETURN succeeds. */
 int reaper_ir_execute_i64(const ReaperIrModule *module, int64_t *values,
                           size_t value_capacity, int64_t *result,
+                          ReaperIrError *error);
+/* Execute the checked unsigned u32 IR subset. Constants use the non-negative
+ * int64_t immediate field and are rejected above UINT32_MAX. values is caller-
+ * owned scratch storage. The result is written only after RETURN succeeds. */
+int reaper_ir_execute_u32(const ReaperIrModule *module, uint32_t *values,
+                          size_t value_capacity, uint32_t *result,
                           ReaperIrError *error);
 const char *reaper_ir_type_name(ReaperIrType type);
 const char *reaper_ir_opcode_name(ReaperIrOpcode opcode);
