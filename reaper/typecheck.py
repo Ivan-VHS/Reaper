@@ -14,6 +14,7 @@ from typing import Any
 
 from .errors import ReaperError
 from .parser import Node, parse
+from .fixed_width import fixed_integer_fits, is_fixed_integer_type
 
 
 ANY = "Any"
@@ -164,8 +165,21 @@ class TypeChecker:
         if node.kind == "function":
             return
         if node.kind == "declare":
-            name, mutable = node.value
+            name, mutable = node.value[:2]
+            declared_type = node.value[2] if len(node.value) > 2 else None
             value_type = self._expression(children[0])
+            if declared_type is not None:
+                if not is_fixed_integer_type(declared_type):
+                    self._report(node, "RPR-T0010", f"unsupported fixed-width integer type '{declared_type}'")
+                elif value_type == "Int" and children[0].kind == "literal" and fixed_integer_fits(children[0].value, declared_type):
+                    value_type = declared_type
+                elif value_type != declared_type:
+                    if value_type == "Int" and children[0].kind == "literal":
+                        self._report(node, "RPR-T0011", f"integer literal is outside the {declared_type} range")
+                    else:
+                        self._report(node, "RPR-T0012", f"cannot initialize {declared_type} with {value_type}; use a value of the same fixed-width type")
+                else:
+                    value_type = declared_type
             self.scopes[-1][name] = Binding(value_type, mutable)
             return
         if node.kind == "change":
@@ -175,7 +189,12 @@ class TypeChecker:
                 return
             if not binding.mutable:
                 self._report(node, "RPR-T0002", f"'{node.value}' is immutable and cannot be reassigned")
-            elif not self._assignable(binding.type_name, actual):
+            elif is_fixed_integer_type(binding.type_name) and actual == "Int" and children[0].kind == "literal":
+                if fixed_integer_fits(children[0].value, binding.type_name):
+                    actual = binding.type_name
+                else:
+                    self._report(node, "RPR-T0011", f"integer literal is outside the {binding.type_name} range")
+            if binding.mutable and not self._assignable(binding.type_name, actual):
                 self._report(
                     node, "RPR-T0001",
                     f"cannot assign {actual} to '{node.value}' declared as {binding.type_name}",
@@ -275,6 +294,11 @@ class TypeChecker:
             if operator in {"+", "-", "*", "/", "//", "%", "**"}:
                 if not self._numeric(left) or not self._numeric(right):
                     self._report(node, "RPR-T0004", f"operator '{operator}' requires numeric operands, got {left} and {right}")
+                    return ANY
+                if is_fixed_integer_type(left) or is_fixed_integer_type(right):
+                    if left == right and is_fixed_integer_type(left):
+                        return left
+                    self._report(node, "RPR-T0012", f"fixed-width arithmetic requires matching operand types, got {left} and {right}")
                     return ANY
                 if ANY in {left, right}:
                     return "Number"
@@ -426,7 +450,7 @@ class TypeChecker:
         return None
 
     def _numeric(self, type_name: str) -> bool:
-        return type_name in NUMERIC | {"Number", ANY}
+        return type_name in NUMERIC | {"Number", ANY} or is_fixed_integer_type(type_name)
 
     def _assignable(self, expected: str, actual: str) -> bool:
         if expected == ANY or actual == ANY or expected == actual:
