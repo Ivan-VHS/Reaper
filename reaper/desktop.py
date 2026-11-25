@@ -39,6 +39,13 @@ from reaper.ui_motion import MotionController, MotionPreferences, fade_in_window
 from reaper.ui_theme import apply_theme, apply_ui_theme, set_dpi_awareness, toggle_theme
 
 APP_TITLE = "Reaper Studio · Ivan-VHS"
+EDITOR_FONT_MIN = 9
+EDITOR_FONT_MAX = 24
+
+
+def bounded_editor_font_size(current: int, delta: int) -> int:
+    """Keep editor zoom predictable across high-DPI displays."""
+    return max(EDITOR_FONT_MIN, min(EDITOR_FONT_MAX, int(current) + int(delta)))
 STARTER = """craft double(value) {
     yield value * 2
 }
@@ -55,6 +62,8 @@ class ReaperStudio(tk.Tk):
         self.geometry("1320x860")
         self.minsize(920, 640)
         self._theme_name = apply_theme(self, "reaper-studio")
+        self._editor_font_size = 11
+        self._editor_font = tkfont.Font(self, family="Cascadia Code", size=self._editor_font_size)
         self.plugin_manager = PluginManager()
         self._theme_mode = tk.StringVar(value=self._theme_name)
         self.current_file: Path | None = None
@@ -96,7 +105,7 @@ class ReaperStudio(tk.Tk):
             style.theme_use("clam")
         except tk.TclError:
             pass
-        style.configure("Treeview", rowheight=24)
+        style.configure("Treeview", rowheight=34)
         try:
             installed = {family.casefold(): family for family in tkfont.families(self)}
         except tk.TclError:
@@ -106,7 +115,7 @@ class ReaperStudio(tk.Tk):
             "Segoe UI Semibold",
         )
         style.configure("PaneTitle.TLabel", font=(heading_font, 12))
-        style.configure("Toolbar.TButton", padding=(9, 5))
+        style.configure("Toolbar.TButton", padding=(12, 9), focusthickness=3)
 
     def _build_menu(self) -> None:
         menu = tk.Menu(self)
@@ -170,6 +179,10 @@ class ReaperStudio(tk.Tk):
             ("dawn", "Рассвет"), ("sunset", "Закат"), ("night", "Ночь"),
         ):
             view_menu.add_radiobutton(label=label, variable=self._theme_mode, value=mode, command=self.apply_visual_theme)
+        view_menu.add_separator()
+        view_menu.add_command(label="Увеличить текст редактора", command=lambda: self.adjust_editor_font(1), accelerator="Ctrl++")
+        view_menu.add_command(label="Уменьшить текст редактора", command=lambda: self.adjust_editor_font(-1), accelerator="Ctrl+-")
+        view_menu.add_command(label="Сбросить размер текста", command=self.reset_editor_font, accelerator="Ctrl+0")
         view_menu.add_separator()
         view_menu.add_command(label="Настройки движения…", command=self.show_motion_settings)
         view_menu.add_separator()
@@ -695,9 +708,11 @@ class ReaperStudio(tk.Tk):
         self.line_numbers.pack(side="left", fill="y")
         self.editor = ScrolledText(
             editor_shell, wrap="none", undo=True, maxundo=-1,
-            font=("Cascadia Code", 11), tabs=("4c",), padx=10, pady=8,
+            font=self._editor_font, tabs=("4c",), padx=10, pady=10,
         )
         self.editor.pack(side="left", fill="both", expand=True)
+        self.editor.configure(takefocus=True, highlightthickness=2, highlightbackground="#3A3A3A",
+                              highlightcolor="#FFE45C", insertwidth=2)
         self.editor.tag_configure("keyword", foreground="#7c3aed")
         self.editor.tag_configure("string", foreground="#0f766e")
         self.editor.tag_configure("number", foreground="#b45309")
@@ -709,6 +724,10 @@ class ReaperStudio(tk.Tk):
         self.editor.bind("<ButtonRelease-1>", self._update_cursor_status)
         self.editor.bind("<Configure>", self._redraw_line_numbers)
         self.editor.bind("<Control-space>", self._completion_shortcut)
+        self.editor.bind("<Control-plus>", lambda _event: (self.adjust_editor_font(1), "break")[1])
+        self.editor.bind("<Control-equal>", lambda _event: (self.adjust_editor_font(1), "break")[1])
+        self.editor.bind("<Control-minus>", lambda _event: (self.adjust_editor_font(-1), "break")[1])
+        self.editor.bind("<Control-0>", lambda _event: (self.reset_editor_font(), "break")[1])
 
         header = ttk.Frame(output_frame)
         header.pack(fill="x")
@@ -766,6 +785,19 @@ class ReaperStudio(tk.Tk):
         ttk.Label(bar, textvariable=self.status, anchor="w").pack(side="left", fill="x", expand=True)
         ttk.Label(bar, textvariable=self.cursor_status, anchor="e").pack(side="right")
 
+    def adjust_editor_font(self, delta: int) -> None:
+        """Adjust code readability without changing source or panel geometry."""
+        self._editor_font_size = bounded_editor_font_size(self._editor_font_size, delta)
+        self._editor_font.configure(size=self._editor_font_size)
+        self.status.set(f"Размер текста редактора: {self._editor_font_size} pt")
+        self._redraw_line_numbers()
+
+    def reset_editor_font(self) -> None:
+        self._editor_font_size = 11
+        self._editor_font.configure(size=self._editor_font_size)
+        self.status.set("Размер текста редактора сброшен: 11 pt")
+        self._redraw_line_numbers()
+
     def _bind_shortcuts(self) -> None:
         bindings = {
             "<Control-n>": self.new_file, "<Control-o>": self.open_file,
@@ -775,6 +807,11 @@ class ReaperStudio(tk.Tk):
             "<F9>": self.toggle_breakpoint, "<F12>": self.go_to_definition,
             "<Control-Shift-R>": self.rename_symbol,
             "<Control-Alt-k>": self.show_codex66,
+            "<Control-plus>": lambda: self.adjust_editor_font(1),
+            "<Control-equal>": lambda: self.adjust_editor_font(1),
+            "<Control-minus>": lambda: self.adjust_editor_font(-1),
+            "<Control-0>": self.reset_editor_font,
+            "<Control-comma>": self.show_motion_settings,
         }
         for sequence, callback in bindings.items():
             self.bind_all(sequence, lambda _event, fn=callback: (fn(), "break")[1])
