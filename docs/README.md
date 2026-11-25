@@ -10,6 +10,7 @@ Start with the [project README](../README.md) for installation, first commands a
 - [Hardware language track](HARDWARE_LANGUAGE.md)
 - [Implementation roadmap](IMPLEMENTATION_ROADMAP.md)
 - [Studio and IDE](REAPER_IDE.md)
+- [NEXUS federation profile](NEXUS_FEDERATION_PROFILE_V1.md) — Reaper ownership, peer contracts and compatibility boundaries.
 
 ## Browse by topic
 
@@ -23,7 +24,6 @@ Start with the [project README](../README.md) for installation, first commands a
 ## Shared rules
 
 - [Psychoporter 666 coding and human-layer standard](PSYCHOPORTER_666.md)
-
 - [Documentation standard](UNIFIED_DOCUMENTATION_STANDARD.md)
 - [Engineering evolution framework](ENGINEERING_EVOLUTION_FRAMEWORK.md)
 - [Repository evolution directives](REPOSITORY_EVOLUTION_DIRECTIVES.md)
