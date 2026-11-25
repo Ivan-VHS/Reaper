@@ -40,7 +40,7 @@ ReaperDabi64ProcessStatus reaper_dabi64_process_frame_validate(
 
     if (!reaper_dabi64_process_user_range_valid(frame->user_rip, 1U) ||
         !reaper_dabi64_process_user_range_valid(frame->user_rsp, 1U) ||
-        (frame->user_rsp & UINT64_C(0x0f)) != 0U ||
+        (frame->user_rsp & UINT64_C(0x07)) != 0U ||
         frame->user_cs != REAPER_DABI64_USER_CODE_SELECTOR ||
         frame->user_ss != REAPER_DABI64_USER_DATA_SELECTOR) {
         return REAPER_DABI64_PROCESS_INVALID_USER_RETURN;
