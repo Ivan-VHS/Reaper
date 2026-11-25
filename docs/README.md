@@ -18,6 +18,7 @@ The root [README](../README.md) is the product entry point: it summarizes the ex
 - [Features](FEATURES.md) — current feature inventory and maturity.
 - [Architecture](ARCHITECTURE.md) — implemented runtime structure and data flow.
 - [Hardware Language](HARDWARE_LANGUAGE.md) — staged systems-language and hardware track.
+- [Java Capability Adoption](JAVA_CAPABILITY_ADOPTION.md) — clean-room capability map, 2026 Java baseline, licensing rules and staged Reaper integration.
 - [Reaper IDE](REAPER_IDE.md) — Studio and language-tool boundaries.
 - [NOO TAH](NOO_TAH.md) — Node.js process integration.
 - [Kora](KORA.md) — optional standard-library helpers.
