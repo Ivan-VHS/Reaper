@@ -53,6 +53,10 @@ craft double(value) {
     yield value * 2
 }
 
+craft is_large(value) {
+    yield value >= 6
+}
+
 craft add(total, value) {
     yield total + value
 }
