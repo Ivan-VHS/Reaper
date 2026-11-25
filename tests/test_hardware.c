@@ -207,7 +207,7 @@ static void test_bus_failure(void) {
         REAPER_HW_ENDIAN_NATIVE, 0
     };
     ReaperHwError error = {0};
-    uint64_t value = 0;
+    uint64_t value = UINT64_C(0xA55A);
     fake.should_fail = 1;
 
     assert(reaper_hw_read(&bus, &region, &reg,
@@ -215,6 +215,7 @@ static void test_bus_failure(void) {
         &value, &error) == REAPER_HW_BUS_FAILURE);
     assert(strcmp(reaper_hw_status_name(error.status), "bus_failure") == 0);
     assert(error.address == UINT64_C(0x5000));
+    assert(value == UINT64_C(0xA55A));
 }
 
 int main(void) {
