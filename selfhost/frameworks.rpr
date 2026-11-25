@@ -92,7 +92,13 @@ craft galhero_dependencies(nodes, edges, target) {
     when changed {
         yield framework_error("GALHERO-LIMIT", "dependency closure did not converge")
     }
-    make ordered := galhero_order(required, edges)
+    vary reduced_edges := []
+    each edge in edges {
+        when framework_contains(required, edge[0]) and framework_contains(required, edge[1]) {
+            change reduced_edges := push(reduced_edges, edge)
+        }
+    }
+    make ordered := galhero_order(required, reduced_edges)
     when ordered[0] == "err" {
         yield ordered
     }
@@ -146,10 +152,15 @@ craft stacked_options_validate(layers) {
         when kind(layer) != "list" {
             yield framework_error("OPTIONS-LAYER", "each option layer must be a list")
         }
+        vary layer_names := []
         each pair in layer {
             when kind(pair) != "list" or size(pair) != 2 or kind(pair[0]) != "text" or pair[0] == "" {
                 yield framework_error("OPTIONS-PAIR", "each option must be a [name, value] pair")
             }
+            when framework_contains(layer_names, pair[0]) {
+                yield framework_error("OPTIONS-DUPLICATE", "an option name may appear only once per layer")
+            }
+            change layer_names := push(layer_names, pair[0])
         }
     }
     yield framework_ok(true)
@@ -319,6 +330,7 @@ craft blau_validate(components, tokens) {
         yield framework_error("BLAU-DUPLICATE", "component identifiers must be unique")
     }
 
+    vary parent_edges := []
     each component in components {
         when component[2] != "" and not framework_contains(component_ids, component[2]) {
             yield framework_error("BLAU-PARENT", "component references an unknown parent")
@@ -329,6 +341,13 @@ craft blau_validate(components, tokens) {
         when component[2] == component[0] {
             yield framework_error("BLAU-SELF-PARENT", "component cannot parent itself")
         }
+        when component[2] != "" {
+            change parent_edges := push(parent_edges, [component[2], component[0]])
+        }
+    }
+    make parent_order := galhero_order(component_ids, parent_edges)
+    when parent_order[0] == "err" {
+        yield framework_error("BLAU-PARENT-CYCLE", "component parent graph contains a cycle")
     }
     yield framework_ok(["components", component_ids, "tokens", token_names])
 }
@@ -467,6 +486,8 @@ make galhero_good := galhero_order(["core", "vm", "cli"], [["core", "vm"], ["vm"
 assert(galhero_good == ["ok", ["core", "vm", "cli"]], "GalHero topological ordering failed")
 make galhero_cycle := galhero_order(["a", "b"], [["a", "b"], ["b", "a"]])
 assert(galhero_cycle[0] == "err" and galhero_cycle[1] == "GALHERO-CYCLE", "GalHero cycle was not rejected")
+make galhero_closure := galhero_dependencies(["core", "vm", "cli", "docs"], [["core", "vm"], ["vm", "cli"]], "cli")
+assert(galhero_closure == ["ok", ["core", "vm", "cli"]], "GalHero dependency closure included unrelated nodes")
 
 make callback_result := call_and_back(3, [framework_plus_one, framework_double])
 assert(callback_result == ["ok", 8], "Call-and-Back callback ordering failed")
@@ -476,6 +497,7 @@ assert(callback_trace == ["ok", [2, 3, 6]], "Call-and-Back trace failed")
 make option_layers := [[["mode", "safe"], ["retries", 2]], [["mode", "fast"], ["timeout", 30]]]
 assert(stacked_options_resolve(option_layers, "mode", "default") == ["some", "safe"], "Stacked Options precedence failed")
 assert(stacked_options_resolve(option_layers, "missing", 7) == ["none", 7], "Stacked Options fallback failed")
+assert(stacked_options_validate([[["mode", "safe"], ["mode", "fast"]]])[0] == "err", "Stacked Options duplicate key was accepted")
 assert(stacked_options_merge(option_layers)[0] == "ok", "Stacked Options merge failed")
 
 make migration := perenosimost_upgrade(["legacy", 1, 4], [["legacy", "stable", framework_plus_one]], "stable")
@@ -490,6 +512,7 @@ make blau_tokens := [["surface", "#070707"], ["accent", "#FFD700"]]
 make blau_components := [["root", "window", "", "surface"], ["title", "label", "root", "accent"]]
 assert(blau_validate(blau_components, blau_tokens)[0] == "ok", "Blau valid blueprint rejected")
 assert(blau_validate([["root", "window", "missing", "surface"]], blau_tokens)[0] == "err", "Blau unknown parent accepted")
+assert(blau_validate([["a", "panel", "b", ""], ["b", "panel", "a", ""]], [])[0] == "err", "Blau parent cycle was accepted")
 
 make shards := shashio_partition([0, 1, 2, 3, 4, 5], 3, framework_identity)
 assert(shards == ["ok", [[0, 3], [1, 4], [2, 5]]], "Shashio stable partition failed")
@@ -503,6 +526,7 @@ make fragments := [
 make assembled := showel_assemble(fragments)
 assert(assembled == ["ok", "runtime();\nfrontend();\ndriver();\n"], "Showel dependency assembly failed")
 assert(showel_validate([["a", "a();", ["missing"]]])[0] == "err", "Showel missing dependency accepted")
+assert(showel_validate([["a", "a();", ["b"]], ["b", "b();", ["a"]]])[0] == "err", "Showel cyclic dependencies were accepted")
 assert(showel_patch("alpha beta", [["beta", "gamma"]]) == ["ok", "alpha gamma"], "Showel bounded patch failed")
 
 emit "SELFHOST_FRAMEWORKS_OK"
