@@ -51,6 +51,9 @@ craft optimizer_fold_binary(op, left, right) {
     when left[1] != right[1] { yield ["NO_FOLD"] }
 
     when left[1] == "bool" {
+        when (left[2] != "true" and left[2] != "false") or (right[2] != "true" and right[2] != "false") {
+            yield ["NO_FOLD"]
+        }
         when op == "and" {
             when left[2] == "true" and right[2] == "true" {
                 yield ["OK", "bool", "true"]
