@@ -23,17 +23,21 @@
       "layer": "system",
       "owner": "DuckOS service manager",
       "effects": [
+        "process",
+        "io"
+      ],
+      "capabilities": [
         "process.spawn",
         "process.detach",
         "stdio.configure"
       ],
-      "capabilities": [
-        "Spawn only from an approved service definition",
-        "Do not expose fork or descriptor mutation to ordinary Reaper code",
-        "Record the resulting service identity and inherited handles"
-      ],
       "status": "planned",
       "safety_invariants": [
+        "Spawn only from an approved service definition",
+        "Do not expose fork or descriptor mutation to ordinary Reaper code",
+        "Record service identity and inherited handles"
+      ],
+      "acceptance": [
         "Detached-service lifecycle tests",
         "Descriptor inheritance and capability-denial tests",
         "Crash and restart policy tests"
@@ -45,16 +49,19 @@
       "layer": "system",
       "owner": "DuckOS service manager",
       "effects": [
+        "service"
+      ],
+      "capabilities": [
         "service.register",
         "service.inspect"
       ],
-      "capabilities": [
+      "status": "planned",
+      "safety_invariants": [
         "Validate hook ownership and lifetime",
         "Define start, stop, reload ordering and re-entrancy",
         "Never invoke callbacks while holding the registry lock"
       ],
-      "status": "planned",
-      "safety_invariants": [
+      "acceptance": [
         "Duplicate-registration and stale-handle tests",
         "Concurrent register/unregister tests",
         "Deterministic lifecycle-order tests"
@@ -66,16 +73,20 @@
       "layer": "system",
       "owner": "DuckOS scheduler service",
       "effects": [
+        "scheduler",
+        "clock"
+      ],
+      "capabilities": [
         "scheduler.register",
         "clock.read"
       ],
-      "capabilities": [
+      "status": "planned",
+      "safety_invariants": [
         "Keep civil-time schedules distinct from monotonic deadlines",
         "Define timezone and daylight-saving behavior",
         "Bound job count, execution time and retry policy"
       ],
-      "status": "planned",
-      "safety_invariants": [
+      "acceptance": [
         "Clock-jump and timezone-transition tests",
         "Missed-run and duplicate-run tests",
         "Scheduler resource-budget tests"
@@ -87,15 +98,19 @@
       "layer": "system",
       "owner": "DuckOS logging service",
       "effects": [
-        "log.write"
+        "log",
+        "io"
       ],
       "capabilities": [
+        "log.write"
+      ],
+      "status": "planned",
+      "safety_invariants": [
         "Use bounded records and an explicit overflow policy",
         "Keep producer paths non-blocking where required",
         "Attach timestamp source, process identity and severity as typed fields"
       ],
-      "status": "planned",
-      "safety_invariants": [
+      "acceptance": [
         "Concurrent producer tests",
         "Ring overflow and loss accounting tests",
         "Malformed and oversized record rejection tests"
@@ -107,16 +122,20 @@
       "layer": "system",
       "owner": "DuckOS init/service manager",
       "effects": [
+        "service",
+        "process"
+      ],
+      "capabilities": [
         "service.start",
         "service.inspect"
       ],
-      "capabilities": [
+      "status": "planned",
+      "safety_invariants": [
         "Resolve and validate the full dependency DAG before side effects",
         "Reject dependency cycles and unavailable requirements",
         "Make start idempotent and report partial activation"
       ],
-      "status": "planned",
-      "safety_invariants": [
+      "acceptance": [
         "Cycle and missing-dependency tests",
         "Failure rollback and restart tests",
         "Ordering and idempotency tests"
@@ -128,15 +147,20 @@
       "layer": "system",
       "owner": "DuckOS power coordinator",
       "effects": [
-        "system.power.request"
+        "power",
+        "storage",
+        "process"
       ],
       "capabilities": [
+        "system.power.request"
+      ],
+      "status": "planned",
+      "safety_invariants": [
         "Use an explicit shutdown state machine and caller deadline",
         "Flush filesystems and devices through their owners",
         "Do not use a fixed delay or unconditional global process kill"
       ],
-      "status": "planned",
-      "safety_invariants": [
+      "acceptance": [
         "Deadline and cancellation tests",
         "Storage flush failure tests",
         "Power-state transition tests"
@@ -148,16 +172,21 @@
       "layer": "system",
       "owner": "DuckOS recovery coordinator",
       "effects": [
+        "system",
+        "recovery",
+        "io"
+      ],
+      "capabilities": [
         "system.recovery.enter",
         "log.read"
       ],
-      "capabilities": [
+      "status": "planned",
+      "safety_invariants": [
         "Keep recovery entry distinct from disabling interrupts",
         "Preserve console and diagnostic paths",
         "Require kernel-owned safe-state transitions before launching recovery tools"
       ],
-      "status": "planned",
-      "safety_invariants": [
+      "acceptance": [
         "Recovery from service and driver failure tests",
         "Read-only root and rollback tests",
         "Privilege-boundary tests"
@@ -169,16 +198,20 @@
       "layer": "devices",
       "owner": "DuckOS device manager",
       "effects": [
-        "device.enumerate",
-        "device.bind"
+        "device",
+        "driver"
       ],
       "capabilities": [
+        "device.enumerate",
+        "driver.bind"
+      ],
+      "status": "planned",
+      "safety_invariants": [
         "Treat add/remove notifications as untrusted and repeatable",
         "Match only approved device identities and driver manifests",
         "Never install or load arbitrary driver code as a side effect of an event"
       ],
-      "status": "planned",
-      "safety_invariants": [
+      "acceptance": [
         "Duplicate and reordered event tests",
         "Unknown-device rejection tests",
         "Driver signature and rollback tests"
@@ -190,16 +223,21 @@
       "layer": "devices",
       "owner": "DuckOS firmware broker plus device driver",
       "effects": [
+        "firmware",
+        "device",
+        "storage"
+      ],
+      "capabilities": [
         "firmware.stage",
         "device.inspect"
       ],
-      "capabilities": [
+      "status": "planned",
+      "safety_invariants": [
         "Verify signature, digest, hardware identity and revision before staging",
         "Use a device-specific update protocol and explicit authorization",
         "Preserve recovery or rollback behavior for interrupted updates"
       ],
-      "status": "planned",
-      "safety_invariants": [
+      "acceptance": [
         "Invalid signature and target mismatch tests",
         "Interrupted-update recovery tests",
         "Hardware revision compatibility tests"
@@ -211,15 +249,19 @@
       "layer": "kernel",
       "owner": "DuckOS boot/HAL ACPI subsystem",
       "effects": [
-        "boot.memory_map.read"
+        "boot",
+        "memory"
       ],
       "capabilities": [
-        "Validate RSDP and table checksums, lengths, alignment and mapped ranges",
-        "Keep AML parsing/interpreting separate from table discovery",
-        "Never treat firmware-provided pointers or AML as trusted input"
+        "boot.memory_map.read"
       ],
       "status": "planned",
       "safety_invariants": [
+        "Validate RSDP and table checksums, lengths, alignment and mapped ranges",
+        "Keep AML parsing/interpreting separate from table discovery",
+        "Never trust firmware-provided pointers or AML"
+      ],
+      "acceptance": [
         "Malformed table and checksum tests",
         "Address-range and integer-overflow tests",
         "AML parser isolation tests"
@@ -231,16 +273,21 @@
       "layer": "compute",
       "owner": "DuckOS NPU driver and user-mode runtime",
       "effects": [
+        "device",
+        "dma",
+        "compute"
+      ],
+      "capabilities": [
         "device.npu.open",
         "dma.allocate"
       ],
-      "capabilities": [
+      "status": "planned",
+      "safety_invariants": [
         "Discover devices through the device manager rather than a fixed path",
         "Negotiate firmware, queue, DMA and memory budgets",
         "Tie sessions and DMA buffers to explicit owners and lifetimes"
       ],
-      "status": "planned",
-      "safety_invariants": [
+      "acceptance": [
         "No-device and unsupported-revision tests",
         "DMA lifetime and cancellation tests",
         "Capability and memory-budget denial tests"
@@ -252,17 +299,22 @@
       "layer": "compute",
       "owner": "DuckOS tensor runtime/NPU backend",
       "effects": [
+        "compute",
+        "dma",
+        "sync"
+      ],
+      "capabilities": [
         "npu.dispatch",
         "dma.map",
         "dma.sync"
       ],
-      "capabilities": [
+      "status": "planned",
+      "safety_invariants": [
         "Validate rank, dimensions, layout, dtype and overflow before dispatch",
         "Use explicit session and buffer handles",
         "Require fence completion, timeout and device-loss handling"
       ],
-      "status": "planned",
-      "safety_invariants": [
+      "acceptance": [
         "Shape and overflow boundary tests",
         "DMA synchronization and fence tests",
         "CPU/NPU parity tests for supported dtypes"
@@ -274,15 +326,19 @@
       "layer": "compute",
       "owner": "DuckOS inference runtime",
       "effects": [
-        "model.execute"
+        "compute",
+        "memory"
       ],
       "capabilities": [
+        "model.execute"
+      ],
+      "status": "planned",
+      "safety_invariants": [
         "Validate graph topology and supported operators before execution",
         "Bound scratch memory, tensor sizes, execution steps and time",
         "Fail on unsupported operators rather than silently skipping layers"
       ],
-      "status": "planned",
-      "safety_invariants": [
+      "acceptance": [
         "Malformed graph and unsupported-op tests",
         "Memory/time budget tests",
         "Deterministic CPU backend fixtures"
@@ -294,16 +350,21 @@
       "layer": "compute",
       "owner": "DuckOS model loader",
       "effects": [
+        "compute",
+        "filesystem",
+        "memory"
+      ],
+      "capabilities": [
         "file.read",
         "model.load"
       ],
-      "capabilities": [
+      "status": "planned",
+      "safety_invariants": [
         "Treat model files and external tensor data as untrusted input",
         "Limit file size, protobuf depth, tensor dimensions and external-data paths",
         "Declare supported ONNX opsets and operator coverage"
       ],
-      "status": "planned",
-      "safety_invariants": [
+      "acceptance": [
         "Path traversal and oversized-input tests",
         "Malformed protobuf and dimension-overflow tests",
         "Opset compatibility fixtures"
@@ -315,16 +376,20 @@
       "layer": "compute",
       "owner": "DuckOS privacy compute runtime",
       "effects": [
+        "crypto",
+        "compute"
+      ],
+      "capabilities": [
         "crypto.he.execute",
         "model.execute_encrypted"
       ],
-      "capabilities": [
+      "status": "planned",
+      "safety_invariants": [
         "Name the supported encryption scheme, parameters and threat model",
         "Keep ciphertext, plaintext and key handles as distinct types",
         "Reject unsupported operations; never imply generic homomorphic inference"
       ],
-      "status": "planned",
-      "safety_invariants": [
+      "acceptance": [
         "Known-answer and parameter-validation tests",
         "Key-handle isolation tests",
         "Ciphertext-size and computation-budget tests"
@@ -336,17 +401,23 @@
       "layer": "virtualization",
       "owner": "DuckOS container service plus kernel isolation adapters",
       "effects": [
+        "process",
+        "filesystem",
+        "network",
+        "isolation"
+      ],
+      "capabilities": [
         "container.create",
         "namespace.create",
         "vfs.mount"
       ],
-      "capabilities": [
+      "status": "planned",
+      "safety_invariants": [
         "Define isolation primitives in DuckOS rather than assuming Linux clone/chroot",
         "Verify image digest and mount policy before execution",
         "Apply CPU, memory, process, filesystem and network budgets"
       ],
-      "status": "planned",
-      "safety_invariants": [
+      "acceptance": [
         "Escape and namespace-isolation tests",
         "Image integrity and mount traversal tests",
         "Resource exhaustion and teardown tests"
@@ -358,16 +429,20 @@
       "layer": "virtualization",
       "owner": "DuckOS hypervisor service and architecture backend",
       "effects": [
+        "virtualization",
+        "memory"
+      ],
+      "capabilities": [
         "vm.create",
         "vm.memory.allocate"
       ],
-      "capabilities": [
+      "status": "planned",
+      "safety_invariants": [
         "Use a versioned hypervisor ABI; KVM is only a Linux backend",
         "Validate memory regions, alignment, CPU features and device model",
         "Bound vCPU, RAM and device resources and define teardown semantics"
       ],
-      "status": "planned",
-      "safety_invariants": [
+      "acceptance": [
         "Unsupported-hardware and ABI tests",
         "Memory-slot boundary tests",
         "VM lifecycle and isolation tests"
@@ -379,16 +454,21 @@
       "layer": "packages",
       "owner": "Optional Flatpak compatibility adapter",
       "effects": [
+        "package",
+        "filesystem",
+        "crypto"
+      ],
+      "capabilities": [
         "package.import",
         "package.verify"
       ],
-      "capabilities": [
+      "status": "planned",
+      "safety_invariants": [
         "Keep Flatpak import optional and separate from the native package format",
         "Verify bundle identity, signatures and declared permissions",
         "Never execute install hooks during inspection or verification"
       ],
-      "status": "planned",
-      "safety_invariants": [
+      "acceptance": [
         "Invalid signature and permission tests",
         "Bundle traversal and resource-limit tests",
         "Import/rollback compatibility tests"
@@ -400,17 +480,22 @@
       "layer": "packages",
       "owner": "DuckOS native package manager",
       "effects": [
+        "package",
+        "filesystem",
+        "transaction"
+      ],
+      "capabilities": [
         "package.install",
         "package.verify",
         "system.transaction"
       ],
-      "capabilities": [
+      "status": "planned",
+      "safety_invariants": [
         "Use signed repositories and explicit trust roots",
         "Resolve dependencies before mutation and install transactionally",
         "Support offline cache, rollback and deterministic package identity"
       ],
-      "status": "planned",
-      "safety_invariants": [
+      "acceptance": [
         "Signature and trust-root tests",
         "Dependency-cycle and conflict tests",
         "Interrupted transaction and rollback tests"
@@ -422,16 +507,21 @@
       "layer": "tooling",
       "owner": "Reaper/DuckOS build orchestrator",
       "effects": [
+        "build",
+        "process",
+        "filesystem"
+      ],
+      "capabilities": [
         "build.execute",
         "toolchain.inspect"
       ],
-      "capabilities": [
+      "status": "planned",
+      "safety_invariants": [
         "Select an immutable target profile and pinned toolchain",
         "Pass executable and arguments as an argv vector, never a concatenated shell string",
         "Record source revision, toolchain digest, target ABI and reproducible output hashes"
       ],
-      "status": "planned",
-      "safety_invariants": [
+      "acceptance": [
         "Argument-injection tests",
         "Toolchain/target mismatch tests",
         "Reproducibility and artifact-manifest tests"
