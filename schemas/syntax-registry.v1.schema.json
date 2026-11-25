@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ivan-vhs.github.io/Reaper/schemas/syntax-registry.v1.schema.json",
+  "title": "Reaper Syntax Registry v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "syntaxes"],
+  "properties": {
+    "schema": {"const": "reaper.syntax-registry.v1"},
+    "syntaxes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "paradigm", "description", "status", "extensions"],
+        "properties": {
+          "name": {"enum": ["reaper", "python", "pipeline", "lisp", "forth", "brainfuck", "befunge93"]},
+          "paradigm": {"type": "string", "minLength": 1},
+          "description": {"type": "string", "minLength": 1},
+          "status": {"enum": ["native", "implemented", "implemented_subset"]},
+          "extensions": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^\\.[a-z0-9]+$"}}
+        }
+      }
+    }
+  }
+}
