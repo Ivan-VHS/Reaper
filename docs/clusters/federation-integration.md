@@ -9,6 +9,7 @@ This hub groups related specifications and implementation references. The linked
 ## Documents
 
 - [FEDERATED INTEGRATION](../FEDERATED_INTEGRATION.md)
+- [REAPER FRAMEWORK FEDERATION V1](../REAPER_FRAMEWORK_FEDERATION_V1.md) — shared C ABI and bounded, caller-owned host callback interface.
 - [INTERNAL PRODUCT ECOSYSTEM](../INTERNAL_PRODUCT_ECOSYSTEM.md)
 - [INTERNAL PRODUCTS](../INTERNAL_PRODUCTS.md)
 - [NOO TAH](../NOO_TAH.md)
