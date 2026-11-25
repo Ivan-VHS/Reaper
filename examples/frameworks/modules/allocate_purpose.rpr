@@ -1,0 +1,9 @@
+# Reaper framework metadata facade.
+# Operation declarations live in language/frameworks.v1.json.
+
+export make framework_id := "allocate-purpose"
+export make display_name := "Allocate Purpose"
+export make feature_key := "RPR-FWK-004"
+export make operation_keys := ["RPR-FWK-004-F01, "RPR-FWK-004-F02, "RPR-FWK-004-F03, "RPR-FWK-004-F04, "RPR-FWK-004-F05, "RPR-FWK-004-F06]
+export make maturity := "contract-only"
+export make native_registry := "reaper.framework-cabi.v1"

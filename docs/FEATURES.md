@@ -10,7 +10,7 @@
 | Audit/governance | explicit grants, HMAC scope, TTL/revocation | reference runtime |
 | Studio | Windows editor/debugger, command palette, MCU profile and hardware-boundary overview | desktop app; no live device inspector |
 | CODEX-66 | searchable 66-item native feature catalogue with JSON export and maturity labels | implemented metadata/UI; feature statuses remain evidence-based |
-| Native C17 | lexer, expression Pratt parser, owned AST, checked i64 IR, constant folding and limited lowering | partial |
+| Native C17 | lexer, expression Pratt parser, owned AST, checked i64 IR, constant folding and limited lowering | partial |\n| Framework federation | 20 importable Reaper metadata modules, 120 stable operation contracts, shared C ABI registry, arity validation and public maturity counters | registry implemented; domain handlers and source-level dispatch remain contract-only |
 | Native MMIO contract | checked region/register descriptors, widths, bounds, alignment, access policies, capability checks and adapter callbacks | implemented C API; no physical mapping or device driver |
 | LSP semantic tokens and diagnostics | lexical highlighting plus local inferred-type diagnostics from the reference AST checker | stdio LSP; UTF-16 positions; no cross-file type inference |
 | МОСТ | 54 aliases: 21 executable, 33 reserved | mixed |
