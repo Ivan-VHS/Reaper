@@ -9,6 +9,8 @@ Reaper is a flow-first programming language with a Python reference runtime and 
 3. Do not describe a reserved token or roadmap entry as executable until parsing, runtime behaviour and tests all exist.
 4. Keep diagnostic codes stable. Add a new code instead of repurposing an old one, and update `docs/errors/DIAGNOSTICS.md`.
 5. Keep FFI disabled unless a user explicitly opts in.
+6. Apply [Ivan-VHS Code Style](docs/IVAN_VHS_CODE_STYLE.md), the [Reaper Psychoporter 666 Code](docs/PSYCHOPORTER_666.md) and the shared [Psychoporter profile](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/PSYCHOPORTER_CODE_STYLE.md). Preserve actual Reaper syntax, C/C++ idioms and the owning subsystem's formatter.
+7. Cite only Constitution rules that materially apply to the change. CURRENT, TARGET and HOST requirements must remain distinct.
 
 ## Local verification
 

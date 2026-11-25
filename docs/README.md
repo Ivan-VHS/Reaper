@@ -4,6 +4,9 @@ Start with the [project README](../README.md) for installation, first commands a
 
 ## Key pages
 
+- [Psychoporter 666 coding and human-layer standard](PSYCHOPORTER_666.md)
+- [Ivan-VHS Code Style](IVAN_VHS_CODE_STYLE.md)
+- [Shared Psychoporter cognitive-ergonomics profile](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/PSYCHOPORTER_CODE_STYLE.md)
 - [Features and maturity](FEATURES.md)
 - [Architecture](ARCHITECTURE.md)
 - [Hardware language track](HARDWARE_LANGUAGE.md)
@@ -21,10 +24,8 @@ Start with the [project README](../README.md) for installation, first commands a
 
 ## Shared rules
 
-- [Psychoporter 666 coding and human-layer standard](PSYCHOPORTER_666.md)
-
 - [Documentation standard](UNIFIED_DOCUMENTATION_STANDARD.md)
 - [Engineering evolution framework](ENGINEERING_EVOLUTION_FRAMEWORK.md)
 - [Repository evolution directives](REPOSITORY_EVOLUTION_DIRECTIVES.md)
 
-Treat the Python reference runtime, native compiler track and privileged hardware work as separate maturity levels. Source, tests and CI are the evidence for implemented behavior.
+The Psychoporter 666 Code distinguishes CURRENT, TARGET and HOST rules. It is an engineering standard, not a claim that roadmap capabilities are implemented. Source, tests and CI remain the evidence for implementation status.
