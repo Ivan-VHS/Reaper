@@ -37,7 +37,8 @@
         "functions_per_framework",
         "function_contract_count",
         "maturity",
-        "dispatch_api"
+        "dispatch_api",
+        "registry_api_functions"
       ],
       "properties": {
         "abi": {
