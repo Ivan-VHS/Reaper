@@ -1,0 +1,244 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://reaper-lang.dev/schemas/framework-manifest.v1.schema.json",
+  "title": "Reaper Framework Manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "name",
+    "description",
+    "version",
+    "host_abi",
+    "dependencies",
+    "conflicts",
+    "provides",
+    "extension_points",
+    "required_capabilities",
+    "activation",
+    "entrypoints"
+  ],
+  "properties": {
+    "schema": {
+      "const": "reaper.framework-manifest.v1"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$",
+      "minLength": 2,
+      "maxLength": 64
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 96
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "version": {
+      "$ref": "#/$defs/version"
+    },
+    "host_abi": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "major",
+        "minor"
+      ],
+      "properties": {
+        "major": {
+          "const": 1
+        },
+        "minor": {
+          "const": 0
+        }
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "minimum"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 64
+          },
+          "minimum": {
+            "$ref": "#/$defs/version"
+          },
+          "maximum_exclusive": {
+            "$ref": "#/$defs/version"
+          }
+        }
+      }
+    },
+    "conflicts": {
+      "type": "array",
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 64
+      }
+    },
+    "provides": {
+      "type": "array",
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9._-]*$",
+        "maxLength": 512
+      }
+    },
+    "extension_points": {
+      "type": "array",
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9._-]*$",
+        "maxLength": 512
+      }
+    },
+    "required_capabilities": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "process.inspect",
+          "process.control",
+          "thread.control",
+          "sync",
+          "fs.handle",
+          "fs.read",
+          "fs.write",
+          "clock",
+          "network",
+          "crypto",
+          "desktop.window",
+          "desktop.display",
+          "desktop.input",
+          "desktop.session",
+          "desktop.compositor",
+          "desktop.gpu",
+          "desktop.shell",
+          "desktop.display.admin",
+          "desktop.session.admin",
+          "desktop.gpu.admin"
+        ]
+      }
+    },
+    "activation": {
+      "enum": [
+        "declarative-only",
+        "trusted-host-callbacks"
+      ]
+    },
+    "entrypoints": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "start",
+            "stop"
+          ],
+          "properties": {
+            "start": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "stop": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "version": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "major",
+        "minor",
+        "patch"
+      ],
+      "properties": {
+        "major": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "minor": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "patch": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "activation": {
+            "const": "declarative-only"
+          }
+        },
+        "required": [
+          "activation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "entrypoints": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "activation": {
+            "const": "trusted-host-callbacks"
+          }
+        },
+        "required": [
+          "activation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "entrypoints": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  ]
+}
