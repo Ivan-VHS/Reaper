@@ -7,6 +7,10 @@ on:
       - "project-contract.json"
       - "schemas/unified-project-contract.v1.schema.json"
       - "tools/validate_project_contract.py"
+      - "federation/supabase-adapter.v1.json"
+      - "federation/schemas/supabase-adapter.v1.schema.json"
+      - "tests/test_supabase_adapter_contract.py"
+      - "docs/integrations/SUPABASE_ADAPTER_V1.md"
       - "docs/UNIFIED_PROJECT_CONTRACT.md"
       - "federation/octa-pyramid.v1.json"
       - "schemas/octa-pyramid.v1.schema.json"
@@ -18,6 +22,10 @@ on:
       - "project-contract.json"
       - "schemas/unified-project-contract.v1.schema.json"
       - "tools/validate_project_contract.py"
+      - "federation/supabase-adapter.v1.json"
+      - "federation/schemas/supabase-adapter.v1.schema.json"
+      - "tests/test_supabase_adapter_contract.py"
+      - "docs/integrations/SUPABASE_ADAPTER_V1.md"
       - "docs/UNIFIED_PROJECT_CONTRACT.md"
       - "federation/octa-pyramid.v1.json"
       - "schemas/octa-pyramid.v1.schema.json"
@@ -40,6 +48,8 @@ jobs:
           python-version: "3.10"
       - name: Validate manifest, schema declaration and evidence paths
         run: python tools/validate_project_contract.py
+      - name: Test Supabase adapter security invariants
+        run: python -m unittest discover -s tests -p "test_supabase_adapter_contract.py" -v
       - name: Validate OCTA-8 horizontal peer mesh and eight facets
         run: python tools/validate_octa_pyramid.py
       - name: Emit machine-readable manifest check
