@@ -8,6 +8,7 @@ Start with the [project README](../README.md) for installation, first commands a
 - [Architecture](ARCHITECTURE.md)
 - [Hardware language track](HARDWARE_LANGUAGE.md)
 - [Declarative file formats and extension registry](FILE_FORMATS_AND_EXTENSIONS_V1.md) — eleven Reaper-owned format specifications, their invariants, dependencies and implementation sequence; the DuckOS-owned .bav bundle remains external.
+- [Selfhost migration and repository audit](SELFHOST_AND_REPOSITORY_AUDIT_V1.md) — safe audit requirements, defects in the proposed ring-buffer/self-rewriter samples and staged semantic-preserving migration gates.
 - [Implementation roadmap](IMPLEMENTATION_ROADMAP.md)
 - [Studio and IDE](REAPER_IDE.md)
 
