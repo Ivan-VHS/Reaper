@@ -100,6 +100,7 @@ typedef struct {
     uint64_t deactivation_runs;
     uint64_t callback_failures;
     uint64_t rollback_stops;
+    size_t total;
     size_t registered;
     size_t resolved;
     size_t active;
@@ -167,6 +168,9 @@ const ReaperFrameworkEntry *reaper_framework_registry_at(
 );
 const ReaperFrameworkEntry *reaper_framework_registry_find(
     const ReaperFrameworkRegistry *registry, const char *id
+);
+const ReaperFrameworkEntry *reaper_framework_resolved_at(
+    const ReaperFrameworkRegistry *registry, size_t position
 );
 
 void reaper_framework_stats_snapshot(

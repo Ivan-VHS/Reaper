@@ -79,7 +79,7 @@ build/reaper-c --frameworks
 build/reaper-c --framework correpse
 ~~~
 
-The CTest suite covers profile discovery, deterministic dependency ordering, lifecycle callbacks, rollback, dependency errors, version constraints, conflicts, ABI mismatch, capability denial, invalid manifests and statistics.
+The CTest suite covers profile discovery, deterministic dependency ordering (including Allocate Purpose before Correpse), lifecycle callbacks, rollback, dependency errors, version constraints, conflicts, ABI mismatch, capability denial, invalid manifests and statistics. Statistics expose total registry size separately from mutually exclusive per-state counts.
 
 ## Capability and security model
 

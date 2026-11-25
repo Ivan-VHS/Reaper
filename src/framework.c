@@ -637,6 +637,18 @@ const ReaperFrameworkEntry *reaper_framework_registry_find(
     return &registry->entries[index];
 }
 
+const ReaperFrameworkEntry *reaper_framework_resolved_at(
+    const ReaperFrameworkRegistry *registry, size_t position
+) {
+    size_t index;
+    if (registry == NULL || position >= registry->resolved_count ||
+        registry->resolved_count > REAPER_FRAMEWORK_REGISTRY_CAPACITY)
+        return NULL;
+    index = registry->resolved_order[position];
+    if (index >= registry->count) return NULL;
+    return &registry->entries[index];
+}
+
 void reaper_framework_stats_snapshot(
     const ReaperFrameworkRegistry *registry,
     ReaperFrameworkStats *stats
@@ -645,7 +657,7 @@ void reaper_framework_stats_snapshot(
     (void)memset(stats, 0, sizeof(*stats));
     if (registry == NULL) return;
     *stats = registry->totals;
-    stats->registered = registry->count;
+    stats->total = registry->count;
     for (size_t i = 0U; i < registry->count; ++i) {
         switch (registry->entries[i].state) {
         case REAPER_FRAMEWORK_STATE_REGISTERED: ++stats->registered; break;
@@ -656,7 +668,6 @@ void reaper_framework_stats_snapshot(
         default: break;
         }
     }
-    stats->registered = registry->count;
 }
 
 const char *reaper_framework_status_name(ReaperFrameworkStatus status) {

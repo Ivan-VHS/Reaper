@@ -79,12 +79,18 @@ static void builtins_are_stable_and_resolve_deterministically(void) {
         assert(allocate->state == REAPER_FRAMEWORK_STATE_RESOLVED);
         assert(correpse->state == REAPER_FRAMEWORK_STATE_RESOLVED);
         assert(strcmp(reaper_framework_state_name(correpse->state), "resolved") == 0);
+        assert(strcmp(reaper_framework_resolved_at(&registry, 0U)->manifest->id,
+                      "allocate-purpose") == 0);
+        assert(strcmp(reaper_framework_resolved_at(&registry, 4U)->manifest->id,
+                      "correpse") == 0);
+        assert(reaper_framework_resolved_at(&registry, 5U) == NULL);
     }
     assert(reaper_framework_activate(&registry, &error) == REAPER_FRAMEWORK_OK);
     {
         ReaperFrameworkStats stats;
         reaper_framework_stats_snapshot(&registry, &stats);
-        assert(stats.registered == 5U);
+        assert(stats.total == 5U);
+        assert(stats.registered == 0U);
         assert(stats.resolved == 5U);
         assert(stats.active == 0U);
         assert(stats.activation_runs == 1U);
