@@ -255,33 +255,44 @@ craft verify_bytecode(code) {
 
         when opcode == "CONST" {
             when size(instruction) != 5 { yield ir_failure("invalid CONST instruction", 1, instruction_index + 1) }
+            when instruction[1] != "NUMBER" and instruction[1] != "STRING" and instruction[1] != "TRUE" and instruction[1] != "FALSE" and instruction[1] != "NOTHING" {
+                yield ir_failure("invalid CONST kind", instruction[3], instruction[4])
+            }
             when instruction[3] < 1 or instruction[4] < 1 { yield ir_failure("invalid CONST span", instruction[3], instruction[4]) }
             change stack_depth := stack_depth + 1
         } otherwise {
             when opcode == "LOAD" {
                 when size(instruction) != 4 { yield ir_failure("invalid LOAD instruction", 1, instruction_index + 1) }
                 when instruction[1] == "" { yield ir_failure("LOAD name cannot be empty", instruction[2], instruction[3]) }
+                when instruction[2] < 1 or instruction[3] < 1 { yield ir_failure("invalid LOAD span", instruction[2], instruction[3]) }
                 change stack_depth := stack_depth + 1
             } otherwise {
                 when opcode == "UNARY" {
                     when size(instruction) != 4 { yield ir_failure("invalid UNARY instruction", 1, instruction_index + 1) }
+                    when instruction[1] != "-" and instruction[1] != "NOT" { yield ir_failure("unknown UNARY operator", instruction[2], instruction[3]) }
+                    when instruction[2] < 1 or instruction[3] < 1 { yield ir_failure("invalid UNARY span", instruction[2], instruction[3]) }
                     when stack_depth < 1 { yield ir_failure("stack underflow at UNARY", instruction[2], instruction[3]) }
                 } otherwise {
                     when opcode == "BINARY" or opcode == "INDEX" {
                         when opcode == "BINARY" and size(instruction) != 4 { yield ir_failure("invalid BINARY instruction", 1, instruction_index + 1) }
                         when opcode == "INDEX" and size(instruction) != 3 { yield ir_failure("invalid INDEX instruction", 1, instruction_index + 1) }
+                        when opcode == "BINARY" and not known_ir_binary_operator(instruction[1]) { yield ir_failure("unknown BINARY operator", instruction[2], instruction[3]) }
+                        when opcode == "BINARY" and (instruction[2] < 1 or instruction[3] < 1) { yield ir_failure("invalid BINARY span", instruction[2], instruction[3]) }
+                        when opcode == "INDEX" and (instruction[1] < 1 or instruction[2] < 1) { yield ir_failure("invalid INDEX span", instruction[1], instruction[2]) }
                         when stack_depth < 2 { yield ir_failure("stack underflow at " ++ opcode, 1, instruction_index + 1) }
                         change stack_depth := stack_depth - 1
                     } otherwise {
                         when opcode == "CALL" {
                             when size(instruction) != 4 { yield ir_failure("invalid CALL instruction", 1, instruction_index + 1) }
                             when instruction[1] < 0 { yield ir_failure("CALL arity cannot be negative", instruction[2], instruction[3]) }
+                            when instruction[2] < 1 or instruction[3] < 1 { yield ir_failure("invalid CALL span", instruction[2], instruction[3]) }
                             when stack_depth < instruction[1] + 1 { yield ir_failure("stack underflow at CALL", instruction[2], instruction[3]) }
                             change stack_depth := stack_depth - instruction[1]
                         } otherwise {
                             when opcode == "BUILD_LIST" {
                                 when size(instruction) != 4 { yield ir_failure("invalid BUILD_LIST instruction", 1, instruction_index + 1) }
                                 when instruction[1] < 0 { yield ir_failure("BUILD_LIST count cannot be negative", instruction[2], instruction[3]) }
+                                when instruction[2] < 1 or instruction[3] < 1 { yield ir_failure("invalid BUILD_LIST span", instruction[2], instruction[3]) }
                                 when stack_depth < instruction[1] { yield ir_failure("stack underflow at BUILD_LIST", instruction[2], instruction[3]) }
                                 change stack_depth := stack_depth - instruction[1] + 1
                             } otherwise {
@@ -358,5 +369,18 @@ assert(underflow_code[0] == "ERROR", "bytecode stack underflow was accepted")
 
 make invalid_span := verify_ir(["RIR1", "const", "NUMBER", "1", 0, 1])
 assert(invalid_span[0] == "ERROR", "zero line span was accepted")
+
+make invalid_opcode_code := verify_bytecode([
+    ["CONST", "NUMBER", "1", 1, 1],
+    ["CONST", "NUMBER", "2", 1, 5],
+    ["BINARY", "???", 1, 3]
+])
+assert(invalid_opcode_code[0] == "ERROR", "unknown bytecode operator was accepted")
+
+make invalid_instruction_span := verify_bytecode([
+    ["CONST", "NUMBER", "1", 1, 1],
+    ["UNARY", "-", 0, 2]
+])
+assert(invalid_instruction_span[0] == "ERROR", "invalid bytecode source span was accepted")
 
 emit "SELFHOST_IR_OK"
