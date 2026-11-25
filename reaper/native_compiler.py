@@ -40,7 +40,15 @@ _C_TYPES = {
     "u32": "uint32_t",
     "u64": "uint64_t",
 }
+_C_MIN = {
+    "i8": "INT8_MIN",
+    "i16": "INT16_MIN",
+    "i32": "INT32_MIN",
+}
 _C_MAX = {
+    "i8": "INT8_MAX",
+    "i16": "INT16_MAX",
+    "i32": "INT32_MAX",
     "u8": "UINT8_MAX",
     "u16": "UINT16_MAX",
     "u32": "UINT32_MAX",
@@ -251,6 +259,55 @@ static inline uint64_t rpr_upow(uint64_t base, uint64_t exponent, uint64_t maxim
         if ((exponent & UINT64_C(1)) != 0) result = rpr_umul(result, base, maximum);
         exponent >>= 1;
         if (exponent != 0) base = rpr_umul(base, base, maximum);
+    }}
+    return result;
+}}
+
+static inline int64_t rpr_sadd(int64_t a, int64_t b, int64_t minimum, int64_t maximum) {{
+    if ((b > 0 && a > maximum - b) || (b < 0 && a < minimum - b))
+        return rpr_fail("signed fixed-width overflow in addition");
+    return a + b;
+}}
+
+static inline int64_t rpr_ssub(int64_t a, int64_t b, int64_t minimum, int64_t maximum) {{
+    if ((b < 0 && a > maximum + b) || (b > 0 && a < minimum + b))
+        return rpr_fail("signed fixed-width overflow in subtraction");
+    return a - b;
+}}
+
+static inline int64_t rpr_smul(int64_t a, int64_t b, int64_t minimum, int64_t maximum) {{
+    if (a == 0 || b == 0) return 0;
+    if (a > 0) {{
+        if ((b > 0 && a > maximum / b) || (b < 0 && b < minimum / a))
+            return rpr_fail("signed fixed-width overflow in multiplication");
+    }} else {{
+        if ((b > 0 && a < minimum / b) || (b < 0 && a < maximum / b))
+            return rpr_fail("signed fixed-width overflow in multiplication");
+    }}
+    return a * b;
+}}
+
+static inline int64_t rpr_sdiv(int64_t a, int64_t b, int64_t minimum, int64_t maximum) {{
+    int64_t result = rpr_floor_div(a, b);
+    if (!rpr_failed && (result < minimum || result > maximum))
+        return rpr_fail("signed fixed-width overflow in division");
+    return result;
+}}
+
+static inline int64_t rpr_smod(int64_t a, int64_t b, int64_t minimum, int64_t maximum) {{
+    int64_t result = rpr_mod(a, b);
+    if (!rpr_failed && (result < minimum || result > maximum))
+        return rpr_fail("signed fixed-width overflow in remainder");
+    return result;
+}}
+
+static inline int64_t rpr_spow(int64_t base, int64_t exponent, int64_t minimum, int64_t maximum) {{
+    if (exponent < 0) return rpr_fail("negative exponent is not supported for fixed-width integers");
+    int64_t result = 1;
+    while (exponent != 0 && !rpr_failed) {{
+        if ((exponent & 1) != 0) result = rpr_smul(result, base, minimum, maximum);
+        exponent >>= 1;
+        if (exponent != 0) base = rpr_smul(base, base, minimum, maximum);
     }}
     return result;
 }}
