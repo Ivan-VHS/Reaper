@@ -1,0 +1,153 @@
+# Deterministic, bounded dependency ordering for Reaper source modules.
+# Resolution is local-only: this module never reads files or accesses a registry.
+# Stable tie-breaking follows manifest order so repeated builds are reproducible.
+
+craft module_graph_has(values, wanted) {
+    vary index := 0
+    loop while index < size(values) {
+        when values[index] == wanted { yield true }
+        change index := index + 1
+    }
+    yield false
+}
+
+craft module_graph_find(modules, wanted) {
+    vary index := 0
+    loop while index < size(modules) {
+        when modules[index][1] == wanted {
+            yield ["OK", modules[index]]
+        }
+        change index := index + 1
+    }
+    yield ["ERROR", "module is not declared: " ++ wanted]
+}
+
+craft module_graph_validate_manifest(modules) {
+    when size(modules) == 0 {
+        yield ["ERROR", "module graph is empty"]
+    }
+    when size(modules) > 1024 {
+        yield ["ERROR", "module graph exceeds the 1024-module bootstrap limit"]
+    }
+
+    vary names := []
+    vary module_index := 0
+    loop while module_index < size(modules) {
+        make module_item := modules[module_index]
+        when size(module_item) != 3 or module_item[0] != "MODULE" {
+            yield ["ERROR", "invalid module manifest record"]
+        }
+        when size(module_item[1]) == 0 {
+            yield ["ERROR", "module name must not be empty"]
+        }
+        when module_graph_has(names, module_item[1]) {
+            yield ["ERROR", "duplicate module name: " ++ module_item[1]]
+        }
+        change names := push(names, module_item[1])
+        change module_index := module_index + 1
+    }
+
+    change module_index := 0
+    loop while module_index < size(modules) {
+        make dependencies := modules[module_index][2]
+        vary dependency_index := 0
+        vary seen_dependencies := []
+        loop while dependency_index < size(dependencies) {
+            make dependency := dependencies[dependency_index]
+            when not module_graph_has(names, dependency) {
+                yield ["ERROR", "unknown dependency: " ++ dependency]
+            }
+            when module_graph_has(seen_dependencies, dependency) {
+                yield ["ERROR", "duplicate dependency: " ++ dependency]
+            }
+            when dependency == modules[module_index][1] {
+                yield ["ERROR", "module cannot depend on itself: " ++ dependency]
+            }
+            change seen_dependencies := push(seen_dependencies, dependency)
+            change dependency_index := dependency_index + 1
+        }
+        change module_index := module_index + 1
+    }
+
+    yield ["OK", names]
+}
+
+craft module_graph_resolve(modules) {
+    make manifest_check := module_graph_validate_manifest(modules)
+    when manifest_check[0] == "ERROR" { yield manifest_check }
+
+    vary remaining := manifest_check[1]
+    vary ordered := []
+
+    # Kahn's algorithm with deterministic manifest-order tie breaking.
+    loop while size(remaining) > 0 {
+        vary found_ready := false
+        vary selected_name := ""
+        vary candidate_index := 0
+
+        loop while candidate_index < size(remaining) and not found_ready {
+            make candidate_name := remaining[candidate_index]
+            make candidate_record := module_graph_find(modules, candidate_name)
+            make dependencies := candidate_record[1][2]
+            vary dependencies_ready := true
+            vary dependency_index := 0
+
+            loop while dependency_index < size(dependencies) and dependencies_ready {
+                when not module_graph_has(ordered, dependencies[dependency_index]) {
+                    change dependencies_ready := false
+                }
+                change dependency_index := dependency_index + 1
+            }
+
+            when dependencies_ready {
+                change selected_name := candidate_name
+                change found_ready := true
+            }
+            change candidate_index := candidate_index + 1
+        }
+
+        when not found_ready {
+            yield ["ERROR", "dependency cycle detected"]
+        }
+
+        change ordered := push(ordered, selected_name)
+        vary next_remaining := []
+        vary remaining_index := 0
+        loop while remaining_index < size(remaining) {
+            when remaining[remaining_index] != selected_name {
+                change next_remaining := push(next_remaining, remaining[remaining_index])
+            }
+            change remaining_index := remaining_index + 1
+        }
+        change remaining := next_remaining
+    }
+
+    yield ["OK", ordered]
+}
+
+make manifests := [
+    ["MODULE", "app", ["ui", "core"]],
+    ["MODULE", "ui", ["core"]],
+    ["MODULE", "core", []],
+    ["MODULE", "telemetry", ["core"]]
+]
+assert(module_graph_resolve(manifests) == ["OK", ["core", "app", "ui", "telemetry"]], "manifest-order tie breaking changed")
+
+make missing_dependency := [
+    ["MODULE", "app", ["absent"]]
+]
+assert(module_graph_resolve(missing_dependency)[0] == "ERROR", "unknown module dependency accepted")
+
+make cyclic_graph := [
+    ["MODULE", "first", ["second"]],
+    ["MODULE", "second", ["first"]]
+]
+assert(module_graph_resolve(cyclic_graph)[0] == "ERROR", "cyclic module graph accepted")
+
+make repeated_dependency := [
+    ["MODULE", "core", []],
+    ["MODULE", "app", ["core", "core"]]
+]
+assert(module_graph_resolve(repeated_dependency)[0] == "ERROR", "duplicate module dependency accepted")
+
+emit "SELFHOST_MODULE_GRAPH_OK"
