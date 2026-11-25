@@ -42,7 +42,7 @@ flowchart TB
   A -.-> X["No implicit device access"]
 ~~~
 
-Source code, schemas, build files, tests and CI are the evidence for implemented behavior. Roadmap entries and catalogue records describe plans or inventories, not shipped functionality.
+源码、架构模式、构建配置、测试和 CI 是已实现行为的依据。路线图和目录仅描述计划或清单，不代表已交付功能。
 
 ## 环境要求
 
@@ -58,7 +58,7 @@ python -m reaper --check examples/flow.rpr
 python -m reaper examples/flow.rpr
 ~~~
 
-### Native C17 track
+### 原生 C17 开发路线
 
 ~~~sh
 cmake -S . -B build -DREAPER_BUILD_TESTS=ON
@@ -66,7 +66,7 @@ cmake --build build --parallel
 ctest --test-dir build --output-on-failure
 ~~~
 
-The Python reference runtime and native C17 track are separate implementation tracks; passing tests in one does not establish feature parity in the other.
+Python 参考运行时与原生 C17 开发路线是两条独立的实现路径；其中一条路径通过测试，并不代表另一条路径已达到功能对等。
 
 ## 首次检查
 
@@ -79,16 +79,16 @@ python -m reaper --repl
 
 ## 运行
 
-After installation, the package exposes the reaper-studio GUI script when Tkinter is installed; language and debug services are separate stdio processes.
+安装后，若系统提供 Tkinter，软件包会提供 `reaper-studio` 图形界面脚本；语言服务与调试服务通过独立的 stdio 进程运行。
 
 ## 接口
 
-| Surface | Contract / entry point | Boundary |
+| 接口 | 契约 / 入口 | 能力边界 |
 |---|---|---|
-| CLI / REPL | `reaper` | Source checking, execution and interactive mode. |
-| Language service | `reaper-lsp / stdio` | Document-local diagnostics, completion and navigation subset. |
-| Debug adapter | `reaper-dap / stdio` | Implemented breakpoint and step subset. |
-| Native ABI | `reaper_ffi / reaper_system / reaper_dabi64_desktop` | Versioned C interfaces; native compiler parity remains partial. |
+| CLI / REPL | `reaper` | 源码检查、执行和交互模式。 |
+| 语言服务 | `reaper-lsp / stdio` | 文档级诊断、补全及已支持的导航功能。 |
+| 调试适配器 | `reaper-dap / stdio` | 已实现的断点与单步调试子集。 |
+| Native ABI | `reaper_ffi / reaper_system / reaper_dabi64_desktop` | 版本化 C 接口；原生编译器的功能对等尚未完成。 |
 
 若仓库中没有版本化实现和测试，则不将 REST/GraphQL、WebSocket、OAuth、云部署或 Cookie 机制描述为现有功能。
 
@@ -96,7 +96,7 @@ After installation, the package exposes the reaper-studio GUI script when Tkinte
 
 参考运行时采用有界资源控制和显式能力契约。MMIO API 会验证描述符与访问策略，但不会映射物理设备。LSP/DAP 使用本地 stdio 传输；文档所述运行时不包含托管 REST 服务、OAuth 提供商或云控制平面。
 
-Security reporting: [SECURITY.md](SECURITY.md). Do not publish secrets, device identifiers or private logs in public issues.
+安全策略：[SECURITY.md](SECURITY.md)。请勿在公开问题中发布密钥、设备标识符或私人日志。
 
 ## 质量验证
 
@@ -120,17 +120,17 @@ ctest --test-dir build --output-on-failure
 
 ## 文档与生态
 
-- [Features and maturity](docs/FEATURES.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Hardware language](docs/HARDWARE_LANGUAGE.md)
-- [Implementation roadmap](docs/IMPLEMENTATION_ROADMAP.md)
-- [Studio and IDE](docs/REAPER_IDE.md)
+- [功能与成熟度](docs/FEATURES.md)
+- [架构](docs/ARCHITECTURE.md)
+- [硬件契约语言](docs/HARDWARE_LANGUAGE.md)
+- [实现路线图](docs/IMPLEMENTATION_ROADMAP.md)
+- [Studio 与 IDE](docs/REAPER_IDE.md)
 - [Psychoporter 666](docs/PSYCHOPORTER_666.md)
-- [Documentation index](docs/README.md)
+- [文档索引](docs/README.md)
 
 功能矩阵和实现路线图明确区分已交付的参考运行时行为、部分原生工作和未来硬件能力。
 
-Cross-project integrations use documented versioned interfaces and explicit adapters. An optional adapter does not grant another project runtime or hardware privileges.
+跨项目集成使用有文档说明的版本化接口和显式适配器。可选适配器不会授予其他项目运行时权限或硬件访问权限。
 
 ## 参与贡献
 
@@ -140,7 +140,7 @@ Cross-project integrations use documented versioned interfaces and explicit adap
 
 本项目依据 [Apache-2.0](LICENSE) 许可。软件按许可条款以“按现状”方式提供。第三方项目名称与商标归其各自权利人所有。
 
-This repository documents local software interfaces. Hosted-service terms, cookie consent, OAuth and CORS are not applicable to the runtime surfaces described above unless a separate hosted component is introduced and documented.
+本仓库记录的是本地软件接口。除非另行引入并记录托管服务，否则云服务条款、Cookie 同意、OAuth 和 CORS 均不适用于上述本地运行组件。
 
 ---
 

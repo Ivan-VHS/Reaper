@@ -42,7 +42,7 @@ flowchart TB
   A -.-> X["No implicit device access"]
 ~~~
 
-Source code, schemas, build files, tests and CI are the evidence for implemented behavior. Roadmap entries and catalogue records describe plans or inventories, not shipped functionality.
+Вихідний код, схеми, конфігурація збирання, тести та CI підтверджують реалізовану поведінку. Дорожня карта й каталоги описують плани та переліки, а не готові функції.
 
 ## Вимоги
 
@@ -58,7 +58,7 @@ python -m reaper --check examples/flow.rpr
 python -m reaper examples/flow.rpr
 ~~~
 
-### Native C17 track
+### Нативна гілка C17
 
 ~~~sh
 cmake -S . -B build -DREAPER_BUILD_TESTS=ON
@@ -66,7 +66,7 @@ cmake --build build --parallel
 ctest --test-dir build --output-on-failure
 ~~~
 
-The Python reference runtime and native C17 track are separate implementation tracks; passing tests in one does not establish feature parity in the other.
+Еталонне середовище Python і нативна гілка C17 — окремі напрями розробки. Успішні тести одного напряму не підтверджують функціональний паритет іншого.
 
 ## Перші перевірки
 
@@ -79,16 +79,16 @@ python -m reaper --repl
 
 ## Запуск
 
-After installation, the package exposes the reaper-studio GUI script when Tkinter is installed; language and debug services are separate stdio processes.
+Після встановлення пакет надає сценарій графічного інтерфейсу `reaper-studio`, якщо встановлено Tkinter; мовна служба та налагоджувач запускаються окремими процесами через stdio.
 
 ## Інтерфейси
 
-| Surface | Contract / entry point | Boundary |
+| Інтерфейс | Контракт / точка входу | Межі |
 |---|---|---|
-| CLI / REPL | `reaper` | Source checking, execution and interactive mode. |
-| Language service | `reaper-lsp / stdio` | Document-local diagnostics, completion and navigation subset. |
-| Debug adapter | `reaper-dap / stdio` | Implemented breakpoint and step subset. |
-| Native ABI | `reaper_ffi / reaper_system / reaper_dabi64_desktop` | Versioned C interfaces; native compiler parity remains partial. |
+| CLI / REPL | `reaper` | Перевірка вихідного коду, виконання та інтерактивний режим. |
+| Мовна служба | `reaper-lsp / stdio` | Діагностика документа, автодоповнення та підтримувана навігація. |
+| Налагоджувач | `reaper-dap / stdio` | Реалізована частина точок зупинки та покрокового виконання. |
+| Native ABI | `reaper_ffi / reaper_system / reaper_dabi64_desktop` | Версіоновані інтерфейси C; паритет нативного компілятора поки неповний. |
 
 REST/GraphQL, WebSocket, OAuth, хмарний deployment і cookie-механізми не описуються як можливості, якщо в репозиторії немає версіонованої реалізації та тестів.
 
@@ -96,7 +96,7 @@ REST/GraphQL, WebSocket, OAuth, хмарний deployment і cookie-механі
 
 Еталонне середовище застосовує ліміти ресурсів і явні capability-контракти. MMIO API перевіряє дескриптори та політику доступу, але не відображає фізичні пристрої. LSP/DAP використовують локальний stdio; розміщений REST-сервіс, OAuth-провайдер або хмарна площина керування не є частиною документованого середовища.
 
-Security reporting: [SECURITY.md](SECURITY.md). Do not publish secrets, device identifiers or private logs in public issues.
+Політика безпеки: [SECURITY.md](SECURITY.md). Не публікуйте секрети, ідентифікатори пристроїв і приватні журнали у відкритих задачах.
 
 ## Перевірка якості
 
@@ -120,17 +120,17 @@ ctest --test-dir build --output-on-failure
 
 ## Документація та екосистема
 
-- [Features and maturity](docs/FEATURES.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Hardware language](docs/HARDWARE_LANGUAGE.md)
-- [Implementation roadmap](docs/IMPLEMENTATION_ROADMAP.md)
-- [Studio and IDE](docs/REAPER_IDE.md)
+- [Можливості та зрілість](docs/FEATURES.md)
+- [Архітектура](docs/ARCHITECTURE.md)
+- [Мова апаратних контрактів](docs/HARDWARE_LANGUAGE.md)
+- [План реалізації](docs/IMPLEMENTATION_ROADMAP.md)
+- [Studio та IDE](docs/REAPER_IDE.md)
 - [Psychoporter 666](docs/PSYCHOPORTER_666.md)
-- [Documentation index](docs/README.md)
+- [Індекс документації](docs/README.md)
 
 Матриця можливостей і план реалізації відокремлюють готову поведінку еталонного середовища від часткової нативної роботи та майбутніх апаратних можливостей.
 
-Cross-project integrations use documented versioned interfaces and explicit adapters. An optional adapter does not grant another project runtime or hardware privileges.
+Інтеграції між проєктами використовують документовані версіоновані інтерфейси та явні адаптери. Необов’язковий адаптер не надає іншому проєкту привілеїв середовища виконання чи доступу до обладнання.
 
 ## Участь у розробці
 
@@ -140,7 +140,7 @@ Cross-project integrations use documented versioned interfaces and explicit adap
 
 Поширюється за ліцензією [Apache-2.0](LICENSE). Програмне забезпечення надається «ЯК Є» в межах умов ліцензії. Назви сторонніх проєктів і торговельні марки належать їхнім правовласникам.
 
-This repository documents local software interfaces. Hosted-service terms, cookie consent, OAuth and CORS are not applicable to the runtime surfaces described above unless a separate hosted component is introduced and documented.
+Репозиторій описує локальні програмні інтерфейси. Умови хмарного сервісу, згода на cookies, OAuth і CORS не стосуються зазначених компонентів, доки окремо не буде впроваджено й задокументовано мережевий сервіс.
 
 ---
 

@@ -42,7 +42,7 @@ flowchart TB
   A -.-> X["No implicit device access"]
 ~~~
 
-Source code, schemas, build files, tests and CI are the evidence for implemented behavior. Roadmap entries and catalogue records describe plans or inventories, not shipped functionality.
+Исходный код, схемы, конфигурация сборки, тесты и CI подтверждают реализованное поведение. Дорожная карта и каталоги описывают планы и перечни, а не поставляемые функции.
 
 ## Требования
 
@@ -58,7 +58,7 @@ python -m reaper --check examples/flow.rpr
 python -m reaper examples/flow.rpr
 ~~~
 
-### Native C17 track
+### Нативная ветка C17
 
 ~~~sh
 cmake -S . -B build -DREAPER_BUILD_TESTS=ON
@@ -66,7 +66,7 @@ cmake --build build --parallel
 ctest --test-dir build --output-on-failure
 ~~~
 
-The Python reference runtime and native C17 track are separate implementation tracks; passing tests in one does not establish feature parity in the other.
+Эталонная среда Python и нативная ветка C17 — отдельные направления разработки. Успешные тесты одного направления не подтверждают функциональный паритет другого.
 
 ## Первые проверки
 
@@ -79,16 +79,16 @@ python -m reaper --repl
 
 ## Запуск
 
-After installation, the package exposes the reaper-studio GUI script when Tkinter is installed; language and debug services are separate stdio processes.
+После установки пакет предоставляет сценарий графического интерфейса `reaper-studio`, если установлен Tkinter; языковая служба и отладчик запускаются отдельными процессами через stdio.
 
 ## Интерфейсы
 
-| Surface | Contract / entry point | Boundary |
+| Интерфейс | Контракт / точка входа | Границы |
 |---|---|---|
-| CLI / REPL | `reaper` | Source checking, execution and interactive mode. |
-| Language service | `reaper-lsp / stdio` | Document-local diagnostics, completion and navigation subset. |
-| Debug adapter | `reaper-dap / stdio` | Implemented breakpoint and step subset. |
-| Native ABI | `reaper_ffi / reaper_system / reaper_dabi64_desktop` | Versioned C interfaces; native compiler parity remains partial. |
+| CLI / REPL | `reaper` | Проверка исходного кода, выполнение и интерактивный режим. |
+| Языковая служба | `reaper-lsp / stdio` | Диагностика документа, автодополнение и поддерживаемая навигация. |
+| Отладчик | `reaper-dap / stdio` | Реализованная часть точек останова и пошагового выполнения. |
+| Native ABI | `reaper_ffi / reaper_system / reaper_dabi64_desktop` | Версионированные интерфейсы C; паритет нативного компилятора пока неполный. |
 
 REST/GraphQL, WebSocket, OAuth, облачный deployment и cookie-механизмы не описываются как возможности, если в репозитории нет версионированной реализации и тестов.
 
@@ -96,7 +96,7 @@ REST/GraphQL, WebSocket, OAuth, облачный deployment и cookie-механ
 
 Эталонная среда применяет лимиты ресурсов и явные capability-контракты. MMIO API проверяет дескрипторы и политику доступа, но не отображает физические устройства. LSP/DAP используют локальный stdio; размещённый REST-сервис, OAuth-провайдер или облачная плоскость управления не входят в документированную среду.
 
-Security reporting: [SECURITY.md](SECURITY.md). Do not publish secrets, device identifiers or private logs in public issues.
+Политика безопасности: [SECURITY.md](SECURITY.md). Не публикуйте секреты, идентификаторы устройств и приватные журналы в открытых задачах.
 
 ## Проверка качества
 
@@ -112,7 +112,7 @@ ctest --test-dir build --output-on-failure
 
 ## Доказательства производительности
 
-对于 эталонной среды и частичной нативной ветки не опубликованы стабильные межмашинные показатели задержки или памяти. Сравнивайте воспроизводимые прогоны с фиксацией компилятора, цели, режима сборки и входных данных.
+Для эталонной среды и частичной нативной ветки не опубликованы стабильные межмашинные показатели задержки или потребления памяти. Сравнивайте воспроизводимые прогоны с фиксацией компилятора, цели, режима сборки и входных данных.
 
 ## Совместимость
 
@@ -120,17 +120,17 @@ ctest --test-dir build --output-on-failure
 
 ## Документация и экосистема
 
-- [Features and maturity](docs/FEATURES.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Hardware language](docs/HARDWARE_LANGUAGE.md)
-- [Implementation roadmap](docs/IMPLEMENTATION_ROADMAP.md)
-- [Studio and IDE](docs/REAPER_IDE.md)
+- [Возможности и зрелость](docs/FEATURES.md)
+- [Архитектура](docs/ARCHITECTURE.md)
+- [Язык аппаратных контрактов](docs/HARDWARE_LANGUAGE.md)
+- [План реализации](docs/IMPLEMENTATION_ROADMAP.md)
+- [Studio и IDE](docs/REAPER_IDE.md)
 - [Psychoporter 666](docs/PSYCHOPORTER_666.md)
-- [Documentation index](docs/README.md)
+- [Индекс документации](docs/README.md)
 
 Матрица возможностей и план реализации отделяют готовое поведение эталонной среды от частичной нативной работы и будущих аппаратных возможностей.
 
-Cross-project integrations use documented versioned interfaces and explicit adapters. An optional adapter does not grant another project runtime or hardware privileges.
+Интеграции между проектами используют документированные версионированные интерфейсы и явные адаптеры. Необязательный адаптер не предоставляет другому проекту привилегий среды выполнения или доступа к оборудованию.
 
 ## Участие в разработке
 
@@ -140,7 +140,7 @@ Cross-project integrations use documented versioned interfaces and explicit adap
 
 Распространяется по лицензии [Apache-2.0](LICENSE). Программное обеспечение предоставляется «КАК ЕСТЬ» в пределах условий лицензии. Названия сторонних проектов и товарные знаки принадлежат их правообладателям.
 
-This repository documents local software interfaces. Hosted-service terms, cookie consent, OAuth and CORS are not applicable to the runtime surfaces described above unless a separate hosted component is introduced and documented.
+Репозиторий описывает локальные программные интерфейсы. Условия облачного сервиса, согласие на cookies, OAuth и CORS не относятся к указанным компонентам, пока отдельно не будет внедрён и документирован сетевой сервис.
 
 ---
 
