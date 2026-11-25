@@ -34,6 +34,9 @@ class SelfHostingBootstrapTests(unittest.TestCase):
     def test_reaper_written_module_graph_resolver_runs_on_the_reference_runtime(self) -> None:
         self._run_selfhost_program("selfhost/module_graph.rpr", "SELFHOST_MODULE_GRAPH_OK")
 
+    def test_reaper_written_optimizer_runs_on_the_reference_runtime(self) -> None:
+        self._run_selfhost_program("selfhost/optimizer.rpr", "SELFHOST_OPTIMIZER_OK")
+
 
 if __name__ == "__main__":
     unittest.main()
