@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1440" height="280" viewBox="0 0 1440 280" role="img" aria-labelledby="title desc">
 <title id="title">Reaper — verified workflow</title>
 <desc id="desc">Vector diagram of the implemented Reaper workflow. It is an architecture illustration, not a screenshot.</desc>
-<defs><linearGradient id="line" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#A78BFA"/><stop offset=".5" stop-color="#38D4B7"/><stop offset="1" stop-color="#84A8F8"/></linearGradient>
+<defs><linearGradient id="line" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#FFD700"/><stop offset=".5" stop-color="#79B8FF"/><stop offset="1" stop-color="#6EDAA3"/></linearGradient>
 <style>
  .label{font:700 10px ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:2px;fill:#49627C}
  .title{font:700 23px Inter,Segoe UI,Arial,sans-serif;letter-spacing:-.4px;fill:#142B49}
@@ -17,44 +17,44 @@
 <path d="M279 147H308" stroke="#7890A9" stroke-width="2" stroke-linecap="round"/><path d="M302 141L308 147L302 153" fill="none" stroke="#7890A9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M564 147H593" stroke="#7890A9" stroke-width="2" stroke-linecap="round"/><path d="M587 141L593 147L587 153" fill="none" stroke="#7890A9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M849 147H878" stroke="#7890A9" stroke-width="2" stroke-linecap="round"/><path d="M872 141L878 147L872 153" fill="none" stroke="#7890A9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M1134 147H1163" stroke="#7890A9" stroke-width="2" stroke-linecap="round"/><path d="M1157 141L1163 147L1157 153" fill="none" stroke="#7890A9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 <g transform="translate(28 76)">
   <rect width="246" height="142" rx="16" fill="#FFFFFF" stroke="#D8E3EE" stroke-width="1.2"/>
-  <rect x="0" y="0" width="246" height="5" rx="2.5" fill="#A78BFA"/>
+  <rect x="0" y="0" width="246" height="5" rx="2.5" fill="#FFD700"/>
   <text x="18" y="31" class="num">01</text>
   <text x="18" y="61" class="nodeTitle">SOURCE</text>
   <text x="18" y="89" class="nodeBody">Program • .rpr</text>
   <text x="18" y="109" class="nodeBody">local project files</text>
-  <circle cx="224" cy="122" r="4" fill="#A78BFA"/>
+  <circle cx="224" cy="122" r="4" fill="#FFD700"/>
   </g><g transform="translate(313 76)">
   <rect width="246" height="142" rx="16" fill="#FFFFFF" stroke="#D8E3EE" stroke-width="1.2"/>
-  <rect x="0" y="0" width="246" height="5" rx="2.5" fill="#38D4B7"/>
+  <rect x="0" y="0" width="246" height="5" rx="2.5" fill="#79B8FF"/>
   <text x="18" y="31" class="num">02</text>
   <text x="18" y="61" class="nodeTitle">FRONT END</text>
   <text x="18" y="89" class="nodeBody">Lexer • parser</text>
   <text x="18" y="109" class="nodeBody">syntax diagnostics</text>
-  <circle cx="224" cy="122" r="4" fill="#38D4B7"/>
+  <circle cx="224" cy="122" r="4" fill="#79B8FF"/>
   </g><g transform="translate(598 76)">
   <rect width="246" height="142" rx="16" fill="#FFFFFF" stroke="#D8E3EE" stroke-width="1.2"/>
-  <rect x="0" y="0" width="246" height="5" rx="2.5" fill="#84A8F8"/>
+  <rect x="0" y="0" width="246" height="5" rx="2.5" fill="#6EDAA3"/>
   <text x="18" y="31" class="num">03</text>
   <text x="18" y="61" class="nodeTitle">RUNTIME</text>
   <text x="18" y="89" class="nodeBody">Python reference</text>
   <text x="18" y="109" class="nodeBody">quotas • audit log</text>
-  <circle cx="224" cy="122" r="4" fill="#84A8F8"/>
+  <circle cx="224" cy="122" r="4" fill="#6EDAA3"/>
   </g><g transform="translate(883 76)">
   <rect width="246" height="142" rx="16" fill="#FFFFFF" stroke="#D8E3EE" stroke-width="1.2"/>
-  <rect x="0" y="0" width="246" height="5" rx="2.5" fill="#A78BFA"/>
+  <rect x="0" y="0" width="246" height="5" rx="2.5" fill="#FFD700"/>
   <text x="18" y="31" class="num">04</text>
   <text x="18" y="61" class="nodeTitle">TOOLS</text>
   <text x="18" y="89" class="nodeBody">CLI • Studio</text>
   <text x="18" y="109" class="nodeBody">LSP • DAP over stdio</text>
-  <circle cx="224" cy="122" r="4" fill="#A78BFA"/>
+  <circle cx="224" cy="122" r="4" fill="#FFD700"/>
   </g><g transform="translate(1168 76)">
   <rect width="246" height="142" rx="16" fill="#FFFFFF" stroke="#D8E3EE" stroke-width="1.2"/>
-  <rect x="0" y="0" width="246" height="5" rx="2.5" fill="#38D4B7"/>
+  <rect x="0" y="0" width="246" height="5" rx="2.5" fill="#79B8FF"/>
   <text x="18" y="31" class="num">05</text>
   <text x="18" y="61" class="nodeTitle">RESULT</text>
   <text x="18" y="89" class="nodeBody">Local execution</text>
   <text x="18" y="109" class="nodeBody">logs • reports • debug</text>
-  <circle cx="224" cy="122" r="4" fill="#38D4B7"/>
+  <circle cx="224" cy="122" r="4" fill="#79B8FF"/>
   </g>
 <text x="28" y="251" class="foot">OPTIONAL PATHS — NOO TAH DELEGATES JAVASCRIPT TO NODE.JS; NATIVE C17 REMAINS PARTIAL</text>
 </svg>
