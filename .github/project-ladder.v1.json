@@ -1,0 +1,150 @@
+{
+  "schema": "dak.project-maturity.v1",
+  "version": 1,
+  "project": "Reaper",
+  "repository": "Ivan-VHS/Reaper",
+  "current_stage": 4,
+  "current_name": "Ascension",
+  "assessment": "provisional",
+  "assessment_date": "2026-11-25",
+  "assessment_basis": "Repository README, architecture, source, tests and CI definitions were inspected for the recorded gates. The full project test matrix was not re-run as part of this maturity adoption; this is not a new CI certification.",
+  "stages": [
+    {
+      "number": 1,
+      "name": "Genesis",
+      "status": "met",
+      "evidence": [
+        {
+          "kind": "scope",
+          "path": "README.md",
+          "claim": "Defines Reaper's language, users, supported runtimes and current native-parity limitations.",
+          "verification": "documentation_only"
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "name": "Foundation",
+      "status": "met",
+      "evidence": [
+        {
+          "kind": "architecture",
+          "path": "docs/ARCHITECTURE.md",
+          "claim": "Documents language, runtime, compiler and tooling boundaries.",
+          "verification": "documentation_only"
+        },
+        {
+          "kind": "policy",
+          "path": "SECURITY.md",
+          "claim": "Provides the repository security and vulnerability-reporting policy.",
+          "verification": "documentation_only"
+        },
+        {
+          "kind": "build",
+          "path": "CMakeLists.txt",
+          "claim": "Defines the native C17 build surface alongside the reference runtime.",
+          "verification": "documentation_only"
+        },
+        {
+          "kind": "ci",
+          "path": ".github/workflows/ci.yml",
+          "claim": "Runs the project test suite, example execution and contract validators.",
+          "verification": "documentation_only"
+        }
+      ]
+    },
+    {
+      "number": 3,
+      "name": "Evolution",
+      "status": "met",
+      "evidence": [
+        {
+          "kind": "source",
+          "path": "reaper/__main__.py",
+          "claim": "Provides the package entry point that dispatches to the Reaper CLI.",
+          "verification": "source_reviewed"
+        },
+        {
+          "kind": "tests",
+          "path": "tests",
+          "claim": "Contains regression tests for parsing, runtime, modules, tools and integration behavior.",
+          "verification": "documentation_only"
+        },
+        {
+          "kind": "runtime",
+          "path": "examples/flow.rpr",
+          "claim": "Provides a runnable .rpr example used by the CI execution path.",
+          "verification": "documentation_only"
+        }
+      ]
+    },
+    {
+      "number": 4,
+      "name": "Ascension",
+      "status": "met",
+      "evidence": [
+        {
+          "kind": "integration",
+          "path": "project-contract.json",
+          "claim": "Defines versioned project capabilities and explicit integration evidence across the ecosystem.",
+          "verification": "source_reviewed"
+        },
+        {
+          "kind": "contract_tests",
+          "path": "tools/validate_project_contract.py",
+          "claim": "Validates the unified project contract and its versioned boundaries.",
+          "verification": "documentation_only"
+        },
+        {
+          "kind": "ci",
+          "path": ".github/workflows/ci.yml",
+          "claim": "Runs project tests, example execution and project-contract validation in CI.",
+          "verification": "documentation_only"
+        }
+      ]
+    },
+    {
+      "number": 5,
+      "name": "Vanguard",
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "number": 6,
+      "name": "Frontier",
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "number": 7,
+      "name": "Dominion",
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "number": 8,
+      "name": "Apex",
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "number": 9,
+      "name": "Zenith",
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "number": 10,
+      "name": "Singularity",
+      "status": "pending",
+      "evidence": []
+    }
+  ],
+  "next_stage": 5,
+  "next_gate": [
+    "Compile and execute a declared .rpr subset through the native compiler/runtime on its declared targets.",
+    "Add reference/native parity fixtures and versioned ABI compatibility tests.",
+    "Record reproducible target builds and measured CPU, memory and resource budgets."
+  ],
+  "semver_independent": true
+}
