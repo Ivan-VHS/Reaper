@@ -51,6 +51,6 @@ python -m unittest discover -s tests -v
 - [实现路线图](docs/IMPLEMENTATION_ROADMAP.md)
 - [Kora 标准库助手](docs/KORA.md)
 - [文档索引](docs/README.md)
-- [生态共享标准](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/SHARED_STANDARDS.md)
+- [生态共享标准](https://github.com/Ivan-VHS/DAK/blob/main/docs/SHARED_STANDARDS.md)
 
 [贡献指南](CONTRIBUTING.md) · [安全策略](SECURITY.md) · [Apache-2.0 许可证](LICENSE)
