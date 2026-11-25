@@ -5,6 +5,7 @@ Start with the [project README](../README.md) for installation, first commands a
 ## Key pages
 
 - [Features and maturity](FEATURES.md)
+- [Reaper framework modules v1](FRAMEWORKS_V1.md)
 - [Psychoporter 666 function categories](FUNCTION_CATEGORIES_666.md)
 - [Architecture](ARCHITECTURE.md)
 - [Hardware language track](HARDWARE_LANGUAGE.md)
