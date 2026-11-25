@@ -76,6 +76,15 @@ class FixedWidthRuntimeTests(unittest.TestCase):
             with self.subTest(engine=engine):
                 with self.assertRaisesRegex(ReaperRuntimeError, "outside the u8 range"):
                     self.run_program("vary value: u8 := 1\nchange value := 256", engine)
+ 
+    def test_checked_exponentiation_stops_at_the_declared_width(self) -> None:
+        source = "make value: u8 := 2\nemit value ** 7"
+        self.assertEqual(self.run_program(source, "treewalk"), ["128"])
+        self.assertEqual(self.run_program(source, "vm"), ["128"])
+        for engine in ("treewalk", "vm"):
+            with self.subTest(engine=engine):
+                with self.assertRaisesRegex(ReaperRuntimeError, "overflows u8"):
+                    self.run_program("make value: u8 := 2\nemit value ** 8", engine)
 
 
 class FixedWidthTypeCheckerTests(unittest.TestCase):
