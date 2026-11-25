@@ -1,0 +1,134 @@
+# Reaper-native effect and capability contract checking.
+#
+# This is a declarative contract validator. It does not grant host permissions,
+# execute syscalls or install drivers. A trusted host remains the authority.
+#
+# Function record:
+#   ["FUNCTION_EFFECTS", function_name, [declared_effects...], [required_capabilities...]]
+# Manifest:
+#   ["CAPABILITY_MANIFEST", [granted_capabilities...]]
+
+craft effect_is_known(effect_name) {
+    yield effect_name == "io.read" or effect_name == "io.write" or effect_name == "fs.read" or effect_name == "fs.write" or effect_name == "clock.read" or effect_name == "process.spawn" or effect_name == "process.signal" or effect_name == "net.connect" or effect_name == "net.listen" or effect_name == "ffi.call" or effect_name == "mmio.read" or effect_name == "mmio.write" or effect_name == "irq.register" or effect_name == "dma.transfer" or effect_name == "alloc.heap" or effect_name == "unsafe"
+}
+
+craft effect_has(values, wanted) {
+    vary index := 0
+    loop while index < size(values) {
+        when values[index] == wanted { yield true }
+        change index := index + 1
+    }
+    yield false
+}
+
+craft effect_list_validate(effects) {
+    vary seen := []
+    vary index := 0
+    loop while index < size(effects) {
+        make item := effects[index]
+        when not effect_is_known(item) {
+            yield ["ERROR", "RPR-E6101 unknown effect " ++ item]
+        }
+        when effect_has(seen, item) {
+            yield ["ERROR", "RPR-E6102 duplicate effect " ++ item]
+        }
+        change seen := push(seen, item)
+        change index := index + 1
+    }
+    yield ["OK", size(seen)]
+}
+
+craft capability_list_validate(capabilities) {
+    vary seen := []
+    vary index := 0
+    loop while index < size(capabilities) {
+        make item := capabilities[index]
+        when size(item) == 0 {
+            yield ["ERROR", "RPR-E6103 capability name must not be empty"]
+        }
+        when effect_has(seen, item) {
+            yield ["ERROR", "RPR-E6104 duplicate capability " ++ item]
+        }
+        change seen := push(seen, item)
+        change index := index + 1
+    }
+    yield ["OK", size(seen)]
+}
+
+craft effect_contract_validate(contract) {
+    when size(contract) != 4 or contract[0] != "FUNCTION_EFFECTS" {
+        yield ["ERROR", "RPR-E6105 malformed function effect contract"]
+    }
+    when size(contract[1]) == 0 {
+        yield ["ERROR", "RPR-E6106 function name must not be empty"]
+    }
+    make checked_effects := effect_list_validate(contract[2])
+    when checked_effects[0] == "ERROR" { yield checked_effects }
+    make checked_capabilities := capability_list_validate(contract[3])
+    when checked_capabilities[0] == "ERROR" { yield checked_capabilities }
+    yield ["OK", checked_effects[1], checked_capabilities[1]]
+}
+
+craft effect_check_grants(contract, manifest) {
+    make contract_check := effect_contract_validate(contract)
+    when contract_check[0] == "ERROR" { yield contract_check }
+    when size(manifest) != 2 or manifest[0] != "CAPABILITY_MANIFEST" {
+        yield ["ERROR", "RPR-E6107 malformed capability manifest"]
+    }
+    make manifest_check := capability_list_validate(manifest[1])
+    when manifest_check[0] == "ERROR" { yield manifest_check }
+
+    vary index := 0
+    loop while index < size(contract[3]) {
+        make required := contract[3][index]
+        when not effect_has(manifest[1], required) {
+            yield ["DENIED", "RPR-E6108 missing capability " ++ required]
+        }
+        change index := index + 1
+    }
+    yield ["GRANTED", contract[1]]
+}
+
+craft effect_check_call(caller, callee) {
+    make caller_check := effect_contract_validate(caller)
+    when caller_check[0] == "ERROR" { yield caller_check }
+    make callee_check := effect_contract_validate(callee)
+    when callee_check[0] == "ERROR" { yield callee_check }
+
+    vary index := 0
+    loop while index < size(callee[2]) {
+        when not effect_has(caller[2], callee[2][index]) {
+            yield ["DENIED", "RPR-E6109 caller does not declare effect " ++ callee[2][index]]
+        }
+        change index := index + 1
+    }
+
+    change index := 0
+    loop while index < size(callee[3]) {
+        when not effect_has(caller[3], callee[3][index]) {
+            yield ["DENIED", "RPR-E6110 caller does not carry capability " ++ callee[3][index]]
+        }
+        change index := index + 1
+    }
+    yield ["GRANTED", callee[1]]
+}
+
+make display_effects := ["FUNCTION_EFFECTS", "render_status", ["io.write"], []]
+make file_reader := ["FUNCTION_EFFECTS", "read_config", ["fs.read"], ["filesystem.read.config"]]
+make manifest := ["CAPABILITY_MANIFEST", ["filesystem.read.config", "ui.output"]]
+
+assert(effect_contract_validate(display_effects)[0] == "OK", "valid pure/IO contract rejected")
+assert(effect_check_grants(file_reader, manifest) == ["GRANTED", "read_config"], "declared host capability not granted")
+assert(effect_check_grants(file_reader, ["CAPABILITY_MANIFEST", []])[0] == "DENIED", "missing host capability accepted")
+
+make caller_with_effect := ["FUNCTION_EFFECTS", "main", ["io.write", "fs.read"], ["filesystem.read.config"]]
+assert(effect_check_call(caller_with_effect, file_reader) == ["GRANTED", "read_config"], "compatible effect call rejected")
+make caller_without_effect := ["FUNCTION_EFFECTS", "main", ["io.write"], []]
+assert(effect_check_call(caller_without_effect, file_reader)[0] == "DENIED", "undeclared effect call accepted")
+
+make unknown_effect := ["FUNCTION_EFFECTS", "bad", ["network.magic"], []]
+assert(effect_contract_validate(unknown_effect)[0] == "ERROR", "unknown effect name accepted")
+make duplicate_capability := ["FUNCTION_EFFECTS", "bad", [], ["device.mmio", "device.mmio"]]
+assert(effect_contract_validate(duplicate_capability)[0] == "ERROR", "duplicate capability accepted")
+
+emit "SELFHOST_EFFECTS_OK"
