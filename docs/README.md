@@ -7,6 +7,7 @@ Start with the [project README](../README.md) for installation, first commands a
 - [Features and maturity](FEATURES.md)
 - [Architecture](ARCHITECTURE.md)
 - [Hardware language track](HARDWARE_LANGUAGE.md)
+- [System Runtime ABI v1](SYSTEM_RUNTIME_ABI_V1.md)
 - [Implementation roadmap](IMPLEMENTATION_ROADMAP.md)
 - [Studio and IDE](REAPER_IDE.md)
 - [NEXUS federation profile](NEXUS_FEDERATION_PROFILE_V1.md) — Reaper ownership, peer contracts and compatibility boundaries.
@@ -27,4 +28,4 @@ Start with the [project README](../README.md) for installation, first commands a
 - [Engineering evolution framework](ENGINEERING_EVOLUTION_FRAMEWORK.md)
 - [Repository evolution directives](REPOSITORY_EVOLUTION_DIRECTIVES.md)
 
-Treat the Python reference runtime, native compiler track and privileged hardware work as separate maturity levels. Source, tests and CI are the evidence for implemented behavior.
+Treat the Python reference runtime, native compiler track, System Runtime host ABI and privileged hardware work as separate maturity levels. Source, tests and CI are the evidence for implemented behavior.
