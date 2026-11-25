@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import Any, Callable
 
 from .errors import ExecutionLimitError, ReaperRuntimeError
-from .fixed_width import fixed_integer_fits, is_fixed_integer_type
+from .fixed_width import fixed_integer_bounds, fixed_integer_fits, is_fixed_integer_type
 
 
 class FixedInteger(int):
@@ -311,18 +311,7 @@ class Interpreter:
                 raise self._error(node.token, f"cannot read this index: {error}") from error
         if node.kind == "unary":
             value = self._evaluate(children[0], environment)
-            if node.value == "NOT":
-                return not self._truthy(value)
-            if node.value == "-" and self._is_number(value):
-                if isinstance(value, FixedInteger):
-                    if value.type_name.startswith("u"):
-                        raise self._error(node.token, f"unary '-' is not valid for {value.type_name}")
-                    result = -int(value)
-                    if not fixed_integer_fits(result, value.type_name):
-                        raise self._error(node.token, f"unary '-' overflows {value.type_name}")
-                    return FixedInteger(result, value.type_name)
-                return -value
-            raise self._error(node.token, "unary '-' expects a number")
+            return self._unary(node.value, value, node.token)
         if node.kind == "call":
             callee = self._evaluate(children[0], environment)
             arguments = [self._evaluate(arg, environment) for arg in children[1:]]
@@ -345,6 +334,20 @@ class Interpreter:
             right = self._evaluate(children[1], environment)
             return self._binary(operator, left, right, node.token)
         raise self._error(node.token, f"unknown expression kind '{node.kind}'")
+
+    def _unary(self, operator: str, value: Any, token: Token) -> Any:
+        if operator == "NOT":
+            return not self._truthy(value)
+        if operator == "-" and self._is_number(value):
+            if isinstance(value, FixedInteger):
+                if value.type_name.startswith("u"):
+                    raise self._error(token, f"unary '-' is not valid for {value.type_name}")
+                result = -int(value)
+                if not fixed_integer_fits(result, value.type_name):
+                    raise self._error(token, f"unary '-' overflows {value.type_name}")
+                return FixedInteger(result, value.type_name)
+            return -value
+        raise self._error(token, "unary '-' expects a number")
 
     def _binary(self, operator: str, left: Any, right: Any, token: Token) -> Any:
         left_fixed = left.type_name if isinstance(left, FixedInteger) else None
@@ -425,7 +428,9 @@ class Interpreter:
                 raise self._error(token, "numeric result is not finite")
             if fixed_type is not None and operator != "/" and not isinstance(result, float):
                 if not fixed_integer_fits(result, fixed_type):
-                    raise self._error(token, f"numeric result overflows {fixed_type}")
+                    minimum, _maximum = fixed_integer_bounds(fixed_type)
+                    direction = "underflows" if result < minimum else "overflows"
+                    raise self._error(token, f"numeric result {direction} {fixed_type}")
                 return FixedInteger(result, fixed_type)
             return result
         raise self._error(token, f"unknown operator '{operator}'")
