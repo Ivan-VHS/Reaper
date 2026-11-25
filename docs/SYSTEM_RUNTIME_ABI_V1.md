@@ -1,7 +1,7 @@
 # Reaper System Runtime ABI v1
 
 **Status:** native C17 host-dispatch boundary implemented; per-platform syscall adapters and source-language bindings remain separate gates.  
-**Scope:** process and thread lifecycle, synchronization, filesystem, clocks, networking and cryptographic services.  
+**Scope:** process and thread lifecycle, synchronization, filesystem, clocks, networking, cryptographic services and capability-gated desktop/session calls.  
 **Compatibility:** additive ABI; the existing Reaper FFI v1 symbols and the 18-module capability suite remain unchanged.
 
 ## Why this boundary exists
@@ -12,7 +12,7 @@ The ABI is implemented in include/reaper/system.h and src/system.c as the standa
 
 ## Expansion measure
 
-The existing native capability suite registers 18 modules with 6 operations each (108 registrations). System ABI v1 adds 7 domains with 6 operation IDs each (42 additional contracts). The declared operation surface therefore grows from 108 to 150 entries, a 38.9% increase. This is a registry/API-surface measurement, not a claim that every host service or language construct is implemented on every platform.
+The existing native capability suite registers 18 modules with 6 operations each (108 registrations). System ABI v1 adds 7 initial domains with 6 operation IDs each (42 contracts), then an additive desktop domain with 10 operations. The catalogue therefore exposes 52 host operations in this ABI version. This is a registry/API-surface measurement, not a claim that every host service or language construct is implemented on every platform.
 
 ## Operation catalogue
 
@@ -25,6 +25,7 @@ The existing native capability suite registers 18 modules with 6 operations each
 | Clock and timers | clock.monotonic_ns, clock.realtime_ns, timer.create, timer.wait, clock.sleep_until, clock.deadline_after | CLOCK |
 | Networking | net.socket_open, net.connect, net.send, net.receive, net.shutdown, net.resolve | NETWORK |
 | Cryptography | crypto.random_fill, crypto.sha256, crypto.hmac_sha256, crypto.constant_time_equal, crypto.zeroize, crypto.key_import | CRYPTO |
+| Desktop | desktop.output.enumerate, desktop.surface.create, desktop.surface.commit, desktop.window.create, desktop.window.configure, desktop.window.destroy, desktop.window.focus, desktop.input.read, desktop.session.switch, desktop.notification.post | Narrow DESKTOP_* capabilities per operation |
 
 reaper_system_operation_count, reaper_system_operation_at and reaper_system_operation_find expose the stable catalogue to native tools and adapters.
 
@@ -55,6 +56,13 @@ The adapter is trusted platform code. It must validate the operation-specific pa
 | CLOCK | Read clocks and wait on adapter-managed timers/deadlines |
 | NETWORK | Resolve names and open/use network endpoints allowed by host policy |
 | CRYPTO | Use host entropy and cryptographic services |
+| DESKTOP_DISPLAY_READ | Enumerate output IDs and read bounded display metadata |
+| DESKTOP_WINDOW_CREATE | Request creation of a window owned by the calling app identity |
+| DESKTOP_WINDOW_CONTROL | Configure, focus or destroy only windows owned by the caller or explicitly delegated to it |
+| DESKTOP_SURFACE_PRESENT | Create an app-owned surface and submit a bounded present/commit request |
+| DESKTOP_INPUT_READ | Read input events already routed to the caller's focused seat/window; never read global raw input |
+| DESKTOP_SESSION_CONTROL | Request workspace/session transitions allowed by the session policy |
+| DESKTOP_NOTIFICATION_POST | Post user notifications; does not confer trusted/system notification priority |
 
 A host should grant the smallest possible mask. A zero mask is valid. There is no implicit grant, global fallback, shell execution, environment-based library search or automatic privilege escalation.
 
@@ -67,6 +75,20 @@ A host should grant the smallest possible mask. A zero mask is valid. There is n
 5. crypto.random_fill must use a cryptographically secure host source. It must fail closed; it must never silently substitute a time-seeded PRNG.
 6. Key material must not be copied into logs or diagnostics. Adapters define key lifetime and zeroization guarantees. A successful crypto.zeroize is a host contract, not a guarantee made by ordinary C memset.
 7. The system ABI does not grant MMIO, DMA, IRQ, port I/O, firmware flashing or driver installation. Those remain separate hardware/driver capabilities and trusted platform operations.
+
+## Desktop and window-system calls
+
+The desktop operations are an additive, capability-gated request surface for a native DuckOS desktop host or a reviewed host adapter. They do not make a hosted Reaper process a window manager and do not grant direct access to a framebuffer, GPU device, keyboard controller or raw input stream.
+
+- Output enumeration returns stable output identities, logical/physical bounds, scale, transform and supported presentation modes. The caller receives metadata only.
+- Surface creation binds an opaque surface handle to the authenticated caller identity, output generation, dimensions, pixel format and a declared memory quota. The platform validates multiplication, stride, buffer ownership and generation.
+- Surface commit submits a bounded buffer/generation/region request. The host validates ownership, damage rectangles and presentation state before committing.
+- Window creation assigns a host-owned window identity. Configuration, focus and destruction operate only on a window owned by the caller or covered by an explicit delegation grant; title and geometry are data, never commands.
+- Input read returns only events routed by the input service to the caller's currently eligible focus target. It must not expose global keyboard/mouse capture.
+- Session switch is a request evaluated by the Reaper session policy and the native session manager. It does not directly change user identity or terminate arbitrary processes.
+- Notification post permits ordinary notifications. The broker reserves system origin, system priority and protected surfaces for native trusted services.
+
+All operation payloads are bounded, versioned records. The host must reject unknown required schema versions, stale generations, replayed sequence numbers, cross-client handles and incomplete state transitions. DABI64 wire layouts and the DuckOS IPC envelope are defined by the DuckOS repository and are not inferred from this operation catalogue. A capability name in Reaper is a preflight boundary; actual access control remains the responsibility of the native host and kernel.
 8. Callbacks are synchronous and must not retain caller-owned buffers. Long-running operations need adapter-defined cancellation/deadline payloads and bounded completion semantics.
 
 ## Language and compiler boundary
@@ -88,7 +110,7 @@ The intended language contract is:
     cmake --build build --parallel
     ctest --test-dir build --output-on-failure
 
-The native-system-abi test covers catalogue cardinality and lookup, ABI/version/size checks, unknown capability rejection, denial before host dispatch, pointer/length validation, one MiB bounds, successful bounded dispatch, host failure and over-reported output lengths. Tests use a fake adapter; they do not invoke real processes, open files, access networks or manipulate devices.
+The native-system-abi test covers catalogue cardinality and lookup, ABI/version/size checks, unknown capability rejection, desktop operation lookup, per-operation desktop capability denial before host dispatch, pointer/length validation, one MiB bounds, successful bounded dispatch, host failure and over-reported output lengths. Tests use a fake adapter; they do not invoke real processes, open files, access networks or manipulate devices.
 
 ## Adoption gates
 
