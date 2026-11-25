@@ -20,6 +20,10 @@ This is the canonical navigation map for Reaper. The root README is the entry po
 - [Integrations and project federation](clusters/federation-integration.md) — Plugin contracts, external runtimes, product interfaces and cross-project federation.
 - [Planning, governance and reference material](clusters/planning-governance.md) — Roadmaps, catalogs, ownership, policy and supporting engineering references.
 
+## Shared lifecycle standard
+
+[Product Stage Naming Standard](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/STAGE_NAMING_STANDARD.md) defines the stage vocabulary shared by DuckOS, Reaper, Pytyliki, OPlague and VentuSample.
+
 ## Cross-repository boundaries
 
 The neighboring projects have distinct responsibilities. Shared vocabulary or integration references do not imply a shared runtime, ABI or release lifecycle.
@@ -44,7 +48,7 @@ Each Markdown page is linked here and from its topic hub, giving readers more th
 - [LSP SEMANTIC TOKENS](LSP_SEMANTIC_TOKENS.md)
 - [MOST 147 FEATURE REGISTRY](MOST_147_FEATURE_REGISTRY.md)
 - [MOST 400 COMBINATORIAL MATRIX](MOST_400_COMBINATORIAL_MATRIX.md)
-- [MOST FUNCTIONS 666](MOST_FUNCTIONS_666.md)
+- [MOST FUNCTION ATLAS — STAGE 0.2](MOST_FUNCTION_ATLAS_STAGE_0_2.md)
 - [MOST IMPLEMENTATION STATUS](MOST_IMPLEMENTATION_STATUS.md)
 - [MOST LANGUAGE SPEC](MOST_LANGUAGE_SPEC.md)
 - [MOST RUSSIAN 66 RULES](MOST_RUSSIAN_66_RULES.md)
@@ -63,7 +67,7 @@ Each Markdown page is linked here and from its topic hub, giving readers more th
 
 - [ANATIDAE MOTION CONSTITUTION](ANATIDAE_MOTION_CONSTITUTION.md)
 - [CODEX 66 SHOWCASE](CODEX_66_SHOWCASE.md)
-- [IDE 666 IMPLEMENTATION](IDE_666_IMPLEMENTATION.md)
+- [REAPER STUDIO — STAGE 0.4](REAPER_STUDIO_STAGE_0_4.md)
 - [MOTION CONSTITUTION V2026](MOTION_CONSTITUTION_V2026.md)
 - [REAPER IDE](REAPER_IDE.md)
 - [REAPER TOOLCHAIN EVOLUTION IDE](REAPER_TOOLCHAIN_EVOLUTION_IDE.md)
@@ -81,7 +85,7 @@ Each Markdown page is linked here and from its topic hub, giving readers more th
 - [ARCHITECTURE](ARCHITECTURE.md)
 - [ATOMIC QUANTUM 133](ATOMIC_QUANTUM_133.md)
 - [CLINICAL SYSTEMS CSR120](CLINICAL_SYSTEMS_CSR120.md)
-- [CONSTITUTION 666 PROFILE](CONSTITUTION_666_PROFILE.md)
+- [REAPER CONSTITUTION — STAGE 0.3](REAPER_CONSTITUTION_PROFILE_STAGE_0_3.md)
 - [DISTRIBUTED SYSTEMS ENGINEERING STANDARD](DISTRIBUTED_SYSTEMS_ENGINEERING_STANDARD.md)
 - [DIVISION DECOMPOSITION ENGINE](DIVISION_DECOMPOSITION_ENGINE.md)
 - [DIVISION ENGINE](DIVISION_ENGINE.md)
