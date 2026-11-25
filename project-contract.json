@@ -131,6 +131,21 @@
         "src/ir.c",
         "tests/test_ir.c"
       ]
+    },
+    {
+      "id": "language.fixed-width-scalar-bindings",
+      "status": "partial",
+      "summary": "Fixed-width i8/u8/i16/u16/i32/u32/i64/u64 annotations flow through the source AST, canonical IR metadata, typechecker, tree-walk runtime and VM; scalar C17 AOT lowers checked signed and unsigned arithmetic for the same integer widths. Typed function parameters/results, aggregate layouts, ownership/regions, freestanding execution and direct object/ELF emission remain outside this slice.",
+      "evidence": [
+        "reaper/fixed_width.py",
+        "reaper/parser.py",
+        "reaper/ir.py",
+        "reaper/typecheck.py",
+        "reaper/runtime.py",
+        "reaper/vm.py",
+        "reaper/native_compiler.py",
+        "tests/test_fixed_width.py"
+      ]
     }
   ],
   "interfaces": [
