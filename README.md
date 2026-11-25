@@ -23,7 +23,7 @@ flowchart LR
   CHECK --> REF["Python reference runtime"]
   REF --> CLI["CLI / REPL"]
   REF --> STUDIO["Windows Studio"]
-  FRONT -. "partial implementation" .-> NATIVE["Native C17 track"]
+  FRONT -.->|partial implementation| NATIVE["Native C17 track"]
   REF --> LSP["LSP / DAP services"]
   EXT["JavaScript source"] --> NODE["Official Node.js runtime"]
   NODE --> NOOTAH["NOO TAH adapter"]
