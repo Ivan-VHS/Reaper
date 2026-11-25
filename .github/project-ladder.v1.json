@@ -1,0 +1,34 @@
+{
+  "schema": "ivan-vhs.project-ladder.v1",
+  "version": 1,
+  "project": "Reaper",
+  "repository": "Ivan-VHS/Reaper",
+  "current_rung": 4,
+  "current_name": "Ascension",
+  "assessment": "provisional",
+  "assessment_date": "2026-11-25",
+  "assessment_basis": "Static review of the repository README and linked feature, architecture or roadmap documentation. Source-level deep audit and CI/test rerun were not performed for this adoption.",
+  "evidence": [
+    {
+      "path": "docs/IMPLEMENTATION_ROADMAP.md",
+      "claim": "Reference runtime, Studio, LSP/DAP and partial native C17 work are tracked as connected workstreams with explicit limits.",
+      "verification": "documentation_only"
+    },
+    {
+      "path": "docs/FEATURES.md",
+      "claim": "The feature matrix separates available reference-runtime behavior from partial native compiler and MMIO contracts.",
+      "verification": "documentation_only"
+    }
+  ],
+  "limitations": [
+    "Native C17 is not feature-equivalent to the reference runtime and is not a general machine-code backend.",
+    "No test or CI workflow was re-run during ladder adoption."
+  ],
+  "next_rung": 5,
+  "next_gate": [
+    "Compile and execute a declared .rpr subset through the native path.",
+    "Add reference/native parity fixtures and host ABI validation for that subset.",
+    "Run reproducible target CI and record the exact supported compiler/platform matrix."
+  ],
+  "semver_independent": true
+}
