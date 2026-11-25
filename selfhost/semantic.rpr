@@ -1,0 +1,278 @@
+# Stage-2 bootstrap slice: expression semantics implemented in Reaper.
+#
+# Symbol rows use:
+# [name, kind, arity, result_type, mutable]
+# kind is value, function, or builtin.
+# result_type is number, text, boolean, list, nothing, or unknown.
+#
+# This module is intentionally expression-scoped. It does not claim complete
+# statement, control-flow, or whole-program semantic parity.
+
+craft semantic_failure(message, line, column) {
+    yield ["ERROR", message, line, column]
+}
+
+craft semantic_node_failure(message, node) {
+    yield ["ERROR", message, node[size(node) - 2], node[size(node) - 1]]
+}
+
+craft valid_semantic_type(value) {
+    yield value == "number" or value == "text" or value == "boolean" or value == "list" or value == "nothing" or value == "unknown"
+}
+
+craft validate_symbol_table(symbols) {
+    vary index := 0
+    loop while index < size(symbols) {
+        make symbol := symbols[index]
+        when size(symbol) != 5 {
+            yield semantic_failure("symbol row must contain five fields", 1, 1)
+        }
+        when symbol[0] == "" {
+            yield semantic_failure("symbol name cannot be empty", 1, 1)
+        }
+        when symbol[1] != "value" and symbol[1] != "function" and symbol[1] != "builtin" {
+            yield semantic_failure("unsupported symbol kind: " ++ symbol[1], 1, 1)
+        }
+        when symbol[1] == "value" and symbol[2] != 0 {
+            yield semantic_failure("value symbols cannot declare call arity", 1, 1)
+        }
+        when symbol[2] < 0 {
+            yield semantic_failure("symbol arity cannot be negative", 1, 1)
+        }
+        when not valid_semantic_type(symbol[3]) {
+            yield semantic_failure("unsupported symbol result type: " ++ symbol[3], 1, 1)
+        }
+        vary prior := 0
+        loop while prior < index {
+            when symbols[prior][0] == symbol[0] {
+                yield semantic_failure("duplicate symbol: " ++ symbol[0], 1, 1)
+            }
+            change prior := prior + 1
+        }
+        change index := index + 1
+    }
+    yield ["OK", size(symbols)]
+}
+
+craft lookup_symbol(symbols, name) {
+    vary index := 0
+    loop while index < size(symbols) {
+        when symbols[index][0] == name {
+            yield ["OK", symbols[index]]
+        }
+        change index := index + 1
+    }
+    yield ["ERROR", "unbound name: " ++ name, 1, 1]
+}
+
+craft analyze_expression(node, symbols) {
+    when size(node) < 3 {
+        yield semantic_failure("malformed expression node", 1, 1)
+    }
+
+    make kind := node[0]
+
+    when kind == "literal" {
+        when size(node) != 5 {
+            yield semantic_node_failure("malformed literal node", node)
+        }
+        when node[1] == "NUMBER" { yield ["OK", "number"] }
+        when node[1] == "STRING" { yield ["OK", "text"] }
+        when node[1] == "TRUE" or node[1] == "FALSE" { yield ["OK", "boolean"] }
+        when node[1] == "NOTHING" { yield ["OK", "nothing"] }
+        yield semantic_node_failure("unsupported literal kind: " ++ node[1], node)
+    }
+
+    when kind == "name" {
+        when size(node) != 4 {
+            yield semantic_node_failure("malformed name node", node)
+        }
+        make found := lookup_symbol(symbols, node[1])
+        when found[0] == "ERROR" {
+            yield semantic_node_failure(found[1], node)
+        }
+        when found[1][1] == "value" {
+            yield ["OK", found[1][3]]
+        }
+        yield ["OK", "callable"]
+    }
+
+    when kind == "unary" {
+        when size(node) != 5 {
+            yield semantic_node_failure("malformed unary node", node)
+        }
+        make operand := analyze_expression(node[2], symbols)
+        when operand[0] == "ERROR" { yield operand }
+        when node[1] == "-" and operand[1] == "number" {
+            yield ["OK", "number"]
+        }
+        when node[1] == "NOT" and operand[1] == "boolean" {
+            yield ["OK", "boolean"]
+        }
+        yield semantic_node_failure("unary operator " ++ node[1] ++ " does not accept " ++ operand[1], node)
+    }
+
+    when kind == "binary" {
+        when size(node) != 6 {
+            yield semantic_node_failure("malformed binary node", node)
+        }
+        make left_type := analyze_expression(node[2], symbols)
+        when left_type[0] == "ERROR" { yield left_type }
+        make right_type := analyze_expression(node[3], symbols)
+        when right_type[0] == "ERROR" { yield right_type }
+        make operator := node[1]
+
+        when operator == "+" or operator == "-" or operator == "*" or operator == "/" or operator == "//" or operator == "%" or operator == "**" {
+            when left_type[1] == "number" and right_type[1] == "number" {
+                yield ["OK", "number"]
+            }
+            yield semantic_node_failure("numeric operator " ++ operator ++ " requires two numbers", node)
+        }
+
+        when operator == "++" {
+            when left_type[1] == "text" and right_type[1] == "text" {
+                yield ["OK", "text"]
+            }
+            yield semantic_node_failure("text concatenation requires two text values", node)
+        }
+
+        when operator == "AND" or operator == "OR" {
+            when left_type[1] == "boolean" and right_type[1] == "boolean" {
+                yield ["OK", "boolean"]
+            }
+            yield semantic_node_failure("logical operators require two booleans", node)
+        }
+
+        when operator == "==" or operator == "!=" or operator == "<" or operator == "<=" or operator == ">" or operator == ">=" {
+            when left_type[1] == right_type[1] or left_type[1] == "unknown" or right_type[1] == "unknown" {
+                yield ["OK", "boolean"]
+            }
+            yield semantic_node_failure("comparison operands have incompatible types", node)
+        }
+
+        when operator == "::" {
+            yield ["OK", "unknown"]
+        }
+
+        yield semantic_node_failure("unsupported binary operator: " ++ operator, node)
+    }
+
+    when kind == "call" {
+        when size(node) != 5 {
+            yield semantic_node_failure("malformed call node", node)
+        }
+        when node[1][0] != "name" {
+            yield semantic_node_failure("indirect calls are not in the stage-2 subset", node)
+        }
+        make found := lookup_symbol(symbols, node[1][1])
+        when found[0] == "ERROR" {
+            yield semantic_node_failure(found[1], node)
+        }
+        when found[1][1] == "value" {
+            yield semantic_node_failure("value is not callable: " ++ node[1][1], node)
+        }
+        when size(node[2]) != found[1][2] {
+            yield semantic_node_failure("call arity mismatch for " ++ node[1][1], node)
+        }
+        vary argument_index := 0
+        loop while argument_index < size(node[2]) {
+            make argument_type := analyze_expression(node[2][argument_index], symbols)
+            when argument_type[0] == "ERROR" { yield argument_type }
+            change argument_index := argument_index + 1
+        }
+        yield ["OK", found[1][3]]
+    }
+
+    when kind == "list" {
+        when size(node) != 4 {
+            yield semantic_node_failure("malformed list node", node)
+        }
+        vary item_index := 0
+        loop while item_index < size(node[1]) {
+            make item_type := analyze_expression(node[1][item_index], symbols)
+            when item_type[0] == "ERROR" { yield item_type }
+            change item_index := item_index + 1
+        }
+        yield ["OK", "list"]
+    }
+
+    when kind == "index" {
+        when size(node) != 5 {
+            yield semantic_node_failure("malformed index node", node)
+        }
+        make collection_type := analyze_expression(node[1], symbols)
+        when collection_type[0] == "ERROR" { yield collection_type }
+        make index_type := analyze_expression(node[2], symbols)
+        when index_type[0] == "ERROR" { yield index_type }
+        when index_type[1] != "number" {
+            yield semantic_node_failure("collection index must be numeric", node)
+        }
+        when collection_type[1] == "list" or collection_type[1] == "text" {
+            yield ["OK", "unknown"]
+        }
+        yield semantic_node_failure("indexing requires a list or text value", node)
+    }
+
+    yield semantic_node_failure("unsupported expression node: " ++ kind, node)
+}
+
+# The explicit symbol table keeps name resolution deterministic and local.
+make semantic_symbols := [
+    ["total", "value", 0, "number", true],
+    ["label", "value", 0, "text", false],
+    ["ready", "value", 0, "boolean", false],
+    ["add", "function", 2, "number", false],
+    ["announce", "builtin", 1, "nothing", false]
+]
+
+make semantic_table_check := validate_symbol_table(semantic_symbols)
+assert(semantic_table_check[0] == "OK", "valid symbol table was rejected")
+
+make arithmetic_expression := [
+    "binary", "+",
+    ["name", "total", 1, 1],
+    ["literal", "NUMBER", "4", 1, 9],
+    1, 7
+]
+make arithmetic_type := analyze_expression(arithmetic_expression, semantic_symbols)
+assert(arithmetic_type == ["OK", "number"], "numeric expression inference mismatch")
+
+make call_expression := [
+    "call",
+    ["name", "add", 2, 1],
+    [
+        ["name", "total", 2, 5],
+        ["literal", "NUMBER", "3", 2, 12]
+    ],
+    2, 4
+]
+assert(analyze_expression(call_expression, semantic_symbols) == ["OK", "number"], "function call analysis mismatch")
+
+make invalid_call := [
+    "call",
+    ["name", "add", 3, 1],
+    [["literal", "NUMBER", "1", 3, 5]],
+    3, 4
+]
+assert(analyze_expression(invalid_call, semantic_symbols)[0] == "ERROR", "call arity mismatch was accepted")
+
+make invalid_operator := [
+    "binary", "+",
+    ["name", "label", 4, 1],
+    ["literal", "NUMBER", "1", 4, 9],
+    4, 7
+]
+make operator_error := analyze_expression(invalid_operator, semantic_symbols)
+assert(operator_error[0] == "ERROR" and operator_error[2] == 4, "type error lost its source location")
+
+make unknown_name := ["name", "missing", 5, 6]
+make unknown_error := analyze_expression(unknown_name, semantic_symbols)
+assert(unknown_error[0] == "ERROR" and unknown_error[2] == 5 and unknown_error[3] == 6, "unbound name diagnostic mismatch")
+
+make duplicate_symbols := [
+    ["same", "value", 0, "number", false],
+    ["same", "value", 0, "number", false]
+]
+assert(validate_symbol_table(duplicate_symbols)[0] == "ERROR", "duplicate symbol was accepted")
+
+emit "SELFHOST_SEMANTIC_OK"
