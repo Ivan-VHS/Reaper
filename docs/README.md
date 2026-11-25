@@ -21,6 +21,8 @@ Start with the [project README](../README.md) for installation, first commands a
 
 ## Shared rules
 
+- [Psychoporter 666 coding and human-layer standard](PSYCHOPORTER_666.md)
+
 - [Documentation standard](UNIFIED_DOCUMENTATION_STANDARD.md)
 - [Engineering evolution framework](ENGINEERING_EVOLUTION_FRAMEWORK.md)
 - [Repository evolution directives](REPOSITORY_EVOLUTION_DIRECTIVES.md)

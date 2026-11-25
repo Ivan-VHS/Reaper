@@ -15,6 +15,16 @@ if str(ROOT) not in sys.path:
 from reaper.lexer import KEYWORD_ALIASES, KEYWORDS  # noqa: E402
 
 
+def _initializer_body(source: str, declaration: str) -> str | None:
+    """Return a C initializer body while allowing ordinary source formatting."""
+    match = re.search(
+        declaration + r"\s*=\s*\{(?P<body>.*?)\}\s*;",
+        source,
+        flags=re.DOTALL,
+    )
+    return match.group("body") if match is not None else None
+
+
 def validate(root: Path = ROOT) -> list[str]:
     errors: list[str] = []
     manifest_path = root / "language" / "most_keyword_aliases.json"
@@ -37,6 +47,7 @@ def validate(root: Path = ROOT) -> list[str]:
         errors.append("manifest contains duplicate source spellings")
     if expected != KEYWORD_ALIASES:
         errors.append("Python KEYWORD_ALIASES differs from the JSON manifest")
+
     runtime_canonical = {
         entry["canonical"] for entry in entries if entry.get("support") == "runtime"
     }
@@ -48,21 +59,31 @@ def validate(root: Path = ROOT) -> list[str]:
     if runtime_canonical | reserved_canonical != set(expected.values()):
         errors.append("manifest support classes do not cover all canonical aliases")
 
-    marker = "static const ReaperKeywordAlias russian_aliases[] = {"
-    if marker not in c_source:
+    alias_declaration = (
+        r"static\s+const\s+ReaperKeywordAlias\s+russian_aliases\s*\[\s*\]"
+    )
+    alias_body = _initializer_body(c_source, alias_declaration)
+    if alias_body is None:
         errors.append("C17 alias table is missing")
     else:
-        block = c_source.split(marker, 1)[1].split("};", 1)[0]
-        native_aliases = dict(re.findall(r'\{"([^"]+)","([^"]+)"\}', block))
+        alias_pairs = re.findall(
+            r'\{\s*"([^"]+)"\s*,\s*"([^"]+)"\s*\}',
+            alias_body,
+        )
+        native_aliases = dict(alias_pairs)
+        if len(native_aliases) != len(alias_pairs):
+            errors.append("C17 alias table contains duplicate source spellings")
         if native_aliases != expected:
             errors.append("C17 russian_aliases differs from the JSON manifest")
 
-    keyword_marker = "static const char *const keywords[]={"
-    if keyword_marker not in c_source:
+    keyword_declaration = (
+        r"static\s+const\s+char\s*\*\s*const\s+keywords\s*\[\s*\]"
+    )
+    keyword_body = _initializer_body(c_source, keyword_declaration)
+    if keyword_body is None:
         errors.append("C17 keyword table is missing")
     else:
-        block = c_source.split(keyword_marker, 1)[1].split("};", 1)[0]
-        native_keywords = set(re.findall(r'"([^"]+)"', block))
+        native_keywords = set(re.findall(r'"([^"]+)"', keyword_body))
         if not set(expected).issubset(native_keywords):
             errors.append("one or more Russian aliases are absent from C17 keywords")
         if not set(expected.values()).issubset(native_keywords):
@@ -78,13 +99,21 @@ def validate(root: Path = ROOT) -> list[str]:
         errors.append("expected exactly 33 lexically reserved aliases")
 
     principles = profile.get("principles")
-    if profile.get("principle_count") != 20 or not isinstance(principles, list) or len(principles) != 20:
+    if (
+        profile.get("principle_count") != 20
+        or not isinstance(principles, list)
+        or len(principles) != 20
+    ):
         errors.append("Russian native profile must contain exactly 20 principles")
     elif len({item.get("id") for item in principles}) != 20:
         errors.append("Russian native profile principle IDs must be unique")
 
     rights = profile.get("rights", {})
-    for key in ("author_and_contributor_rights", "third_party_rights", "ownership_boundary"):
+    for key in (
+        "author_and_contributor_rights",
+        "third_party_rights",
+        "ownership_boundary",
+    ):
         if not rights.get(key):
             errors.append(f"rights.{key} must be documented")
 
@@ -97,7 +126,11 @@ def main() -> int:
         for error in errors:
             print(f"ERROR: {error}")
         return 1
-    print("МОСТ contract valid: 54 exact aliases, 21 runtime aliases, 33 lexical reservations, 20 principles.")
+
+    print(
+        "МОСТ contract valid: 54 exact aliases, 21 runtime aliases, "
+        "33 lexical reservations, 20 principles."
+    )
     return 0
 
 
