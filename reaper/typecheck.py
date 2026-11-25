@@ -16,6 +16,16 @@ from .errors import ReaperError
 from .parser import Node, parse
 from .fixed_width import fixed_integer_fits, is_fixed_integer_type
 
+def _integer_literal_value(node: Node) -> int | None:
+    if node.kind == "literal" and isinstance(node.value, int) and not isinstance(node.value, bool):
+        return node.value
+    if node.kind == "unary" and node.value == "-" and len(node.children or []) == 1:
+        child = (node.children or [])[0]
+        value = _integer_literal_value(child)
+        return -value if value is not None else None
+    return None
+
+
 
 ANY = "Any"
 NOTHING = "Nothing"
@@ -171,15 +181,19 @@ class TypeChecker:
             if declared_type is not None:
                 if not is_fixed_integer_type(declared_type):
                     self._report(node, "RPR-T0010", f"unsupported fixed-width integer type '{declared_type}'")
-                elif value_type == "Int" and children[0].kind == "literal" and fixed_integer_fits(children[0].value, declared_type):
-                    value_type = declared_type
-                elif value_type != declared_type:
-                    if value_type == "Int" and children[0].kind == "literal":
-                        self._report(node, "RPR-T0011", f"integer literal is outside the {declared_type} range")
-                    else:
-                        self._report(node, "RPR-T0012", f"cannot initialize {declared_type} with {value_type}; use a value of the same fixed-width type")
                 else:
-                    value_type = declared_type
+                    literal_value = _integer_literal_value(children[0])
+                    if literal_value is not None:
+                        if fixed_integer_fits(literal_value, declared_type):
+                            value_type = declared_type
+                        else:
+                            self._report(node, "RPR-T0011", f"integer literal is outside the {declared_type} range")
+                            value_type = declared_type
+                    elif value_type != declared_type:
+                        self._report(node, "RPR-T0012", f"cannot initialize {declared_type} with {value_type}; use a value of the same fixed-width type")
+                        value_type = declared_type
+                    else:
+                        value_type = declared_type
             self.scopes[-1][name] = Binding(value_type, mutable)
             return
         if node.kind == "change":
@@ -189,11 +203,14 @@ class TypeChecker:
                 return
             if not binding.mutable:
                 self._report(node, "RPR-T0002", f"'{node.value}' is immutable and cannot be reassigned")
-            elif is_fixed_integer_type(binding.type_name) and actual == "Int" and children[0].kind == "literal":
-                if fixed_integer_fits(children[0].value, binding.type_name):
-                    actual = binding.type_name
-                else:
-                    self._report(node, "RPR-T0011", f"integer literal is outside the {binding.type_name} range")
+            elif is_fixed_integer_type(binding.type_name):
+                literal_value = _integer_literal_value(children[0])
+                if literal_value is not None:
+                    if fixed_integer_fits(literal_value, binding.type_name):
+                        actual = binding.type_name
+                    else:
+                        self._report(node, "RPR-T0011", f"integer literal is outside the {binding.type_name} range")
+                        actual = binding.type_name
             if binding.mutable and not self._assignable(binding.type_name, actual):
                 self._report(
                     node, "RPR-T0001",
@@ -292,6 +309,20 @@ class TypeChecker:
                 return self._flow_type(children[0], children[1], left)
             right = self._expression(children[1])
             if operator in {"+", "-", "*", "/", "//", "%", "**"}:
+                right_literal = _integer_literal_value(children[1])
+                left_literal = _integer_literal_value(children[0])
+                if is_fixed_integer_type(left) and right == "Int" and right_literal is not None:
+                    if fixed_integer_fits(right_literal, left):
+                        right = left
+                    else:
+                        self._report(node, "RPR-T0011", f"integer literal is outside the {left} range")
+                        return ANY
+                elif is_fixed_integer_type(right) and left == "Int" and left_literal is not None:
+                    if fixed_integer_fits(left_literal, right):
+                        left = right
+                    else:
+                        self._report(node, "RPR-T0011", f"integer literal is outside the {right} range")
+                        return ANY
                 if not self._numeric(left) or not self._numeric(right):
                     self._report(node, "RPR-T0004", f"operator '{operator}' requires numeric operands, got {left} and {right}")
                     return ANY
