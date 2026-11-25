@@ -196,7 +196,7 @@ craft infer_expression(node, bindings, functions) {
         }
         when target[1] == "Text" { yield semantic_ok("Text", node) }
         when target[1] == "Any" { yield semantic_ok("Any", node) }
-        when size(target[1]) >= 5 and target[1][0:5] == "List[" {
+        when size(target[1]) >= 5 and starts_with(target[1], "List[") {
             yield semantic_ok("Any", node)
         }
         yield semantic_error("RPR-T0008", "value is not indexable", node)
