@@ -1,5 +1,5 @@
 {
-  "$schema": "language-canon.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "schema": "reaper.language-canon.v1",
   "version": 1,
   "language": {
@@ -71,48 +71,81 @@
     "operator_precedence": [
       {
         "precedence": 1,
-        "operators": ["::"],
+        "operators": [
+          "::"
+        ],
         "associativity": "left"
       },
       {
         "precedence": 2,
-        "operators": ["or"],
+        "operators": [
+          "or"
+        ],
         "associativity": "left"
       },
       {
         "precedence": 3,
-        "operators": ["and"],
+        "operators": [
+          "and"
+        ],
         "associativity": "left"
       },
       {
         "precedence": 4,
-        "operators": ["==", "!=", "<", "<=", ">", ">="],
+        "operators": [
+          "==",
+          "!=",
+          "<",
+          "<=",
+          ">",
+          ">="
+        ],
         "associativity": "left"
       },
       {
         "precedence": 5,
-        "operators": ["++"],
+        "operators": [
+          "++"
+        ],
         "associativity": "left"
       },
       {
         "precedence": 6,
-        "operators": ["+", "-"],
+        "operators": [
+          "+",
+          "-"
+        ],
         "associativity": "left"
       },
       {
         "precedence": 7,
-        "operators": ["*", "/", "//", "%"],
+        "operators": [
+          "*",
+          "/",
+          "//",
+          "%"
+        ],
         "associativity": "left"
       },
       {
         "precedence": 8,
-        "operators": ["**"],
+        "operators": [
+          "**"
+        ],
         "associativity": "right"
       }
     ],
-    "prefix_operators": ["not", "-"],
-    "non_canonical_pipe_spellings": ["|>", "~>"],
-    "non_pipe_tokens": ["->"],
+    "prefix_operators": [
+      "not",
+      "-"
+    ],
+    "non_canonical_pipe_spellings": [
+      "|>",
+      "~>"
+    ],
+    "non_pipe_tokens": [
+      "->"
+    ],
     "native_only_or_unconfirmed_operator_spellings": [
       "??",
       "&&",
@@ -190,5 +223,6 @@
     "Native backends pass feature-by-feature differential tests before claiming support.",
     "Diagnostics, resource limits, effects, permissions and failure paths are covered.",
     "Documentation, examples, IDE metadata and migration notes are synchronized."
-  ]
+  ],
+  "schema_file": "language-canon.v1.schema.json"
 }
