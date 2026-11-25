@@ -1,0 +1,220 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ivan-vhs:reaper:language-canon:v1",
+  "title": "Reaper Language Canon v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schema",
+    "version",
+    "language",
+    "authority",
+    "frontend_pipeline",
+    "surface",
+    "profiles",
+    "semantic_invariants",
+    "maturity_statuses",
+    "implementation_tracks",
+    "conformance_gates"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "language-canon.v1.schema.json"
+    },
+    "schema": {
+      "const": "reaper.language-canon.v1"
+    },
+    "version": {
+      "const": 1
+    },
+    "language": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "edition", "source_extension", "encoding"],
+      "properties": {
+        "name": { "const": "Reaper" },
+        "edition": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+$" },
+        "source_extension": { "const": ".rpr" },
+        "encoding": { "const": "UTF-8" }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "normative_spec",
+        "style_constitution",
+        "quick_reference",
+        "feature_registry",
+        "most_alias_registry",
+        "reference_lexer",
+        "reference_parser",
+        "reference_runtime",
+        "native_lexer",
+        "native_parser",
+        "native_aot_spec"
+      ],
+      "properties": {
+        "normative_spec": { "type": "string" },
+        "style_constitution": { "type": "string" },
+        "quick_reference": { "type": "string" },
+        "feature_registry": { "type": "string" },
+        "most_alias_registry": { "type": "string" },
+        "reference_lexer": { "type": "string" },
+        "reference_parser": { "type": "string" },
+        "reference_runtime": { "type": "string" },
+        "native_lexer": { "type": "string" },
+        "native_parser": { "type": "string" },
+        "native_aot_spec": { "type": "string" }
+      }
+    },
+    "frontend_pipeline": {
+      "type": "array",
+      "minItems": 8,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "surface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "canonical_keywords",
+        "declarations",
+        "flow_operator",
+        "operator_precedence",
+        "prefix_operators",
+        "non_canonical_pipe_spellings",
+        "non_pipe_tokens",
+        "native_only_or_unconfirmed_operator_spellings"
+      ],
+      "properties": {
+        "canonical_keywords": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "declarations": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "immutable_keyword",
+            "mutable_keyword",
+            "reassignment_keyword",
+            "binding_operator"
+          ],
+          "properties": {
+            "immutable_keyword": { "const": "make" },
+            "mutable_keyword": { "const": "vary" },
+            "reassignment_keyword": { "const": "change" },
+            "binding_operator": { "const": ":=" }
+          }
+        },
+        "flow_operator": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["lexeme", "precedence", "associativity", "semantics"],
+          "properties": {
+            "lexeme": { "const": "::" },
+            "precedence": { "const": 1 },
+            "associativity": { "const": "left" },
+            "semantics": { "type": "string", "minLength": 20 }
+          }
+        },
+        "operator_precedence": {
+          "type": "array",
+          "minItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["precedence", "operators", "associativity"],
+            "properties": {
+              "precedence": { "type": "integer", "minimum": 1, "maximum": 8 },
+              "operators": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": { "type": "string", "minLength": 1 }
+              },
+              "associativity": { "enum": ["left", "right"] }
+            }
+          }
+        },
+        "prefix_operators": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "non_canonical_pipe_spellings": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "non_pipe_tokens": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "native_only_or_unconfirmed_operator_spellings": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "profiles": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "status", "selection"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "kind": { "enum": ["canonical", "exact-keyword-alias"] },
+          "status": { "enum": ["current", "partial", "specified", "planned", "deprecated"] },
+          "selection": { "type": "string", "minLength": 1 },
+          "alias_registry": { "type": "string" },
+          "alias_count": { "type": "integer", "minimum": 0 },
+          "runtime_alias_count": { "type": "integer", "minimum": 0 },
+          "lexical_reserved_alias_count": { "type": "integer", "minimum": 0 },
+          "normalization": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "semantic_invariants": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 10 }
+    },
+    "maturity_statuses": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": ["planned", "specified", "partial", "implemented", "deprecated"]
+      }
+    },
+    "implementation_tracks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "status", "scope"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "status": { "enum": ["partial", "implemented", "specified", "planned"] },
+          "scope": { "type": "string", "minLength": 20 }
+        }
+      }
+    },
+    "conformance_gates": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 10 }
+    }
+  }
+}

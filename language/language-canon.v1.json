@@ -1,0 +1,194 @@
+{
+  "$schema": "language-canon.v1.schema.json",
+  "schema": "reaper.language-canon.v1",
+  "version": 1,
+  "language": {
+    "name": "Reaper",
+    "edition": "0.1",
+    "source_extension": ".rpr",
+    "encoding": "UTF-8"
+  },
+  "authority": {
+    "normative_spec": "docs/LANGUAGE_CANON.md",
+    "style_constitution": "docs/PSYCHOPORTER_666.md",
+    "quick_reference": "LANGUAGE.md",
+    "feature_registry": "language/features.json",
+    "most_alias_registry": "language/most_keyword_aliases.json",
+    "reference_lexer": "reaper/lexer.py",
+    "reference_parser": "reaper/parser.py",
+    "reference_runtime": "reaper/runtime.py",
+    "native_lexer": "src/lexer.c",
+    "native_parser": "src/parser.c",
+    "native_aot_spec": "docs/NATIVE_COMPILER.md"
+  },
+  "frontend_pipeline": [
+    "source",
+    "profile_resolution",
+    "lexing",
+    "parsing",
+    "canonical_ast",
+    "semantic_checks",
+    "canonical_ir",
+    "ir_verification",
+    "runtime_or_backend"
+  ],
+  "surface": {
+    "canonical_keywords": [
+      "make",
+      "vary",
+      "change",
+      "craft",
+      "yield",
+      "emit",
+      "when",
+      "otherwise",
+      "each",
+      "in",
+      "loop",
+      "while",
+      "true",
+      "false",
+      "nothing",
+      "and",
+      "or",
+      "not",
+      "import",
+      "export",
+      "as"
+    ],
+    "declarations": {
+      "immutable_keyword": "make",
+      "mutable_keyword": "vary",
+      "reassignment_keyword": "change",
+      "binding_operator": ":="
+    },
+    "flow_operator": {
+      "lexeme": "::",
+      "precedence": 1,
+      "associativity": "left",
+      "semantics": "The left value is inserted as the first argument of the call on the right."
+    },
+    "operator_precedence": [
+      {
+        "precedence": 1,
+        "operators": ["::"],
+        "associativity": "left"
+      },
+      {
+        "precedence": 2,
+        "operators": ["or"],
+        "associativity": "left"
+      },
+      {
+        "precedence": 3,
+        "operators": ["and"],
+        "associativity": "left"
+      },
+      {
+        "precedence": 4,
+        "operators": ["==", "!=", "<", "<=", ">", ">="],
+        "associativity": "left"
+      },
+      {
+        "precedence": 5,
+        "operators": ["++"],
+        "associativity": "left"
+      },
+      {
+        "precedence": 6,
+        "operators": ["+", "-"],
+        "associativity": "left"
+      },
+      {
+        "precedence": 7,
+        "operators": ["*", "/", "//", "%"],
+        "associativity": "left"
+      },
+      {
+        "precedence": 8,
+        "operators": ["**"],
+        "associativity": "right"
+      }
+    ],
+    "prefix_operators": ["not", "-"],
+    "non_canonical_pipe_spellings": ["|>", "~>"],
+    "non_pipe_tokens": ["->"],
+    "native_only_or_unconfirmed_operator_spellings": [
+      "??",
+      "&&",
+      "||",
+      "+%",
+      "+|"
+    ]
+  },
+  "profiles": [
+    {
+      "id": "reaper",
+      "kind": "canonical",
+      "status": "current",
+      "selection": "Default for .rpr and explicit selection."
+    },
+    {
+      "id": "most-ru",
+      "kind": "exact-keyword-alias",
+      "status": "partial",
+      "alias_registry": "language/most_keyword_aliases.json",
+      "alias_count": 54,
+      "runtime_alias_count": 21,
+      "lexical_reserved_alias_count": 33,
+      "normalization": "Exact mapping to canonical Reaper keyword spellings; no stemming, inflection or synonym inference."
+    }
+  ],
+  "semantic_invariants": [
+    "All supported source profiles normalize to the same canonical AST and semantic IR.",
+    "A profile cannot change type rules, evaluation order, runtime limits, errors, permissions or ABI behavior.",
+    "make declares an immutable binding; vary declares a mutable binding; change targets an existing mutable binding.",
+    "Host effects are explicit and capability-gated; source syntax grants no operating-system privilege.",
+    "Source size, token count, nesting, execution, calls, collections and managed resources are bounded by the selected runtime.",
+    "Unsupported constructs fail before backend code generation; no silent backend fallback is permitted.",
+    "Reserved token catalog entries do not imply grammar or runtime support."
+  ],
+  "maturity_statuses": [
+    "planned",
+    "specified",
+    "partial",
+    "implemented",
+    "deprecated"
+  ],
+  "implementation_tracks": [
+    {
+      "id": "reference-runtime",
+      "status": "implemented",
+      "scope": "Broad compatibility implementation for the current .rpr grammar and runtime semantics."
+    },
+    {
+      "id": "reference-bytecode-vm",
+      "status": "implemented",
+      "scope": "Selectable VM execution over the reference semantic/IR model; must remain behaviorally aligned with the reference interpreter."
+    },
+    {
+      "id": "native-c17-frontend",
+      "status": "partial",
+      "scope": "C17 lexer, expression parser, owned AST, checked scalar IR and limited lowering; not a complete Reaper parser."
+    },
+    {
+      "id": "native-aot",
+      "status": "partial",
+      "scope": "Bounded scalar source subset lowered to generated C17 and compiled by a host toolchain; not full language parity or a freestanding DuckOS backend."
+    },
+    {
+      "id": "qcs",
+      "status": "implemented",
+      "scope": "Separate validation frontend and .qcs surface; not a Reaper syntax profile."
+    }
+  ],
+  "conformance_gates": [
+    "Grammar and operator precedence are documented and versioned.",
+    "Each accepted construct has positive, negative and boundary tests.",
+    "Reference interpreter and VM produce the same observable behavior.",
+    "Canonical AST and IR fixtures are deterministic and preserve source provenance.",
+    "Native backends pass feature-by-feature differential tests before claiming support.",
+    "Diagnostics, resource limits, effects, permissions and failure paths are covered.",
+    "Documentation, examples, IDE metadata and migration notes are synchronized."
+  ]
+}

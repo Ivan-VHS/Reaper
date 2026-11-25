@@ -1,37 +1,46 @@
-# Reaper systems language — quick reference
+# Reaper language — quick reference
 
-Reaper is moving toward a low-level systems and hardware language for firmware, embedded software and platform development. The current product keeps its expression-oriented .rpr language and Python compatibility runtime while the native compiler and hardware contracts are expanded. See [the systems-language architecture](docs/HARDWARE_LANGUAGE.md) for the migration plan and implemented boundaries.
+**Normative specification:** [Reaper Language Canon v1](docs/LANGUAGE_CANON.md)  
+**Machine-readable contract:** [language/language-canon.v1.json](language/language-canon.v1.json)
+
+Reaper is one language with one semantic core. The canonical source extension is `.rpr`; the canonical flow operator is `::`. The Russian МОСТ layer supplies exact aliases for the same Reaper tokens and does not create a second grammar.
+
+## Core syntax
 
 | Syntax | Meaning |
 |---|---|
-| `craft name(args) { ... }` | function |
-| `make name := value` | immutable binding |
-| `vary name := value` | mutable binding |
-| `change name := value` | reassignment |
-| `yield value` | function result |
-| `emit value` | explicit console output |
-| `value :: op(args)` | pass value as first argument |
-| `[a,b] :: map(fn)` | collection flow |
+| `craft name(args) { ... }` | Function |
+| `make name := value` | Immutable binding |
+| `vary name := value` | Mutable binding |
+| `change name := value` | Reassignment |
+| `yield value` | Function result |
+| `emit value` | Explicit output |
+| `when condition { ... } otherwise { ... }` | Conditional |
+| `each item in values { ... }` | Iteration |
+| `loop while condition { ... }` | Bounded loop |
+| `value :: operation(args)` | Pass value as the first argument |
 
 ```reaper
-craft double(x) { yield x * 2 }
+craft double(x) {
+    yield x * 2
+}
+
 make total := [1, 2, 3] :: map(double) :: sum()
 emit "total = " ++ text(total)
 ```
 
-Rules: explicit effects; no implicit file/network/clock access in ordinary expressions; no silent coercion; bounded steps, call depth and collections. See [runtime limits](docs/RUNTIME_PLATFORM.md).\n\n## Static type analysis\n\nThe optional `reaper typecheck program.rpr` command runs conservative type inference over the existing AST. It checks supported numeric and text operators, collection indexes and iteration, mutable bindings, and known call arity. Unknown values at module and host boundaries remain `Any`. This is a first semantic-analysis slice, not yet a complete sound type system with source annotations, user generics, null-flow refinement or exhaustive pattern matching. See [Polyglot capability layer](docs/POLYGLOT_CAPABILITY_LAYER.md) for the capability map and implementation status.
+## Operator order
 
-## Integrated product layer
+From lowest to highest: `::`, `or`, `and`, comparisons, `++`, `+ -`, `* / // %`, `**`. Exponentiation is right-associative; the other binary operators are left-associative. The word forms `and` and `or` are canonical.
 
-Reaper includes eighteen in-process product services, exposed through `reaper --products`, `reaper --product-info Dropaul`, and the Reaper Studio **Внутренние продукты** menu. The workflow product's canonical name is **Dropaul**. Product services use the Python reference runtime; C17 parity is not claimed.
+`|>` and `~>` are not pipeline aliases. `->` is not a pipeline operator. C17 lexer/parser recognition of additional spellings does not make those spellings part of the reference language.
 
-## Native AOT subset
+## МОСТ
 
-The experimental AOT compiler accepts scalar bindings, top-level integer functions, `yield`, `emit`, `when`/`otherwise`, `loop while`, checked i64 arithmetic, comparisons, booleans, and simple strings. It emits portable C17 and uses an installed GCC/Clang-compatible toolchain to build a host executable:
+The alias registry contains 54 exact Russian mappings: 21 runtime-supported aliases and 33 lexically reserved aliases. Reserved aliases do not imply parser or runtime support. No stemming, inflection guessing or synonym resolution is performed. See [МОСТ implementation status](docs/MOST_IMPLEMENTATION_STATUS.md) and [alias registry](language/most_keyword_aliases.json).
 
-```sh
-python -m reaper program.rpr --emit-c program.c
-python -m reaper program.rpr --native program
-```
+## Implementation boundary
 
-Lists, `each`, collection pipelines, closures, modules, decimals, `nothing`, dynamic dispatch, async/effects, and arbitrary FFI are deliberately outside this first native slice. The Python runtime remains authoritative for those constructs. The C17 MMIO adapter validates descriptors and capability grants through a host-supplied bus; it does not map physical memory. QCS remains a separate validation frontend. See [Native AOT Compiler](docs/NATIVE_COMPILER.md) and [Hardware Language](docs/HARDWARE_LANGUAGE.md).
+The Python reference runtime and its VM define the current broad compatibility behavior. The native C17 parser is an expression-level slice, and native AOT supports a bounded scalar subset emitted as C17 for a host toolchain. Full native parity, direct freestanding DuckOS code generation and self-hosting are not claimed.
+
+Use [Features](docs/FEATURES.md), [Implementation roadmap](docs/IMPLEMENTATION_ROADMAP.md), [Native Compiler](docs/NATIVE_COMPILER.md) and [Hardware Language](docs/HARDWARE_LANGUAGE.md) for evidence-backed implementation status.
