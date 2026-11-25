@@ -43,7 +43,7 @@ A context match MUST NOT increase the malware risk score, set `blocked`, trigger
 
 ## BAV integration boundary in DuckOS
 
-The first BAV increment is a small Java context-classification library. It loads the TSV catalog, applies Unicode NFKC normalization, uses whole-phrase boundaries, rejects oversized input and returns category/term IDs only. It does not scan binaries, inspect process memory, verify signatures or detect malware.
+The defensive-security design describes a small Java context-classification library that loads the TSV catalog, applies Unicode NFKC normalization, uses whole-phrase boundaries, rejects oversized input and returns category/term IDs only. However, the named bav/java/duckos/bav/context/ContextClassifier.java and ContextClassifierSelfTest.java paths were not present when checked against the current default branch or the indexed source commit. Until those files and their test are restored or the documentation is corrected, the classifier is specified/documented rather than verified as a delivered Java implementation. The checked-in TSV taxonomy itself is present. This component does not scan binaries, inspect process memory, verify signatures or detect malware.
 
 The full BAV architecture must keep these components separate:
 
@@ -78,3 +78,23 @@ java -ea -cp build/bav-context duckos.bav.context.ContextClassifierSelfTest \
 ```
 
 This test validates the context classifier only. It is not a malware-detection benchmark, a sandbox certification or proof of full antivirus protection.
+
+
+## DuckOS BAV bundle interoperability and extension namespace
+
+DuckOS defines the signed declarative malware-policy bundle format as the **.bav** file type. Its current specification is reviewed in the DuckOS repository under [BAV Security Bundle v1](https://github.com/Ivan-VHS/DuckOS/blob/feat/ergonomics-and-bav-security-foundation/docs/BAV_SECURITY_BUNDLE_V1.md). This is a cross-project format proposal, not a Reaper language feature.
+
+The extension ownership rules are:
+
+- **.bav** — reserved for signed DuckOS BAV security bundles.
+- **.bufspec** — proposed separate suffix for the Buffer Allocation & Validation specification from the OS design notes; it is not currently a Reaper parser or runtime format.
+- **duckos.bav.defense-context.v1** — existing policy identifier for the context vocabulary; it is a namespace, not a file suffix.
+- **security/defense-context.v1.tsv** — the existing plain-text context taxonomy; it is not a malware-signature file and must remain informational.
+
+The Reaper repository's Beelzebul 66-rule scanner remains a separate read-only repository-security tool. It audits tracked repository content and emits the beelzebul.report.v1 report. It must not be described as a general host-file, process-memory or on-access antivirus scanner. Its existing Python implementation and CI are retained in their own repository/tooling domain; they are not imported as DuckOS native system code.
+
+The context taxonomy and its classifier output MUST never be folded into malware confidence, malicious verdicts, block decisions, quarantine actions, build failures or capability revocation. Only independent technical evidence and a separate verified response policy may lead to a malware verdict or response.
+
+Reaper does not currently parse, compile, execute or package .bav or .bufspec files. Any future registry, parser, syntax highlighting, content-type, formatter or validator support requires a separate versioned contract, native/runtime support where appropriate, negative fixtures, compatibility tests and a reviewable implementation change. A file extension documented here is not evidence of runtime support.
+
+DuckOS must consume Reaper repository reports or context tags only through explicit, versioned, bounded data interfaces. No implicit FFI, source import, elevated process or dynamic loading is granted by this integration.
