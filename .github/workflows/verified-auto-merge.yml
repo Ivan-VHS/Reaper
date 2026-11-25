@@ -75,10 +75,59 @@ jobs:
     needs: [python-tests, native-c]
     if: github.event_name != 'workflow_dispatch' && github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
+      actions: read
       contents: write
       pull-requests: write
     steps:
+      - name: Wait for all pull-request workflows on this exact commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          REQUIRED_WORKFLOWS: '["CodeQL","Beelzebul security gate"]'
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 54); do
+            payload="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?head_sha=${PR_HEAD_SHA}&per_page=100")"
+            state="$(jq -r \
+              --arg self "${GITHUB_WORKFLOW}" \
+              --arg sha "${PR_HEAD_SHA}" \
+              --argjson required "${REQUIRED_WORKFLOWS}" '
+                [.workflow_runs[]
+                  | select(.event == "pull_request" and .head_sha == $sha and .name != $self)]
+                | sort_by(.updated_at)
+                | group_by(.name)
+                | map(.[-1]) as $latest
+                | [$required[] as $name | select(([ $latest[].name ] | index($name)) == null)] as $missing
+                | [$required[] as $name
+                    | select(([ $latest[] | select(.name == $name and .status == "completed" and .conclusion == "success") ] | length) == 0
+                        and ([ $latest[] | select(.name == $name and .status == "completed") ] | length) > 0)] as $required_failed
+                | [$latest[] | select(.status == "completed"
+                    and (.conclusion != "success" and .conclusion != "skipped" and .conclusion != "neutral"))] as $failed
+                | [$latest[] | select(.status != "completed")] as $pending
+                | if ($missing | length) > 0 then
+                    "missing:" + ($missing | join(","))
+                  elif ($required_failed | length) > 0 then
+                    "required-failed:" + ($required_failed | join(","))
+                  elif ($failed | length) > 0 then
+                    "failed:" + ([ $failed[] | "\(.name)=\(.conclusion)" ] | join(","))
+                  elif ($pending | length) > 0 then
+                    "pending:" + ([ $pending[] | "\(.name)=\(.status)" ] | join(","))
+                  else "ready"
+                  end
+              ' <<< "$payload")"
+            echo "PR assurance attempt ${attempt}/54: ${state}"
+            case "$state" in
+              ready) exit 0 ;;
+              failed:*) echo "::error::A pull-request workflow failed: ${state}"; exit 1 ;;
+              *) sleep 10 ;;
+            esac
+          done
+          echo "::error::Timed out waiting for all pull-request assurance workflows."
+          exit 1
+
       - name: Confirm validated PR head is unchanged
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
