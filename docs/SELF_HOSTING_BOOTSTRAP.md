@@ -4,33 +4,45 @@
 
 Move language implementation logic into Reaper source files. The finished compiler must be able to compile and rebuild its own source; merely renaming the Python or C implementation does not count as self-hosting.
 
-## Current status — Stage 0 and partial Stage 1
+## Current status — Stage 0, partial Stage 1, partial Stage 2 and partial Stage 3
 
-`selfhost/lexer.rpr` is the first executable frontend component implemented in Reaper itself. It performs scanning in Reaper functions and uses only the language's existing string indexing, lists, comparisons, loops, flow-independent control statements and standard collection operations. The Python interpreter is only the bootstrap host that executes this Reaper program.
+The self-hosting implementation lives in executable `.rpr` files. The Python reference interpreter currently acts only as the bootstrap host and test orchestrator for these sources. Running a Reaper-written module proves that the module's logic is Reaper code; it does **not** prove a self-hosting compiler or native-code parity.
 
-The stage-0 lexer currently covers ASCII identifiers and digits, keywords, decimal/integer literals, strings and escapes, comments, newlines, punctuation, operators and source positions. It returns a structured error token for an invalid character or malformed string. The Python lexer accepts Unicode identifiers; that compatibility gap is deliberate and must be closed before the self-hosted frontend can replace the reference lexer.
+### Stage 0: tokenizer
 
-The Python test suite executes the Reaper source and checks its internal assertions. This proves that the lexer logic is running as Reaper code; it does **not** prove a self-hosting compiler or complete frontend parity.
+`selfhost/lexer.rpr` scans source text in Reaper itself. It covers ASCII identifiers and digits, keywords, decimal/integer literals, strings and escapes, comments, newlines, punctuation, operators and source positions. It returns a structured error token for an invalid character or malformed string.
+
+The reference lexer accepts Unicode identifiers. The self-hosted lexer does not yet have parity for Unicode identifier classification, so Stage 0 remains open.
 
 ### Stage 1: Pratt expression parser (partial)
 
-`selfhost/parser.rpr` now implements a Pratt parser in Reaper source. It consumes the same token-array shape emitted by the bootstrap lexer and builds compact array-form expression nodes. Implemented forms are literals, names, unary expressions, grouping, list literals, function calls, indexing and infix operators. The precedence table matches the reference parser, including the actual `::` flow operator and right-associative `**`.
+`selfhost/parser.rpr` consumes the bootstrap token-array shape and builds compact array-form expression nodes. Implemented forms are literals, names, unary expressions, grouping, list literals, function calls, indexing and infix operators. Its precedence table includes the actual `::` flow operator and right-associative `**`.
 
-The bootstrap assertions cover arithmetic precedence, exponentiation associativity, source-located unary nodes, flow composition, nested call/list/index expressions, missing delimiters and trailing-token errors. The Python test suite executes both `selfhost/lexer.rpr` and `selfhost/parser.rpr`; the same tests are registered with CTest when Python is available.
+The parser does **not** yet parse declarations, function definitions, imports/exports, blocks, conditionals, iteration or loop statements. Its expression nodes are stage-local arrays, not the canonical whole-program AST contract. The Python parser remains the compatibility oracle.
 
-This is deliberately **not** a complete parser replacement: declarations, function definitions, control-flow statements, block grammar and parity with the Python `Node` AST are not yet implemented. The parser output is a stage-local representation, not the canonical AST contract. The Python parser remains the reference frontend.
+### Stage 2: expression semantic analysis (partial)
 
-## Bootstrap stages
+`selfhost/semantic.rpr` implements deterministic symbol-table validation, duplicate-name rejection, name resolution, direct function/builtin call arity checks and conservative expression type inference. Its current primitive types are `number`, `text`, `boolean`, `list`, `nothing` and `unknown`. Numeric, text-concatenation, logical, comparison, indexing and flow-operator cases are handled explicitly. Diagnostics retain the expression's line and column where available.
 
-| Stage | Reaper-written component | Acceptance gate |
+The current pass is expression-scoped. It does not yet implement lexical scopes, declarations, parameter-type contracts, control-flow analysis, definite assignment, mutability checking or whole-program/module semantics. It must not be used as a replacement for the reference type/runtime checks.
+
+### Stage 3: canonical expression IR and bytecode lowering (partial)
+
+`selfhost/ir.rpr` lowers supported expression nodes into a versioned `RIR1` array representation. It recursively verifies node shapes, operator allowlists and source spans, then emits deterministic stack bytecode for constants, loads, unary/binary operations, calls, list construction and indexing. A separate bytecode verifier checks instruction shape, stack underflow, call/list arity consumption and the final single-value stack invariant. The verifier reports the maximum required stack depth.
+
+This is an expression-only IR and bytecode frontend. It does **not** include a bytecode VM, control-flow blocks, whole-program IR, optimizer, object writer, linker, executable loader or native code generation. A verified bytecode sequence is not proof that it can execute or produce a native binary.
+
+### Bootstrap stages
+
+| Stage | Reaper-written component | Current state and acceptance gate |
 |---|---|---|
-| 0 | Lexer | Token-by-token parity for the supported language, Unicode and error locations included |
-| 1 | Pratt expression parser (partial); statement parser and canonical AST still pending | Calls, indexes, lists and operators are covered; complete AST parity and statement grammar remain the acceptance gate |
-| 2 | Semantic analysis and runtime support | Differential conformance against the reference interpreter |
-| 3 | Canonical IR construction and verifier | Deterministic IR plus rejection of malformed or unsafe IR |
-| 4 | Optimizer passes | Differential semantics, fixed-point budget and reproducible output |
-| 5 | Native code-generation frontend | Generated output builds and passes the complete conformance suite |
-| 6 | Bootstrap closure | Stage-1 rebuilds Stage-1 reproducibly; clean-room Stage-0/Stage-1/Stage-2 builds agree |
+| 0 | Lexer | Partial; token parity including Unicode identifiers, every keyword/operator, escapes and malformed-source positions |
+| 1 | Pratt parser and statement parser | Expression subset exists; declarations, functions, imports/exports, blocks and control flow must match the canonical AST |
+| 2 | Semantic analysis | Expression subset exists; scopes, function signatures, mutability, control flow and differential semantic fixtures remain |
+| 3 | Canonical IR and verifier | Expression RIR1 and stack bytecode subset exists; whole-program IR, control-flow validation and cross-engine golden fixtures remain |
+| 4 | Optimizer passes | Not implemented in the self-hosted frontend; requires semantics-preserving passes, fixed-point budgets and reproducible output |
+| 5 | Native code-generation frontend | Not implemented in the self-hosted frontend; generated output must build and pass conformance |
+| 6 | Bootstrap closure | Not implemented; the self-hosted compiler must rebuild itself reproducibly from a clean checkout |
 
 ## Non-negotiable rules
 
@@ -44,9 +56,11 @@ This is deliberately **not** a complete parser replacement: declarations, functi
 
 ## Immediate next work
 
-- Close Unicode identifier parity in the self-hosted lexer.
+- Close Unicode identifier and numeric-character parity in the self-hosted lexer.
 - Expand token conformance to every keyword, operator, escape, whitespace and malformed-source case.
-- Extend the Reaper-written frontend with declarations, function definitions, blocks, conditionals, iteration and loop statements.
-- Define a versioned canonical AST representation and compare parser output with the Python AST over a shared golden corpus.
-- Add differential tests for calls, indexes, list literals, operator precedence, nested blocks and malformed statements.
-- Move the CLI, diagnostics, semantic analysis and compiler pipeline into Reaper in dependency order.
+- Add a Reaper-written statement parser for declarations, function definitions, imports/exports, blocks, conditionals, iteration and loops.
+- Define a versioned whole-program AST and compare it with the reference parser over a shared golden corpus.
+- Expand semantic analysis to lexical scopes, function parameter types, mutability, definite assignment and control-flow joins.
+- Extend RIR1 to whole-program definitions and explicit control-flow blocks; add malformed-IR and resource-boundary fixtures.
+- Implement an optimizer only after semantic and IR conformance gates exist.
+- Move the CLI and compilation orchestration into Reaper in dependency order.
