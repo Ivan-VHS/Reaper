@@ -1,0 +1,307 @@
+# Reaper-native stack-bytecode lowering and verifier.
+#
+# Bytecode v1 deliberately has a small, auditable instruction set:
+#   PUSH_CONST type value
+#   PUSH_ARG parameter_index
+#   UNARY operator
+#   BINARY operator
+#   RETURN
+#
+# The verifier simulates stack depth before execution. This is a structural
+# verifier, not a VM implementation or a claim of native-code parity.
+
+craft bc_type_is_valid(type_name) {
+    yield type_name == "i64" or type_name == "u64" or type_name == "f64" or type_name == "bool" or type_name == "string" or type_name == "unit"
+}
+
+craft bc_binary_operator_is_valid(op) {
+    yield op == "+" or op == "-" or op == "*" or op == "/" or op == "//" or op == "%" or op == "**" or op == "==" or op == "!=" or op == "<" or op == "<=" or op == ">" or op == ">=" or op == "and" or op == "or" or op == "++" or op == "::"
+}
+
+craft bc_unary_operator_is_valid(op) {
+    yield op == "+" or op == "-" or op == "not" or op == "!"
+}
+
+craft bc_has_value(values, wanted) {
+    vary index := 0
+    loop while index < size(values) {
+        when values[index] == wanted { yield true }
+        change index := index + 1
+    }
+    yield false
+}
+
+craft bc_parameter_index(parameters, name) {
+    vary index := 0
+    loop while index < size(parameters) {
+        make parameter := parameters[index]
+        when parameter[1] == name {
+            yield ["OK", parameter[2]]
+        }
+        change index := index + 1
+    }
+    yield ["ERROR", "unknown variable " ++ name]
+}
+
+craft bc_verify_function(function_item) {
+    when size(function_item) != 4 or function_item[0] != "FUNCTION" {
+        yield ["ERROR", "invalid bytecode function"]
+    }
+    when size(function_item[1]) == 0 {
+        yield ["ERROR", "bytecode function name must not be empty"]
+    }
+
+    make parameters := function_item[2]
+    make code := function_item[3]
+    when size(code) == 0 {
+        yield ["ERROR", "bytecode function has no instructions"]
+    }
+
+    vary parameter_names := []
+    vary parameter_indices := []
+    vary parameter_cursor := 0
+    loop while parameter_cursor < size(parameters) {
+        make parameter := parameters[parameter_cursor]
+        when size(parameter) != 3 or parameter[0] != "PARAM" or size(parameter[1]) == 0 {
+            yield ["ERROR", "invalid bytecode parameter record"]
+        }
+        when bc_has_value(parameter_names, parameter[1]) {
+            yield ["ERROR", "duplicate bytecode parameter name"]
+        }
+        when bc_has_value(parameter_indices, parameter[2]) {
+            yield ["ERROR", "duplicate bytecode parameter index"]
+        }
+        when parameter[2] < 0 or parameter[2] >= size(parameters) {
+            yield ["ERROR", "bytecode parameter index is out of range"]
+        }
+        change parameter_names := push(parameter_names, parameter[1])
+        change parameter_indices := push(parameter_indices, parameter[2])
+        change parameter_cursor := parameter_cursor + 1
+    }
+
+    vary depth := 0
+    vary maximum_depth := 0
+    vary returned := false
+    vary pc := 0
+
+    loop while pc < size(code) {
+        make instruction := code[pc]
+        when size(instruction) == 0 {
+            yield ["ERROR", "empty bytecode instruction"]
+        }
+        when returned {
+            yield ["ERROR", "bytecode instruction appears after RETURN"]
+        }
+
+        when instruction[0] == "PUSH_CONST" {
+            when size(instruction) != 3 or not bc_type_is_valid(instruction[1]) {
+                yield ["ERROR", "invalid PUSH_CONST instruction"]
+            }
+            change depth := depth + 1
+        } otherwise {
+            when instruction[0] == "PUSH_ARG" {
+                when size(instruction) != 2 or instruction[1] < 0 or instruction[1] >= size(parameters) {
+                    yield ["ERROR", "PUSH_ARG references an invalid parameter"]
+                }
+                change depth := depth + 1
+            } otherwise {
+                when instruction[0] == "UNARY" {
+                    when size(instruction) != 2 or not bc_unary_operator_is_valid(instruction[1]) {
+                        yield ["ERROR", "invalid UNARY bytecode instruction"]
+                    }
+                    when depth < 1 {
+                        yield ["ERROR", "stack underflow in UNARY instruction"]
+                    }
+                } otherwise {
+                    when instruction[0] == "BINARY" {
+                        when size(instruction) != 2 or not bc_binary_operator_is_valid(instruction[1]) {
+                            yield ["ERROR", "invalid BINARY bytecode instruction"]
+                        }
+                        when depth < 2 {
+                            yield ["ERROR", "stack underflow in BINARY instruction"]
+                        }
+                        change depth := depth - 1
+                    } otherwise {
+                        when instruction[0] == "RETURN" {
+                            when size(instruction) != 1 or depth != 1 {
+                                yield ["ERROR", "RETURN requires exactly one stack value"]
+                            }
+                            when pc != size(code) - 1 {
+                                yield ["ERROR", "RETURN must be the final instruction"]
+                            }
+                            change depth := 0
+                            change returned := true
+                        } otherwise {
+                            yield ["ERROR", "unknown bytecode opcode"]
+                        }
+                    }
+                }
+            }
+        }
+
+        when depth > maximum_depth {
+            change maximum_depth := depth
+        }
+        change pc := pc + 1
+    }
+
+    when not returned or depth != 0 {
+        yield ["ERROR", "bytecode function has no valid RETURN"]
+    }
+    yield ["OK", maximum_depth]
+}
+
+craft bc_verify(module_item) {
+    when size(module_item) != 3 or module_item[0] != "REAPER_BC" or module_item[1] != 1 {
+        yield ["ERROR", "unsupported bytecode header or version"]
+    }
+    when size(module_item[2]) == 0 {
+        yield ["ERROR", "bytecode module must contain at least one function"]
+    }
+
+    vary names := []
+    vary index := 0
+    loop while index < size(module_item[2]) {
+        make function_item := module_item[2][index]
+        when size(function_item) != 4 or function_item[0] != "FUNCTION" {
+            yield ["ERROR", "invalid function in bytecode module"]
+        }
+        when bc_has_value(names, function_item[1]) {
+            yield ["ERROR", "duplicate bytecode function name"]
+        }
+        change names := push(names, function_item[1])
+        make checked := bc_verify_function(function_item)
+        when checked[0] == "ERROR" { yield checked }
+        change index := index + 1
+    }
+    yield ["OK", size(names)]
+}
+
+craft bc_join(left, right) {
+    vary joined := []
+    vary index := 0
+    loop while index < size(left) {
+        change joined := push(joined, left[index])
+        change index := index + 1
+    }
+    change index := 0
+    loop while index < size(right) {
+        change joined := push(joined, right[index])
+        change index := index + 1
+    }
+    yield joined
+}
+
+craft bc_lower_expression(node, parameters) {
+    when size(node) == 0 {
+        yield ["ERROR", "RPR-E5300 empty expression node"]
+    }
+
+    when node[0] == "literal" {
+        make token_kind := node[1]
+        make literal_value := node[2]
+        vary literal_type := "unit"
+
+        when token_kind == "NUMBER" {
+            change literal_type := "i64"
+            vary digit_index := 0
+            loop while digit_index < size(literal_value) {
+                when literal_value[digit_index] == "." {
+                    change literal_type := "f64"
+                }
+                change digit_index := digit_index + 1
+            }
+        } otherwise {
+            when token_kind == "STRING" { change literal_type := "string" } otherwise {
+                when token_kind == "TRUE" or token_kind == "FALSE" { change literal_type := "bool" }
+            }
+        }
+
+        when not bc_type_is_valid(literal_type) {
+            yield ["ERROR", "RPR-E5302 unsupported literal type"]
+        }
+        yield ["OK", [["PUSH_CONST", literal_type, literal_value]]]
+    }
+
+    when node[0] == "name" {
+        make resolved := bc_parameter_index(parameters, node[1])
+        when resolved[0] == "ERROR" {
+            yield ["ERROR", "RPR-E5303 " ++ resolved[1]]
+        }
+        yield ["OK", [["PUSH_ARG", resolved[1]]]]
+    }
+
+    when node[0] == "unary" {
+        when not bc_unary_operator_is_valid(node[1]) {
+            yield ["ERROR", "RPR-E5304 unsupported unary operator"]
+        }
+        make operand_result := bc_lower_expression(node[2], parameters)
+        when operand_result[0] == "ERROR" { yield operand_result }
+        yield ["OK", push(operand_result[1], ["UNARY", node[1]])]
+    }
+
+    when node[0] == "binary" {
+        when not bc_binary_operator_is_valid(node[1]) {
+            yield ["ERROR", "RPR-E5305 unsupported binary operator"]
+        }
+        make left_result := bc_lower_expression(node[2], parameters)
+        when left_result[0] == "ERROR" { yield left_result }
+        make right_result := bc_lower_expression(node[3], parameters)
+        when right_result[0] == "ERROR" { yield right_result }
+        make combined := bc_join(left_result[1], right_result[1])
+        yield ["OK", push(combined, ["BINARY", node[1]])]
+    }
+
+    yield ["ERROR", "RPR-E5301 expression form is not supported by the bytecode lowerer"]
+}
+
+craft bc_compile_expression(expression_result, parameters) {
+    when size(expression_result) != 2 or expression_result[0] != "OK" {
+        yield ["ERROR", "RPR-E5306 parser result is not successful"]
+    }
+    make lowered := bc_lower_expression(expression_result[1], parameters)
+    when lowered[0] == "ERROR" { yield lowered }
+
+    make code := push(lowered[1], ["RETURN"])
+    make function_item := ["FUNCTION", "expression", parameters, code]
+    make module_item := ["REAPER_BC", 1, [function_item]]
+    make checked := bc_verify(module_item)
+    when checked[0] == "ERROR" {
+        yield ["ERROR", "RPR-E5307 generated bytecode failed verification: " ++ checked[1]]
+    }
+    yield ["OK", module_item]
+}
+
+make valid_bytecode := ["REAPER_BC", 1, [
+    ["FUNCTION", "sum", [["PARAM", "left", 0], ["PARAM", "right", 1]], [
+        ["PUSH_ARG", 0],
+        ["PUSH_ARG", 1],
+        ["BINARY", "+"],
+        ["RETURN"]
+    ]]
+]]
+assert(bc_verify(valid_bytecode) == ["OK", 2], "valid stack bytecode rejected")
+
+make underflow_bytecode := ["REAPER_BC", 1, [
+    ["FUNCTION", "bad", [], [["BINARY", "+"], ["RETURN"]]]
+]]
+assert(bc_verify(underflow_bytecode)[0] == "ERROR", "stack underflow accepted")
+
+make early_return_bytecode := ["REAPER_BC", 1, [
+    ["FUNCTION", "bad", [], [["PUSH_CONST", "i64", "1"], ["RETURN"], ["PUSH_CONST", "i64", "2"]]]
+]]
+assert(bc_verify(early_return_bytecode)[0] == "ERROR", "instructions after RETURN accepted")
+
+make expression_ast := ["OK", ["binary", "+",
+    ["name", "input", 1, 1],
+    ["literal", "NUMBER", "5", 1, 9],
+    1, 7
+]]
+make compiled := bc_compile_expression(expression_ast, [["PARAM", "input", 0]])
+assert(compiled[0] == "OK", "expression AST failed to lower into stack bytecode")
+assert(bc_verify(compiled[1])[0] == "OK", "lowered bytecode failed verification")
+
+make unsupported_ast := ["OK", ["index", ["name", "items", 1, 1], ["literal", "NUMBER", "0", 1, 7], 1, 6]]
+assert(bc_compile_expression(unsupported_ast, [["PARAM", "items", 0]])[0] == "ERROR", "unsupported indexing lowering must fail explicitly")
+
+emit "SELFHOST_BYTECODE_OK"
