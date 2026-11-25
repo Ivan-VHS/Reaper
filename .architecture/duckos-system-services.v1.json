@@ -21,7 +21,10 @@
     "implicit_linux_syscalls": false,
     "implicit_shell_execution": false,
     "deterministic_resource_release": true,
-    "bounded_inputs_and_work": true
+    "bounded_inputs_and_work": true,
+    "calling_abi": "DABI64 v1: user-entry, call-frame and value layout contract; separate from kernel syscall dispatch",
+    "system_service_abi": "ivan-vhs.duckos-system-services.v1",
+    "dabi64_is_syscall_dispatcher": false
   },
   "modules": [
     {
@@ -325,5 +328,11 @@
       "name": "VirtHost isolation, hypervisor, packages and toolchains",
       "status": "planned"
     }
-  ]
+  ],
+  "dependencies": {
+    "duckos_dabi64_v1": "Call/entry/value ABI; current draft does not provide a kernel syscall dispatcher",
+    "duckos_kernel_syscall_dispatcher": "not_present_on_mainline",
+    "reaper_typed_system_effects_and_lowering": "not_present_on_mainline",
+    "integration_rule": "Do not mark any operation Partial or Delivered until Reaper compiler, DABI64/runtime bridge, DuckOS provider and tests agree"
+  }
 }
