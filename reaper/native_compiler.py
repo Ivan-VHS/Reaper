@@ -17,6 +17,27 @@ from typing import Any
 from .parser import Node, parse
 from .fixed_width import fixed_integer_fits, is_fixed_integer_type
 
+def _integer_literal_value(node: Node) -> int | None:
+    if node.kind == "literal" and isinstance(node.value, int) and not isinstance(node.value, bool):
+        return node.value
+    if node.kind == "unary" and node.value in {"-", "MINUS"} and len(node.children or []) == 1:
+        child_value = _integer_literal_value((node.children or [])[0])
+        return -child_value if child_value is not None else None
+    return None
+
+
+def _fixed_integer_c_literal(value: int, type_name: str) -> str:
+    c_type = _C_TYPES[type_name]
+    if type_name.startswith("u"):
+        raw = f"UINT64_C({value})"
+    elif value == -(1 << 63):
+        raw = "INT64_MIN"
+    elif value < 0:
+        raw = f"(-INT64_C({-value}))"
+    else:
+        raw = f"INT64_C({value})"
+    return f"(({c_type})({raw}))"
+
 
 class NativeCompileError(ValueError):
     """A source-located diagnostic from the native subset compiler."""
@@ -326,7 +347,6 @@ int main(void) {{
 '''
 
     def _compile_top_level(self, node: Node) -> None:
-        self._append_source_map(output=self.main_body, node=node)
         kind = node.kind
         if kind == "function":
             self._compile_function(node)
@@ -431,8 +451,9 @@ int main(void) {{
         return False
 
     def _compile_statement(self, node: Node, scope: Scope, output: list[str]) -> None:
-        self._append_source_map(output, node)
         kind = node.kind
+        if kind not in {"declare", "change"}:
+            self._append_source_map(output, node)
         if kind == "block":
             self._compile_block(node, scope, output)
             return
@@ -555,6 +576,7 @@ int main(void) {{
         *,
         global_scope: bool,
     ) -> None:
+        self._append_source_map(output, node)
         if not isinstance(node.value, tuple) or len(node.value) not in {2, 3} or len(self._children(node)) != 1:
             self._fail(node, "malformed make/vary declaration")
         source_name, mutable = node.value[:2]
@@ -566,16 +588,17 @@ int main(void) {{
         if global_scope and source_name in self.function_table:
             self._fail(node, f"'{source_name}' is already declared as a function")
         initializer = self._children(node)[0]
-        expression, type_name = self._compile_expression(initializer, scope)
-        if declared_type is not None:
-            if type_name == _I64 and initializer.kind == "literal" and isinstance(initializer.value, int):
-                if not fixed_integer_fits(initializer.value, declared_type):
-                    self._fail(initializer, f"integer literal is outside the {declared_type} range")
-                expression = f"({_C_TYPES[declared_type]})({expression})"
-                type_name = declared_type
-            elif type_name != declared_type:
+        literal_value = _integer_literal_value(initializer)
+        if declared_type is not None and literal_value is not None:
+            if not fixed_integer_fits(literal_value, declared_type):
+                self._fail(initializer, f"integer literal is outside the {declared_type} range")
+            expression = _fixed_integer_c_literal(literal_value, declared_type)
+            type_name = declared_type
+        else:
+            expression, type_name = self._compile_expression(initializer, scope)
+            if declared_type is not None and type_name != declared_type:
                 self._fail(node, f"cannot initialize {declared_type} with {type_name}; use a value of the same fixed-width type")
-        elif type_name not in {_I64, _BOOL, _STRING, *_FIXED_TYPES}:
+        if declared_type is None and type_name not in {_I64, _BOOL, _STRING, *_FIXED_TYPES}:
             self._fail(node, "native variables must be scalar integers, bool, or string")
         c_type = _C_TYPES.get(type_name, "int64_t" if type_name == _BOOL else "const char *")
         c_name = self._name("global" if global_scope else "local")
@@ -601,18 +624,16 @@ int main(void) {{
             symbol is global_symbol for global_symbol in self.global_scope.symbols.values()
         ):
             self._fail(node, "native craft functions cannot mutate global bindings")
+        self._append_source_map(output, node)
         value_node = self._children(node)[0]
-        expression, type_name = self._compile_expression(value_node, scope)
-        if (
-            type_name == _I64
-            and symbol.type_name in _FIXED_TYPES
-            and value_node.kind == "literal"
-            and isinstance(value_node.value, int)
-        ):
-            if not fixed_integer_fits(value_node.value, symbol.type_name):
+        literal_value = _integer_literal_value(value_node)
+        if is_fixed_integer_type(symbol.type_name) and literal_value is not None:
+            if not fixed_integer_fits(literal_value, symbol.type_name):
                 self._fail(value_node, f"integer literal is outside the {symbol.type_name} range")
-            expression = f"({_C_TYPES[symbol.type_name]})({expression})"
+            expression = _fixed_integer_c_literal(literal_value, symbol.type_name)
             type_name = symbol.type_name
+        else:
+            expression, type_name = self._compile_expression(value_node, scope)
         if type_name != symbol.type_name:
             self._fail(node, f"cannot assign {type_name} to {symbol.type_name} variable '{node.value}'")
         tick = "if (!rpr_tick()) return 0;" if self._inside_function else "if (!rpr_tick()) return EXIT_FAILURE;"
@@ -653,12 +674,17 @@ int main(void) {{
                 return "INT64_MIN", _I64
             expression, type_name = self._compile_expression(operand, scope)
             if operator in {"-", "MINUS"}:
-                self._require_type(node, type_name, _I64, "unary '-' requires an integer")
+                if type_name in {"i8", "i16", "i32"}:
+                    minimum = _C_MIN[type_name]
+                    maximum = _C_MAX[type_name]
+                    return f"({_C_TYPES[type_name]})rpr_ssub(INT64_C(0), (int64_t)({expression}), {minimum}, {maximum})", type_name
+                if type_name != _I64:
+                    self._fail(node, "unary '-' requires a signed integer")
                 return f"rpr_sub(INT64_C(0), (int64_t)({expression}))", _I64
             if operator in {"NOT", "not", "!"}:
-                if type_name not in {_I64, _BOOL}:
+                if type_name not in {_I64, _BOOL} and not is_fixed_integer_type(type_name):
                     self._fail(node, "'not' requires an integer or boolean")
-                return f"(!rpr_truthy((int64_t)({expression})))", _BOOL
+                return f"(!(({expression}) != 0))", _BOOL
             self._fail(node, f"unary operator '{operator}' is not supported")
         if kind == "binary":
             children = self._children(node)
@@ -688,8 +714,18 @@ int main(void) {{
                     self._fail(node, f"operator '{operator}' requires matching integer operands")
                 return f"(({left}) {operator} ({right}))", _BOOL
             if operator in {"+", "-", "*", "//", "%", "**"}:
-                if left_type == right_type and is_fixed_integer_type(left_type):
-                    maximum = _C_MAX.get(left_type, "UINT64_MAX")
+                if is_fixed_integer_type(left_type) and right_type == _I64:
+                    literal_value = _integer_literal_value(children[1])
+                    if literal_value is not None and fixed_integer_fits(literal_value, left_type):
+                        right = _fixed_integer_c_literal(literal_value, left_type)
+                        right_type = left_type
+                if is_fixed_integer_type(right_type) and left_type == _I64:
+                    literal_value = _integer_literal_value(children[0])
+                    if literal_value is not None and fixed_integer_fits(literal_value, right_type):
+                        left = _fixed_integer_c_literal(literal_value, right_type)
+                        left_type = right_type
+                if left_type == right_type and left_type in {"u8", "u16", "u32", "u64"}:
+                    maximum = _C_MAX[left_type]
                     helper = {
                         "+": f"rpr_uadd((uint64_t)({{left}}), (uint64_t)({{right}}), {maximum})",
                         "-": f"rpr_usub((uint64_t)({{left}}), (uint64_t)({{right}}))",
@@ -697,6 +733,18 @@ int main(void) {{
                         "//": f"rpr_udiv((uint64_t)({{left}}), (uint64_t)({{right}}))",
                         "%": f"rpr_umod((uint64_t)({{left}}), (uint64_t)({{right}}))",
                         "**": f"rpr_upow((uint64_t)({{left}}), (uint64_t)({{right}}), {maximum})",
+                    }[operator].format(left=left, right=right)
+                    return f"({_C_TYPES[left_type]})({helper})", left_type
+                if left_type == right_type and left_type in {"i8", "i16", "i32"}:
+                    minimum = _C_MIN[left_type]
+                    maximum = _C_MAX[left_type]
+                    helper = {
+                        "+": f"rpr_sadd((int64_t)({{left}}), (int64_t)({{right}}), {minimum}, {maximum})",
+                        "-": f"rpr_ssub((int64_t)({{left}}), (int64_t)({{right}}), {minimum}, {maximum})",
+                        "*": f"rpr_smul((int64_t)({{left}}), (int64_t)({{right}}), {minimum}, {maximum})",
+                        "//": f"rpr_sdiv((int64_t)({{left}}), (int64_t)({{right}}), {minimum}, {maximum})",
+                        "%": f"rpr_smod((int64_t)({{left}}), (int64_t)({{right}}), {minimum}, {maximum})",
+                        "**": f"rpr_spow((int64_t)({{left}}), (int64_t)({{right}}), {minimum}, {maximum})",
                     }[operator].format(left=left, right=right)
                     return f"({_C_TYPES[left_type]})({helper})", left_type
                 if left_type != _I64 or right_type != _I64:
@@ -730,7 +778,7 @@ int main(void) {{
         self._fail(node, f"expression '{kind}' is outside the native scalar subset")
 
     def _require_condition(self, node: Node, type_name: str) -> None:
-        if type_name not in {_I64, _BOOL}:
+        if type_name not in {_I64, _BOOL} and not is_fixed_integer_type(type_name):
             self._fail(node, "condition must be an integer or boolean")
 
     def _require_type(self, node: Node, actual: str, expected: str, message: str) -> None:
@@ -740,7 +788,7 @@ int main(void) {{
     def _append_source_map(self, output: list[str], node: Node) -> None:
         token = getattr(node, "token", None)
         line = getattr(token, "line", 1)
-        filename = self.filename.replace("\\\\", "\\\\\\\\").replace('"', '\\"')
+        filename = self.filename.replace("\\", "\\\\").replace('"', '\\"')
         output.append(self._line(f'#line {line} "{filename}"'))
 
     def _line(self, text: str) -> str:
