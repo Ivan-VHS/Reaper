@@ -1,0 +1,54 @@
+# Showel Fleppery CODE: deterministic in-memory transformation pipelines.
+# Step format: [name, transform_craft, validator_craft].
+# No file writes, shell execution, network access or implicit FFI.
+
+export craft add_step(pipeline, name, transform, validator) {
+    when kind(name) != "text" {
+        yield [false, pipeline, "step name must be text"]
+    }
+    when kind(transform) != "craft" or kind(validator) != "craft" {
+        yield [false, pipeline, "transform and validator must be Reaper crafts"]
+    }
+    yield [true, push(pipeline, [name, transform, validator]), "ok"]
+}
+
+export craft render(template, replacements) {
+    vary output := template
+
+    each replacement in replacements {
+        when size(replacement) == 2 {
+            make marker := "{{" ++ text(replacement[0]) ++ "}}"
+            change output := replace(output, marker, text(replacement[1]))
+        }
+    }
+    yield output
+}
+
+export craft run(pipeline, source) {
+    vary current := source
+    vary audit := []
+    vary failure := ""
+
+    each step in pipeline {
+        when failure == "" {
+            when size(step) != 3 {
+                change failure := "invalid pipeline step"
+            } otherwise {
+                make before := current
+                change current := step[1](current)
+
+                when step[2](current) {
+                    change audit := push(audit, [step[0], before, current])
+                } otherwise {
+                    change current := before
+                    change failure := "validator rejected step: " ++ step[0]
+                }
+            }
+        }
+    }
+
+    when failure != "" {
+        yield [false, source, audit, failure]
+    }
+    yield [true, current, audit, "ok"]
+}
