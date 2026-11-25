@@ -1,0 +1,378 @@
+{
+  "schema": "reaper.system-runtime.v1",
+  "api_version": 1,
+  "operation_count": 20,
+  "status": "partial",
+  "execution_state": "contracts-and-validators-only",
+  "safety_policy": "A successful authorization is preflight only. No catalog operation dispatches privileged or external effects in this API version.",
+  "profiles": [
+    "hosted",
+    "kernel",
+    "boot",
+    "hypervisor",
+    "freestanding",
+    "simulator"
+  ],
+  "operations": [
+    {
+      "id": "111",
+      "subsystem": "system-services",
+      "name": "service.daemonize",
+      "effects": [
+        "process-control",
+        "service-control"
+      ],
+      "adapter": "service-manager",
+      "profiles": [
+        "hosted"
+      ],
+      "maturity": "contract-only",
+      "native_checks": [],
+      "boundary": "The host service manager owns process detachment, session setup and descriptor policy."
+    },
+    {
+      "id": "112",
+      "subsystem": "system-services",
+      "name": "service.lifecycle_hooks",
+      "effects": [
+        "service-control"
+      ],
+      "adapter": "service-manager",
+      "profiles": [
+        "hosted",
+        "kernel",
+        "simulator"
+      ],
+      "maturity": "contract-only",
+      "native_checks": [],
+      "boundary": "Callbacks require an owning service object, stable lifetime and serialized state transitions."
+    },
+    {
+      "id": "113",
+      "subsystem": "system-services",
+      "name": "scheduler.cron_schedule",
+      "effects": [
+        "schedule"
+      ],
+      "adapter": "scheduler",
+      "profiles": [
+        "hosted",
+        "kernel",
+        "simulator"
+      ],
+      "maturity": "validators-available",
+      "native_checks": [
+        "cron-five-field-validator"
+      ],
+      "boundary": "Cron syntax validation is native; timer persistence and dispatch belong to a scheduler adapter."
+    },
+    {
+      "id": "114",
+      "subsystem": "system-services",
+      "name": "logging.append",
+      "effects": [
+        "log-write"
+      ],
+      "adapter": "journal",
+      "profiles": [
+        "hosted",
+        "kernel",
+        "simulator"
+      ],
+      "maturity": "validators-available",
+      "native_checks": [
+        "bounded-spsc-log-ring"
+      ],
+      "boundary": "A bounded SPSC record queue is native; durable journal storage and rotation require a writer."
+    },
+    {
+      "id": "115",
+      "subsystem": "system-services",
+      "name": "service.start_unit",
+      "effects": [
+        "service-control",
+        "process-control"
+      ],
+      "adapter": "init",
+      "profiles": [
+        "hosted",
+        "kernel",
+        "simulator"
+      ],
+      "maturity": "validators-available",
+      "native_checks": [
+        "stable-topological-dependency-order"
+      ],
+      "boundary": "Dependency ordering is native; process creation and readiness checks require an init adapter."
+    },
+    {
+      "id": "116",
+      "subsystem": "system-services",
+      "name": "system.graceful_shutdown",
+      "effects": [
+        "process-control",
+        "power-control"
+      ],
+      "adapter": "power",
+      "profiles": [
+        "hosted",
+        "kernel",
+        "simulator"
+      ],
+      "maturity": "contract-only",
+      "native_checks": [],
+      "boundary": "Shutdown sequencing, deadlines, vetoes and storage flush results must be owned by the OS."
+    },
+    {
+      "id": "117",
+      "subsystem": "system-services",
+      "name": "system.emergency_mode",
+      "effects": [
+        "boot-control",
+        "process-control"
+      ],
+      "adapter": "boot",
+      "profiles": [
+        "kernel",
+        "boot"
+      ],
+      "maturity": "contract-only",
+      "native_checks": [],
+      "boundary": "Recovery shell scheduling and kernel halt policy are platform responsibilities."
+    },
+    {
+      "id": "118",
+      "subsystem": "hardware-services",
+      "name": "device.handle_event",
+      "effects": [
+        "device-discovery",
+        "driver-control"
+      ],
+      "adapter": "device-manager",
+      "profiles": [
+        "hosted",
+        "kernel",
+        "simulator"
+      ],
+      "maturity": "contract-only",
+      "native_checks": [],
+      "boundary": "Device identity, driver binding and node publication require a trusted device manager."
+    },
+    {
+      "id": "119",
+      "subsystem": "hardware-services",
+      "name": "firmware.load",
+      "effects": [
+        "firmware-write",
+        "device-discovery"
+      ],
+      "adapter": "firmware",
+      "profiles": [
+        "kernel",
+        "boot"
+      ],
+      "maturity": "validators-available",
+      "native_checks": [
+        "bounded-image-validation",
+        "signature-verifier-callback"
+      ],
+      "boundary": "Image bounds and signature verification callback are native; flashing requires a signed device adapter."
+    },
+    {
+      "id": "120",
+      "subsystem": "hardware-services",
+      "name": "acpi.parse",
+      "effects": [
+        "acpi-read"
+      ],
+      "adapter": "acpi",
+      "profiles": [
+        "kernel",
+        "boot"
+      ],
+      "maturity": "validators-available",
+      "native_checks": [
+        "acpi-table-length-and-checksum"
+      ],
+      "boundary": "ACPI table length and checksum validation are native; mapping and AML execution are not."
+    },
+    {
+      "id": "121",
+      "subsystem": "ai-runtime",
+      "name": "ai.npu_initialize",
+      "effects": [
+        "npu-access",
+        "device-discovery"
+      ],
+      "adapter": "npu",
+      "profiles": [
+        "hosted",
+        "kernel",
+        "simulator"
+      ],
+      "maturity": "contract-only",
+      "native_checks": [],
+      "boundary": "NPU discovery, allocation and command submission require a device-specific driver."
+    },
+    {
+      "id": "122",
+      "subsystem": "ai-runtime",
+      "name": "ai.tensor_matmul",
+      "effects": [
+        "ai-compute",
+        "dma"
+      ],
+      "adapter": "ai-runtime",
+      "profiles": [
+        "hosted",
+        "kernel",
+        "simulator"
+      ],
+      "maturity": "validators-available",
+      "native_checks": [
+        "tensor-dimension-type-and-storage-validation"
+      ],
+      "boundary": "Tensor shape, type and storage validation are native; execution requires a CPU/GPU/NPU backend."
+    },
+    {
+      "id": "123",
+      "subsystem": "ai-runtime",
+      "name": "ai.inference",
+      "effects": [
+        "ai-compute"
+      ],
+      "adapter": "ai-runtime",
+      "profiles": [
+        "hosted",
+        "kernel",
+        "simulator"
+      ],
+      "maturity": "contract-only",
+      "native_checks": [],
+      "boundary": "Operator dispatch, graph scheduling and tensor allocation require a concrete compute backend."
+    },
+    {
+      "id": "124",
+      "subsystem": "ai-runtime",
+      "name": "ai.model_load_onnx",
+      "effects": [
+        "model-read",
+        "filesystem-read"
+      ],
+      "adapter": "model-loader",
+      "profiles": [
+        "hosted"
+      ],
+      "maturity": "contract-only",
+      "native_checks": [],
+      "boundary": "ONNX protobuf parsing, opset validation and operator lowering are not implemented in this core."
+    },
+    {
+      "id": "125",
+      "subsystem": "ai-runtime",
+      "name": "ai.private_inference",
+      "effects": [
+        "ai-compute",
+        "crypto"
+      ],
+      "adapter": "homomorphic-encryption",
+      "profiles": [
+        "hosted"
+      ],
+      "maturity": "contract-only",
+      "native_checks": [],
+      "boundary": "Homomorphic evaluation requires a reviewed cryptographic backend and explicit key lifecycle."
+    },
+    {
+      "id": "126",
+      "subsystem": "isolation",
+      "name": "container.create",
+      "effects": [
+        "process-isolation",
+        "filesystem-mount"
+      ],
+      "adapter": "container",
+      "profiles": [
+        "kernel",
+        "boot"
+      ],
+      "maturity": "validators-available",
+      "native_checks": [
+        "namespace-seccomp-and-resource-policy"
+      ],
+      "boundary": "Isolation-policy validation is native; namespaces, cgroups, mounts and seccomp require kernel support."
+    },
+    {
+      "id": "127",
+      "subsystem": "virtualization",
+      "name": "virtualization.create_vm",
+      "effects": [
+        "virtualization"
+      ],
+      "adapter": "hypervisor",
+      "profiles": [
+        "hypervisor"
+      ],
+      "maturity": "validators-available",
+      "native_checks": [
+        "vm-memory-cpu-architecture-and-iommu-policy"
+      ],
+      "boundary": "VM resource-profile validation is native; vCPU execution and VM exits require a hypervisor backend."
+    },
+    {
+      "id": "128",
+      "subsystem": "packages",
+      "name": "package.install_sandboxed",
+      "effects": [
+        "package-install",
+        "filesystem-write"
+      ],
+      "adapter": "package",
+      "profiles": [
+        "hosted"
+      ],
+      "maturity": "validators-available",
+      "native_checks": [
+        "package-identity-version-digest-and-signature"
+      ],
+      "boundary": "Manifest/signature validation is native through a verifier callback; sandbox installation is adapter-owned."
+    },
+    {
+      "id": "129",
+      "subsystem": "packages",
+      "name": "package.install",
+      "effects": [
+        "package-install",
+        "filesystem-write"
+      ],
+      "adapter": "package",
+      "profiles": [
+        "hosted"
+      ],
+      "maturity": "validators-available",
+      "native_checks": [
+        "package-identity-version-digest-and-signature"
+      ],
+      "boundary": "Package identity and signature validation are native; atomic deployment and rollback require a package adapter."
+    },
+    {
+      "id": "130",
+      "subsystem": "build-infrastructure",
+      "name": "build.cross_compile",
+      "effects": [
+        "toolchain-exec",
+        "filesystem-read",
+        "filesystem-write"
+      ],
+      "adapter": "toolchain",
+      "profiles": [
+        "hosted"
+      ],
+      "maturity": "validators-available",
+      "native_checks": [
+        "target-triple-toolchain-and-sysroot-identity"
+      ],
+      "boundary": "Target identity validation is native; tool discovery and execution belong to an argv-based toolchain adapter."
+    }
+  ]
+}

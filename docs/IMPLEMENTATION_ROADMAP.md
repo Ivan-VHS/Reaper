@@ -27,6 +27,7 @@ Never move a row to Delivered because a registry, design, README, schema or gene
 | NOO TAH | Process-isolated Node.js integration through the installed upstream Node runtime | NOO TAH implementation and compatibility workflow |
 | Native C17 | Partial lexer/parser/AST/checked-i64 IR/limited lowering | `src/`, `include/`, `tests/`, native C workflow |
 | Native MMIO | Descriptor validation and callback contract only | Native headers, source and negative tests |
+| Native system runtime | 20 registered operation contracts and bounded validators for cron, dependencies, logging, ACPI, firmware verification, tensors, isolation, VMs, packages and target identities | `include/reaper/system_runtime.h`, `src/system_runtime.c`, `tests/test_system_runtime.c`, `docs/SYSTEM_RUNTIME.md` |
 | Jora factory | Deterministic request validation, catalogue/composition and scaffold generation | `docs/JORA_APPLICATION_FACTORY.md`, CLI tests; generated packs remain non-installable |
 | Federation | Versioned metadata/adapters for OPlague, VentuSample and optional Pytyliki ABI | Federation manifests and integration tests |
 | МОСТ | 21 executable aliases and 33 reserved aliases | `docs/MOST_IMPLEMENTATION_STATUS.md`, registry validator |
@@ -70,14 +71,16 @@ Never move a row to Delivered because a registry, design, README, schema or gene
 
 ### R4 — Native runtime, memory and host effects
 
-**Status: Planned beyond the current checked API contracts.**
+**Status: Partial for capability contracts and bounded validators; execution adapters remain Planned.**
 
 - Define allocator ownership, lifetime, overflow, failure and cleanup semantics before implementing memory arenas.
+- Maintain the versioned system-runtime operation registry and preflight authorization contract; do not mark registry entries as executable handlers.
+- Extend only bounded, host-independent validators in the native core; keep process, power, device, firmware mutation, NPU, ONNX, HE, container, hypervisor and package effects behind explicit adapters.
 - Define a stable host-call ABI and explicit capability/effect declarations.
 - Keep MMIO behind a separate opt-in privileged adapter; the normal interpreter/compiler must not map physical addresses.
 - Require exact device/architecture/ABI identity and independent package/signature verification in any future driver-facing service.
 
-**Acceptance:** sanitizer-backed ownership tests, fault-injection, host-effect denial tests, ABI compatibility tests and a dedicated hardware/emulator gate. Reference-runtime tests alone do not qualify native memory or hardware behavior.
+**Acceptance:** sanitizer-backed ownership tests, fault-injection, host-effect denial tests, ABI compatibility tests and a dedicated hardware/emulator gate. Adapter-backed operation tests must run in a controlled host or DuckOS test environment. Reference-runtime tests alone do not qualify native memory or hardware behavior.
 
 ### R5 — Studio and language services
 

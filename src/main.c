@@ -3,6 +3,7 @@
 #include "reaper/evolution.h"
 #include "reaper/token_catalog.h"
 #include "reaper/capability_suite.h"
+#include "reaper/system_runtime.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -20,15 +21,18 @@ static void usage(FILE *f) {
     fprintf(f,"Reaper %s — native C17 development runtime\n"
       "Usage: reaper-c [--version] [--evolution-status] [--tokens|--ast-json] <source.rpr>\n"
       "       reaper-c [--capabilities|--capability MODULE]\n"
+      "       reaper-c [--system-capabilities|--system-capability OPERATION]\n"
       "  --version           Show native runtime version\n"
       "  --evolution-status  Show native evolution gates and safety boundary\n"
       "  --tokens            Print lexical tokens\n"
       "  --ast-json          Parse one expression and print deterministic AST JSON\n"
       "  --capabilities      List the native capability registry\n"
-      "  --capability NAME   Inspect one native capability module\n",REAPER_VERSION);
+      "  --capability NAME   Inspect one native capability module\n"
+      "  --system-capabilities List system operations 111–130\n"
+      "  --system-capability NAME Inspect one system operation contract\n",REAPER_VERSION);
 }
 int main(int argc,char **argv) {
-    int dump=0,ast_json=0,catalog_dump=0,capability_dump=0; const char *catalog_lookup=NULL; const char *capability_lookup=NULL; const char *path=NULL;
+    int dump=0,ast_json=0,catalog_dump=0,capability_dump=0,system_dump=0; const char *catalog_lookup=NULL; const char *capability_lookup=NULL; const char *system_lookup=NULL; const char *path=NULL;
     for(int i=1;i<argc;++i) {
         if(strcmp(argv[i],"--version")==0){puts("Reaper " REAPER_VERSION " (C17 native core)");return 0;}
         if(strcmp(argv[i],"--evolution-status")==0){reaper_evolution_print_status();return 0;}
@@ -37,9 +41,41 @@ int main(int argc,char **argv) {
         if(strcmp(argv[i],"--catalog")==0){catalog_dump=1;continue;}
         if(strcmp(argv[i],"--capabilities")==0){capability_dump=1;continue;}
         if(strcmp(argv[i],"--capability")==0){if(i+1>=argc){usage(stderr);return 2;}capability_lookup=argv[++i];continue;}
+        if(strcmp(argv[i],"--system-capabilities")==0){system_dump=1;continue;}
+        if(strcmp(argv[i],"--system-capability")==0){if(i+1>=argc){usage(stderr);return 2;}system_lookup=argv[++i];continue;}
         if(strcmp(argv[i],"--catalog-token")==0){if(i+1>=argc){usage(stderr);return 2;}catalog_lookup=argv[++i];continue;}
         if(argv[i][0]=='-'||(dump&&ast_json)){usage(stderr);return 2;}
         if(path){usage(stderr);return 2;} path=argv[i];
+    }
+    if(system_dump||system_lookup){
+        if(path||dump||ast_json||catalog_dump||catalog_lookup||capability_dump||
+           capability_lookup||(system_dump&&system_lookup)){usage(stderr);return 2;}
+        if(system_lookup){
+            const ReaperSystemOperation *operation =
+                reaper_system_operation_find(system_lookup);
+            if(operation==NULL){
+                fprintf(stderr,"reaper-c: unknown system operation %s\n",system_lookup);
+                return 1;
+            }
+            printf("%s\t%s\t%s\n",operation->id,operation->subsystem,operation->operation);
+            printf("  effects=0x%016llx adapter=0x%016llx profiles=0x%08x\n",
+                   (unsigned long long)operation->required_effects,
+                   (unsigned long long)operation->required_adapter,
+                   operation->allowed_profiles);
+            printf("  maturity=%s dispatchable=no\n",
+                   operation->maturity==REAPER_SYSTEM_MATURITY_VALIDATORS_AVAILABLE
+                       ? "validators-available" : "contract-only");
+            printf("  %s\n",operation->boundary);
+            return 0;
+        }
+        for(size_t i=0U;i<reaper_system_operation_count();++i){
+            const ReaperSystemOperation *operation=reaper_system_operation_at(i);
+            printf("%s\t%s\t%s\t%s\n",operation->id,operation->subsystem,
+                   operation->operation,
+                   operation->maturity==REAPER_SYSTEM_MATURITY_VALIDATORS_AVAILABLE
+                       ? "validators-available" : "contract-only");
+        }
+        return 0;
     }
     if(capability_dump||capability_lookup){
         if(path||dump||ast_json||catalog_dump||catalog_lookup||

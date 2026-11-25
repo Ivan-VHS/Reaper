@@ -6,12 +6,13 @@
 | Lexer | deterministic tokens and source spans |
 | Python parser/runtime | reference semantics, scopes, values, quotas |
 | Native C17 | token stream, expression AST, checked IR, limited lowering |
+| System runtime | versioned operation registry, effect/adapter preflight, bounded validators | partial; no privileged operation dispatcher |
 | MOST | exact keyword canonicalization before the same parser |
 | QCS | independent hardware-domain syntax validation |
 | Adapters | versioned JSON and explicitly selected native ABI |
 | Tests | syntax, semantics, bounds, negative cases and integrations |
 
-Reaper source → tokens → AST → bounded reference runtime → explicit output. The C17 track is separate until full language conformance. Studio is Windows-only.
+Reaper source → tokens → AST → bounded reference runtime → explicit output. The C17 track is separate until full language conformance. System-runtime operations are versioned C17 contracts; host/OS adapters own side effects. Studio is Windows-only.
 
 ## Integrated product layer
 

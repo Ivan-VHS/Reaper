@@ -48,3 +48,7 @@ jobs:
         run: |
           python -m reaper examples/device_audit.rpr
           python -c "import json; report=json.load(open('device-audit-report.json', encoding='utf-8')); assert report['schema'] == 'reaper.oplage-comparison.v1'; assert report['mode'] == 'read_only'"
+      - name: Validate and inspect native system-runtime catalogue
+        run: |
+          python -m reaper --check examples/system_runtime_inventory.rpr
+          python -m reaper examples/system_runtime_inventory.rpr

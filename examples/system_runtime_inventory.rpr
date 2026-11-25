@@ -1,0 +1,10 @@
+# Read-only inspection of the native system-runtime contract.
+# This example does not execute service, device, AI, package or VM operations.
+
+make system_runtime := read_json("language/system-runtime.v1.json")
+
+emit "Schema: " ++ system_runtime["schema"]
+emit "ABI version: " ++ text(system_runtime["api_version"])
+emit "Registered operations: " ++ text(system_runtime["operation_count"])
+emit "Execution state: " ++ system_runtime["execution_state"]
+emit "Policy: " ++ system_runtime["safety_policy"]
