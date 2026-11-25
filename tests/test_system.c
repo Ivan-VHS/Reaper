@@ -47,7 +47,7 @@ static ReaperSystemHost make_host(FakeHost *fake, uint64_t capabilities) {
 
 static void test_catalog(void) {
     size_t index;
-    assert(reaper_system_operation_count() == 42U);
+    assert(reaper_system_operation_count() == 84U);
     for (index = 0U; index < reaper_system_operation_count(); ++index) {
         const ReaperSystemOperationInfo *info = reaper_system_operation_at(index);
         assert(info != NULL);
@@ -56,7 +56,7 @@ static void test_catalog(void) {
         assert(info->effect != NULL && info->effect[0] != '\0');
         assert(reaper_system_operation_find(info->operation) == info);
     }
-    assert(reaper_system_operation_at(42U) == NULL);
+    assert(reaper_system_operation_at(84U) == NULL);
     assert(reaper_system_operation_find((ReaperSystemOperation)0x7fff) == NULL);
 }
 
@@ -143,10 +143,56 @@ static void test_host_failures_and_contract_violation(void) {
                   "access-denied") == 0);
 }
 
+
+
+static void test_desktop_capability_gate(void) {
+    FakeHost fake = {0};
+    ReaperSystemHost host = make_host(&fake, REAPER_SYSTEM_CAP_DESKTOP_WINDOW);
+    ReaperSystemError error;
+    size_t output_size = 0U;
+    const char payload[] = "window-create";
+    char output[sizeof(payload)] = {0};
+
+    assert(reaper_system_invoke(&host, REAPER_SYSTEM_WINDOW_CREATE,
+                                payload, sizeof(payload), output, sizeof(output),
+                                &output_size, &error) == REAPER_SYSTEM_OK);
+    assert(fake.calls == 1U);
+    assert(fake.last_operation == REAPER_SYSTEM_WINDOW_CREATE);
+    assert(output_size == sizeof(payload));
+    assert(memcmp(payload, output, sizeof(payload)) == 0);
+
+    host.granted_capabilities = 0U;
+    assert(reaper_system_invoke(&host, REAPER_SYSTEM_WINDOW_DESTROY,
+                                NULL, 0U, NULL, 0U, &output_size, &error) ==
+           REAPER_SYSTEM_ACCESS_DENIED);
+    assert(fake.calls == 1U);
+
+    host.granted_capabilities = REAPER_SYSTEM_CAP_DESKTOP_GPU;
+    assert(reaper_system_invoke(&host, REAPER_SYSTEM_GPU_BUFFER_ALLOCATE,
+                                NULL, 0U, NULL, 0U, &output_size, &error) ==
+           REAPER_SYSTEM_OK);
+    assert(fake.calls == 2U);
+    assert(reaper_system_invoke(&host, REAPER_SYSTEM_GPU_RESET,
+                                NULL, 0U, NULL, 0U, &output_size, &error) ==
+           REAPER_SYSTEM_ACCESS_DENIED);
+    assert(fake.calls == 2U);
+
+    host.granted_capabilities = REAPER_SYSTEM_CAP_DESKTOP_DISPLAY;
+    assert(reaper_system_invoke(&host, REAPER_SYSTEM_DISPLAY_QUERY,
+                                NULL, 0U, NULL, 0U, &output_size, &error) ==
+           REAPER_SYSTEM_OK);
+    assert(fake.calls == 3U);
+    assert(reaper_system_invoke(&host, REAPER_SYSTEM_DISPLAY_SET_MODE,
+                                NULL, 0U, NULL, 0U, &output_size, &error) ==
+           REAPER_SYSTEM_ACCESS_DENIED);
+    assert(fake.calls == 3U);
+}
+
 int main(void) {
     test_catalog();
     test_host_validation();
     test_rights_and_unknown_operations();
+    test_desktop_capability_gate();
     test_bounded_dispatch();
     test_host_failures_and_contract_violation();
     puts("reaper system API tests passed");
