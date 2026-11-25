@@ -19,7 +19,10 @@ Start with the [project README](../README.md) for installation, first commands a
 - [Federation and integration](clusters/federation-integration.md)
 - [Planning and governance](clusters/planning-governance.md)
 
-## Shared rules
+## Shared standards
+
+- [Product Stage Naming Standard](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/STAGE_NAMING_STANDARD.md) — shared lifecycle labels and migration policy.
+- [Reaper Psychoporter — Stage 0.1](REAPER_PSYCHOPORTER_STAGE_0_1.md) — engineering doctrine and coding standard.
 
 - [Psychoporter 666 coding and human-layer standard](PSYCHOPORTER_666.md)
 
