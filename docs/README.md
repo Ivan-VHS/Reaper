@@ -11,6 +11,11 @@ Start with the [project README](../README.md) for installation, first commands a
 - [Studio and IDE](REAPER_IDE.md)
 - [NEXUS federation profile](NEXUS_FEDERATION_PROFILE_V1.md) — Reaper ownership, peer contracts and compatibility boundaries.
 
+## DuckOS platform contracts
+
+- [DuckOS desktop and boot policy contracts v1](DUCKOS_DESKTOP_BOOT_CONTRACTS_V1.md) — proposed Reaper contract groups for native desktop sessions, display surfaces, portals, boot adapters, trust evidence and recovery. This is a specification; source modules and runtime enforcement are not yet delivered.
+- [DuckOS native desktop and DuckBoot architecture v1](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/DESKTOP_AND_DUCKBOOT_ARCHITECTURE_V1.md) — canonical OS-owned architecture and implementation gates.
+
 ## Browse by topic
 
 - [Language and toolchain](clusters/language-toolchain.md)
