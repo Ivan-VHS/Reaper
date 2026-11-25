@@ -1,36 +1,37 @@
 # Reaper documentation
 
-Start with the [project README](../README.md) for installation, first commands and current implementation status. The [documentation map](INFORMATION_ARCHITECTURE.md) links every topic area.
+> **Psychoporter 666 documentation profile v1.0** · Reviewed 2026-11-25 (UTC)
 
-## Key pages
+[Project overview](../README.md) · [Source](https://github.com/Ivan-VHS/Reaper) · [Issues](https://github.com/Ivan-VHS/Reaper/issues) · [Contributing](../CONTRIBUTING.md) · [Security](../SECURITY.md)
 
-- [Features and maturity](FEATURES.md)
-- [Psychoporter 666 function categories](FUNCTION_CATEGORIES_666.md)
-- [Architecture](ARCHITECTURE.md)
-- [Hardware language track](HARDWARE_LANGUAGE.md)
-- [System Runtime ABI v1](SYSTEM_RUNTIME_ABI_V1.md)
-- [DABI64 Desktop Host v1](DABI64_DESKTOP_HOST_V1.md)
-- [Implementation roadmap](IMPLEMENTATION_ROADMAP.md)
-- [Studio and IDE](REAPER_IDE.md)
-- [NEXUS federation profile](NEXUS_FEDERATION_PROFILE_V1.md) — Reaper ownership, peer contracts and compatibility boundaries.
+Start with the [project README](../README.md) for installation, validation-before-run workflow and maturity boundaries.
+
+## Key references
+
+- [Features and maturity](FEATURES.md) — reference runtime versus native track.
+- [Architecture](ARCHITECTURE.md) — compiler, runtime and service boundaries.
+- [Hardware language track](HARDWARE_LANGUAGE.md) — checked hardware contracts and open work.
+- [Implementation roadmap](IMPLEMENTATION_ROADMAP.md) — evidence-led gates.
+- [Studio and IDE](REAPER_IDE.md) — editor and language-service boundaries.
+- [Psychoporter 666](PSYCHOPORTER_666.md) — engineering and documentation profile.
 
 ## Browse by topic
 
-- [Language and toolchain](clusters/language-toolchain.md)
-- [Psychoporter 666 function categories](FUNCTION_CATEGORIES_666.md)
-- [Architecture and systems](clusters/architecture-systems.md)
-- [Studio and IDE](clusters/studio-ide-ui.md)
-- [Quality and evidence](clusters/quality-evidence.md)
-- [Federation and integration](clusters/federation-integration.md)
-- [Planning and governance](clusters/planning-governance.md)
+- [language toolchain](clusters/language-toolchain.md)
+- [architecture systems](clusters/architecture-systems.md)
+- [studio ide ui](clusters/studio-ide-ui.md)
+- [quality evidence](clusters/quality-evidence.md)
+- [federation integration](clusters/federation-integration.md)
+- [planning governance](clusters/planning-governance.md)
 
-## Shared rules
+## Shared engineering rules
 
-- [Psychoporter 666 coding and human-layer standard](PSYCHOPORTER_666.md)
-- [Documentation standard](UNIFIED_DOCUMENTATION_STANDARD.md)
+- [Unified documentation standard](UNIFIED_DOCUMENTATION_STANDARD.md)
 - [Engineering evolution framework](ENGINEERING_EVOLUTION_FRAMEWORK.md)
 - [Repository evolution directives](REPOSITORY_EVOLUTION_DIRECTIVES.md)
 
-Treat the Python reference runtime, native compiler track, System Runtime host ABI and privileged hardware work as separate maturity levels. Source, tests and CI are the evidence for implemented behavior.
+## Evidence and maturity
 
-- [OPlague GPU telemetry v1 ingestion](OPLAGE_GPU_TELEMETRY.md)
+Describe behavior from source, build configuration, schemas, tests and CI evidence. Mark proposals and roadmap items as planned. Do not invent benchmarks, security certifications, platform support, API surfaces or release status.
+
+**The index is navigation, not proof of implementation.**
