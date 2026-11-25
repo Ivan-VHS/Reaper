@@ -23,10 +23,10 @@ This hub groups related specifications and implementation references. The linked
 - [MOST RUSSIAN 66 RULES](../MOST_RUSSIAN_66_RULES.md)
 - [MOST RUSSIAN NATIVE PROFILE](../MOST_RUSSIAN_NATIVE_PROFILE.md)
 - [NATIVE IR EXECUTION](../NATIVE_IR_EXECUTION.md)
-- [REAPER FRAMEWORK FEDERATION V1](../REAPER_FRAMEWORK_FEDERATION_V1.md) — Reaper-native module helpers, stable framework keys and cross-language host callback ABI.
 - [POLYGLOT CODE](../POLYGLOT_CODE.md)
 - [POLYGLOT IMMERSION](../POLYGLOT_IMMERSION.md)
 - [QCS FRONTEND](../QCS_FRONTEND.md)
+- [REAPER FRAMEWORK FEDERATION V1](../REAPER_FRAMEWORK_FEDERATION_V1.md) — Reaper-native module helpers, stable framework keys and cross-language host callback ABI.
 - [REAPER PARSER M1](../REAPER_PARSER_M1.md)
 - [RUNTIME PLATFORM](../RUNTIME_PLATFORM.md)
 - [SELF HOSTING BOOTSTRAP](../SELF_HOSTING_BOOTSTRAP.md)
