@@ -36,6 +36,10 @@ jobs:
         run: python tools/validate_most_functions.py
       - name: Validate engineering evolution contract
         run: python tools/validate_engineering_evolution.py
+      - name: Validate Psychoporter 666 constitution and profile
+        run: python tools/validate_psychoporter.py
+      - name: Test Psychoporter 666 validator
+        run: python -m unittest discover -s tests -p "test_psychoporter.py" -v
       - name: Run unit tests
         run: python -m unittest discover -s tests -v
       - name: Validate example
