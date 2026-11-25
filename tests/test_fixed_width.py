@@ -172,7 +172,7 @@ class FixedWidthIrAndNativeTests(unittest.TestCase):
         generated = compile_source(source, "fixed-width-native.rpr")
         self.assertIn("rpr_uadd(", generated)
         self.assertIn("rpr_sadd(", generated)
-        self.assertIn('#line 1 "fixed-width-native.rpr"', generated)
+        self.assertIn('#line 2 "fixed-width-native.rpr"', generated)
 
         with tempfile.TemporaryDirectory(prefix="reaper-fixed-width-") as folder:
             executable = build_executable(
