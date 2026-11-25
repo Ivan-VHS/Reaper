@@ -18,7 +18,7 @@ Reaper 是一款面向编译器工具、嵌入式软件和硬件相关程序的�
 - NOO TAH 将 JavaScript 执行交给官方 Node.js 运行时。
 - Jora 项目脚手架和能力组合；目录中的应用包仍是规范，不是可安装的编辑器。
 
-文档：[功能](docs/FEATURES.md) · [架构](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Jora 工厂](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md)。
+文档：[语言规范](docs/LANGUAGE_CANON.md) · [快速参考](LANGUAGE.md) · [功能](docs/FEATURES.md) · [架构](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Jora 工厂](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md)。
 
 ## 快速开始
 
@@ -52,5 +52,3 @@ python -m unittest discover -s tests -v
 - [Kora 标准库助手](docs/KORA.md)
 - [文档索引](docs/README.md)
 - [生态共享标准](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/SHARED_STANDARDS.md)
-
-[贡献指南](CONTRIBUTING.md) · [安全策略](SECURITY.md) · [Apache-2.0 许可证](LICENSE)

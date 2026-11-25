@@ -18,7 +18,7 @@ Reaper — мова системного програмування та лок�
 - NOO TAH делегує виконання JavaScript офіційному Node.js.
 - Генерація каркасів Jora та композиція можливостей; пакети каталогу поки є специфікаціями, а не встановлюваними редакторами.
 
-Документи: [Можливості](docs/FEATURES.md) · [Архітектура](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Фабрика Jora](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md).
+Документи: [Канон мови](docs/LANGUAGE_CANON.md) · [Короткий довідник](LANGUAGE.md) · [Можливості](docs/FEATURES.md) · [Архітектура](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Фабрика Jora](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md).
 
 ## Швидкий старт
 
@@ -52,5 +52,3 @@ python -m unittest discover -s tests -v
 - [Бібліотека Kora](docs/KORA.md)
 - [Індекс документації](docs/README.md)
 - [Спільні стандарти екосистеми](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/SHARED_STANDARDS.md)
-
-[Внесок у проєкт](CONTRIBUTING.md) · [Безпека](SECURITY.md) · [Apache-2.0](LICENSE)
