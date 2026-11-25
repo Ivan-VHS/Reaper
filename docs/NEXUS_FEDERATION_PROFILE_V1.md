@@ -27,10 +27,16 @@ Keep the current OCTA-8 topology and existing contracts authoritative:
 |---|---|---|
 | OPlague | `oplage.device-snapshot.v1`, GPU telemetry snapshots | Validate schema, provenance, bounds and digest; produce a comparison/evidence report |
 | Pytyliki | `pytyliki.c-abi.v1` | Call only through an explicitly trusted library path and caller-owned buffers |
-| VentuSample | `ventusample.pack.v1` and offline render metadata | Read/validate manifests as artifacts; do not load audio plugins or claim runtime coupling |
+| VentuSample | `ventusample.pack.v1` and offline render metadata | Reaper reference runtime validates bounded metadata, derives 22 normalized descriptors and compares manifests; it never opens WAV assets or loads DSP plugins |
 | DuckOS | Reaper policy contracts and bounded JSON workflows | Provide deterministic policy semantics; privileged effects remain DuckOS-owned |
 
 Do not create a second message bus, duplicate report envelope or implicit service discovery runtime. Preserve opt-in semantics and permit a peer to be absent.
+
+## Implemented read-only adapters
+
+- `ventusample_metrics(pack)` and `ventusample_compare(reference, candidate)` consume the v1 manifest contract. Comparison is deterministic, metadata-only and reports descriptor deltas plus a canonical SHA-256 report digest. V2 remains a separate contract and is not silently treated as v1.
+- `oplage_gpu_normalize(snapshot)` and `oplage_gpu_load(path)` validate OPlague GPU telemetry v1 and preserve unavailable sensor values as `unknown`. The digest detects payload changes but does not authenticate a publisher or build.
+- The Reaper reference runtime exposes these adapters to both tree-walk and VM execution. They remain user-space host tools; DuckOS kernel services do not import or execute peer Python modules.
 
 ## Safety and runtime boundaries
 

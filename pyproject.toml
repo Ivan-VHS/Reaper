@@ -23,10 +23,11 @@ reaper-noo-tah = "reaper.noo_tah:main"
 reaper-toolchain = "reaper.toolchain_inventory:main"
 reaper-duckos-audit = "reaper.duckos_bridge:main"
 reaper-oplage-gpu-audit = "reaper.gpu_telemetry:main"
+reaper-ventusample-pack-compare = "reaper.ventusample:main"
 [project.gui-scripts]
 reaper-studio = "reaper.desktop:main"
 [tool.setuptools]
 packages = ["reaper", "reaper.kora"]
 [tool.setuptools.package-data]
-"reaper" = ["systems_architectures.json", "systems_languages.json", "token_catalog.json", "atomic_quantum_catalogue.v1.json"]
+"reaper" = ["systems_architectures.json", "systems_languages.json", "token_catalog.json", "atomic_quantum_catalogue.v1.json", "ventusample_pack.v1.schema.json"]
 "reaper.kora" = ["manifest.json"]
