@@ -161,10 +161,10 @@ const char *reaper_system_call_json(
         response_buffer,
         (size_t)REAPER_SYSTEM_JSON_MAX_BYTES,
         &response_length,
-        NULL
+        &error
     );
     if (status != REAPER_SYSTEM_OK) {
-        set_last_error(status, reaper_system_status_name(status), NULL);
+        set_last_error(status, error.message, NULL);
         return NULL;
     }
 
