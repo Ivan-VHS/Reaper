@@ -87,3 +87,10 @@ The backend does not infer that an unsupported construct is safe, and it does no
 5. Do not describe the backend as a direct ELF linker, a full native interpreter, or self-hosting. Those milestones require their own implementation and acceptance tests.
 
 The next compiler milestones are typed collection lowering, explicit runtime-call contracts, ownership and deterministic drop, a versioned canonical native IR, and a direct object/ELF backend. Each remains separate from this first AOT slice until its conformance tests pass.
+
+
+## Native IR scalar extension — checked u32
+
+The C17 IR verifier/executor now has a distinct u32 subset: bounded constants, typed add/subtract/multiply/divide, and explicit failure for overflow, underflow and division by zero. This is a lower-level IR primitive, not a new source-language feature.
+
+The current .rpr parser, Python Canonical IR/VM and C17 AOT lowering do not yet emit or execute source-level u32 operations. The AOT compiler remains the limited scalar subset documented above; no direct ELF writer, DABI64 backend or freestanding runtime is implied. The next gate is to connect the type through the source AST, canonical IR and AOT lowering with differential boundary tests.
