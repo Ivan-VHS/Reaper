@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any
 
 from .parser import Node, parse
+from .fixed_width import fixed_integer_fits, is_fixed_integer_type
 
 
 class NativeCompileError(ValueError):
@@ -28,6 +29,23 @@ class NativeToolchainError(RuntimeError):
 _I64 = "i64"
 _BOOL = "bool"
 _STRING = "string"
+_FIXED_TYPES = {"i8", "u8", "i16", "u16", "i32", "u32", "u64"}
+_C_TYPES = {
+    "i64": "int64_t",
+    "i8": "int8_t",
+    "u8": "uint8_t",
+    "i16": "int16_t",
+    "u16": "uint16_t",
+    "i32": "int32_t",
+    "u32": "uint32_t",
+    "u64": "uint64_t",
+}
+_C_MAX = {
+    "u8": "UINT8_MAX",
+    "u16": "UINT16_MAX",
+    "u32": "UINT32_MAX",
+    "u64": "UINT64_MAX",
+}
 
 
 @dataclass(slots=True)
@@ -200,6 +218,43 @@ static inline int64_t rpr_pow(int64_t base, int64_t exponent) {{
     return result;
 }}
 
+static inline uint64_t rpr_uadd(uint64_t a, uint64_t b, uint64_t maximum) {{
+    if (a > maximum || b > maximum || a > maximum - b)
+        return (uint64_t)rpr_fail("unsigned integer overflow in addition");
+    return a + b;
+}}
+
+static inline uint64_t rpr_usub(uint64_t a, uint64_t b) {{
+    if (a < b) return (uint64_t)rpr_fail("unsigned integer underflow in subtraction");
+    return a - b;
+}}
+
+static inline uint64_t rpr_umul(uint64_t a, uint64_t b, uint64_t maximum) {{
+    if (a > maximum || b > maximum || (b != 0 && a > maximum / b))
+        return (uint64_t)rpr_fail("unsigned integer overflow in multiplication");
+    return a * b;
+}}
+
+static inline uint64_t rpr_udiv(uint64_t a, uint64_t b) {{
+    if (b == 0) return (uint64_t)rpr_fail("unsigned division by zero");
+    return a / b;
+}}
+
+static inline uint64_t rpr_umod(uint64_t a, uint64_t b) {{
+    if (b == 0) return (uint64_t)rpr_fail("unsigned remainder by zero");
+    return a % b;
+}}
+
+static inline uint64_t rpr_upow(uint64_t base, uint64_t exponent, uint64_t maximum) {{
+    uint64_t result = UINT64_C(1);
+    while (exponent != 0 && !rpr_failed) {{
+        if ((exponent & UINT64_C(1)) != 0) result = rpr_umul(result, base, maximum);
+        exponent >>= 1;
+        if (exponent != 0) base = rpr_umul(base, base, maximum);
+    }}
+    return result;
+}}
+
 {globals_text}
 
 {prototypes}
@@ -214,6 +269,7 @@ int main(void) {{
 '''
 
     def _compile_top_level(self, node: Node) -> None:
+        self._append_source_map(output=self.main_body, node=node)
         kind = node.kind
         if kind == "function":
             self._compile_function(node)
@@ -318,6 +374,7 @@ int main(void) {{
         return False
 
     def _compile_statement(self, node: Node, scope: Scope, output: list[str]) -> None:
+        self._append_source_map(output, node)
         kind = node.kind
         if kind == "block":
             self._compile_block(node, scope, output)
@@ -345,6 +402,18 @@ int main(void) {{
                 output.append(self._line(f"int64_t {temporary} = (int64_t)({expression});"))
                 output.append(self._line("if (rpr_failed) return EXIT_FAILURE;"))
                 output.append(self._line(f"(void)printf(\"%s\\n\", rpr_truthy({temporary}) ? \"true\" : \"false\");"))
+            elif type_name == "u64":
+                output.append(self._line(f"uint64_t {temporary} = (uint64_t)({expression});"))
+                output.append(self._line("if (rpr_failed) return EXIT_FAILURE;"))
+                output.append(self._line(f"(void)printf(\"%\" PRIu64 \"\\n\", {temporary});"))
+            elif type_name in {"u8", "u16", "u32"}:
+                output.append(self._line(f"uint32_t {temporary} = (uint32_t)({expression});"))
+                output.append(self._line("if (rpr_failed) return EXIT_FAILURE;"))
+                output.append(self._line(f"(void)printf(\"%\" PRIu32 \"\\n\", {temporary});"))
+            elif type_name in {"i8", "i16", "i32"}:
+                output.append(self._line(f"int32_t {temporary} = (int32_t)({expression});"))
+                output.append(self._line("if (rpr_failed) return EXIT_FAILURE;"))
+                output.append(self._line(f"(void)printf(\"%\" PRId32 \"\\n\", {temporary});"))
             else:
                 output.append(self._line(f"int64_t {temporary} = (int64_t)({expression});"))
                 output.append(self._line("if (rpr_failed) return EXIT_FAILURE;"))
@@ -371,7 +440,7 @@ int main(void) {{
             self._require_condition(children[0], condition_type)
             tick = "if (!rpr_tick()) return 0;" if self._inside_function else "if (!rpr_tick()) return EXIT_FAILURE;"
             output.append(self._line(tick))
-            output.append(self._line(f"if (rpr_truthy((int64_t)({condition}))) {{"))
+            output.append(self._line(f"if (({condition}) != 0) {{"))
             self._indent += 1
             self._compile_block(children[1], scope, output)
             self._indent -= 1
@@ -388,7 +457,7 @@ int main(void) {{
                 self._fail(node, "loop while requires a condition and body")
             condition, condition_type = self._compile_expression(children[0], scope)
             self._require_condition(children[0], condition_type)
-            output.append(self._line(f"while (!rpr_failed && rpr_truthy((int64_t)({condition}))) {{"))
+            output.append(self._line(f"while (!rpr_failed && (({condition}) != 0)) {{"))
             self._indent += 1
             output.append(self._line("if (!rpr_tick()) break;"))
             self._compile_block(children[1], scope, output)
@@ -429,29 +498,39 @@ int main(void) {{
         *,
         global_scope: bool,
     ) -> None:
-        if not isinstance(node.value, tuple) or len(node.value) != 2 or len(self._children(node)) != 1:
+        if not isinstance(node.value, tuple) or len(node.value) not in {2, 3} or len(self._children(node)) != 1:
             self._fail(node, "malformed make/vary declaration")
-        source_name, mutable = node.value
+        source_name, mutable = node.value[:2]
+        declared_type = node.value[2] if len(node.value) == 3 else None
         if not isinstance(source_name, str) or not isinstance(mutable, bool):
             self._fail(node, "malformed declaration name or mutability")
+        if declared_type is not None and not is_fixed_integer_type(declared_type):
+            self._fail(node, f"unsupported fixed-width integer type '{declared_type}'")
         if global_scope and source_name in self.function_table:
             self._fail(node, f"'{source_name}' is already declared as a function")
-        expression, type_name = self._compile_expression(self._children(node)[0], scope)
-        if type_name not in {_I64, _BOOL, _STRING}:
-            self._fail(node, "native variables must be i64, bool, or string")
+        initializer = self._children(node)[0]
+        expression, type_name = self._compile_expression(initializer, scope)
+        if declared_type is not None:
+            if type_name == _I64 and initializer.kind == "literal" and isinstance(initializer.value, int):
+                if not fixed_integer_fits(initializer.value, declared_type):
+                    self._fail(initializer, f"integer literal is outside the {declared_type} range")
+                expression = f"({_C_TYPES[declared_type]})({expression})"
+                type_name = declared_type
+            elif type_name != declared_type:
+                self._fail(node, f"cannot initialize {declared_type} with {type_name}; use a value of the same fixed-width type")
+        elif type_name not in {_I64, _BOOL, _STRING, *_FIXED_TYPES}:
+            self._fail(node, "native variables must be scalar integers, bool, or string")
+        c_type = _C_TYPES.get(type_name, "int64_t" if type_name == _BOOL else "const char *")
         c_name = self._name("global" if global_scope else "local")
         symbol = Symbol(source_name, c_name, type_name, mutable)
         if not scope.define(symbol):
             self._fail(node, f"'{source_name}' is already declared in this scope")
         if global_scope:
-            c_type = "const char *" if type_name == _STRING else "int64_t"
             self.global_declarations.append(f"static {c_type} {c_name};")
             output.append(self._line(f"{c_name} = {expression};"))
         else:
-            c_type = "const char *" if type_name == _STRING else "int64_t"
-            qualifier = "const " if not mutable and type_name != _STRING else ""
-            const_pointer = " const" if not mutable and type_name == _STRING else ""
-            output.append(self._line(f"{qualifier}{c_type}{const_pointer} {c_name} = {expression};"))
+            qualifier = "const " if not mutable else ""
+            output.append(self._line(f"{qualifier}{c_type} {c_name} = {expression};"))
 
     def _compile_change(self, node: Node, scope: Scope, output: list[str]) -> None:
         if not isinstance(node.value, str) or len(self._children(node)) != 1:
@@ -465,7 +544,18 @@ int main(void) {{
             symbol is global_symbol for global_symbol in self.global_scope.symbols.values()
         ):
             self._fail(node, "native craft functions cannot mutate global bindings")
-        expression, type_name = self._compile_expression(self._children(node)[0], scope)
+        value_node = self._children(node)[0]
+        expression, type_name = self._compile_expression(value_node, scope)
+        if (
+            type_name == _I64
+            and symbol.type_name in _FIXED_TYPES
+            and value_node.kind == "literal"
+            and isinstance(value_node.value, int)
+        ):
+            if not fixed_integer_fits(value_node.value, symbol.type_name):
+                self._fail(value_node, f"integer literal is outside the {symbol.type_name} range")
+            expression = f"({_C_TYPES[symbol.type_name]})({expression})"
+            type_name = symbol.type_name
         if type_name != symbol.type_name:
             self._fail(node, f"cannot assign {type_name} to {symbol.type_name} variable '{node.value}'")
         tick = "if (!rpr_tick()) return 0;" if self._inside_function else "if (!rpr_tick()) return EXIT_FAILURE;"
@@ -521,22 +611,39 @@ int main(void) {{
             right, right_type = self._compile_expression(children[1], scope)
             operator = str(node.value)
             if operator in {"AND", "OR"}:
-                if left_type not in {_I64, _BOOL} or right_type not in {_I64, _BOOL}:
+                if left_type not in {_I64, _BOOL} and not is_fixed_integer_type(left_type):
+                    self._fail(node, f"'{operator.lower()}' requires integer or boolean operands")
+                if right_type not in {_I64, _BOOL} and not is_fixed_integer_type(right_type):
                     self._fail(node, f"'{operator.lower()}' requires integer or boolean operands")
                 c_operator = "&&" if operator == "AND" else "||"
-                return f"(rpr_truthy((int64_t)({left})) {c_operator} rpr_truthy((int64_t)({right})))", _BOOL
+                return f"((({left}) != 0) {c_operator} (({right}) != 0))", _BOOL
             if operator in {"==", "!="} and left_type == right_type == _STRING:
                 comparison = "== 0" if operator == "==" else "!= 0"
                 return f"(strcmp({left}, {right}) {comparison})", _BOOL
-            if operator in {"==", "!="} and left_type == right_type and left_type in {_I64, _BOOL}:
+            if operator in {"==", "!="} and left_type == right_type and (
+                left_type in {_I64, _BOOL} or is_fixed_integer_type(left_type)
+            ):
                 return f"(({left}) {operator} ({right}))", _BOOL
             if operator in {"<", "<=", ">", ">="}:
-                if left_type != _I64 or right_type != _I64:
-                    self._fail(node, f"operator '{operator}' requires integer operands")
+                if left_type != right_type or not (
+                    left_type == _I64 or is_fixed_integer_type(left_type)
+                ):
+                    self._fail(node, f"operator '{operator}' requires matching integer operands")
                 return f"(({left}) {operator} ({right}))", _BOOL
             if operator in {"+", "-", "*", "//", "%", "**"}:
-                self._require_type(node, left_type, _I64, f"operator '{operator}' requires integer operands")
-                self._require_type(node, right_type, _I64, f"operator '{operator}' requires integer operands")
+                if left_type == right_type and is_fixed_integer_type(left_type):
+                    maximum = _C_MAX.get(left_type, "UINT64_MAX")
+                    helper = {
+                        "+": f"rpr_uadd((uint64_t)({{left}}), (uint64_t)({{right}}), {maximum})",
+                        "-": f"rpr_usub((uint64_t)({{left}}), (uint64_t)({{right}}))",
+                        "*": f"rpr_umul((uint64_t)({{left}}), (uint64_t)({{right}}), {maximum})",
+                        "//": f"rpr_udiv((uint64_t)({{left}}), (uint64_t)({{right}}))",
+                        "%": f"rpr_umod((uint64_t)({{left}}), (uint64_t)({{right}}))",
+                        "**": f"rpr_upow((uint64_t)({{left}}), (uint64_t)({{right}}), {maximum})",
+                    }[operator].format(left=left, right=right)
+                    return f"({_C_TYPES[left_type]})({helper})", left_type
+                if left_type != _I64 or right_type != _I64:
+                    self._fail(node, f"operator '{operator}' requires matching integer operands")
                 helper = {
                     "+": "rpr_add", "-": "rpr_sub", "*": "rpr_mul",
                     "//": "rpr_floor_div", "%": "rpr_mod", "**": "rpr_pow",
@@ -572,6 +679,12 @@ int main(void) {{
     def _require_type(self, node: Node, actual: str, expected: str, message: str) -> None:
         if actual != expected:
             self._fail(node, message)
+
+    def _append_source_map(self, output: list[str], node: Node) -> None:
+        token = getattr(node, "token", None)
+        line = getattr(token, "line", 1)
+        filename = self.filename.replace("\\\\", "\\\\\\\\").replace('"', '\\"')
+        output.append(self._line(f'#line {line} "{filename}"'))
 
     def _line(self, text: str) -> str:
         return "    " * self._indent + text
