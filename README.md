@@ -10,6 +10,14 @@ Reaper is a systems-programming language and local development workbench for com
 
 **Status:** the Python reference runtime, CLI/REPL, Windows Studio foundation, stdio LSP/DAP services and a partial native C17 track are present. Native compiler parity and privileged hardware services are not complete.
 
+## Project constitution and code style
+
+- [Reaper Psychoporter 666 Code](docs/PSYCHOPORTER_666.md) defines the language's naming, syntax, architecture, error handling, tests, tooling, human layer and security principles.
+- [Ivan-VHS Code Style](docs/IVAN_VHS_CODE_STYLE.md) defines the active implementation and review style.
+- [Psychoporter cognitive-ergonomics profile](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/PSYCHOPORTER_CODE_STYLE.md) is the shared reader-centred engineering profile.
+
+The 666 Code distinguishes current syntax, target capabilities and host/platform responsibilities. It does not claim that future compiler, runtime or hardware features are already implemented. Source, tests, CI and the maturity notes below remain authoritative.
+
 ## What is included
 
 - Reaper source language, lexer/parser, reference runtime and diagnostics.
