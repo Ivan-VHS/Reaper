@@ -19,24 +19,24 @@ import "modules/ripplecripple.rpr" as ripplecripple
 import "modules/secator.rpr" as secator
 import "modules/pollatia.rpr" as pollatia
 
-# This client reads Reaper module metadata; it does not invoke contract-only handlers.
-emit codex_no["display_name"] ++ " :: " ++ codex_no["feature_key"]
-emit joint_baby["display_name"] ++ " :: " ++ joint_baby["feature_key"]
-emit correpse["display_name"] ++ " :: " ++ correpse["feature_key"]
-emit allocate_purpose["display_name"] ++ " :: " ++ allocate_purpose["feature_key"]
-emit collillioi["display_name"] ++ " :: " ++ collillioi["feature_key"]
-emit aspdoi["display_name"] ++ " :: " ++ aspdoi["feature_key"]
-emit asjiop["display_name"] ++ " :: " ++ asjiop["feature_key"]
-emit alllll["display_name"] ++ " :: " ++ alllll["feature_key"]
-emit zabor["display_name"] ++ " :: " ++ zabor["feature_key"]
-emit vjinz["display_name"] ++ " :: " ++ vjinz["feature_key"]
-emit supreme_boy["display_name"] ++ " :: " ++ supreme_boy["feature_key"]
-emit chee_now["display_name"] ++ " :: " ++ chee_now["feature_key"]
-emit humble_bumble["display_name"] ++ " :: " ++ humble_bumble["feature_key"]
-emit hub2["display_name"] ++ " :: " ++ hub2["feature_key"]
-emit kloz["display_name"] ++ " :: " ++ kloz["feature_key"]
-emit co["display_name"] ++ " :: " ++ co["feature_key"]
-emit cripplebo["display_name"] ++ " :: " ++ cripplebo["feature_key"]
-emit ripplecripple["display_name"] ++ " :: " ++ ripplecripple["feature_key"]
-emit secator["display_name"] ++ " :: " ++ secator["feature_key"]
-emit pollatia["display_name"] ++ " :: " ++ pollatia["feature_key"]
+# Calls exported Reaper helpers and prints their stable public operation keys.
+emit codex_no["display_name"] ++ " :: " ++ codex_no["operation_key"](0)
+emit joint_baby["display_name"] ++ " :: " ++ joint_baby["operation_key"](0)
+emit correpse["display_name"] ++ " :: " ++ correpse["operation_key"](0)
+emit allocate_purpose["display_name"] ++ " :: " ++ allocate_purpose["operation_key"](0)
+emit collillioi["display_name"] ++ " :: " ++ collillioi["operation_key"](0)
+emit aspdoi["display_name"] ++ " :: " ++ aspdoi["operation_key"](0)
+emit asjiop["display_name"] ++ " :: " ++ asjiop["operation_key"](0)
+emit alllll["display_name"] ++ " :: " ++ alllll["operation_key"](0)
+emit zabor["display_name"] ++ " :: " ++ zabor["operation_key"](0)
+emit vjinz["display_name"] ++ " :: " ++ vjinz["operation_key"](0)
+emit supreme_boy["display_name"] ++ " :: " ++ supreme_boy["operation_key"](0)
+emit chee_now["display_name"] ++ " :: " ++ chee_now["operation_key"](0)
+emit humble_bumble["display_name"] ++ " :: " ++ humble_bumble["operation_key"](0)
+emit hub2["display_name"] ++ " :: " ++ hub2["operation_key"](0)
+emit kloz["display_name"] ++ " :: " ++ kloz["operation_key"](0)
+emit co["display_name"] ++ " :: " ++ co["operation_key"](0)
+emit cripplebo["display_name"] ++ " :: " ++ cripplebo["operation_key"](0)
+emit ripplecripple["display_name"] ++ " :: " ++ ripplecripple["operation_key"](0)
+emit secator["display_name"] ++ " :: " ++ secator["operation_key"](0)
+emit pollatia["display_name"] ++ " :: " ++ pollatia["operation_key"](0)

@@ -1,9 +1,17 @@
-# Reaper framework metadata facade.
-# Operation declarations live in language/frameworks.v1.json.
+# Reaper framework metadata and source-level helper functions.
+# Operation contracts: language/frameworks.v1.json
 
 export make framework_id := "zabor"
 export make display_name := "Zabor"
 export make feature_key := "RPR-FWK-009"
-export make operation_keys := ["RPR-FWK-009-F01, "RPR-FWK-009-F02, "RPR-FWK-009-F03, "RPR-FWK-009-F04, "RPR-FWK-009-F05, "RPR-FWK-009-F06]
+export make operation_keys := ["RPR-FWK-009-F01", "RPR-FWK-009-F02", "RPR-FWK-009-F03", "RPR-FWK-009-F04", "RPR-FWK-009-F05", "RPR-FWK-009-F06"]
 export make maturity := "contract-only"
 export make native_registry := "reaper.framework-cabi.v1"
+
+export craft operation_key(index) {
+    yield operation_keys[index]
+}
+
+export craft framework_manifest() {
+    yield [framework_id, display_name, feature_key, operation_keys, maturity]
+}

@@ -1,9 +1,17 @@
-# Reaper framework metadata facade.
-# Operation declarations live in language/frameworks.v1.json.
+# Reaper framework metadata and source-level helper functions.
+# Operation contracts: language/frameworks.v1.json
 
-export make framework_id := "humble-bumble"
+export make framework_id := "humble_bumble"
 export make display_name := "HumbleBumble"
 export make feature_key := "RPR-FWK-013"
-export make operation_keys := ["RPR-FWK-013-F01, "RPR-FWK-013-F02, "RPR-FWK-013-F03, "RPR-FWK-013-F04, "RPR-FWK-013-F05, "RPR-FWK-013-F06]
+export make operation_keys := ["RPR-FWK-013-F01", "RPR-FWK-013-F02", "RPR-FWK-013-F03", "RPR-FWK-013-F04", "RPR-FWK-013-F05", "RPR-FWK-013-F06"]
 export make maturity := "contract-only"
 export make native_registry := "reaper.framework-cabi.v1"
+
+export craft operation_key(index) {
+    yield operation_keys[index]
+}
+
+export craft framework_manifest() {
+    yield [framework_id, display_name, feature_key, operation_keys, maturity]
+}
