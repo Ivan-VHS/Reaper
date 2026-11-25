@@ -6,7 +6,7 @@
 
 ## Purpose
 
-Reaper exposes a capability-gated host dispatch boundary. A trusted adapter may be supplied by DuckOS, another host OS, a simulator or a reviewed runtime. Reaper does not issue raw syscalls, map physical memory, load drivers or elevate privilege through this API. The C17 implementation lives in include/reaper/system.h and src/system.c.
+Reaper exposes a capability-gated host dispatch boundary. A trusted adapter may be supplied by DAK, another host OS, a simulator or a reviewed runtime. Reaper does not issue raw syscalls, map physical memory, load drivers or elevate privilege through this API. The C17 implementation lives in include/reaper/system.h and src/system.c.
 
 ## Operation catalogue
 
@@ -69,7 +69,7 @@ Native System Runtime tests cover catalogue lookup, ABI/version/size checks, cap
 
 ## Adoption gates
 
-- DuckOS: implement IPC and policy-enforcing adapters over real kernel services; derive sender identity from kernel task state; keep display administration, global input, session administration and GPU reset off by default.
+- DAK: implement IPC and policy-enforcing adapters over real kernel services; derive sender identity from kernel task state; keep display administration, global input, session administration and GPU reset off by default.
 - Pytyliki and OPlague: request only window/shell capabilities needed by their native utility panels; keep hardware inventory, driver and package evidence read-only.
 - VentuSample: use window, compositor-surface and focused-input services only; audio-device access is separate.
 
