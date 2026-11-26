@@ -153,3 +153,149 @@ export craft package_dependency_closure(name, packages, visited) {
     }
     yield [true, closure]
 }
+
+
+# Package selection, registry audits and dependency change impact.
+export craft package_find_all(packages, package_name) {
+    vary matches := []
+    vary index := 0
+    loop while index < size(packages) {
+        when size(packages[index]) == 4 and packages[index][0] == package_name {
+            change matches := push(matches, packages[index])
+        }
+        change index := index + 1
+    }
+    yield matches
+}
+
+export craft package_select_version(packages, package_name, minimum, maximum) {
+    vary selected := []
+    vary found := false
+    vary index := 0
+    loop while index < size(packages) {
+        when packages[index][0] == package_name {
+            make accepted := package_version_satisfies(packages[index][1], minimum, maximum)
+            when accepted[0] and accepted[1] {
+                when not found {
+                    change selected := packages[index]
+                    change found := true
+                } otherwise {
+                    make newer := package_version_compare(packages[index][1], selected[1])
+                    when newer[0] and newer[1] > 0 { change selected := packages[index] }
+                }
+            }
+        }
+        change index := index + 1
+    }
+    when found { yield [true, selected] }
+    yield [false, "no_compatible_package_version"]
+}
+
+export craft package_registry_audit(registry) {
+    vary issues := []
+    vary index := 0
+    loop while index < size(registry) {
+        when size(registry[index]) != 2 {
+            change issues := push(issues, [index, "invalid_registry_entry"])
+        } otherwise {
+            when not package_valid(registry[index][0]) {
+                change issues := push(issues, [index, "invalid_package"])
+            }
+            when not package_provenance_valid(registry[index][1]) {
+                change issues := push(issues, [index, "invalid_provenance"])
+            }
+        }
+        change index := index + 1
+    }
+    yield [size(issues) == 0, issues]
+}
+
+export craft package_registry_candidates(registry, package_name) {
+    vary candidates := []
+    vary index := 0
+    loop while index < size(registry) {
+        when size(registry[index]) == 2 and registry[index][0][0] == package_name {
+            change candidates := push(candidates, registry[index])
+        }
+        change index := index + 1
+    }
+    yield candidates
+}
+
+export craft package_remove_impact(packages, package_name) {
+    make target := package_find(packages, package_name)
+    when not target[0] { yield [false, "package_not_found"] }
+    vary dependents := []
+    vary index := 0
+    loop while index < size(packages) {
+        vary dependency_index := 0
+        loop while dependency_index < size(packages[index][2]) {
+            when packages[index][2][dependency_index][0] == package_name {
+                change dependents := push(dependents, packages[index][0])
+            }
+            change dependency_index := dependency_index + 1
+        }
+        change index := index + 1
+    }
+    yield [true, dependents]
+}
+
+export craft package_replace_version(packages, package_name, new_version) {
+    when not package_version_valid(new_version) { yield [false, "invalid_version"] }
+    vary result := []
+    vary replaced := false
+    vary index := 0
+    loop while index < size(packages) {
+        when packages[index][0] == package_name {
+            change result := push(result, [
+                packages[index][0], new_version, packages[index][2], packages[index][3]
+            ])
+            change replaced := true
+        } otherwise {
+            change result := push(result, packages[index])
+        }
+        change index := index + 1
+    }
+    when not replaced { yield [false, "package_not_found"] }
+    yield [true, result]
+}
+
+export craft package_lock_diff(before, after) {
+    when size(before) != 2 or size(after) != 2 { yield [false, "invalid_lockfile"] }
+    vary added := []
+    vary removed := []
+    vary changed := []
+    vary index := 0
+    loop while index < size(after[1]) {
+        make old_index := 0
+        vary found := false
+        loop while old_index < size(before[1]) {
+            when before[1][old_index][0] == after[1][index][0] {
+                change found := true
+                when before[1][old_index] != after[1][index] {
+                    change changed := push(changed, [before[1][old_index], after[1][index]])
+                }
+            }
+            change old_index := old_index + 1
+        }
+        when not found { change added := push(added, after[1][index]) }
+        change index := index + 1
+    }
+    vary old_index := 0
+    loop while old_index < size(before[1]) {
+        when not package_lock_has(after[1], before[1][old_index][0]) {
+            change removed := push(removed, before[1][old_index])
+        }
+        change old_index := old_index + 1
+    }
+    yield [true, added, removed, changed]
+}
+
+export craft package_lock_has(entries, name) {
+    vary index := 0
+    loop while index < size(entries) {
+        when entries[index][0] == name { yield true }
+        change index := index + 1
+    }
+    yield false
+}
