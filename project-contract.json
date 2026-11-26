@@ -125,9 +125,10 @@
     {
       "id": "composition.rforge-framework-collection",
       "status": "partial",
-      "summary": "Twenty independently importable Reaper framework source modules with an 80-assertion Reaper smoke program; reference-runtime verification is pending and the current native AOT backend does not support module imports/exports or collection values.",
+      "summary": "Twenty independently importable Reaper framework source modules with an 84-assertion Reaper smoke program; reference-runtime verification is pending and the current native AOT backend does not support module imports/exports or collection values.",
       "evidence": [
         "frameworks/rforge/",
+        "frameworks/rforge/all.rpr",
         "frameworks/rforge/README.md",
         "examples/rforge/frameworks.v1.json",
         "schemas/rforge.framework-catalog.v1.schema.json",
