@@ -16,7 +16,7 @@ _OPCODES = {
         "CONST", "LOAD", "DEFINE", "ASSIGN", "EMIT", "RETURN", "MAKE_FUNCTION",
         "JUMP_IF_FALSE", "JUMP", "ENTER_SCOPE", "EXIT_SCOPE", "ITER_INIT",
         "ITER_NEXT", "ITER_END", "POP", "BUILD_LIST", "INDEX", "UNARY",
-        "CALL", "PIPE_CALL", "BINARY", "AND_JUMP", "OR_JUMP", "IMPORT", "MAZA", "EXPORT",
+        "CALL", "PIPE_CALL", "BINARY", "AND_JUMP", "OR_JUMP", "IMPORT", "EXPORT", "MAZA",
     ), start=1)
 }
 _OPCODE_NAMES = {value: key for key, value in _OPCODES.items()}
