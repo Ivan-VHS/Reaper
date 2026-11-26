@@ -21,6 +21,7 @@ This hub groups related specifications and implementation references. The linked
 - [FOUNDATIONAL FRAMEWORKS 36–40](../FOUNDATIONAL_FRAMEWORKS_36_40.md) — compiler context, type model, paradigm and concept relations.
 - [FOUNDATIONAL FRAMEWORKS 41–45](../FOUNDATIONAL_FRAMEWORKS_41_45.md) — engineering process, system/subsystem contracts and module graph.
 - [FOUNDATIONAL FRAMEWORKS 46–50](../FOUNDATIONAL_FRAMEWORKS_46_50.md) — component/block/node graphs, versioned interfaces and protocols.
+- [FOUNDATIONAL FRAMEWORKS 51–55](../FOUNDATIONAL_FRAMEWORKS_51_55.md) — normative standards, policies, schema contracts and coverage evidence.
 - [ATOMIC QUANTUM 133](../ATOMIC_QUANTUM_133.md)
 - [CLINICAL SYSTEMS CSR120](../CLINICAL_SYSTEMS_CSR120.md)
 - [CONSTITUTION 666 PROFILE](../CONSTITUTION_666_PROFILE.md)

@@ -17,6 +17,7 @@ Start with the [project README](../README.md) for installation, first commands a
 - [Foundational frameworks 36–40](FOUNDATIONAL_FRAMEWORKS_36_40.md) — source context, typed value models, patterns, paradigms and concept graph.
 - [Foundational frameworks 41–45](FOUNDATIONAL_FRAMEWORKS_41_45.md) — engineering methodology, approaches, system manifests, subsystems and .rpr module contracts.
 - [Foundational frameworks 46–50](FOUNDATIONAL_FRAMEWORKS_46_50.md) — components, blocks, graph nodes, interfaces and transport protocols.
+- [Foundational frameworks 51–55](FOUNDATIONAL_FRAMEWORKS_51_55.md) — standards, policy controls, specifications, schemas and coverage matrices.
 - [Hardware language track](HARDWARE_LANGUAGE.md)
 - [System Runtime ABI v1](SYSTEM_RUNTIME_ABI_V1.md)
 - [DABI64 Desktop Host v1](DABI64_DESKTOP_HOST_V1.md)

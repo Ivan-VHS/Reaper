@@ -1,0 +1,8 @@
+import "../frameworks/foundation_51_55.rpr" as governance
+
+emit "All fifty-five frameworks valid = " ++ text(governance["foundation_validate_catalog_55"]())
+emit "Normative rules = " ++ text(governance["standard_normative_rules"]())
+emit "Exception shape valid = " ++ text(governance["regulation_validate_exception"](["policy.native-ffi-opt-in", "reviewed trusted library", "security-owner", 1900000000, "proposed"]))
+emit "Specification valid = " ++ text(governance["specification_validate_descriptor"](["spec.runtime.v1", 1, "bounded runtime", [["R-1", "Requests are bounded", "must"]], [["R-1", "tests/test_runtime_platform.py"]]]))
+emit "Schema payload valid = " ++ text(governance["schema_validate_payload"](["sample.v1", 1, 0, [["name", "text", true]], false], ["Reaper"]))
+emit "Matrix coverage = " ++ text(governance["matrix_coverage_summary"](["lexer", "parser"], ["syntax", "diagnostics"], [["lexer", "syntax", "covered", "tests/test_lexer.py"], ["lexer", "diagnostics", "partial", "docs/errors/DIAGNOSTICS.md"], ["parser", "syntax", "covered", "tests/test_parser.py"], ["parser", "diagnostics", "missing", ""]]))
