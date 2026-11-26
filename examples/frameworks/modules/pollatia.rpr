@@ -87,6 +87,7 @@ export craft metrics_export(snapshot, policy) {
             change selected := push(selected, counter)
         }
     }
+    when not fc["fc_nonnegative"](policy[1]) { yield [false, [], "export-item-limit-invalid"] }
     when size(selected) > policy[1] { yield [false, [], "export-item-limit"] }
     yield [true, ["reaper.metrics-export.v1", selected], "aggregate-export"]
 }
