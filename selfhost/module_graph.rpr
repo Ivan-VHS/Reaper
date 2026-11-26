@@ -64,10 +64,19 @@ craft module_graph_validate(graph) {
     yield ["OK", size(graph)]
 }
 
+craft module_resolved_contains(resolved, requested) {
+    vary index := 0
+    loop while index < size(resolved) {
+        when resolved[index] == requested { yield true }
+        change index := index + 1
+    }
+    yield false
+}
+
 craft module_dependencies_resolved(dependencies, resolved) {
     vary index := 0
     loop while index < size(dependencies) {
-        when not sequence_contains(resolved, dependencies[index]) { yield false }
+        when not module_resolved_contains(resolved, dependencies[index]) { yield false }
         change index := index + 1
     }
     yield true
@@ -83,7 +92,7 @@ craft module_graph_toposort(graph) {
         vary index := 0
         loop while index < size(graph) {
             make name := graph[index][0]
-            when not sequence_contains(ordered, name) and module_dependencies_resolved(graph[index][1], ordered) {
+            when not module_resolved_contains(ordered, name) and module_dependencies_resolved(graph[index][1], ordered) {
                 change ordered := push(ordered, name)
                 change progress := true
             }
