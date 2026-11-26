@@ -6,15 +6,17 @@ from pathlib import Path
 from reaper import Interpreter
 
 
-class PlagueEvolutionTests(unittest.TestCase):
-    def test_reaper_native_policy_smoke(self) -> None:
-        program = Path(__file__).resolve().parents[1] / "examples" / "plague" / "evolution_smoke.rpr"
+class PlagueFoundationTests(unittest.TestCase):
+    def test_reaper_policy_and_component_registry_smoke(self) -> None:
+        program = Path(__file__).resolve().parents[1] / "plague" / "examples" / "policy_smoke.rpr"
         output: list[str] = []
         Interpreter(output=output.append).run(
             program.read_text(encoding="utf-8"),
             str(program),
         )
-        self.assertEqual(output, ["PLAGUE_V1_OK"])
+        self.assertIn("PASS default mode is observe", output)
+        self.assertIn("PASS registry contains ten components", output)
+        self.assertIn("PASS merge is denied", output)
 
 
 if __name__ == "__main__":
