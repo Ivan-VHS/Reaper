@@ -105,9 +105,9 @@ static int valid_hex(const char *value, size_t expected_length) {
     size_t index;
     if (value == NULL) return 0;
     for (index = 0u; index < expected_length; ++index) {
-        if (value[index] == '\\0' || !isxdigit((unsigned char)value[index])) return 0;
+        if (value[index] == 0 || !isxdigit((unsigned char)value[index])) return 0;
     }
-    return value[expected_length] == '\\0';
+    return value[expected_length] == 0;
 }
 
 static int valid_revision(const ReaperEvolutionApplyRequest *request) {
@@ -189,15 +189,6 @@ static int request_digest(const ReaperEvolutionApplyRequest *request, char outpu
     reaper_sha256_final(&context, digest);
     reaper_sha256_hex(digest, output);
     return 1;
-}
-
-static void audit_event(const ReaperEvolutionApplyHost *host,
-                        const ReaperEvolutionApplyRequest *request,
-                        const char *event, const char *path,
-                        const char *details) {
-    (void)host->audit_append(host->context, event, request->request_id,
-        request->repository_id, request->target_branch, request->base_revision,
-        path != NULL ? path : "", "", details != NULL ? details : "");
 }
 
 static void cleanup_committed_backups(const ReaperEvolutionApplyHost *host,
