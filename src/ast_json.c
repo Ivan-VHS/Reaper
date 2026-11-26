@@ -55,7 +55,10 @@ int reaper_ast_write_json(const ReaperAst *ast, FILE *output) {
         if (n->right == REAPER_AST_NO_NODE) {
             if (fputs(",\"right\":null", output) == EOF) return 0;
         } else if (fprintf(output, ",\"right\":%u", n->right) < 0) return 0;
-        if (fprintf(output, ",\"line\":%zu,\"column\":%zu}", n->line, n->column) < 0) return 0;
+        if (fprintf(output, ",\"line\":%zu,\"column\":%zu,\"source_id\":%u,\"byte_start\":%llu,\"byte_end\":%llu}",
+                    n->line, n->column, n->source_id,
+                    (unsigned long long)n->byte_start,
+                    (unsigned long long)n->byte_end) < 0) return 0;
     }
     return fputs("]}\n", output) != EOF && !ferror(output);
 }
