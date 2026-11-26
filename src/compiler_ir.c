@@ -74,11 +74,17 @@ static int is_text_type(ReaperCompilerIrType type) {
            type == REAPER_COMPILER_IR_TYPE_FONT;
 }
 
+static int is_numeric_type(ReaperCompilerIrType type) {
+    return type == REAPER_COMPILER_IR_TYPE_I64 ||
+           type == REAPER_COMPILER_IR_TYPE_F64;
+}
+
 static int valid_value(const ReaperCompilerIrNode *node) {
     if (node->type <= REAPER_COMPILER_IR_TYPE_INVALID ||
         node->type > REAPER_COMPILER_IR_TYPE_RATIO) return 0;
     if (is_text_type(node->type)) {
-        if (!bounded_payload(node->text, REAPER_COMPILER_IR_TEXT_MAX, 0)) return 0;
+        if (!bounded_payload(node->text, REAPER_COMPILER_IR_TEXT_MAX,
+                node->type == REAPER_COMPILER_IR_TYPE_TEXT)) return 0;
         if (node->type == REAPER_COMPILER_IR_TYPE_COLOR && !valid_color(node->text)) return 0;
     } else if (node->type == REAPER_COMPILER_IR_TYPE_F64 ||
                node->type == REAPER_COMPILER_IR_TYPE_LENGTH ||
@@ -130,14 +136,14 @@ static int valid_node(const ReaperCompilerIrNode *node,
             return valid_operator(node->key, 1) &&
                 earlier_ref(node->lhs, index) &&
                 node->rhs == REAPER_COMPILER_IR_NO_VALUE &&
-                nodes[node->lhs].type == REAPER_COMPILER_IR_TYPE_I64 &&
-                node->type == REAPER_COMPILER_IR_TYPE_I64;
+                is_numeric_type(nodes[node->lhs].type) &&
+                node->type == nodes[node->lhs].type;
         case REAPER_COMPILER_IR_HIR_BINARY:
             return valid_operator(node->key, 0) &&
                 earlier_ref(node->lhs, index) && earlier_ref(node->rhs, index) &&
-                nodes[node->lhs].type == REAPER_COMPILER_IR_TYPE_I64 &&
-                nodes[node->rhs].type == REAPER_COMPILER_IR_TYPE_I64 &&
-                node->type == REAPER_COMPILER_IR_TYPE_I64;
+                is_numeric_type(nodes[node->lhs].type) &&
+                nodes[node->rhs].type == nodes[node->lhs].type &&
+                node->type == nodes[node->lhs].type;
         case REAPER_COMPILER_IR_HIR_CALL:
             return valid_key(node->key) &&
                 (node->lhs == REAPER_COMPILER_IR_NO_VALUE || earlier_ref(node->lhs, index)) &&
@@ -195,14 +201,14 @@ static int valid_node(const ReaperCompilerIrNode *node,
         case REAPER_COMPILER_IR_MIR_UNARY:
             return valid_operator(node->key, 1) && earlier_ref(node->lhs, index) &&
                 node->rhs == REAPER_COMPILER_IR_NO_VALUE &&
-                nodes[node->lhs].type == REAPER_COMPILER_IR_TYPE_I64 &&
-                node->type == REAPER_COMPILER_IR_TYPE_I64;
+                is_numeric_type(nodes[node->lhs].type) &&
+                node->type == nodes[node->lhs].type;
         case REAPER_COMPILER_IR_MIR_ARITHMETIC:
             return valid_operator(node->key, 0) &&
                 earlier_ref(node->lhs, index) && earlier_ref(node->rhs, index) &&
-                nodes[node->lhs].type == REAPER_COMPILER_IR_TYPE_I64 &&
-                nodes[node->rhs].type == REAPER_COMPILER_IR_TYPE_I64 &&
-                node->type == REAPER_COMPILER_IR_TYPE_I64;
+                is_numeric_type(nodes[node->lhs].type) &&
+                nodes[node->rhs].type == nodes[node->lhs].type &&
+                node->type == nodes[node->lhs].type;
         case REAPER_COMPILER_IR_MIR_CALL:
             return valid_key(node->key) && valid_value(node) &&
                 (node->lhs == REAPER_COMPILER_IR_NO_VALUE || earlier_ref(node->lhs, index)) &&
@@ -231,14 +237,14 @@ static int valid_node(const ReaperCompilerIrNode *node,
         case REAPER_COMPILER_IR_LIR_NATIVE_UNARY:
             return valid_operator(node->key, 1) && earlier_ref(node->lhs, index) &&
                 node->rhs == REAPER_COMPILER_IR_NO_VALUE &&
-                nodes[node->lhs].type == REAPER_COMPILER_IR_TYPE_I64 &&
-                node->type == REAPER_COMPILER_IR_TYPE_I64;
+                is_numeric_type(nodes[node->lhs].type) &&
+                node->type == nodes[node->lhs].type;
         case REAPER_COMPILER_IR_LIR_NATIVE_ARITHMETIC:
             return valid_operator(node->key, 0) &&
                 earlier_ref(node->lhs, index) && earlier_ref(node->rhs, index) &&
-                nodes[node->lhs].type == REAPER_COMPILER_IR_TYPE_I64 &&
-                nodes[node->rhs].type == REAPER_COMPILER_IR_TYPE_I64 &&
-                node->type == REAPER_COMPILER_IR_TYPE_I64;
+                is_numeric_type(nodes[node->lhs].type) &&
+                nodes[node->rhs].type == nodes[node->lhs].type &&
+                node->type == nodes[node->lhs].type;
         case REAPER_COMPILER_IR_LIR_NATIVE_CALL:
             return valid_key(node->key) && valid_value(node) &&
                 (node->lhs == REAPER_COMPILER_IR_NO_VALUE || earlier_ref(node->lhs, index)) &&
