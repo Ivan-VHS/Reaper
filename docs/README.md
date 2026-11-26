@@ -5,14 +5,21 @@ Start with the [project README](../README.md) for installation, first commands a
 ## Key pages
 
 - [Features and maturity](FEATURES.md)
+- [Psychoporter 666 function categories](FUNCTION_CATEGORIES_666.md)
 - [Architecture](ARCHITECTURE.md)
+- [Architecture foundation: 66 concepts](REAPER_ARCHITECTURE_FOUNDATION_66.md) — native C17 registry, nine architectural layers, dependency graph validation and deterministic ordering.
 - [Hardware language track](HARDWARE_LANGUAGE.md)
+- [System Runtime ABI v1](SYSTEM_RUNTIME_ABI_V1.md)
+- [DABI64 Desktop Host v1](DABI64_DESKTOP_HOST_V1.md)
 - [Implementation roadmap](IMPLEMENTATION_ROADMAP.md)
 - [Studio and IDE](REAPER_IDE.md)
+- [Mora archive contracts](MORA_ARCHIVE_CONTRACTS.md) — executable `.rpr` validators, record layouts, provenance rules and offline regression fixture.
+- [NEXUS federation profile](NEXUS_FEDERATION_PROFILE_V1.md) — Reaper ownership, peer contracts and compatibility boundaries.
 
 ## Browse by topic
 
 - [Language and toolchain](clusters/language-toolchain.md)
+- [Psychoporter 666 function categories](FUNCTION_CATEGORIES_666.md)
 - [Architecture and systems](clusters/architecture-systems.md)
 - [Studio and IDE](clusters/studio-ide-ui.md)
 - [Quality and evidence](clusters/quality-evidence.md)
@@ -22,9 +29,10 @@ Start with the [project README](../README.md) for installation, first commands a
 ## Shared rules
 
 - [Psychoporter 666 coding and human-layer standard](PSYCHOPORTER_666.md)
-
 - [Documentation standard](UNIFIED_DOCUMENTATION_STANDARD.md)
 - [Engineering evolution framework](ENGINEERING_EVOLUTION_FRAMEWORK.md)
 - [Repository evolution directives](REPOSITORY_EVOLUTION_DIRECTIVES.md)
 
-Treat the Python reference runtime, native compiler track and privileged hardware work as separate maturity levels. Source, tests and CI are the evidence for implemented behavior.
+Treat the Python reference runtime, native compiler track, System Runtime host ABI and privileged hardware work as separate maturity levels. Source, tests and CI are the evidence for implemented behavior.
+
+- [OPlague GPU telemetry v1 ingestion](OPLAGE_GPU_TELEMETRY.md)
