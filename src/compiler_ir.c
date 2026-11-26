@@ -452,14 +452,19 @@ int reaper_compiler_ir_emit_c17(const ReaperCompilerIrModule *lir,
         const ReaperCompilerIrNode *node = &lir->nodes[index];
         uint64_t number_bits = UINT64_C(0);
         long long integer_value = 0;
-        if (node->type == REAPER_COMPILER_IR_TYPE_F64 ||
-            node->type == REAPER_COMPILER_IR_TYPE_LENGTH ||
-            node->type == REAPER_COMPILER_IR_TYPE_RATIO) {
+        const int carries_value =
+            node->opcode == REAPER_COMPILER_IR_LIR_NATIVE_CONSTANT ||
+            node->opcode == REAPER_COMPILER_IR_LIR_NATIVE_PROPERTY;
+        if (carries_value &&
+            (node->type == REAPER_COMPILER_IR_TYPE_F64 ||
+             node->type == REAPER_COMPILER_IR_TYPE_LENGTH ||
+             node->type == REAPER_COMPILER_IR_TYPE_RATIO)) {
             memcpy(&number_bits, &node->number, sizeof number_bits);
         }
-        if (node->type == REAPER_COMPILER_IR_TYPE_I64 ||
-            node->type == REAPER_COMPILER_IR_TYPE_BOOL ||
-            node->type == REAPER_COMPILER_IR_TYPE_DURATION) {
+        if (carries_value &&
+            (node->type == REAPER_COMPILER_IR_TYPE_I64 ||
+             node->type == REAPER_COMPILER_IR_TYPE_BOOL ||
+             node->type == REAPER_COMPILER_IR_TYPE_DURATION)) {
             integer_value = (long long)node->integer;
         }
         if (!appendf(output, output_capacity, &length, error, "    {")) return 0;
