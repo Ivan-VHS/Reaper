@@ -90,6 +90,8 @@ export craft anchor_catalog() {
         ["anchor.reaper.system.abi", "interface", "system-runtime", 1, "docs/SYSTEM_RUNTIME_ABI_V1.md", "stable"],
         ["anchor.reaper.dabi64.desktop", "interface", "desktop-host", 1, "docs/DABI64_DESKTOP_HOST_V1.md", "stable"],
         ["anchor.reaper.module-loader", "module", "module-loader", 1, "reaper/modules.py", "stable"],
+        ["anchor.reaper.legacy-capability-catalog", "capability", "capabilities", 1, "docs/NATIVE_CAPABILITY_SUITE.md", "deprecated"],
+        ["anchor.reaper.capability.v2", "capability", "capabilities", 2, "docs/NATIVE_CAPABILITY_SUITE.md", "canonical"],
         ["anchor.reaper.typed-structs", "capability", "typed-records", 1, "docs/HARDWARE_LANGUAGE.md", "experimental"]
     ]
 }
