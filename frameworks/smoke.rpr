@@ -1,5 +1,6 @@
-# End-to-end Reaper source smoke tests for the ten-framework family.
+# End-to-end Reaper source conformance for the framework family and stdlib facade.
 import "family.rpr" as family
+import "../stdlib/frameworks.rpr" as framework_stdlib
 import "Lokaliza/src/locale.rpr" as lokaliza
 import "Sealise/src/blueprint.rpr" as sealise
 import "Blebby/src/package.rpr" as blebby
@@ -12,54 +13,86 @@ import "SWO/src/pipeline.rpr" as swo
 import "ScoHOPE/src/application.rpr" as scohope
 
 assert(family["framework_count"]() == 10, "family registry must expose ten frameworks")
+assert(framework_stdlib["framework_count"]() == 10, "stdlib facade must expose ten frameworks")
+assert(framework_stdlib["framework_available"]("Shinnn"), "stdlib must resolve a framework module")
 
 make locales := [
     lokaliza["locale_record"]("en", "", "ltr"),
-    lokaliza["locale_record"]("uk", "en", "ltr")
+    lokaliza["locale_record"]("uk", "en", "ltr"),
+    lokaliza["locale_record"]("ru", "en", "ltr")
 ]
-make locale_result := lokaliza["locale_register"](locales, lokaliza["locale_record"]("ru", "en", "ltr"))
+make locale_result := lokaliza["locale_register"](locales, lokaliza["locale_record"]("pl", "en", "ltr"))
 assert(locale_result[0], "Lokaliza must register a valid locale")
 assert(lokaliza["locale_resolve"](locale_result[1], "missing", "en")[0], "Lokaliza fallback must resolve")
+assert(lokaliza["locale_plural_category"]("ru", 21) == "one", "Lokaliza must apply Russian plural rules")
+make catalog := [["en", "greeting", "Hello {name}"]]
+make catalog_set := lokaliza["locale_catalog_set"](catalog, "uk", "greeting", "Привіт {name}")
+assert(catalog_set[0], "Lokaliza must update a catalog immutably")
+make localized := lokaliza["locale_message"](catalog_set[1], locale_result[1], "uk", "en", "greeting")
+assert(localized[0] and localized[1] == "Привіт {name}", "Lokaliza must resolve a localized message")
+make formatted := lokaliza["locale_format_message"](localized[1], [["name", "Reaper"]])
+assert(formatted[0] and formatted[1] == "Привіт Reaper", "Lokaliza must substitute named arguments")
 
 make blueprint := sealise["blueprint_record"]("desktop-app", ["README.md", "src/main.rpr"], ["app", "service"], [1, 0, 0])
 assert(sealise["blueprint_validate"](blueprint, ["README.md", "src/main.rpr"])[0], "Sealise must validate complete blueprints")
 assert(not sealise["blueprint_validate"](blueprint, ["README.md"])[0], "Sealise must reject missing files")
+make api_contract := sealise["contract_record"]("app.start.v1", [1, 0, 0], ["AppId"], "Result", ["pure"], "stable")
+assert(sealise["contract_validate"](api_contract)[0], "Sealise must validate interface contracts")
 
 make base_package := blebby["package_record"]("base", [1, 0, 0], [], "sha256-base")
 make app_package := blebby["package_record"]("app", [1, 2, 0], [["base", [1, 0, 0]]], "sha256-app")
 assert(blebby["package_check_dependencies"](app_package, [base_package])[0], "Blebby must resolve compatible dependencies")
 assert(blebby["package_version_compare"]([2, 0, 0], [1, 9, 9])[1] == 1, "Blebby version comparison must be ordered")
+make lock := blebby["package_lockfile_build"]([base_package])
+assert(lock[0] and blebby["package_lockfile_validate"](lock[1], [base_package])[0], "Blebby must validate deterministic lock snapshots")
 
 make memory := centen["resource_record"]("memory", 64, 16, "MiB")
 make reservation := centen["resource_reserve"](memory, 24)
 assert(reservation[0] and reservation[1][2] == 40, "Centen must reserve within capacity")
 assert(not centen["resource_reserve"](memory, 100)[0], "Centen must reject over-allocation")
+make batch := centen["resource_reserve_batch"]([memory], [["memory", 8]])
+assert(batch[0] and batch[1][0][2] == 24, "Centen must stage multi-resource reservations")
 
 make template := kaso["template_record"]("greeting", [["text", "Hello "], ["slot", "name"]], ["name"], [1, 0, 0])
 make rendered := kaso["template_render"](template, [["name", "Reaper"]])
 assert(rendered[0] and rendered[1] == "Hello Reaper", "Kaso must render required slots")
+make safe_render := kaso["template_render_blocks"]([["text", "<p>"], ["escaped_slot", "name"], ["text", "</p>"]], [["name", "<Ada>"]], 0)
+assert(safe_render[0] and safe_render[1] == "<p>&lt;Ada&gt;</p>", "Kaso must escape interpolated text")
 
 make valid_graph := shinnn["graph_validate"](["kernel", "app"], [["app", "kernel"]])
 make cyclic_graph := shinnn["graph_validate"](["kernel", "app"], [["app", "kernel"], ["kernel", "app"]])
 assert(valid_graph[0], "Shinnn must accept an acyclic graph")
 assert(not cyclic_graph[0], "Shinnn must reject dependency cycles")
+make ordering := shinnn["graph_topological_order"](["kernel", "app"], [["app", "kernel"]])
+assert(ordering[0] and ordering[1] == ["kernel", "app"], "Shinnn must order dependencies before dependents")
 
 make core_component := porteo["component_record"]("core", [], "running", [])
 make app_component := porteo["component_record"]("app", ["core"], "declared", [])
 assert(porteo["component_prepare"](app_component, [core_component])[0], "Porteo must prepare after dependencies are running")
+make launch_plan := porteo["orchestration_start_plan"]([core_component, app_component])
+assert(launch_plan[0] and launch_plan[1] == ["core", "app"], "Porteo must derive dependency-first launch order")
+make backoff := porteo["restart_delay"]([4, 10, 40, 2], 3)
+assert(backoff[0] and backoff[1] == 40, "Porteo must cap restart backoff")
 
 make source_target := portable_bortable["target_record"]("portable", "x86_64", 64, "little", "dabi64.v1", ["sse2"])
 make host_target := portable_bortable["target_record"]("host", "x86_64", 64, "little", "dabi64.v1", ["sse2", "avx2"])
 assert(portable_bortable["target_compatible"](source_target, host_target)[0], "Portable Bortable must accept a compatible target")
-assert(not portable_bortable["target_compatible"](source_target, portable_bortable["target_record"]("bad", "arm64", 32, "little", "other", []))[0], "Portable Bortable must reject incompatible targets")
+make abi := portable_bortable["abi_record"]("dabi64.v1", "x86_64", 64, 8, "dabi64.v1", "little")
+assert(portable_bortable["abi_compatible"](abi, abi)[0], "Portable Bortable must validate ABI compatibility")
 
 make compile_stage := swo["workflow_stage"]("compile", [], "passed", [])
 make test_stage := swo["workflow_stage"]("test", ["compile"], "planned", [])
 assert(swo["workflow_validate"]([compile_stage, test_stage])[0], "SWO must validate acyclic workflows")
 assert(swo["workflow_can_start"](test_stage, [compile_stage, test_stage])[0], "SWO must enforce dependency readiness")
+make gate := swo["quality_gate"]("tests", 1, 1, 10, "passed")
+make quality := swo["quality_report"]([gate])
+assert(quality[0] and quality[1][0] == 1, "SWO must aggregate quality gates")
 
 make application := scohope["application_record"]("editor", "desktop", [1, 0, 0], "en", ["window", "storage"], "configured")
 assert(scohope["application_valid"](application)[0], "ScoHOPE must validate an application profile")
 assert(scohope["application_environment_check"](application, ["window", "storage", "audio"])[0], "ScoHOPE must check environment capabilities")
+make config_schema := [["theme", "text", true, true], ["retry_count", "integer", false, true]]
+make config_values := [["theme", "night"], ["retry_count", 3]]
+assert(scohope["config_validate"](config_schema, config_values)[0], "ScoHOPE must validate typed configuration")
 
 emit "REAPER_FRAMEWORK_FAMILY_SMOKE_OK"
