@@ -356,11 +356,13 @@ Profiles are configurations of the same ДОМ implementation, not forks.
 
 | Profile | Intended use | Included surface |
 |---|---|---|
-| `core` | Minimal deterministic programs | Uu, Nonconcrete, Establish and the minimum execution contracts |
-| `standard` | Ordinary applications and editors | Core plus JLOM, poooVERTY, System Carriere and JennyFlash |
+| `core` | Minimal deterministic programs | Uu, Nonconcrete, poooVERTY, JLOM and Establish; no message bus or reactive graph unless selected |
+| `standard` | Ordinary applications and editors | Core plus System Carriere and JennyFlash |
 | `system` | DAK/system services | Standard plus explicitly granted host-service adapters and stricter resource policy |
 | `development` | Reaper Studio and debugging | Standard plus Jenny Flashing Boy and debug-only capabilities |
-| `embedded` | Constrained targets | Bounded subset chosen at build time; no dynamic loading unless target support is proven |
+| `embedded` | Constrained targets | A statically selected subset of core with fixed budgets; no dynamic loading unless target support is proven |
+
+Establish links only the implementations selected by the profile. It knows the full contract catalogue, but an unselected optional subsystem is not instantiated; a manifest that requires an unavailable subsystem is rejected before startup. JLOM and poooVERTY are part of core because every runtime instance needs managed execution and resource admission.
 
 A profile cannot silently add privileges. Feature absence is explicit and validated during Establish. Production builds must not include Jenny Flashing Boy unless the operator explicitly builds a development image.
 
