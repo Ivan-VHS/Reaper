@@ -83,3 +83,121 @@ export craft validate(options, rules) {
 
     yield [size(errors) == 0, resolved, errors]
 }
+
+export craft validate_shape(options) {
+    when kind(options) != "list" { yield [false, ["options-must-be-list"]] }
+    vary keys := []
+    vary errors := []
+    each option in options {
+        when kind(option) != "list" or size(option) != 2 {
+            change errors := push(errors, ["option-shape", option])
+        } otherwise {
+            when kind(option[0]) != "text" or size(option[0]) == 0 {
+                change errors := push(errors, ["option-key", option])
+            }
+            when not contains_key(keys, option[0]) {
+                change keys := push(keys, option[0])
+            } otherwise {
+                change errors := push(errors, ["duplicate-option-key", option[0]])
+            }
+        }
+    }
+    yield [size(errors) == 0, errors]
+}
+
+craft contains_key(keys, target) {
+    vary found := false
+    each key in keys {
+        when key == target { change found := true }
+    }
+    yield found
+}
+
+export craft remove(options, key) {
+    make checked := validate_shape(options)
+    when not checked[0] { yield [false, options, checked[1]] }
+    vary remaining := []
+    vary removed := false
+    each option in options {
+        when option[0] == key {
+            change removed := true
+        } otherwise {
+            change remaining := push(remaining, option)
+        }
+    }
+    yield [true, remaining, removed]
+}
+
+export craft select(options, requested_keys) {
+    make checked := validate_shape(options)
+    when not checked[0] { yield [false, [], checked[1]] }
+    when kind(requested_keys) != "list" { yield [false, [], ["keys-must-be-list"]] }
+    vary selected := []
+    each option in options {
+        when contains_key(requested_keys, option[0]) {
+            change selected := push(selected, option)
+        }
+    }
+    yield [true, selected, "selected"]
+}
+
+export craft unknown_keys(options, rules) {
+    make checked := validate_shape(options)
+    when not checked[0] { yield [false, [], checked[1]] }
+    vary known := []
+    each rule in rules {
+        when kind(rule) == "list" and size(rule) == 4 {
+            change known := push(known, rule[0])
+        }
+    }
+    vary unknown := []
+    each option in options {
+        when not contains_key(known, option[0]) {
+            change unknown := push(unknown, option[0])
+        }
+    }
+    yield [true, unknown, "checked"]
+}
+
+craft put_with_source(entries, key, value, source) {
+    vary result := []
+    vary inserted := false
+    each entry in entries {
+        when entry[0] == key {
+            when not inserted {
+                change result := push(result, [key, value, source])
+                change inserted := true
+            }
+        } otherwise {
+            change result := push(result, entry)
+        }
+    }
+    when not inserted { change result := push(result, [key, value, source]) }
+    yield result
+}
+
+craft apply_source_layer(entries, layer, source) {
+    vary result := entries
+    each option in layer {
+        when kind(option) == "list" and size(option) == 2 {
+            change result := put_with_source(result, option[0], option[1], source)
+        }
+    }
+    yield result
+}
+
+export craft resolve_with_sources(defaults, profile, workspace, request) {
+    make defaults_check := validate_shape(defaults)
+    make profile_check := validate_shape(profile)
+    make workspace_check := validate_shape(workspace)
+    make request_check := validate_shape(request)
+    when not defaults_check[0] or not profile_check[0] or not workspace_check[0] or not request_check[0] {
+        yield [false, [], "invalid-configuration-layer"]
+    }
+    vary result := []
+    change result := apply_source_layer(result, defaults, "defaults")
+    change result := apply_source_layer(result, profile, "profile")
+    change result := apply_source_layer(result, workspace, "workspace")
+    change result := apply_source_layer(result, request, "request")
+    yield [true, result, "resolved-with-provenance"]
+}
