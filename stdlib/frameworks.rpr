@@ -1,0 +1,20 @@
+# Reaper standard-library facade for the ten-framework suite.
+import "../frameworks/family.rpr" as suite
+
+export make framework_names := suite["framework_names"]
+
+export craft framework_count() {
+    yield suite["framework_count"]()
+}
+
+export craft framework_name(index) {
+    yield suite["framework_name"](index)
+}
+
+export craft get_framework(name) {
+    yield suite["framework_get"](name)
+}
+
+export craft framework_available(name) {
+    yield suite["framework_get"](name) != nothing
+}
