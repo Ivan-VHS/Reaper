@@ -120,7 +120,7 @@ class FoundationalFrameworksElevenToFifteenTests(unittest.TestCase):
             self.run_expression(f'systems["extension_validate_manifest"]({manifest})'),
             ["true"],
         )
-        denied = '["sample.extension", 1, ["reaper.host-service.v1", 2, 0, "both"], ["filesystem.read"], "sample.start"]'
+        denied = '["sample.extension", 1, ["reaper.host-service.v1", 2, 0, "both"], ["FS_READ"], "sample.start"]'
         self.assertEqual(
             self.run_expression(f'systems["extension_validate_manifest"]({denied})'),
             ["false"],
@@ -148,19 +148,19 @@ class FoundationalFrameworksElevenToFifteenTests(unittest.TestCase):
         )
         self.assertEqual(
             self.run_expression(
-                'systems["shell_validate_context"](["reaper-host", "session-1", "main.rpr", ["root.access"]])'
+                'systems["shell_validate_context"](["reaper-host", "session-1", "main.rpr", ["ROOT_ACCESS"]])'
             ),
             ["false"],
         )
         self.assertEqual(
             self.run_expression(
-                'systems["shell_validate_request"](["notify", "console.write", 1024])'
+                'systems["shell_validate_request"](["notify", "FS_READ", 1024])'
             ),
             ["true"],
         )
         self.assertEqual(
             self.run_expression(
-                'systems["shell_validate_request"](["notify", "console.write", 65537])'
+                'systems["shell_validate_request"](["notify", "FS_READ", 65537])'
             ),
             ["false"],
         )
