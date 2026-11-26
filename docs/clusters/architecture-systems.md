@@ -29,4 +29,5 @@ This hub groups related specifications and implementation references. The linked
 - Use the central map for cross-cluster navigation and project boundaries.
 - Update this hub and the central catalog whenever a page is added, moved or retired.
 
-- [Architecture foundation: 66 concepts](../REAPER_ARCHITECTURE_FOUNDATION_66.md) — stable native catalog, layer model and dependency validation API.
+- [Architecture foundation: 66 concepts](../REAPER_ARCHITECTURE_FOUNDATION_66.md)
+- [FOUNDATIONAL FRAMEWORKS V1](../FOUNDATIONAL_FRAMEWORKS_V1.md) — executable Reaper contracts for concepts 1–5. — stable native catalog, layer model and dependency validation API.
