@@ -123,6 +123,20 @@ Never move a row to Delivered because a registry, design, README, schema or gene
 
 **Acceptance:** reproducible archive inventory, verified checksums, passing required CI for the tagged commit and a maintainer-approved release.
 
+### R9 — AESTHETICA contextual evaluation framework
+
+**Status: Partial — executable reference-runtime module and acceptance example; cross-engine and IDE integration are not delivered.**
+
+- Preserve beauty and ugliness as independent evaluation axes; never define one as the inverse of the other.
+- Keep every score tied to caller-supplied evidence, confidence, salience, declared intent, perspective, purpose, culture tag and provenance.
+- Version report, diagnostic and evolution envelopes. Reject malformed evidence, duplicate/unknown dimensions, invalid ranges, missing weights and malformed profile comparisons.
+- Preserve deliberate imperfection. Recommend refinement only for evidence explicitly marked accidental; leave unknown intent for review.
+- Keep evaluation read-only. Any future generative adapter must create a separate revision and require an explicit review/apply boundary.
+- Wire the `.rpr` acceptance example into the supported interpreter matrix. Add deterministic-repeat, schema-compatibility and negative diagnostic fixtures.
+- Add compiler-generated Span/SourceMap integration, a typed language-level result contract, native C17 conformance and Studio/LSP presentation only through separate reviewable work.
+
+**Acceptance:** the example passes `reaper --check` and execution on every supported reference-runtime version; repeated identical inputs produce identical reports; negative cases produce stable `AES-E` diagnostics; serialized schema/profile versions are compatible; native C17 status remains Partial until equivalent fixtures pass.
+
 ## Not a Reaper workstream
 
 A public hosted API, cloud deployment, kernel driver, privileged device manager and production control plane are not current Reaper product targets. They must not be marked Planned as if they were missing parts of the language unless a separately approved product decision establishes ownership and a concrete target.
