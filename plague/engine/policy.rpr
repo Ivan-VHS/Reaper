@@ -1,0 +1,56 @@
+# PLAGUE action policy. Unknown modes and actions fail closed.
+
+export craft action_allowed(mode, action) {
+    when mode == "observe" {
+        yield action == "read_repository_metadata" OR
+            action == "read_source" OR
+            action == "build_dependency_graph" OR
+            action == "analyze_source" OR
+            action == "produce_report"
+    } otherwise {
+        when mode == "propose" {
+            yield action == "read_repository_metadata" OR
+                action == "read_source" OR
+                action == "build_dependency_graph" OR
+                action == "analyze_source" OR
+                action == "produce_report" OR
+                action == "create_plan" OR
+                action == "create_patch"
+        } otherwise {
+            when mode == "apply" {
+                yield action == "read_repository_metadata" OR
+                    action == "read_source" OR
+                    action == "build_dependency_graph" OR
+                    action == "analyze_source" OR
+                    action == "produce_report" OR
+                    action == "create_plan" OR
+                    action == "create_patch" OR
+                    action == "write_topic_branch" OR
+                    action == "run_declared_check" OR
+                    action == "open_pull_request"
+            } otherwise {
+                yield false
+            }
+        }
+    }
+}
+
+export craft default_mode() {
+    yield "observe"
+}
+
+export craft can_write_default_branch() {
+    yield false
+}
+
+export craft can_merge_pull_request() {
+    yield false
+}
+
+export craft can_publish_release() {
+    yield false
+}
+
+export craft can_expand_scope() {
+    yield false
+}
