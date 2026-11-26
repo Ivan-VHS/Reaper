@@ -24,6 +24,30 @@
   },
   "capabilities": [
     {
+      "id": "foundations.twelfth-five-frameworks",
+      "status": "partial",
+      "summary": "Adds executable contracts for two-dimensional coordinate grids, subsystem contour ports, deny-by-default trust perimeters, reproducible working-environment profiles and constrained workspace roots/state; OS isolation, environment mutation and filesystem workspace management remain host-owned.",
+      "evidence": [
+        "frameworks/foundation_56_60.rpr",
+        "frameworks/foundation_51_55.rpr",
+        "frameworks/foundation_46_50.rpr",
+        "frameworks/foundation_41_45.rpr",
+        "frameworks/foundation_36_40.rpr",
+        "frameworks/foundation_31_35.rpr",
+        "frameworks/foundation_26_30.rpr",
+        "frameworks/foundation_21_25.rpr",
+        "frameworks/foundation_16_20.rpr",
+        "frameworks/foundation_11_15.rpr",
+        "frameworks/foundation_6_10.rpr",
+        "frameworks/foundation.rpr",
+        "docs/FOUNDATIONAL_FRAMEWORKS_56_60.md",
+        "examples/foundations_56_60.rpr",
+        "tests/test_foundational_frameworks_56_60.py",
+        "docs/SYSTEM_RUNTIME_ABI_V1.md",
+        "docs/ARCHITECTURE.md"
+      ]
+    },
+    {
       "id": "foundations.eleventh-five-frameworks",
       "status": "partial",
       "summary": "Adds executable registries for normative engineering standards, policy controls and exception metadata, versioned requirement specifications with acceptance coverage, typed payload schemas with fixed-width value checks and schema compatibility, and complete row/column coverage matrices; enforcement authorities and binary schema evolution remain partial.",

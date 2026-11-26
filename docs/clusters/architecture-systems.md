@@ -22,6 +22,7 @@ This hub groups related specifications and implementation references. The linked
 - [FOUNDATIONAL FRAMEWORKS 41–45](../FOUNDATIONAL_FRAMEWORKS_41_45.md) — engineering process, system/subsystem contracts and module graph.
 - [FOUNDATIONAL FRAMEWORKS 46–50](../FOUNDATIONAL_FRAMEWORKS_46_50.md) — component/block/node graphs, versioned interfaces and protocols.
 - [FOUNDATIONAL FRAMEWORKS 51–55](../FOUNDATIONAL_FRAMEWORKS_51_55.md) — normative standards, policies, schema contracts and coverage evidence.
+- [FOUNDATIONAL FRAMEWORKS 56–60](../FOUNDATIONAL_FRAMEWORKS_56_60.md) — coordinate models, subsystem boundaries, trust zones and workspace state.
 - [ATOMIC QUANTUM 133](../ATOMIC_QUANTUM_133.md)
 - [CLINICAL SYSTEMS CSR120](../CLINICAL_SYSTEMS_CSR120.md)
 - [CONSTITUTION 666 PROFILE](../CONSTITUTION_666_PROFILE.md)

@@ -1,0 +1,7 @@
+import "../frameworks/foundation_56_60.rpr" as workspace
+
+emit "All sixty frameworks valid = " ++ text(workspace["foundation_validate_catalog_60"]())
+emit "Grid valid = " ++ text(workspace["grid_validate_cells"](["coverage", [["row", "runtime", 2], ["column", "platform", 2]], ["runtime", "compiler"], ["hosted", "native"]], [["runtime", "hosted", "yes"], ["runtime", "native", "yes"], ["compiler", "hosted", "partial"], ["compiler", "native", "partial"]]))
+emit "Perimeter default deny = " ++ workspace["perimeter_decision"](workspace["perimeter_default_policy"](), "application", "trusted-host", "egress", "capability-grant")
+emit "Developer environment valid = " ++ text(workspace["working_environment_validate_profile"](["developer-host", "hosted-reference", "local", "network-disabled-by-default", "implemented"]))
+emit "Workspace descriptor valid = " ++ text(workspace["workspace_validate_descriptor"](["reaper", "projects/reaper", "projects/reaper/src", "projects/reaper/build", "clean", ["modules/main.rpr"]]))
