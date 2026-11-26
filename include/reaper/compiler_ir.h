@@ -103,7 +103,8 @@ typedef struct {
 /*
  * Lower the current native expression AST into typed HIR.
  * Supported source nodes: i64 literals, finite decimal literals, decoded
- * strings, booleans, unary i64 +/- and binary i64 + - * /.
+ * strings, booleans, unary +/- and binary + - * / over matching i64 or f64
+ * operands. Mixed numeric operands are rejected; no implicit promotion occurs.
  * Identifiers, null, calls, collections and unsupported operators fail
  * explicitly with a source-located diagnostic.
  *
