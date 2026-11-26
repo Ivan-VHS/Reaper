@@ -85,6 +85,13 @@ class FoundationalFrameworksFortySixToFiftyTests(unittest.TestCase):
         )
         self.assertEqual(
             self.run_expression(
+                'graph["block_validate_descriptor"](["entry", "input.v1", "output.v1", [["load-x", "load", "u32"], ["load-x", "load", "u32"]], ["x"], ["pure"]])'
+            ),
+            ["false"],
+        )
+
+        self.assertEqual(
+            self.run_expression(
                 'graph["block_validate_branch"]([["a", "in", "out", [["ret", "return", "u32"]], [], ["pure"]], ["b", "in", "out", [["ret", "return", "u32"]], [], ["pure"]]], ["a", "b"])'
             ),
             ["true"],
@@ -109,6 +116,25 @@ class FoundationalFrameworksFortySixToFiftyTests(unittest.TestCase):
             ),
             ["false"],
         )
+        self.assertEqual(
+            self.run_expression(
+                'graph["node_validate_graph"](graph["node_catalog"](), [["node.source", "node.lex", "source-text.v1"], ["node.lex", "node.parse", "token-stream.v1"], ["node.parse", "node.analyze", "syntax-tree.v1"], ["node.analyze", "node.lower", "typed-tree.v1"], ["node.lower", "node.execute", "canonical-ir.v1"], ["node.execute", "node.end", "runtime-value.v1"]])'
+            ),
+            ["true"],
+        )
+        self.assertEqual(
+            self.run_expression(
+                'graph["node_topological_order"](graph["node_catalog"](), [["node.source", "node.lex", "source-text.v1"], ["node.lex", "node.parse", "token-stream.v1"], ["node.parse", "node.analyze", "syntax-tree.v1"], ["node.analyze", "node.lower", "typed-tree.v1"], ["node.lower", "node.execute", "canonical-ir.v1"], ["node.execute", "node.end", "runtime-value.v1"]])'
+            ),
+            ["[node.source, node.lex, node.parse, node.analyze, node.lower, node.execute, node.host, node.end]"],
+        )
+        self.assertEqual(
+            self.run_expression(
+                'graph["node_validate_graph"]([["b", "operation", "consumer", ["token-stream.v1"], [], "implemented"], ["a", "operation", "producer", [], ["token-stream.v1"], "implemented"]], [["a", "b", "token-stream.v1"]])'
+            ),
+            ["false"],
+        )
+
         self.assertEqual(
             self.run_expression(
                 'graph["node_validate_graph"]([["a", "operation", "producer", [], ["token-stream.v1"], "implemented"], ["b", "operation", "consumer", ["token-stream.v1"], [], "implemented"]], [["a", "b", "token-stream.v1"], ["a", "b", "token-stream.v1"]])'
