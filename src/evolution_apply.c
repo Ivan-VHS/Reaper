@@ -41,6 +41,39 @@ static int valid_identifier(const char *value, size_t maximum) {
     return 1;
 }
 
+static int valid_slash_identifier(const char *value, size_t maximum) {
+    size_t index, segment_start = 0u;
+    if (!valid_text(value, maximum) || value[0] == '/') return 0;
+    for (index = 0u; value[index] != '\0'; ++index) {
+        const unsigned char ch = (unsigned char)value[index];
+        if (ch == '/') {
+            const size_t segment_length = index - segment_start;
+            if (segment_length == 0u ||
+                (segment_length == 1u && value[segment_start] == '.') ||
+                (segment_length == 2u && value[segment_start] == '.' &&
+                 value[segment_start + 1u] == '.')) return 0;
+            segment_start = index + 1u;
+        } else if (!(isalnum(ch) || ch == '_' || ch == '-' || ch == '.')) {
+            return 0;
+        }
+    }
+    if (segment_start == index) return 0;
+    if ((index - segment_start == 1u && value[segment_start] == '.') ||
+        (index - segment_start == 2u && value[segment_start] == '.' &&
+         value[segment_start + 1u] == '.')) return 0;
+    return 1;
+}
+
+static int hash_field(ReaperSha256Context *context, const void *bytes, size_t length) {
+    uint8_t encoded_length[8];
+    uint64_t value = (uint64_t)length;
+    size_t index;
+    for (index = 0u; index < 8u; ++index)
+        encoded_length[7u - index] = (uint8_t)(value >> (index * 8u));
+    return reaper_sha256_update(context, encoded_length, sizeof encoded_length) &&
+           reaper_sha256_update(context, bytes, length);
+}
+
 static int valid_relative_path(const char *path) {
     size_t index = 0u, segment_length = 0u;
     if (!valid_text(path, REAPER_EVOLUTION_APPLY_MAX_PATH) ||
@@ -114,34 +147,41 @@ static int host_complete(const ReaperEvolutionApplyHost *host) {
         host->rollback_committed != NULL &&
         host->discard_staged != NULL &&
         host->release_rollback != NULL &&
+        host->preserve_failed_rollback != NULL &&
         host->audit_append != NULL;
 }
 
-static void request_digest(const ReaperEvolutionApplyRequest *request, char output[65]) {
+static int request_digest(const ReaperEvolutionApplyRequest *request, char output[65]) {
     ReaperSha256Context context;
     uint8_t digest[32];
     size_t index;
+    const uint64_t patch_count = (uint64_t)request->patch_count;
+    const uint64_t check_count = (uint64_t)request->check_count;
     reaper_sha256_init(&context);
-    (void)reaper_sha256_update(&context, request->repository_id, strlen(request->repository_id));
-    (void)reaper_sha256_update(&context, "\0", 1u);
-    (void)reaper_sha256_update(&context, request->base_branch, strlen(request->base_branch));
-    (void)reaper_sha256_update(&context, "\0", 1u);
-    (void)reaper_sha256_update(&context, request->target_branch, strlen(request->target_branch));
-    (void)reaper_sha256_update(&context, "\0", 1u);
-    (void)reaper_sha256_update(&context, request->revision_algorithm, strlen(request->revision_algorithm));
-    (void)reaper_sha256_update(&context, request->base_revision, strlen(request->base_revision));
+    if (!hash_field(&context, request->request_id, strlen(request->request_id)) ||
+        !hash_field(&context, request->repository_id, strlen(request->repository_id)) ||
+        !hash_field(&context, request->default_branch, strlen(request->default_branch)) ||
+        !hash_field(&context, request->base_branch, strlen(request->base_branch)) ||
+        !hash_field(&context, request->target_branch, strlen(request->target_branch)) ||
+        !hash_field(&context, request->revision_algorithm, strlen(request->revision_algorithm)) ||
+        !hash_field(&context, request->base_revision, strlen(request->base_revision)) ||
+        !hash_field(&context, &patch_count, sizeof patch_count)) return 0;
     for (index = 0u; index < request->patch_count; ++index) {
         const ReaperSourcePatch *patch = &request->patches[index];
-        (void)reaper_sha256_update(&context, patch->relative_path, strlen(patch->relative_path));
-        (void)reaper_sha256_update(&context, patch->expected_original_sha256, 64u);
-        (void)reaper_sha256_update(&context, patch->replacement, patch->replacement_size);
+        const uint64_t replacement_size = (uint64_t)patch->replacement_size;
+        if (!hash_field(&context, patch->relative_path, strlen(patch->relative_path)) ||
+            !hash_field(&context, patch->expected_original_sha256, 64u) ||
+            !hash_field(&context, &replacement_size, sizeof replacement_size) ||
+            !hash_field(&context, patch->replacement, patch->replacement_size)) return 0;
     }
+    if (!hash_field(&context, &check_count, sizeof check_count)) return 0;
     for (index = 0u; index < request->check_count; ++index) {
-        (void)reaper_sha256_update(&context, request->check_ids[index], strlen(request->check_ids[index]));
-        (void)reaper_sha256_update(&context, "\0", 1u);
+        if (!hash_field(&context, request->check_ids[index], strlen(request->check_ids[index]))) return 0;
     }
+    if (!hash_field(&context, &request->limits, sizeof request->limits)) return 0;
     reaper_sha256_final(&context, digest);
     reaper_sha256_hex(digest, output);
+    return 1;
 }
 
 static void audit_event(const ReaperEvolutionApplyHost *host,
@@ -179,6 +219,10 @@ static int rollback_entries(const ReaperEvolutionApplyHost *host,
                 entry->rollback = NULL;
                 entry->staged = NULL;
             } else {
+                if (!host->preserve_failed_rollback(host->context, entry->rollback,
+                        "pending-apply-recovery", entry->path)) ok = 0;
+                entry->rollback = NULL;
+                entry->staged = NULL;
                 ok = 0;
             }
         } else if (!entry->committed && entry->staged != NULL) {
@@ -237,10 +281,10 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
     }
     if (request == NULL ||
         !valid_identifier(request->request_id, 96u) ||
-        !valid_identifier(request->repository_id, 128u) ||
-        !valid_identifier(request->default_branch, 128u) ||
-        !valid_identifier(request->base_branch, 128u) ||
-        !valid_identifier(request->target_branch, 128u) ||
+        !valid_slash_identifier(request->repository_id, 128u) ||
+        !valid_slash_identifier(request->default_branch, 128u) ||
+        !valid_slash_identifier(request->base_branch, 128u) ||
+        !valid_slash_identifier(request->target_branch, 128u) ||
         strcmp(request->target_branch, request->default_branch) == 0 ||
         !valid_revision(request) ||
         request->signed_grant == NULL || request->signed_grant_size == 0u ||
@@ -302,7 +346,10 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
         return result;
     }
 
-    request_digest(request, result.request_digest);
+    if (!request_digest(request, result.request_digest)) {
+        result.status = REAPER_APPLY_INVALID_ARGUMENT;
+        return result;
+    }
     if (!host->audit_append(host->context, "apply.started", request->request_id,
             request->repository_id, request->target_branch, request->base_revision,
             "", result.request_digest, "preflight completed")) {
