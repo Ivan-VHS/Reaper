@@ -116,7 +116,11 @@
     "design_evolution_proposal_generation",
     "bounded_source_evolution_plan_generation",
     "observe_and_propose_orchestration",
-    "PLAGUE_default_deny_action_policy_integration"
+    "PLAGUE_default_deny_action_policy_integration",
+    "current_proposed_architecture_graph_comparison",
+    "dependency_edge_consistency_validation",
+    "observe_without_mutation_or_plan_generation",
+    "risk_benefit_gate_for_evolution_proposals"
   ],
   "not_implemented": [
     "first_class_reaper_struct_and_enum_syntax",
