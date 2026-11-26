@@ -212,8 +212,8 @@ export craft signature_validate_function(function_node, declarations) {
 
     vary generic_index := 0
     loop while generic_index < size(generic_parameters) {
-        when generic_parameters[generic_index] == "" or generic_parameters[generic_index] == "Result" or generic_parameters[generic_index] == "Option" {
-            yield signature_error("RPR-SIG-0019", "generic parameter name is empty or reserved", function_node[1])
+        when generic_parameters[generic_index] == "" or generic_parameters[generic_index] == "Result" or generic_parameters[generic_index] == "Option" or signature_primitive_type(generic_parameters[generic_index]) {
+            yield signature_error("RPR-SIG-0019", "generic parameter name is empty, reserved or shadows a primitive type", function_node[1])
         }
         vary prior_generic := 0
         loop while prior_generic < generic_index {
@@ -256,12 +256,16 @@ export craft signature_validate_program(program_node) {
     when size(program_node) != 4 or program_node[0] != "program" {
         yield ["ERROR", "RPR-SIG-0021", "expected a program AST"]
     }
-    make declarations := program_node[3]
+    make raw_declarations := program_node[3]
+    vary declarations := []
+    each raw_declaration in raw_declarations {
+        change declarations := push(declarations, signature_unwrap_export(raw_declaration))
+    }
+
     vary names := []
     vary signatures := []
 
-    each raw_declaration in declarations {
-        make declaration := signature_unwrap_export(raw_declaration)
+    each declaration in declarations {
         when size(declaration) == 4 and declaration[0] == "function" {
             make function_name := declaration[2][0]
             when signature_name_in(names, function_name) {
