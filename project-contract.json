@@ -94,11 +94,20 @@
     {
       "id": "selfhosting.frontend-bootstrap",
       "status": "partial",
-      "summary": "Reaper-written tokenizer and Pratt expression parser cover a tested subset, not a complete self-hosting compiler.",
+      "summary": "Reaper-written tokenizer and Pratt expression parser cover a tested subset; new Reaper-native compiler foundations extend source mapping, diagnostics, module ordering, expression IR and bytecode verification, and conservative constant folding without claiming a complete self-hosting compiler.",
       "evidence": [
         "selfhost/lexer.rpr",
         "selfhost/parser.rpr",
-        "tests/test_self_hosting.py"
+        "selfhost/source_map.rpr",
+        "selfhost/diagnostics.rpr",
+        "selfhost/module_graph.rpr",
+        "selfhost/ir.rpr",
+        "selfhost/bytecode.rpr",
+        "selfhost/optimizer.rpr",
+        "tests/test_self_hosting.py",
+        "docs/SELF_HOSTING_BOOTSTRAP.md",
+        "selfhost/semantic.rpr",
+        "selfhost/effects.rpr"
       ]
     },
     {
@@ -120,6 +129,23 @@
         "tools/validate_octa_pyramid.py",
         "tests/test_octa_pyramid.py",
         "docs/OCTA_PYRAMID_FEDERATION.md"
+      ]
+    },
+    {
+      "id": "selfhosting.compiler-foundations",
+      "status": "partial",
+      "summary": "Reaper-native source maps, structured diagnostics, deterministic local dependency ordering, conservative expression-subset type analysis, explicit effect/capability contract checks, canonical IR and stack-bytecode lowering/verifiers, and conservative boolean/string constant folding. These are independently tested bootstrap slices, not a complete parser, VM or native compiler.",
+      "evidence": [
+        "selfhost/source_map.rpr",
+        "selfhost/diagnostics.rpr",
+        "selfhost/module_graph.rpr",
+        "selfhost/semantic.rpr",
+        "selfhost/effects.rpr",
+        "selfhost/ir.rpr",
+        "selfhost/bytecode.rpr",
+        "selfhost/optimizer.rpr",
+        "tests/test_self_hosting.py",
+        "docs/SELF_HOSTING_BOOTSTRAP.md"
       ]
     }
   ],
@@ -152,6 +178,39 @@
       "evidence": [
         "federation/octa-pyramid.v1.json",
         "docs/OCTA_PYRAMID_FEDERATION.md"
+      ]
+    },
+    {
+      "id": "reaper.canonical-ir.expression.v1",
+      "format": "Reaper-native canonical expression IR v1",
+      "direction": "both",
+      "status": "partial",
+      "evidence": [
+        "selfhost/ir.rpr",
+        "tests/test_self_hosting.py",
+        "docs/SELF_HOSTING_BOOTSTRAP.md"
+      ]
+    },
+    {
+      "id": "reaper.stack-bytecode.expression.v1",
+      "format": "Reaper-native expression stack bytecode v1",
+      "direction": "both",
+      "status": "partial",
+      "evidence": [
+        "selfhost/bytecode.rpr",
+        "tests/test_self_hosting.py",
+        "docs/SELF_HOSTING_BOOTSTRAP.md"
+      ]
+    },
+    {
+      "id": "reaper.effect-contract.v1",
+      "format": "Reaper-native function effect and capability contract records",
+      "direction": "both",
+      "status": "partial",
+      "evidence": [
+        "selfhost/effects.rpr",
+        "tests/test_self_hosting.py",
+        "docs/SELF_HOSTING_BOOTSTRAP.md"
       ]
     }
   ],
@@ -201,13 +260,16 @@
     "Execution quotas are resource guardrails, not a security sandbox for untrusted programs.",
     "Filesystem, process, network, clock, shell and native-library effects remain explicit or opt-in rather than ambient expression behavior.",
     "Native FFI executes in-process native code and must only load trusted ABI-compatible libraries.",
-    "The native C17 implementation and self-hosting frontend remain partial; Python is the compatibility reference."
+    "The native C17 implementation and self-hosting frontend remain partial; Python is the compatibility reference.",
+    "Reaper-native bootstrap IR and bytecode modules cover a verified expression subset; they are not a production VM, full type/effect verifier, or native compiler backend.",
+    "The Reaper-native semantic analyzer covers a conservative expression subset; calls and host-defined values remain Any until complete name, module, function and built-in contracts are available."
   ],
   "extension_points": [
     "Canonical IR and selectable execution engines.",
     "Versioned .rpr module interfaces and explicit import/export boundaries.",
     "Opt-in C ABI adapters and validated versioned JSON interchange.",
     "Native C17 frontend stages with Python reference behavior as the compatibility oracle.",
-    "Bounded vertical self-composition for deterministic compiler and data-flow transformation pipelines."
+    "Bounded vertical self-composition for deterministic compiler and data-flow transformation pipelines.",
+    "Reaper-native staged frontend and compiler foundations with explicit parity gates before replacing compatibility implementations."
   ]
 }

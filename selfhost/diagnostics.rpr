@@ -1,0 +1,101 @@
+# Stable structured diagnostics owned by the Reaper language.
+# This module defines data contracts; presentation belongs to CLI and IDE hosts.
+
+craft diagnostic_code_is_valid(code) {
+    when size(code) < 5 { yield false }
+    yield code[0] == "R" and code[1] == "P" and code[2] == "R" and code[3] == "-"
+}
+
+craft diagnostic_severity_is_valid(severity) {
+    yield severity == "error" or severity == "warning" or severity == "note" or severity == "help"
+}
+
+craft make_diagnostic(code, severity, message, primary_span) {
+    when not diagnostic_code_is_valid(code) {
+        yield ["ERROR", "diagnostic code must use the RPR- prefix"]
+    }
+    when not diagnostic_severity_is_valid(severity) {
+        yield ["ERROR", "unsupported diagnostic severity"]
+    }
+    when size(message) == 0 {
+        yield ["ERROR", "diagnostic message must not be empty"]
+    }
+    when size(primary_span) != 3 or primary_span[0] != "SPAN" {
+        yield ["ERROR", "diagnostic requires a source span"]
+    }
+    when primary_span[1] < 0 or primary_span[2] < primary_span[1] {
+        yield ["ERROR", "diagnostic source span is invalid"]
+    }
+
+    yield ["DIAGNOSTIC", "reaper.diagnostic/v1", code, severity, message, primary_span, []]
+}
+
+craft diagnostic_is_valid(item) {
+    when size(item) != 7 { yield false }
+    when item[0] != "DIAGNOSTIC" { yield false }
+    when item[1] != "reaper.diagnostic/v1" { yield false }
+    when not diagnostic_code_is_valid(item[2]) { yield false }
+    when not diagnostic_severity_is_valid(item[3]) { yield false }
+    when size(item[4]) == 0 { yield false }
+    when size(item[5]) != 3 or item[5][0] != "SPAN" { yield false }
+    when item[5][1] < 0 or item[5][2] < item[5][1] { yield false }
+    when size(item[6]) == 0 { yield true }
+    vary index := 0
+    loop while index < size(item[6]) {
+        make note := item[6][index]
+        when size(note) != 3 or note[0] != "NOTE" or size(note[2]) == 0 {
+            yield false
+        }
+        when size(note[1]) != 3 or note[1][0] != "SPAN" {
+            yield false
+        }
+        when note[1][1] < 0 or note[1][2] < note[1][1] {
+            yield false
+        }
+        change index := index + 1
+    }
+    yield true
+}
+
+craft diagnostic_with_note(item, note_span, note_message) {
+    when not diagnostic_is_valid(item) {
+        yield ["ERROR", "cannot extend an invalid diagnostic"]
+    }
+    when size(note_span) != 3 or note_span[0] != "SPAN" {
+        yield ["ERROR", "diagnostic note requires a source span"]
+    }
+    when note_span[1] < 0 or note_span[2] < note_span[1] {
+        yield ["ERROR", "diagnostic note span is invalid"]
+    }
+    when size(note_message) == 0 {
+        yield ["ERROR", "diagnostic note must not be empty"]
+    }
+
+    make next_notes := push(item[6], ["NOTE", note_span, note_message])
+    yield ["DIAGNOSTIC", item[1], item[2], item[3], item[4], item[5], next_notes]
+}
+
+craft diagnostic_with_severity(item, severity) {
+    when not diagnostic_is_valid(item) {
+        yield ["ERROR", "cannot update an invalid diagnostic"]
+    }
+    when not diagnostic_severity_is_valid(severity) {
+        yield ["ERROR", "unsupported diagnostic severity"]
+    }
+    yield ["DIAGNOSTIC", item[1], item[2], severity, item[4], item[5], item[6]]
+}
+
+make primary := ["SPAN", 4, 9]
+make related := ["SPAN", 0, 3]
+make first := make_diagnostic("RPR-E1001", "error", "unknown name", primary)
+assert(diagnostic_is_valid(first), "new diagnostic must satisfy the stable schema")
+make annotated := diagnostic_with_note(first, related, "name was not declared in this scope")
+assert(diagnostic_is_valid(annotated), "diagnostic with a note must remain valid")
+assert(size(annotated[6]) == 1, "diagnostic note was not retained")
+assert(annotated[2] == "RPR-E1001", "diagnostic identity changed while adding a note")
+assert(diagnostic_with_severity(annotated, "warning")[3] == "warning", "severity update mismatch")
+assert(not diagnostic_code_is_valid("E1001"), "non-canonical diagnostic code accepted")
+assert(make_diagnostic("RPR-E1002", "error", "bad span", ["SPAN", 8, 2])[0] == "ERROR", "reversed diagnostic span accepted")
+assert(not diagnostic_severity_is_valid("fatal"), "unknown severity accepted")
+
+emit "SELFHOST_DIAGNOSTICS_OK"
