@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema": "ivan-vhs.reaper.framework-catalog.v1",
+  "version": "1.0.0",
+  "description": "Central discovery index for framework families explicitly registered in this integration branch.",
+  "registry_scope": "registered framework families and their canonical manifests; not a claim that every experimental module in every open branch has been inventoried",
+  "families": [
+    {
+      "id": "aesthetic-evolution",
+      "name": "Reaper Aesthetic & Architecture Evolution Framework",
+      "manifest": "frameworks/aesthetic/manifest.v1.json",
+      "entrypoint": "frameworks/aesthetic/all.rpr",
+      "status": "source_present_runtime_validation_pending",
+      "capabilities": ["typed_profile_contracts", "HIR", "MIR", "LIR", "compiler_adapter", "architecture_evolution", "design_evolution", "source_evolution_planning"]
+    },
+    {
+      "id": "plague",
+      "name": "PLAGUE",
+      "manifest": "plague/manifest.v1.json",
+      "entrypoint": "plague/engine/registry.rpr",
+      "status": "foundation",
+      "capabilities": ["repository_evolution_policy", "bounded_proposal_assessment", "risk_aware_selection"]
+    }
+  ]
+}
