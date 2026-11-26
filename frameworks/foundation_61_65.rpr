@@ -1,0 +1,408 @@
+# Thirteenth group of Reaper foundations.
+import "foundation_56_60.rpr" as previous
+
+export make FOUNDATION_THIRTEENTH_SCHEMA := "reaper.foundation.thirteenth.v1"
+export make FOUNDATION_THIRTEENTH_VERSION := 1
+
+export craft bridgehead_modes() {
+    yield ["compile", "simulate", "inspect", "stage"]
+}
+
+export craft bridgehead_catalog() {
+    yield [
+        ["bridge.host-reference", "compile", "reaper-source", "host-runtime", "host-python-compat", "implemented"],
+        ["bridge.c17-host", "compile", "reaper-scalar-ir", "host-executable", "host-c-abi", "partial"],
+        ["bridge.simulator", "simulate", "reaper-ir", "fake-host-adapter", "simulator-abi", "partial"],
+        ["bridge.embedded-stage", "stage", "typed-ir", "firmware-image", "target-abi", "planned"],
+        ["bridge.hardware-inspect", "inspect", "device-snapshot", "read-only-report", "snapshot-v1", "implemented"]
+    ]
+}
+
+craft bridgehead_find(identifier) {
+    vary found := nothing
+    each bridge in bridgehead_catalog() {
+        when bridge[0] == identifier {
+            change found := bridge
+        }
+    }
+    yield found
+}
+
+export craft bridgehead_validate_descriptor(bridge) {
+    when kind(bridge) != "list" or size(bridge) != 6 {
+        yield false
+    }
+    when kind(bridge[0]) != "text" or bridge[0] == "" or not contains(bridgehead_modes(), bridge[1]) or kind(bridge[2]) != "text" or bridge[2] == "" or kind(bridge[3]) != "text" or bridge[3] == "" or kind(bridge[4]) != "text" or bridge[4] == "" {
+        yield false
+    }
+    yield contains(["implemented", "partial", "planned"], bridge[5])
+}
+
+export craft bridgehead_validate_selection(identifier) {
+    make bridge := bridgehead_find(identifier)
+    when bridge == nothing or bridge[5] == "planned" {
+        yield false
+    }
+    yield bridgehead_validate_descriptor(bridge)
+}
+
+export craft bridgehead_validate_handoff(handoff) {
+    when kind(handoff) != "list" or size(handoff) != 4 {
+        yield false
+    }
+    make bridge := bridgehead_find(handoff[0])
+    when bridge == nothing or bridge[5] == "planned" {
+        yield false
+    }
+    when kind(handoff[1]) != "text" or kind(handoff[2]) != "number" or handoff[2] < 0 or handoff[2] % 1 != 0 or kind(handoff[3]) != "boolean" {
+        yield false
+    }
+    when handoff[1] != bridge[4] or handoff[2] > 1048576 {
+        yield false
+    }
+    when bridge[0] == "bridge.embedded-stage" or bridge[1] == "stage" {
+        yield handoff[3] == true
+    }
+    yield handoff[3] == false
+}
+
+export craft bridgehead_rules() {
+    yield [
+        ["identity", "source and target are named in the bridge descriptor"],
+        ["authorization", "handoff authority is explicit and target-owned"],
+        ["transport", "bridge protocol and payload bounds are validated"],
+        ["promotion", "stage and flash operations require a separate reviewed adapter"],
+        ["rollback", "deployment bridge records a reversible promotion plan"]
+    ]
+}
+
+export craft anchor_kinds() {
+    yield ["framework", "capability", "interface", "module", "diagnostic", "target", "requirement"]
+}
+
+export craft anchor_stability_levels() {
+    yield ["canonical", "stable", "experimental", "deprecated"]
+}
+
+export craft anchor_catalog() {
+    yield [
+        ["anchor.foundation.catalog", "framework", "foundations", 13, "frameworks/foundation_61_65.rpr", "canonical"],
+        ["anchor.reaper.system.abi", "interface", "system-runtime", 1, "docs/SYSTEM_RUNTIME_ABI_V1.md", "stable"],
+        ["anchor.reaper.dabi64.desktop", "interface", "desktop-host", 1, "docs/DABI64_DESKTOP_HOST_V1.md", "stable"],
+        ["anchor.reaper.module-loader", "module", "module-loader", 1, "reaper/modules.py", "stable"],
+        ["anchor.reaper.legacy-capability-catalog", "capability", "capabilities", 1, "docs/NATIVE_CAPABILITY_SUITE.md", "deprecated"],
+        ["anchor.reaper.capability.v2", "capability", "capabilities", 2, "docs/NATIVE_CAPABILITY_SUITE.md", "canonical"],
+        ["anchor.reaper.typed-structs", "capability", "typed-records", 1, "docs/HARDWARE_LANGUAGE.md", "experimental"]
+    ]
+}
+
+craft anchor_find(identifier) {
+    vary found := nothing
+    each anchor in anchor_catalog() {
+        when anchor[0] == identifier {
+            change found := anchor
+        }
+    }
+    yield found
+}
+
+export craft anchor_validate_descriptor(anchor) {
+    when kind(anchor) != "list" or size(anchor) != 6 {
+        yield false
+    }
+    when kind(anchor[0]) != "text" or anchor[0] == "" or not contains(anchor_kinds(), anchor[1]) or kind(anchor[2]) != "text" or anchor[2] == "" or kind(anchor[3]) != "number" or anchor[3] < 1 or anchor[3] % 1 != 0 or kind(anchor[4]) != "text" or anchor[4] == "" or not contains(anchor_stability_levels(), anchor[5]) {
+        yield false
+    }
+    yield true
+}
+
+export craft anchor_validate_reference(identifier, expected_kind, minimum_version) {
+    when kind(expected_kind) != "text" or kind(minimum_version) != "number" or minimum_version < 1 or minimum_version % 1 != 0 {
+        yield false
+    }
+    make anchor := anchor_find(identifier)
+    when anchor == nothing or not anchor_validate_descriptor(anchor) {
+        yield false
+    }
+    yield anchor[1] == expected_kind and anchor[3] >= minimum_version and anchor[5] != "deprecated"
+}
+
+export craft anchor_validate_catalog() {
+    vary identifiers := []
+    each anchor in anchor_catalog() {
+        when not anchor_validate_descriptor(anchor) or contains(identifiers, anchor[0]) {
+            yield false
+        }
+        change identifiers := push(identifiers, anchor[0])
+    }
+    yield true
+}
+
+export craft anchor_validate_replacement(old_id, new_id) {
+    make old_anchor := anchor_find(old_id)
+    make new_anchor := anchor_find(new_id)
+    when old_anchor == nothing or new_anchor == nothing or old_id == new_id {
+        yield false
+    }
+    yield old_anchor[5] == "deprecated" and new_anchor[5] == "canonical"
+}
+
+export craft baseline_metric_units() {
+    yield ["count", "bytes", "nanoseconds", "milliseconds", "percent", "frames-per-second", "bytes-per-second"]
+}
+
+export craft baseline_validate_metric(metric) {
+    when kind(metric) != "list" or size(metric) != 3 {
+        yield false
+    }
+    when kind(metric[0]) != "text" or metric[0] == "" or kind(metric[1]) != "number" or metric[1] < 0 or not contains(baseline_metric_units(), metric[2]) {
+        yield false
+    }
+    yield true
+}
+
+export craft baseline_validate_snapshot(snapshot) {
+    when kind(snapshot) != "list" or size(snapshot) != 6 {
+        yield false
+    }
+    when kind(snapshot[0]) != "text" or snapshot[0] == "" or kind(snapshot[1]) != "text" or snapshot[1] == "" or kind(snapshot[2]) != "text" or snapshot[2] == "" or kind(snapshot[3]) != "text" or size(snapshot[3]) != 64 or kind(snapshot[4]) != "list" or kind(snapshot[5]) != "list" {
+        yield false
+    }
+    vary metric_names := []
+    each metric in snapshot[4] {
+        when not baseline_validate_metric(metric) or contains(metric_names, metric[0]) {
+            yield false
+        }
+        change metric_names := push(metric_names, metric[0])
+    }
+    when size(metric_names) == 0 or kind(snapshot[5]) != "list" or size(snapshot[5]) == 0 {
+        yield false
+    }
+    vary evidence_refs := []
+    each evidence in snapshot[5] {
+        when kind(evidence) != "text" or evidence == "" or contains(evidence_refs, evidence) {
+            yield false
+        }
+        change evidence_refs := push(evidence_refs, evidence)
+    }
+    yield true
+}
+
+export craft baseline_compare(left, right) {
+    when not baseline_validate_snapshot(left) or not baseline_validate_snapshot(right) {
+        yield nothing
+    }
+    when left[2] != right[2] or left[1] != right[1] or size(left[4]) != size(right[4]) {
+        yield nothing
+    }
+    vary comparison := []
+    each left_metric in left[4] {
+        vary found := false
+        each right_metric in right[4] {
+            when left_metric[0] == right_metric[0] and left_metric[2] == right_metric[2] {
+                change found := true
+                change comparison := push(comparison, [left_metric[0], left_metric[1], right_metric[1], right_metric[1] - left_metric[1], left_metric[2]])
+            }
+        }
+        when not found {
+            yield nothing
+        }
+    }
+    yield comparison
+}
+
+export craft baseline_validate_pair(left, right) {
+    yield baseline_compare(left, right) != nothing
+}
+
+export craft supporting_failure_modes() {
+    yield ["fail-closed", "retry-bounded", "fallback", "degrade", "stop"]
+}
+
+export craft supporting_component_roles() {
+    yield ["primary", "replica", "fallback", "observer", "recovery"]
+}
+
+export craft supporting_validate_component(component) {
+    when kind(component) != "list" or size(component) != 4 {
+        yield false
+    }
+    when kind(component[0]) != "text" or component[0] == "" or not contains(supporting_component_roles(), component[1]) or kind(component[2]) != "text" or component[2] == "" or not contains(["required", "optional"], component[3]) {
+        yield false
+    }
+    yield true
+}
+
+export craft supporting_validate_structure(structure) {
+    when kind(structure) != "list" or size(structure) != 3 or kind(structure[0]) != "text" or structure[0] == "" or kind(structure[1]) != "list" or kind(structure[2]) != "list" {
+        yield false
+    }
+    vary identifiers := []
+    vary primary_count := 0
+    each component in structure[1] {
+        when not supporting_validate_component(component) or contains(identifiers, component[0]) {
+            yield false
+        }
+        when component[1] == "primary" {
+            change primary_count := primary_count + 1
+        }
+        change identifiers := push(identifiers, component[0])
+    }
+    when primary_count != 1 {
+        yield false
+    }
+    each relation in structure[2] {
+        when kind(relation) != "list" or size(relation) != 3 or not contains(identifiers, relation[0]) or not contains(identifiers, relation[1]) or relation[0] == relation[1] or not contains(["depends-on", "replicates", "backs-up", "observes", "recovers"], relation[2]) {
+            yield false
+        }
+    }
+    yield true
+}
+
+export craft supporting_validate_policy(policy) {
+    when kind(policy) != "list" or size(policy) != 3 or not contains(supporting_failure_modes(), policy[0]) or kind(policy[1]) != "number" or policy[1] < 0 or policy[1] % 1 != 0 or kind(policy[2]) != "number" or policy[2] < 0 or policy[2] % 1 != 0 {
+        yield false
+    }
+    yield policy[0] != "retry-bounded" or policy[1] > 0
+}
+
+export craft hardware_word_sizes() {
+    yield [8, 16, 32, 64, 128]
+}
+
+export craft hardware_endianness() {
+    yield ["little", "big", "target-defined"]
+}
+
+export craft hardware_memory_kinds() {
+    yield ["rom", "ram", "flash", "mmio", "reserved"]
+}
+
+export craft hardware_memory_permissions() {
+    yield ["read-only", "read-write", "write-only", "device"]
+}
+
+export craft hardware_driver_policies() {
+    yield ["read-only-driver-set", "fake-adapter-only", "no-driver-load"]
+}
+
+export craft hardware_profiles() {
+    yield [
+        ["host-x86_64", "x86_64", 64, "LP64-or-LLP64", "little", "host-c-abi", "hosted-reference", "partial"],
+        ["armv7m-generic", "armv7-m", 32, "ILP32", "target-defined", "AAPCS", "freestanding", "planned"],
+        ["riscv64-generic", "riscv64", 64, "LP64", "target-defined", "RISC-V-psABI-LP64", "freestanding", "planned"]
+    ]
+}
+
+craft hardware_find_profile(identifier) {
+    vary found := nothing
+    each profile in hardware_profiles() {
+        when profile[0] == identifier {
+            change found := profile
+        }
+    }
+    yield found
+}
+
+export craft hardware_validate_profile(profile) {
+    when kind(profile) != "list" or size(profile) != 8 {
+        yield false
+    }
+    make known := hardware_find_profile(profile[0])
+    when known == nothing or known[7] == "planned" {
+        yield false
+    }
+    yield profile == known and contains(hardware_word_sizes(), profile[2]) and contains(hardware_endianness(), profile[4])
+}
+
+export craft hardware_validate_memory_region(region) {
+    when kind(region) != "list" or size(region) != 5 {
+        yield false
+    }
+    when kind(region[0]) != "text" or region[0] == "" or not contains(hardware_memory_kinds(), region[1]) or kind(region[2]) != "number" or kind(region[3]) != "number" or region[2] < 0 or region[3] <= 0 or region[2] % 1 != 0 or region[3] % 1 != 0 or not contains(hardware_memory_permissions(), region[4]) {
+        yield false
+    }
+    when region[1] == "mmio" and region[4] != "device" {
+        yield false
+    }
+    when region[1] == "rom" or region[1] == "flash" {
+        yield region[4] == "read-only" and region[2] + region[3] <= 18446744073709551615
+    }
+    yield region[2] + region[3] <= 18446744073709551615
+}
+
+export craft hardware_validate_memory_map(regions) {
+    when kind(regions) != "list" or size(regions) == 0 {
+        yield false
+    }
+    vary identifiers := []
+    each region in regions {
+        when not hardware_validate_memory_region(region) or contains(identifiers, region[0]) {
+            yield false
+        }
+        change identifiers := push(identifiers, region[0])
+    }
+    vary left_index := 0
+    each left in regions {
+        vary right_index := 0
+        each right in regions {
+            when left_index < right_index and left[2] < right[2] + right[3] and right[2] < left[2] + left[3] {
+                yield false
+            }
+            change right_index := right_index + 1
+        }
+        change left_index := left_index + 1
+    }
+    yield true
+}
+
+export craft hardware_validate_base(base) {
+    when kind(base) != "list" or size(base) != 4 {
+        yield false
+    }
+    make profile := hardware_find_profile(base[0])
+    when profile == nothing or not hardware_validate_profile(profile) or kind(base[1]) != "list" or kind(base[2]) != "text" or base[2] == "" or not contains(hardware_driver_policies(), base[3]) {
+        yield false
+    }
+    yield hardware_validate_memory_map(base[1])
+}
+
+export craft hardware_safety_boundaries() {
+    yield [
+        ["physical-memory", "only trusted host or driver adapters may map it"],
+        ["mmio", "descriptor validation is not device access"],
+        ["dma", "buffer ownership and cache rules require target adapter"],
+        ["interrupts", "registration and dispatch require privileged host implementation"],
+        ["firmware", "flashing is disabled without explicit reviewed transport"]
+    ]
+}
+
+export craft foundation_thirteenth_five() {
+    yield [
+        ["foundation.bridgehead.v1", "Bridgehead", "controlled compiler/runtime/target handoff", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_61_65.md"],
+        ["foundation.anchor-point.v1", "Anchor Point", "stable identifiers and versioned cross-reference anchors", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_61_65.md"],
+        ["foundation.baseline.v1", "Baseline", "fingerprinted snapshots and compatible metric comparisons", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_61_65.md"],
+        ["foundation.supporting-structure.v1", "Supporting Structure", "primary/replica/fallback topology and recovery policy", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_61_65.md"],
+        ["foundation.hardware-software-base.v1", "Hardware/Software Base", "target CPU/ABI/memory-map/runtime compatibility contract", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_61_65.md"]
+    ]
+}
+
+export craft foundation_all_frameworks_65() {
+    vary rows := previous["foundation_all_frameworks_60"]()
+    each row in foundation_thirteenth_five() {
+        change rows := push(rows, row)
+    }
+    yield rows
+}
+
+export craft foundation_validate_catalog_65() {
+    make rows := foundation_all_frameworks_65()
+    vary identifiers := []
+    each row in rows {
+        when size(row) != 5 {
+            yield false
+        }
+        change identifiers := push(identifiers, row[0])
+    }
+    yield previous["foundation_validate_catalog_60"]() and size(rows) == 65 and size(unique(identifiers)) == 65
+}
