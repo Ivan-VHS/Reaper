@@ -1,0 +1,54 @@
+# FrameLifecycle — deterministic state transitions for composed components.
+# Transition records and requested steps use [from_state, to_state] and state lists.
+
+export craft valid_lifecycle(initial_state, steps, transitions) {
+    when kind(initial_state) != "number" {
+        yield false
+    }
+    when kind(steps) != "list" {
+        yield false
+    }
+    when kind(transitions) != "list" {
+        yield false
+    }
+    craft valid_transition(transition) {
+        when kind(transition) != "list" {
+            yield false
+        }
+        when size(transition) != 2 {
+            yield false
+        }
+        when kind(transition[0]) != "number" {
+            yield false
+        }
+        when kind(transition[1]) != "number" {
+            yield false
+        }
+        yield true
+    }
+    craft invalid_transition(transition) {
+        yield not valid_transition(transition)
+    }
+    when size(keep(transitions, invalid_transition)) != 0 {
+        yield false
+    }
+    when size(unique(transitions)) != size(transitions) {
+        yield false
+    }
+    vary current_state := initial_state
+    vary accepted := true
+    each next_state in steps {
+        when kind(next_state) != "number" {
+            change accepted := false
+        } otherwise {
+            when accepted {
+                when contains(transitions, [current_state, next_state]) {
+                    change current_state := next_state
+                } otherwise {
+                    change accepted := false
+                }
+            }
+        }
+    }
+    yield accepted
+}
