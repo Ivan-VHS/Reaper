@@ -166,6 +166,58 @@ int reaper_source_map_resolve(
     return 1;
 }
 
+static int source_position(
+    const ReaperSourceFile *file,
+    uint64_t byte_offset,
+    uint32_t *line_out,
+    uint32_t *column_out
+) {
+    if (file == NULL || byte_offset > file->byte_length ||
+        (file->byte_length != 0u && file->contents == NULL)) return 0;
+    uint64_t offset = 0u;
+    uint32_t line = 1u;
+    uint32_t column = 1u;
+    while (offset < byte_offset) {
+        unsigned char lead = file->contents[(size_t)offset];
+        uint64_t width = 1u;
+        if (lead >= 0xC2u && lead <= 0xDFu) width = 2u;
+        else if (lead >= 0xE0u && lead <= 0xEFu) width = 3u;
+        else if (lead >= 0xF0u && lead <= 0xF4u) width = 4u;
+        else if (lead >= 0x80u) return 0;
+        if (offset + width > file->byte_length ||
+            offset + width > byte_offset) return 0;
+        for (uint64_t index = 1u; index < width; ++index) {
+            unsigned char next = file->contents[(size_t)(offset + index)];
+            if ((next & 0xC0u) != 0x80u) return 0;
+            if (index == 1u &&
+                ((lead == 0xE0u && next < 0xA0u) ||
+                 (lead == 0xEDu && next > 0x9Fu) ||
+                 (lead == 0xF0u && next < 0x90u) ||
+                 (lead == 0xF4u && next > 0x8Fu))) return 0;
+        }
+        if (width == 1u && lead == (unsigned char)'\n') {
+            if (line == UINT32_MAX) return 0;
+            ++line;
+            column = 1u;
+        } else {
+            if (column == UINT32_MAX) return 0;
+            ++column;
+        }
+        offset += width;
+    }
+    *line_out = line;
+    *column_out = column;
+    return 1;
+}
+
+static int source_line_count(const ReaperSourceFile *file, uint32_t *line_count) {
+    uint32_t line = 1u, column = 1u;
+    if (!source_position(file, file->byte_length, &line, &column)) return 0;
+    (void)column;
+    *line_count = line;
+    return 1;
+}
+
 static int verify_source_map(
     const ReaperSourceMap *map,
     ReaperTypedIrError *error
@@ -178,12 +230,16 @@ static int verify_source_map(
 
     for (size_t i = 0u; i < map->file_count; ++i) {
         const ReaperSourceFile *file = &map->files[i];
+        uint32_t measured_lines = 0u, measured_column = 0u;
         if (file->path == NULL || file->path[0] == '\0' ||
             (file->byte_length != 0u && file->contents == NULL) ||
-            file->line_count == 0u) {
+            file->byte_length > (uint64_t)SIZE_MAX || file->line_count == 0u ||
+            !source_line_count(file, &measured_lines) ||
+            measured_lines != file->line_count) {
             return reject(error, REAPER_TIR_ERROR_SOURCE_MAP, i,
-                          "source file requires path, source bytes and line count");
+                          "source file requires valid UTF-8 bytes and an exact line count");
         }
+        (void)measured_column;
         for (size_t prior = 0u; prior < i; ++prior) {
             if (map->files[prior].id == file->id) {
                 return reject(error, REAPER_TIR_ERROR_SOURCE_MAP, i,
@@ -204,14 +260,24 @@ static int verify_source_map(
             return reject(error, REAPER_TIR_ERROR_SPAN, i,
                           "span byte range is outside its source file");
         }
+        uint32_t actual_start_line = 0u, actual_start_column = 0u;
+        uint32_t actual_end_line = 0u, actual_end_column = 0u;
         if (span->start_line == 0u || span->start_column == 0u ||
             span->end_line == 0u || span->end_column == 0u ||
             span->start_line > span->end_line ||
             span->end_line > file->line_count ||
             (span->start_line == span->end_line &&
-             span->start_column > span->end_column)) {
+             span->start_column > span->end_column) ||
+            !source_position(file, span->byte_start,
+                             &actual_start_line, &actual_start_column) ||
+            !source_position(file, span->byte_end,
+                             &actual_end_line, &actual_end_column) ||
+            actual_start_line != span->start_line ||
+            actual_start_column != span->start_column ||
+            actual_end_line != span->end_line ||
+            actual_end_column != span->end_column) {
             return reject(error, REAPER_TIR_ERROR_SPAN, i,
-                          "span line and column coordinates are invalid");
+                          "span byte offsets and Unicode source coordinates disagree");
         }
         for (size_t prior = 0u; prior < i; ++prior) {
             if (map->spans[prior].id == span->id) {
@@ -237,6 +303,12 @@ static int verify_type_layout(
     if (type->flags & ~(uint32_t)REAPER_TIR_TYPE_FLAG_PACKED) {
         return reject(error, REAPER_TIR_ERROR_TYPE, index,
                       "typed IR type contains unsupported flags");
+    }
+    if ((type->flags & REAPER_TIR_TYPE_FLAG_PACKED) != 0u &&
+        type->kind != REAPER_TIR_TYPE_STRUCT &&
+        type->kind != REAPER_TIR_TYPE_UNION) {
+        return reject(error, REAPER_TIR_ERROR_TYPE, index,
+                      "packed representation applies only to structs and unions");
     }
     if (find_span(&module->source_map, type->span_id) == NULL) {
         return reject(error, REAPER_TIR_ERROR_TYPE, index,
