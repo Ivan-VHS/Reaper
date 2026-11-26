@@ -1,0 +1,105 @@
+# Reaper-native package manifest and lock contract validator.
+# It validates lock identity and offline cache claims; it does not download or
+# install packages and never performs ambient network access.
+
+export craft package_manifest(name, version, edition, dependencies) {
+    yield ["REAPER_PACKAGE_V1", name, version, edition, dependencies]
+}
+
+export craft valid_package_name(name) {
+    when name == "" or size(name) > 128 { yield false }
+    when name[0] < "a" or name[0] > "z" { yield false }
+    vary index := 0
+    loop while index < size(name) {
+        make char := name[index]
+        when not ((char >= "a" and char <= "z") or (char >= "0" and char <= "9") or char == "-") {
+            yield false
+        }
+        change index := index + 1
+    }
+    yield true
+}
+
+export craft valid_semver(version) {
+    make parts := split(version, ".")
+    when size(parts) != 3 { yield false }
+    each part in parts {
+        when part == "" { yield false }
+        when number(part) < 0 or number(part) % 1 != 0 { yield false }
+        when text(number(part)) != part { yield false }
+    }
+    yield true
+}
+
+export craft valid_sha256(digest) {
+    when size(digest) != 64 { yield false }
+    make digits := "0123456789abcdef"
+    vary index := 0
+    loop while index < size(digest) {
+        when not contains(digits, lower(digest[index])) { yield false }
+        change index := index + 1
+    }
+    yield true
+}
+
+export craft package_manifest_validate(manifest) {
+    when size(manifest) != 5 or manifest[0] != "REAPER_PACKAGE_V1" { yield ["ERROR", "invalid package manifest envelope"] }
+    when not valid_package_name(manifest[1]) { yield ["ERROR", "invalid package name"] }
+    when not valid_semver(manifest[2]) { yield ["ERROR", "package version must be semantic version x.y.z"] }
+    when manifest[3] != "0.1" and manifest[3] != "1.0" { yield ["ERROR", "unsupported Reaper package edition"] }
+    when size(manifest[4]) > 2048 { yield ["ERROR", "package dependency count exceeds the v1 limit"] }
+
+    vary names := []
+    each dependency in manifest[4] {
+        when size(dependency) != 4 { yield ["ERROR", "dependency must contain name, version, digest, and source"] }
+        when not valid_package_name(dependency[0]) or not valid_semver(dependency[1]) or not valid_sha256(dependency[2]) or dependency[3] == "" {
+            yield ["ERROR", "dependency identity, version, digest, and source must be explicit"]
+        }
+        when contains(names, dependency[0]) { yield ["ERROR", "duplicate dependency: " ++ dependency[0]] }
+        change names := push(names, dependency[0])
+    }
+    yield ["OK", size(names)]
+}
+
+export craft package_lock(manifest, dependencies) {
+    yield ["REAPER_LOCK_V1", manifest[1], manifest[2], manifest[3], dependencies]
+}
+
+export craft package_lock_validate(manifest, lock) {
+    make valid_manifest := package_manifest_validate(manifest)
+    when valid_manifest[0] == "ERROR" { yield valid_manifest }
+    when size(lock) != 5 or lock[0] != "REAPER_LOCK_V1" { yield ["ERROR", "invalid package lock envelope"] }
+    when lock[1] != manifest[1] or lock[2] != manifest[2] or lock[3] != manifest[3] {
+        yield ["ERROR", "package lock does not match manifest identity"]
+    }
+    when size(lock[4]) != size(manifest[4]) { yield ["ERROR", "package lock is missing dependencies"] }
+
+    each dependency in manifest[4] {
+        vary found := false
+        each locked in lock[4] {
+            when locked == dependency { change found := true }
+        }
+        when not found { yield ["ERROR", "dependency lock entry differs from manifest: " ++ dependency[0]] }
+    }
+    yield ["OK", size(lock[4])]
+}
+
+export craft offline_dependencies_available(lock, cached_digests) {
+    each dependency in lock[4] {
+        when not contains(cached_digests, dependency[2]) {
+            yield ["ERROR", "offline cache misses package digest: " ++ dependency[2]]
+        }
+    }
+    yield ["OK", size(lock[4])]
+}
+
+make dependency := ["core-math", "1.2.0", "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", "local:/packages/core-math"]
+make manifest := package_manifest("telemetry", "2.0.1", "1.0", [dependency])
+make lock := package_lock(manifest, [dependency])
+assert(package_manifest_validate(manifest)[0] == "OK", "package manifest should validate")
+assert(package_lock_validate(manifest, lock)[0] == "OK", "matching package lock should validate")
+assert(offline_dependencies_available(lock, [dependency[2]])[0] == "OK", "cached digest should satisfy offline resolution")
+assert(offline_dependencies_available(lock, [])[0] == "ERROR", "missing offline artifact must fail")
+assert(package_manifest_validate(package_manifest("bad_name", "1.0.0", "1.0", []))[0] == "ERROR", "invalid package name must fail")
+
+emit "SELFHOST_PACKAGE_CONTRACT_OK"
