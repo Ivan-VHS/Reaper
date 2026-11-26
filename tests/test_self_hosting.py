@@ -40,6 +40,9 @@ class SelfHostingBootstrapTests(unittest.TestCase):
     def test_reaper_written_operator_table_runs_on_the_reference_runtime(self) -> None:
         self._run_selfhost_program("selfhost/operator_table.rpr", "SELFHOST_OPERATOR_TABLE_OK")
 
+    def test_reaper_written_unicode_lexer_runs_on_the_reference_runtime(self) -> None:
+        self._run_selfhost_program("selfhost/lexer.rpr", "SELFHOST_LEXER_OK")
+
 
 if __name__ == "__main__":
     unittest.main()
