@@ -133,6 +133,12 @@ class FoundationalFrameworksSixteenToTwentyTests(unittest.TestCase):
         )
         self.assertEqual(
             self.run_expression(
+                'runtime["kernel_validate_adapter"]([1.5, "duck-host", "trusted-host", ["FS_READ"]])'
+            ),
+            ["false"],
+        )
+        self.assertEqual(
+            self.run_expression(
                 'runtime["kernel_validate_adapter"]([1, "sim-host", "simulator", ["UNKNOWN"]])'
             ),
             ["false"],
@@ -171,9 +177,15 @@ class FoundationalFrameworksSixteenToTwentyTests(unittest.TestCase):
         )
         self.assertEqual(
             self.run_expression(
-                'runtime["library_validate_descriptor"](["reaper.ffi", 1, 0, "import"])'
+                'runtime["library_validate_descriptor"](["reaper.ffi", 1, 0, "inspect"])'
             ),
             ["true"],
+        )
+        self.assertEqual(
+            self.run_expression(
+                'runtime["library_validate_descriptor"](["reaper.ffi", 1, 0, "import"])'
+            ),
+            ["false"],
         )
         self.assertEqual(
             self.run_expression(
