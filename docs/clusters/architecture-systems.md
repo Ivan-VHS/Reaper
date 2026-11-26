@@ -11,8 +11,6 @@ This hub groups related specifications and implementation references. The linked
 - [HARDWARE LANGUAGE](../HARDWARE_LANGUAGE.md) — systems-language target, MMIO safety contract and hardware qualification gates.
 - [ARCHITECTURE 66](../ARCHITECTURE_66.md)
 - [ARCHITECTURE](../ARCHITECTURE.md)
-- [FOUNDATIONAL FRAMEWORKS V1](../FOUNDATIONAL_FRAMEWORKS_V1.md) — executable contracts for the first five foundations.
-- [FOUNDATIONAL FRAMEWORKS 6–10](../FOUNDATIONAL_FRAMEWORKS_6_10.md) — semantic basis, shared primitives, compatibility contracts, application skeleton and cross-layer backbone.
 - [ATOMIC QUANTUM 133](../ATOMIC_QUANTUM_133.md)
 - [CLINICAL SYSTEMS CSR120](../CLINICAL_SYSTEMS_CSR120.md)
 - [CONSTITUTION 666 PROFILE](../CONSTITUTION_666_PROFILE.md)
@@ -30,3 +28,7 @@ This hub groups related specifications and implementation references. The linked
 - Follow links within this cluster when a shared compiler, runtime, IDE or quality contract is involved.
 - Use the central map for cross-cluster navigation and project boundaries.
 - Update this hub and the central catalog whenever a page is added, moved or retired.
+
+- [Architecture foundation: 66 concepts](../REAPER_ARCHITECTURE_FOUNDATION_66.md)
+- [FOUNDATIONAL FRAMEWORKS V1](../FOUNDATIONAL_FRAMEWORKS_V1.md) — executable Reaper contracts for concepts 1–5.
+- [FOUNDATIONAL FRAMEWORKS 6–10](../FOUNDATIONAL_FRAMEWORKS_6_10.md) — executable Reaper contracts for Basis, Base, Foundation, Skeleton and Backbone. — stable native catalog, layer model and dependency validation API.
