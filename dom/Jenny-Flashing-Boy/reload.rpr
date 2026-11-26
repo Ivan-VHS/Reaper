@@ -1,0 +1,37 @@
+# Jenny Flashing Boy: development-only reload planning and rollback decisions.
+# Module row: [module_id, version, abi_id].
+# Reload plan: [old_module, new_module, scopes_quiesced, state_migrated, handles_migrated].
+
+export craft build_plan(old_module, new_module, scopes_quiesced, state_migrated, handles_migrated) {
+    when kind(old_module) != "list" or size(old_module) != 3 { yield [false, [], "invalid-old-module"] }
+    when kind(new_module) != "list" or size(new_module) != 3 { yield [false, [], "invalid-new-module"] }
+    when kind(scopes_quiesced) != "boolean" or kind(state_migrated) != "boolean" or kind(handles_migrated) != "boolean" {
+        yield [false, [], "reload-flags-must-be-boolean"]
+    }
+    yield [true, [old_module, new_module, scopes_quiesced, state_migrated, handles_migrated], "plan-created"]
+}
+
+export craft validate_plan(plan) {
+    when kind(plan) != "list" or size(plan) != 5 { yield [false, ["reload-plan-shape"]] }
+    make old_module := plan[0]
+    make new_module := plan[1]
+    vary errors := []
+    when old_module[0] != new_module[0] { change errors := push(errors, ["module-identity-changed"]) }
+    when old_module[1] == new_module[1] { change errors := push(errors, ["version-not-changed"]) }
+    when old_module[2] != new_module[2] { change errors := push(errors, ["abi-incompatible"]) }
+    when not plan[2] { change errors := push(errors, ["active-scopes-not-quiesced"]) }
+    when not plan[3] { change errors := push(errors, ["state-not-migrated"]) }
+    when not plan[4] { change errors := push(errors, ["owned-handles-not-migrated"]) }
+    yield [size(errors) == 0, errors]
+}
+
+export craft authorize_commit(plan) {
+    make checked := validate_plan(plan)
+    when not checked[0] { yield [false, checked[1], "reload-denied"] }
+    yield [true, [plan[1][0], plan[1][1], plan[1][2], "candidate"], "reload-candidate-authorized"]
+}
+
+export craft rollback(plan) {
+    when kind(plan) != "list" or size(plan) != 5 { yield [false, nothing, "invalid-reload-plan"] }
+    yield [true, [plan[0][0], plan[0][1], plan[0][2], "restored"], "old-module-retained"]
+}
