@@ -30,7 +30,7 @@ The implementation is authored in Reaper source:
 
 - `plague/engine/core.rpr` validates repository profiles and change proposals.
 - `plague/engine/evolution.rpr` checks target compatibility, scope grants, change budgets, required assurance gates, risk ceiling and rollback evidence.
-- `select_candidate` ranks up to 128 proposals deterministically by expected benefit minus risk. Ties preserve input order.
+- `select_candidate` ranks up to 128 proposals deterministically by expected benefit minus declared risk. Equal scores are ordered by ascending proposal ID.
 - `plague/schemas/repository-profile.v1.schema.json` and `plague/schemas/evolution-proposal.v1.schema.json` define the external JSON contracts.
 - `plague/examples/evolution_smoke.rpr` exercises eligible, blocked and selected proposals.
 - `tests/test_plague_evolution.py` is a host-side test adapter; policy behavior itself remains in `.rpr`.
@@ -57,7 +57,7 @@ Evolution proposal (12 fields):
 2. target platform
 3. target stack
 4. changed path count
-5. patch byte count
+5. patch byte count (at most 1,048,576)
 6. requested scopes
 7. completed gates
 8. rollback available
@@ -79,7 +79,7 @@ The selector returns a candidate recommendation only. Neither `eligible_for_revi
 
 v1 is deterministic and advisory. It does not enumerate local files, invoke a shell, access a network, load repository code, create branches, write patches, merge pull requests, install packages, probe devices or mutate firmware. Evidence references are opaque identifiers supplied by the caller; v1 does not claim to verify their contents.
 
-The next implementation gates are: canonical repository inventory and provenance; content-addressed snapshots; patch parsing and byte-level manifest validation; sandboxed validation adapters; exact-SHA CI evidence; branch/PR creation behind explicit grants; signed approval records; and tested rollback. Each adapter must have its own limits and negative tests. No adapter is considered implemented merely because its schema exists.
+The next implementation gates are: canonical repository inventory and provenance; content-addressed snapshots; patch parsing and byte-level manifest validation; sandboxed validation adapters; exact-SHA CI evidence; branch/PR creation behind explicit grants; signed approval records; and tested rollback. Each adapter must have its own limits and negative tests. No adapter is considered implemented merely because its schema exists. The profile evaluator also does not authenticate the grants or match individual changed paths against allow/exclude patterns.
 
 ## Acceptance
 
