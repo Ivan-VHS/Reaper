@@ -1,0 +1,8 @@
+import "../frameworks/foundation_21_25.rpr" as tools
+
+emit "All twenty-five frameworks valid = " ++ text(tools["foundation_validate_catalog_25"]())
+emit "Language toolset valid = " ++ text(tools["toolset_validate_selection"](["reaper.cli", "reaper.formatter"]))
+emit "Tool probe valid = " ++ text(tools["tooling_validate_probe"](["gcc", "C:/toolchain/bin/gcc.exe", "available"]))
+emit "Toolkit resolution = " ++ text(tools["toolkit_resolve_tools"](["language", "native-build"]))
+emit "Package order = " ++ text(tools["package_resolve_order"]([["math", 1, 0, "math.rpr", []], ["app", 1, 0, "main.rpr", ["math"]]]))
+emit "Canonical VM stack valid = " ++ text(tools["stack_validate_selection"]("canonical-vm"))
