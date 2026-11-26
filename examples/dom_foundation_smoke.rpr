@@ -92,4 +92,41 @@ make stopped := dom["stop"](quiescing[1])
 assert(stopped[0] and stopped[1][4] == "Stopped", "DOM shuts down in order")
 assert(not dom["start"](stopped[1])[0], "DOM prevents restart after terminal stop")
 
+
+# Standalone framework modules remain focused components behind ДОМ adapters.
+import "../dom/adapters/framework_modules.rpr" as dom_frameworks
+
+make graph_adapter := dom_frameworks["resolve_module_graph"](
+    ["editor", "core", "compiler"],
+    [["compiler", "core"], ["editor", "compiler"]]
+)
+assert(graph_adapter[0] and graph_adapter[1] == ["core", "compiler", "editor"], "ДОМ reuses GalHero")
+
+make option_adapter := dom_frameworks["resolve_configuration"](
+    [["mode", "safe"]],
+    [["timeout", 20]],
+    [["mode", "strict"]],
+    [["timeout", 45]],
+    [["mode", "text", true, nothing], ["timeout", "number", true, 10]]
+)
+assert(option_adapter[0], "ДОМ reuses Stacked Options")
+
+make most_adapter := dom_frameworks["normalize_most_word"]("функция")
+assert(most_adapter[0] == "craft" and most_adapter[1] == "runtime", "ДОМ reuses exact МОСТ alias mapping")
+
+make snapshot_adapter := dom_frameworks["update_snapshot"](
+    [["theme", "noir"], [0, []]][1],
+    0,
+    "theme",
+    "yellow"
+)
+assert(snapshot_adapter[0], "ДОМ reuses Blau versioned state")
+
+make state_adapter := dom_frameworks["apply_state_events"](
+    "idle",
+    ["start", "stop"],
+    [["idle", "start", "running"], ["running", "stop", "idle"]]
+)
+assert(state_adapter[0] and state_adapter[1] == "idle", "ДОМ reuses Shashio state transitions")
+
 emit "dom foundation smoke checks passed"
