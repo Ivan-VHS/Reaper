@@ -45,7 +45,7 @@ class FrameLayersTests(unittest.TestCase):
             'framework["valid_layer_graph"](3, [[1, 1]])',
             'framework["valid_layer_graph"](3, [[0, 3]])',
             'framework["valid_layer_graph"](3, [[0, 1], [0, 1]])',
-            'framework["valid_layer_graph"](3, [[0]])',
+            'framework["valid_layer_graph"](3, [[0]])',\n            'framework["valid_layer_graph"](3.5, [[0, 1]])',\n            'framework["valid_layer_graph"](3, [[0, 1.5]])',
         )
         for expression in cases:
             with self.subTest(expression=expression):
@@ -59,7 +59,7 @@ class FrameLifecycleTests(unittest.TestCase):
     def test_undeclared_transition_or_invalid_transition_table_is_rejected(self) -> None:
         self.assertEqual(run_framework("lifecycle", 'framework["valid_lifecycle"](0, [1, 4], [[0, 1], [1, 2]])'), ["false"])
         self.assertEqual(run_framework("lifecycle", 'framework["valid_lifecycle"](0, [1], [[0, 1], [0, 1]])'), ["false"])
-        self.assertEqual(run_framework("lifecycle", 'framework["valid_lifecycle"](0, [1], [[0]])'), ["false"])
+        self.assertEqual(run_framework("lifecycle", 'framework["valid_lifecycle"](0, [1], [[0]])'), ["false"])\n        self.assertEqual(run_framework("lifecycle", 'framework["valid_lifecycle"](0, [1.5], [[0, 1.5]])'), ["false"])
 
 
 class FrameCapabilitiesTests(unittest.TestCase):
@@ -77,12 +77,12 @@ class FrameExtensionsTests(unittest.TestCase):
         self.assertEqual(run_framework("extensions", 'framework["valid_extension_registry"]([["codec", 1, 3], ["theme", 2, 4]])'), ["true"])
         self.assertEqual(run_framework("extensions", 'framework["valid_extension_registry"]([["codec", 1, 3], ["codec", 2, 4]])'), ["false"])
         self.assertEqual(run_framework("extensions", 'framework["valid_extension_registry"]([["codec", 4, 2]])'), ["false"])
-        self.assertEqual(run_framework("extensions", 'framework["valid_extension_registry"]([["", 1, 3]])'), ["false"])
+        self.assertEqual(run_framework("extensions", 'framework["valid_extension_registry"]([["", 1, 3]])'), ["false"])\n        self.assertEqual(run_framework("extensions", 'framework["valid_extension_registry"]([["fractional", 1.5, 3]])'), ["false"])
 
     def test_compatibility_range_is_inclusive(self) -> None:
         self.assertEqual(run_framework("extensions", 'framework["compatible_extension"](["codec", 2, 4], 2)'), ["true"])
         self.assertEqual(run_framework("extensions", 'framework["compatible_extension"](["codec", 2, 4], 4)'), ["true"])
-        self.assertEqual(run_framework("extensions", 'framework["compatible_extension"](["codec", 2, 4], 5)'), ["false"])
+        self.assertEqual(run_framework("extensions", 'framework["compatible_extension"](["codec", 2, 4], 5)'), ["false"])\n        self.assertEqual(run_framework("extensions", 'framework["compatible_extension"](["codec", 2, 4], 2.5)'), ["false"])
 
     def test_registry_filters_to_host_compatible_extensions(self) -> None:
         self.assertEqual(
