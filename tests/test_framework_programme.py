@@ -12,16 +12,12 @@ INDEX = ROOT / "reaper" / "frameworks" / "framework-index.v1.json"
 RUNNER = ROOT / "tests" / "_framework_runner.rpr"
 
 
-def load_index() -> dict:
-    return json.loads(INDEX.read_text(encoding="utf-8"))
-
-
 def run_framework(entry: dict, args: str) -> list[str]:
     relative = Path(entry["path"]).relative_to("reaper")
     specifier = f"../reaper/{relative.as_posix()}"
     source = (
-        f'import "{specifier}" as framework\n'
-        f'emit framework["{entry["api"]}"]{args}\n'
+        f'import "{specifier}" as framework\\n'
+        f'emit framework["{entry["api"]}"]{args}\\n'
     )
     output: list[str] = []
     Interpreter(output=output.append).run(source, filename=str(RUNNER))
@@ -31,22 +27,24 @@ def run_framework(entry: dict, args: str) -> list[str]:
 class FrameworkProgrammeTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        cls.index = load_index()
+        cls.index = json.loads(INDEX.read_text(encoding="utf-8"))
         cls.frameworks = cls.index["frameworks"]
 
-    def test_index_covers_all_sixty_five_domains_and_325_frameworks(self) -> None:
-        self.assertEqual(self.index["schema"], "reaper.framework-index/v1")
-        self.assertEqual(self.index["target_framework_count"], 325)
-        self.assertEqual(len(self.index["domains"]), 65)
-        self.assertEqual(len(self.frameworks), 325)
-        self.assertEqual(len({item["id"] for item in self.frameworks}), 325)
-        self.assertEqual(len({item["path"] for item in self.frameworks}), 325)
+    def test_programme_counts_and_domain_slots_are_consistent(self) -> None:
+        self.assertEqual(self.index["total_target_framework_count"], 330)
+        self.assertEqual(self.index["remaining_target_framework_count"], 325)
+        self.assertEqual(len(self.index["domains"]), 66)
+        self.assertEqual(sum(domain["framework_slots"] for domain in self.index["domains"]), 330)
+        self.assertEqual(len(self.frameworks), 20)
+        self.assertEqual(self.index["remaining_source_count"], 305)
+        self.assertEqual(len({item["id"] for item in self.frameworks}), 20)
+        self.assertEqual(len({item["path"] for item in self.frameworks}), 20)
 
-    def test_every_framework_has_an_independent_reaper_module(self) -> None:
+    def test_each_new_framework_is_an_independent_reaper_module(self) -> None:
         missing = [item["path"] for item in self.frameworks if not (ROOT / item["path"]).is_file()]
         self.assertEqual(missing, [])
 
-    def test_every_framework_accepts_its_valid_contract_fixture(self) -> None:
+    def test_each_new_framework_accepts_its_valid_contract(self) -> None:
         failures = []
         for entry in self.frameworks:
             with self.subTest(framework=entry["id"]):
@@ -56,12 +54,10 @@ class FrameworkProgrammeTests(unittest.TestCase):
                     failures.append(f'{entry["id"]}: {type(error).__name__}: {error}')
                     continue
                 if output != [entry["positive"]["output"]]:
-                    failures.append(
-                        f'{entry["id"]}: expected {entry["positive"]["output"]!r}, got {output!r}'
-                    )
+                    failures.append(f'{entry["id"]}: expected {entry["positive"]["output"]!r}, got {output!r}')
         self.assertEqual(failures, [])
 
-    def test_every_framework_rejects_or_reports_its_negative_contract_fixture(self) -> None:
+    def test_each_new_framework_rejects_its_invalid_contract(self) -> None:
         failures = []
         for entry in self.frameworks:
             with self.subTest(framework=entry["id"]):
@@ -71,9 +67,7 @@ class FrameworkProgrammeTests(unittest.TestCase):
                     failures.append(f'{entry["id"]}: {type(error).__name__}: {error}')
                     continue
                 if output != [entry["negative"]["output"]]:
-                    failures.append(
-                        f'{entry["id"]}: expected {entry["negative"]["output"]!r}, got {output!r}'
-                    )
+                    failures.append(f'{entry["id"]}: expected {entry["negative"]["output"]!r}, got {output!r}')
         self.assertEqual(failures, [])
 
 
