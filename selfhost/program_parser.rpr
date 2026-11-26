@@ -7,7 +7,7 @@
 # The representation is deterministic and source-aware. It is intentionally
 # independent of Python objects; the host compares it with the reference AST.
 
-craft parse_program(tokens) {
+export craft parse_program(tokens) {
     vary cursor := 0
     make token_count := size(tokens)
     vary failed := false
@@ -299,6 +299,68 @@ craft parse_program(tokens) {
         yield ast("each", token, name_token[1], [iterable, body])
     }
 
+    craft parse_struct(token) {
+        make name_token := consume("IDENT", "expected a structure name after 'struct'")
+        make ignored_open := consume("{", "expected '{' after structure name")
+        vary fields := []
+        skip_newlines()
+
+        loop while not failed and not check("}") and not check("EOF") {
+            make field_name := consume("IDENT", "expected a field name")
+            make ignored_colon := consume(":", "expected ':' after field name")
+            make field_type := consume("IDENT", "expected a field type")
+
+            when not failed {
+                change fields := push(fields, ast("field", field_name, [field_name[1], field_type[1]], []))
+                when match_kind(",") {
+                    skip_newlines()
+                } otherwise {
+                    make ended := statement_end()
+                }
+            }
+        }
+
+        when not failed and not check("}") {
+            make ignored := fail("expected '}' after structure fields", peek())
+        }
+        when failed {
+            yield ast("struct", token, name_token[1], fields)
+        }
+        make ignored_close := advance()
+        yield ast("struct", token, name_token[1], fields)
+    }
+
+    craft parse_platform(token) {
+        make name_token := consume("IDENT", "expected a platform name after 'platform'")
+        make ignored_open := consume("{", "expected '{' after platform name")
+        vary fields := []
+        skip_newlines()
+
+        loop while not failed and not check("}") and not check("EOF") {
+            make field_name := consume("IDENT", "expected a platform property name")
+            make ignored_assign := consume(":=", "expected ':=' after platform property")
+            make value := parse_bp(1)
+
+            when not failed {
+                change fields := push(fields, ast("platform_field", field_name, field_name[1], [value]))
+                when match_kind(",") {
+                    skip_newlines()
+                } otherwise {
+                    make ended := statement_end()
+                }
+            }
+        }
+
+        when not failed and not check("}") {
+            make ignored := fail("expected '}' after platform properties", peek())
+        }
+        when failed {
+            yield ast("platform", token, name_token[1], fields)
+        }
+        make ignored_close := advance()
+        yield ast("platform", token, name_token[1], fields)
+    }
+
     craft parse_statement() {
         when check("IMPORT") {
             make token := advance()
@@ -312,15 +374,25 @@ craft parse_program(tokens) {
 
         when check("EXPORT") {
             make token := advance()
-            when check("MAKE") or check("VARY") or check("CRAFT") {
+            when check("MAKE") or check("VARY") or check("CRAFT") or check("STRUCT") or check("PLATFORM") {
                 make declaration := parse_statement()
-                when not failed and declaration[0] != "declare" and declaration[0] != "function" {
-                    make ignored := fail("inline export must declare a name or craft", token)
+                when not failed and declaration[0] != "declare" and declaration[0] != "function" and declaration[0] != "struct" and declaration[0] != "platform" {
+                    make ignored := fail("inline export must declare a name, craft, struct, or platform", token)
                 }
                 yield ast("export", token, nothing, [declaration])
             }
             make name_token := consume("IDENT", "expected a name after 'export'")
             yield ast("export", token, name_token[1], [])
+        }
+
+        when check("STRUCT") {
+            make token := advance()
+            yield parse_struct(token)
+        }
+
+        when check("PLATFORM") {
+            make token := advance()
+            yield parse_platform(token)
         }
 
         when check("MAKE") or check("VARY") {
