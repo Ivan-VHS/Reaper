@@ -64,19 +64,6 @@ static int valid_slash_identifier(const char *value, size_t maximum) {
     return 1;
 }
 
-static int hash_u64(ReaperSha256Context *context, uint64_t value) {
-    uint8_t encoded[8];
-    size_t index;
-    for (index = 0u; index < 8u; ++index)
-        encoded[7u - index] = (uint8_t)(value >> (index * 8u));
-    return reaper_sha256_update(context, encoded, sizeof encoded);
-}
-
-static int hash_field(ReaperSha256Context *context, const void *bytes, size_t length) {
-    return hash_u64(context, (uint64_t)length) &&
-           reaper_sha256_update(context, bytes, length);
-}
-
 static int valid_relative_path(const char *path) {
     size_t index = 0u, segment_length = 0u;
     if (!valid_text(path, REAPER_EVOLUTION_APPLY_MAX_PATH) ||
@@ -141,6 +128,7 @@ static int host_complete(const ReaperEvolutionApplyHost *host) {
         host->verify_repository_grant != NULL &&
         host->verify_path_scope != NULL &&
         host->verify_git_revision != NULL &&
+        host->begin_workspace != NULL &&
         host->resolve_confined_path != NULL &&
         host->read_file != NULL &&
         host->release_buffer != NULL &&
@@ -149,17 +137,31 @@ static int host_complete(const ReaperEvolutionApplyHost *host) {
         host->commit_staged != NULL &&
         host->rollback_committed != NULL &&
         host->discard_staged != NULL &&
+        host->publish_topic_branch != NULL &&
+        host->rollback_topic_branch != NULL &&
         host->release_rollback != NULL &&
         host->preserve_failed_rollback != NULL &&
+        host->end_workspace != NULL &&
         host->audit_append != NULL;
+}
+
+static int hash_u64(ReaperSha256Context *context, uint64_t value) {
+    uint8_t encoded[8];
+    size_t index;
+    for (index = 0u; index < 8u; ++index)
+        encoded[7u - index] = (uint8_t)(value >> (index * 8u));
+    return reaper_sha256_update(context, encoded, sizeof encoded);
+}
+
+static int hash_field(ReaperSha256Context *context, const void *bytes, size_t length) {
+    return hash_u64(context, (uint64_t)length) &&
+           reaper_sha256_update(context, bytes, length);
 }
 
 static int request_digest(const ReaperEvolutionApplyRequest *request, char output[65]) {
     ReaperSha256Context context;
     uint8_t digest[32];
     size_t index;
-    const uint64_t patch_count = (uint64_t)request->patch_count;
-    const uint64_t check_count = (uint64_t)request->check_count;
     reaper_sha256_init(&context);
     if (!hash_field(&context, request->request_id, strlen(request->request_id)) ||
         !hash_field(&context, request->repository_id, strlen(request->repository_id)) ||
@@ -168,16 +170,15 @@ static int request_digest(const ReaperEvolutionApplyRequest *request, char outpu
         !hash_field(&context, request->target_branch, strlen(request->target_branch)) ||
         !hash_field(&context, request->revision_algorithm, strlen(request->revision_algorithm)) ||
         !hash_field(&context, request->base_revision, strlen(request->base_revision)) ||
-        !hash_u64(&context, patch_count)) return 0;
+        !hash_u64(&context, (uint64_t)request->patch_count)) return 0;
     for (index = 0u; index < request->patch_count; ++index) {
         const ReaperSourcePatch *patch = &request->patches[index];
-        const uint64_t replacement_size = (uint64_t)patch->replacement_size;
         if (!hash_field(&context, patch->relative_path, strlen(patch->relative_path)) ||
             !hash_field(&context, patch->expected_original_sha256, 64u) ||
-            !hash_u64(&context, replacement_size) ||
+            !hash_u64(&context, (uint64_t)patch->replacement_size) ||
             !hash_field(&context, patch->replacement, patch->replacement_size)) return 0;
     }
-    if (!hash_u64(&context, check_count)) return 0;
+    if (!hash_u64(&context, (uint64_t)request->check_count)) return 0;
     for (index = 0u; index < request->check_count; ++index) {
         if (!hash_field(&context, request->check_ids[index], strlen(request->check_ids[index]))) return 0;
     }
@@ -205,6 +206,7 @@ static void cleanup_committed_backups(const ReaperEvolutionApplyHost *host,
 
 static int rollback_entries(const ReaperEvolutionApplyHost *host,
                             const ReaperEvolutionApplyRequest *request,
+                            void *workspace,
                             ApplyEntry *entries, size_t count,
                             ReaperEvolutionApplyResult *result) {
     size_t index;
@@ -212,14 +214,14 @@ static int rollback_entries(const ReaperEvolutionApplyHost *host,
     for (index = count; index > 0u; --index) {
         ApplyEntry *entry = &entries[index - 1u];
         if (entry->committed && entry->rollback != NULL) {
-            if (host->rollback_committed(host->context, entry->rollback)) {
+            if (host->rollback_committed(host->context, workspace, entry->rollback)) {
                 ++result->rolled_back_files;
                 host->release_rollback(host->context, entry->rollback);
                 entry->rollback = NULL;
                 entry->staged = NULL;
             } else {
                 if (host->preserve_failed_rollback(host->context, entry->rollback,
-                        request->request_id, entry->path)) {
+                        request->request_id, request->target_branch, entry->path)) {
                     /* Ownership moves to the host's durable recovery store. */
                     entry->rollback = NULL;
                     entry->staged = NULL;
@@ -227,11 +229,28 @@ static int rollback_entries(const ReaperEvolutionApplyHost *host,
                 ok = 0;
             }
         } else if (!entry->committed && entry->staged != NULL) {
-            if (!host->discard_staged(host->context, entry->staged)) ok = 0;
+            if (!host->discard_staged(host->context, workspace, entry->staged)) ok = 0;
             entry->staged = NULL;
         }
     }
     return ok;
+}
+
+static int rollback_published_branch(const ReaperEvolutionApplyHost *host,
+                                     const ReaperEvolutionApplyRequest *request,
+                                     void **published_rollback) {
+    if (published_rollback == NULL || *published_rollback == NULL) return 1;
+    if (host->rollback_topic_branch(host->context, *published_rollback)) {
+        host->release_rollback(host->context, *published_rollback);
+        *published_rollback = NULL;
+        return 1;
+    }
+    if (host->preserve_failed_rollback(host->context, *published_rollback,
+            request->request_id, request->target_branch, "")) {
+        /* Ownership moves to the durable recovery store. */
+        *published_rollback = NULL;
+    }
+    return 0;
 }
 
 int reaper_evolution_patch_generate(const char *relative_path,
@@ -269,11 +288,14 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
     ApplyEntry entries[REAPER_EVOLUTION_APPLY_MAX_FILES];
     size_t index, total_replacement_bytes = 0u;
     void *staged_handles[REAPER_EVOLUTION_APPLY_MAX_FILES] = {0};
+    void *workspace = NULL;
+    void *published_rollback = NULL;
     char canonical_path[REAPER_EVOLUTION_APPLY_MAX_PATH];
     char actual_digest[65];
     uint8_t *current_bytes = NULL;
     size_t current_size = 0u;
     int checks_passed = 0;
+    int branch_published = 0;
 
     memset(entries, 0, sizeof entries);
     if (!host_complete(host)) {
@@ -351,11 +373,21 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
         result.status = REAPER_APPLY_INVALID_ARGUMENT;
         return result;
     }
+    (void)snprintf(result.published_branch, sizeof result.published_branch,
+                   "%s", request->target_branch);
     if (!host->audit_append(host->context, "apply.started", request->request_id,
             request->repository_id, request->target_branch, request->base_revision,
-            "", result.request_digest, "preflight completed")) {
+            "", result.request_digest, "grant and immutable base revision verified")) {
         result.status = REAPER_APPLY_AUDIT_FAILED;
         return result;
+    }
+
+    if (!host->begin_workspace(host->context, request->repository_id,
+            request->base_branch, request->revision_algorithm, request->base_revision,
+            request->target_branch, &request->limits, &workspace) ||
+        workspace == NULL) {
+        result.status = REAPER_APPLY_WORKSPACE_FAILED;
+        goto fail;
     }
 
     for (index = 0u; index < request->patch_count; ++index) {
@@ -368,8 +400,8 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
             goto fail;
         }
         canonical_path[0] = '\0';
-        if (!host->resolve_confined_path(host->context, request->repository_id,
-                patch->relative_path, canonical_path, sizeof canonical_path) ||
+        if (!host->resolve_confined_path(host->context, workspace, patch->relative_path,
+                canonical_path, sizeof canonical_path) ||
             !valid_text(canonical_path, sizeof canonical_path)) {
             result.status = REAPER_APPLY_PATH_DENIED;
             (void)snprintf(result.failed_path, sizeof result.failed_path, "%s", patch->relative_path);
@@ -377,7 +409,8 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
         }
         current_bytes = NULL;
         current_size = 0u;
-        if (!host->read_file(host->context, canonical_path, &current_bytes, &current_size) ||
+        if (!host->read_file(host->context, workspace, canonical_path,
+                &current_bytes, &current_size) ||
             (current_size > 0u && current_bytes == NULL) ||
             current_size > REAPER_EVOLUTION_APPLY_MAX_FILE_BYTES) {
             if (current_bytes != NULL) host->release_buffer(host->context, current_bytes);
@@ -397,12 +430,12 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
         host->release_buffer(host->context, current_bytes);
         current_bytes = NULL;
 
-        if (!host->stage_replace(host->context, canonical_path,
+        if (!host->stage_replace(host->context, workspace, canonical_path,
                 patch->expected_original_sha256, patch->replacement,
                 patch->replacement_size, &entries[index].staged) ||
             entries[index].staged == NULL) {
             if (entries[index].staged != NULL) {
-                (void)host->discard_staged(host->context, entries[index].staged);
+                (void)host->discard_staged(host->context, workspace, entries[index].staged);
                 entries[index].staged = NULL;
             }
             result.status = REAPER_APPLY_STAGE_FAILED;
@@ -413,13 +446,13 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
         staged_handles[index] = entries[index].staged;
         if (!host->audit_append(host->context, "patch.staged", request->request_id,
                 request->repository_id, request->target_branch, request->base_revision,
-                patch->relative_path, patch->expected_original_sha256, "source pinned and staged")) {
+                patch->relative_path, patch->expected_original_sha256, "source pinned in isolated workspace")) {
             result.status = REAPER_APPLY_AUDIT_FAILED;
             goto fail;
         }
     }
 
-    if (!host->run_declared_checks(host->context,
+    if (!host->run_declared_checks(host->context, workspace,
             staged_handles, request->patch_count,
             request->check_ids, request->check_count, &request->limits,
             result.report, sizeof result.report)) {
@@ -435,7 +468,8 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
     }
 
     for (index = 0u; index < request->patch_count; ++index) {
-        if (!host->commit_staged(host->context, entries[index].staged, &entries[index].rollback)) {
+        if (!host->commit_staged(host->context, workspace,
+                entries[index].staged, &entries[index].rollback)) {
             result.status = REAPER_APPLY_COMMIT_FAILED;
             (void)snprintf(result.failed_path, sizeof result.failed_path, "%s", entries[index].path);
             goto fail;
@@ -449,30 +483,59 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
         ++result.applied_files;
     }
 
+    if (!host->publish_topic_branch(host->context, workspace,
+            request->target_branch, request->revision_algorithm,
+            request->base_revision, result.published_revision, &published_rollback)) {
+        result.status = REAPER_APPLY_PUBLISH_FAILED;
+        if (published_rollback != NULL) branch_published = 1;
+        goto fail;
+    }
+    branch_published = 1;
+    if (published_rollback == NULL ||
+        !valid_revision(&(ReaperEvolutionApplyRequest){
+            .revision_algorithm = request->revision_algorithm,
+            .base_revision = result.published_revision
+        })) {
+        result.status = REAPER_APPLY_PUBLISH_FAILED;
+        goto fail;
+    }
+
     if (!host->audit_append(host->context, "apply.committed", request->request_id,
-            request->repository_id, request->target_branch, request->base_revision,
+            request->repository_id, request->target_branch, result.published_revision,
             "", result.request_digest, result.report)) {
         result.status = REAPER_APPLY_AUDIT_FAILED;
         goto fail;
     }
 
     cleanup_committed_backups(host, entries, request->patch_count);
+    host->release_rollback(host->context, published_rollback);
+    published_rollback = NULL;
+    host->end_workspace(host->context, workspace);
+    workspace = NULL;
     result.status = REAPER_APPLY_OK;
     return result;
 
 fail:
     if (current_bytes != NULL) host->release_buffer(host->context, current_bytes);
     {
-        const int rollback_ok = rollback_entries(host, request, entries, request->patch_count, &result);
+        int rollback_ok = 1;
+        if (branch_published &&
+            !rollback_published_branch(host, request, &published_rollback))
+            rollback_ok = 0;
+        if (workspace != NULL &&
+            !rollback_entries(host, request, workspace, entries, request->patch_count, &result))
+            rollback_ok = 0;
         if (!host->audit_append(host->context, "apply.rolled_back", request->request_id,
-                request->repository_id, request->target_branch, request->base_revision,
+                request->repository_id, request->target_branch,
+                branch_published ? result.published_revision : request->base_revision,
                 result.failed_path, result.request_digest,
-                checks_passed ? "apply failed after checks; rollback attempted" :
-                                "pre-commit operation failed; staged changes discarded")) {
+                checks_passed ? "branch publication failed or audit did not commit; rollback attempted" :
+                                "isolated workspace operation failed; staged changes discarded")) {
             if (rollback_ok) result.status = REAPER_APPLY_AUDIT_FAILED;
         }
         if (!rollback_ok) result.status = REAPER_APPLY_ROLLBACK_FAILED;
     }
+    if (workspace != NULL) host->end_workspace(host->context, workspace);
     return result;
 }
 
@@ -486,10 +549,12 @@ const char *reaper_evolution_apply_status_name(ReaperApplyStatus status) {
     case REAPER_APPLY_PATH_DENIED: return "path-denied";
     case REAPER_APPLY_FINGERPRINT_MISMATCH: return "fingerprint-mismatch";
     case REAPER_APPLY_LIMIT_EXCEEDED: return "limit-exceeded";
+    case REAPER_APPLY_WORKSPACE_FAILED: return "workspace-failed";
     case REAPER_APPLY_READ_FAILED: return "read-failed";
     case REAPER_APPLY_STAGE_FAILED: return "stage-failed";
     case REAPER_APPLY_CHECKS_FAILED: return "checks-failed";
     case REAPER_APPLY_COMMIT_FAILED: return "commit-failed";
+    case REAPER_APPLY_PUBLISH_FAILED: return "publish-failed";
     case REAPER_APPLY_AUDIT_FAILED: return "audit-failed";
     case REAPER_APPLY_ROLLBACK_FAILED: return "rollback-failed";
     default: return "invalid-status";
