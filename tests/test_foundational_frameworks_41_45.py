@@ -109,6 +109,25 @@ class FoundationalFrameworksFortyOneToFortyFiveTests(unittest.TestCase):
         )
         self.assertEqual(
             self.run_expression(
+                'engineering["system_validate_dependency_order"](["language", "compiler", "runtime", "host"])'
+            ),
+            ["true"],
+        )
+        self.assertEqual(
+            self.run_expression(
+                'engineering["system_validate_dependency_order"](["compiler", "language"])'
+            ),
+            ["false"],
+        )
+        self.assertEqual(
+            self.run_expression(
+                'engineering["system_validate_dependency_order"](["language", "runtime", "compiler"])'
+            ),
+            ["false"],
+        )
+
+        self.assertEqual(
+            self.run_expression(
                 'engineering["subsystem_validate_flow"](["lexer", "parser"])'
             ),
             ["true"],
