@@ -454,7 +454,7 @@ export craft compare_profiles(before, after, stability_threshold) {
          absolute(contrast_delta)) / 3.0
 
     make profile_stability := 1.0 - average_distance
-    make status := "shifted"
+    vary status := "shifted"
 
     when profile_stability >= stability_threshold {
         change status := "stable"
