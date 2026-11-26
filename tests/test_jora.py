@@ -328,7 +328,7 @@ class JoraCompositionTests(unittest.TestCase):
             self.assertEqual(manifest["source_bundle"]["files_copied"], result["source_bundle"]["files_copied"])
             self.assertFalse(result["installable"])
             self.assertFalse(result["source_executed"])
-            self.assertGreater(result["validation"]["checked_files"], 16)
+            self.assertGreater(result["validation"]["files_checked"], 16)
 
     def test_catalog_contains_twenty_one_canonical_capability_packs(self):
         items = [item for item in list_components() if not item["id"].startswith("harvest.")]
