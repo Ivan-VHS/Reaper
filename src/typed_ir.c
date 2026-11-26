@@ -436,8 +436,8 @@ static int verify_type_layout(
                 }
                 previous_end = field_end;
             }
-            if (field_type->byte_alignment > maximum_field_alignment) {
-                maximum_field_alignment = field_type->byte_alignment;
+            if (effective_alignment > maximum_field_alignment) {
+                maximum_field_alignment = effective_alignment;
             }
             if (field_type->byte_size > maximum_member_size) {
                 maximum_member_size = field_type->byte_size;
