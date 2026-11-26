@@ -21,7 +21,7 @@ PLAGUE is a Reaper-native framework family for evidence-driven evolution of expl
 | Maladrix | Performance and resilience engineering | Planned |
 | Necrovex | Recovery, migrations and compatibility repair | Planned |
 
-The executable registry is in engine/registry.rpr. Action permissions are in engine/policy.rpr. Bounded profile/proposal validation and deterministic proposal assessment are in core.rpr and evolution.rpr. All four are Reaper modules.
+The executable registry is in engine/registry.rpr. Action permissions are in engine/policy.rpr. Bounded profile/proposal validation and deterministic proposal assessment are in engine/core.rpr and engine/evolution.rpr. All four are Reaper modules.
 
 ## Operating modes
 
@@ -70,10 +70,13 @@ Do not report any of those as implemented until source, tests and CI evidence ex
 
 From the Reaper repository root:
 
-    python -m reaper --check plague/core.rpr
-    python -m reaper --check plague/evolution.rpr
+    python -m reaper --check plague/engine/core.rpr
+    python -m reaper --check plague/engine/evolution.rpr
+    python -m reaper --check plague/examples/evolution_smoke.rpr
+    python -m reaper plague/examples/evolution_smoke.rpr
     python -m reaper --check examples/plague/evolution_smoke.rpr
     python -m reaper examples/plague/evolution_smoke.rpr
+    python -m unittest discover -s tests -p "test_plague_evolution.py" -v
     python -m unittest discover -s tests -p "test_plague_framework.py" -v
     python -m reaper --check plague/engine/policy.rpr
     python -m reaper --check plague/engine/registry.rpr
