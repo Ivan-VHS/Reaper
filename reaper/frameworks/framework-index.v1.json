@@ -1,10 +1,10 @@
 {
   "schema": "reaper.framework-index/v1",
   "total_target_framework_count": 330,
-  "remaining_target_framework_count": 325,
+  "remaining_target_framework_count": 0,
   "existing_batch_01_source_count": 5,
-  "new_source_count": 225,
-  "remaining_source_count": 100,
+  "new_source_count": 325,
+  "remaining_source_count": 0,
   "domains": [
     {
       "number": 1,
@@ -20,7 +20,7 @@
       "name": "Платформа",
       "framework_slots": 5,
       "source_frameworks": 5,
-      "state": "tests-first"
+      "state": "source-added-ci-pending"
     },
     {
       "number": 3,
@@ -28,7 +28,7 @@
       "name": "Среда",
       "framework_slots": 5,
       "source_frameworks": 5,
-      "state": "tests-first"
+      "state": "source-added-ci-pending"
     },
     {
       "number": 4,
@@ -36,7 +36,7 @@
       "name": "Инфраструктура",
       "framework_slots": 5,
       "source_frameworks": 5,
-      "state": "tests-first"
+      "state": "source-added-ci-pending"
     },
     {
       "number": 5,
@@ -44,7 +44,7 @@
       "name": "Архитектура",
       "framework_slots": 5,
       "source_frameworks": 5,
-      "state": "tests-first"
+      "state": "source-added-ci-pending"
     },
     {
       "number": 6,
@@ -68,7 +68,7 @@
       "name": "Фундамент",
       "framework_slots": 5,
       "source_frameworks": 5,
-      "state": "tests-first"
+      "state": "source-added-ci-pending"
     },
     {
       "number": 9,
@@ -76,7 +76,7 @@
       "name": "Остов",
       "framework_slots": 5,
       "source_frameworks": 5,
-      "state": "tests-first"
+      "state": "source-added-ci-pending"
     },
     {
       "number": 10,
@@ -84,7 +84,7 @@
       "name": "Костяк",
       "framework_slots": 5,
       "source_frameworks": 5,
-      "state": "tests-first"
+      "state": "source-added-ci-pending"
     },
     {
       "number": 11,
@@ -92,7 +92,7 @@
       "name": "Структура",
       "framework_slots": 5,
       "source_frameworks": 5,
-      "state": "tests-first"
+      "state": "source-added-ci-pending"
     },
     {
       "number": 12,
@@ -259,280 +259,280 @@
       "slug": "32-middleware",
       "name": "Мидлвар",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 33,
       "slug": "33-integration-software",
       "name": "Связующее ПО",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 34,
       "slug": "34-container",
       "name": "Контейнер",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 35,
       "slug": "35-host",
       "name": "Хост",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 36,
       "slug": "36-context",
       "name": "Контекст",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 37,
       "slug": "37-model",
       "name": "Модель",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 38,
       "slug": "38-pattern",
       "name": "Паттерн",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 39,
       "slug": "39-paradigm",
       "name": "Парадигма",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 40,
       "slug": "40-concept",
       "name": "Концепция",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 41,
       "slug": "41-methodology",
       "name": "Методология",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 42,
       "slug": "42-approach",
       "name": "Подход",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 43,
       "slug": "43-system",
       "name": "Система",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 44,
       "slug": "44-subsystem",
       "name": "Подсистема",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 45,
       "slug": "45-module",
       "name": "Модуль",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 46,
       "slug": "46-component",
       "name": "Компонент",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 47,
       "slug": "47-block",
       "name": "Блок",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "queued"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 48,
       "slug": "48-node",
       "name": "Узел",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "queued"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 49,
       "slug": "49-interface",
       "name": "Интерфейс",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "queued"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 50,
       "slug": "50-protocol",
       "name": "Протокол",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "queued"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 51,
       "slug": "51-standard",
       "name": "Стандарт",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "queued"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 52,
       "slug": "52-regulation",
       "name": "Регламент",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "queued"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 53,
       "slug": "53-specification",
       "name": "Спецификация",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "queued"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 54,
       "slug": "54-schema",
       "name": "Схема",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "queued"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 55,
       "slug": "55-matrix",
       "name": "Матрица",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "queued"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 56,
       "slug": "56-grid",
       "name": "Сетка",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "queued"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 57,
       "slug": "57-circuit",
       "name": "Контур",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "queued"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 58,
       "slug": "58-perimeter",
       "name": "Периметр",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "queued"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 59,
       "slug": "59-work-environment",
       "name": "Рабочая среда",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "queued"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 60,
       "slug": "60-workspace",
       "name": "Рабочая область",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "queued"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 61,
       "slug": "61-staging-ground",
       "name": "Плацдарм",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "queued"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 62,
       "slug": "62-anchor-point",
       "name": "Опорная точка",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "queued"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 63,
       "slug": "63-baseline",
       "name": "Базовая линия",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "queued"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 64,
       "slug": "64-load-bearing-structure",
       "name": "Несущая конструкция",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "queued"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 65,
       "slug": "65-hardware-software-base",
       "name": "Аппаратно-программная база",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "queued"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 66,
       "slug": "66-software-skeleton",
       "name": "Программный каркас",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "queued"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     }
   ],
   "frameworks": [
@@ -4858,6 +4858,1906 @@
       },
       "negative": {
         "args": "([2, 0], [1, 2], [1, 4])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "47.ranges",
+      "domain_number": 47,
+      "domain": "Блок",
+      "slug": "47-block",
+      "name": "Block Range Framework",
+      "role": "ranges",
+      "path": "reaper/frameworks/47-block/ranges.rpr.rpr",
+      "api": "valid_block_ranges",
+      "purpose": "Validate sorted half-open address blocks with positive lengths and no overlap.",
+      "positive": {
+        "args": "([[0, 16], [16, 32]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[0, 16], [15, 32]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "47.capacity",
+      "domain_number": 47,
+      "domain": "Блок",
+      "slug": "47-block",
+      "name": "Block Capacity Framework",
+      "role": "capacity",
+      "path": "reaper/frameworks/47-block/capacity.rpr.rpr",
+      "api": "admit_block_items",
+      "purpose": "Admit items only when they fit the non-negative block capacity.",
+      "positive": {
+        "args": "(4, 8)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(9, 8)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "47.dependencies",
+      "domain_number": 47,
+      "domain": "Блок",
+      "slug": "47-block",
+      "name": "Block Dependency Framework",
+      "role": "dependencies",
+      "path": "reaper/frameworks/47-block/dependencies.rpr.rpr",
+      "api": "valid_block_dependencies",
+      "purpose": "Validate forward-only block dependencies, making cycles impossible by construction.",
+      "positive": {
+        "args": "(4, [[0, 1], [1, 3]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(4, [[3, 1]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "47.slots",
+      "domain_number": 47,
+      "domain": "Блок",
+      "slug": "47-block",
+      "name": "Block Slot Framework",
+      "role": "slots",
+      "path": "reaper/frameworks/47-block/slots.rpr.rpr",
+      "api": "missing_block_slots",
+      "purpose": "Return required block slots that have no supplied implementation.",
+      "positive": {
+        "args": "([\"code\", \"data\", \"tests\"], [\"code\", \"tests\"])",
+        "output": "[data]"
+      },
+      "negative": {
+        "args": "([\"code\"], [\"code\"])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "47.lifecycle",
+      "domain_number": 47,
+      "domain": "Блок",
+      "slug": "47-block",
+      "name": "Block Lifecycle Framework",
+      "role": "lifecycle",
+      "path": "reaper/frameworks/47-block/lifecycle.rpr.rpr",
+      "api": "valid_block_lifecycle",
+      "purpose": "Replay block states only through declared transitions.",
+      "positive": {
+        "args": "(\"empty\", [\"allocated\", \"filled\"], [[\"empty\", \"allocated\"], [\"allocated\", \"filled\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(\"empty\", [\"released\"], [[\"empty\", \"allocated\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "48.identity",
+      "domain_number": 48,
+      "domain": "Узел",
+      "slug": "48-node",
+      "name": "Node Identity Framework",
+      "role": "identity",
+      "path": "reaper/frameworks/48-node/identity.rpr.rpr",
+      "api": "valid_node_identity",
+      "purpose": "Validate stable numeric node identity and non-negative generation.",
+      "positive": {
+        "args": "(42, 3)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(-1, 3)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "48.ports",
+      "domain_number": 48,
+      "domain": "Узел",
+      "slug": "48-node",
+      "name": "Node Port Framework",
+      "role": "ports",
+      "path": "reaper/frameworks/48-node/ports.rpr.rpr",
+      "api": "valid_node_ports",
+      "purpose": "Ensure node input/output port counts fit the declared connection ceiling.",
+      "positive": {
+        "args": "([2, 3, 8])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([6, 3, 8])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "48.graph",
+      "domain_number": 48,
+      "domain": "Узел",
+      "slug": "48-node",
+      "name": "Node Graph Framework",
+      "role": "graph",
+      "path": "reaper/frameworks/48-node/graph.rpr.rpr",
+      "api": "valid_node_graph",
+      "purpose": "Validate directed node links with unique in-range endpoints and no self-links.",
+      "positive": {
+        "args": "(3, [[0, 1], [1, 2]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(3, [[1, 1]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "48.requirements",
+      "domain_number": 48,
+      "domain": "Узел",
+      "slug": "48-node",
+      "name": "Node Requirements Framework",
+      "role": "requirements",
+      "path": "reaper/frameworks/48-node/requirements.rpr.rpr",
+      "api": "missing_node_dependencies",
+      "purpose": "List node prerequisites absent from the supplied dependency set.",
+      "positive": {
+        "args": "([\"parser\", \"types\"], [\"parser\"])",
+        "output": "[types]"
+      },
+      "negative": {
+        "args": "([\"parser\"], [\"parser\"])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "48.state",
+      "domain_number": 48,
+      "domain": "Узел",
+      "slug": "48-node",
+      "name": "Node State Framework",
+      "role": "state",
+      "path": "reaper/frameworks/48-node/state.rpr.rpr",
+      "api": "valid_node_state",
+      "purpose": "Validate node state against a unique lifecycle vocabulary.",
+      "positive": {
+        "args": "(\"ready\", [\"created\", \"ready\", \"suspended\", \"stopped\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(\"unknown\", [\"created\", \"ready\", \"stopped\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "49.signature",
+      "domain_number": 49,
+      "domain": "Интерфейс",
+      "slug": "49-interface",
+      "name": "Interface Signature Framework",
+      "role": "signature",
+      "path": "reaper/frameworks/49-interface/signature.rpr.rpr",
+      "api": "valid_interface_signature",
+      "purpose": "Validate a typed interface signature with unique parameter names.",
+      "positive": {
+        "args": "([\"compile\", [[\"source\", \"text\"], [\"target\", \"triple\"]], \"result\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"compile\", [[\"source\", \"text\"], [\"source\", \"triple\"]], \"result\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "49.arity",
+      "domain_number": 49,
+      "domain": "Интерфейс",
+      "slug": "49-interface",
+      "name": "Interface Arity Framework",
+      "role": "arity",
+      "path": "reaper/frameworks/49-interface/arity.rpr.rpr",
+      "api": "interface_arity_compatible",
+      "purpose": "Check required and provided callable arities for exact compatibility.",
+      "positive": {
+        "args": "(3, 3)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(3, 2)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "49.binding",
+      "domain_number": 49,
+      "domain": "Интерфейс",
+      "slug": "49-interface",
+      "name": "Interface Binding Framework",
+      "role": "binding",
+      "path": "reaper/frameworks/49-interface/binding.rpr.rpr",
+      "api": "valid_interface_bindings",
+      "purpose": "Validate output-to-input bindings between distinct endpoints with equal types.",
+      "positive": {
+        "args": "([[\"compiler\", \"object\", \"object\", \"linker\", \"input\", \"object\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"compiler\", \"object\", \"text\", \"linker\", \"input\", \"object\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "49.methods",
+      "domain_number": 49,
+      "domain": "Интерфейс",
+      "slug": "49-interface",
+      "name": "Interface Method Framework",
+      "role": "methods",
+      "path": "reaper/frameworks/49-interface/methods.rpr.rpr",
+      "api": "missing_interface_methods",
+      "purpose": "Resolve required methods absent from an implementation interface.",
+      "positive": {
+        "args": "([\"parse\", \"lower\", \"emit\"], [\"parse\", \"emit\"])",
+        "output": "[lower]"
+      },
+      "negative": {
+        "args": "([\"parse\", \"emit\"], [\"parse\", \"emit\"])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "49.version",
+      "domain_number": 49,
+      "domain": "Интерфейс",
+      "slug": "49-interface",
+      "name": "Interface Version Framework",
+      "role": "version",
+      "path": "reaper/frameworks/49-interface/version.rpr.rpr",
+      "api": "valid_interface_version_bounds",
+      "purpose": "Validate an interface version and inclusive supported minor-version interval.",
+      "positive": {
+        "args": "([2, 3, 5])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([2, 6, 5])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "50.frame",
+      "domain_number": 50,
+      "domain": "Протокол",
+      "slug": "50-protocol",
+      "name": "Protocol Frame Framework",
+      "role": "frame",
+      "path": "reaper/frameworks/50-protocol/frame.rpr.rpr",
+      "api": "valid_protocol_frame",
+      "purpose": "Validate protocol version, message type, sequence number and payload bounds.",
+      "positive": {
+        "args": "([1, \"data\", 4, 128, 1024])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([0, \"data\", 4, 2048, 1024])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "50.sequence",
+      "domain_number": 50,
+      "domain": "Протокол",
+      "slug": "50-protocol",
+      "name": "Protocol Sequence Framework",
+      "role": "sequence",
+      "path": "reaper/frameworks/50-protocol/sequence.rpr.rpr",
+      "api": "protocol_sequence_admissible",
+      "purpose": "Accept strictly increasing sequence numbers only within the configured receive window.",
+      "positive": {
+        "args": "(10, 13, 4)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(10, 15, 4)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "50.handshake",
+      "domain_number": 50,
+      "domain": "Протокол",
+      "slug": "50-protocol",
+      "name": "Protocol Handshake Framework",
+      "role": "handshake",
+      "path": "reaper/frameworks/50-protocol/handshake.rpr.rpr",
+      "api": "valid_protocol_handshake",
+      "purpose": "Replay handshake states against a declared transition graph.",
+      "positive": {
+        "args": "(\"new\", [\"hello\", \"accepted\", \"ready\"], [[\"new\", \"hello\"], [\"hello\", \"accepted\"], [\"accepted\", \"ready\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(\"new\", [\"ready\"], [[\"new\", \"hello\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "50.features",
+      "domain_number": 50,
+      "domain": "Протокол",
+      "slug": "50-protocol",
+      "name": "Protocol Feature Framework",
+      "role": "features",
+      "path": "reaper/frameworks/50-protocol/features.rpr.rpr",
+      "api": "missing_protocol_features",
+      "purpose": "Return protocol extensions required by a peer but absent from local support.",
+      "positive": {
+        "args": "([\"crc\", \"compression\", \"resume\"], [\"crc\", \"resume\"])",
+        "output": "[compression]"
+      },
+      "negative": {
+        "args": "([\"crc\"], [\"crc\"])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "50.messages",
+      "domain_number": 50,
+      "domain": "Протокол",
+      "slug": "50-protocol",
+      "name": "Protocol Message Order Framework",
+      "role": "messages",
+      "path": "reaper/frameworks/50-protocol/messages.rpr.rpr",
+      "api": "valid_protocol_message_order",
+      "purpose": "Validate unique message IDs and strictly increasing integer sequence numbers.",
+      "positive": {
+        "args": "([[1, \"a\"], [2, \"b\"], [4, \"c\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[1, \"a\"], [1, \"b\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "51.rule",
+      "domain_number": 51,
+      "domain": "Стандарт",
+      "slug": "51-standard",
+      "name": "Standard Rule Framework",
+      "role": "rule",
+      "path": "reaper/frameworks/51-standard/rule.rpr.rpr",
+      "api": "valid_standard_rule",
+      "purpose": "Validate a normative rule identity, severity and mandatory flag.",
+      "positive": {
+        "args": "[\"R-001\", \"critical\", true]",
+        "output": "true"
+      },
+      "negative": {
+        "args": "[\"R-001\", \"unknown\", true]",
+        "output": "false"
+      }
+    },
+    {
+      "id": "51.compliance",
+      "domain_number": 51,
+      "domain": "Стандарт",
+      "slug": "51-standard",
+      "name": "Standard Compliance Framework",
+      "role": "compliance",
+      "path": "reaper/frameworks/51-standard/compliance.rpr.rpr",
+      "api": "standard_compliance_threshold",
+      "purpose": "Check a minimum compliance percentage across explicit boolean control results.",
+      "positive": {
+        "args": "([true, true, false, true], 75)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([true, false, false, false], 75)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "51.scope",
+      "domain_number": 51,
+      "domain": "Стандарт",
+      "slug": "51-standard",
+      "name": "Standard Scope Framework",
+      "role": "scope",
+      "path": "reaper/frameworks/51-standard/scope.rpr.rpr",
+      "api": "standard_scope_applies",
+      "purpose": "Check whether a release is inside an inclusive standard applicability range.",
+      "positive": {
+        "args": "(3, 2, 5)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(6, 2, 5)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "51.controls",
+      "domain_number": 51,
+      "domain": "Стандарт",
+      "slug": "51-standard",
+      "name": "Standard Controls Framework",
+      "role": "controls",
+      "path": "reaper/frameworks/51-standard/controls.rpr.rpr",
+      "api": "missing_standard_controls",
+      "purpose": "List mandatory controls absent from compliance evidence.",
+      "positive": {
+        "args": "([\"traceability\", \"review\", \"recovery\"], [\"traceability\", \"recovery\"])",
+        "output": "[review]"
+      },
+      "negative": {
+        "args": "([\"review\"], [\"review\"])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "51.exceptions",
+      "domain_number": 51,
+      "domain": "Стандарт",
+      "slug": "51-standard",
+      "name": "Standard Exception Framework",
+      "role": "exceptions",
+      "path": "reaper/frameworks/51-standard/exceptions.rpr.rpr",
+      "api": "valid_standard_exceptions",
+      "purpose": "Validate unique, justified standard exceptions whose expiry is not before the current release.",
+      "positive": {
+        "args": "([[\"R-2\", 8, \"migration\"]], 5)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"R-2\", 4, \"migration\"]], 5)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "52.policy",
+      "domain_number": 52,
+      "domain": "Регламент",
+      "slug": "52-regulation",
+      "name": "Regulation Policy Framework",
+      "role": "policy",
+      "path": "reaper/frameworks/52-regulation/policy.rpr.rpr",
+      "api": "valid_regulation_policy",
+      "purpose": "Validate rules with explicit principal, resource, action and allow/deny effect.",
+      "positive": {
+        "args": "([[\"compiler\", \"cache\", \"read\", \"allow\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"compiler\", \"cache\", \"delete\", \"maybe\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "52.decision",
+      "domain_number": 52,
+      "domain": "Регламент",
+      "slug": "52-regulation",
+      "name": "Regulation Decision Framework",
+      "role": "decision",
+      "path": "reaper/frameworks/52-regulation/decision.rpr.rpr",
+      "api": "regulation_decide",
+      "purpose": "Resolve exact policy matches with explicit deny taking precedence over allow.",
+      "positive": {
+        "args": "(\"compiler\", \"cache\", \"read\", [[\"compiler\", \"cache\", \"read\", \"allow\"]])",
+        "output": "allow"
+      },
+      "negative": {
+        "args": "(\"compiler\", \"cache\", \"delete\", [[\"compiler\", \"cache\", \"read\", \"allow\"]])",
+        "output": "deny"
+      }
+    },
+    {
+      "id": "52.roles",
+      "domain_number": 52,
+      "domain": "Регламент",
+      "slug": "52-regulation",
+      "name": "Regulation Role Framework",
+      "role": "roles",
+      "path": "reaper/frameworks/52-regulation/roles.rpr.rpr",
+      "api": "valid_regulation_roles",
+      "purpose": "Validate one unique, named role assignment per principal.",
+      "positive": {
+        "args": "([[\"build-bot\", \"builder\"], [\"release-bot\", \"approver\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"build-bot\", \"builder\"], [\"build-bot\", \"admin\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "52.controls",
+      "domain_number": 52,
+      "domain": "Регламент",
+      "slug": "52-regulation",
+      "name": "Regulation Controls Framework",
+      "role": "controls",
+      "path": "reaper/frameworks/52-regulation/controls.rpr.rpr",
+      "api": "missing_regulation_controls",
+      "purpose": "Find required policy controls absent from an approved regulation profile.",
+      "positive": {
+        "args": "([\"approval\", \"audit\", \"retention\"], [\"approval\", \"retention\"])",
+        "output": "[audit]"
+      },
+      "negative": {
+        "args": "([\"audit\"], [\"audit\"])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "52.review",
+      "domain_number": 52,
+      "domain": "Регламент",
+      "slug": "52-regulation",
+      "name": "Regulation Review Framework",
+      "role": "review",
+      "path": "reaper/frameworks/52-regulation/review.rpr.rpr",
+      "api": "valid_regulation_review_window",
+      "purpose": "Require periodic review before the maximum permitted policy age.",
+      "positive": {
+        "args": "(30, 90)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(120, 90)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "53.parameter",
+      "domain_number": 53,
+      "domain": "Спецификация",
+      "slug": "53-specification",
+      "name": "Specification Parameter Framework",
+      "role": "parameter",
+      "path": "reaper/frameworks/53-specification/parameter.rpr.rpr",
+      "api": "valid_spec_parameter",
+      "purpose": "Validate a typed numeric specification parameter with an inclusive value range.",
+      "positive": {
+        "args": "[\"heap_bytes\", \"integer\", 1024, 65536]",
+        "output": "true"
+      },
+      "negative": {
+        "args": "[\"heap_bytes\", \"integer\", 65536, 1024]",
+        "output": "false"
+      }
+    },
+    {
+      "id": "53.constraints",
+      "domain_number": 53,
+      "domain": "Спецификация",
+      "slug": "53-specification",
+      "name": "Specification Constraint Framework",
+      "role": "constraints",
+      "path": "reaper/frameworks/53-specification/constraints.rpr.rpr",
+      "api": "valid_spec_constraints",
+      "purpose": "Validate unique named lower/upper constraints and their ordering.",
+      "positive": {
+        "args": "([[\"stack\", 1024, 8192], [\"heap\", 4096, 65536]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"stack\", 8192, 1024]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "53.requirements",
+      "domain_number": 53,
+      "domain": "Спецификация",
+      "slug": "53-specification",
+      "name": "Specification Requirement Framework",
+      "role": "requirements",
+      "path": "reaper/frameworks/53-specification/requirements.rpr.rpr",
+      "api": "missing_spec_requirements",
+      "purpose": "List normative specification requirements without implementation evidence.",
+      "positive": {
+        "args": "([\"R1\", \"R2\", \"R3\"], [\"R1\", \"R3\"])",
+        "output": "[R2]"
+      },
+      "negative": {
+        "args": "([\"R1\"], [\"R1\"])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "53.traceability",
+      "domain_number": 53,
+      "domain": "Спецификация",
+      "slug": "53-specification",
+      "name": "Specification Traceability Framework",
+      "role": "traceability",
+      "path": "reaper/frameworks/53-specification/traceability.rpr.rpr",
+      "api": "valid_spec_traceability",
+      "purpose": "Validate unique requirement-to-evidence traceability links.",
+      "positive": {
+        "args": "([[\"R1\", \"test-1\"], [\"R2\", \"test-2\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"R1\", \"test-1\"], [\"R1\", \"test-2\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "53.version",
+      "domain_number": 53,
+      "domain": "Спецификация",
+      "slug": "53-specification",
+      "name": "Specification Version Framework",
+      "role": "version",
+      "path": "reaper/frameworks/53-specification/version.rpr.rpr",
+      "api": "valid_spec_version",
+      "purpose": "Validate a non-negative three-part specification version.",
+      "positive": {
+        "args": "([1, 4, 2])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([1, -1, 2])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "54.definition",
+      "domain_number": 54,
+      "domain": "Схема",
+      "slug": "54-schema",
+      "name": "Schema Definition Framework",
+      "role": "definition",
+      "path": "reaper/frameworks/54-schema/definition.rpr.rpr",
+      "api": "valid_schema_definition",
+      "purpose": "Validate unique typed schema fields and explicit required flags.",
+      "positive": {
+        "args": "([[\"id\", \"integer\", true], [\"label\", \"text\", false]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"id\", \"integer\", true], [\"id\", \"text\", false]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "54.record",
+      "domain_number": 54,
+      "domain": "Схема",
+      "slug": "54-schema",
+      "name": "Schema Record Framework",
+      "role": "record",
+      "path": "reaper/frameworks/54-schema/record.rpr.rpr",
+      "api": "schema_accepts_record",
+      "purpose": "Check known unique record fields and every required schema field.",
+      "positive": {
+        "args": "([[\"id\", 7]], [[\"id\", \"integer\", true], [\"label\", \"text\", false]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"unknown\", 7]], [[\"id\", \"integer\", true]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "54.references",
+      "domain_number": 54,
+      "domain": "Схема",
+      "slug": "54-schema",
+      "name": "Schema Reference Framework",
+      "role": "references",
+      "path": "reaper/frameworks/54-schema/references.rpr.rpr",
+      "api": "valid_schema_references",
+      "purpose": "Validate references between existing, distinct schema fields.",
+      "positive": {
+        "args": "([\"id\", \"parent\"], [[\"id\", \"integer\"], [\"parent\", \"integer\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"id\", \"missing\"], [[\"id\", \"integer\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "54.required",
+      "domain_number": 54,
+      "domain": "Схема",
+      "slug": "54-schema",
+      "name": "Schema Required Field Framework",
+      "role": "required",
+      "path": "reaper/frameworks/54-schema/required.rpr.rpr",
+      "api": "schema_missing_required_fields",
+      "purpose": "Return required field names absent from a schema record.",
+      "positive": {
+        "args": "([[\"id\", \"integer\", true], [\"name\", \"text\", true]], [[\"id\", 1]])",
+        "output": "[name]"
+      },
+      "negative": {
+        "args": "([[\"id\", \"integer\", true]], [[\"id\", 1]])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "54.migration",
+      "domain_number": 54,
+      "domain": "Схема",
+      "slug": "54-schema",
+      "name": "Schema Migration Framework",
+      "role": "migration",
+      "path": "reaper/frameworks/54-schema/migration.rpr.rpr",
+      "api": "valid_schema_migration",
+      "purpose": "Allow only forward schema migration versions with non-negative integer components.",
+      "positive": {
+        "args": "([1, 2], [1, 3])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([2, 0], [1, 9])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "55.square",
+      "domain_number": 55,
+      "domain": "Матрица",
+      "slug": "55-matrix",
+      "name": "Square Matrix Framework",
+      "role": "square",
+      "path": "reaper/frameworks/55-matrix/square.rpr.rpr",
+      "api": "valid_square_numeric_matrix",
+      "purpose": "Validate a non-empty square matrix containing only numeric values.",
+      "positive": {
+        "args": "([[1, 2], [3, 4]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[1, 2], [3]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "55.multiply",
+      "domain_number": 55,
+      "domain": "Матрица",
+      "slug": "55-matrix",
+      "name": "Matrix Multiplication Framework",
+      "role": "multiply",
+      "path": "reaper/frameworks/55-matrix/multiply.rpr.rpr",
+      "api": "matrix_product_compatible",
+      "purpose": "Check rectangular numeric matrix dimensions for a valid multiplication.",
+      "positive": {
+        "args": "([[1, 2, 3], [4, 5, 6]], [[1, 2], [3, 4], [5, 6]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[1, 2]], [[1, 2]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "55.row-totals",
+      "domain_number": 55,
+      "domain": "Матрица",
+      "slug": "55-matrix",
+      "name": "Matrix Row Totals Framework",
+      "role": "row-totals",
+      "path": "reaper/frameworks/55-matrix/row_totals.rpr.rpr",
+      "api": "matrix_row_totals",
+      "purpose": "Calculate deterministic numeric totals for every row of a rectangular matrix.",
+      "positive": {
+        "args": "([[1, 2], [3, 4]])",
+        "output": "[3, 7]"
+      },
+      "negative": {
+        "args": "([[1, 2], [3]])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "55.diagonal",
+      "domain_number": 55,
+      "domain": "Матрица",
+      "slug": "55-matrix",
+      "name": "Matrix Diagonal Framework",
+      "role": "diagonal",
+      "path": "reaper/frameworks/55-matrix/diagonal.rpr.rpr",
+      "api": "matrix_diagonal",
+      "purpose": "Extract the main diagonal of a square numeric matrix.",
+      "positive": {
+        "args": "([[1, 2], [3, 4]])",
+        "output": "[1, 4]"
+      },
+      "negative": {
+        "args": "([[1, 2, 3], [4, 5, 6]])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "55.sparsity",
+      "domain_number": 55,
+      "domain": "Матрица",
+      "slug": "55-matrix",
+      "name": "Matrix Sparsity Framework",
+      "role": "sparsity",
+      "path": "reaper/frameworks/55-matrix/sparsity.rpr.rpr",
+      "api": "matrix_nonzero_count",
+      "purpose": "Count nonzero elements in a rectangular numeric matrix.",
+      "positive": {
+        "args": "([[0, 2], [3, 0]])",
+        "output": "2"
+      },
+      "negative": {
+        "args": "([[0, \"x\"]])",
+        "output": "-1"
+      }
+    },
+    {
+      "id": "56.shape",
+      "domain_number": 56,
+      "domain": "Сетка",
+      "slug": "56-grid",
+      "name": "Grid Shape Framework",
+      "role": "shape",
+      "path": "reaper/frameworks/56-grid/shape.rpr.rpr",
+      "api": "valid_grid_shape",
+      "purpose": "Validate positive integral grid width and height.",
+      "positive": {
+        "args": "(8, 4)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(0, 4)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "56.cell",
+      "domain_number": 56,
+      "domain": "Сетка",
+      "slug": "56-grid",
+      "name": "Grid Cell Framework",
+      "role": "cell",
+      "path": "reaper/frameworks/56-grid/cell.rpr.rpr",
+      "api": "grid_cell_inside",
+      "purpose": "Check an integer grid coordinate against width and height bounds.",
+      "positive": {
+        "args": "(8, 4, 7, 3)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(8, 4, 8, 3)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "56.neighbors",
+      "domain_number": 56,
+      "domain": "Сетка",
+      "slug": "56-grid",
+      "name": "Grid Neighbors Framework",
+      "role": "neighbors",
+      "path": "reaper/frameworks/56-grid/neighbors.rpr.rpr",
+      "api": "grid_neighbors4",
+      "purpose": "Return in-bounds four-directional orthogonal neighbours in deterministic order.",
+      "positive": {
+        "args": "(3, 3, 1, 1)",
+        "output": "[[1, 0], [2, 1], [1, 2], [0, 1]]"
+      },
+      "negative": {
+        "args": "(3, 3, 3, 1)",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "56.occupancy",
+      "domain_number": 56,
+      "domain": "Сетка",
+      "slug": "56-grid",
+      "name": "Grid Occupancy Framework",
+      "role": "occupancy",
+      "path": "reaper/frameworks/56-grid/occupancy.rpr.rpr",
+      "api": "valid_grid_occupancy",
+      "purpose": "Validate unique occupied cells, each inside a declared rectangular grid.",
+      "positive": {
+        "args": "(3, 2, [[0, 0], [2, 1]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(3, 2, [[0, 0], [0, 0]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "56.distance",
+      "domain_number": 56,
+      "domain": "Сетка",
+      "slug": "56-grid",
+      "name": "Grid Distance Framework",
+      "role": "distance",
+      "path": "reaper/frameworks/56-grid/distance.rpr.rpr",
+      "api": "grid_manhattan_distance",
+      "purpose": "Calculate Manhattan distance between two non-negative integral grid points.",
+      "positive": {
+        "args": "([1, 2], [4, 6])",
+        "output": "7"
+      },
+      "negative": {
+        "args": "([1, 2], [4.5, 6])",
+        "output": "-1"
+      }
+    },
+    {
+      "id": "57.graph",
+      "domain_number": 57,
+      "domain": "Контур",
+      "slug": "57-circuit",
+      "name": "Circuit Graph Framework",
+      "role": "graph",
+      "path": "reaper/frameworks/57-circuit/graph.rpr.rpr",
+      "api": "valid_circuit_graph",
+      "purpose": "Validate directed circuit connections with in-range endpoints and unique links.",
+      "positive": {
+        "args": "(4, [[0, 1], [1, 2], [2, 3], [3, 0]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(3, [[0, 4]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "57.reachability",
+      "domain_number": 57,
+      "domain": "Контур",
+      "slug": "57-circuit",
+      "name": "Circuit Reachability Framework",
+      "role": "reachability",
+      "path": "reaper/frameworks/57-circuit/reachability.rpr.rpr",
+      "api": "circuit_reachable",
+      "purpose": "Compute directed reachability with an iterative closure over supplied links.",
+      "positive": {
+        "args": "(4, [[0, 1], [1, 2], [2, 3]], 0, 3)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(4, [[0, 1], [2, 3]], 0, 3)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "57.branches",
+      "domain_number": 57,
+      "domain": "Контур",
+      "slug": "57-circuit",
+      "name": "Circuit Branch Framework",
+      "role": "branches",
+      "path": "reaper/frameworks/57-circuit/branches.rpr.rpr",
+      "api": "valid_circuit_branch_count",
+      "purpose": "Ensure circuit branch count remains inside the approved integer range.",
+      "positive": {
+        "args": "(3, 1, 5)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(7, 1, 5)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "57.redundancy",
+      "domain_number": 57,
+      "domain": "Контур",
+      "slug": "57-circuit",
+      "name": "Circuit Redundancy Framework",
+      "role": "redundancy",
+      "path": "reaper/frameworks/57-circuit/redundancy.rpr.rpr",
+      "api": "valid_circuit_redundancy",
+      "purpose": "Require enough independent circuit paths to tolerate the declared failure count.",
+      "positive": {
+        "args": "(3, 2)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(2, 2)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "57.state",
+      "domain_number": 57,
+      "domain": "Контур",
+      "slug": "57-circuit",
+      "name": "Circuit State Framework",
+      "role": "state",
+      "path": "reaper/frameworks/57-circuit/state.rpr.rpr",
+      "api": "valid_circuit_state_sequence",
+      "purpose": "Replay circuit states through explicitly declared transitions.",
+      "positive": {
+        "args": "(\"open\", [\"energized\", \"closed\"], [[\"open\", \"energized\"], [\"energized\", \"closed\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(\"open\", [\"closed\"], [[\"open\", \"energized\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "58.zone",
+      "domain_number": 58,
+      "domain": "Периметр",
+      "slug": "58-perimeter",
+      "name": "Perimeter Zone Framework",
+      "role": "zone",
+      "path": "reaper/frameworks/58-perimeter/zone.rpr.rpr",
+      "api": "valid_perimeter_zone",
+      "purpose": "Validate a named trust zone with a bounded integer trust level.",
+      "positive": {
+        "args": "[\"user-space\", 2]",
+        "output": "true"
+      },
+      "negative": {
+        "args": "[\"\", 2]",
+        "output": "false"
+      }
+    },
+    {
+      "id": "58.actions",
+      "domain_number": 58,
+      "domain": "Периметр",
+      "slug": "58-perimeter",
+      "name": "Perimeter Action Framework",
+      "role": "actions",
+      "path": "reaper/frameworks/58-perimeter/actions.rpr.rpr",
+      "api": "perimeter_action_allowed",
+      "purpose": "Authorize only an exact action explicitly listed in the perimeter allowlist.",
+      "positive": {
+        "args": "(\"read\", [\"read\", \"inspect\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(\"shell\", [\"read\", \"inspect\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "58.rules",
+      "domain_number": 58,
+      "domain": "Периметр",
+      "slug": "58-perimeter",
+      "name": "Perimeter Rule Framework",
+      "role": "rules",
+      "path": "reaper/frameworks/58-perimeter/rules.rpr.rpr",
+      "api": "valid_perimeter_rules",
+      "purpose": "Validate unique source-zone, target-zone and action perimeter rules.",
+      "positive": {
+        "args": "([[\"user\", \"service\", \"https\"], [\"service\", \"storage\", \"read\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"user\", \"service\", \"https\"], [\"user\", \"service\", \"https\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "58.routes",
+      "domain_number": 58,
+      "domain": "Периметр",
+      "slug": "58-perimeter",
+      "name": "Perimeter Route Framework",
+      "role": "routes",
+      "path": "reaper/frameworks/58-perimeter/routes.rpr.rpr",
+      "api": "missing_perimeter_routes",
+      "purpose": "Return required trust-boundary routes that have no explicit rule.",
+      "positive": {
+        "args": "([[\"user\", \"api\"], [\"api\", \"db\"]], [[\"user\", \"api\"]])",
+        "output": "[[api, db]]"
+      },
+      "negative": {
+        "args": "([[\"user\", \"api\"]], [[\"user\", \"api\"]])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "58.rate-limit",
+      "domain_number": 58,
+      "domain": "Периметр",
+      "slug": "58-perimeter",
+      "name": "Perimeter Rate Limit Framework",
+      "role": "rate-limit",
+      "path": "reaper/frameworks/58-perimeter/rate_limit.rpr.rpr",
+      "api": "valid_perimeter_rate_limit",
+      "purpose": "Validate request count, window, and burst against an explicit perimeter quota.",
+      "positive": {
+        "args": "(30, 60, 40, 50)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(60, 60, 40, 50)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "59.manifest",
+      "domain_number": 59,
+      "domain": "Рабочая среда",
+      "slug": "59-work-environment",
+      "name": "Work Environment Manifest Framework",
+      "role": "manifest",
+      "path": "reaper/frameworks/59-work-environment/manifest.rpr.rpr",
+      "api": "valid_work_environment_manifest",
+      "purpose": "Validate unique non-empty process-independent environment key/value pairs.",
+      "positive": {
+        "args": "([[\"EDITOR\", \"reaper\"], [\"MODE\", \"release\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"MODE\", \"debug\"], [\"MODE\", \"release\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "59.overlay",
+      "domain_number": 59,
+      "domain": "Рабочая среда",
+      "slug": "59-work-environment",
+      "name": "Work Environment Overlay Framework",
+      "role": "overlay",
+      "path": "reaper/frameworks/59-work-environment/overlay.rpr.rpr",
+      "api": "resolve_work_environment_value",
+      "purpose": "Resolve a key from ordered environment layers where later definitions override earlier ones.",
+      "positive": {
+        "args": "([[[\"mode\", \"debug\"]], [[\"mode\", \"release\"]]], \"mode\", \"safe\")",
+        "output": "release"
+      },
+      "negative": {
+        "args": "([[[\"mode\", \"debug\"]]], \"missing\", \"safe\")",
+        "output": "safe"
+      }
+    },
+    {
+      "id": "59.tools",
+      "domain_number": 59,
+      "domain": "Рабочая среда",
+      "slug": "59-work-environment",
+      "name": "Work Environment Tools Framework",
+      "role": "tools",
+      "path": "reaper/frameworks/59-work-environment/tools.rpr.rpr",
+      "api": "valid_work_environment_tools",
+      "purpose": "Ensure every required development tool is present and tool identities are unique.",
+      "positive": {
+        "args": "([\"reaper\", \"cmake\"], [\"reaper\", \"cmake\", \"clang\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"reaper\", \"ninja\"], [\"reaper\", \"cmake\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "59.locale",
+      "domain_number": 59,
+      "domain": "Рабочая среда",
+      "slug": "59-work-environment",
+      "name": "Work Environment Locale Framework",
+      "role": "locale",
+      "path": "reaper/frameworks/59-work-environment/locale.rpr.rpr",
+      "api": "resolve_work_environment_locale",
+      "purpose": "Resolve a requested locale, then a configured fallback, then English.",
+      "positive": {
+        "args": "(\"uk-UA\", [\"en\", \"uk-UA\"], \"en\")",
+        "output": "uk-UA"
+      },
+      "negative": {
+        "args": "(\"fr-FR\", [\"en\", \"uk-UA\"], \"en\")",
+        "output": "en"
+      }
+    },
+    {
+      "id": "59.limits",
+      "domain_number": 59,
+      "domain": "Рабочая среда",
+      "slug": "59-work-environment",
+      "name": "Work Environment Limits Framework",
+      "role": "limits",
+      "path": "reaper/frameworks/59-work-environment/limits.rpr.rpr",
+      "api": "valid_work_environment_limits",
+      "purpose": "Validate positive integer memory, step and open-file quotas for a work environment.",
+      "positive": {
+        "args": "([67108864, 1000000, 64])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([0, 1000, 8])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "60.layout",
+      "domain_number": 60,
+      "domain": "Рабочая область",
+      "slug": "60-workspace",
+      "name": "Workspace Layout Framework",
+      "role": "layout",
+      "path": "reaper/frameworks/60-workspace/layout.rpr.rpr",
+      "api": "valid_workspace_layout",
+      "purpose": "Validate unique relative workspace directories under a non-empty project root.",
+      "positive": {
+        "args": "(\"project\", [[\"src\", \"source\"], [\"tests\", \"tests\"], [\"build\", \"build\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(\"project\", [[\"../outside\", \"source\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "60.artifacts",
+      "domain_number": 60,
+      "domain": "Рабочая область",
+      "slug": "60-workspace",
+      "name": "Workspace Artifact Framework",
+      "role": "artifacts",
+      "path": "reaper/frameworks/60-workspace/artifacts.rpr.rpr",
+      "api": "valid_workspace_artifact_paths",
+      "purpose": "Reject workspace artifact paths that are absolute, empty or traverse parent directories.",
+      "positive": {
+        "args": "([\"build/app.o\", \"build/map.txt\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"build/app.o\", \"../secret\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "60.directories",
+      "domain_number": 60,
+      "domain": "Рабочая область",
+      "slug": "60-workspace",
+      "name": "Workspace Directory Framework",
+      "role": "directories",
+      "path": "reaper/frameworks/60-workspace/directories.rpr.rpr",
+      "api": "missing_workspace_directories",
+      "purpose": "Find mandatory workspace directories not present in the project layout.",
+      "positive": {
+        "args": "([\"src\", \"tests\", \"docs\"], [\"src\", \"docs\"])",
+        "output": "[tests]"
+      },
+      "negative": {
+        "args": "([\"src\"], [\"src\"])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "60.project",
+      "domain_number": 60,
+      "domain": "Рабочая область",
+      "slug": "60-workspace",
+      "name": "Workspace Project Framework",
+      "role": "project",
+      "path": "reaper/frameworks/60-workspace/project.rpr.rpr",
+      "api": "valid_workspace_project_selection",
+      "purpose": "Ensure the active workspace project is one of the unique declared projects.",
+      "positive": {
+        "args": "(\"reaper\", [\"reaper\", \"oplague\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(\"unknown\", [\"reaper\", \"oplague\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "60.quota",
+      "domain_number": 60,
+      "domain": "Рабочая область",
+      "slug": "60-workspace",
+      "name": "Workspace Quota Framework",
+      "role": "quota",
+      "path": "reaper/frameworks/60-workspace/quota.rpr.rpr",
+      "api": "valid_workspace_quota",
+      "purpose": "Ensure used and reserved workspace storage fit the configured quota.",
+      "positive": {
+        "args": "(600, 256, 1024)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(900, 256, 1024)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "61.manifest",
+      "domain_number": 61,
+      "domain": "Плацдарм",
+      "slug": "61-staging-ground",
+      "name": "Staging Manifest Framework",
+      "role": "manifest",
+      "path": "reaper/frameworks/61-staging-ground/manifest.rpr.rpr",
+      "api": "valid_staging_manifest",
+      "purpose": "Validate unique staged artifact names and fixed-length content digests.",
+      "positive": {
+        "args": "([[\"compiler.bin\", \"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"compiler.bin\", \"short\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "61.promotion",
+      "domain_number": 61,
+      "domain": "Плацдарм",
+      "slug": "61-staging-ground",
+      "name": "Staging Promotion Framework",
+      "role": "promotion",
+      "path": "reaper/frameworks/61-staging-ground/promotion.rpr.rpr",
+      "api": "staging_promotion_allowed",
+      "purpose": "Allow promotion only when test, review and provenance gates are all explicitly true.",
+      "positive": {
+        "args": "([true, true, true])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([true, false, true])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "61.rollback",
+      "domain_number": 61,
+      "domain": "Плацдарм",
+      "slug": "61-staging-ground",
+      "name": "Staging Rollback Framework",
+      "role": "rollback",
+      "path": "reaper/frameworks/61-staging-ground/rollback.rpr.rpr",
+      "api": "staging_rollback_order",
+      "purpose": "Return completed staging steps in reverse order for compensating execution.",
+      "positive": {
+        "args": "([\"copy\", \"verify\", \"publish\"])",
+        "output": "[publish, verify, copy]"
+      },
+      "negative": {
+        "args": "([])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "61.provenance",
+      "domain_number": 61,
+      "domain": "Плацдарм",
+      "slug": "61-staging-ground",
+      "name": "Staging Provenance Framework",
+      "role": "provenance",
+      "path": "reaper/frameworks/61-staging-ground/provenance.rpr.rpr",
+      "api": "valid_staging_provenance",
+      "purpose": "Require artifact, source commit, author and branch provenance identifiers.",
+      "positive": {
+        "args": "([\"app.bin\", \"abcdef012345\", \"builder\", \"release/1\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"app.bin\", \"\", \"builder\", \"release/1\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "61.gate",
+      "domain_number": 61,
+      "domain": "Плацдарм",
+      "slug": "61-staging-ground",
+      "name": "Staging Gate Framework",
+      "role": "gate",
+      "path": "reaper/frameworks/61-staging-ground/gate.rpr.rpr",
+      "api": "valid_staging_gate",
+      "purpose": "Validate named unique staging checks and enforce a required passing threshold.",
+      "positive": {
+        "args": "([[\"build\", true], [\"tests\", true], [\"review\", false]], 2)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"build\", true], [\"tests\", false], [\"review\", false]], 2)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "62.identity",
+      "domain_number": 62,
+      "domain": "Опорная точка",
+      "slug": "62-anchor-point",
+      "name": "Anchor Identity Framework",
+      "role": "identity",
+      "path": "reaper/frameworks/62-anchor-point/identity.rpr.rpr",
+      "api": "valid_anchor_identity",
+      "purpose": "Validate a stable namespace/key anchor without whitespace or empty segments.",
+      "positive": {
+        "args": "([\"compiler\", \"parse.entry\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"compiler\", \"\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "62.resolve",
+      "domain_number": 62,
+      "domain": "Опорная точка",
+      "slug": "62-anchor-point",
+      "name": "Anchor Resolution Framework",
+      "role": "resolve",
+      "path": "reaper/frameworks/62-anchor-point/resolve.rpr.rpr",
+      "api": "resolve_anchor_target",
+      "purpose": "Resolve a stable anchor identifier to its unique declared target.",
+      "positive": {
+        "args": "(\"compiler.parse\", [[\"compiler.parse\", \"parser.rpr\"], [\"compiler.emit\", \"emitter.rpr\"]])",
+        "output": "parser.rpr"
+      },
+      "negative": {
+        "args": "(\"compiler.unknown\", [[\"compiler.parse\", \"parser.rpr\"]])",
+        "output": ""
+      }
+    },
+    {
+      "id": "62.bindings",
+      "domain_number": 62,
+      "domain": "Опорная точка",
+      "slug": "62-anchor-point",
+      "name": "Anchor Binding Framework",
+      "role": "bindings",
+      "path": "reaper/frameworks/62-anchor-point/bindings.rpr.rpr",
+      "api": "valid_anchor_bindings",
+      "purpose": "Validate unique anchor identifiers with non-empty target references.",
+      "positive": {
+        "args": "([[\"parser\", \"parser.rpr\"], [\"vm\", \"vm.rpr\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"parser\", \"parser.rpr\"], [\"parser\", \"other.rpr\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "62.pin",
+      "domain_number": 62,
+      "domain": "Опорная точка",
+      "slug": "62-anchor-point",
+      "name": "Anchor Version Pin Framework",
+      "role": "pin",
+      "path": "reaper/frameworks/62-anchor-point/pin.rpr.rpr",
+      "api": "anchor_version_pinned",
+      "purpose": "Require an anchor's actual version to match its explicitly pinned version.",
+      "positive": {
+        "args": "([1, 2, 0], [1, 2, 0])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([1, 2, 1], [1, 2, 0])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "62.references",
+      "domain_number": 62,
+      "domain": "Опорная точка",
+      "slug": "62-anchor-point",
+      "name": "Anchor Reference Framework",
+      "role": "references",
+      "path": "reaper/frameworks/62-anchor-point/references.rpr.rpr",
+      "api": "missing_anchor_references",
+      "purpose": "List required stable anchor references absent from a module's declared bindings.",
+      "positive": {
+        "args": "([\"parser\", \"lower\", \"emit\"], [\"parser\", \"emit\"])",
+        "output": "[lower]"
+      },
+      "negative": {
+        "args": "([\"parser\"], [\"parser\"])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "63.snapshot",
+      "domain_number": 63,
+      "domain": "Базовая линия",
+      "slug": "63-baseline",
+      "name": "Baseline Snapshot Framework",
+      "role": "snapshot",
+      "path": "reaper/frameworks/63-baseline/snapshot.rpr.rpr",
+      "api": "valid_baseline_snapshot",
+      "purpose": "Validate unique named numeric measurements in a reproducible baseline snapshot.",
+      "positive": {
+        "args": "([[\"latency_ms\", 12], [\"memory_bytes\", 4096]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"latency_ms\", 12], [\"latency_ms\", 14]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "63.drift",
+      "domain_number": 63,
+      "domain": "Базовая линия",
+      "slug": "63-baseline",
+      "name": "Baseline Drift Framework",
+      "role": "drift",
+      "path": "reaper/frameworks/63-baseline/drift.rpr.rpr",
+      "api": "baseline_drift_metrics",
+      "purpose": "Return baseline metric names whose absolute change exceeds a non-negative tolerance.",
+      "positive": {
+        "args": "([[\"latency\", 10]], [[\"latency\", 15]], 3)",
+        "output": "[latency]"
+      },
+      "negative": {
+        "args": "([[\"latency\", 10]], [[\"latency\", 12]], 3)",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "63.coverage",
+      "domain_number": 63,
+      "domain": "Базовая линия",
+      "slug": "63-baseline",
+      "name": "Baseline Coverage Framework",
+      "role": "coverage",
+      "path": "reaper/frameworks/63-baseline/coverage.rpr.rpr",
+      "api": "missing_baseline_metrics",
+      "purpose": "Return baseline metrics that are absent from a new measurement set.",
+      "positive": {
+        "args": "([[\"latency\", 10], [\"memory\", 20]], [[\"latency\", 11]])",
+        "output": "[memory]"
+      },
+      "negative": {
+        "args": "([[\"latency\", 10]], [[\"latency\", 11]])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "63.profile",
+      "domain_number": 63,
+      "domain": "Базовая линия",
+      "slug": "63-baseline",
+      "name": "Baseline Profile Framework",
+      "role": "profile",
+      "path": "reaper/frameworks/63-baseline/profile.rpr.rpr",
+      "api": "valid_baseline_profile",
+      "purpose": "Validate a named measurement profile with sample count and unit label.",
+      "positive": {
+        "args": "([\"release\", 30, \"milliseconds\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"release\", 0, \"milliseconds\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "63.regression",
+      "domain_number": 63,
+      "domain": "Базовая линия",
+      "slug": "63-baseline",
+      "name": "Baseline Regression Framework",
+      "role": "regression",
+      "path": "reaper/frameworks/63-baseline/regression.rpr.rpr",
+      "api": "baseline_regression_within_budget",
+      "purpose": "Check that a numeric measurement increase stays within its allowed regression budget.",
+      "positive": {
+        "args": "(100, 105, 10)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(100, 120, 10)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "64.profile",
+      "domain_number": 64,
+      "domain": "Несущая конструкция",
+      "slug": "64-load-bearing-structure",
+      "name": "Load Bearing Profile Framework",
+      "role": "profile",
+      "path": "reaper/frameworks/64-load-bearing-structure/profile.rpr.rpr",
+      "api": "valid_load_bearing_profile",
+      "purpose": "Ensure declared capacity supports demand plus the required reserve margin.",
+      "positive": {
+        "args": "(70, 100, 20)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(90, 100, 20)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "64.distribution",
+      "domain_number": 64,
+      "domain": "Несущая конструкция",
+      "slug": "64-load-bearing-structure",
+      "name": "Load Distribution Framework",
+      "role": "distribution",
+      "path": "reaper/frameworks/64-load-bearing-structure/distribution.rpr.rpr",
+      "api": "balanced_load_distribution",
+      "purpose": "Check that non-negative resource loads remain within the maximum allowed spread.",
+      "positive": {
+        "args": "([4, 5, 4], 2)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([1, 10, 2], 2)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "64.margin",
+      "domain_number": 64,
+      "domain": "Несущая конструкция",
+      "slug": "64-load-bearing-structure",
+      "name": "Load Margin Framework",
+      "role": "margin",
+      "path": "reaper/frameworks/64-load-bearing-structure/margin.rpr.rpr",
+      "api": "load_bearing_margin",
+      "purpose": "Calculate remaining supported capacity after a valid non-negative load.",
+      "positive": {
+        "args": "(100, 65)",
+        "output": "35"
+      },
+      "negative": {
+        "args": "(50, 65)",
+        "output": "-1"
+      }
+    },
+    {
+      "id": "64.redundancy",
+      "domain_number": 64,
+      "domain": "Несущая конструкция",
+      "slug": "64-load-bearing-structure",
+      "name": "Load Redundancy Framework",
+      "role": "redundancy",
+      "path": "reaper/frameworks/64-load-bearing-structure/redundancy.rpr.rpr",
+      "api": "valid_load_redundancy",
+      "purpose": "Require replica count to exceed the declared number of tolerated failures.",
+      "positive": {
+        "args": "(3, 2)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(2, 2)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "64.members",
+      "domain_number": 64,
+      "domain": "Несущая конструкция",
+      "slug": "64-load-bearing-structure",
+      "name": "Load Bearing Member Framework",
+      "role": "members",
+      "path": "reaper/frameworks/64-load-bearing-structure/members.rpr.rpr",
+      "api": "valid_load_bearing_members",
+      "purpose": "Validate unique structural members whose applied loads do not exceed member ratings.",
+      "positive": {
+        "args": "([[\"beam\", 20, 40], [\"column\", 30, 50]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"beam\", 50, 40]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "65.device",
+      "domain_number": 65,
+      "domain": "Аппаратно-программная база",
+      "slug": "65-hardware-software-base",
+      "name": "Hardware Device Profile Framework",
+      "role": "device",
+      "path": "reaper/frameworks/65-hardware-software-base/device.rpr.rpr",
+      "api": "valid_hardware_device_profile",
+      "purpose": "Validate device identity, target architecture, ABI and supported word width.",
+      "positive": {
+        "args": "([\"Acme\", \"M4\", \"armv7\", \"aapcs\", 32])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"Acme\", \"M4\", \"armv7\", \"unknown\", 24])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "65.memory-map",
+      "domain_number": 65,
+      "domain": "Аппаратно-программная база",
+      "slug": "65-hardware-software-base",
+      "name": "Hardware Memory Map Framework",
+      "role": "memory-map",
+      "path": "reaper/frameworks/65-hardware-software-base/memory_map.rpr.rpr",
+      "api": "valid_hardware_memory_map",
+      "purpose": "Validate aligned positive-size hardware regions with overflow-safe non-overlap.",
+      "positive": {
+        "args": "([[0, 4096, 256], [4096, 2048, 256]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[0, 4096, 256], [2048, 1024, 256]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "65.driver-abi",
+      "domain_number": 65,
+      "domain": "Аппаратно-программная база",
+      "slug": "65-hardware-software-base",
+      "name": "Hardware Driver ABI Framework",
+      "role": "driver-abi",
+      "path": "reaper/frameworks/65-hardware-software-base/driver_abi.rpr.rpr",
+      "api": "valid_hardware_driver_abi",
+      "purpose": "Require an exact driver/host ABI match and a supported word width.",
+      "positive": {
+        "args": "(\"dabi64-v1\", \"dabi64-v1\", 64)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(\"dabi64-v1\", \"legacy-v0\", 64)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "65.dma",
+      "domain_number": 65,
+      "domain": "Аппаратно-программная база",
+      "slug": "65-hardware-software-base",
+      "name": "Hardware DMA Framework",
+      "role": "dma",
+      "path": "reaper/frameworks/65-hardware-software-base/dma.rpr.rpr",
+      "api": "valid_dma_buffer_contract",
+      "purpose": "Validate a DMA buffer's positive size, power-of-two alignment and aligned address.",
+      "positive": {
+        "args": "(4096, 1024, 256)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(4097, 1024, 256)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "65.mmio",
+      "domain_number": 65,
+      "domain": "Аппаратно-программная база",
+      "slug": "65-hardware-software-base",
+      "name": "Hardware MMIO Register Framework",
+      "role": "mmio",
+      "path": "reaper/frameworks/65-hardware-software-base/mmio.rpr.rpr",
+      "api": "valid_hardware_mmio_register",
+      "purpose": "Validate MMIO register offset, width, region bounds and access policy.",
+      "positive": {
+        "args": "(16, 32, 256, \"read_write\")",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(3, 32, 256, \"read_write\")",
+        "output": "false"
+      }
+    },
+    {
+      "id": "66.application",
+      "domain_number": 66,
+      "domain": "Программный каркас",
+      "slug": "66-software-skeleton",
+      "name": "Software Skeleton Application Framework",
+      "role": "application",
+      "path": "reaper/frameworks/66-software-skeleton/application.rpr.rpr",
+      "api": "valid_software_skeleton_manifest",
+      "purpose": "Validate app identity, semantic version, entry module/function and unique module inventory.",
+      "positive": {
+        "args": "(\"reaper-studio\", [1, 2, 0], \"studio\", \"main\", [\"studio\", \"editor\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(\"reaper-studio\", [1, 2, 0], \"missing\", \"main\", [\"studio\", \"editor\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "66.composition",
+      "domain_number": 66,
+      "domain": "Программный каркас",
+      "slug": "66-software-skeleton",
+      "name": "Software Skeleton Composition Framework",
+      "role": "composition",
+      "path": "reaper/frameworks/66-software-skeleton/composition.rpr.rpr",
+      "api": "valid_software_skeleton_composition",
+      "purpose": "Validate a module dependency graph with a deterministic topological ordering.",
+      "positive": {
+        "args": "(4, [[0, 1], [1, 2], [2, 3]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(3, [[0, 1], [1, 2], [2, 0]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "66.modules",
+      "domain_number": 66,
+      "domain": "Программный каркас",
+      "slug": "66-software-skeleton",
+      "name": "Software Skeleton Module Framework",
+      "role": "modules",
+      "path": "reaper/frameworks/66-software-skeleton/modules.rpr.rpr",
+      "api": "missing_software_skeleton_modules",
+      "purpose": "List declared application modules that do not have source implementations.",
+      "positive": {
+        "args": "([\"core\", \"ui\", \"storage\"], [\"core\", \"storage\"])",
+        "output": "[ui]"
+      },
+      "negative": {
+        "args": "([\"core\"], [\"core\"])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "66.entrypoint",
+      "domain_number": 66,
+      "domain": "Программный каркас",
+      "slug": "66-software-skeleton",
+      "name": "Software Skeleton Entrypoint Framework",
+      "role": "entrypoint",
+      "path": "reaper/frameworks/66-software-skeleton/entrypoint.rpr.rpr",
+      "api": "valid_software_skeleton_entrypoint",
+      "purpose": "Require an exported entrypoint function from a declared application module.",
+      "positive": {
+        "args": "(\"studio\", \"main\", [\"studio\", \"editor\"], [\"main\", \"open\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(\"missing\", \"main\", [\"studio\", \"editor\"], [\"main\", \"open\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "66.lifecycle",
+      "domain_number": 66,
+      "domain": "Программный каркас",
+      "slug": "66-software-skeleton",
+      "name": "Software Skeleton Lifecycle Framework",
+      "role": "lifecycle",
+      "path": "reaper/frameworks/66-software-skeleton/lifecycle.rpr.rpr",
+      "api": "valid_software_skeleton_lifecycle",
+      "purpose": "Replay an application lifecycle using only declared state transitions.",
+      "positive": {
+        "args": "(\"created\", [\"configured\", \"running\", \"stopped\"], [[\"created\", \"configured\"], [\"configured\", \"running\"], [\"running\", \"stopped\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(\"created\", [\"running\"], [[\"created\", \"configured\"]])",
         "output": "false"
       }
     }
