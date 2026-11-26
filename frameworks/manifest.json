@@ -1,6 +1,6 @@
 {
   "schema": "reaper.framework-family.v1",
-  "status": "bootstrap_slice",
+  "status": "extended_source_implementation",
   "language": "Reaper",
   "source_budget": {
     "target_characters_per_framework": 666666,
@@ -13,7 +13,8 @@
       "generated files",
       "manifests"
     ],
-    "includes_whitespace_and_comments": true
+    "includes_whitespace_and_comments": true,
+    "count_method": "Recomputed from the source contents committed to this branch."
   },
   "frameworks": [
     {
@@ -22,9 +23,9 @@
       "source_files": [
         "frameworks/Lokaliza/src/locale.rpr"
       ],
-      "current_source_characters": 2324,
+      "current_source_characters": 5488,
       "target_source_characters": 666666,
-      "remaining_source_characters": 664342,
+      "remaining_source_characters": 661178,
       "maturity": "Genesis"
     },
     {
@@ -33,9 +34,9 @@
       "source_files": [
         "frameworks/Sealise/src/blueprint.rpr"
       ],
-      "current_source_characters": 2436,
+      "current_source_characters": 5071,
       "target_source_characters": 666666,
-      "remaining_source_characters": 664230,
+      "remaining_source_characters": 661595,
       "maturity": "Genesis"
     },
     {
@@ -44,9 +45,9 @@
       "source_files": [
         "frameworks/Blebby/src/package.rpr"
       ],
-      "current_source_characters": 2792,
+      "current_source_characters": 6430,
       "target_source_characters": 666666,
-      "remaining_source_characters": 663874,
+      "remaining_source_characters": 660236,
       "maturity": "Genesis"
     },
     {
@@ -55,9 +56,9 @@
       "source_files": [
         "frameworks/Centen/src/resource.rpr"
       ],
-      "current_source_characters": 2669,
+      "current_source_characters": 5863,
       "target_source_characters": 666666,
-      "remaining_source_characters": 663997,
+      "remaining_source_characters": 660803,
       "maturity": "Genesis"
     },
     {
@@ -66,9 +67,9 @@
       "source_files": [
         "frameworks/Kaso/src/template.rpr"
       ],
-      "current_source_characters": 2854,
+      "current_source_characters": 7195,
       "target_source_characters": 666666,
-      "remaining_source_characters": 663812,
+      "remaining_source_characters": 659471,
       "maturity": "Genesis"
     },
     {
@@ -77,9 +78,9 @@
       "source_files": [
         "frameworks/Shinnn/src/graph.rpr"
       ],
-      "current_source_characters": 2840,
+      "current_source_characters": 5941,
       "target_source_characters": 666666,
-      "remaining_source_characters": 663826,
+      "remaining_source_characters": 660725,
       "maturity": "Genesis"
     },
     {
@@ -88,9 +89,9 @@
       "source_files": [
         "frameworks/Porteo/src/lifecycle.rpr"
       ],
-      "current_source_characters": 2789,
+      "current_source_characters": 6041,
       "target_source_characters": 666666,
-      "remaining_source_characters": 663877,
+      "remaining_source_characters": 660625,
       "maturity": "Genesis"
     },
     {
@@ -99,9 +100,9 @@
       "source_files": [
         "frameworks/Portable-Bortable/src/target.rpr"
       ],
-      "current_source_characters": 2642,
+      "current_source_characters": 5454,
       "target_source_characters": 666666,
-      "remaining_source_characters": 664024,
+      "remaining_source_characters": 661212,
       "maturity": "Genesis"
     },
     {
@@ -110,9 +111,9 @@
       "source_files": [
         "frameworks/SWO/src/pipeline.rpr"
       ],
-      "current_source_characters": 2946,
+      "current_source_characters": 6325,
       "target_source_characters": 666666,
-      "remaining_source_characters": 663720,
+      "remaining_source_characters": 660341,
       "maturity": "Genesis"
     },
     {
@@ -121,15 +122,16 @@
       "source_files": [
         "frameworks/ScoHOPE/src/application.rpr"
       ],
-      "current_source_characters": 3358,
+      "current_source_characters": 7840,
       "target_source_characters": 666666,
-      "remaining_source_characters": 663308,
+      "remaining_source_characters": 658826,
       "maturity": "Genesis"
     }
   ],
   "integration": {
-    "family_entry": "family.rpr",
+    "family_entry": "frameworks/family.rpr",
+    "language_entry": "stdlib/frameworks.rpr",
     "runtime_owner": "DOM",
-    "native_aot_status": "not_supported_for_collection_and_module_features_in_current_backend"
+    "native_aot_status": "reference-runtime-source-only-until-current-native-backend-supports-collections-and-modules"
   }
 }
