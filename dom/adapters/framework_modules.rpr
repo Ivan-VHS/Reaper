@@ -1,0 +1,45 @@
+# ДОМ adapters for the eight standalone Reaper framework modules.
+# This layer reuses each module through its public contract; it does not copy
+# their algorithms into the ДОМ runtime or give them independent authority.
+
+import "../../frameworks/galhero.rpr" as galhero
+import "../../frameworks/call_and_back.rpr" as call_back
+import "../../frameworks/stacked_options.rpr" as options
+import "../../frameworks/perenosimost.rpr" as perenosimost
+import "../../frameworks/most.rpr" as most
+import "../../frameworks/blau.rpr" as blau
+import "../../frameworks/shashio.rpr" as shashio
+import "../../frameworks/showel_fleppery_code.rpr" as showel
+
+export craft resolve_module_graph(nodes, edges) {
+    yield galhero["topological_order"](nodes, edges)
+}
+
+export craft resolve_configuration(defaults, profile, workspace, request, rules) {
+    make resolved := options["resolve"](defaults, profile, workspace, request)
+    yield options["validate"](resolved, rules)
+}
+
+export craft dispatch_callbacks(registry, event, payload) {
+    yield call_back["dispatch"](registry, event, payload)
+}
+
+export craft normalize_most_word(word) {
+    yield [
+        perenosimost["canonical"](word),
+        perenosimost["support"](word),
+        most["classify"](word)
+    ]
+}
+
+export craft update_snapshot(snapshot, expected_version, key, value) {
+    yield blau["compare_and_set"](snapshot, expected_version, key, value)
+}
+
+export craft apply_state_events(initial_state, events, transitions) {
+    yield shashio["apply_atomic"](initial_state, events, transitions)
+}
+
+export craft transform_in_memory(pipeline, source) {
+    yield showel["run"](pipeline, source)
+}
