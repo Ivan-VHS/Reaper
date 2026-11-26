@@ -27,3 +27,6 @@ jobs:
           ./build/reaper-c --tokens examples/hello.rpr
           ./build/reaper-c --capabilities
           ./build/reaper-c --capability operandu
+          ./build/reaper-c --frameworks
+          ./build/reaper-c --framework codex-no
+          ./build/reaper-c --framework-stats

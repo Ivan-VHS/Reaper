@@ -1,0 +1,256 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Ivan-VHS/Reaper/main/schemas/reaper-framework-registry.v1.schema.json",
+  "title": "Reaper Framework Registry v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "language",
+    "version",
+    "registry",
+    "language_adapters",
+    "public_statistics",
+    "frameworks"
+  ],
+  "properties": {
+    "schema": {
+      "const": "reaper.framework-registry/v1"
+    },
+    "language": {
+      "const": "REAPER"
+    },
+    "version": {
+      "const": "1.0.0"
+    },
+    "registry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "abi",
+        "abi_version",
+        "implementation",
+        "source_header",
+        "source_file",
+        "cli",
+        "framework_count",
+        "functions_per_framework",
+        "function_contract_count",
+        "maturity",
+        "dispatch_api",
+        "registry_api_functions"
+      ],
+      "properties": {
+        "abi": {
+          "const": "reaper.framework-cabi.v1"
+        },
+        "abi_version": {
+          "const": 1
+        },
+        "implementation": {
+          "const": "C17 native registry"
+        },
+        "source_header": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_file": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cli": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "string"
+          }
+        },
+        "framework_count": {
+          "const": 20
+        },
+        "functions_per_framework": {
+          "const": 6
+        },
+        "function_contract_count": {
+          "const": 120
+        },
+        "maturity": {
+          "const": "catalogue-and-signature-validation"
+        },
+        "registry_api_functions": {
+          "const": 8
+        },
+        "dispatch_api": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "function",
+            "max_request_bytes",
+            "max_response_bytes",
+            "payload_encoding",
+            "callback",
+            "callback_error"
+          ],
+          "properties": {
+            "function": {
+              "const": "reaper_framework_invoke"
+            },
+            "max_request_bytes": {
+              "const": 1048576
+            },
+            "max_response_bytes": {
+              "const": 1048576
+            },
+            "payload_encoding": {
+              "type": "string"
+            },
+            "callback": {
+              "type": "string"
+            },
+            "callback_error": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "language_adapters": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": [
+          "language",
+          "status",
+          "scope"
+        ],
+        "properties": {
+          "language": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "public_statistics": {
+      "type": "object",
+      "required": [
+        "source",
+        "registered_frameworks",
+        "registered_function_contracts",
+        "registry_api_functions",
+        "executable_domain_handlers",
+        "reaper_source_bindings",
+        "privacy"
+      ],
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "registered_frameworks": {
+          "const": 20
+        },
+        "registered_function_contracts": {
+          "const": 120
+        },
+        "registry_api_functions": {
+          "const": 8
+        },
+        "executable_domain_handlers": {
+          "const": 0
+        },
+        "reaper_source_bindings": {
+          "const": 0
+        },
+        "privacy": {
+          "type": "string"
+        }
+      }
+    },
+    "frameworks": {
+      "type": "array",
+      "minItems": 20,
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "domain",
+          "feature_key",
+          "source_module",
+          "maturity",
+          "functions"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+          },
+          "name": {
+            "type": "string"
+          },
+          "domain": {
+            "type": "string"
+          },
+          "feature_key": {
+            "type": "string",
+            "pattern": "^RPR-FWK-[0-9]{3}$"
+          },
+          "source_module": {
+            "type": "string"
+          },
+          "maturity": {
+            "const": "contract-only"
+          },
+          "functions": {
+            "type": "array",
+            "minItems": 6,
+            "maxItems": 6,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "key",
+                "name",
+                "min_arity",
+                "max_arity",
+                "description",
+                "status"
+              ],
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "pattern": "^RPR-FWK-[0-9]{3}-F[0-9]{2}$"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "min_arity": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "max_arity": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "description": {
+                  "type": "string"
+                },
+                "status": {
+                  "const": "contract-only"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

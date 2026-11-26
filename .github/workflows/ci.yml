@@ -42,8 +42,12 @@ jobs:
         run: python -m reaper --check examples/flow.rpr
       - name: Validate federated audit program
         run: python -m reaper --check examples/device_audit.rpr
+      - name: Validate framework metadata client
+        run: python -m reaper --check examples/frameworks/manifest_client.rpr
       - name: Run example
         run: python -m reaper examples/flow.rpr
+      - name: Run Reaper framework metadata client
+        run: python -m reaper examples/frameworks/manifest_client.rpr
       - name: Run end-to-end read-only device audit example
         run: |
           python -m reaper examples/device_audit.rpr

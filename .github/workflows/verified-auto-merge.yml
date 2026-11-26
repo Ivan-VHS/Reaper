@@ -44,6 +44,10 @@ jobs:
         run: python -m reaper --check examples/flow.rpr
       - name: Run example
         run: python -m reaper examples/flow.rpr
+      - name: Validate Reaper framework client
+        run: python -m reaper --check examples/frameworks/manifest_client.rpr
+      - name: Run Reaper framework client
+        run: python -m reaper examples/frameworks/manifest_client.rpr
 
   native-c:
     if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository)
@@ -69,6 +73,9 @@ jobs:
           ./build/reaper-c --version
           ./build/reaper-c --evolution-status
           ./build/reaper-c --tokens examples/hello.rpr
+          ./build/reaper-c --frameworks
+          ./build/reaper-c --framework joint-baby
+          ./build/reaper-c --framework-stats
 
   auto-merge:
     name: Enable native GitHub auto-merge

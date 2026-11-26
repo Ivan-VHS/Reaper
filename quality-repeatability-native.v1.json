@@ -7,7 +7,8 @@
     "native_surfaces": [
       "C11 lexer/parser/IR and optimizer",
       "Python interpreter and CLI",
-      "native FFI, editor and embedded contracts"
+      "native FFI, editor and embedded contracts",
+      "Versioned 20-framework registry with bounded C ABI host callback dispatch"
     ]
   },
   "pillars": {
@@ -55,6 +56,22 @@
             ],
             "verification": [
               "tests/test_governance.py"
+            ]
+          }
+        },
+        {
+          "id": "framework-registry-contract",
+          "status": "implemented",
+          "requirement": "Framework identifiers and operation signatures remain versioned, stable and independently inspectable.",
+          "verification": "Native registry tests verify all twenty namespaces, 120 stable operation keys, lookup and arity validation.",
+          "evidence": {
+            "implementation": [
+              "src/framework_suite.c",
+              "language/frameworks.v1.json"
+            ],
+            "verification": [
+              "tests/test_framework_suite.c",
+              "schemas/reaper-framework-registry.v1.schema.json"
             ]
           }
         }
@@ -106,6 +123,40 @@
               "tests/test_federation.py"
             ]
           }
+        },
+        {
+          "id": "reaper-framework-module-parity",
+          "status": "implemented",
+          "requirement": "Each registered framework has a Reaper module exposing the same stable operation keys and common metadata helpers.",
+          "verification": "The Reaper integration example imports all twenty modules and executes the exported operation_key helper from each.",
+          "evidence": {
+            "implementation": [
+              "examples/frameworks/modules/codex_no.rpr",
+              "examples/frameworks/modules/joint_baby.rpr",
+              "examples/frameworks/modules/correpse.rpr",
+              "examples/frameworks/modules/allocate_purpose.rpr",
+              "examples/frameworks/modules/collillioi.rpr",
+              "examples/frameworks/modules/aspdoi.rpr",
+              "examples/frameworks/modules/asjiop.rpr",
+              "examples/frameworks/modules/alllll.rpr",
+              "examples/frameworks/modules/zabor.rpr",
+              "examples/frameworks/modules/vjinz.rpr",
+              "examples/frameworks/modules/supreme_boy.rpr",
+              "examples/frameworks/modules/chee_now.rpr",
+              "examples/frameworks/modules/humble_bumble.rpr",
+              "examples/frameworks/modules/hub2.rpr",
+              "examples/frameworks/modules/kloz.rpr",
+              "examples/frameworks/modules/co.rpr",
+              "examples/frameworks/modules/cripplebo.rpr",
+              "examples/frameworks/modules/ripplecripple.rpr",
+              "examples/frameworks/modules/secator.rpr",
+              "examples/frameworks/modules/pollatia.rpr"
+            ],
+            "verification": [
+              "examples/frameworks/manifest_client.rpr",
+              ".github/workflows/ci.yml"
+            ]
+          }
         }
       ]
     },
@@ -154,6 +205,22 @@
             ],
             "verification": [
               "tests/test_embedded_ffi.py"
+            ]
+          }
+        },
+        {
+          "id": "bounded-polyglot-host-dispatch",
+          "status": "implemented",
+          "requirement": "Cross-language host calls validate registered function signatures and enforce bounded request and response payloads before handing control to a caller-owned callback.",
+          "verification": "Native tests cover valid callback dispatch, arity rejection, unknown framework rejection, 1 MiB payload limits, oversized output rejection and callback failure handling.",
+          "evidence": {
+            "implementation": [
+              "include/reaper/framework_suite.h",
+              "src/framework_suite.c"
+            ],
+            "verification": [
+              "tests/test_framework_suite.c",
+              ".github/workflows/native-c.yml"
             ]
           }
         }

@@ -1,0 +1,42 @@
+import "modules/codex_no.rpr" as codex_no
+import "modules/joint_baby.rpr" as joint_baby
+import "modules/correpse.rpr" as correpse
+import "modules/allocate_purpose.rpr" as allocate_purpose
+import "modules/collillioi.rpr" as collillioi
+import "modules/aspdoi.rpr" as aspdoi
+import "modules/asjiop.rpr" as asjiop
+import "modules/alllll.rpr" as alllll
+import "modules/zabor.rpr" as zabor
+import "modules/vjinz.rpr" as vjinz
+import "modules/supreme_boy.rpr" as supreme_boy
+import "modules/chee_now.rpr" as chee_now
+import "modules/humble_bumble.rpr" as humble_bumble
+import "modules/hub2.rpr" as hub2
+import "modules/kloz.rpr" as kloz
+import "modules/co.rpr" as co
+import "modules/cripplebo.rpr" as cripplebo
+import "modules/ripplecripple.rpr" as ripplecripple
+import "modules/secator.rpr" as secator
+import "modules/pollatia.rpr" as pollatia
+
+# Calls exported Reaper helpers and prints their stable public operation keys.
+emit codex_no["display_name"] ++ " :: " ++ codex_no["operation_key"](0)
+emit joint_baby["display_name"] ++ " :: " ++ joint_baby["operation_key"](0)
+emit correpse["display_name"] ++ " :: " ++ correpse["operation_key"](0)
+emit allocate_purpose["display_name"] ++ " :: " ++ allocate_purpose["operation_key"](0)
+emit collillioi["display_name"] ++ " :: " ++ collillioi["operation_key"](0)
+emit aspdoi["display_name"] ++ " :: " ++ aspdoi["operation_key"](0)
+emit asjiop["display_name"] ++ " :: " ++ asjiop["operation_key"](0)
+emit alllll["display_name"] ++ " :: " ++ alllll["operation_key"](0)
+emit zabor["display_name"] ++ " :: " ++ zabor["operation_key"](0)
+emit vjinz["display_name"] ++ " :: " ++ vjinz["operation_key"](0)
+emit supreme_boy["display_name"] ++ " :: " ++ supreme_boy["operation_key"](0)
+emit chee_now["display_name"] ++ " :: " ++ chee_now["operation_key"](0)
+emit humble_bumble["display_name"] ++ " :: " ++ humble_bumble["operation_key"](0)
+emit hub2["display_name"] ++ " :: " ++ hub2["operation_key"](0)
+emit kloz["display_name"] ++ " :: " ++ kloz["operation_key"](0)
+emit co["display_name"] ++ " :: " ++ co["operation_key"](0)
+emit cripplebo["display_name"] ++ " :: " ++ cripplebo["operation_key"](0)
+emit ripplecripple["display_name"] ++ " :: " ++ ripplecripple["operation_key"](0)
+emit secator["display_name"] ++ " :: " ++ secator["operation_key"](0)
+emit pollatia["display_name"] ++ " :: " ++ pollatia["operation_key"](0)

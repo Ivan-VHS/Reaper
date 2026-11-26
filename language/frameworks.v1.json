@@ -1,0 +1,1218 @@
+{
+  "schema": "reaper.framework-registry/v1",
+  "language": "REAPER",
+  "version": "1.0.0",
+  "registry": {
+    "abi": "reaper.framework-cabi.v1",
+    "abi_version": 1,
+    "implementation": "C17 native registry",
+    "source_header": "include/reaper/framework_suite.h",
+    "source_file": "src/framework_suite.c",
+    "cli": [
+      "reaper-c --frameworks",
+      "reaper-c --framework <id-or-name>",
+      "reaper-c --framework-stats"
+    ],
+    "framework_count": 20,
+    "functions_per_framework": 6,
+    "function_contract_count": 120,
+    "maturity": "catalogue-and-signature-validation",
+    "registry_api_functions": 8,
+    "dispatch_api": {
+      "function": "reaper_framework_invoke",
+      "max_request_bytes": 1048576,
+      "max_response_bytes": 1048576,
+      "payload_encoding": "caller-defined versioned payload",
+      "callback": "explicit host-owned C ABI callback",
+      "callback_error": "normalized to REAPER_FRAMEWORK_DISPATCH_FAILED"
+    }
+  },
+  "language_adapters": [
+    {
+      "language": "Reaper",
+      "status": "metadata-and-helper-functions",
+      "scope": "Each .rpr module exports framework_manifest() and operation_key(index); the example calls these functions through Reaper's module runtime. These helpers do not invoke native domain handlers."
+    },
+    {
+      "language": "C17",
+      "status": "implemented",
+      "scope": "Shared C ABI registry enumeration, lookup, signature validation, bounded callback dispatch and public registry statistics."
+    },
+    {
+      "language": "Other C-ABI languages",
+      "status": "adapter-ready",
+      "scope": "Compatible foreign hosts can inspect descriptors and invoke a trusted host-owned callback through the shared C ABI. Dedicated language SDKs and built-in operation handlers are not shipped."
+    }
+  ],
+  "public_statistics": {
+    "source": "Computed by reaper_framework_registry_stats() from the native registry.",
+    "registered_frameworks": 20,
+    "registered_function_contracts": 120,
+    "registry_api_functions": 8,
+    "executable_domain_handlers": 0,
+    "reaper_source_bindings": 0,
+    "privacy": "Registry metadata only; no user telemetry or runtime activity is collected."
+  },
+  "frameworks": [
+    {
+      "id": "codex-no",
+      "name": "CodexNo",
+      "domain": "Compiler and language feature catalog",
+      "feature_key": "RPR-FWK-001",
+      "source_module": "examples/frameworks/modules/codex_no.rpr",
+      "maturity": "contract-only",
+      "functions": [
+        {
+          "key": "RPR-FWK-001-F01",
+          "name": "lookup_symbol",
+          "min_arity": 1,
+          "max_arity": 2,
+          "description": "Resolve a stable symbol key in the public registry.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-001-F02",
+          "name": "inspect_feature",
+          "min_arity": 1,
+          "max_arity": 1,
+          "description": "Return the maturity record for one language feature.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-001-F03",
+          "name": "list_contracts",
+          "min_arity": 1,
+          "max_arity": 1,
+          "description": "Enumerate registered operation contracts for a framework.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-001-F04",
+          "name": "describe_framework",
+          "min_arity": 1,
+          "max_arity": 1,
+          "description": "Read one framework descriptor without executing its operations.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-001-F05",
+          "name": "compare_versions",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Compare two semantic version identifiers.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-001-F06",
+          "name": "export_catalog",
+          "min_arity": 1,
+          "max_arity": 1,
+          "description": "Serialize a caller-selected catalog view.",
+          "status": "contract-only"
+        }
+      ]
+    },
+    {
+      "id": "joint-baby",
+      "name": "Joint Baby",
+      "domain": "Cross-language composition and ABI binding",
+      "feature_key": "RPR-FWK-002",
+      "source_module": "examples/frameworks/modules/joint_baby.rpr",
+      "maturity": "contract-only",
+      "functions": [
+        {
+          "key": "RPR-FWK-002-F01",
+          "name": "bind_language",
+          "min_arity": 2,
+          "max_arity": 3,
+          "description": "Describe an explicit source-to-host language binding.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-002-F02",
+          "name": "validate_abi",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Validate an ABI identifier and version pair.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-002-F03",
+          "name": "invoke_foreign",
+          "min_arity": 3,
+          "max_arity": 3,
+          "description": "Validate a foreign-call request before host dispatch.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-002-F04",
+          "name": "marshal_value",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Validate a typed value for ABI marshalling.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-002-F05",
+          "name": "unmarshal_value",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Validate a typed ABI result for decoding.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-002-F06",
+          "name": "release_foreign",
+          "min_arity": 1,
+          "max_arity": 1,
+          "description": "Validate release of a host-owned foreign handle.",
+          "status": "contract-only"
+        }
+      ]
+    },
+    {
+      "id": "correpse",
+      "name": "Correpse",
+      "domain": "Contracts, consistency and reconciliation",
+      "feature_key": "RPR-FWK-003",
+      "source_module": "examples/frameworks/modules/correpse.rpr",
+      "maturity": "contract-only",
+      "functions": [
+        {
+          "key": "RPR-FWK-003-F01",
+          "name": "check_invariant",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Evaluate a named invariant against supplied evidence.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-003-F02",
+          "name": "reconcile_state",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Produce a deterministic reconciliation plan.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-003-F03",
+          "name": "compare_contracts",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Compare two versioned interface contracts.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-003-F04",
+          "name": "validate_schema",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Validate a payload against a named schema.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-003-F05",
+          "name": "detect_conflict",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Identify conflicting values in a merge candidate.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-003-F06",
+          "name": "prove_precondition",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Check a declared precondition against explicit inputs.",
+          "status": "contract-only"
+        }
+      ]
+    },
+    {
+      "id": "allocate-purpose",
+      "name": "Allocate Purpose",
+      "domain": "Memory, allocation and resource budgets",
+      "feature_key": "RPR-FWK-004",
+      "source_module": "examples/frameworks/modules/allocate_purpose.rpr",
+      "maturity": "contract-only",
+      "functions": [
+        {
+          "key": "RPR-FWK-004-F01",
+          "name": "arena_create",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Describe a bounded arena allocation request.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-004-F02",
+          "name": "arena_reserve",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Validate a reservation against an arena capacity.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-004-F03",
+          "name": "arena_release",
+          "min_arity": 1,
+          "max_arity": 1,
+          "description": "Validate release of an owned allocation region.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-004-F04",
+          "name": "budget_split",
+          "min_arity": 3,
+          "max_arity": 3,
+          "description": "Split a resource budget while preserving its total.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-004-F05",
+          "name": "quota_check",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Compare requested resources with an explicit quota.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-004-F06",
+          "name": "allocation_trace",
+          "min_arity": 1,
+          "max_arity": 1,
+          "description": "Inspect allocation events for a declared scope.",
+          "status": "contract-only"
+        }
+      ]
+    },
+    {
+      "id": "collillioi",
+      "name": "Collillioi",
+      "domain": "Collections and deterministic algorithms",
+      "feature_key": "RPR-FWK-005",
+      "source_module": "examples/frameworks/modules/collillioi.rpr",
+      "maturity": "contract-only",
+      "functions": [
+        {
+          "key": "RPR-FWK-005-F01",
+          "name": "map_sequence",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Describe a pure sequence transformation.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-005-F02",
+          "name": "filter_sequence",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Describe a predicate-based sequence filter.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-005-F03",
+          "name": "fold_sequence",
+          "min_arity": 3,
+          "max_arity": 3,
+          "description": "Describe a left fold with an explicit initial value.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-005-F04",
+          "name": "zip_sequences",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Describe a bounded pairwise sequence composition.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-005-F05",
+          "name": "stable_sort",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Describe a deterministic stable ordering.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-005-F06",
+          "name": "partition_sequence",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Partition a sequence using an explicit size or predicate.",
+          "status": "contract-only"
+        }
+      ]
+    },
+    {
+      "id": "aspdoi",
+      "name": "Aspdoi",
+      "domain": "Asynchronous tasks and structured scheduling",
+      "feature_key": "RPR-FWK-006",
+      "source_module": "examples/frameworks/modules/aspdoi.rpr",
+      "maturity": "contract-only",
+      "functions": [
+        {
+          "key": "RPR-FWK-006-F01",
+          "name": "task_spawn",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Validate task creation under a caller-owned task scope.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-006-F02",
+          "name": "task_cancel",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Validate cancellation of a task handle.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-006-F03",
+          "name": "await_result",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Describe a bounded wait for a task result.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-006-F04",
+          "name": "deadline_after",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Calculate a deadline from a supplied monotonic timestamp.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-006-F05",
+          "name": "schedule_task",
+          "min_arity": 3,
+          "max_arity": 3,
+          "description": "Validate a task scheduling request and its policy.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-006-F06",
+          "name": "join_scope",
+          "min_arity": 1,
+          "max_arity": 1,
+          "description": "Describe joining all child tasks in a scope.",
+          "status": "contract-only"
+        }
+      ]
+    },
+    {
+      "id": "asjiop",
+      "name": "ASJIOP",
+      "domain": "ABI, serialization and binary layouts",
+      "feature_key": "RPR-FWK-007",
+      "source_module": "examples/frameworks/modules/asjiop.rpr",
+      "maturity": "contract-only",
+      "functions": [
+        {
+          "key": "RPR-FWK-007-F01",
+          "name": "abi_negotiate",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Negotiate a supported ABI version and feature set.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-007-F02",
+          "name": "encode_frame",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Validate fields for a versioned binary frame.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-007-F03",
+          "name": "decode_frame",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Validate a binary frame before decoding.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-007-F04",
+          "name": "type_fingerprint",
+          "min_arity": 1,
+          "max_arity": 1,
+          "description": "Compute or resolve a stable type fingerprint.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-007-F05",
+          "name": "call_descriptor",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Resolve a function signature and calling convention.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-007-F06",
+          "name": "validate_layout",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Check a declared layout against ABI constraints.",
+          "status": "contract-only"
+        }
+      ]
+    },
+    {
+      "id": "alllll",
+      "name": "ALLLLL",
+      "domain": "Language feature registry and compatibility",
+      "feature_key": "RPR-FWK-008",
+      "source_module": "examples/frameworks/modules/alllll.rpr",
+      "maturity": "contract-only",
+      "functions": [
+        {
+          "key": "RPR-FWK-008-F01",
+          "name": "feature_lookup",
+          "min_arity": 1,
+          "max_arity": 1,
+          "description": "Resolve a stable language feature key.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-008-F02",
+          "name": "feature_enablement",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Check feature availability for a target profile.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-008-F03",
+          "name": "enumerate_features",
+          "min_arity": 1,
+          "max_arity": 1,
+          "description": "Enumerate features in a named capability area.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-008-F04",
+          "name": "dependency_order",
+          "min_arity": 1,
+          "max_arity": 1,
+          "description": "Return a dependency-safe feature implementation order.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-008-F05",
+          "name": "compatibility_check",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Check compatibility between two feature profiles.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-008-F06",
+          "name": "capability_diff",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Describe differences between capability sets.",
+          "status": "contract-only"
+        }
+      ]
+    },
+    {
+      "id": "zabor",
+      "name": "Zabor",
+      "domain": "Capability grants and policy scopes",
+      "feature_key": "RPR-FWK-009",
+      "source_module": "examples/frameworks/modules/zabor.rpr",
+      "maturity": "contract-only",
+      "functions": [
+        {
+          "key": "RPR-FWK-009-F01",
+          "name": "grant_create",
+          "min_arity": 3,
+          "max_arity": 3,
+          "description": "Describe a scoped capability grant.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-009-F02",
+          "name": "grant_check",
+          "min_arity": 3,
+          "max_arity": 3,
+          "description": "Check a principal, resource and requested capability.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-009-F03",
+          "name": "grant_revoke",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Validate revocation of a scoped grant.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-009-F04",
+          "name": "scope_intersect",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Calculate the least-authority intersection of two scopes.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-009-F05",
+          "name": "policy_match",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Evaluate a named policy against explicit facts.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-009-F06",
+          "name": "audit_decision",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Format a decision record without exposing secrets.",
+          "status": "contract-only"
+        }
+      ]
+    },
+    {
+      "id": "vjinz",
+      "name": "Vjinz",
+      "domain": "Source maps, diagnostics and tracing",
+      "feature_key": "RPR-FWK-010",
+      "source_module": "examples/frameworks/modules/vjinz.rpr",
+      "maturity": "contract-only",
+      "functions": [
+        {
+          "key": "RPR-FWK-010-F01",
+          "name": "source_map_lookup",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Resolve an IR location to its original source span.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-010-F02",
+          "name": "span_translate",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Translate a span between declared coordinate systems.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-010-F03",
+          "name": "diagnostic_emit",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Create a structured diagnostic from a code and span.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-010-F04",
+          "name": "trace_register",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Register a named trace scope and its metadata.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-010-F05",
+          "name": "symbol_resolve",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Resolve a symbol in a versioned namespace.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-010-F06",
+          "name": "origin_chain",
+          "min_arity": 1,
+          "max_arity": 1,
+          "description": "Return provenance links for an artifact.",
+          "status": "contract-only"
+        }
+      ]
+    },
+    {
+      "id": "supreme-boy",
+      "name": "SupremeBoy",
+      "domain": "Quality gates and release evidence",
+      "feature_key": "RPR-FWK-011",
+      "source_module": "examples/frameworks/modules/supreme_boy.rpr",
+      "maturity": "contract-only",
+      "functions": [
+        {
+          "key": "RPR-FWK-011-F01",
+          "name": "quality_gate",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Evaluate a release gate against its evidence set.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-011-F02",
+          "name": "build_matrix",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Describe a target and configuration build matrix.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-011-F03",
+          "name": "test_evidence",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Validate a test result as release evidence.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-011-F04",
+          "name": "regression_compare",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Compare two metric snapshots for regressions.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-011-F05",
+          "name": "artifact_attest",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Describe an artifact provenance attestation.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-011-F06",
+          "name": "release_check",
+          "min_arity": 1,
+          "max_arity": 1,
+          "description": "Summarize readiness of a declared release candidate.",
+          "status": "contract-only"
+        }
+      ]
+    },
+    {
+      "id": "chee-now",
+      "name": "CheeNow",
+      "domain": "Channels, concurrency and back-pressure",
+      "feature_key": "RPR-FWK-012",
+      "source_module": "examples/frameworks/modules/chee_now.rpr",
+      "maturity": "contract-only",
+      "functions": [
+        {
+          "key": "RPR-FWK-012-F01",
+          "name": "channel_open",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Describe creation of a bounded message channel.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-012-F02",
+          "name": "channel_send",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Validate sending a typed message to a channel.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-012-F03",
+          "name": "channel_receive",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Describe receiving one message under a wait policy.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-012-F04",
+          "name": "channel_close",
+          "min_arity": 1,
+          "max_arity": 1,
+          "description": "Validate closure of a channel owned by the caller.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-012-F05",
+          "name": "backpressure_check",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Evaluate a queue against an explicit back-pressure limit.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-012-F06",
+          "name": "fanout_dispatch",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Describe deterministic delivery to a recipient set.",
+          "status": "contract-only"
+        }
+      ]
+    },
+    {
+      "id": "humble-bumble",
+      "name": "HumbleBumble",
+      "domain": "Result values, error taxonomy and recovery",
+      "feature_key": "RPR-FWK-013",
+      "source_module": "examples/frameworks/modules/humble_bumble.rpr",
+      "maturity": "contract-only",
+      "functions": [
+        {
+          "key": "RPR-FWK-013-F01",
+          "name": "result_ok",
+          "min_arity": 1,
+          "max_arity": 1,
+          "description": "Describe a successful typed result.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-013-F02",
+          "name": "result_err",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Describe a typed failure result.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-013-F03",
+          "name": "map_ok",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Describe a transformation applied only to successful results.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-013-F04",
+          "name": "map_err",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Describe a transformation applied only to error values.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-013-F05",
+          "name": "recover_error",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Describe recovery under an explicit error policy.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-013-F06",
+          "name": "classify_failure",
+          "min_arity": 1,
+          "max_arity": 1,
+          "description": "Classify a failure using stable diagnostic categories.",
+          "status": "contract-only"
+        }
+      ]
+    },
+    {
+      "id": "hub2",
+      "name": "Hub2",
+      "domain": "Service discovery and event distribution",
+      "feature_key": "RPR-FWK-014",
+      "source_module": "examples/frameworks/modules/hub2.rpr",
+      "maturity": "contract-only",
+      "functions": [
+        {
+          "key": "RPR-FWK-014-F01",
+          "name": "service_register",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Register a service descriptor in a host-owned registry.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-014-F02",
+          "name": "service_resolve",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Resolve a service by name and version constraints.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-014-F03",
+          "name": "endpoint_health",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Evaluate a service health response.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-014-F04",
+          "name": "event_publish",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Validate publication to a named event topic.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-014-F05",
+          "name": "event_subscribe",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Describe a scoped event subscription.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-014-F06",
+          "name": "event_ack",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Validate acknowledgement of a delivered event.",
+          "status": "contract-only"
+        }
+      ]
+    },
+    {
+      "id": "kloz",
+      "name": "Kloz",
+      "domain": "Modules, packages and dependency lifecycle",
+      "feature_key": "RPR-FWK-015",
+      "source_module": "examples/frameworks/modules/kloz.rpr",
+      "maturity": "contract-only",
+      "functions": [
+        {
+          "key": "RPR-FWK-015-F01",
+          "name": "module_load",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Describe loading a versioned Reaper module.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-015-F02",
+          "name": "module_export",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Resolve a public export from a module.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-015-F03",
+          "name": "module_import",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Validate an explicit module import request.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-015-F04",
+          "name": "dependency_resolve",
+          "min_arity": 1,
+          "max_arity": 1,
+          "description": "Resolve a dependency closure without executing it.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-015-F05",
+          "name": "module_version",
+          "min_arity": 1,
+          "max_arity": 1,
+          "description": "Read a module's declared semantic version.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-015-F06",
+          "name": "module_unload",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Validate unloading after owned references are released.",
+          "status": "contract-only"
+        }
+      ]
+    },
+    {
+      "id": "co",
+      "name": "CO",
+      "domain": "Core primitives and deterministic identity",
+      "feature_key": "RPR-FWK-016",
+      "source_module": "examples/frameworks/modules/co.rpr",
+      "maturity": "contract-only",
+      "functions": [
+        {
+          "key": "RPR-FWK-016-F01",
+          "name": "core_hash",
+          "min_arity": 1,
+          "max_arity": 1,
+          "description": "Compute a stable hash over canonical bytes.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-016-F02",
+          "name": "checksum",
+          "min_arity": 1,
+          "max_arity": 1,
+          "description": "Calculate a corruption-detection checksum.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-016-F03",
+          "name": "stable_id",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Derive a stable identifier from a namespace and input.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-016-F04",
+          "name": "text_normalize",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Normalize text under an explicit normalization policy.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-016-F05",
+          "name": "compare_bytes",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Compare byte sequences without implicit conversion.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-016-F06",
+          "name": "version_parse",
+          "min_arity": 1,
+          "max_arity": 1,
+          "description": "Parse a strict semantic version identifier.",
+          "status": "contract-only"
+        }
+      ]
+    },
+    {
+      "id": "cripplebo",
+      "name": "CrippleBO",
+      "domain": "Fault records and resilience policies",
+      "feature_key": "RPR-FWK-017",
+      "source_module": "examples/frameworks/modules/cripplebo.rpr",
+      "maturity": "contract-only",
+      "functions": [
+        {
+          "key": "RPR-FWK-017-F01",
+          "name": "fault_record",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Create a structured fault record from supplied evidence.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-017-F02",
+          "name": "retry_plan",
+          "min_arity": 3,
+          "max_arity": 3,
+          "description": "Calculate a bounded retry plan.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-017-F03",
+          "name": "circuit_check",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Evaluate a circuit-breaker state transition.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-017-F04",
+          "name": "fallback_select",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Select a declared fallback for a failed component.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-017-F05",
+          "name": "isolate_component",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Describe isolation within a host-authorized boundary.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-017-F06",
+          "name": "recovery_report",
+          "min_arity": 1,
+          "max_arity": 1,
+          "description": "Summarize a recovery attempt and its evidence.",
+          "status": "contract-only"
+        }
+      ]
+    },
+    {
+      "id": "ripplecripple",
+      "name": "RippleCripple",
+      "domain": "Reactive streams and flow control",
+      "feature_key": "RPR-FWK-018",
+      "source_module": "examples/frameworks/modules/ripplecripple.rpr",
+      "maturity": "contract-only",
+      "functions": [
+        {
+          "key": "RPR-FWK-018-F01",
+          "name": "stream_open",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Describe opening a typed stream under a bounded policy.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-018-F02",
+          "name": "stream_push",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Validate a stream item before enqueueing.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-018-F03",
+          "name": "stream_merge",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Describe a deterministic merge of compatible streams.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-018-F04",
+          "name": "stream_throttle",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Apply a declared rate or demand limit.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-018-F05",
+          "name": "stream_checkpoint",
+          "min_arity": 1,
+          "max_arity": 1,
+          "description": "Describe a checkpoint for replayable stream state.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-018-F06",
+          "name": "stream_close",
+          "min_arity": 1,
+          "max_arity": 1,
+          "description": "Validate stream closure and resource release.",
+          "status": "contract-only"
+        }
+      ]
+    },
+    {
+      "id": "secator",
+      "name": "Secator",
+      "domain": "Security policy and secret references",
+      "feature_key": "RPR-FWK-019",
+      "source_module": "examples/frameworks/modules/secator.rpr",
+      "maturity": "contract-only",
+      "functions": [
+        {
+          "key": "RPR-FWK-019-F01",
+          "name": "access_decide",
+          "min_arity": 3,
+          "max_arity": 3,
+          "description": "Make an explicit allow-or-deny decision from policy inputs.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-019-F02",
+          "name": "principal_resolve",
+          "min_arity": 1,
+          "max_arity": 1,
+          "description": "Resolve a principal from a trusted host identity.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-019-F03",
+          "name": "secret_ref",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Create a non-secret reference to a host-managed secret.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-019-F04",
+          "name": "token_validate",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Validate token metadata without logging token material.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-019-F05",
+          "name": "policy_compile",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Validate a policy before host enforcement.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-019-F06",
+          "name": "security_audit",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Create a redacted security audit event.",
+          "status": "contract-only"
+        }
+      ]
+    },
+    {
+      "id": "pollatia",
+      "name": "PollATIA",
+      "domain": "Public statistics and privacy-aware metrics",
+      "feature_key": "RPR-FWK-020",
+      "source_module": "examples/frameworks/modules/pollatia.rpr",
+      "maturity": "contract-only",
+      "functions": [
+        {
+          "key": "RPR-FWK-020-F01",
+          "name": "stats_snapshot",
+          "min_arity": 1,
+          "max_arity": 1,
+          "description": "Create a snapshot from published, non-sensitive counters.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-020-F02",
+          "name": "counter_add",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Describe a monotonic counter update.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-020-F03",
+          "name": "gauge_set",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Describe an absolute gauge update.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-020-F04",
+          "name": "histogram_observe",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Record an observation in a declared histogram.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-020-F05",
+          "name": "metrics_export",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Export selected aggregate metrics in a versioned format.",
+          "status": "contract-only"
+        },
+        {
+          "key": "RPR-FWK-020-F06",
+          "name": "privacy_filter",
+          "min_arity": 2,
+          "max_arity": 2,
+          "description": "Remove or aggregate fields outside a public metrics policy.",
+          "status": "contract-only"
+        }
+      ]
+    }
+  ]
+}
