@@ -58,7 +58,8 @@ static int verify_path(void *context, const void *grant, size_t size,
                        const char *repo, const char *path, uint64_t now) {
     FakeHost *fake = (FakeHost *)context;
     (void)grant; (void)size; (void)repo; (void)now;
-    return !fake->deny_path && strcmp(path, "src/main.rpr") == 0;
+    return !fake->deny_path &&
+        (strcmp(path, "src/main.rpr") == 0 || strcmp(path, "SRC/main.rpr") == 0);
 }
 
 static int verify_revision(void *context, const char *repo, const char *branch,
@@ -445,6 +446,26 @@ static void test_untrusted_host_and_stale_source_are_rejected(void) {
     assert(fake.branch_exists == 0);
 }
 
+static void test_canonical_path_alias_is_denied_before_second_stage(void) {
+    FakeHost fake;
+    ReaperEvolutionApplyHost host;
+    ReaperEvolutionApplyRequest request;
+    ReaperEvolutionApplyResult result;
+    ReaperSourcePatch patches[2];
+
+    setup(&fake, &host, &request, &patches[0]);
+    patches[1] = patches[0];
+    patches[1].relative_path = "SRC/main.rpr";
+    request.patches = patches;
+    request.patch_count = 2u;
+
+    result = reaper_evolution_apply(&host, &request);
+    assert(result.status == REAPER_APPLY_PATH_DENIED);
+    assert(strcmp(fake.current, "old source") == 0);
+    assert(fake.branch_exists == 0);
+    assert(fake.workspace_end_count == 1);
+}
+
 static void test_host_authorization_and_revision_denials(void) {
     FakeHost fake;
     ReaperEvolutionApplyHost host;
@@ -481,6 +502,7 @@ int main(void) {
     test_default_branch_and_path_escape_are_rejected();
     test_untrusted_host_and_stale_source_are_rejected();
     test_host_authorization_and_revision_denials();
-    puts("native evolution apply tests: 8 groups passed");
+    test_canonical_path_alias_is_denied_before_second_stage();
+    puts("native evolution apply tests: 9 groups passed");
     return 0;
 }
