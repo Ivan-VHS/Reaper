@@ -45,6 +45,13 @@ typedef struct {
 
 static const char *CHECK_IDS[] = {"reaper.unit"};
 
+static int trusted_time(void *context, uint64_t *now) {
+    (void)context;
+    if (now == NULL) return 0;
+    *now = 100u;
+    return 1;
+}
+
 static int verify_grant(void *context, const void *grant, size_t size,
                         const char *repo, const char *branch,
                         const char *request_digest, uint64_t now) {
@@ -270,6 +277,7 @@ static ReaperEvolutionApplyHost make_host(FakeHost *fake) {
     host.abi_version = REAPER_EVOLUTION_APPLY_ABI_VERSION;
     host.capabilities = REAPER_APPLY_HOST_REQUIRED_CAPABILITIES;
     host.context = fake;
+    host.trusted_time_unix_seconds = trusted_time;
     host.verify_repository_grant = verify_grant;
     host.verify_path_scope = verify_path;
     host.verify_git_revision = verify_revision;
@@ -316,7 +324,6 @@ static void setup(FakeHost *fake, ReaperEvolutionApplyHost *host,
     request->base_revision = "0123456789012345678901234567890123456789";
     request->signed_grant = "signed";
     request->signed_grant_size = 6u;
-    request->now_unix_seconds = 100u;
     request->patches = patch;
     request->patch_count = 1u;
     request->check_ids = CHECK_IDS;
