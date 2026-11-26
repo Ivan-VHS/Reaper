@@ -3,8 +3,8 @@
   "total_target_framework_count": 330,
   "remaining_target_framework_count": 325,
   "existing_batch_01_source_count": 5,
-  "new_source_count": 30,
-  "remaining_source_count": 295,
+  "new_source_count": 50,
+  "remaining_source_count": 275,
   "domains": [
     {
       "number": 1,
@@ -67,32 +67,32 @@
       "slug": "08-fundamental",
       "name": "Фундамент",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "queued"
+      "source_frameworks": 5,
+      "state": "tests-first"
     },
     {
       "number": 9,
       "slug": "09-spine",
       "name": "Остов",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "queued"
+      "source_frameworks": 5,
+      "state": "tests-first"
     },
     {
       "number": 10,
       "slug": "10-backbone",
       "name": "Костяк",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "queued"
+      "source_frameworks": 5,
+      "state": "tests-first"
     },
     {
       "number": 11,
       "slug": "11-structure",
       "name": "Структура",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "queued"
+      "source_frameworks": 5,
+      "state": "tests-first"
     },
     {
       "number": 12,
@@ -1155,6 +1155,386 @@
           "[]"
         ]
       ]
+    },
+    {
+      "id": "08.primitive-registry",
+      "domain_number": 8,
+      "domain": "Фундамент",
+      "slug": "08-fundamental",
+      "name": "Primitive Registry Framework",
+      "role": "primitive-registry",
+      "path": "reaper/frameworks/08-fundamental/primitive_registry.rpr",
+      "api": "valid_fundamental_primitives",
+      "purpose": "Validate a unique list of primitive type names from the supported Reaper scalar set.",
+      "positive": {
+        "args": "([\"bool\", \"u8\", \"i32\", \"f64\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"bool\", \"u8\", \"u8\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "08.unit-scale",
+      "domain_number": 8,
+      "domain": "Фундамент",
+      "slug": "08-fundamental",
+      "name": "Unit Scale Framework",
+      "role": "unit-scale",
+      "path": "reaper/frameworks/08-fundamental/unit_scale.rpr",
+      "api": "fundamental_bytes",
+      "purpose": "Convert byte-oriented units to an exact byte count with overflow bounds.",
+      "positive": {
+        "args": "(3, \"KiB\")",
+        "output": "3072"
+      },
+      "negative": {
+        "args": "(1, \"minute\")",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "08.invariant",
+      "domain_number": 8,
+      "domain": "Фундамент",
+      "slug": "08-fundamental",
+      "name": "Invariant Framework",
+      "role": "invariant",
+      "path": "reaper/frameworks/08-fundamental/invariant.rpr",
+      "api": "valid_fundamental_invariant",
+      "purpose": "Check a scalar against an explicit inclusive lower/upper invariant.",
+      "positive": {
+        "args": "(12, 10, 20)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(21, 10, 20)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "08.result-envelope",
+      "domain_number": 8,
+      "domain": "Фундамент",
+      "slug": "08-fundamental",
+      "name": "Result Envelope Framework",
+      "role": "result-envelope",
+      "path": "reaper/frameworks/08-fundamental/result_envelope.rpr",
+      "api": "valid_fundamental_result_envelope",
+      "purpose": "Validate tagged ok/err result envelopes and reject malformed error payloads.",
+      "positive": {
+        "args": "([\"ok\", 42])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"err\", \"\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "08.diagnostic-severity",
+      "domain_number": 8,
+      "domain": "Фундамент",
+      "slug": "08-fundamental",
+      "name": "Diagnostic Severity Framework",
+      "role": "diagnostic-severity",
+      "path": "reaper/frameworks/08-fundamental/diagnostic_severity.rpr",
+      "api": "fundamental_diagnostic_severity",
+      "purpose": "Map stable diagnostic code prefixes to error/warning/info severity.",
+      "positive": {
+        "args": "(\"RPR-E1042\")",
+        "output": "error"
+      },
+      "negative": {
+        "args": "(\"OTHER-1042\")",
+        "output": "unknown"
+      }
+    },
+    {
+      "id": "09.chain",
+      "domain_number": 9,
+      "domain": "Остов",
+      "slug": "09-spine",
+      "name": "Spine Chain Framework",
+      "role": "chain",
+      "path": "reaper/frameworks/09-spine/chain.rpr",
+      "api": "valid_spine_chain",
+      "purpose": "Validate ordered unique node identifiers for a linear spine.",
+      "positive": {
+        "args": "([10, 20, 30])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([10, 20, 10])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "09.index",
+      "domain_number": 9,
+      "domain": "Остов",
+      "slug": "09-spine",
+      "name": "Spine Index Framework",
+      "role": "index",
+      "path": "reaper/frameworks/09-spine/index.rpr",
+      "api": "spine_node_index",
+      "purpose": "Return the deterministic index of a node or -1 when absent.",
+      "positive": {
+        "args": "([\"lexer\", \"parser\", \"runtime\"], \"parser\")",
+        "output": "1"
+      },
+      "negative": {
+        "args": "([\"lexer\", \"parser\"], \"vm\")",
+        "output": "-1"
+      }
+    },
+    {
+      "id": "09.tree",
+      "domain_number": 9,
+      "domain": "Остов",
+      "slug": "09-spine",
+      "name": "Spine Tree Framework",
+      "role": "tree",
+      "path": "reaper/frameworks/09-spine/tree.rpr",
+      "api": "valid_spine_tree",
+      "purpose": "Validate a rooted tree with one parent per non-root node and full root reachability.",
+      "positive": {
+        "args": "(4, 0, [[0, 1], [0, 2], [2, 3]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(3, 0, [[0, 1], [2, 2]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "09.cycle",
+      "domain_number": 9,
+      "domain": "Остов",
+      "slug": "09-spine",
+      "name": "Spine Cycle Framework",
+      "role": "cycle",
+      "path": "reaper/frameworks/09-spine/cycle.rpr",
+      "api": "spine_graph_has_cycle",
+      "purpose": "Detect whether a directed dependency graph contains a cycle.",
+      "positive": {
+        "args": "(3, [[0, 1], [1, 2]])",
+        "output": "false"
+      },
+      "negative": {
+        "args": "(3, [[0, 1], [1, 2], [2, 0]])",
+        "output": "true"
+      }
+    },
+    {
+      "id": "09.path",
+      "domain_number": 9,
+      "domain": "Остов",
+      "slug": "09-spine",
+      "name": "Spine Path Framework",
+      "role": "path",
+      "path": "reaper/frameworks/09-spine/path.rpr",
+      "api": "compact_spine_path",
+      "purpose": "Collapse adjacent repeated identifiers while preserving path order.",
+      "positive": {
+        "args": "([\"a\", \"a\", \"b\", \"b\", \"c\"])",
+        "output": "[a, b, c]"
+      },
+      "negative": {
+        "args": "([])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "10.retry-schedule",
+      "domain_number": 10,
+      "domain": "Костяк",
+      "slug": "10-backbone",
+      "name": "Retry Schedule Framework",
+      "role": "retry-schedule",
+      "path": "reaper/frameworks/10-backbone/retry_schedule.rpr",
+      "api": "backbone_retry_delays",
+      "purpose": "Generate a bounded exponential retry delay schedule with a hard cap.",
+      "positive": {
+        "args": "(100, 2, 4, 500)",
+        "output": "[100, 200, 400, 500]"
+      },
+      "negative": {
+        "args": "(100, 1, 0, 500)",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "10.queue-admission",
+      "domain_number": 10,
+      "domain": "Костяк",
+      "slug": "10-backbone",
+      "name": "Queue Admission Framework",
+      "role": "queue-admission",
+      "path": "reaper/frameworks/10-backbone/queue_admission.rpr",
+      "api": "backbone_queue_admission",
+      "purpose": "Admit incoming work only when current plus incoming depth remains within queue capacity.",
+      "positive": {
+        "args": "(8, 2, 12)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(11, 2, 12)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "10.route-selection",
+      "domain_number": 10,
+      "domain": "Костяк",
+      "slug": "10-backbone",
+      "name": "Route Selection Framework",
+      "role": "route-selection",
+      "path": "reaper/frameworks/10-backbone/route_selection.rpr",
+      "api": "backbone_select_route",
+      "purpose": "Select the longest matching topic-prefix route deterministically.",
+      "positive": {
+        "args": "(\"compiler.native.build\", [[\"compiler\", \"general\"], [\"compiler.native\", \"native\"]])",
+        "output": "native"
+      },
+      "negative": {
+        "args": "(\"audio.render\", [[\"compiler\", \"general\"]])",
+        "output": ""
+      }
+    },
+    {
+      "id": "10.topic-fanout",
+      "domain_number": 10,
+      "domain": "Костяк",
+      "slug": "10-backbone",
+      "name": "Topic Fanout Framework",
+      "role": "topic-fanout",
+      "path": "reaper/frameworks/10-backbone/topic_fanout.rpr",
+      "api": "backbone_topic_subscribers",
+      "purpose": "Return unique subscribers bound to an exact topic.",
+      "positive": {
+        "args": "(\"build.done\", [[\"studio\", \"build.done\"], [\"store\", \"build.done\"], [\"studio\", \"build.done\"]])",
+        "output": "[studio, store]"
+      },
+      "negative": {
+        "args": "(\"build.failed\", [[\"studio\", \"build.done\"]])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "10.message-envelope",
+      "domain_number": 10,
+      "domain": "Костяк",
+      "slug": "10-backbone",
+      "name": "Message Envelope Framework",
+      "role": "message-envelope",
+      "path": "reaper/frameworks/10-backbone/message_envelope.rpr",
+      "api": "valid_backbone_envelope",
+      "purpose": "Validate message ID, schema version, topic and bounded payload size.",
+      "positive": {
+        "args": "([\"msg-1\", 1, \"build.done\", 1024])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"\", 1, \"build.done\", 1024])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "11.record-layout",
+      "domain_number": 11,
+      "domain": "Структура",
+      "slug": "11-structure",
+      "name": "Record Layout Framework",
+      "role": "record-layout",
+      "path": "reaper/frameworks/11-structure/record_layout.rpr",
+      "api": "valid_structure_record_layout",
+      "purpose": "Validate field ranges fit a record and do not overlap.",
+      "positive": {
+        "args": "(16, [[\"tag\", 0, 4], [\"value\", 4, 8]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(16, [[\"tag\", 0, 8], [\"value\", 4, 8]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "11.hierarchy",
+      "domain_number": 11,
+      "domain": "Структура",
+      "slug": "11-structure",
+      "name": "Hierarchy Framework",
+      "role": "hierarchy",
+      "path": "reaper/frameworks/11-structure/hierarchy.rpr",
+      "api": "valid_structure_hierarchy",
+      "purpose": "Validate a rooted parent vector with exactly one root and no out-of-range parents.",
+      "positive": {
+        "args": "(4, [-1, 0, 0, 2])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(3, [-1, 0, 4])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "11.matrix-shape",
+      "domain_number": 11,
+      "domain": "Структура",
+      "slug": "11-structure",
+      "name": "Matrix Shape Framework",
+      "role": "matrix-shape",
+      "path": "reaper/frameworks/11-structure/matrix_shape.rpr",
+      "api": "structure_matrix_shape",
+      "purpose": "Return rectangular matrix dimensions or an empty list for ragged input.",
+      "positive": {
+        "args": "([[1, 2, 3], [4, 5, 6]])",
+        "output": "[2, 3]"
+      },
+      "negative": {
+        "args": "([[1, 2], [3]])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "11.field-alignment",
+      "domain_number": 11,
+      "domain": "Структура",
+      "slug": "11-structure",
+      "name": "Field Alignment Framework",
+      "role": "field-alignment",
+      "path": "reaper/frameworks/11-structure/field_alignment.rpr",
+      "api": "valid_structure_field_alignment",
+      "purpose": "Validate offset alignment and non-overlap for typed fields.",
+      "positive": {
+        "args": "([[0, 4, 4], [8, 8, 8]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[2, 4, 4]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "11.coverage",
+      "domain_number": 11,
+      "domain": "Структура",
+      "slug": "11-structure",
+      "name": "Coverage Framework",
+      "role": "coverage",
+      "path": "reaper/frameworks/11-structure/coverage.rpr",
+      "api": "structure_missing_slots",
+      "purpose": "Report missing structural slots while rejecting malformed and duplicate slot IDs.",
+      "positive": {
+        "args": "([\"header\", \"body\", \"footer\"], [\"header\", \"body\"])",
+        "output": "[footer]"
+      },
+      "negative": {
+        "args": "([], [\"header\"])",
+        "output": "[]"
+      }
     }
   ]
 }
