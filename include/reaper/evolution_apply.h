@@ -43,7 +43,8 @@ enum {
     REAPER_APPLY_HOST_NO_NETWORK          = UINT32_C(1) << 6,
     REAPER_APPLY_HOST_RESOURCE_LIMITED    = UINT32_C(1) << 7,
     REAPER_APPLY_HOST_DURABLE_AUDIT       = UINT32_C(1) << 8,
-    REAPER_APPLY_HOST_ROLLBACK            = UINT32_C(1) << 9
+    REAPER_APPLY_HOST_ROLLBACK            = UINT32_C(1) << 9,
+    REAPER_APPLY_HOST_RECOVERY_STORE      = UINT32_C(1) << 10
 };
 
 #define REAPER_APPLY_HOST_REQUIRED_CAPABILITIES ( \
@@ -51,7 +52,8 @@ enum {
     REAPER_APPLY_HOST_ATOMIC_REPLACE | REAPER_APPLY_HOST_REVISION_VERIFIED | \
     REAPER_APPLY_HOST_GRANT_CRYPTOGRAPHIC | REAPER_APPLY_HOST_SANDBOXED_CHECKS | \
     REAPER_APPLY_HOST_NO_NETWORK | REAPER_APPLY_HOST_RESOURCE_LIMITED | \
-    REAPER_APPLY_HOST_DURABLE_AUDIT | REAPER_APPLY_HOST_ROLLBACK)
+    REAPER_APPLY_HOST_DURABLE_AUDIT | REAPER_APPLY_HOST_ROLLBACK | \
+    REAPER_APPLY_HOST_RECOVERY_STORE)
 
 typedef struct {
     uint32_t timeout_ms;
@@ -147,6 +149,11 @@ typedef struct {
         void *context, void *staged_handle, void **rollback_handle
     );
     int (*rollback_committed)(void *context, void *rollback_handle);
+    /* Persists a failed rollback snapshot for an explicit recovery operation. */
+    int (*preserve_failed_rollback)(
+        void *context, void *rollback_handle, const char *request_id,
+        const char *relative_path
+    );
     int (*discard_staged)(void *context, void *staged_handle);
     void (*release_rollback)(void *context, void *rollback_handle);
     /* Must append to a durable, tamper-evident, hash-chained journal. */
