@@ -60,7 +60,7 @@ make proposed_graph := [
 
 make request := [
     "SourceEvolutionRequest", "sample-evolution",
-    "sha256:baseline-pinned-by-caller",
+    "sha256:0000000000000000000000000000000000000000000000000000000000000000",
     ["design", "compiler", "tests", "documentation"],
     12, 16384, 12, 60, true
 ]
