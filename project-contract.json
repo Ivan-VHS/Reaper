@@ -24,6 +24,24 @@
   },
   "capabilities": [
     {
+      "id": "foundations.fifth-five-frameworks",
+      "status": "partial",
+      "summary": "Adds executable contracts for the Reaper tool inventory, PATH-probe evidence, composable tool bundles, dependency-first package manifests and runtime/platform stack profiles; package lockfiles, installation and external tool execution remain planned.",
+      "evidence": [
+        "frameworks/foundation_21_25.rpr",
+        "frameworks/foundation_16_20.rpr",
+        "frameworks/foundation_11_15.rpr",
+        "frameworks/foundation_6_10.rpr",
+        "frameworks/foundation.rpr",
+        "docs/FOUNDATIONAL_FRAMEWORKS_21_25.md",
+        "examples/foundations_21_25.rpr",
+        "tests/test_foundational_frameworks_21_25.py",
+        "reaper/toolchain_inventory.py",
+        "reaper/embedded.py",
+        "reaper/systems_architectures.py"
+      ]
+    },
+    {
       "id": "foundations.fourth-five-frameworks",
       "status": "partial",
       "summary": "Adds executable Reaper contracts for runtime lifecycle transitions, execution-context quotas and engine maturity, a capability-matched System Runtime host boundary, and versioned reusable-module dependencies; scheduler, native backend and privileged host dispatch remain partial.",
