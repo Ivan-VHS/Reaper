@@ -1,0 +1,319 @@
+# Eighth group of Reaper foundations.
+import "foundation_31_35.rpr" as previous
+
+export make FOUNDATION_EIGHTH_SCHEMA := "reaper.foundation.eighth.v1"
+export make FOUNDATION_EIGHTH_VERSION := 1
+
+export craft context_locales() {
+    yield ["en", "ru", "uk", "zh-CN"]
+}
+
+export craft context_phases() {
+    yield ["lex", "parse", "analysis", "lower", "runtime", "debug", "build"]
+}
+
+export craft context_target_profiles() {
+    yield ["hosted-reference", "native-c17-host", "simulator-adapter", "freestanding"]
+}
+
+export craft context_fields() {
+    yield ["source_file", "module_id", "locale", "phase", "target_profile"]
+}
+
+export craft context_validate_descriptor(context) {
+    when kind(context) != "list" or size(context) != 5 {
+        yield false
+    }
+    when kind(context[0]) != "text" or context[0] == "" or kind(context[1]) != "text" or context[1] == "" {
+        yield false
+    }
+    when not contains(context_locales(), context[2]) or not contains(context_phases(), context[3]) or not contains(context_target_profiles(), context[4]) {
+        yield false
+    }
+    yield true
+}
+
+export craft context_validate_span(span) {
+    when kind(span) != "list" or size(span) != 4 {
+        yield false
+    }
+    each value in span {
+        when kind(value) != "number" or value % 1 != 0 {
+            yield false
+        }
+    }
+    yield span[0] >= 0 and span[1] >= span[0] and span[2] >= 1 and span[3] >= 1
+}
+
+export craft context_validate_source_map(source_map) {
+    when kind(source_map) != "list" {
+        yield false
+    }
+    each entry in source_map {
+        when kind(entry) != "list" or size(entry) != 2 or kind(entry[0]) != "text" or entry[0] == "" or not context_validate_span(entry[1]) {
+            yield false
+        }
+    }
+    yield true
+}
+
+export craft model_primitive_types() {
+    yield [
+        ["nothing", "implemented"],
+        ["boolean", "implemented"],
+        ["number", "implemented"],
+        ["text", "implemented"],
+        ["list", "implemented"],
+        ["map", "implemented"],
+        ["craft", "implemented"],
+        ["resource", "implemented"],
+        ["range", "implemented"],
+        ["u8", "partial"],
+        ["u16", "partial"],
+        ["u32", "partial"],
+        ["u64", "partial"],
+        ["u128", "partial"],
+        ["i8", "partial"],
+        ["i16", "partial"],
+        ["i32", "partial"],
+        ["i64", "partial"],
+        ["i128", "partial"],
+        ["pointer", "planned"],
+        ["reference", "planned"],
+        ["slice", "planned"]
+    ]
+}
+
+craft model_find_type(identifier) {
+    vary found := nothing
+    each item in model_primitive_types() {
+        when item[0] == identifier {
+            change found := item
+        }
+    }
+    yield found
+}
+
+export craft model_validate_type(identifier) {
+    yield model_find_type(identifier) != nothing
+}
+
+export craft model_validate_field(field) {
+    when kind(field) != "list" or size(field) != 3 {
+        yield false
+    }
+    when kind(field[0]) != "text" or field[0] == "" or kind(field[1]) != "text" or kind(field[2]) != "boolean" {
+        yield false
+    }
+    make known := model_find_type(field[1])
+    yield known != nothing and known[1] != "planned"
+}
+
+export craft model_validate_record(record) {
+    when kind(record) != "list" or size(record) != 2 or kind(record[0]) != "text" or record[0] == "" or kind(record[1]) != "list" or size(record[1]) == 0 {
+        yield false
+    }
+    vary names := []
+    each field in record[1] {
+        when not model_validate_field(field) or contains(names, field[0]) {
+            yield false
+        }
+        change names := push(names, field[0])
+    }
+    yield true
+}
+
+export craft model_value_kinds() {
+    yield ["nothing", "boolean", "number", "text", "list", "map", "craft", "resource", "range"]
+}
+
+export craft model_validate_runtime_kind(value_kind) {
+    yield contains(model_value_kinds(), value_kind)
+}
+
+export craft pattern_catalog() {
+    yield [
+        ["bounded-collections", "runtime", ["range", "size", "execution-quota"], "implemented"],
+        ["module-boundary", "modules", ["import", "export", "cycle-check"], "implemented"],
+        ["host-capability", "platform", ["host-abi", "explicit-capability", "bounded-request"], "partial"],
+        ["managed-resource", "runtime", ["resource-handle", "deterministic-close", "quota"], "implemented"],
+        ["canonical-flow", "compiler", ["source", "semantic-analysis", "canonical-ir"], "partial"]
+    ]
+}
+
+craft pattern_find(identifier) {
+    vary found := nothing
+    each pattern in pattern_catalog() {
+        when pattern[0] == identifier {
+            change found := pattern
+        }
+    }
+    yield found
+}
+
+export craft pattern_validate_request(request) {
+    when kind(request) != "list" or size(request) != 2 or kind(request[1]) != "list" {
+        yield false
+    }
+    make pattern := pattern_find(request[0])
+    when pattern == nothing {
+        yield false
+    }
+    each construct in request[1] {
+        when kind(construct) != "text" or construct == "" {
+            yield false
+        }
+    }
+    when size(unique(request[1])) != size(request[1]) {
+        yield false
+    }
+    each required in pattern[2] {
+        when not contains(request[1], required) {
+            yield false
+        }
+    }
+    yield true
+}
+
+export craft pattern_find_by_domain(domain) {
+    vary matches := []
+    each pattern in pattern_catalog() {
+        when pattern[1] == domain {
+            change matches := push(matches, pattern[0])
+        }
+    }
+    yield matches
+}
+
+export craft paradigm_profiles() {
+    yield [
+        ["flow-first", "::", "pipeline-oriented expression composition", "implemented"],
+        ["classic", "statement-and-expression", "traditional function and expression syntax", "implemented"],
+        ["most", "localized-keyword-aliases", "pre-parse canonical keyword mapping", "implemented"],
+        ["qcs-dsl", "qcs-specific", "separate hardware-domain validation frontend", "partial"],
+        ["systems-syntax", "typed-system-declarations", "reserved tokens; full parser and lowering incomplete", "planned"]
+    ]
+}
+
+craft paradigm_find(identifier) {
+    vary found := nothing
+    each profile in paradigm_profiles() {
+        when profile[0] == identifier {
+            change found := profile
+        }
+    }
+    yield found
+}
+
+export craft paradigm_validate_profile(identifier) {
+    make profile := paradigm_find(identifier)
+    when profile == nothing {
+        yield false
+    }
+    yield profile[3] != "planned"
+}
+
+export craft paradigm_validate_selection(selection) {
+    when kind(selection) != "list" or size(selection) == 0 {
+        yield false
+    }
+    each identifier in selection {
+        when not paradigm_validate_profile(identifier) {
+            yield false
+        }
+    }
+    yield size(unique(selection)) == size(selection)
+}
+
+export craft paradigm_validate_interop(source_mode, target_mode) {
+    yield paradigm_validate_profile(source_mode) and paradigm_validate_profile(target_mode)
+}
+
+export craft concept_catalog() {
+    yield [
+        ["concept.source-span", "source coordinates and ranges", "foundation.context.v1", "toolchain", "implemented"],
+        ["concept.value-model", "runtime and typed value categories", "foundation.model.v1", "semantics", "partial"],
+        ["concept.ownership", "resource ownership and borrowing rules", "foundation.basis.v1", "memory", "partial"],
+        ["concept.capability", "explicit host authority and effect boundary", "foundation.kernel.v1", "security", "partial"],
+        ["concept.module-graph", "module dependencies and cycle rejection", "foundation.root.v1", "modules", "implemented"],
+        ["concept.canonical-ir", "stable intermediate representation", "foundation.backbone.v1", "compiler", "partial"],
+        ["concept.execution-lifecycle", "runtime state transitions and cleanup", "foundation.runtime.v1", "runtime", "partial"],
+        ["concept.target-stack", "target, ABI, compiler and runtime profile", "foundation.technology-stack.v1", "platform", "partial"]
+    ]
+}
+
+export craft concept_links() {
+    yield [
+        ["concept.source-span", "concept.value-model", "supports"],
+        ["concept.value-model", "concept.canonical-ir", "feeds"],
+        ["concept.ownership", "concept.capability", "constrains"],
+        ["concept.module-graph", "concept.canonical-ir", "feeds"],
+        ["concept.target-stack", "concept.capability", "constrains"],
+        ["concept.execution-lifecycle", "concept.ownership", "enforces"]
+    ]
+}
+
+craft concept_find(identifier) {
+    vary found := nothing
+    each concept in concept_catalog() {
+        when concept[0] == identifier {
+            change found := concept
+        }
+    }
+    yield found
+}
+
+export craft concept_validate_catalog() {
+    vary identifiers := []
+    each concept in concept_catalog() {
+        when size(concept) != 5 {
+            yield false
+        }
+        change identifiers := push(identifiers, concept[0])
+    }
+    yield size(unique(identifiers)) == size(identifiers)
+}
+
+export craft concept_validate_link(link) {
+    when kind(link) != "list" or size(link) != 3 {
+        yield false
+    }
+    when concept_find(link[0]) == nothing or concept_find(link[1]) == nothing {
+        yield false
+    }
+    yield contains(concept_links(), link)
+}
+
+export craft concept_find_concept(identifier) {
+    yield concept_find(identifier)
+}
+
+export craft foundation_eighth_five() {
+    yield [
+        ["foundation.context.v1", "Context", "source, locale, phase, target and SourceMap coordinates", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_36_40.md"],
+        ["foundation.model.v1", "Model", "runtime value kinds and typed aggregate model descriptors", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_36_40.md"],
+        ["foundation.pattern.v1", "Pattern", "validated reusable engineering and language patterns", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_36_40.md"],
+        ["foundation.paradigm.v1", "Paradigm", "flow-first, classic, MOST and QCS language modes", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_36_40.md"],
+        ["foundation.concept.v1", "Concept", "cross-framework concept and dependency graph", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_36_40.md"]
+    ]
+}
+
+export craft foundation_all_frameworks_40() {
+    vary rows := previous["foundation_all_frameworks_35"]()
+    each row in foundation_eighth_five() {
+        change rows := push(rows, row)
+    }
+    yield rows
+}
+
+export craft foundation_validate_catalog_40() {
+    make rows := foundation_all_frameworks_40()
+    vary identifiers := []
+    each row in rows {
+        when size(row) != 5 {
+            yield false
+        }
+        change identifiers := push(identifiers, row[0])
+    }
+    yield previous["foundation_validate_catalog_35"]() and size(rows) == 40 and size(unique(identifiers)) == 40
+}
