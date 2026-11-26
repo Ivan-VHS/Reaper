@@ -386,6 +386,29 @@ static void test_utf8_columns_count_codepoints(void)
     reaper_tokens_free(&tokens);
 }
 
+
+static void test_utf8_token_byte_offsets(void)
+{
+    const char *source = "вывести утка + 1";
+    ReaperTokenArray tokens = {0};
+    ReaperLexError error = {{0}, 0u, 0u};
+    int found = 0;
+
+    assert(reaper_lex(source, &tokens, &error));
+    for (size_t index = 0u; index < tokens.length; ++index) {
+        const ReaperToken *token = &tokens.items[index];
+        assert(token->byte_start <= token->byte_end);
+        if (strcmp(token->text, "+") == 0) {
+            assert(token->column == 14u);
+            assert(token->byte_start == 24u);
+            assert(token->byte_end == 25u);
+            found = 1;
+        }
+    }
+    assert(found);
+    reaper_tokens_free(&tokens);
+}
+
 int main(void)
 {
     test_program();
@@ -397,6 +420,7 @@ int main(void)
     test_most_russian_vocabulary();
     test_most_extended_aliases();
     test_utf8_columns_count_codepoints();
+    test_utf8_token_byte_offsets();
     test_invalid_utf8_is_rejected();
     test_invalid_utf8_reports_line_and_column();
     test_source_size_limit_is_enforced();
