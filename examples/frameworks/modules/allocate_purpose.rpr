@@ -32,9 +32,10 @@ export craft arena_release(arena) {
 }
 
 export craft budget_split(total, weights) {
-    when not fc["fc_nonnegative"](total) or kind(weights) != "list" or size(weights) == 0 {
+    when not fc["fc_nonnegative"](total) or kind(weights) != "list" {
         yield [false, [], "split-input-invalid"]
     }
+    when size(weights) == 0 { yield [false, [], "split-input-invalid"] }
     vary sum_weights := 0
     each weight in weights {
         when not fc["fc_nonnegative"](weight) { yield [false, [], ["invalid-weight", weight]] }
@@ -49,9 +50,10 @@ export craft budget_split(total, weights) {
 }
 
 export craft quota_check(request, quota) {
-    when kind(request) != "list" or kind(quota) != "list" or size(request) != size(quota) {
+    when kind(request) != "list" or kind(quota) != "list" {
         yield [false, [], "quota-vector-shape"]
     }
+    when size(request) != size(quota) { yield [false, [], "quota-vector-shape"] }
     vary denied := []
     vary index := 0
     loop while index < size(request) {
@@ -73,9 +75,12 @@ export craft allocation_trace(events) {
     vary totals := []
     vary errors := []
     each event in events {
-        when not fc["fc_record"](event, 3) or not fc["fc_nonempty_text"](event[0]) or not fc["fc_is_number"](event[1]) {
+        when not fc["fc_record"](event, 3) {
             change errors := push(errors, ["invalid-allocation-event", event])
         } otherwise {
+            when not fc["fc_nonempty_text"](event[0]) or not fc["fc_is_number"](event[1]) {
+                change errors := push(errors, ["invalid-allocation-event", event])
+            } otherwise {
             make current := fc["fc_lookup"](totals, event[0])
             vary next_total := event[1]
             when current[0] { change next_total := current[1] + event[1] }
@@ -84,6 +89,7 @@ export craft allocation_trace(events) {
             } otherwise {
                 make written := fc["fc_put"](totals, event[0], next_total)
                 change totals := written[1]
+            }
             }
         }
     }
