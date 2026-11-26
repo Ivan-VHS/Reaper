@@ -34,7 +34,7 @@ class FrameworkPortfolioTests(unittest.TestCase):
         self.assertEqual(schema["$schema"], "https://json-schema.org/draft/2020-12/schema")
         self.assertEqual(schema["properties"]["schema"]["const"], "reaper.framework-portfolio.v1")
         self.assertIn("integration_surfaces", schema["required"])
-        self.assertIn("frameworks_portfolio_smoke.rpr", str(ROOT / "examples" / "frameworks_portfolio_smoke.rpr"))
+        self.assertTrue((ROOT / "examples" / "frameworks_portfolio_smoke.rpr").is_file())
 
     def test_portfolio_counts_all_sixty_owned_modules(self) -> None:
         modules = [
