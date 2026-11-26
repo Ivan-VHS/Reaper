@@ -6,6 +6,7 @@ export make display_name := "SupremeBoy"
 export make feature_key := "RPR-FWK-011"
 export make operation_keys := ["RPR-FWK-011-F01", "RPR-FWK-011-F02", "RPR-FWK-011-F03", "RPR-FWK-011-F04", "RPR-FWK-011-F05", "RPR-FWK-011-F06"]
 export make maturity := "reference-handler-v1-partial"
+export make handler_status := "reference-source-handler-v1"
 export make native_registry := "reaper.framework-cabi.v1"
 
 export craft operation_key(index) { yield operation_keys[index] }
