@@ -189,7 +189,7 @@ static int valid_node(const ReaperCompilerIrNode *node,
                 node->type > REAPER_COMPILER_IR_TYPE_INVALID &&
                 node->type <= REAPER_COMPILER_IR_TYPE_RATIO &&
                 (!is_text_type(node->type) ||
-                 bounded_text(node->text, REAPER_COMPILER_IR_TEXT_MAX, 1)) &&
+                 bounded_payload(node->text, REAPER_COMPILER_IR_TEXT_MAX, 1)) &&
                 node->lhs == REAPER_COMPILER_IR_NO_VALUE &&
                 node->rhs == REAPER_COMPILER_IR_NO_VALUE;
         case REAPER_COMPILER_IR_MIR_UNARY:
@@ -225,7 +225,7 @@ static int valid_node(const ReaperCompilerIrNode *node,
                 node->type > REAPER_COMPILER_IR_TYPE_INVALID &&
                 node->type <= REAPER_COMPILER_IR_TYPE_RATIO &&
                 (!is_text_type(node->type) ||
-                 bounded_text(node->text, REAPER_COMPILER_IR_TEXT_MAX, 1)) &&
+                 bounded_payload(node->text, REAPER_COMPILER_IR_TEXT_MAX, 1)) &&
                 node->lhs == REAPER_COMPILER_IR_NO_VALUE &&
                 node->rhs == REAPER_COMPILER_IR_NO_VALUE;
         case REAPER_COMPILER_IR_LIR_NATIVE_UNARY:
