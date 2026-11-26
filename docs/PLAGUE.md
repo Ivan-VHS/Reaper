@@ -4,55 +4,62 @@ PLAGUE is a local, Reaper-native framework family for evidence-driven modernizat
 
 ## First foundation
 
-The initial implementation lives in the top-level plague/ directory and contains:
+The initial implementation in the top-level `plague/` directory contains:
 
 - the ten-component framework registry;
-- bounded repository-profile and evolution-proposal validation;
-- deterministic compatibility, scope, resource-budget, assurance-gate and rollback-evidence assessment;
-- risk/benefit candidate ranking for up to 128 proposals;
-- the executable Reaper action policy;
-- observe / propose / apply capability levels;
-- default-deny behavior for unknown actions and modes;
-- fixed denials for default-branch writes, merges, releases, secret access, untrusted-script execution and scope expansion;
-- repository-target, change-plan and evidence-bundle JSON schemas;
-- five JSON contracts covering repository targets, change plans, evidence, repository profiles and evolution proposals;
-- two Reaper smoke programs and a host-side test adapter connected to CI.
+- a Reaper action policy with `observe / propose / apply` modes;
+- default-deny behavior for unknown modes/actions and fixed denials for default-branch writes, merges, releases, secret access, untrusted-script execution and scope expansion;
+- versioned repository-target, change-plan and evidence-bundle schemas;
+- bounded repository-profile and evolution-proposal validation in Reaper;
+- compatibility, requested-scope, assurance-gate, change-size, rollback and risk assessment;
+- deterministic ranking of up to 128 candidate proposals;
+- separate Reaper smoke programs and host-side test adapters connected to CI.
 
 The current maturity is **Genesis**. Plaguecore is Partial for the action-policy and bounded proposal-assessment slices; the other nine components remain Planned. The foundation does not yet discover repositories, read repository trees, modify files, invoke tools or create pull requests. Its policy function is not a substitute for grant validation or a sandbox.
 
 ## Component responsibilities
 
-| Component | Responsibility |
-|---|---|
-| Plagueborn | Repository discovery and onboarding |
-| Plaguecore | Policy, orchestration and scheduling |
-| Plagionyx | Architecture and dependency evolution |
-| Plagorium | Functional requirements and gap analysis |
-| Blightforge | Source patching and modernization |
-| Virulith | Feature completion and integration |
-| Scourvex | Testing and evidence |
-| Pestigon | Security and supply-chain review |
-| Maladrix | Performance and resilience |
-| Necrovex | Recovery and compatibility migrations |
+| Component | Responsibility | Status |
+|---|---|---|
+| Plagueborn | Repository discovery and onboarding | Planned |
+| Plaguecore | Policy, orchestration and scheduling | Partial |
+| Plagionyx | Architecture and dependency evolution | Planned |
+| Plagorium | Functional requirements and gap analysis | Planned |
+| Blightforge | Source patching and modernization | Planned |
+| Virulith | Feature completion and integration | Planned |
+| Scourvex | Testing and evidence | Planned |
+| Pestigon | Security and supply-chain review | Planned |
+| Maladrix | Performance and resilience | Planned |
+| Necrovex | Recovery and compatibility migrations | Planned |
 
-Plaguecore is Partial for its action-policy and advisory proposal-evaluation slices. The other nine components are Planned. No framework component is feature-complete.
+No framework component is feature-complete.
 
-## Advisory evolution evaluator
+## Operating modes
 
-The Reaper modules plague/engine/core.rpr and plague/engine/evolution.rpr validate bounded repository profiles and change proposals. The evaluator rejects target mismatches, ungranted scopes, exceeded path/byte budgets, missing assurance gates, absent required rollback evidence and risk above the profile ceiling. It returns blocked, defer, review_required or eligible_for_review and ranks up to 128 candidates by expected benefit minus risk. This is advisory only: proposal eligibility never grants write authority, and evidence references are not cryptographically verified in this slice.
+- **Observe** is the default. It is intended for bounded repository inspection, analysis, graph construction and report production.
+- **Propose** adds change planning and patch preparation, but does not write repository branches.
+- **Apply** is designed for writes to a dedicated topic branch, declared checks and pull-request creation. It still requires an explicitly delegated repository and path set.
 
-See PLAGUE_FOUNDATION_V1.md for tuple layouts and acceptance fixtures.
+The Reaper action policy is a capability matrix, not a complete authorization service. Every future side effect must additionally validate the repository grant, path allowlist, current revision, operator approval, check allowlist and audit context.
 
-## Bounded proposal assessment\n\nThe additional v1 evaluator lives in `plague/engine/core.rpr` and `plague/engine/evolution.rpr`. It validates fixed-width repository profiles and change proposals, checks target platform/stack, requested scopes, required assurance gates, changed-path and patch-byte budgets, rollback availability and the configured risk ceiling. It can assess and rank at most 128 proposals using `expected_benefit - declared_risk`; equal scores are ordered by proposal ID. Results are `blocked`, `defer`, `review_required` or `eligible_for_review`. The selector is advisory: no result writes source, creates a branch or authorizes a merge.\n\nThe external contracts are `plague/schemas/repository-profile.v1.schema.json` and `plague/schemas/evolution-proposal.v1.schema.json`. The fixed Reaper tuple layout is documented in [the v1 policy specification](PLAGUE_FOUNDATION_V1.md). Caller-provided risk values and evidence references are not independently verified. This evaluator does not authenticate repository grants or enforce individual path allowlists.\n\n## Bounded proposal assessment\n\nThe additional Reaper v1 evaluator lives in `plague/engine/core.rpr` and `plague/engine/evolution.rpr`. It validates fixed-width repository profiles and change proposals, checks target platform/stack, requested scope labels, required assurance gates, a maximum of 100 changed paths, a maximum patch size of 1 MiB, rollback availability and the configured risk ceiling. It can assess and rank at most 128 proposals using `expected_benefit - declared_risk`; ties are resolved by ascending proposal ID. Results are `blocked`, `defer`, `review_required` or `eligible_for_review`. The selector is advisory and does not write source or authorize a merge.\n\nThe external contracts are `plague/schemas/repository-profile.v1.schema.json` and `plague/schemas/evolution-proposal.v1.schema.json`. The tuple layouts are documented in [the v1 policy specification](PLAGUE_FOUNDATION_V1.md). Risk values and evidence references are caller-supplied and not independently verified. This evaluator does not authenticate repository grants or enforce individual path allowlists.\n\n## Access model
+## Bounded proposal assessment
 
-Every repository must receive an explicit grant with a repository identity, base branch, allowed paths, excluded paths, mode, expiry and approved check profile. The initial global scope list is empty. A project is not authorized merely because the GitHub account can see it.
+The Reaper evaluator is implemented in `plague/engine/core.rpr` and `plague/engine/evolution.rpr`. It validates fixed-width repository profiles and change proposals, checks target platform/stack, requested scope labels, required assurance gates, a maximum of 100 changed paths, a maximum patch size of 1 MiB, rollback availability and the profile risk ceiling.
+
+It returns `blocked`, `defer`, `review_required` or `eligible_for_review`. It ranks at most 128 proposals using `expected_benefit - declared_risk`; ties are resolved by ascending proposal ID. This is advisory only: candidate selection does not write source or authorize a merge.
+
+External contracts are `plague/schemas/repository-profile.v1.schema.json` and `plague/schemas/evolution-proposal.v1.schema.json`. The tuple layout and acceptance cases are documented in [the v1 policy specification](PLAGUE_FOUNDATION_V1.md). Risk/benefit scores and evidence references are caller-supplied; their authenticity and contents are not verified. Scope labels are not authenticated grants, and individual paths are not matched against allow/exclude rules.
+
+## Access model
+
+Every repository must receive an explicit grant with repository identity, base branch, allowed paths, excluded paths, mode, expiry and approved check profile. The initial global scope list is empty. A project is not authorized merely because the GitHub account can see it.
 
 - Observe mode reads eligible metadata/source and creates analysis reports.
 - Propose mode creates plans and patches but cannot write repository branches.
 - Apply mode may write only to a dedicated topic branch, run declared checks and open a reviewable pull request.
-- Merges, releases, secret access, scope expansion and arbitrary script execution are denied by the current policy.
+- Merges, releases, secret access, scope expansion and arbitrary script execution are denied by the current core policy.
 
-The current JSON scope file describes the intended policy contract. Path matching, grants, expiry, approval, sandboxing and adapters still need an enforcement implementation.
+The scope JSON is a policy contract. Path matching, grant authentication, expiry enforcement, approval, sandboxing and side-effect adapters still need an enforcement implementation.
 
 ## Full-functionality evidence
 
@@ -69,6 +76,6 @@ A feature is not complete because its name appears in a catalogue or the code co
 7. Integrate security, performance, recovery and compatibility gates.
 8. Add coordinated multi-repository pull requests.
 
-Every step must update its implementation, tests, contract, feature matrix and CI together.
+Every step must update implementation, tests, contracts, feature matrix and CI together.
 
 See the [framework README](../plague/README.md), [architecture](../plague/ARCHITECTURE.md) and [v1 proposal-assessment specification](PLAGUE_FOUNDATION_V1.md).
