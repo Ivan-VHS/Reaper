@@ -1,0 +1,124 @@
+# Holmosaptimu: local metric contracts and deterministic summaries.
+# Metric descriptor: [metric_id, kind, unit].
+# Sample: [metric_id, timestamp, numeric_value].
+# This module does not export, upload or collect live telemetry.
+
+craft metric_kind_valid(value) {
+    yield value == "counter" or value == "gauge" or value == "sample"
+}
+
+craft metric_for(catalog, metric_id) {
+    vary found := nothing
+    each metric in catalog {
+        when kind(metric) == "list" and size(metric) == 3 and metric[0] == metric_id {
+            change found := metric
+        }
+    }
+    yield found
+}
+
+export craft validate_catalog(catalog) {
+    when kind(catalog) != "list" { yield [false, ["catalog-must-be-list"]] }
+    vary ids := []
+    vary errors := []
+    each metric in catalog {
+        when kind(metric) != "list" or size(metric) != 3 {
+            change errors := push(errors, "metric-shape")
+        } otherwise {
+            when kind(metric[0]) != "text" or size(metric[0]) == 0 {
+                change errors := push(errors, "metric-id")
+            }
+            when not metric_kind_valid(metric[1]) {
+                change errors := push(errors, "metric-kind:" ++ text(metric[0]))
+            }
+            when kind(metric[2]) != "text" {
+                change errors := push(errors, "metric-unit:" ++ text(metric[0]))
+            }
+            vary duplicate := false
+            each metric_id in ids {
+                when metric_id == metric[0] { change duplicate := true }
+            }
+            when duplicate {
+                change errors := push(errors, "duplicate-metric:" ++ text(metric[0]))
+            } otherwise {
+                change ids := push(ids, metric[0])
+            }
+        }
+    }
+    yield [size(errors) == 0, errors]
+}
+
+export craft sample_valid(catalog, sample) {
+    when kind(sample) != "list" or size(sample) != 3 { yield false }
+    make metric := metric_for(catalog, sample[0])
+    when metric == nothing { yield false }
+    when kind(sample[1]) != "number" or sample[1] < 0 { yield false }
+    when kind(sample[2]) != "number" { yield false }
+    when metric[1] == "counter" and sample[2] < 0 { yield false }
+    yield true
+}
+
+export craft validate_samples(catalog, samples) {
+    make checked := validate_catalog(catalog)
+    when not checked[0] { yield [false, checked[1]] }
+    when kind(samples) != "list" { yield [false, ["samples-must-be-list"]] }
+    vary errors := []
+    each sample in samples {
+        when not sample_valid(catalog, sample) {
+            change errors := push(errors, "invalid-sample")
+        }
+    }
+    yield [size(errors) == 0, errors]
+}
+
+export craft summarize(catalog, samples, metric_id) {
+    make checked := validate_samples(catalog, samples)
+    when not checked[0] { yield [false, [], checked[1]] }
+    make metric := metric_for(catalog, metric_id)
+    when metric == nothing { yield [false, [], "metric-not-found"] }
+    vary count := 0
+    vary total := 0
+    vary minimum := nothing
+    vary maximum := nothing
+    vary latest_time := -1
+    vary latest_value := nothing
+    each sample in samples {
+        when sample[0] == metric_id {
+            change count := count + 1
+            change total := total + sample[2]
+            when minimum == nothing or sample[2] < minimum { change minimum := sample[2] }
+            when maximum == nothing or sample[2] > maximum { change maximum := sample[2] }
+            when sample[1] >= latest_time {
+                change latest_time := sample[1]
+                change latest_value := sample[2]
+            }
+        }
+    }
+    when count == 0 {
+        yield [true, [metric_id, metric[1], metric[2], 0, nothing, nothing, nothing, nothing], "empty"]
+    }
+    yield [true, [
+        metric_id, metric[1], metric[2], count,
+        minimum, maximum, total / count, [latest_time, latest_value]
+    ], "summarized"]
+}
+
+export craft health_grade(error_count, warning_count, unknown_count) {
+    when kind(error_count) != "number" or kind(warning_count) != "number" or
+        kind(unknown_count) != "number" { yield "invalid" }
+    when error_count < 0 or warning_count < 0 or unknown_count < 0 { yield "invalid" }
+    when error_count > 0 { yield "critical" }
+    when unknown_count > 0 { yield "unknown" }
+    when warning_count > 0 { yield "degraded" }
+    yield "healthy"
+}
+
+export craft compare_threshold(value, warning_limit, critical_limit) {
+    when kind(value) != "number" or kind(warning_limit) != "number" or
+        kind(critical_limit) != "number" or warning_limit > critical_limit {
+        yield [false, "invalid-threshold"]
+    }
+    when value >= critical_limit { yield [true, "critical"] }
+    when value >= warning_limit { yield [true, "warning"] }
+    yield [true, "normal"]
+}
