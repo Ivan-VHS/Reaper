@@ -1,0 +1,45 @@
+# Reaper-native smoke scenario for the aesthetic compiler and evolution planner.
+import "../engine/jellymeat.rpr" as Jellymeat
+import "../engine/holmosaptimu.rpr" as Holmosaptimu
+import "../engine/sentan.rpr" as Sentan
+import "../engine/somo.rpr" as SOMO
+
+make current_profile := Jellymeat["dak_noir"]()
+make target_profile := Jellymeat["mora_studio"]()
+make compiled := Holmosaptimu["compile"](current_profile, current_profile[3])
+
+assert(compiled[0] == "AestheticCompileResult", "baseline profile must compile")
+assert(compiled[3][0] == "AestheticHIR", "compiler must emit HIR")
+assert(compiled[4][0] == "AestheticMIR", "compiler must emit MIR")
+assert(compiled[5][0] == "AestheticLIR", "compiler must emit LIR")
+assert(size(compiled[3][3]) >= 20, "HIR must preserve semantic design nodes")
+
+make graph := [
+    "ArchitectureGraph", "1.0.0", "sample-app",
+    [
+        ["design.tokens", "foundation", []],
+        ["native.renderer", "platform", ["design.tokens"]],
+        ["application.shell", "product", ["native.renderer"]]
+    ],
+    [
+        ["native.renderer", "design.tokens", "depends_on"],
+        ["application.shell", "native.renderer", "depends_on"]
+    ]
+]
+make architecture_result := Sentan["inspect"](graph)
+assert(architecture_result[1] == "valid", "acyclic architecture must pass")
+
+make request := [
+    "SourceEvolutionRequest", "sample-evolution",
+    "sha256:baseline-pinned-by-caller",
+    ["design", "compiler", "tests", "documentation"],
+    12, 16384, 12, 60, true
+]
+make evolution := SOMO["evolve"](
+    current_profile, target_profile, graph, request, "propose"
+)
+assert(evolution[0] == "EvolutionResult", "SOMO must return its contract")
+assert(evolution[1] == "proposed", "bounded proposal must be accepted")
+assert(evolution[4][0][0] == "SourceEvolutionPlan", "Kolir must provide a source plan")
+
+emit "RAAEF_PIPELINE_OK"
