@@ -16,7 +16,9 @@ export craft feature_lookup(features, feature_id) {
     when kind(features) != "list" { yield [false, nothing, "features-must-be-list"] }
     vary found := nothing
     each feature in features {
-        when fc["fc_record"](feature, 5) and feature[0] == feature_id { change found := feature }
+        when fc["fc_record"](feature, 5) {
+            when feature[0] == feature_id { change found := feature }
+        }
     }
     when found == nothing { yield [false, nothing, "feature-not-found"] }
     yield [true, found, "found"]
@@ -36,8 +38,8 @@ export craft enumerate_features(features, area) {
     when kind(features) != "list" { yield [false, [], "features-must-be-list"] }
     vary result := []
     each feature in features {
-        when fc["fc_record"](feature, 5) and feature[1] == area {
-            change result := push(result, feature)
+        when fc["fc_record"](feature, 5) {
+            when feature[1] == area { change result := push(result, feature) }
         }
     }
     yield [true, result, size(result)]
