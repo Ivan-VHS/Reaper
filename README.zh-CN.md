@@ -16,6 +16,7 @@
 | 运行平台 | Windows、Linux、macOS（参考运行时） |
 | 桌面平台 | Windows Studio |
 | 许可证 | [Apache-2.0](LICENSE) |
+| 行为准则 | 尚未发布根目录 `CODE_OF_CONDUCT.md` |
 | 文档审核日期 | 2026-11-26 |
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/dashboard.svg"><img src="assets/readme/dashboard-light.svg" alt="Reaper 语言和开发工具概览" width="100%"></picture>
