@@ -16,6 +16,7 @@
 | Платформы runtime | Windows, Linux, macOS (эталонная среда) |
 | Desktop | Windows Studio |
 | Лицензия | [Apache-2.0](LICENSE) |
+| Кодекс поведения | Отдельный `CODE_OF_CONDUCT.md` не опубликован |
 | Проверка документации | 2026-11-26 |
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/dashboard.svg"><img src="assets/readme/dashboard-light.svg" alt="Язык Reaper и инструменты разработчика" width="100%"></picture>
