@@ -1,0 +1,96 @@
+# JennyFlash: versioned local signals and deterministic update batches.
+# Signal: [signal_id, version, value, dependencies, subscribers].
+# Update: [signal_id, expected_version, new_value].
+
+import "../Uu/core.rpr" as uu
+
+export craft create(signal_id, initial_value, dependencies) {
+    when not uu["nonempty_text"](signal_id) { yield [false, [], "invalid-signal-id"] }
+    when kind(dependencies) != "list" { yield [false, [], "invalid-dependency-list"] }
+    when not uu["all_unique"](dependencies) { yield [false, [], "duplicate-dependency"] }
+    yield [true, [signal_id, 0, initial_value, dependencies, []], "created"]
+}
+
+export craft subscribe(signal, subscriber_id) {
+    when kind(signal) != "list" or size(signal) != 5 { yield [false, signal, "invalid-signal"] }
+    when not uu["nonempty_text"](subscriber_id) { yield [false, signal, "invalid-subscriber"] }
+    when uu["contains"](signal[4], subscriber_id) { yield [true, signal, "already-subscribed"] }
+    yield [true, [signal[0], signal[1], signal[2], signal[3], push(signal[4], subscriber_id)], "subscribed"]
+}
+
+export craft unsubscribe(signal, subscriber_id) {
+    when kind(signal) != "list" or size(signal) != 5 { yield [false, signal, "invalid-signal"] }
+    vary subscribers := []
+    vary removed := false
+    each existing in signal[4] {
+        when existing == subscriber_id {
+            change removed := true
+        } otherwise {
+            change subscribers := push(subscribers, existing)
+        }
+    }
+    yield [true, [signal[0], signal[1], signal[2], signal[3], subscribers], removed]
+}
+
+export craft compare_and_set(signal, expected_version, new_value) {
+    when kind(signal) != "list" or size(signal) != 5 { yield [false, signal, "invalid-signal"] }
+    when signal[1] != expected_version { yield [false, signal, "version-conflict"] }
+    yield [true, [signal[0], signal[1] + 1, new_value, signal[3], signal[4]], "updated"]
+}
+
+export craft read(signal) {
+    when kind(signal) != "list" or size(signal) != 5 { yield [false, nothing, "invalid-signal"] }
+    yield [true, signal[2], signal[1]]
+}
+
+craft find_signal(signals, signal_id) {
+    vary index := 0
+    loop while index < size(signals) {
+        when kind(signals[index]) == "list" and size(signals[index]) == 5 {
+            when signals[index][0] == signal_id { yield [true, index, signals[index]] }
+        }
+        change index := index + 1
+    }
+    yield [false, -1, nothing]
+}
+
+export craft apply_batch(signals, updates) {
+    when kind(signals) != "list" or kind(updates) != "list" { yield [false, signals, ["invalid-batch-input"]] }
+    vary next_signals := signals
+    vary errors := []
+    vary seen := []
+    each update in updates {
+        when kind(update) != "list" or size(update) != 3 {
+            change errors := push(errors, ["update-shape", update])
+        } otherwise {
+            when uu["contains"](seen, update[0]) {
+                change errors := push(errors, ["duplicate-update", update[0]])
+            } otherwise {
+                change seen := push(seen, update[0])
+            }
+            make found := find_signal(next_signals, update[0])
+            when not found[0] {
+                change errors := push(errors, ["signal-not-found", update[0]])
+            } otherwise {
+                when found[2][1] != update[1] {
+                    change errors := push(errors, ["version-conflict", update[0]])
+                } otherwise {
+                    make changed := [found[2][0], found[2][1] + 1, update[2], found[2][3], found[2][4]]
+                    vary rebuilt := []
+                    vary index := 0
+                    loop while index < size(next_signals) {
+                        when index == found[1] {
+                            change rebuilt := push(rebuilt, changed)
+                        } otherwise {
+                            change rebuilt := push(rebuilt, next_signals[index])
+                        }
+                        change index := index + 1
+                    }
+                    change next_signals := rebuilt
+                }
+            }
+        }
+    }
+    when size(errors) > 0 { yield [false, signals, errors] }
+    yield [true, next_signals, "committed"]
+}

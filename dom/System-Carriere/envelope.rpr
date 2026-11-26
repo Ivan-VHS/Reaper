@@ -1,0 +1,56 @@
+# System Carriere: message envelope validation and delivery policy.
+# Envelope: [message_id, correlation_id, schema_id, schema_version,
+#            sender, recipient, deadline, delivery_mode, payload].
+
+import "../Uu/core.rpr" as uu
+
+export craft validate_envelope(envelope) {
+    when kind(envelope) != "list" or size(envelope) != 9 { yield [false, ["message-envelope-shape"]] }
+    vary errors := []
+    when not uu["nonempty_text"](envelope[0]) { change errors := push(errors, ["message-id"]) }
+    when not uu["nonempty_text"](envelope[1]) { change errors := push(errors, ["correlation-id"]) }
+    when not uu["nonempty_text"](envelope[2]) { change errors := push(errors, ["schema-id"]) }
+    when not uu["nonempty_text"](envelope[3]) { change errors := push(errors, ["schema-version"]) }
+    when not uu["nonempty_text"](envelope[4]) { change errors := push(errors, ["sender"]) }
+    when not uu["nonempty_text"](envelope[5]) { change errors := push(errors, ["recipient"]) }
+    when not uu["nonnegative_number"](envelope[6]) { change errors := push(errors, ["deadline"]) }
+    when envelope[7] != "best-effort" and envelope[7] != "at-most-once" and envelope[7] != "at-least-once" {
+        change errors := push(errors, ["delivery-mode", envelope[7]])
+    }
+    yield [size(errors) == 0, errors]
+}
+
+export craft delivery_policy(envelope) {
+    make checked := validate_envelope(envelope)
+    when not checked[0] { yield [false, [], checked[1]] }
+    when envelope[7] == "best-effort" { yield [true, [1, false, false], "best-effort"] }
+    when envelope[7] == "at-most-once" { yield [true, [1, true, false], "at-most-once"] }
+    yield [true, [3, true, true], "at-least-once-requires-idempotency"]
+}
+
+export craft authorize(envelope, granted_capabilities) {
+    make checked := validate_envelope(envelope)
+    when not checked[0] { yield [false, checked[1]] }
+    when not uu["contains"](granted_capabilities, "message.send") {
+        yield [false, ["missing-capability", "message.send"]]
+    }
+    yield [true, "authorized-for-host-dispatch"]
+}
+
+export craft resolve_recipient(envelope, endpoints) {
+    make checked := validate_envelope(envelope)
+    when not checked[0] { yield [false, nothing, checked[1]] }
+    vary match := nothing
+    vary matches := 0
+    each endpoint in endpoints {
+        when kind(endpoint) == "list" and size(endpoint) == 3 {
+            when endpoint[0] == envelope[5] and endpoint[2] == "active" {
+                change match := endpoint
+                change matches := matches + 1
+            }
+        }
+    }
+    when matches == 0 { yield [false, nothing, "recipient-not-found"] }
+    when matches > 1 { yield [false, nothing, "recipient-ambiguous"] }
+    yield [true, match, "resolved"]
+}

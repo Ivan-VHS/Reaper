@@ -1,0 +1,252 @@
+# Reaper-native ДОМ Foundation integration checks.
+
+import "../dom/Uu/core.rpr" as uu
+import "../dom/Nonconcrete/contracts.rpr" as contracts
+import "../dom/poooVERTY/budgets.rpr" as budgets
+import "../dom/JLOM/lifecycle.rpr" as lifecycle
+import "../dom/Establish/manifest.rpr" as establish
+import "../dom/System-Carriere/envelope.rpr" as carriere
+import "../dom/JennyFlash/signals.rpr" as jenny_flash
+import "../dom/Jenny-Flashing-Boy/reload.rpr" as flashing_boy
+import "../dom/core/runtime.rpr" as dom
+import "../dom/adapters/framework_modules.rpr" as dom_frameworks
+
+
+craft increment(value) {
+    yield value + 1
+}
+
+craft uppercase_text(value) {
+    yield upper(value)
+}
+
+craft non_empty_text(value) {
+    yield size(trim(value)) > 0
+}
+
+assert(uu["contains"](["a", "b"], "b"), "Uu contains")
+assert(uu["all_unique"](["a", "b", "c"]), "Uu unique validation")
+assert(not uu["all_unique"](["a", "b", "a"]), "Uu duplicate rejection")
+assert(uu["clamp"](12, 0, 10)[1] == 10, "Uu clamp upper bound")
+
+make actual_contract := ["reaper.dom.message.v1", 1, 2, [["id", "text"]], ["send"], ["message.send"]]
+make required_contract := ["reaper.dom.message.v1", 1, 1, [["id", "text"]], ["send"], ["message.send"]]
+assert(contracts["validate_contract"](actual_contract)[0], "contract is valid")
+assert(contracts["compatible"](actual_contract, required_contract)[0], "compatible minor version")
+assert(not contracts["missing_capabilities"](["message.send"], ["storage.read"])[0], "capability denial")
+
+make budget := [1024, 8, 32, 16]
+make usage := [128, 1, 4, 2]
+make request := [256, 2, 8, 1]
+make admitted := budgets["admit"](budget, usage, request)
+assert(admitted[0], "resource request should fit")
+assert(admitted[1] == [384, 3, 12, 3], "resource accounting")
+assert(not budgets["admit"](budget, usage, [2048, 0, 0, 0])[0], "resource over-budget denied")
+assert(budgets["release"](admitted[1], request)[1] == usage, "resource release")
+
+make made := lifecycle["create_instance"]("runtime-smoke", "sample.app")
+assert(made[0], "JLOM creates instance")
+make resolved := lifecycle["move"](made[1], "Resolved")
+make prepared := lifecycle["move"](resolved[1], "Prepared")
+make running := lifecycle["move"](prepared[1], "Running")
+assert(running[0], "JLOM prepares and starts")
+assert(not lifecycle["move"](made[1], "Ready")[0], "JLOM rejects skipped state")
+
+make manifest := [
+    "reaper.dom.manifest.v1",
+    "sample.app",
+    "1.0.0",
+    "standard",
+    [
+        ["app.ui", "1.0.0", ["app.core"]],
+        ["app.core", "1.0.0", []]
+    ],
+    ["message.send", "storage.read"],
+    budget
+]
+make manifest_check := establish["validate_manifest"](manifest)
+assert(manifest_check[0], "Establish accepts a valid manifest")
+assert(manifest_check[1] == ["app.core", "app.ui"], "Establish sorts dependencies")
+assert(not establish["validate_with_host"](manifest, ["storage.read"])[0], "Establish enforces grants")
+assert(establish["validate_with_host"](manifest, ["message.send", "storage.read"])[0], "Establish accepts explicit grants")
+
+make envelope := [
+    "msg-1", "trace-1", "sample.event.v1", "1",
+    "app.ui", "app.core", 100, "at-least-once", ["changed", 42]
+]
+assert(carriere["validate_envelope"](envelope)[0], "message envelope is valid")
+assert(carriere["delivery_policy"](envelope)[1] == [3, true, true], "at-least-once policy")
+assert(carriere["resolve_recipient"](envelope, [["app.core", "service", "active"]])[0], "recipient resolves")
+assert(not carriere["authorize"](envelope, ["storage.read"])[0], "message capability required")
+
+make signal := jenny_flash["create"]("theme", "noir", [])
+assert(signal[0], "signal is created")
+make watched := jenny_flash["subscribe"](signal[1], "ui.panel")
+make changed := jenny_flash["compare_and_set"](watched[1], 0, "yellow")
+assert(changed[0] and changed[1][1] == 1, "signal version advances")
+assert(not jenny_flash["compare_and_set"](changed[1], 0, "red")[0], "stale signal update rejected")
+make signal_batch := jenny_flash["apply_batch"]([changed[1]], [["theme", 1, "black"]])
+assert(signal_batch[0] and signal_batch[1][0][2] == "black", "signal batch commits")
+
+make old_module := ["app.core", "1.0.0", "dabi64.v1"]
+make new_module := ["app.core", "1.1.0", "dabi64.v1"]
+make reload_plan := flashing_boy["build_plan"](old_module, new_module, true, true, true)
+assert(reload_plan[0] and flashing_boy["authorize_commit"](reload_plan[1])[0], "compatible reload authorized")
+make unsafe_plan := flashing_boy["build_plan"](old_module, ["app.core", "2.0.0", "dabi64.v2"], false, false, false)
+assert(not flashing_boy["authorize_commit"](unsafe_plan[1])[0], "unsafe reload denied")
+assert(flashing_boy["rollback"](reload_plan[1])[1][1] == "1.0.0", "reload rollback retains old module")
+
+make instance_result := dom["create"](manifest, ["message.send", "storage.read"], "dom-instance-1")
+assert(instance_result[0] and instance_result[1][4] == "Prepared", "DOM creates prepared runtime")
+make started := dom["start"](instance_result[1])
+make ready := dom["ready"](started[1])
+assert(ready[0] and ready[1][4] == "Ready", "DOM reaches ready")
+make quiescing := dom["quiesce"](ready[1])
+make stopped := dom["stop"](quiescing[1])
+assert(stopped[0] and stopped[1][4] == "Stopped", "DOM shuts down in order")
+assert(not dom["start"](stopped[1])[0], "DOM prevents restart after terminal stop")
+
+
+# Standalone framework modules remain focused components behind ДОМ adapters.
+make graph_adapter := dom_frameworks["resolve_module_graph"](
+    ["editor", "core", "compiler"],
+    [["compiler", "core"], ["editor", "compiler"]]
+)
+assert(graph_adapter[0] and graph_adapter[1] == ["core", "compiler", "editor"], "ДОМ reuses GalHero")
+
+make option_adapter := dom_frameworks["resolve_configuration"](
+    [["mode", "safe"]],
+    [["timeout", 20]],
+    [["mode", "strict"]],
+    [["timeout", 45]],
+    [["mode", "text", true, nothing], ["timeout", "number", true, 10]]
+)
+assert(option_adapter[0], "ДОМ reuses Stacked Options")
+
+make most_adapter := dom_frameworks["normalize_most_word"]("функция")
+assert(most_adapter[0] == "craft" and most_adapter[1] == "runtime", "ДОМ reuses exact МОСТ alias mapping")
+
+
+make callback_adapter := dom_frameworks["dispatch_callbacks"](
+    [["tick", 10, false, increment]],
+    "tick",
+    4
+)
+assert(callback_adapter[0] == [5], "ДОМ reuses Call-and-Back")
+
+make pipeline_adapter := dom_frameworks["transform_in_memory"](
+    [["uppercase", uppercase_text, non_empty_text]],
+    "reaper"
+)
+assert(pipeline_adapter[0] and pipeline_adapter[1] == "REAPER", "ДОМ reuses Showel Fleppery CODE")
+
+make empty_snapshot := dom_frameworks["empty_snapshot"]()
+make snapshot_adapter := dom_frameworks["update_snapshot"](
+    empty_snapshot,
+    0,
+    "theme",
+    "yellow"
+)
+assert(snapshot_adapter[0], "ДОМ reuses Blau versioned state")
+
+make state_adapter := dom_frameworks["apply_state_events"](
+    "idle",
+    ["start", "stop"],
+    [["idle", "start", "running"], ["running", "stop", "idle"]]
+)
+assert(state_adapter[0] and state_adapter[1] == "idle", "ДОМ reuses Shashio state transitions")
+
+
+# Negative and boundary cases protect the contracts against partial success.
+make cyclic_manifest := [
+    "reaper.dom.manifest.v1",
+    "cycle.app",
+    "1.0.0",
+    "core",
+    [
+        ["cycle.a", "1.0.0", ["cycle.b"]],
+        ["cycle.b", "1.0.0", ["cycle.a"]]
+    ],
+    [],
+    budget
+]
+assert(not establish["validate_manifest"](cyclic_manifest)[0], "Establish rejects dependency cycles")
+
+make ambiguous_recipient := carriere["resolve_recipient"](
+    envelope,
+    [["app.core", "service", "active"], ["app.core", "second", "active"]]
+)
+assert(not ambiguous_recipient[0], "System Carriere rejects ambiguous endpoint identity")
+
+make failed_batch := jenny_flash["apply_batch"](
+    [changed[1]],
+    [["theme", 1, "white"], ["theme", 1, "red"]]
+)
+assert(not failed_batch[0] and failed_batch[1] == [changed[1]], "JennyFlash batch rolls back on duplicate writes")
+
+make malformed_reload := flashing_boy["authorize_commit"]([[], new_module, true, true, true])
+assert(not malformed_reload[0], "Jenny Flashing Boy rejects malformed module metadata")
+
+make split_result := budgets["split"](100, [1, 3])
+assert(split_result[0] and split_result[1] == [25, 75], "poooVERTY weighted split")
+
+make cancelled_scope := lifecycle["create_scope"]("scope-smoke", "sample.app")
+make scoped_task := lifecycle["add_task"](cancelled_scope[1], "task-1")
+assert(scoped_task[0], "JLOM registers scoped task")
+assert(not lifecycle["add_task"](scoped_task[1], "task-1")[0], "JLOM rejects duplicate task")
+assert(lifecycle["cancel_scope"](scoped_task[1])[0], "JLOM cancels scope")
+
+
+make graph_layers := dom_frameworks["graph_layers"](
+    ["editor", "core", "compiler"],
+    [["compiler", "core"], ["editor", "compiler"]]
+)
+assert(graph_layers[0] and graph_layers[1] == [["core"], ["compiler"], ["editor"]], "GalHero emits dependency layers")
+
+make callback_removed := dom_frameworks["unsubscribe_callback"](
+    [["tick", 10, false, increment]],
+    "tick",
+    increment
+)
+assert(callback_removed[0] and callback_removed[1] == [] and callback_removed[2] == 1, "Call-and-Back unsubscribes callbacks")
+
+make provenance := dom_frameworks["resolve_configuration_provenance"](
+    [["mode", "safe"]],
+    [["mode", "strict"]],
+    [],
+    [["mode", "turbo"]]
+)
+assert(provenance[0] and provenance[1][0][2] == "request", "Stacked Options preserves value provenance")
+
+assert(dom_frameworks["validate_most_profile"]()[0], "MOST validates its exact alias profile")
+
+make atomic_snapshot := dom_frameworks["apply_snapshot_operations"](
+    empty_snapshot,
+    [["put", "theme", "amber"], ["put", "contrast", "high"]]
+)
+assert(atomic_snapshot[0] and atomic_snapshot[1][0] == 1, "Blau applies one atomic versioned batch")
+make rejected_snapshot := dom_frameworks["apply_snapshot_operations"](
+    atomic_snapshot[1],
+    [["put", "theme", "red"], ["delete", "missing-key", nothing]]
+)
+assert(not rejected_snapshot[0] and rejected_snapshot[1] == atomic_snapshot[1], "Blau rolls back invalid batch")
+
+make reachable := dom_frameworks["reachable_states"](
+    ["idle", "running", "stopped"],
+    [["idle", "start", "running"], ["running", "stop", "stopped"]],
+    "idle"
+)
+assert(reachable[0] and reachable[1] == ["idle", "running", "stopped"], "Shashio computes reachable states")
+
+assert(dom_frameworks["run_bounded_transform"](
+    [["uppercase", uppercase_text, non_empty_text]],
+    "reaper",
+    1
+)[0], "Showel enforces an explicit execution budget")
+assert(not dom_frameworks["run_bounded_transform"](
+    [["uppercase", uppercase_text, non_empty_text]],
+    "reaper",
+    0
+)[0], "Showel rejects over-budget pipelines")
+
+emit "dom foundation smoke checks passed"

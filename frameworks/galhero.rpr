@@ -120,3 +120,78 @@ export craft transitive_dependencies(nodes, edges, root) {
     make no_errors := []
     yield [true, visited, no_errors]
 }
+
+export craft dependents_of(edges, prerequisite) {
+    vary dependents := []
+    each edge in edges {
+        when kind(edge) == "list" and size(edge) == 2 and edge[1] == prerequisite {
+            when not has_name(dependents, edge[0]) {
+                change dependents := push(dependents, edge[0])
+            }
+        }
+    }
+    yield dependents
+}
+
+export craft topological_layers(nodes, edges) {
+    make checked := validate(nodes, edges)
+    when not checked[0] { yield [false, [], checked[1]] }
+    vary pending := nodes
+    vary layers := []
+    loop while size(pending) > 0 {
+        vary ready := []
+        vary next_pending := []
+        each candidate in pending {
+            vary blocked := false
+            each edge in edges {
+                when edge[0] == candidate and has_name(pending, edge[1]) {
+                    change blocked := true
+                }
+            }
+            when blocked {
+                change next_pending := push(next_pending, candidate)
+            } otherwise {
+                change ready := push(ready, candidate)
+            }
+        }
+        when size(ready) == 0 {
+            yield [false, layers, ["dependency cycle", pending]]
+        }
+        change layers := push(layers, ready)
+        change pending := next_pending
+    }
+    yield [true, layers, []]
+}
+
+export craft reverse_topological_order(nodes, edges) {
+    make planned := topological_order(nodes, edges)
+    when not planned[0] { yield [false, [], planned[2]] }
+    vary reversed := []
+    vary index := size(planned[1]) - 1
+    loop while index >= 0 {
+        change reversed := push(reversed, planned[1][index])
+        change index := index - 1
+    }
+    yield [true, reversed, []]
+}
+
+export craft validate_unique_edges(edges) {
+    vary seen := []
+    vary errors := []
+    each edge in edges {
+        when kind(edge) != "list" or size(edge) != 2 {
+            change errors := push(errors, ["edge-shape", edge])
+        } otherwise {
+            when has_name(seen, edge) {
+                change errors := push(errors, ["duplicate-edge", edge])
+            } otherwise {
+                change seen := push(seen, edge)
+            }
+        }
+    }
+    yield [size(errors) == 0, errors]
+}
+
+export craft dependency_closure(nodes, edges, root) {
+    yield transitive_dependencies(nodes, edges, root)
+}

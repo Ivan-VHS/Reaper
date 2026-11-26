@@ -1,0 +1,83 @@
+# JLOM: object lifecycle, task scopes and cancellation state.
+# Instance row: [id, state, generation, owner].
+# Scope row: [scope_id, owner, state, task_ids].
+
+export craft valid_state(state) {
+    yield state == "Declared" or state == "Resolved" or state == "Prepared" or state == "Running" or state == "Ready" or state == "Quiescing" or state == "Stopped" or state == "Failed" or state == "Recovering"
+}
+
+export craft can_transition(from_state, to_state) {
+    when from_state == "Declared" and to_state == "Resolved" { yield true }
+    when from_state == "Resolved" and to_state == "Prepared" { yield true }
+    when from_state == "Prepared" and to_state == "Running" { yield true }
+    when from_state == "Running" and to_state == "Ready" { yield true }
+    when from_state == "Running" and to_state == "Quiescing" { yield true }
+    when from_state == "Ready" and to_state == "Quiescing" { yield true }
+    when from_state == "Prepared" and to_state == "Quiescing" { yield true }
+    when from_state == "Quiescing" and to_state == "Stopped" { yield true }
+    when from_state == "Failed" and to_state == "Recovering" { yield true }
+    when from_state == "Recovering" and to_state == "Prepared" { yield true }
+    when to_state == "Failed" {
+        when from_state == "Stopped" or from_state == "Failed" { yield false }
+        yield valid_state(from_state)
+    }
+    yield false
+}
+
+export craft create_instance(instance_id, owner) {
+    when kind(instance_id) != "text" or size(instance_id) == 0 { yield [false, [], "invalid-instance-id"] }
+    when kind(owner) != "text" or size(owner) == 0 { yield [false, [], "invalid-owner"] }
+    yield [true, [instance_id, "Declared", 0, owner], "created"]
+}
+
+export craft move(instance, target_state) {
+    when kind(instance) != "list" or size(instance) != 4 { yield [false, instance, "invalid-instance-record"] }
+    when kind(instance[2]) != "number" or instance[2] < 0 {
+        yield [false, instance, "invalid-generation"]
+    }
+    when not valid_state(instance[1]) or not valid_state(target_state) {
+        yield [false, instance, "unknown-lifecycle-state"]
+    }
+    when not can_transition(instance[1], target_state) {
+        yield [false, instance, ["invalid-lifecycle-transition", instance[1], target_state]]
+    }
+    yield [true, [instance[0], target_state, instance[2] + 1, instance[3]], "transitioned"]
+}
+
+export craft create_scope(scope_id, owner) {
+    when kind(scope_id) != "text" or size(scope_id) == 0 { yield [false, [], "invalid-scope-id"] }
+    when kind(owner) != "text" or size(owner) == 0 { yield [false, [], "invalid-scope-owner"] }
+    yield [true, [scope_id, owner, "active", []], "created"]
+}
+
+export craft add_task(scope, task_id) {
+    when kind(scope) != "list" or size(scope) != 4 { yield [false, scope, "invalid-scope-record"] }
+    when scope[2] != "active" { yield [false, scope, "scope-not-active"] }
+    when kind(task_id) != "text" or size(task_id) == 0 { yield [false, scope, "invalid-task-id"] }
+    each existing in scope[3] {
+        when existing == task_id { yield [false, scope, "duplicate-task"] }
+    }
+    yield [true, [scope[0], scope[1], scope[2], push(scope[3], task_id)], "task-added"]
+}
+
+export craft cancel_scope(scope) {
+    when kind(scope) != "list" or size(scope) != 4 { yield [false, scope, "invalid-scope-record"] }
+    when scope[2] == "cancelled" { yield [true, scope, "already-cancelled"] }
+    when scope[2] != "active" { yield [false, scope, "scope-not-cancellable"] }
+    yield [true, [scope[0], scope[1], "cancelled", scope[3]], "cancelled"]
+}
+
+export craft join_status(scope, completed_task_ids) {
+    when kind(scope) != "list" or size(scope) != 4 or kind(completed_task_ids) != "list" {
+        yield [false, "invalid-join-input"]
+    }
+    vary pending := []
+    each task_id in scope[3] {
+        vary completed := false
+        each finished in completed_task_ids {
+            when finished == task_id { change completed := true }
+        }
+        when not completed { change pending := push(pending, task_id) }
+    }
+    yield [size(pending) == 0, pending]
+}

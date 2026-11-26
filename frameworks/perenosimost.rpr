@@ -106,3 +106,88 @@ export craft normalize_words(words) {
     }
     yield normalized
 }
+
+export craft lookup_alias(word) {
+    each row in alias_table() {
+        when row[0] == word { yield [true, row] }
+    }
+    yield [false, [word, word, "unknown"]]
+}
+
+export craft classify(word) {
+    make found := lookup_alias(word)
+    yield [found[1][1], found[1][2]]
+}
+
+export craft validate_alias_table() {
+    vary sources := []
+    vary errors := []
+    each row in alias_table() {
+        when kind(row) != "list" or size(row) != 3 {
+            change errors := push(errors, ["alias-row-shape", row])
+        } otherwise {
+            when kind(row[0]) != "text" or size(row[0]) == 0 {
+                change errors := push(errors, ["alias-source", row])
+            }
+            when kind(row[1]) != "text" or size(row[1]) == 0 {
+                change errors := push(errors, ["alias-canonical", row])
+            }
+            when row[2] != "runtime" and row[2] != "reserved" {
+                change errors := push(errors, ["alias-support", row])
+            }
+            when has_source(sources, row[0]) {
+                change errors := push(errors, ["duplicate-alias", row[0]])
+            } otherwise {
+                change sources := push(sources, row[0])
+            }
+        }
+    }
+    yield [size(errors) == 0, errors]
+}
+
+craft has_source(sources, target) {
+    vary found := false
+    each source in sources {
+        when source == target { change found := true }
+    }
+    yield found
+}
+
+export craft unsupported_words(words) {
+    vary unsupported := []
+    each word in words {
+        when support(word) != "runtime" {
+            change unsupported := push(unsupported, [word, support(word)])
+        }
+    }
+    yield unsupported
+}
+
+export craft partition_words(words) {
+    vary runtime_words := []
+    vary reserved_words := []
+    vary unknown_words := []
+    each word in words {
+        when support(word) == "runtime" {
+            change runtime_words := push(runtime_words, word)
+        } otherwise {
+            when support(word) == "reserved" {
+                change reserved_words := push(reserved_words, word)
+            } otherwise {
+                change unknown_words := push(unknown_words, word)
+            }
+        }
+    }
+    yield [runtime_words, reserved_words, unknown_words]
+}
+
+export craft canonicalize_unique(words) {
+    vary result := []
+    each word in words {
+        make normalized := canonical(word)
+        when not has_source(result, normalized) {
+            change result := push(result, normalized)
+        }
+    }
+    yield result
+}

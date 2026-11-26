@@ -1,0 +1,95 @@
+# poooVERTY: deterministic admission and accounting for bounded resources.
+# Budget/usage/request rows: [memory_units, task_slots, queue_items, open_handles].
+# Platform adapters define the physical units and enforce real resource ceilings.
+
+import "../Uu/core.rpr" as uu
+
+export craft validate_vector(vector) {
+    when kind(vector) != "list" or size(vector) != 4 {
+        yield [false, "resource-vector-shape"]
+    }
+    vary errors := []
+    each value in vector {
+        when not uu["nonnegative_number"](value) {
+            change errors := push(errors, ["invalid-resource-value", value])
+        }
+    }
+    yield [size(errors) == 0, errors]
+}
+
+export craft fits(budget, usage, request) {
+    make budget_check := validate_vector(budget)
+    make usage_check := validate_vector(usage)
+    make request_check := validate_vector(request)
+    when not budget_check[0] or not usage_check[0] or not request_check[0] {
+        yield [false, ["invalid-resource-vector"]]
+    }
+    vary errors := []
+    vary index := 0
+    loop while index < 4 {
+        when usage[index] + request[index] > budget[index] {
+            change errors := push(errors, ["budget-exceeded", index, budget[index], usage[index], request[index]])
+        }
+        change index := index + 1
+    }
+    yield [size(errors) == 0, errors]
+}
+
+export craft remaining(budget, usage) {
+    make checked := fits(budget, usage, [0, 0, 0, 0])
+    when not checked[0] { yield [false, [], checked[1]] }
+    vary result := []
+    vary index := 0
+    loop while index < 4 {
+        change result := push(result, budget[index] - usage[index])
+        change index := index + 1
+    }
+    yield [true, result, "ok"]
+}
+
+export craft admit(budget, usage, request) {
+    make checked := fits(budget, usage, request)
+    when not checked[0] { yield [false, usage, checked[1]] }
+    vary next_usage := []
+    vary index := 0
+    loop while index < 4 {
+        change next_usage := push(next_usage, usage[index] + request[index])
+        change index := index + 1
+    }
+    yield [true, next_usage, "admitted"]
+}
+
+export craft release(usage, released) {
+    make usage_check := validate_vector(usage)
+    make release_check := validate_vector(released)
+    when not usage_check[0] or not release_check[0] {
+        yield [false, usage, "invalid-resource-vector"]
+    }
+    vary next_usage := []
+    vary index := 0
+    loop while index < 4 {
+        when released[index] > usage[index] {
+            yield [false, usage, ["release-exceeds-usage", index]]
+        }
+        change next_usage := push(next_usage, usage[index] - released[index])
+        change index := index + 1
+    }
+    yield [true, next_usage, "released"]
+}
+
+export craft split(total, weights) {
+    when not uu["nonnegative_number"](total) or kind(weights) != "list" or size(weights) == 0 {
+        yield [false, [], "invalid-split-input"]
+    }
+    vary weight_sum := 0
+    each weight in weights {
+        when not uu["nonnegative_number"](weight) { yield [false, [], ["invalid-weight", weight]] }
+        change weight_sum := weight_sum + weight
+    }
+    when weight_sum <= 0 { yield [false, [], "zero-weight-sum"] }
+    vary shares := []
+    each weight in weights {
+        change shares := push(shares, total * weight / weight_sum)
+    }
+    yield [true, shares, "split"]
+}

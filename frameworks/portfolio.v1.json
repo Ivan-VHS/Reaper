@@ -1,0 +1,631 @@
+{
+  "schema": "reaper.framework-portfolio.v1",
+  "version": "1.0.0",
+  "language": "Reaper",
+  "canonical_runtime": "ДОМ",
+  "scale_policy": {
+    "target_qualified_production_reaper_loc_per_independent_module": 50000,
+    "counted_modules": 50,
+    "total_qualified_production_reaper_loc_target": 2500000,
+    "baseline_qualified_loc": null,
+    "rule": "Count only reachable, non-duplicated, first-party executable Reaper source owned by the module and covered by positive, negative, boundary and regression tests.",
+    "exclusions": [
+      "blank lines",
+      "comments",
+      "documentation",
+      "tests",
+      "examples",
+      "fixtures",
+      "generated source",
+      "metadata registries",
+      "schemas",
+      "host-language code",
+      "copied code",
+      "templates",
+      "unreachable code",
+      "placeholders"
+    ],
+    "warning": "A line-count target is not a completion criterion. Contract, diagnostics, resource limits, security, CI, target-runtime evidence and integration are separately required."
+  },
+  "groups": [
+    {
+      "id": "dom",
+      "name": "ДОМ foundational runtime",
+      "pr": 350,
+      "status": "architecture_baseline_open; implementation_slice_PR353",
+      "items": [
+        {
+          "id": "dom.uu",
+          "name": "Uu",
+          "source": "dom/Uu/core.rpr",
+          "status": "initial_reaper_reference_slice",
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "dom.nonconcrete",
+          "name": "Nonconcrete",
+          "source": "dom/Nonconcrete/contracts.rpr",
+          "status": "initial_reaper_reference_slice",
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "dom.poooverty",
+          "name": "poooVERTY",
+          "source": "dom/poooVERTY/budgets.rpr",
+          "status": "initial_reaper_reference_slice",
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "dom.jlom",
+          "name": "JLOM",
+          "source": "dom/JLOM/lifecycle.rpr",
+          "status": "initial_reaper_reference_slice",
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "dom.system-carriere",
+          "name": "System Carriere",
+          "source": "dom/System-Carriere/envelope.rpr",
+          "status": "initial_reaper_reference_slice",
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "dom.jennyflash",
+          "name": "JennyFlash",
+          "source": "dom/JennyFlash/signals.rpr",
+          "status": "initial_reaper_reference_slice",
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "dom.jenny-flashing-boy",
+          "name": "Jenny Flashing Boy",
+          "source": "dom/Jenny-Flashing-Boy/reload.rpr",
+          "status": "initial_reaper_reference_slice",
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "dom.establish",
+          "name": "Establish",
+          "source": "dom/Establish/manifest.rpr",
+          "status": "initial_reaper_reference_slice",
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        }
+      ]
+    },
+    {
+      "id": "standalone",
+      "name": "Standalone Reaper framework modules",
+      "pr": 336,
+      "status": "open; stacked_pr_353_adds_dom_adapters",
+      "items": [
+        {
+          "id": "framework.galhero",
+          "name": "GalHero",
+          "source": "frameworks/galhero.rpr",
+          "status": "reference_runtime_module_PR336",
+          "source_pr": 336,
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "framework.call-and-back",
+          "name": "Call-and-Back",
+          "source": "frameworks/call_and_back.rpr",
+          "status": "reference_runtime_module_PR336",
+          "source_pr": 336,
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "framework.stacked-options",
+          "name": "Stacked Options",
+          "source": "frameworks/stacked_options.rpr",
+          "status": "reference_runtime_module_PR336",
+          "source_pr": 336,
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "framework.perenosimost",
+          "name": "PerenosiMOST",
+          "source": "frameworks/perenosimost.rpr",
+          "status": "reference_runtime_module_PR336",
+          "source_pr": 336,
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "framework.most",
+          "name": "MOST",
+          "source": "frameworks/most.rpr",
+          "status": "reference_runtime_facade_PR336",
+          "source_pr": 336,
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "framework.blau",
+          "name": "Blau",
+          "source": "frameworks/blau.rpr",
+          "status": "reference_runtime_module_PR336",
+          "source_pr": 336,
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "framework.shashio",
+          "name": "Shashio",
+          "source": "frameworks/shashio.rpr",
+          "status": "reference_runtime_module_PR336",
+          "source_pr": 336,
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "framework.showel-fleppery-code",
+          "name": "Showel Fleppery CODE",
+          "source": "frameworks/showel_fleppery_code.rpr",
+          "status": "reference_runtime_module_PR336",
+          "source_pr": 336,
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        }
+      ]
+    },
+    {
+      "id": "federation",
+      "name": "Framework Federation namespaces",
+      "pr": 333,
+      "status": "open; catalogue and helper metadata only",
+      "items": [
+        {
+          "id": "federation.codex-no",
+          "name": "CodexNo",
+          "feature_key": "RPR-FWK-001",
+          "source_pr": 333,
+          "status": "metadata_and_contracts_only",
+          "executable_domain_handlers": 0,
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "federation.joint-baby",
+          "name": "Joint Baby",
+          "feature_key": "RPR-FWK-002",
+          "source_pr": 333,
+          "status": "metadata_and_contracts_only",
+          "executable_domain_handlers": 0,
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "federation.correpse",
+          "name": "Correpse",
+          "feature_key": "RPR-FWK-003",
+          "source_pr": 333,
+          "status": "metadata_and_contracts_only",
+          "executable_domain_handlers": 0,
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "federation.allocate-purpose",
+          "name": "Allocate Purpose",
+          "feature_key": "RPR-FWK-004",
+          "source_pr": 333,
+          "status": "metadata_and_contracts_only",
+          "executable_domain_handlers": 0,
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "federation.collillioi",
+          "name": "Collillioi",
+          "feature_key": "RPR-FWK-005",
+          "source_pr": 333,
+          "status": "metadata_and_contracts_only",
+          "executable_domain_handlers": 0,
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "federation.aspdoi",
+          "name": "Aspdoi",
+          "feature_key": "RPR-FWK-006",
+          "source_pr": 333,
+          "status": "metadata_and_contracts_only",
+          "executable_domain_handlers": 0,
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "federation.asjiop",
+          "name": "ASJIOP",
+          "feature_key": "RPR-FWK-007",
+          "source_pr": 333,
+          "status": "metadata_and_contracts_only",
+          "executable_domain_handlers": 0,
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "federation.alllll",
+          "name": "ALLLLL",
+          "feature_key": "RPR-FWK-008",
+          "source_pr": 333,
+          "status": "metadata_and_contracts_only",
+          "executable_domain_handlers": 0,
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "federation.zabor",
+          "name": "Zabor",
+          "feature_key": "RPR-FWK-009",
+          "source_pr": 333,
+          "status": "metadata_and_contracts_only",
+          "executable_domain_handlers": 0,
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "federation.vjinz",
+          "name": "Vjinz",
+          "feature_key": "RPR-FWK-010",
+          "source_pr": 333,
+          "status": "metadata_and_contracts_only",
+          "executable_domain_handlers": 0,
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "federation.supreme-boy",
+          "name": "SupremeBoy",
+          "feature_key": "RPR-FWK-011",
+          "source_pr": 333,
+          "status": "metadata_and_contracts_only",
+          "executable_domain_handlers": 0,
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "federation.chee-now",
+          "name": "CheeNow",
+          "feature_key": "RPR-FWK-012",
+          "source_pr": 333,
+          "status": "metadata_and_contracts_only",
+          "executable_domain_handlers": 0,
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "federation.humble-bumble",
+          "name": "HumbleBumble",
+          "feature_key": "RPR-FWK-013",
+          "source_pr": 333,
+          "status": "metadata_and_contracts_only",
+          "executable_domain_handlers": 0,
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "federation.hub2",
+          "name": "Hub2",
+          "feature_key": "RPR-FWK-014",
+          "source_pr": 333,
+          "status": "metadata_and_contracts_only",
+          "executable_domain_handlers": 0,
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "federation.kloz",
+          "name": "Kloz",
+          "feature_key": "RPR-FWK-015",
+          "source_pr": 333,
+          "status": "metadata_and_contracts_only",
+          "executable_domain_handlers": 0,
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "federation.co",
+          "name": "CO",
+          "feature_key": "RPR-FWK-016",
+          "source_pr": 333,
+          "status": "metadata_and_contracts_only",
+          "executable_domain_handlers": 0,
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "federation.cripplebo",
+          "name": "CrippleBO",
+          "feature_key": "RPR-FWK-017",
+          "source_pr": 333,
+          "status": "metadata_and_contracts_only",
+          "executable_domain_handlers": 0,
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "federation.ripplecripple",
+          "name": "RippleCripple",
+          "feature_key": "RPR-FWK-018",
+          "source_pr": 333,
+          "status": "metadata_and_contracts_only",
+          "executable_domain_handlers": 0,
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "federation.secator",
+          "name": "Secator",
+          "feature_key": "RPR-FWK-019",
+          "source_pr": 333,
+          "status": "metadata_and_contracts_only",
+          "executable_domain_handlers": 0,
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "federation.pollatia",
+          "name": "PollATIA",
+          "feature_key": "RPR-FWK-020",
+          "source_pr": 333,
+          "status": "metadata_and_contracts_only",
+          "executable_domain_handlers": 0,
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        }
+      ]
+    },
+    {
+      "id": "language",
+      "name": "Canonical 14 Reaper language/runtime subsystems",
+      "pr": 351,
+      "status": "open; 50k-per-subsystem expansion programme",
+      "items": [
+        {
+          "id": "reaper.r01",
+          "name": "Lexer and source mapping",
+          "source_pr": 351,
+          "status": "50k_program_defined_incremental_implementation",
+          "executable_source_status": "partial_or_pending_by_subsystem",
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "reaper.r02",
+          "name": "Parser and canonical AST",
+          "source_pr": 351,
+          "status": "50k_program_defined_incremental_implementation",
+          "executable_source_status": "partial_or_pending_by_subsystem",
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "reaper.r03",
+          "name": "Semantic analysis, types and effects",
+          "source_pr": 351,
+          "status": "50k_program_defined_incremental_implementation",
+          "executable_source_status": "partial_or_pending_by_subsystem",
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "reaper.r04",
+          "name": "Canonical IR and verification",
+          "source_pr": 351,
+          "status": "50k_program_defined_incremental_implementation",
+          "executable_source_status": "partial_or_pending_by_subsystem",
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "reaper.r05",
+          "name": "Optimizer and analysis passes",
+          "source_pr": 351,
+          "status": "50k_program_defined_incremental_implementation",
+          "executable_source_status": "partial_or_pending_by_subsystem",
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "reaper.r06",
+          "name": "Bytecode VM and runtime",
+          "source_pr": 351,
+          "status": "50k_program_defined_incremental_implementation",
+          "executable_source_status": "partial_or_pending_by_subsystem",
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "reaper.r07",
+          "name": "Memory, ownership and concurrency",
+          "source_pr": 351,
+          "status": "50k_program_defined_incremental_implementation",
+          "executable_source_status": "partial_or_pending_by_subsystem",
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "reaper.r08",
+          "name": "Standard library and core data model",
+          "source_pr": 351,
+          "status": "50k_program_defined_incremental_implementation",
+          "executable_source_status": "partial_or_pending_by_subsystem",
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "reaper.r09",
+          "name": "Modules, packages and builds",
+          "source_pr": 351,
+          "status": "50k_program_defined_incremental_implementation",
+          "executable_source_status": "partial_or_pending_by_subsystem",
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "reaper.r10",
+          "name": "Native compiler and architecture backends",
+          "source_pr": 351,
+          "status": "50k_program_defined_incremental_implementation",
+          "executable_source_status": "partial_or_pending_by_subsystem",
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "reaper.r11",
+          "name": "ABI, FFI and system interfaces",
+          "source_pr": 351,
+          "status": "50k_program_defined_incremental_implementation",
+          "executable_source_status": "partial_or_pending_by_subsystem",
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "reaper.r12",
+          "name": "Hardware and embedded runtime",
+          "source_pr": 351,
+          "status": "50k_program_defined_incremental_implementation",
+          "executable_source_status": "partial_or_pending_by_subsystem",
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "reaper.r13",
+          "name": "Developer tooling and Studio",
+          "source_pr": 351,
+          "status": "50k_program_defined_incremental_implementation",
+          "executable_source_status": "partial_or_pending_by_subsystem",
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "reaper.r14",
+          "name": "Self-hosting and bootstrap",
+          "source_pr": 351,
+          "status": "50k_program_defined_incremental_implementation",
+          "executable_source_status": "partial_or_pending_by_subsystem",
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        }
+      ]
+    }
+  ],
+  "native_framework_core": {
+    "pr": 335,
+    "status": "open",
+    "role": "trusted native C17 extension registry and activation API; not a second application runtime",
+    "profiles": [
+      "CodexNo",
+      "Joint Baby",
+      "Correpse",
+      "Allocate Purpose",
+      "Collillio"
+    ],
+    "counts_as_independent_reaper_loc_targets": false
+  },
+  "adjacent_programmes": [
+    {
+      "id": "jora",
+      "name": "Jora",
+      "pr": 276,
+      "status": "merged_scaffold_generator",
+      "runtime_role": "application composition, not application runtime"
+    },
+    {
+      "id": "kora",
+      "name": "Kora",
+      "pr": 141,
+      "status": "merged_python_and_lua_reascript_surface",
+      "runtime_role": "separate utility/plugin host"
+    },
+    {
+      "id": "native-capability-suite",
+      "name": "Native Capability Suite",
+      "pr": 173,
+      "status": "merged_c17_registry_with_selected_primitives",
+      "runtime_role": "native capability catalogue"
+    },
+    {
+      "id": "system-runtime-abi",
+      "name": "System Runtime ABI",
+      "pr": 308,
+      "status": "open_draft_native_host_boundary",
+      "runtime_role": "capability-gated host dispatch"
+    },
+    {
+      "id": "dak-system-services",
+      "name": "DAK System Services",
+      "prs": [
+        312,
+        313
+      ],
+      "status": "open_contract_proposals",
+      "runtime_role": "target host service contracts"
+    },
+    {
+      "id": "java-capability-adoption",
+      "name": "Java Capability Adoption",
+      "pr": 295,
+      "status": "merged_clean_room_capability_plan",
+      "runtime_role": "language/runtime capability roadmap"
+    },
+    {
+      "id": "engineering-evolution",
+      "name": "Engineering Evolution Framework",
+      "pr": 165,
+      "status": "merged_governance_framework",
+      "runtime_role": "engineering policy"
+    },
+    {
+      "id": "quality-commercial",
+      "name": "Quality and Commercial Readiness",
+      "pr": 112,
+      "status": "open_policy_and_evidence_framework",
+      "runtime_role": "quality and release evidence"
+    }
+  ],
+  "dependencies": {
+    "standalone_to_dom": {
+      "GalHero": "Establish",
+      "Call-and-Back": "System Carriere",
+      "Stacked Options": "Establish",
+      "PerenosiMOST": "Reaper language tooling",
+      "MOST": "Reaper language tooling",
+      "Blau": "JennyFlash",
+      "Shashio": "JLOM",
+      "Showel Fleppery CODE": "Jenny Flashing Boy"
+    },
+    "federation_to_dom": {
+      "Joint Baby": "Nonconcrete",
+      "Correpse": "Establish / Nonconcrete",
+      "Allocate Purpose": "poooVERTY",
+      "Collillioi": "Uu",
+      "Aspdoi": "JLOM",
+      "ASJIOP": "Nonconcrete / host ABI",
+      "Zabor": "Nonconcrete",
+      "Vjinz": "compiler diagnostics / DOM diagnostics",
+      "CheeNow": "JLOM / System Carriere",
+      "HumbleBumble": "Uu / JLOM",
+      "Hub2": "System Carriere",
+      "Kloz": "Establish",
+      "CO": "Uu",
+      "CrippleBO": "JLOM",
+      "RippleCripple": "JennyFlash",
+      "Secator": "Nonconcrete / host security",
+      "PollATIA": "DOM observability"
+    }
+  }
+}

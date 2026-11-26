@@ -1,0 +1,132 @@
+# Uu: deterministic, bounded primitives shared by ДОМ subsystems.
+# Public values use Reaper lists until the public record ABI is frozen.
+
+export craft contains(values, target) {
+    vary found := false
+    each value in values {
+        when value == target { change found := true }
+    }
+    yield found
+}
+
+export craft all_unique(values) {
+    vary seen := []
+    vary valid := true
+    each value in values {
+        when contains(seen, value) {
+            change valid := false
+        } otherwise {
+            change seen := push(seen, value)
+        }
+    }
+    yield valid
+}
+
+export craft unique(values) {
+    vary result := []
+    each value in values {
+        when not contains(result, value) {
+            change result := push(result, value)
+        }
+    }
+    yield result
+}
+
+export craft stable_union(left, right) {
+    vary result := unique(left)
+    each value in right {
+        when not contains(result, value) {
+            change result := push(result, value)
+        }
+    }
+    yield result
+}
+
+export craft nonempty_text(value) {
+    when kind(value) != "text" { yield false }
+    yield size(trim(value)) > 0
+}
+
+export craft nonnegative_number(value) {
+    when kind(value) != "number" { yield false }
+    yield value >= 0
+}
+
+export craft pair_list(pairs) {
+    when kind(pairs) != "list" { yield false }
+    vary valid := true
+    each pair in pairs {
+        when kind(pair) != "list" or size(pair) != 2 {
+            change valid := false
+        }
+    }
+    yield valid
+}
+
+export craft lookup(pairs, key) {
+    vary found := false
+    vary value := nothing
+    when not pair_list(pairs) { yield [false, nothing] }
+    each pair in pairs {
+        when pair[0] == key {
+            change found := true
+            change value := pair[1]
+        }
+    }
+    yield [found, value]
+}
+
+export craft put(pairs, key, value) {
+    when not pair_list(pairs) { yield [false, pairs, "invalid-pair-list"] }
+    vary result := []
+    vary inserted := false
+    each pair in pairs {
+        when pair[0] == key {
+            when not inserted {
+                change result := push(result, [key, value])
+                change inserted := true
+            }
+        } otherwise {
+            change result := push(result, pair)
+        }
+    }
+    when not inserted { change result := push(result, [key, value]) }
+    yield [true, result, "ok"]
+}
+
+export craft remove(pairs, key) {
+    when not pair_list(pairs) { yield [false, pairs, "invalid-pair-list"] }
+    vary result := []
+    vary removed := false
+    each pair in pairs {
+        when pair[0] == key {
+            change removed := true
+        } otherwise {
+            change result := push(result, pair)
+        }
+    }
+    yield [true, result, removed]
+}
+
+export craft clamp(value, lower, upper) {
+    when kind(value) != "number" or kind(lower) != "number" or kind(upper) != "number" {
+        yield [false, value, "numeric-values-required"]
+    }
+    when lower > upper { yield [false, value, "invalid-range"] }
+    when value < lower { yield [true, lower, "clamped-low"] }
+    when value > upper { yield [true, upper, "clamped-high"] }
+    yield [true, value, "unchanged"]
+}
+
+export craft validate_names(names) {
+    vary errors := []
+    each name in names {
+        when not nonempty_text(name) {
+            change errors := push(errors, ["invalid-name", name])
+        }
+    }
+    when not all_unique(names) {
+        change errors := push(errors, ["duplicate-name"])
+    }
+    yield [size(errors) == 0, errors]
+}

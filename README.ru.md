@@ -18,8 +18,9 @@ Reaper — язык системного программирования и л�
 - NOO TAH передаёт выполнение JavaScript официальному Node.js.
 - Генерация каркасов Jora и композиция возможностей; пакеты каталога пока являются спецификациями, а не устанавливаемыми редакторами.
 - Восемь нативных модулей Reaper: планирование зависимостей, callbacks, слои параметров, алиасы МОСТ, версионированное состояние, конечные автоматы и преобразование кода.
+- Начальный срез фундаментального runtime ДОМ на Reaper: контракты подсистем, бюджеты, жизненный цикл, манифесты и единая композиция runtime; нативный паритет пока не заявляется.
 
-Документы: [Фреймворки](docs/FRAMEWORKS_V1.md) · [Возможности](docs/FEATURES.md) · [Архитектура](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Фабрика Jora](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md).
+Документы: [Фреймворки](docs/FRAMEWORKS_V1.md) · [ДОМ Foundation](docs/DOM_FOUNDATION_IMPLEMENTATION.md) · [Портфель фреймворков](docs/FRAMEWORK_PORTFOLIO_EXPANSION.md) · [Возможности](docs/FEATURES.md) · [Архитектура](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Фабрика Jora](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md).
 
 ## Быстрый старт
 
@@ -31,6 +32,7 @@ python -m pip install -e .
 python -m reaper --check examples/flow.rpr
 python -m reaper examples/flow.rpr
 python -m reaper examples/frameworks_smoke.rpr
+python -m reaper examples/dom_foundation_smoke.rpr
 ```
 
 Studio и REPL:

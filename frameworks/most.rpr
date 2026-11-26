@@ -47,3 +47,42 @@ export craft profile_contract() {
         "one parser and one runtime"
     ]
 }
+
+export craft classify_many(words) {
+    vary classified := []
+    each word in words {
+        change classified := push(classified, [word, classify(word)])
+    }
+    yield classified
+}
+
+export craft runtime_count() {
+    yield size(runtime_aliases())
+}
+
+export craft reserved_count() {
+    yield size(reserved_aliases())
+}
+
+export craft validate_profile() {
+    make alias_check := bridge["validate_alias_table"]()
+    vary errors := []
+    when not alias_check[0] {
+        change errors := push(errors, alias_check[1])
+    }
+    when runtime_count() != 21 {
+        change errors := push(errors, ["runtime-alias-count", runtime_count()])
+    }
+    when reserved_count() != 33 {
+        change errors := push(errors, ["reserved-alias-count", reserved_count()])
+    }
+    yield [size(errors) == 0, errors]
+}
+
+export craft validate_source_words(words) {
+    yield check_runtime_words(words)
+}
+
+export craft normalize_unique(words) {
+    yield bridge["canonicalize_unique"](words)
+}
