@@ -1,0 +1,29 @@
+# Affliction — UI Unreal
+# UI-first widget contracts and engine bridge event routing.
+
+export make FRAMEWORK_ID := "affliction.ui_unreal"
+export make FRAMEWORK_VERSION := "1.0.0"
+export make FRAMEWORK_PROFILE := "UI Unreal"
+
+export craft affliction_widget_valid(widget_id, width, height) {
+    yield widget_id > 0 and width > 0 and height > 0
+}
+
+export craft affliction_event_allowed(focused, visible, enabled) {
+    yield focused and visible and enabled
+}
+
+export craft affliction_layout_valid(x, y, width, height, viewport_width, viewport_height) {
+    yield x >= 0 and y >= 0 and width > 0 and height > 0 and viewport_width > 0 and viewport_height > 0 and x + width <= viewport_width and y + height <= viewport_height
+}
+
+export craft affliction_unreal_bridge_compatible(engine_major, bridge_major) {
+    yield engine_major >= 5 and bridge_major == engine_major
+}
+
+export craft affliction_widget_route(widget_id, event_id, focused, visible, enabled) {
+    when widget_id > 0 and event_id > 0 and affliction_event_allowed(focused, visible, enabled) {
+        yield [widget_id, event_id, "routed"]
+    }
+    yield []
+}
