@@ -4,7 +4,7 @@ export craft safe_environment_path(path) {
     when kind(path) != "text" or size(trim(path)) == 0 {
         yield false
     }
-    when starts_with(path, "/") or ends_with(path, "/") {
+    when starts_with(path, "/") or ends_with(path, "/") or contains(path, ":") or contains(path, "\\\\") {
         yield false
     }
     craft invalid_segment(segment) {
