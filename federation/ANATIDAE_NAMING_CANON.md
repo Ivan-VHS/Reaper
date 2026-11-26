@@ -73,7 +73,7 @@ Use **Крылыш** as an internal visual grouping metaphor for the existing co
 Use **Утёнок** or **Кряквёнок** only for optional onboarding guidance. **Пёрышко** may mark a secondary metadata summary only when the full hardware ID, hash, source and evidence remain explicit. Device inventory, INF/ZIP evidence, DRIVE-LENS, candidate-only compatibility semantics and all read-only safety language remain literal.
 
 ### VentuSample
-Use **Утёнок** for optional first-pack guidance and **Крякуша** only for non-critical help around the existing variation workflow. **Пёрышко** may label a compact file-summary decoration while filename, format, sample rate, key, scale, seed and measurements remain visible. Do not add a genre, sound profile, sample format or generator behavior merely to use a vocabulary word.
+VentuSample owns its product-specific terminology and naming rules in its own repository. This federation canon does not define its application vocabulary.
 
 ## 7. Adoption and acceptance
 

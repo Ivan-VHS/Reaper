@@ -1,0 +1,30 @@
+name: Bug report
+description: Report a reproducible Reaper issue.
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal .rpr example or exact editor steps
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed output and diagnostic code
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Reaper version and Python/runtime version
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true

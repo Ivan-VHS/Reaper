@@ -1,0 +1,707 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://duckos.local/schemas/jora.application.v1.schema.json",
+  "title": "Jora Application Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "id",
+    "name",
+    "naming",
+    "graphs",
+    "description",
+    "formula",
+    "components",
+    "dependency_order",
+    "dependencies",
+    "locales",
+    "preferred_locale",
+    "syntax",
+    "implementation",
+    "installable",
+    "executable_capabilities",
+    "limitations"
+  ],
+  "properties": {
+    "schema": {
+      "const": "reaper.jora.application.v1"
+    },
+    "version": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{1,60}$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "pattern": "^(?!.*[Jj][Oo][Rr][Aa]).+$"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 500
+    },
+    "formula": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expression",
+        "result",
+        "components"
+      ],
+      "properties": {
+        "expression": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "pattern": "^(?!.*[Jj][Oo][Rr][Aa]).+$"
+        },
+        "components": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 24,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "text.editor",
+              "audio.editor",
+              "translation.workspace",
+              "subtitle.editor",
+              "notes.workspace",
+              "task.board",
+              "calendar.scheduler",
+              "speech.synthesis",
+              "speech.recognition",
+              "code.editor",
+              "spreadsheet.editor",
+              "image.editor",
+              "video.editor",
+              "presentation.editor",
+              "file.manager",
+              "api.client",
+              "automation.engine",
+              "data.visualizer",
+              "database.manager",
+              "archive.manager",
+              "knowledge.graph"
+            ]
+          }
+        },
+        "result": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "pattern": "^(?!.*[Jj][Oo][Rr][Aa]).+$"
+        }
+      }
+    },
+    "components": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 24,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "version",
+          "domain",
+          "summary",
+          "provides",
+          "requires",
+          "maturity",
+          "generated_unit",
+          "consumes"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "text.editor",
+              "audio.editor",
+              "translation.workspace",
+              "subtitle.editor",
+              "notes.workspace",
+              "task.board",
+              "calendar.scheduler",
+              "speech.synthesis",
+              "speech.recognition",
+              "code.editor",
+              "spreadsheet.editor",
+              "image.editor",
+              "video.editor",
+              "presentation.editor",
+              "file.manager",
+              "api.client",
+              "automation.engine",
+              "data.visualizer",
+              "database.manager",
+              "archive.manager",
+              "knowledge.graph"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "domain": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "provides": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "requires": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "maturity": {
+            "const": "specification_only"
+          },
+          "generated_unit": {
+            "type": "string"
+          },
+          "consumes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "dependency_order": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "version",
+          "maturity",
+          "requires"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "maturity": {
+            "type": "string"
+          },
+          "requires": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "locales": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "en",
+          "ru",
+          "uk",
+          "most"
+        ]
+      }
+    },
+    "preferred_locale": {
+      "enum": [
+        "en",
+        "ru",
+        "uk",
+        "most"
+      ]
+    },
+    "syntax": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "status"
+      ],
+      "properties": {
+        "mode": {
+          "const": "flow"
+        },
+        "status": {
+          "const": "implemented"
+        }
+      }
+    },
+    "implementation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "canonical_language",
+        "targets",
+        "runtime",
+        "maturity"
+      ],
+      "properties": {
+        "canonical_language": {
+          "const": "reaper"
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "language",
+              "status",
+              "reason"
+            ],
+            "properties": {
+              "id": {
+                "enum": [
+                  "reaper",
+                  "java",
+                  "kotlin",
+                  "python",
+                  "typescript",
+                  "rust",
+                  "c"
+                ]
+              },
+              "language": {
+                "type": "string"
+              },
+              "status": {
+                "enum": [
+                  "generated",
+                  "adapter_pending"
+                ]
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "runtime": {
+          "const": "reaper-reference"
+        },
+        "maturity": {
+          "const": "scaffold_only"
+        }
+      }
+    },
+    "installable": {
+      "const": false
+    },
+    "executable_capabilities": {
+      "type": "array",
+      "maxItems": 0
+    },
+    "limitations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "naming": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "platform",
+        "product_name_policy",
+        "style",
+        "descriptors",
+        "selected",
+        "suggestions",
+        "rule"
+      ],
+      "properties": {
+        "version": {
+          "const": "jora-naming.v2"
+        },
+        "platform": {
+          "const": "Jora"
+        },
+        "product_name_policy": {
+          "const": "no_platform_brand_in_application_name"
+        },
+        "style": {
+          "enum": [
+            "compact",
+            "balanced",
+            "descriptive",
+            "formula"
+          ]
+        },
+        "descriptors": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "selected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "label",
+            "style"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string",
+              "pattern": "^(?!.*[Jj][Oo][Rr][Aa]).+$"
+            },
+            "style": {
+              "enum": [
+                "compact",
+                "balanced",
+                "descriptive",
+                "formula"
+              ]
+            }
+          }
+        },
+        "suggestions": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "label",
+              "style"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string",
+                "pattern": "^(?!.*[Jj][Oo][Rr][Aa]).+$"
+              },
+              "style": {
+                "enum": [
+                  "compact",
+                  "balanced",
+                  "descriptive",
+                  "formula"
+                ]
+              }
+            }
+          }
+        },
+        "rule": {
+          "type": "string"
+        }
+      }
+    },
+    "graphs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "selected",
+        "selection_policy",
+        "topology_mode",
+        "seed",
+        "variant_count",
+        "variants",
+        "objective"
+      ],
+      "properties": {
+        "schema": {
+          "const": "reaper.jora.graph-set.v1"
+        },
+        "selected": {
+          "type": "string"
+        },
+        "topology_mode": {
+          "enum": [
+            "auto",
+            "layered",
+            "pipeline",
+            "hub_spoke",
+            "plugin_mesh",
+            "event_driven",
+            "hybrid"
+          ]
+        },
+        "seed": {
+          "type": "string"
+        },
+        "variant_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 6
+        },
+        "variants": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "label",
+              "topology",
+              "objective",
+              "layout_variant",
+              "seed",
+              "variation",
+              "signature",
+              "nodes",
+              "edges",
+              "metrics",
+              "cycle_policy"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string",
+                "pattern": "^(?!.*[Jj][Oo][Rr][Aa]).+$"
+              },
+              "topology": {
+                "enum": [
+                  "layered",
+                  "pipeline",
+                  "hub_spoke",
+                  "plugin_mesh",
+                  "event_driven",
+                  "hybrid"
+                ]
+              },
+              "seed": {
+                "type": "string"
+              },
+              "variation": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "signature": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{16}$"
+              },
+              "nodes": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 80,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "kind",
+                    "label",
+                    "maturity"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "kind": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "maturity": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "edges": {
+                "type": "array",
+                "maxItems": 256,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "from",
+                    "to",
+                    "relation"
+                  ],
+                  "properties": {
+                    "from": {
+                      "type": "string"
+                    },
+                    "to": {
+                      "type": "string"
+                    },
+                    "relation": {
+                      "type": "string"
+                    },
+                    "delivery": {
+                      "const": "asynchronous"
+                    }
+                  }
+                }
+              },
+              "metrics": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "node_count",
+                  "edge_count",
+                  "dependency_edges",
+                  "capability_connections",
+                  "planned_nodes",
+                  "compatibility_score",
+                  "objective_score",
+                  "latency_score",
+                  "modularity_score",
+                  "extensibility_score",
+                  "complexity_score",
+                  "longest_sync_path"
+                ],
+                "properties": {
+                  "node_count": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "edge_count": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "dependency_edges": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "capability_connections": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "planned_nodes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "compatibility_score": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "objective_score": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "latency_score": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "modularity_score": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "extensibility_score": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "complexity_score": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "longest_sync_path": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 80
+                  }
+                }
+              },
+              "cycle_policy": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "synchronous_edges",
+                  "event_feedback"
+                ],
+                "properties": {
+                  "event_feedback": {
+                    "type": "string"
+                  },
+                  "synchronous_edges": {
+                    "const": "acyclic"
+                  }
+                }
+              },
+              "layout_variant": {
+                "enum": [
+                  "direct",
+                  "domain_grouped",
+                  "capability_routed",
+                  "stateful",
+                  "validated",
+                  "extensible"
+                ]
+              },
+              "objective": {
+                "enum": [
+                  "balanced",
+                  "low_latency",
+                  "modularity",
+                  "extensibility",
+                  "minimal_complexity"
+                ]
+              }
+            }
+          }
+        },
+        "selection_policy": {
+          "const": "max_objective_score_then_compatibility_then_minimal_planned_nodes"
+        },
+        "objective": {
+          "enum": [
+            "balanced",
+            "low_latency",
+            "modularity",
+            "extensibility",
+            "minimal_complexity"
+          ]
+        }
+      }
+    }
+  }
+}

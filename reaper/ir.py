@@ -199,20 +199,89 @@ def lower(tree: Node, source_name: str = "<memory>") -> CanonicalIR:
 
 
 def verify(module: CanonicalIR) -> None:
+    """Validate IR structure and operands before a VM can consume the module."""
     if not isinstance(module, CanonicalIR):
         raise IRVerificationError("expected a CanonicalIR module")
+    if not isinstance(module.code, tuple):
+        raise IRVerificationError("module code must be an immutable instruction tuple")
+    if not isinstance(module.source_name, str) or not module.source_name:
+        raise IRVerificationError("module source_name must be non-empty text")
+
+    binary_operators = {
+        "==", "!=", "<", "<=", ">", ">=", "++",
+        "+", "-", "*", "/", "//", "%", "**",
+    }
+
+    def require_name(value: Any, label: str) -> None:
+        if not isinstance(value, str) or not value:
+            raise IRVerificationError(f"{label}: expected a non-empty name")
 
     def check(code: tuple[IRInstruction, ...], label: str) -> None:
+        if not isinstance(code, tuple):
+            raise IRVerificationError(f"{label}: instruction code must be a tuple")
+
         for index, instruction in enumerate(code):
-            if instruction.op not in _ALLOWED:
-                raise IRVerificationError(f"{label}: unknown IR operation at {index}: {instruction.op}")
-            if instruction.op in {"JUMP", "JUMP_IF_FALSE", "AND_JUMP", "OR_JUMP"}:
-                target = instruction.argument
-                if not isinstance(target, int) or target < 0 or target > len(code):
-                    raise IRVerificationError(f"{label}: invalid jump target at {index}")
-            if instruction.op == "MAKE_FUNCTION":
-                if not isinstance(instruction.argument, IRFunction):
-                    raise IRVerificationError(f"{label}: MAKE_FUNCTION requires an IRFunction")
-                check(instruction.argument.code, instruction.argument.name)
+            where = f"{label}: instruction {index}"
+            if not isinstance(instruction, IRInstruction):
+                raise IRVerificationError(f"{where}: expected an IRInstruction")
+            if not isinstance(instruction.op, str) or instruction.op not in _ALLOWED:
+                raise IRVerificationError(f"{where}: unknown IR operation: {instruction.op!r}")
+
+            op = instruction.op
+            argument = instruction.argument
+
+            if op in {"JUMP", "JUMP_IF_FALSE", "AND_JUMP", "OR_JUMP"}:
+                if type(argument) is not int or argument < 0 or argument > len(code):
+                    raise IRVerificationError(f"{where}: invalid jump target")
+
+            elif op in {"CALL", "PIPE_CALL", "BUILD_LIST"}:
+                if type(argument) is not int or argument < 0:
+                    raise IRVerificationError(f"{where}: argument count must be a non-negative integer")
+
+            elif op == "DEFINE":
+                if not isinstance(argument, tuple) or len(argument) != 2:
+                    raise IRVerificationError(f"{where}: DEFINE requires (name, mutable)")
+                require_name(argument[0], where)
+                if type(argument[1]) is not bool:
+                    raise IRVerificationError(f"{where}: DEFINE mutable flag must be boolean")
+
+            elif op in {"LOAD", "ASSIGN", "EXPORT", "ITER_INIT"}:
+                require_name(argument, where)
+
+            elif op == "ITER_NEXT":
+                if not isinstance(argument, tuple) or len(argument) != 2:
+                    raise IRVerificationError(f"{where}: ITER_NEXT requires (name, target)")
+                require_name(argument[0], where)
+                target = argument[1]
+                if type(target) is not int or target < 0 or target > len(code):
+                    raise IRVerificationError(f"{where}: invalid iterator exit target")
+
+            elif op == "MAKE_FUNCTION":
+                function = argument
+                if not isinstance(function, IRFunction):
+                    raise IRVerificationError(f"{where}: MAKE_FUNCTION requires an IRFunction")
+                require_name(function.name, where)
+                if not isinstance(function.parameters, tuple):
+                    raise IRVerificationError(f"{where}: function parameters must be a tuple")
+                for parameter in function.parameters:
+                    require_name(parameter, where)
+                if len(set(function.parameters)) != len(function.parameters):
+                    raise IRVerificationError(f"{where}: function parameter names must be unique")
+                check(function.code, function.name)
+
+            elif op == "IMPORT":
+                if not isinstance(argument, tuple) or len(argument) != 2:
+                    raise IRVerificationError(f"{where}: IMPORT requires (specifier, alias)")
+                require_name(argument[0], where)
+                if argument[1] is not None:
+                    require_name(argument[1], where)
+
+            elif op == "UNARY":
+                if not isinstance(argument, str) or argument not in {"NOT", "-"}:
+                    raise IRVerificationError(f"{where}: unsupported unary operator {argument!r}")
+
+            elif op == "BINARY":
+                if not isinstance(argument, str) or argument not in binary_operators:
+                    raise IRVerificationError(f"{where}: unsupported binary operator {argument!r}")
 
     check(module.code, module.source_name)

@@ -5,7 +5,8 @@ from dataclasses import dataclass
 from difflib import SequenceMatcher
 from pathlib import Path
 import re, threading
-from .errors import ReaperError
+from .errors import LexError, ReaperError
+from .diagnostic_catalog import explain_diagnostic
 from .lexer import KEYWORD_ALIASES
 from .parser import parse
 
@@ -35,6 +36,7 @@ class Diagnostic:
     severity: str
     span: Span
     code: str
+    help: str | None = None
 
 @dataclass(frozen=True, slots=True)
 class Snapshot:
@@ -92,21 +94,36 @@ def _scan(snapshot):
                 expected = {")":"(", "]":"[", "}":"{"}[char]
                 if stack and stack[-1][0] == expected: stack.pop()
                 else: diagnostics.append(Diagnostic("unexpected closing delimiter", "error",
-                                                     Span(row,col,col+1), "unmatched-delimiter"))
+                                                     Span(row,col,col+1), "RPR-E0014",
+                                                     "Close the matching opener or remove the extra closing delimiter."))
     for char,row,col in stack:
         diagnostics.append(Diagnostic("unclosed delimiter " + char, "hint",
-                                      Span(row,col,col+1), "incomplete-delimiter"))
+                                      Span(row,col,col+1), "RPR-W0001",
+                                      "Add the matching closing delimiter, or remove the incomplete opener."))
     try:
-        parse(snapshot.text, snapshot.uri)
+        tree = parse(snapshot.text, snapshot.uri)
+        from .typecheck import TypeChecker
+        checked = TypeChecker(snapshot.uri).check(tree)
+        for item in checked.diagnostics:
+            start = max(0, item.column - 1)
+            diagnostics.append(Diagnostic(
+                item.message,
+                item.severity,
+                Span(max(0, item.line - 1), start, start + 1),
+                item.code,
+                None,
+            ))
     except (ReaperError, ValueError) as error:
         parts = str(error).rsplit(":", 3)
         try:
             row, column, message = int(parts[-3]) - 1, int(parts[-2]) - 1, parts[-1].strip()
         except (ValueError, IndexError):
             row, column, message = 0, 0, str(error)
+        code = "RPR-E0001" if isinstance(error, LexError) else "RPR-E0013"
+        definition = explain_diagnostic(code)
         diagnostics.append(Diagnostic(message, "error",
                                       Span(max(0, row), max(0, column), max(0, column) + 1),
-                                      "parser-error"))
+                                      code, definition["help"] if definition else None))
     return Analysis(snapshot, tuple(symbols), tuple(identifiers), tuple(diagnostics))
 
 class LanguageService:
@@ -158,7 +175,12 @@ class LanguageService:
             if self._docs.get(uri) == snap: self._results[uri] = result
         return result
     def result(self, uri):
-        with self._lock: return self._results.get(uri)
+        with self._lock:
+            current = self._docs.get(uri)
+            cached = self._results.get(uri)
+            if current is None or cached is None or cached.snapshot != current:
+                return None
+            return cached
     def completion(self, uri, prefix=""):
         result = self.result(uri) or self.analyze(uri)
         names = {s.name:s.kind for s in result.symbols}
@@ -178,6 +200,48 @@ class LanguageService:
         if not IDENT.fullmatch(replacement) or replacement in KEYWORDS or replacement in BUILTINS:
             raise ValueError("replacement must be a non-keyword identifier")
         return [(span,replacement) for span in self.references(uri,name)]
+    def _workspace_analyses(self):
+        """Return bounded analyses for documents the editor has already opened.
+
+        This is deliberately not a disk crawler: the LSP workspace consists only
+        of explicitly opened buffers, and results remain lexical rather than semantic.
+        """
+        with self._lock:
+            uris = sorted(self._docs)
+            total_chars = sum(len(self._docs[uri].text) for uri in uris)
+        if len(uris) > 512:
+            raise ValueError("workspace search is limited to 512 open documents")
+        if total_chars > 8_000_000:
+            raise ValueError("workspace search is limited to 8 million characters")
+        return [self.result(uri) or self.analyze(uri) for uri in uris]
+
+    def workspace_symbols(self, query="", limit=100):
+        if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= 500:
+            raise ValueError("workspace symbol limit must be between 1 and 500")
+        needle = str(query).casefold()
+        matches = []
+        for analysis in self._workspace_analyses():
+            for symbol in analysis.symbols:
+                if needle in symbol.name.casefold():
+                    matches.append(symbol)
+                    if len(matches) >= limit:
+                        return matches
+        return matches
+
+    def workspace_definitions(self, name):
+        needle = str(name)
+        return [symbol for symbol in self.workspace_symbols(needle, 500)
+                if symbol.name == needle]
+
+    def workspace_references(self, name):
+        needle = str(name)
+        references = []
+        for analysis in self._workspace_analyses():
+            for value, span in analysis.identifiers:
+                if value == needle:
+                    references.append((analysis.snapshot.uri, span))
+        return references
+
     def close(self, uri):
         with self._lock:
             self._docs.pop(uri,None); self._results.pop(uri,None)
