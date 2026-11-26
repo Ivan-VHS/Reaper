@@ -43,7 +43,7 @@ The Reaper modules plague/engine/core.rpr and plague/engine/evolution.rpr valida
 
 See PLAGUE_FOUNDATION_V1.md for tuple layouts and acceptance fixtures.
 
-## Access model
+## Bounded proposal assessment\n\nThe additional v1 evaluator lives in `plague/engine/core.rpr` and `plague/engine/evolution.rpr`. It validates fixed-width repository profiles and change proposals, checks target platform/stack, requested scopes, required assurance gates, changed-path and patch-byte budgets, rollback availability and the configured risk ceiling. It can assess and rank at most 128 proposals using `expected_benefit - declared_risk`; equal scores are ordered by proposal ID. Results are `blocked`, `defer`, `review_required` or `eligible_for_review`. The selector is advisory: no result writes source, creates a branch or authorizes a merge.\n\nThe external contracts are `plague/schemas/repository-profile.v1.schema.json` and `plague/schemas/evolution-proposal.v1.schema.json`. The fixed Reaper tuple layout is documented in [the v1 policy specification](PLAGUE_FOUNDATION_V1.md). Caller-provided risk values and evidence references are not independently verified. This evaluator does not authenticate repository grants or enforce individual path allowlists.\n\n## Access model
 
 Every repository must receive an explicit grant with a repository identity, base branch, allowed paths, excluded paths, mode, expiry and approved check profile. The initial global scope list is empty. A project is not authorized merely because the GitHub account can see it.
 
