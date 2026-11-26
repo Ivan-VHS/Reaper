@@ -62,12 +62,12 @@ SOMO coordinates a deterministic pipeline and consults the PLAGUE v1 action poli
 
 1. Validate the requested mode through PLAGUE's default-deny action policy.
 2. Validate the current and target aesthetic profiles.
-2. Compile the baseline profile through HIR, MIR and LIR.
-3. Assess the target design against the declared accessibility contract.
-4. Validate both current and proposed architecture graphs, check that node dependency declarations match graph edges, reject cycles, and compute an explicit architecture delta.
-5. In `observe`, return evidence and graph comparisons without generating source-change plans.
-6. In `propose`, generate bounded Cellene/Kolir proposals only after the PLAGUE plan capability is allowed; defer changes whose declared risk is not lower than their expected benefit.
-7. Return the profile compile products, architecture delta and source plan as a reviewable proposal.
+3. Compile the baseline profile through HIR, MIR and LIR.
+4. Assess the target design against the declared accessibility contract.
+5. Validate both current and proposed architecture graphs, check that node dependency declarations match graph edges, reject cycles, and compute an explicit architecture delta.
+6. In `observe`, return evidence and graph comparisons without generating source-change plans.
+7. In `propose`, generate bounded Cellene/Kolir proposals only after the PLAGUE plan capability is allowed; defer changes whose declared risk is not lower than their expected benefit.
+8. Return the profile compile products, architecture delta and source plan as a reviewable proposal.
 
 Observe performs assessment only. Propose emits a bounded change plan. A native C17 transactional apply engine now defines SHA-256-pinned whole-file patch descriptors, signed repository/path grant callbacks, exact Git revision verification, an isolated workspace, sandboxed registered checks, atomic topic-branch publication, durable audit and conditional rollback/recovery callbacks. The engine fails closed without every host capability. However, concrete Windows/POSIX Git/workspace and sandbox adapters, plus a Reaper-to-native bridge, are not yet available. SOMO therefore continues to block apply. The system never treats account repository visibility as write authorization. PLAGUE's current Reaper module is an action-policy matrix, not the cryptographic host grant implementation.
 
