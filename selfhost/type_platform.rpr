@@ -1,0 +1,461 @@
+# Reaper-native typed layout and target-platform core, version 1.
+# The public values are versioned arrays so every field and index is explicit.
+# This module computes data layout; it does not claim native ABI call lowering.
+
+export craft type_primitive(name) {
+    yield ["TYPE_V1", "primitive", name]
+}
+
+export craft type_named(name) {
+    yield ["TYPE_V1", "named", name]
+}
+
+export craft type_pointer(pointee, mutable) {
+    yield ["TYPE_V1", "pointer", pointee, mutable]
+}
+
+export craft type_array(element, count) {
+    yield ["TYPE_V1", "array", element, count]
+}
+
+export craft type_field(name, field_type) {
+    yield ["FIELD_V1", name, field_type]
+}
+
+export craft type_struct(name, representation, explicit_align, fields) {
+    yield ["STRUCT_V1", name, representation, explicit_align, fields]
+}
+
+export craft type_union(name, representation, explicit_align, fields) {
+    yield ["UNION_V1", name, representation, explicit_align, fields]
+}
+
+export craft type_enum(name, underlying, variants) {
+    yield ["ENUM_V1", name, underlying, variants]
+}
+
+export craft type_variant(name, value) {
+    yield ["VARIANT_V1", name, value]
+}
+
+export craft type_distinct(name, underlying) {
+    yield ["DISTINCT_V1", name, underlying]
+}
+
+export craft type_opaque(name, known_size, known_align) {
+    yield ["OPAQUE_V1", name, known_size, known_align]
+}
+
+export craft platform_profile(
+    id, architecture, operating_system, data_model,
+    pointer_size, pointer_align, endian, object_format,
+    call_abi, service_wire_abi, max_align,
+    c_long_size, c_long_align, atomic_widths, features, status
+) {
+    yield [
+        "PLATFORM_V1", id, architecture, operating_system, data_model,
+        pointer_size, pointer_align, endian, object_format, call_abi,
+        service_wire_abi, max_align, c_long_size, c_long_align,
+        atomic_widths, features, status
+    ]
+}
+
+export craft platform_windows_x86_64() {
+    yield platform_profile(
+        "WINDOWS_X86_64", "x86_64", "windows", "LLP64",
+        8, 8, "little", "PE_COFF", "MS_X64", "none", 16,
+        4, 4, [8, 16, 32, 64], ["sse2"], "declared"
+    )
+}
+
+export craft platform_linux_x86_64() {
+    yield platform_profile(
+        "LINUX_X86_64", "x86_64", "linux", "LP64",
+        8, 8, "little", "ELF", "SYSV_X86_64", "none", 16,
+        8, 8, [8, 16, 32, 64], ["sse2", "sse4_2"], "declared"
+    )
+}
+
+export craft platform_linux_aarch64() {
+    yield platform_profile(
+        "LINUX_AARCH64", "aarch64", "linux", "LP64",
+        8, 8, "little", "ELF", "AAPCS64", "none", 16,
+        8, 8, [8, 16, 32, 64], ["neon"], "declared"
+    )
+}
+
+export craft platform_dak_x86_64() {
+    # DABI64_DESKTOP_HOST_V1 is a pointer-free service wire ABI, not a
+    # process calling convention. DAK's process ABI and object format remain
+    # unfinalized here, so the profile is intentionally not ABI-ready.
+    yield platform_profile(
+        "DAK_X86_64", "x86_64", "DAK", "unfinalized",
+        8, 8, "little", "unfinalized", "unfinalized",
+        "DABI64_DESKTOP_HOST_V1", 16,
+        0, 0, [8, 16, 32, 64], ["sse2"], "profile_only"
+    )
+}
+
+export craft layout_error(code, message) {
+    yield [false, code, message]
+}
+
+export craft layout_value(byte_size, byte_align, field_offsets) {
+    yield [true, [byte_size, byte_align, field_offsets], ""]
+}
+
+export craft layout_is_power_of_two(value) {
+    when value < 1 or value > 65536 {
+        yield false
+    }
+    vary candidate := 1
+    loop while candidate < value {
+        change candidate := candidate * 2
+    }
+    yield candidate == value
+}
+
+export craft layout_align_up(value, alignment) {
+    when value < 0 or not layout_is_power_of_two(alignment) {
+        yield -1
+    }
+    when value > 9223372036854775807 - (alignment - 1) {
+        yield -1
+    }
+    yield ((value + alignment - 1) // alignment) * alignment
+}
+
+export craft list_has(values, expected) {
+    each value in values {
+        when value == expected {
+            yield true
+        }
+    }
+    yield false
+}
+
+export craft find_type_definition(type_name, definitions) {
+    each definition in definitions {
+        when size(definition) > 1 and definition[1] == type_name {
+            yield definition
+        }
+    }
+    yield []
+}
+
+export craft platform_has_feature(platform, feature) {
+    when size(platform) != 17 or platform[0] != "PLATFORM_V1" {
+        yield false
+    }
+    yield list_has(platform[15], feature)
+}
+
+export craft platform_has_atomic_width(platform, bit_width) {
+    when size(platform) != 17 or platform[0] != "PLATFORM_V1" {
+        yield false
+    }
+    yield list_has(platform[14], bit_width)
+}
+
+export craft platform_validate(platform) {
+    when size(platform) != 17 or platform[0] != "PLATFORM_V1" {
+        yield layout_error("RPR-PLATFORM-0001", "invalid or unsupported platform descriptor")
+    }
+    when platform[1] == "" or platform[2] == "" or platform[3] == "" {
+        yield layout_error("RPR-PLATFORM-0002", "platform identity, architecture and operating system are required")
+    }
+    when platform[5] != 4 and platform[5] != 8 {
+        yield layout_error("RPR-PLATFORM-0003", "v1 supports 32-bit or 64-bit pointers only")
+    }
+    when not layout_is_power_of_two(platform[6]) or platform[6] > platform[11] {
+        yield layout_error("RPR-PLATFORM-0004", "pointer alignment must be a supported power of two")
+    }
+    when platform[6] > platform[5] {
+        yield layout_error("RPR-PLATFORM-0005", "pointer alignment cannot exceed pointer size in v1")
+    }
+    when platform[7] != "little" and platform[7] != "big" {
+        yield layout_error("RPR-PLATFORM-0006", "endianness must be little or big")
+    }
+    when not layout_is_power_of_two(platform[11]) {
+        yield layout_error("RPR-PLATFORM-0007", "maximum alignment must be a power of two")
+    }
+    when platform[12] != 0 and (platform[12] < 1 or not layout_is_power_of_two(platform[13])) {
+        yield layout_error("RPR-PLATFORM-0008", "C long size and alignment are inconsistent")
+    }
+    when platform[12] == 0 and platform[16] != "profile_only" {
+        yield layout_error("RPR-PLATFORM-0009", "unknown C long layout requires a profile-only target")
+    }
+    when size(platform[14]) == 0 {
+        yield layout_error("RPR-PLATFORM-0010", "atomic width catalogue cannot be empty")
+    }
+    when size(platform[15]) == 0 {
+        yield layout_error("RPR-PLATFORM-0011", "CPU feature catalogue cannot be empty")
+    }
+    yield [true, platform, ""]
+}
+
+export craft platform_is_abi_ready(platform) {
+    make checked := platform_validate(platform)
+    when not checked[0] {
+        yield false
+    }
+    yield platform[8] != "unfinalized" and platform[9] != "unfinalized" and platform[16] == "declared"
+}
+
+export craft platform_satisfies(platform, architecture, minimum_pointer_size, endian, required_features) {
+    make checked := platform_validate(platform)
+    when not checked[0] {
+        yield checked
+    }
+    when platform[2] != architecture {
+        yield layout_error("RPR-PLATFORM-0012", "target architecture does not match the requirement")
+    }
+    when platform[5] < minimum_pointer_size {
+        yield layout_error("RPR-PLATFORM-0013", "target pointer width is below the required minimum")
+    }
+    when endian != "any" and platform[7] != endian {
+        yield layout_error("RPR-PLATFORM-0014", "target endianness does not match the requirement")
+    }
+    each feature in required_features {
+        when not platform_has_feature(platform, feature) {
+            yield layout_error("RPR-PLATFORM-0015", "required CPU feature is unavailable: " ++ feature)
+        }
+    }
+    yield [true, platform, ""]
+}
+
+export craft primitive_layout(type_name, platform) {
+    when type_name == "bool" or type_name == "i8" or type_name == "u8" or type_name == "c_char" {
+        yield layout_value(1, 1, [])
+    }
+    when type_name == "i16" or type_name == "u16" or type_name == "c_short" {
+        yield layout_value(2, 2, [])
+    }
+    when type_name == "i32" or type_name == "u32" or type_name == "f32" or type_name == "c_int" {
+        yield layout_value(4, 4, [])
+    }
+    when type_name == "i64" or type_name == "u64" or type_name == "f64" or type_name == "c_longlong" {
+        yield layout_value(8, 8, [])
+    }
+    when type_name == "usize" or type_name == "isize" or type_name == "pointer" {
+        yield layout_value(platform[5], platform[6], [])
+    }
+    when type_name == "c_long" {
+        when platform[12] == 0 {
+            yield layout_error("RPR-LAYOUT-0001", "C long is not defined for this platform profile")
+        }
+        yield layout_value(platform[12], platform[13], [])
+    }
+    yield layout_error("RPR-LAYOUT-0002", "unknown primitive type: " ++ type_name)
+}
+
+export craft type_layout(type_descriptor, platform, definitions, stack) {
+    when size(type_descriptor) == 0 {
+        yield layout_error("RPR-LAYOUT-0003", "type descriptor is empty")
+    }
+
+    when type_descriptor[0] == "TYPE_V1" {
+        when type_descriptor[1] == "primitive" {
+            yield primitive_layout(type_descriptor[2], platform)
+        }
+        when type_descriptor[1] == "named" {
+            make name := type_descriptor[2]
+            when list_has(stack, name) {
+                yield layout_error("RPR-LAYOUT-0004", "recursive by-value type has no finite layout: " ++ name)
+            }
+            make definition := find_type_definition(name, definitions)
+            when size(definition) == 0 {
+                yield layout_error("RPR-LAYOUT-0005", "unknown named type: " ++ name)
+            }
+            yield type_layout(definition, platform, definitions, push(stack, name))
+        }
+        when type_descriptor[1] == "pointer" {
+            yield layout_value(platform[5], platform[6], [])
+        }
+        when type_descriptor[1] == "array" {
+            make count := type_descriptor[3]
+            when count < 1 or count > 9223372036854775807 {
+                yield layout_error("RPR-LAYOUT-0006", "array length must be a positive representable integer")
+            }
+            make element := type_layout(type_descriptor[2], platform, definitions, stack)
+            when not element[0] {
+                yield element
+            }
+            when element[1][0] != 0 and count > 9223372036854775807 // element[1][0] {
+                yield layout_error("RPR-LAYOUT-0007", "array size overflows the target layout range")
+            }
+            yield layout_value(element[1][0] * count, element[1][1], [])
+        }
+        yield layout_error("RPR-LAYOUT-0008", "unknown type descriptor kind: " ++ type_descriptor[1])
+    }
+
+    when type_descriptor[0] == "STRUCT_V1" {
+        yield layout_record(type_descriptor, false, platform, definitions, stack)
+    }
+    when type_descriptor[0] == "UNION_V1" {
+        yield layout_record(type_descriptor, true, platform, definitions, stack)
+    }
+    when type_descriptor[0] == "ENUM_V1" {
+        make underlying := type_layout(type_descriptor[2], platform, definitions, stack)
+        when not underlying[0] {
+            yield underlying
+        }
+        make variants := type_descriptor[3]
+        when size(variants) == 0 {
+            yield layout_error("RPR-LAYOUT-0009", "enum must contain at least one variant")
+        }
+        vary variant_names := []
+        vary variant_values := []
+        each variant in variants {
+            when size(variant) != 3 or variant[0] != "VARIANT_V1" {
+                yield layout_error("RPR-LAYOUT-0010", "invalid enum variant descriptor")
+            }
+            when list_has(variant_names, variant[1]) or list_has(variant_values, variant[2]) {
+                yield layout_error("RPR-LAYOUT-0011", "enum variant names and values must be unique")
+            }
+            change variant_names := push(variant_names, variant[1])
+            change variant_values := push(variant_values, variant[2])
+        }
+        yield underlying
+    }
+    when type_descriptor[0] == "DISTINCT_V1" {
+        yield type_layout(type_descriptor[2], platform, definitions, stack)
+    }
+    when type_descriptor[0] == "OPAQUE_V1" {
+        when type_descriptor[2] < 1 or not layout_is_power_of_two(type_descriptor[3]) {
+            yield layout_error("RPR-LAYOUT-0012", "opaque type requires positive size and power-of-two alignment")
+        }
+        when type_descriptor[3] > platform[11] {
+            yield layout_error("RPR-LAYOUT-0013", "opaque type alignment exceeds the target maximum")
+        }
+        yield layout_value(type_descriptor[2], type_descriptor[3], [])
+    }
+    yield layout_error("RPR-LAYOUT-0014", "unknown aggregate type descriptor")
+}
+
+export craft layout_record(definition, is_union, platform, definitions, stack) {
+    when size(definition) != 5 {
+        yield layout_error("RPR-LAYOUT-0015", "aggregate descriptor has an invalid shape")
+    }
+    make name := definition[1]
+    make representation := definition[2]
+    make requested_align := definition[3]
+    make fields := definition[4]
+    when representation != "native" and representation != "C" and representation != "packed" {
+        yield layout_error("RPR-LAYOUT-0016", "representation must be native, C or packed")
+    }
+    when size(fields) == 0 {
+        yield layout_error("RPR-LAYOUT-0017", "empty aggregates are not part of typed layout v1")
+    }
+    when requested_align != 0 and not layout_is_power_of_two(requested_align) {
+        yield layout_error("RPR-LAYOUT-0018", "explicit alignment must be a power of two")
+    }
+    when requested_align > platform[11] {
+        yield layout_error("RPR-LAYOUT-0019", "explicit alignment exceeds the platform maximum")
+    }
+
+    vary names := []
+    vary offsets := []
+    vary current_size := 0
+    vary aggregate_align := 1
+
+    each field in fields {
+        when size(field) != 3 or field[0] != "FIELD_V1" {
+            yield layout_error("RPR-LAYOUT-0020", "invalid aggregate field descriptor")
+        }
+        when list_has(names, field[1]) {
+            yield layout_error("RPR-LAYOUT-0021", "duplicate aggregate field: " ++ field[1])
+        }
+        change names := push(names, field[1])
+
+        make field_result := type_layout(field[2], platform, definitions, stack)
+        when not field_result[0] {
+            yield field_result
+        }
+        make field_size := field_result[1][0]
+        make natural_align := field_result[1][1]
+        vary effective_align := natural_align
+        when representation == "packed" {
+            change effective_align := 1
+        }
+
+        when effective_align > aggregate_align {
+            change aggregate_align := effective_align
+        }
+
+        when is_union {
+            change offsets := push(offsets, 0)
+            when field_size > current_size {
+                change current_size := field_size
+            }
+        } otherwise {
+            make field_offset := layout_align_up(current_size, effective_align)
+            when field_offset < 0 or field_size > 9223372036854775807 - field_offset {
+                yield layout_error("RPR-LAYOUT-0022", "aggregate field layout overflows the target size range")
+            }
+            change offsets := push(offsets, field_offset)
+            change current_size := field_offset + field_size
+        }
+    }
+
+    when requested_align > aggregate_align {
+        change aggregate_align := requested_align
+    }
+    when aggregate_align > platform[11] {
+        yield layout_error("RPR-LAYOUT-0023", "aggregate alignment exceeds the platform maximum")
+    }
+    make final_size := layout_align_up(current_size, aggregate_align)
+    when final_size < 0 {
+        yield layout_error("RPR-LAYOUT-0024", "aggregate tail padding overflows the target size range")
+    }
+    yield layout_value(final_size, aggregate_align, offsets)
+}
+
+export craft type_layout_with_metadata(type_descriptor, platform, definitions) {
+    make checked := platform_validate(platform)
+    when not checked[0] {
+        yield checked
+    }
+    make result := type_layout(type_descriptor, platform, definitions, [])
+    when not result[0] {
+        yield result
+    }
+    yield [
+        true,
+        [
+            "LAYOUT_V1", platform[1], result[1][0], result[1][1],
+            result[1][2], platform[7], platform[8], platform[9],
+            platform[16]
+        ],
+        ""
+    ]
+}
+
+export craft type_definitions_validate(definitions) {
+    vary names := []
+    each definition in definitions {
+        when size(definition) < 2 {
+            yield layout_error("RPR-TYPE-0001", "type definition has an invalid shape")
+        }
+        when list_has(names, definition[1]) {
+            yield layout_error("RPR-TYPE-0002", "duplicate nominal type: " ++ definition[1])
+        }
+        change names := push(names, definition[1])
+    }
+    yield [true, names, ""]
+}
+
+export craft platform_registry_validate(platforms) {
+    vary ids := []
+    each platform in platforms {
+        make checked := platform_validate(platform)
+        when not checked[0] {
+            yield checked
+        }
+        when list_has(ids, platform[1]) {
+            yield layout_error("RPR-PLATFORM-0016", "duplicate platform identifier: " ++ platform[1])
+        }
+        change ids := push(ids, platform[1])
+    }
+    yield [true, ids, ""]
+}
