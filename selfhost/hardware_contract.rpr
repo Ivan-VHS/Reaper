@@ -15,15 +15,15 @@ craft mmio_access_valid(access) {
 }
 
 craft mmio_region_valid(region) {
-    when size(region) != 6 { yield false }
+    when size(region) != 7 { yield false }
     when region[0] != "mmio" or size(region[1]) == 0 { yield false }
     when region[2] < 0 or region[3] < 1 or region[4] < 1 { yield false }
     when region[2] % region[4] != 0 { yield false }
-    when size(region[5]) == 0 { yield false }
+    when size(region[5]) == 0 or size(region[6]) == 0 { yield false }
 
     vary index := 0
-    loop while index < size(region[5]) {
-        make register := region[5][index]
+    loop while index < size(region[6]) {
+        make register := region[6][index]
         when size(register) != 5 { yield false }
         when size(register[0]) == 0 { yield false }
         make width_bytes := mmio_width_bytes(register[2])
@@ -33,8 +33,8 @@ craft mmio_region_valid(region) {
         when register[1] + width_bytes > region[3] { yield false }
         vary previous := 0
         loop while previous < index {
-            when region[5][previous][0] == register[0] { yield false }
-            when region[5][previous][1] == register[1] { yield false }
+            when region[6][previous][0] == register[0] { yield false }
+            when region[6][previous][1] == register[1] { yield false }
             change previous := previous + 1
         }
         change index := index + 1
@@ -44,8 +44,8 @@ craft mmio_region_valid(region) {
 
 craft mmio_register_find(region, register_name) {
     vary index := 0
-    loop while index < size(region[5]) {
-        when region[5][index][0] == register_name { yield ["OK", index] }
+    loop while index < size(region[6]) {
+        when region[6][index][0] == register_name { yield ["OK", index] }
         change index := index + 1
     }
     yield ["ERR", "MMIO register not declared", register_name]
@@ -53,10 +53,10 @@ craft mmio_register_find(region, register_name) {
 
 craft mmio_access_allowed(region, register_name, operation, granted_capability) {
     when not mmio_region_valid(region) { yield ["ERR", "MMIO region descriptor is invalid"] }
-    when granted_capability != region[4] { yield ["ERR", "MMIO capability denied"] }
+    when granted_capability != region[5] { yield ["ERR", "MMIO capability denied"] }
     make found := mmio_register_find(region, register_name)
     when found[0] != "OK" { yield found }
-    make access := region[5][found[1]][3]
+    make access := region[6][found[1]][3]
     when operation == "read" {
         when access == "write_only" { yield ["ERR", "register is not readable", register_name] }
         yield ["OK", register_name]
@@ -109,19 +109,19 @@ craft irq_handler_effects_valid(effects, step_budget) {
     yield ["OK", step_budget]
 }
 
-make gpio := ["mmio", "gpio0", 402653184, 256, 4, [
+make gpio := ["mmio", "gpio0", 402653184, 256, 4, "gpio0.control", [
     ["mode", 0, 32, "read_write", 0],
     ["input", 16, 32, "read_only", 0],
     ["output", 20, 32, "write_one_to_set", 0]
 ]]
 assert(mmio_region_valid(gpio), "valid MMIO descriptor rejected")
-assert(mmio_access_allowed(gpio, "input", "read", 4)[0] == "OK", "read-only register read denied")
-assert(mmio_access_allowed(gpio, "input", "write", 4)[0] == "ERR", "write to read-only register allowed")
-assert(mmio_access_allowed(gpio, "output", "write", 4)[0] == "OK", "write-one-to-set denied")
-assert(mmio_access_allowed(gpio, "mode", "read", 8)[0] == "ERR", "wrong MMIO capability accepted")
-assert(not mmio_region_valid(["mmio", "bad", 3, 8, 4, [["unaligned", 1, 32, "read_write", 0]]]), "unaligned MMIO register accepted")
-assert(not mmio_region_valid(["mmio", "bad", 0, 4, 1, [["outside", 4, 32, "read_write", 0]]]), "out-of-region register accepted")
-assert(not mmio_region_valid(["mmio", "bad", 0, 8, 1, [["x", 0, 24, "read_write", 0]]]), "unsupported register width accepted")
+assert(mmio_access_allowed(gpio, "input", "read", "gpio0.control")[0] == "OK", "read-only register read denied")
+assert(mmio_access_allowed(gpio, "input", "write", "gpio0.control")[0] == "ERR", "write to read-only register allowed")
+assert(mmio_access_allowed(gpio, "output", "write", "gpio0.control")[0] == "OK", "write-one-to-set denied")
+assert(mmio_access_allowed(gpio, "mode", "read", "other.capability")[0] == "ERR", "wrong MMIO capability accepted")
+assert(not mmio_region_valid(["mmio", "bad", 3, 8, 4, "bad.control", [["unaligned", 1, 32, "read_write", 0]]]), "unaligned MMIO register accepted")
+assert(not mmio_region_valid(["mmio", "bad", 0, 4, 1, "bad.control", [["outside", 4, 32, "read_write", 0]]]), "out-of-region register accepted")
+assert(not mmio_region_valid(["mmio", "bad", 0, 8, 1, "bad.control", [["x", 0, 24, "read_write", 0]]]), "unsupported register width accepted")
 
 make dma := dma_buffer_make(7, 4096, 64, "bidirectional")
 assert(dma[0] == "OK", "valid DMA descriptor rejected")
