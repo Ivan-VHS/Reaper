@@ -22,6 +22,8 @@ class FrameworkPortfolioCliTests(unittest.TestCase):
         result = json.loads(stdout)
         self.assertEqual(result["module_count"], 60)
         self.assertEqual(result["integration_surface_count"], 19)
+        self.assertEqual(result["external_framework_count"], 20)
+        self.assertEqual(result["total_discoverable_entries"], 99)
 
     def test_framework_info_finds_a_new_module(self) -> None:
         code, stdout, stderr = self.run_cli("--framework-info", "Vorke")
@@ -29,6 +31,14 @@ class FrameworkPortfolioCliTests(unittest.TestCase):
         result = json.loads(stdout)
         self.assertEqual(result["id"], "framework.vorke")
         self.assertEqual(result["record_type"], "framework")
+
+    def test_framework_info_finds_external_rforge_archetype(self) -> None:
+        code, stdout, stderr = self.run_cli("--framework-info", "Plague")
+        self.assertEqual(code, 0, stderr)
+        result = json.loads(stdout)
+        self.assertEqual(result["record_type"], "adjacent_framework")
+        self.assertEqual(result["collection_id"], "rforge")
+        self.assertEqual(result["status"], "source_present_runtime_validation_pending")
 
     def test_framework_search_includes_integration_surfaces(self) -> None:
         code, stdout, stderr = self.run_cli("--framework-search", "federation")
