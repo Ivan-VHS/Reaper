@@ -18,7 +18,7 @@ from .parser import Node, parse
 
 ANY = "Any"
 NOTHING = "Nothing"
-NUMERIC = {"Int", "Float"}
+NUMERIC = {"Int", "Float", "Number", "i8", "u8", "i16", "u16", "i32", "u32", "i64", "u64", "isize", "usize"}
 
 BUILTIN_ARITY: dict[str, tuple[int, int | None]] = {
     "divmod_euclidean": (2, 2), "euclidean_divmod": (2, 2),
@@ -188,6 +188,20 @@ class TypeChecker:
                 for effect in effects or ():
                     if effect not in SUPPORTED_EFFECTS:
                         self._report(child, "RPR-EFF0001", f"unknown effect '{effect}'")
+                for declared_type in [*(parameter_types or ()), metadata.get("return_type")]:
+                    if declared_type is not None:
+                        self._validate_type_expression(declared_type, child)
+
+    def _validate_type_expression(self, type_name: str, node: Node) -> None:
+        parts = self._generic_parts(type_name)
+        if parts is None:
+            return
+        name, arguments = parts
+        expected = {"Option": 1, "Result": 2, "List": 1, "Map": 2, "Stream": 1}
+        if name in expected and len(arguments) != expected[name]:
+            self._report(node, "RPR-T0017", f"{name} expects {expected[name]} generic type argument(s), got {len(arguments)}")
+        for argument in arguments:
+            self._validate_type_expression(argument, node)
 
     def _check_function(self, node: Node) -> None:
         name, parameters = node.value
@@ -408,7 +422,7 @@ class TypeChecker:
                 left = self._generic_parts(argument_types[0])
                 right = self._generic_parts(argument_types[1])
                 if left and right and left[0] == right[0] == "Result":
-                    return f"Result<List<{left[1][0]}, {right[1][0]}>, Any>"
+                    return "Result<List[Any], Any>"
                 return "Result<List[Any]>, Any>"
             if name == "zip3_ok":
                 return "Result<List[Any], Any>"
