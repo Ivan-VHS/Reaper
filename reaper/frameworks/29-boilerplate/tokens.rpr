@@ -1,0 +1,26 @@
+# BoilerplateTokens — validate explicit template replacement tokens.
+
+export craft valid_boilerplate_tokens(tokens) {
+    when kind(tokens) != "list" or size(tokens) == 0 {
+        yield false
+    }
+    craft valid_token(token) {
+        when kind(token) != "list" or size(token) != 2 {
+            yield false
+        }
+        when kind(token[0]) != "text" or kind(token[1]) != "text" {
+            yield false
+        }
+        yield starts_with(token[0], "{{") and ends_with(token[0], "}}") and size(token[0]) > 4 and size(trim(token[1])) > 0
+    }
+    craft invalid_token(token) {
+        yield not valid_token(token)
+    }
+    craft token_name(token) {
+        yield token[0]
+    }
+    when size(keep(tokens, invalid_token)) != 0 {
+        yield false
+    }
+    yield size(unique(map(tokens, token_name))) == size(tokens)
+}

@@ -1,0 +1,14 @@
+# BaseLayerCompatibility — check an offered version against inclusive bounds.
+
+export craft base_layer_version_compatible(offered, minimum, maximum) {
+    when kind(offered) != "number" or kind(minimum) != "number" or kind(maximum) != "number" {
+        yield false
+    }
+    when offered % 1 != 0 or minimum % 1 != 0 or maximum % 1 != 0 {
+        yield false
+    }
+    when minimum < 0 or maximum < minimum {
+        yield false
+    }
+    yield offered >= minimum and offered <= maximum
+}

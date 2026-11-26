@@ -1,0 +1,31 @@
+# InterlayerTypedFlow — check adjacent source/output and target/input types.
+
+export craft valid_interlayer_typed_flow(stages) {
+    when kind(stages) != "list" or size(stages) == 0 {
+        yield false
+    }
+    craft valid_stage(stage) {
+        when kind(stage) != "list" or size(stage) != 3 {
+            yield false
+        }
+        each field in stage {
+            when kind(field) != "text" or size(trim(field)) == 0 {
+                yield false
+            }
+        }
+        yield true
+    }
+    craft invalid_stage(stage) {
+        yield not valid_stage(stage)
+    }
+    when size(keep(stages, invalid_stage)) != 0 {
+        yield false
+    }
+    vary valid := true
+    each index in range(0, size(stages) - 1) {
+        when stages[index][2] != stages[index + 1][1] {
+            change valid := false
+        }
+    }
+    yield valid
+}

@@ -1,0 +1,14 @@
+# TemplateOutputPath — validate a safe relative output path.
+
+export craft safe_template_output_path(path) {
+    when kind(path) != "text" or size(trim(path)) == 0 {
+        yield false
+    }
+    when starts_with(path, "/") or ends_with(path, "/") or contains(path, ":") or contains(path, "\\\\") {
+        yield false
+    }
+    craft invalid_segment(segment) {
+        yield segment == "" or segment == "." or segment == ".."
+    }
+    yield size(keep(split(path, "/"), invalid_segment)) == 0
+}

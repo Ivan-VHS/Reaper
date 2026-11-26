@@ -1,0 +1,30 @@
+# InterlayerAdapterContract — explicit typed adapter between distinct layers.
+# [adapter_name, source_layer, target_layer, contract_version, lossless].
+
+export craft valid_interlayer_adapter_contracts(adapters) {
+    when kind(adapters) != "list" or size(adapters) == 0 {
+        yield false
+    }
+    craft valid_adapter(adapter) {
+        when kind(adapter) != "list" or size(adapter) != 5 {
+            yield false
+        }
+        when kind(adapter[0]) != "text" or kind(adapter[1]) != "text" or kind(adapter[2]) != "text" or kind(adapter[3]) != "number" or kind(adapter[4]) != "boolean" {
+            yield false
+        }
+        when size(trim(adapter[0])) == 0 or size(trim(adapter[1])) == 0 or size(trim(adapter[2])) == 0 or adapter[1] == adapter[2] {
+            yield false
+        }
+        yield adapter[3] % 1 == 0 and adapter[3] >= 1
+    }
+    craft invalid_adapter(adapter) {
+        yield not valid_adapter(adapter)
+    }
+    craft adapter_name(adapter) {
+        yield adapter[0]
+    }
+    when size(keep(adapters, invalid_adapter)) != 0 {
+        yield false
+    }
+    yield size(unique(map(adapters, adapter_name))) == size(adapters)
+}

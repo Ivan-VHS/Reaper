@@ -1,0 +1,20 @@
+# SkeletonEntrypoint — validate an entrypoint file path and exported symbol.
+
+export craft valid_skeleton_entrypoint(entrypoint) {
+    when kind(entrypoint) != "list" or size(entrypoint) != 2 {
+        yield false
+    }
+    when kind(entrypoint[0]) != "text" or kind(entrypoint[1]) != "text" {
+        yield false
+    }
+    when size(trim(entrypoint[1])) == 0 {
+        yield false
+    }
+    when starts_with(entrypoint[0], "/") or contains(entrypoint[0], ":") or contains(entrypoint[0], "\\\\") {
+        yield false
+    }
+    craft invalid_segment(segment) {
+        yield segment == "" or segment == "." or segment == ".."
+    }
+    yield size(keep(split(entrypoint[0], "/"), invalid_segment)) == 0
+}

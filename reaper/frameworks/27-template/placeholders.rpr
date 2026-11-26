@@ -1,0 +1,35 @@
+# TemplatePlaceholders — report required placeholders without a supplied value.
+
+export craft template_missing_placeholders(required, values) {
+    when kind(required) != "list" or kind(values) != "list" {
+        yield []
+    }
+    craft invalid_name(value) {
+        yield kind(value) != "text" or size(trim(value)) == 0
+    }
+    craft valid_pair(pair) {
+        when kind(pair) != "list" or size(pair) != 2 {
+            yield false
+        }
+        when kind(pair[0]) != "text" or kind(pair[1]) != "text" {
+            yield false
+        }
+        yield size(trim(pair[0])) > 0
+    }
+    craft invalid_pair(pair) {
+        yield not valid_pair(pair)
+    }
+    craft pair_name(pair) {
+        yield pair[0]
+    }
+    when size(keep(required, invalid_name)) != 0 or size(unique(required)) != size(required) {
+        yield []
+    }
+    when size(keep(values, invalid_pair)) != 0 or size(unique(map(values, pair_name))) != size(values) {
+        yield []
+    }
+    craft missing(name) {
+        yield not contains(map(values, pair_name), name)
+    }
+    yield keep(required, missing)
+}

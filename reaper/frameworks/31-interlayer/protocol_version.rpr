@@ -1,0 +1,19 @@
+# InterlayerProtocolVersion — producer and consumer must share a supported major.
+
+export craft interlayer_protocol_compatible(producer, consumer) {
+    craft valid_version(version) {
+        when kind(version) != "list" or size(version) != 2 {
+            yield false
+        }
+        each part in version {
+            when kind(part) != "number" or part % 1 != 0 or part < 0 {
+                yield false
+            }
+        }
+        yield true
+    }
+    when not valid_version(producer) or not valid_version(consumer) {
+        yield false
+    }
+    yield producer[0] == consumer[0]
+}

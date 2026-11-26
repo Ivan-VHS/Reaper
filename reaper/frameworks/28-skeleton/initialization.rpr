@@ -1,0 +1,14 @@
+# SkeletonInitialization — validate canonical core-first, entry-last initialization order.
+
+export craft valid_skeleton_initialization_order(order) {
+    when kind(order) != "list" or size(order) < 2 {
+        yield false
+    }
+    craft invalid_name(name) {
+        yield kind(name) != "text" or size(trim(name)) == 0
+    }
+    when size(keep(order, invalid_name)) != 0 or size(unique(order)) != size(order) {
+        yield false
+    }
+    yield order[0] == "core" and order[size(order) - 1] == "entry"
+}

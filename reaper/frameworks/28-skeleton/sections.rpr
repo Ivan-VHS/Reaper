@@ -1,0 +1,20 @@
+# SkeletonSections — report missing required project sections.
+
+export craft skeleton_missing_sections(required, present) {
+    when kind(required) != "list" or kind(present) != "list" {
+        yield []
+    }
+    craft invalid_name(value) {
+        yield kind(value) != "text" or size(trim(value)) == 0
+    }
+    when size(keep(required, invalid_name)) != 0 or size(keep(present, invalid_name)) != 0 {
+        yield []
+    }
+    when size(unique(required)) != size(required) or size(unique(present)) != size(present) {
+        yield []
+    }
+    craft missing(section) {
+        yield not contains(present, section)
+    }
+    yield keep(required, missing)
+}

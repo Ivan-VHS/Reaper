@@ -49,11 +49,11 @@ Each numbered row is one independent implementation batch with five framework sl
 | 24 | Пакет | 5 | Tests first — implementation next |
 | 25 | Стек | 5 | Tests first — implementation next |
 | 26 | Технологический стек | 5 | Tests first — implementation next |
-| 27 | Шаблон | 5 | Queued |
-| 28 | Скелет | 5 | Queued |
-| 29 | Бойлерплейт | 5 | Queued |
-| 30 | Базовый слой | 5 | Queued |
-| 31 | Прослойка | 5 | Queued |
+| 27 | Шаблон | 5 | Tests first — implementation next |
+| 28 | Скелет | 5 | Tests first — implementation next |
+| 29 | Бойлерплейт | 5 | Tests first — implementation next |
+| 30 | Базовый слой | 5 | Tests first — implementation next |
+| 31 | Прослойка | 5 | Tests first — implementation next |
 | 32 | Мидлвар | 5 | Queued |
 | 33 | Связующее ПО | 5 | Queued |
 | 34 | Контейнер | 5 | Queued |
