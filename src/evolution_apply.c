@@ -10,6 +10,7 @@ typedef struct {
     void *staged;
     void *rollback;
     char path[REAPER_EVOLUTION_APPLY_MAX_PATH];
+    char canonical_path[REAPER_EVOLUTION_APPLY_MAX_PATH];
     int committed;
 } ApplyEntry;
 
