@@ -88,7 +88,6 @@ typedef struct {
     const char *base_revision;
     const void *signed_grant;       /* Opaque, host-issued token; never parsed by this engine. */
     size_t signed_grant_size;
-    uint64_t now_unix_seconds;
     const ReaperSourcePatch *patches;
     size_t patch_count;
     const char *const *check_ids;   /* Registered check IDs, never shell commands. */
