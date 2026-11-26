@@ -26,6 +26,14 @@ class SelfHostingBootstrapTests(unittest.TestCase):
         self._run_selfhost_program("selfhost/program_parser.rpr", "SELFHOST_PROGRAM_PARSER_OK")
 
 
+    def test_reaper_written_typed_records_and_platform_abi_run(self) -> None:
+        program = Path(__file__).resolve().parents[1] / "selfhost/type_declarations.rpr"
+        output: list[str] = []
+        Interpreter(output=output.append).run(program.read_text(encoding="utf-8"), str(program))
+        self.assertEqual(output[-1], "SELFHOST_TYPE_DECLARATIONS_OK")
+        self.assertIn("SELFHOST_LEXER_OK", output)
+        self.assertIn("SELFHOST_PROGRAM_PARSER_OK", output)
+
     def test_program_parser_matches_reference_ast_for_full_statement_sample(self) -> None:
         source = '''import "math.rpr" as math
 export make base := 10
