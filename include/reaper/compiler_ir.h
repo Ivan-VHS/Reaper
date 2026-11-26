@@ -1,6 +1,8 @@
 #ifndef REAPER_COMPILER_IR_H
 #define REAPER_COMPILER_IR_H
 
+#include "reaper/ast.h"
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -94,9 +96,29 @@ typedef struct {
 
 typedef struct {
     size_t node_index;
+    ReaperCompilerSourceSpan span;
     char message[192];
 } ReaperCompilerIrError;
 
+/*
+ * Lower the current native expression AST into typed HIR.
+ * Supported source nodes: i64 literals, finite decimal literals, decoded
+ * strings, booleans, unary i64 +/- and binary i64 + - * /.
+ * Identifiers, null, calls, collections and unsupported operators fail
+ * explicitly with a source-located diagnostic.
+ *
+ * The AST is borrowed and remains caller-owned. The output array is also
+ * caller-owned and must hold ast->length nodes. The returned HIR borrows
+ * that output storage.
+ */
+int reaper_compiler_ir_lower_ast_to_hir(
+    const ReaperAst *ast,
+    const char *source_name,
+    ReaperCompilerIrNode *output,
+    size_t output_capacity,
+    ReaperCompilerIrModule *hir,
+    ReaperCompilerIrError *error
+);
 int reaper_compiler_ir_verify(
     const ReaperCompilerIrModule *module,
     ReaperCompilerIrStage expected_stage,
