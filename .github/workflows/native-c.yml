@@ -24,6 +24,8 @@ jobs:
         run: |
           ./build/reaper-c --version
           ./build/reaper-c --evolution-status
+          ./build/reaper-c --frameworks
+          ./build/reaper-c --framework Jevron
           ./build/reaper-c --tokens examples/hello.rpr
           ./build/reaper-c --capabilities
           ./build/reaper-c --capability operandu

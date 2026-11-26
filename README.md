@@ -15,6 +15,7 @@ Reaper is a systems-programming language and local development workbench for com
 - Reaper source language, lexer/parser, reference runtime and diagnostics.
 - CLI, REPL, Windows Studio foundation, LSP and DAP services.
 - Experimental native C17 implementation; it is not yet feature-equivalent to the reference runtime.
+- Native framework-family registry with 66 Latin-named repository-engineering profiles, lookup and evidence gates; see [Framework Family 66](docs/FRAMEWORK_FAMILY_66.md).
 - NOO TAH delegates JavaScript execution to the official Node.js runtime.
 - Jora application scaffolding and capability composition; catalog packs remain specifications, not installable editors.
 
@@ -45,6 +46,8 @@ python -m unittest discover -s tests -v
 ```
 
 ## Architecture and status
+
+The native CLI exposes `reaper-c --frameworks` and `reaper-c --framework NAME` for framework discovery. Profile assessment is evidence-gated and review-only; it does not modify files or merge changes.
 
 The .rpr reference runtime, partial native C17 work, developer tools and external runtime adapters are separate tracks. A catalogue entry or planned capability is not proof of implementation.
 
