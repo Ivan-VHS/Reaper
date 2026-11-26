@@ -33,7 +33,11 @@ craft keyword_kind(word) {
                                                                 when word == "and" { yield "AND" } otherwise {
                                                                     when word == "or" { yield "OR" } otherwise {
                                                                         when word == "not" { yield "NOT" } otherwise {
-                                                                            yield "IDENT"
+                                                                            when word == "struct" { yield "STRUCT" } otherwise {
+                                                                                when word == "platform" { yield "PLATFORM" } otherwise {
+                                                                                    yield "IDENT"
+                                                                                }
+                                                                            }
                                                                         }
                                                                     }
                                                                 }
@@ -54,7 +58,7 @@ craft keyword_kind(word) {
     }
 }
 
-craft tokenize(source) {
+export craft tokenize(source) {
     vary index := 0
     vary line := 1
     vary column := 1
@@ -164,7 +168,7 @@ craft tokenize(source) {
                 yield [pair, pair, start_line, start_column]
             } otherwise {
                 make char := current(0)
-                when char == "+" or char == "-" or char == "*" or char == "/" or char == "%" or char == "<" or char == ">" or char == "(" or char == ")" or char == "{" or char == "}" or char == "[" or char == "]" or char == "," or char == "=" {
+                when char == "+" or char == "-" or char == "*" or char == "/" or char == "%" or char == "<" or char == ">" or char == "(" or char == ")" or char == "{" or char == "}" or char == "[" or char == "]" or char == "," or char == ":" or char == "=" {
                     make ignored := advance()
                     yield [char, char, start_line, start_column]
                 } otherwise {
