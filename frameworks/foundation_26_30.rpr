@@ -1,0 +1,252 @@
+# Sixth group of Reaper foundations.
+import "foundation_21_25.rpr" as previous
+
+export make FOUNDATION_SIXTH_SCHEMA := "reaper.foundation.sixth.v1"
+export make FOUNDATION_SIXTH_VERSION := 1
+
+export craft technology_stack_profiles() {
+    yield [
+        ["hosted-c17-x86_64", "x86_64-host", "host-c-abi", "gcc-or-clang", "partial"],
+        ["windows-msvc-x64", "x86_64-windows", "microsoft-x64", "cl-or-clang-cl", "partial"],
+        ["armv7m-firmware", "armv7-m", "AAPCS", "arm-none-eabi-gcc", "planned"],
+        ["riscv64-firmware", "riscv64", "RISC-V-psABI-LP64", "riscv64-unknown-elf-gcc", "planned"]
+    ]
+}
+
+craft technology_stack_find(identifier) {
+    vary found := nothing
+    each profile in technology_stack_profiles() {
+        when profile[0] == identifier {
+            change found := profile
+        }
+    }
+    yield found
+}
+
+export craft technology_stack_validate_profile(profile) {
+    when kind(profile) != "list" or size(profile) != 5 {
+        yield false
+    }
+    make known := technology_stack_find(profile[0])
+    when known == nothing or known[4] == "planned" {
+        yield false
+    }
+    yield profile == known
+}
+
+export craft technology_stack_validate_selection(identifier) {
+    make profile := technology_stack_find(identifier)
+    when profile == nothing {
+        yield false
+    }
+    yield profile[4] != "planned"
+}
+
+export craft technology_stack_requirements() {
+    yield [
+        ["target", "target triple and architecture"],
+        ["abi", "calling convention and data layout"],
+        ["compiler", "identified compiler family and version"],
+        ["linker", "explicit linker and script policy"],
+        ["runtime", "hosted or freestanding runtime profile"],
+        ["evidence", "build and conformance evidence"]
+    ]
+}
+
+export craft template_catalog() {
+    yield [
+        ["cli-tool", ["project_name", "entry_module"], "implemented"],
+        ["library-module", ["module_name", "export_name"], "implemented"],
+        ["test-suite", ["test_name", "source_module"], "partial"],
+        ["embedded-workspace", ["board_id", "target_profile"], "partial"]
+    ]
+}
+
+craft template_find(identifier) {
+    vary found := nothing
+    each template in template_catalog() {
+        when template[0] == identifier {
+            change found := template
+        }
+    }
+    yield found
+}
+
+export craft template_validate_request(request) {
+    when kind(request) != "list" or size(request) != 2 or kind(request[1]) != "list" {
+        yield false
+    }
+    make template := template_find(request[0])
+    when template == nothing {
+        yield false
+    }
+    vary keys := []
+    each binding in request[1] {
+        when kind(binding) != "list" or size(binding) != 2 or kind(binding[0]) != "text" or kind(binding[1]) != "text" or binding[0] == "" or binding[1] == "" {
+            yield false
+        }
+        change keys := push(keys, binding[0])
+    }
+    when size(unique(keys)) != size(keys) or size(keys) != size(template[1]) {
+        yield false
+    }
+    each required in template[1] {
+        when not contains(keys, required) {
+            yield false
+        }
+    }
+    yield true
+}
+
+export craft template_plan(request) {
+    when not template_validate_request(request) {
+        yield nothing
+    }
+    yield [request[0], template_find(request[0])[1], request[1]]
+}
+
+export craft skeleton_alias_catalog() {
+    yield [
+        ["foundation.skeleton.alias.v1", "Skeleton", "foundation.skeleton.v1", "canonical-alias"],
+        ["foundation.scaffold.alias.v1", "Scaffold", "foundation.scaffold.v1", "canonical-alias"]
+    ]
+}
+
+export craft skeleton_alias_resolve(name) {
+    vary canonical := nothing
+    each alias in skeleton_alias_catalog() {
+        when alias[1] == name {
+            change canonical := alias[2]
+        }
+    }
+    yield canonical
+}
+
+export craft skeleton_alias_validate(alias) {
+    yield contains(skeleton_alias_catalog(), alias)
+}
+
+export craft boilerplate_catalog() {
+    yield [
+        ["minimal-entry", "program", "emit 42", "implemented"],
+        ["identity-function", "function", "craft identity(value) { yield value }", "implemented"],
+        ["exported-constant", "module", "export make answer := 42", "implemented"],
+        ["bounded-list-flow", "flow", "make values := [1, 2, 3]\nemit values :: sum()", "implemented"]
+    ]
+}
+
+craft boilerplate_find(identifier) {
+    vary found := nothing
+    each snippet in boilerplate_catalog() {
+        when snippet[0] == identifier {
+            change found := snippet
+        }
+    }
+    yield found
+}
+
+export craft boilerplate_validate_selection(selection) {
+    when kind(selection) != "list" {
+        yield false
+    }
+    each identifier in selection {
+        when boilerplate_find(identifier) == nothing {
+            yield false
+        }
+    }
+    yield size(unique(selection)) == size(selection)
+}
+
+export craft boilerplate_source(identifier) {
+    make snippet := boilerplate_find(identifier)
+    when snippet == nothing {
+        yield nothing
+    }
+    yield snippet[2]
+}
+
+export craft base_layer_catalog() {
+    yield [
+        ["core-syntax", "implemented", "reaper/lexer.py; reaper/parser.py"],
+        ["scopes-and-bindings", "implemented", "reaper/runtime.py"],
+        ["module-loading", "implemented", "reaper/modules.py"],
+        ["reference-runtime", "implemented", "reaper/runtime.py"],
+        ["resource-limits", "implemented", "reaper/resources.py; reaper/memory.py"],
+        ["canonical-ir", "partial", "reaper/ir.py; include/reaper/ir.h"],
+        ["static-types", "partial", "reaper/typecheck.py"],
+        ["ownership-and-effects", "partial", "docs/HARDWARE_LANGUAGE.md"],
+        ["native-target-backend", "partial", "reaper/native_compiler.py"]
+    ]
+}
+
+export craft base_layer_required_features() {
+    yield ["core-syntax", "scopes-and-bindings", "module-loading", "reference-runtime", "resource-limits"]
+}
+
+export craft base_layer_validate_profile(features) {
+    when kind(features) != "list" {
+        yield false
+    }
+    each feature in features {
+        when base_layer_find(feature) == nothing {
+            yield false
+        }
+    }
+    when size(unique(features)) != size(features) {
+        yield false
+    }
+    each required in base_layer_required_features() {
+        when not contains(features, required) {
+            yield false
+        }
+    }
+    yield true
+}
+
+craft base_layer_find(identifier) {
+    vary found := nothing
+    each feature in base_layer_catalog() {
+        when feature[0] == identifier {
+            change found := feature
+        }
+    }
+    yield found
+}
+
+export craft base_layer_status(identifier) {
+    make feature := base_layer_find(identifier)
+    when feature == nothing {
+        yield nothing
+    }
+    yield feature[1]
+}
+
+export craft foundation_sixth_five() {
+    yield [
+        ["foundation.technology-stack.v1", "Technology Stack", "target ABI, compiler, linker and runtime profile composition", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_26_30.md"],
+        ["foundation.template.v1", "Template", "validated project and module template requests", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_26_30.md"],
+        ["foundation.skeleton.alias.v1", "Skeleton", "canonical alias to the existing Skeleton framework", "implemented", "docs/FOUNDATIONAL_FRAMEWORKS_26_30.md"],
+        ["foundation.boilerplate.v1", "Boilerplate", "reusable validated Reaper source starter fragments", "implemented", "docs/FOUNDATIONAL_FRAMEWORKS_26_30.md"],
+        ["foundation.base-layer.v1", "Base Layer", "evidence-backed inventory of the language's minimum working core", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_26_30.md"]
+    ]
+}
+
+export craft foundation_all_frameworks_30() {
+    vary rows := previous["foundation_all_frameworks_25"]()
+    each row in foundation_sixth_five() {
+        change rows := push(rows, row)
+    }
+    yield rows
+}
+
+export craft foundation_validate_catalog_30() {
+    make rows := foundation_all_frameworks_30()
+    vary identifiers := []
+    each row in rows {
+        when size(row) != 5 {
+            yield false
+        }
+        change identifiers := push(identifiers, row[0])
+    }
+    yield previous["foundation_validate_catalog_25"]() and size(rows) == 30 and size(unique(identifiers)) == 30
+}

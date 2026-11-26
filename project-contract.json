@@ -24,6 +24,24 @@
   },
   "capabilities": [
     {
+      "id": "foundations.sixth-five-frameworks",
+      "status": "partial",
+      "summary": "Adds executable Reaper contracts for target technology stacks, validated template inputs, a canonical Skeleton alias, reusable Reaper boilerplate snippets and an evidence-backed minimum language-core inventory; target builds, file generation and native typed lowering remain partial.",
+      "evidence": [
+        "frameworks/foundation_26_30.rpr",
+        "frameworks/foundation_21_25.rpr",
+        "frameworks/foundation_16_20.rpr",
+        "frameworks/foundation_11_15.rpr",
+        "frameworks/foundation_6_10.rpr",
+        "frameworks/foundation.rpr",
+        "docs/FOUNDATIONAL_FRAMEWORKS_26_30.md",
+        "examples/foundations_26_30.rpr",
+        "tests/test_foundational_frameworks_26_30.py",
+        "docs/HARDWARE_LANGUAGE.md",
+        "docs/ARCHITECTURE.md"
+      ]
+    },
+    {
       "id": "foundations.fifth-five-frameworks",
       "status": "partial",
       "summary": "Adds executable contracts for the Reaper tool inventory, PATH-probe evidence, composable tool bundles, dependency-first package manifests and runtime/platform stack profiles; package lockfiles, installation and external tool execution remain planned.",
