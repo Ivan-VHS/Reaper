@@ -1,7 +1,17 @@
 # Specification Parameter Framework — Validate a typed numeric specification parameter with an inclusive value range.
 
 export craft valid_spec_parameter(parameter) {
-when kind(parameter) != "list" or size(parameter) != 4 { yield false }
- when kind(parameter[0]) != "text" or kind(parameter[1]) != "text" or kind(parameter[2]) != "number" or kind(parameter[3]) != "number" { yield false }
- yield size(trim(parameter[0])) > 0 and contains(["integer", "number"], parameter[1]) and parameter[2] <= parameter[3]
+    when kind(parameter) != "list" or size(parameter) != 4 {
+        yield false
+    }
+    when kind(parameter[0]) != "text" or kind(parameter[1]) != "text" or kind(parameter[2]) != "number" or kind(parameter[3]) != "number" {
+        yield false
+    }
+    when size(trim(parameter[0])) == 0 or not contains(["integer", "number"], parameter[1]) or parameter[2] > parameter[3] {
+        yield false
+    }
+    when parameter[1] == "integer" and (parameter[2] % 1 != 0 or parameter[3] % 1 != 0) {
+        yield false
+    }
+    yield true
 }
