@@ -23,6 +23,8 @@ This change moves the ДОМ proposal from architecture diagrams into executable
 
 All framework policy in this slice is authored in Reaper. The Python test module is only an adapter to the repository's existing reference-interpreter test harness; it is not a subsystem implementation.
 
+The standalone modules are consumed through dom/adapters/framework_modules.rpr. The adapter calls only their public Reaper contracts; their algorithms remain in their owning modules.
+
 ## Canonical data contracts
 
 The current Reaper grammar supports crafts, lists, module imports/exports and explicit result tuples. Until typed public record declarations and a stable aggregate ABI are available, this first vertical slice uses documented positional list contracts.
