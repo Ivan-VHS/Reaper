@@ -1,12 +1,12 @@
 # Reaper as a systems and hardware language
 
 **Author and project maintainer:** Ivan-VHS  
-**Status:** architecture and first checked MMIO adapter contract  
+**Status:** Reaper-native Typed Registry v1 and first checked MMIO adapter contract; first-class aggregate grammar and native lowering remain separate milestones  
 **Scope:** language, compiler, runtime, embedded targets and Reaper Studio
 
 Reaper is being repositioned from a flow-first general-purpose language toward a systems language for firmware, embedded software, platform services and hardware-adjacent development. The existing .rpr surface and Python runtime remain part of the compatibility product while a native compiler path grows toward the canonical execution route.
 
-This document separates what is already in the repository from the target design. A syntax proposal or registry entry is not an implemented compiler feature.
+This document separates what is already in the repository from the target design. The executable Reaper .rpr Typed Registry is implemented in the reference runtime; it is not yet first-class compiler syntax or native aggregate lowering. See [Typed Registry v1](TYPED_REGISTRY.md).
 
 ## Product contract
 
@@ -32,7 +32,7 @@ The language is not allowed to imply that user-space code can safely access arbi
 | QCS | separate hardware-domain lexer/parser and JSON AST | design/validation frontend, not device execution |
 | Embedded workbench | MCU profiles, Flash/SRAM maps, linker-script generation and cross-compiler process invocation | no board flashing or physical MMIO |
 | Studio | Windows editor/debugger foundation plus a Systems/Hardware overview showing MCU profiles and current access limits | no live device inspector or complete hardware IDE |
-| Native capability catalogue | versioned module and operation descriptions with a small set of C primitives | catalogue entries are not automatically executable handlers |
+| Native capability catalogue | versioned module and operation descriptions with a small set of C primitives | catalogue entries are not automatically executable handlers |\n| Typed Registry | Reaper .rpr constructors, target-aware layouts, platform/ABI checks and binding/effect/capability validation | parser-level aggregate declarations, HIR/MIR lowering and native object emission are not implemented by this registry |
 
 ## Target language layers
 
@@ -45,7 +45,7 @@ The language is not allowed to imply that user-space code can safely access arbi
 7. **Native compiler.** Canonical versioned IR with source maps; HIR for typed operations; MIR/CFG for control flow, ownership, drops and effects; target lowering; optimization passes with verified invariants; backend to host C17 during migration, then a native code/object backend; linker and firmware image metadata.
 8. **Runtime profiles.** Hosted, freestanding, no_std, boot-stage, kernel-driver, MCU and simulator profiles have distinct startup, panic, allocator, threading and I/O contracts.
 
-## Proposed source surface
+## Implemented Reaper Typed Registry\n\nThe shared [Typed Registry v1](TYPED_REGISTRY.md) is executable Reaper source in `stdlib/typed_registry.rpr`. It declares fixed-width scalar, pointer, array, struct and enum descriptors; calculates target-dependent layouts; validates platform/ABI tuples; and checks binding types, effects and requested capabilities. `examples/typed_registry.rpr` is the executable conformance fixture and CI runs it.\n\nThis API intentionally uses the current Reaper grammar. It does not claim dedicated `struct`/`enum` syntax, compile-time type resolution or native backend support.\n\n## Proposed source surface
 
 The following illustrates where the language is heading. It is not claimed to compile with the current parser or runtime.
 
