@@ -164,6 +164,15 @@ export craft platform_validate(platform) {
     when platform[1] == "" or platform[2] == "" or platform[3] == "" {
         yield layout_error("RPR-PLATFORM-0002", "platform identity, architecture and operating system are required")
     }
+    when platform[16] != "declared" and platform[16] != "profile_only" {
+        yield layout_error("RPR-PLATFORM-0025", "platform status must be declared or profile_only")
+    }
+    when platform[8] == "" or platform[9] == "" or platform[10] == "" {
+        yield layout_error("RPR-PLATFORM-0026", "object format and both ABI identifiers must be explicit")
+    }
+    when platform[16] == "declared" and (platform[8] == "unfinalized" or platform[9] == "unfinalized") {
+        yield layout_error("RPR-PLATFORM-0027", "a declared profile cannot contain an unfinalized process ABI")
+    }
     when platform[4] != "ILP32" and platform[4] != "LP64" and platform[4] != "LLP64" and platform[4] != "unfinalized" {
         yield layout_error("RPR-PLATFORM-0017", "data model must be ILP32, LP64, LLP64 or unfinalized")
     }
@@ -226,7 +235,7 @@ export craft platform_validate(platform) {
     yield [true, platform, ""]
 }
 
-export craft platform_is_abi_ready(platform) {
+export craft platform_process_abi_declared(platform) {
     make checked := platform_validate(platform)
     when not checked[0] {
         yield false
@@ -257,6 +266,10 @@ export craft platform_satisfies(platform, architecture, minimum_pointer_size, en
 }
 
 export craft primitive_layout(type_name, platform) {
+    make checked_platform := platform_validate(platform)
+    when not checked_platform[0] {
+        yield checked_platform
+    }
     when type_name == "bool" or type_name == "i8" or type_name == "u8" or type_name == "c_char" {
         yield layout_value(1, 1, [])
     }
@@ -325,6 +338,10 @@ export craft integer_type_bounds(type_descriptor, platform) {
 }
 
 export craft type_layout(type_descriptor, platform, definitions, stack) {
+    make checked_platform := platform_validate(platform)
+    when not checked_platform[0] {
+        yield checked_platform
+    }
     when size(type_descriptor) == 0 {
         yield layout_error("RPR-LAYOUT-0003", "type descriptor is empty")
     }
@@ -536,10 +553,6 @@ export craft layout_record(definition, is_union, platform, definitions, stack) {
 }
 
 export craft type_layout_with_metadata(type_descriptor, platform, definitions) {
-    make checked := platform_validate(platform)
-    when not checked[0] {
-        yield checked
-    }
     make result := type_layout(type_descriptor, platform, definitions, [])
     when not result[0] {
         yield result
