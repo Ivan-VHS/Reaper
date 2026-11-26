@@ -278,6 +278,9 @@ export craft concept_validate_link(link) {
     when kind(link) != "list" or size(link) != 3 {
         yield false
     }
+    when kind(link[0]) != "text" or kind(link[1]) != "text" or kind(link[2]) != "text" {
+        yield false
+    }
     when concept_find(link[0]) == nothing or concept_find(link[1]) == nothing {
         yield false
     }
