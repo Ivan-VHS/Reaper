@@ -215,7 +215,11 @@ static int rollback_entries(const ReaperEvolutionApplyHost *host,
     int ok = 1;
     for (index = count; index > 0u; --index) {
         ApplyEntry *entry = &entries[index - 1u];
-        if (entry->committed && entry->rollback != NULL) {
+        if (entry->committed) {
+            if (entry->rollback == NULL) {
+                ok = 0;
+                continue;
+            }
             if (host->rollback_committed(host->context, workspace, entry->rollback)) {
                 ++result->rolled_back_files;
                 host->release_rollback(host->context, entry->rollback);
@@ -455,6 +459,11 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
     for (index = 0u; index < request->patch_count; ++index) {
         if (!host->commit_staged(host->context, workspace,
                 entries[index].staged, &entries[index].rollback)) {
+            if (entries[index].rollback != NULL) {
+                (void)host->preserve_failed_rollback(host->context, entries[index].rollback,
+                    request->request_id, request->target_branch, entries[index].path);
+                entries[index].rollback = NULL;
+            }
             result.status = REAPER_APPLY_COMMIT_FAILED;
             (void)snprintf(result.failed_path, sizeof result.failed_path, "%s", entries[index].path);
             goto fail;
