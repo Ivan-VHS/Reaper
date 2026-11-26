@@ -65,6 +65,13 @@ class FoundationalFrameworksFiftySixToSixtyTests(unittest.TestCase):
             self.run_expression('workspace["grid_validate_axis"](["row", "runtime", 1.5])'),
             ["false"],
         )
+        self.assertEqual(
+            self.run_expression(
+                'workspace["grid_validate_descriptor"](["coverage", [["row", "runtime", 3], ["column", "platform", 2]], ["runtime", "compiler"], ["hosted", "native"]])'
+            ),
+            ["false"],
+        )
+
 
     def test_contour_ports_match_interface_and_direction(self) -> None:
         self.assertEqual(
@@ -171,6 +178,12 @@ class FoundationalFrameworksFiftySixToSixtyTests(unittest.TestCase):
             self.run_expression(f'workspace["workspace_mutation_allowed"]({workspace})'),
             ["true"],
         )
+        invalid = '["reaper", "projects/reaper", "projects/other/src", "projects/reaper/build", "clean", ["modules/main.rpr"]]'
+        self.assertEqual(
+            self.run_expression(f'workspace["workspace_mutation_allowed"]({invalid})'),
+            ["false"],
+        )
+
 
 
 if __name__ == "__main__":
