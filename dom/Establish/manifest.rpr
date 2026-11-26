@@ -7,11 +7,7 @@ import "../poooVERTY/budgets.rpr" as budgets
 import "../Nonconcrete/contracts.rpr" as contracts
 
 export craft valid_profile(profile) {
-    yield profile == "core"
-        or profile == "standard"
-        or profile == "system"
-        or profile == "development"
-        or profile == "embedded"
+    yield profile == "core" or profile == "standard" or profile == "system" or profile == "development" or profile == "embedded"
 }
 
 export craft validate_modules(modules) {
