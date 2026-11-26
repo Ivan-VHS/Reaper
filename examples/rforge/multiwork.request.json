@@ -1,0 +1,61 @@
+{
+  "schema": "reaper.rforge.request.v1",
+  "product_kind": "multiwork",
+  "product_name": "Sonaris Workbench",
+  "components": [
+    {
+      "id": "text.editor",
+      "kind": "application",
+      "version": "1.0.0",
+      "required": true
+    },
+    {
+      "id": "audio.editor",
+      "kind": "application",
+      "version": "1.0.0",
+      "required": true
+    },
+    {
+      "id": "translation.workspace",
+      "kind": "application",
+      "version": "1.0.0",
+      "required": true
+    }
+  ],
+  "locales": [
+    "en",
+    "ru",
+    "uk",
+    "most"
+  ],
+  "target": {
+    "source_language": "reaper",
+    "runtime": "reaper_reference",
+    "deployment": "host"
+  },
+  "objective": "modularity",
+  "topologies": [
+    "layered",
+    "event_driven",
+    "hybrid"
+  ],
+  "autonomy": "plan_only",
+  "capabilities": {
+    "required": [
+      "text.document",
+      "audio.asset",
+      "translation.workspace"
+    ],
+    "optional": [
+      "translation.review",
+      "audio.timeline"
+    ]
+  },
+  "permissions": {
+    "filesystem": "project_read",
+    "network": "deny",
+    "devices": "none",
+    "processes": "none"
+  },
+  "seed": 17
+}
