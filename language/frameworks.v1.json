@@ -1,7 +1,7 @@
 {
   "schema": "reaper.framework-registry/v1",
   "language": "REAPER",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "registry": {
     "abi": "reaper.framework-cabi.v1",
     "abi_version": 1,
@@ -25,13 +25,14 @@
       "payload_encoding": "caller-defined versioned payload",
       "callback": "explicit host-owned C ABI callback",
       "callback_error": "normalized to REAPER_FRAMEWORK_DISPATCH_FAILED"
-    }
+    },
+    "reference_runtime_handlers": 120
   },
   "language_adapters": [
     {
       "language": "Reaper",
-      "status": "metadata-and-helper-functions",
-      "scope": "Each .rpr module exports framework_manifest() and operation_key(index); the example calls these functions through Reaper's module runtime. These helpers do not invoke native domain handlers."
+      "status": "reference-runtime-handlers",
+      "scope": "Each of the twenty importable .rpr modules implements six bounded source-level handlers and framework metadata helpers. The handlers run through the Reaper reference runtime; system/foreign side effects remain explicit host plans. Reaper-to-native C ABI source bindings are not included."
     },
     {
       "language": "C17",
@@ -45,13 +46,14 @@
     }
   ],
   "public_statistics": {
-    "source": "Computed by reaper_framework_registry_stats() from the native registry.",
+    "source": "Native C ABI counters come from the compiled C17 registry; Reaper reference-handler count comes from the versioned Reaper source modules.",
     "registered_frameworks": 20,
     "registered_function_contracts": 120,
     "registry_api_functions": 8,
     "executable_domain_handlers": 0,
     "reaper_source_bindings": 0,
-    "privacy": "Registry metadata only; no user telemetry or runtime activity is collected."
+    "privacy": "Registry metadata only; no user telemetry or runtime activity is collected.",
+    "reaper_reference_handlers": 120
   },
   "frameworks": [
     {
@@ -60,7 +62,7 @@
       "domain": "Compiler and language feature catalog",
       "feature_key": "RPR-FWK-001",
       "source_module": "examples/frameworks/modules/codex_no.rpr",
-      "maturity": "contract-only",
+      "maturity": "reference-handler-v1-partial",
       "functions": [
         {
           "key": "RPR-FWK-001-F01",
@@ -68,7 +70,7 @@
           "min_arity": 1,
           "max_arity": 2,
           "description": "Resolve a stable symbol key in the public registry.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-001-F02",
@@ -76,7 +78,7 @@
           "min_arity": 1,
           "max_arity": 1,
           "description": "Return the maturity record for one language feature.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-001-F03",
@@ -84,7 +86,7 @@
           "min_arity": 1,
           "max_arity": 1,
           "description": "Enumerate registered operation contracts for a framework.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-001-F04",
@@ -92,7 +94,7 @@
           "min_arity": 1,
           "max_arity": 1,
           "description": "Read one framework descriptor without executing its operations.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-001-F05",
@@ -100,7 +102,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Compare two semantic version identifiers.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-001-F06",
@@ -108,7 +110,7 @@
           "min_arity": 1,
           "max_arity": 1,
           "description": "Serialize a caller-selected catalog view.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         }
       ]
     },
@@ -118,7 +120,7 @@
       "domain": "Cross-language composition and ABI binding",
       "feature_key": "RPR-FWK-002",
       "source_module": "examples/frameworks/modules/joint_baby.rpr",
-      "maturity": "contract-only",
+      "maturity": "reference-handler-v1-partial",
       "functions": [
         {
           "key": "RPR-FWK-002-F01",
@@ -126,7 +128,7 @@
           "min_arity": 2,
           "max_arity": 3,
           "description": "Describe an explicit source-to-host language binding.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-002-F02",
@@ -134,7 +136,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Validate an ABI identifier and version pair.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-002-F03",
@@ -142,7 +144,7 @@
           "min_arity": 3,
           "max_arity": 3,
           "description": "Validate a foreign-call request before host dispatch.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-002-F04",
@@ -150,7 +152,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Validate a typed value for ABI marshalling.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-002-F05",
@@ -158,7 +160,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Validate a typed ABI result for decoding.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-002-F06",
@@ -166,7 +168,7 @@
           "min_arity": 1,
           "max_arity": 1,
           "description": "Validate release of a host-owned foreign handle.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         }
       ]
     },
@@ -176,7 +178,7 @@
       "domain": "Contracts, consistency and reconciliation",
       "feature_key": "RPR-FWK-003",
       "source_module": "examples/frameworks/modules/correpse.rpr",
-      "maturity": "contract-only",
+      "maturity": "reference-handler-v1-partial",
       "functions": [
         {
           "key": "RPR-FWK-003-F01",
@@ -184,7 +186,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Evaluate a named invariant against supplied evidence.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-003-F02",
@@ -192,7 +194,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Produce a deterministic reconciliation plan.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-003-F03",
@@ -200,7 +202,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Compare two versioned interface contracts.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-003-F04",
@@ -208,7 +210,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Validate a payload against a named schema.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-003-F05",
@@ -216,7 +218,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Identify conflicting values in a merge candidate.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-003-F06",
@@ -224,7 +226,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Check a declared precondition against explicit inputs.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         }
       ]
     },
@@ -234,7 +236,7 @@
       "domain": "Memory, allocation and resource budgets",
       "feature_key": "RPR-FWK-004",
       "source_module": "examples/frameworks/modules/allocate_purpose.rpr",
-      "maturity": "contract-only",
+      "maturity": "reference-handler-v1-partial",
       "functions": [
         {
           "key": "RPR-FWK-004-F01",
@@ -242,7 +244,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Describe a bounded arena allocation request.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-004-F02",
@@ -250,7 +252,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Validate a reservation against an arena capacity.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-004-F03",
@@ -258,7 +260,7 @@
           "min_arity": 1,
           "max_arity": 1,
           "description": "Validate release of an owned allocation region.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-004-F04",
@@ -266,7 +268,7 @@
           "min_arity": 3,
           "max_arity": 3,
           "description": "Split a resource budget while preserving its total.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-004-F05",
@@ -274,7 +276,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Compare requested resources with an explicit quota.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-004-F06",
@@ -282,7 +284,7 @@
           "min_arity": 1,
           "max_arity": 1,
           "description": "Inspect allocation events for a declared scope.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         }
       ]
     },
@@ -292,7 +294,7 @@
       "domain": "Collections and deterministic algorithms",
       "feature_key": "RPR-FWK-005",
       "source_module": "examples/frameworks/modules/collillioi.rpr",
-      "maturity": "contract-only",
+      "maturity": "reference-handler-v1-partial",
       "functions": [
         {
           "key": "RPR-FWK-005-F01",
@@ -300,7 +302,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Describe a pure sequence transformation.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-005-F02",
@@ -308,7 +310,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Describe a predicate-based sequence filter.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-005-F03",
@@ -316,7 +318,7 @@
           "min_arity": 3,
           "max_arity": 3,
           "description": "Describe a left fold with an explicit initial value.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-005-F04",
@@ -324,7 +326,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Describe a bounded pairwise sequence composition.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-005-F05",
@@ -332,7 +334,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Describe a deterministic stable ordering.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-005-F06",
@@ -340,7 +342,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Partition a sequence using an explicit size or predicate.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         }
       ]
     },
@@ -350,7 +352,7 @@
       "domain": "Asynchronous tasks and structured scheduling",
       "feature_key": "RPR-FWK-006",
       "source_module": "examples/frameworks/modules/aspdoi.rpr",
-      "maturity": "contract-only",
+      "maturity": "reference-handler-v1-partial",
       "functions": [
         {
           "key": "RPR-FWK-006-F01",
@@ -358,7 +360,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Validate task creation under a caller-owned task scope.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-006-F02",
@@ -366,7 +368,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Validate cancellation of a task handle.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-006-F03",
@@ -374,7 +376,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Describe a bounded wait for a task result.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-006-F04",
@@ -382,7 +384,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Calculate a deadline from a supplied monotonic timestamp.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-006-F05",
@@ -390,7 +392,7 @@
           "min_arity": 3,
           "max_arity": 3,
           "description": "Validate a task scheduling request and its policy.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-006-F06",
@@ -398,7 +400,7 @@
           "min_arity": 1,
           "max_arity": 1,
           "description": "Describe joining all child tasks in a scope.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         }
       ]
     },
@@ -408,7 +410,7 @@
       "domain": "ABI, serialization and binary layouts",
       "feature_key": "RPR-FWK-007",
       "source_module": "examples/frameworks/modules/asjiop.rpr",
-      "maturity": "contract-only",
+      "maturity": "reference-handler-v1-partial",
       "functions": [
         {
           "key": "RPR-FWK-007-F01",
@@ -416,7 +418,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Negotiate a supported ABI version and feature set.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-007-F02",
@@ -424,7 +426,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Validate fields for a versioned binary frame.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-007-F03",
@@ -432,7 +434,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Validate a binary frame before decoding.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-007-F04",
@@ -440,7 +442,7 @@
           "min_arity": 1,
           "max_arity": 1,
           "description": "Compute or resolve a stable type fingerprint.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-007-F05",
@@ -448,7 +450,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Resolve a function signature and calling convention.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-007-F06",
@@ -456,7 +458,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Check a declared layout against ABI constraints.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         }
       ]
     },
@@ -466,7 +468,7 @@
       "domain": "Language feature registry and compatibility",
       "feature_key": "RPR-FWK-008",
       "source_module": "examples/frameworks/modules/alllll.rpr",
-      "maturity": "contract-only",
+      "maturity": "reference-handler-v1-partial",
       "functions": [
         {
           "key": "RPR-FWK-008-F01",
@@ -474,7 +476,7 @@
           "min_arity": 1,
           "max_arity": 1,
           "description": "Resolve a stable language feature key.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-008-F02",
@@ -482,7 +484,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Check feature availability for a target profile.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-008-F03",
@@ -490,7 +492,7 @@
           "min_arity": 1,
           "max_arity": 1,
           "description": "Enumerate features in a named capability area.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-008-F04",
@@ -498,7 +500,7 @@
           "min_arity": 1,
           "max_arity": 1,
           "description": "Return a dependency-safe feature implementation order.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-008-F05",
@@ -506,7 +508,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Check compatibility between two feature profiles.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-008-F06",
@@ -514,7 +516,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Describe differences between capability sets.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         }
       ]
     },
@@ -524,7 +526,7 @@
       "domain": "Capability grants and policy scopes",
       "feature_key": "RPR-FWK-009",
       "source_module": "examples/frameworks/modules/zabor.rpr",
-      "maturity": "contract-only",
+      "maturity": "reference-handler-v1-partial",
       "functions": [
         {
           "key": "RPR-FWK-009-F01",
@@ -532,7 +534,7 @@
           "min_arity": 3,
           "max_arity": 3,
           "description": "Describe a scoped capability grant.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-009-F02",
@@ -540,7 +542,7 @@
           "min_arity": 3,
           "max_arity": 3,
           "description": "Check a principal, resource and requested capability.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-009-F03",
@@ -548,7 +550,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Validate revocation of a scoped grant.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-009-F04",
@@ -556,7 +558,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Calculate the least-authority intersection of two scopes.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-009-F05",
@@ -564,7 +566,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Evaluate a named policy against explicit facts.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-009-F06",
@@ -572,7 +574,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Format a decision record without exposing secrets.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         }
       ]
     },
@@ -582,7 +584,7 @@
       "domain": "Source maps, diagnostics and tracing",
       "feature_key": "RPR-FWK-010",
       "source_module": "examples/frameworks/modules/vjinz.rpr",
-      "maturity": "contract-only",
+      "maturity": "reference-handler-v1-partial",
       "functions": [
         {
           "key": "RPR-FWK-010-F01",
@@ -590,7 +592,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Resolve an IR location to its original source span.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-010-F02",
@@ -598,7 +600,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Translate a span between declared coordinate systems.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-010-F03",
@@ -606,7 +608,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Create a structured diagnostic from a code and span.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-010-F04",
@@ -614,7 +616,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Register a named trace scope and its metadata.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-010-F05",
@@ -622,7 +624,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Resolve a symbol in a versioned namespace.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-010-F06",
@@ -630,7 +632,7 @@
           "min_arity": 1,
           "max_arity": 1,
           "description": "Return provenance links for an artifact.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         }
       ]
     },
@@ -640,7 +642,7 @@
       "domain": "Quality gates and release evidence",
       "feature_key": "RPR-FWK-011",
       "source_module": "examples/frameworks/modules/supreme_boy.rpr",
-      "maturity": "contract-only",
+      "maturity": "reference-handler-v1-partial",
       "functions": [
         {
           "key": "RPR-FWK-011-F01",
@@ -648,7 +650,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Evaluate a release gate against its evidence set.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-011-F02",
@@ -656,7 +658,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Describe a target and configuration build matrix.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-011-F03",
@@ -664,7 +666,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Validate a test result as release evidence.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-011-F04",
@@ -672,7 +674,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Compare two metric snapshots for regressions.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-011-F05",
@@ -680,7 +682,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Describe an artifact provenance attestation.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-011-F06",
@@ -688,7 +690,7 @@
           "min_arity": 1,
           "max_arity": 1,
           "description": "Summarize readiness of a declared release candidate.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         }
       ]
     },
@@ -698,7 +700,7 @@
       "domain": "Channels, concurrency and back-pressure",
       "feature_key": "RPR-FWK-012",
       "source_module": "examples/frameworks/modules/chee_now.rpr",
-      "maturity": "contract-only",
+      "maturity": "reference-handler-v1-partial",
       "functions": [
         {
           "key": "RPR-FWK-012-F01",
@@ -706,7 +708,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Describe creation of a bounded message channel.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-012-F02",
@@ -714,7 +716,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Validate sending a typed message to a channel.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-012-F03",
@@ -722,7 +724,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Describe receiving one message under a wait policy.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-012-F04",
@@ -730,7 +732,7 @@
           "min_arity": 1,
           "max_arity": 1,
           "description": "Validate closure of a channel owned by the caller.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-012-F05",
@@ -738,7 +740,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Evaluate a queue against an explicit back-pressure limit.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-012-F06",
@@ -746,7 +748,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Describe deterministic delivery to a recipient set.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         }
       ]
     },
@@ -756,7 +758,7 @@
       "domain": "Result values, error taxonomy and recovery",
       "feature_key": "RPR-FWK-013",
       "source_module": "examples/frameworks/modules/humble_bumble.rpr",
-      "maturity": "contract-only",
+      "maturity": "reference-handler-v1-partial",
       "functions": [
         {
           "key": "RPR-FWK-013-F01",
@@ -764,7 +766,7 @@
           "min_arity": 1,
           "max_arity": 1,
           "description": "Describe a successful typed result.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-013-F02",
@@ -772,7 +774,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Describe a typed failure result.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-013-F03",
@@ -780,7 +782,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Describe a transformation applied only to successful results.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-013-F04",
@@ -788,7 +790,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Describe a transformation applied only to error values.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-013-F05",
@@ -796,7 +798,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Describe recovery under an explicit error policy.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-013-F06",
@@ -804,7 +806,7 @@
           "min_arity": 1,
           "max_arity": 1,
           "description": "Classify a failure using stable diagnostic categories.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         }
       ]
     },
@@ -814,7 +816,7 @@
       "domain": "Service discovery and event distribution",
       "feature_key": "RPR-FWK-014",
       "source_module": "examples/frameworks/modules/hub2.rpr",
-      "maturity": "contract-only",
+      "maturity": "reference-handler-v1-partial",
       "functions": [
         {
           "key": "RPR-FWK-014-F01",
@@ -822,7 +824,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Register a service descriptor in a host-owned registry.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-014-F02",
@@ -830,7 +832,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Resolve a service by name and version constraints.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-014-F03",
@@ -838,7 +840,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Evaluate a service health response.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-014-F04",
@@ -846,7 +848,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Validate publication to a named event topic.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-014-F05",
@@ -854,7 +856,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Describe a scoped event subscription.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-014-F06",
@@ -862,7 +864,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Validate acknowledgement of a delivered event.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         }
       ]
     },
@@ -872,7 +874,7 @@
       "domain": "Modules, packages and dependency lifecycle",
       "feature_key": "RPR-FWK-015",
       "source_module": "examples/frameworks/modules/kloz.rpr",
-      "maturity": "contract-only",
+      "maturity": "reference-handler-v1-partial",
       "functions": [
         {
           "key": "RPR-FWK-015-F01",
@@ -880,7 +882,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Describe loading a versioned Reaper module.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-015-F02",
@@ -888,7 +890,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Resolve a public export from a module.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-015-F03",
@@ -896,7 +898,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Validate an explicit module import request.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-015-F04",
@@ -904,7 +906,7 @@
           "min_arity": 1,
           "max_arity": 1,
           "description": "Resolve a dependency closure without executing it.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-015-F05",
@@ -912,7 +914,7 @@
           "min_arity": 1,
           "max_arity": 1,
           "description": "Read a module's declared semantic version.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-015-F06",
@@ -920,7 +922,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Validate unloading after owned references are released.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         }
       ]
     },
@@ -930,7 +932,7 @@
       "domain": "Core primitives and deterministic identity",
       "feature_key": "RPR-FWK-016",
       "source_module": "examples/frameworks/modules/co.rpr",
-      "maturity": "contract-only",
+      "maturity": "reference-handler-v1-partial",
       "functions": [
         {
           "key": "RPR-FWK-016-F01",
@@ -938,7 +940,7 @@
           "min_arity": 1,
           "max_arity": 1,
           "description": "Compute a stable hash over canonical bytes.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-016-F02",
@@ -946,7 +948,7 @@
           "min_arity": 1,
           "max_arity": 1,
           "description": "Calculate a corruption-detection checksum.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-016-F03",
@@ -954,7 +956,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Derive a stable identifier from a namespace and input.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-016-F04",
@@ -962,7 +964,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Normalize text under an explicit normalization policy.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-016-F05",
@@ -970,7 +972,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Compare byte sequences without implicit conversion.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-016-F06",
@@ -978,7 +980,7 @@
           "min_arity": 1,
           "max_arity": 1,
           "description": "Parse a strict semantic version identifier.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         }
       ]
     },
@@ -988,7 +990,7 @@
       "domain": "Fault records and resilience policies",
       "feature_key": "RPR-FWK-017",
       "source_module": "examples/frameworks/modules/cripplebo.rpr",
-      "maturity": "contract-only",
+      "maturity": "reference-handler-v1-partial",
       "functions": [
         {
           "key": "RPR-FWK-017-F01",
@@ -996,7 +998,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Create a structured fault record from supplied evidence.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-017-F02",
@@ -1004,7 +1006,7 @@
           "min_arity": 3,
           "max_arity": 3,
           "description": "Calculate a bounded retry plan.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-017-F03",
@@ -1012,7 +1014,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Evaluate a circuit-breaker state transition.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-017-F04",
@@ -1020,7 +1022,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Select a declared fallback for a failed component.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-017-F05",
@@ -1028,7 +1030,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Describe isolation within a host-authorized boundary.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-017-F06",
@@ -1036,7 +1038,7 @@
           "min_arity": 1,
           "max_arity": 1,
           "description": "Summarize a recovery attempt and its evidence.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         }
       ]
     },
@@ -1046,7 +1048,7 @@
       "domain": "Reactive streams and flow control",
       "feature_key": "RPR-FWK-018",
       "source_module": "examples/frameworks/modules/ripplecripple.rpr",
-      "maturity": "contract-only",
+      "maturity": "reference-handler-v1-partial",
       "functions": [
         {
           "key": "RPR-FWK-018-F01",
@@ -1054,7 +1056,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Describe opening a typed stream under a bounded policy.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-018-F02",
@@ -1062,7 +1064,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Validate a stream item before enqueueing.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-018-F03",
@@ -1070,7 +1072,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Describe a deterministic merge of compatible streams.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-018-F04",
@@ -1078,7 +1080,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Apply a declared rate or demand limit.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-018-F05",
@@ -1086,7 +1088,7 @@
           "min_arity": 1,
           "max_arity": 1,
           "description": "Describe a checkpoint for replayable stream state.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-018-F06",
@@ -1094,7 +1096,7 @@
           "min_arity": 1,
           "max_arity": 1,
           "description": "Validate stream closure and resource release.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         }
       ]
     },
@@ -1104,7 +1106,7 @@
       "domain": "Security policy and secret references",
       "feature_key": "RPR-FWK-019",
       "source_module": "examples/frameworks/modules/secator.rpr",
-      "maturity": "contract-only",
+      "maturity": "reference-handler-v1-partial",
       "functions": [
         {
           "key": "RPR-FWK-019-F01",
@@ -1112,7 +1114,7 @@
           "min_arity": 3,
           "max_arity": 3,
           "description": "Make an explicit allow-or-deny decision from policy inputs.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-019-F02",
@@ -1120,7 +1122,7 @@
           "min_arity": 1,
           "max_arity": 1,
           "description": "Resolve a principal from a trusted host identity.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-019-F03",
@@ -1128,7 +1130,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Create a non-secret reference to a host-managed secret.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-019-F04",
@@ -1136,7 +1138,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Validate token metadata without logging token material.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-019-F05",
@@ -1144,7 +1146,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Validate a policy before host enforcement.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-019-F06",
@@ -1152,7 +1154,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Create a redacted security audit event.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         }
       ]
     },
@@ -1162,7 +1164,7 @@
       "domain": "Public statistics and privacy-aware metrics",
       "feature_key": "RPR-FWK-020",
       "source_module": "examples/frameworks/modules/pollatia.rpr",
-      "maturity": "contract-only",
+      "maturity": "reference-handler-v1-partial",
       "functions": [
         {
           "key": "RPR-FWK-020-F01",
@@ -1170,7 +1172,7 @@
           "min_arity": 1,
           "max_arity": 1,
           "description": "Create a snapshot from published, non-sensitive counters.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-020-F02",
@@ -1178,7 +1180,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Describe a monotonic counter update.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-020-F03",
@@ -1186,7 +1188,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Describe an absolute gauge update.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-020-F04",
@@ -1194,7 +1196,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Record an observation in a declared histogram.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-020-F05",
@@ -1202,7 +1204,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Export selected aggregate metrics in a versioned format.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         },
         {
           "key": "RPR-FWK-020-F06",
@@ -1210,7 +1212,7 @@
           "min_arity": 2,
           "max_arity": 2,
           "description": "Remove or aggregate fields outside a public metrics policy.",
-          "status": "contract-only"
+          "status": "reference-source-handler-v1"
         }
       ]
     }
