@@ -1,17 +1,61 @@
-# Reaper framework metadata and source-level helper functions.
-# Operation contracts: language/frameworks.v1.json
+# HumbleBumble: explicit Result values, mapping and recovery decisions.
+import "../federation_common.rpr" as fc
 
-export make framework_id := "humble_bumble"
+export make framework_id := "humble-bumble"
 export make display_name := "HumbleBumble"
 export make feature_key := "RPR-FWK-013"
 export make operation_keys := ["RPR-FWK-013-F01", "RPR-FWK-013-F02", "RPR-FWK-013-F03", "RPR-FWK-013-F04", "RPR-FWK-013-F05", "RPR-FWK-013-F06"]
-export make maturity := "contract-only"
+export make maturity := "reference-handler-v1-partial"
 export make native_registry := "reaper.framework-cabi.v1"
 
-export craft operation_key(index) {
-    yield operation_keys[index]
+export craft operation_key(index) { yield operation_keys[index] }
+export craft framework_manifest() { yield [framework_id, display_name, feature_key, operation_keys, maturity] }
+
+# Result shape: [is_ok, value_or_error, metadata].
+export craft result_ok(value) {
+    yield [true, value, "ok"]
 }
 
-export craft framework_manifest() {
-    yield [framework_id, display_name, feature_key, operation_keys, maturity]
+export craft result_err(code, details) {
+    when not fc["fc_nonempty_text"](code) { yield [false, ["invalid-error-code"], details] }
+    yield [false, code, details]
+}
+
+export craft map_ok(result, mapper) {
+    when not fc["fc_record"](result, 3) or kind(mapper) != "craft" {
+        yield [false, nothing, "map-ok-input-shape"]
+    }
+    when not result[0] { yield result }
+    yield [true, mapper(result[1]), result[2]]
+}
+
+export craft map_err(result, mapper) {
+    when not fc["fc_record"](result, 3) or kind(mapper) != "craft" {
+        yield [false, nothing, "map-err-input-shape"]
+    }
+    when result[0] { yield result }
+    yield [false, mapper(result[1]), result[2]]
+}
+
+export craft recover_error(result, recovery_policy) {
+    when not fc["fc_record"](result, 3) or kind(recovery_policy) != "craft" {
+        yield [false, nothing, "recovery-input-shape"]
+    }
+    when result[0] { yield result }
+    make recovered := recovery_policy(result[1], result[2])
+    yield [true, recovered, ["recovered-from", result[1]]]
+}
+
+export craft classify_failure(failure) {
+    when kind(failure) == "text" {
+        when starts_with(failure, "DOM-E1") { yield [true, "lifecycle", true] }
+        when starts_with(failure, "DOM-E2") { yield [true, "resource", true] }
+        when starts_with(failure, "DOM-E6") { yield [true, "communication", true] }
+        when starts_with(failure, "ABI-") { yield [true, "compatibility", false] }
+        yield [true, "application", false]
+    }
+    when fc["fc_record"](failure, 3) {
+        yield [true, failure[0], failure[2]]
+    }
+    yield [false, "unknown", false]
 }
