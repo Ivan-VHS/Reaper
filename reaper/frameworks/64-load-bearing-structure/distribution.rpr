@@ -1,13 +1,24 @@
 # Load Distribution Framework — Check that non-negative resource loads remain within the maximum allowed spread.
 
 export craft balanced_load_distribution(loads, tolerance) {
-when kind(loads) != "list" or size(loads) == 0 or kind(tolerance) != "number" or tolerance < 0 { yield false }
- vary minimum := loads[0]
- vary maximum := loads[0]
- each load in loads {
-  when kind(load) != "number" or load < 0 { yield false }
-  when load < minimum { change minimum := load }
-  when load > maximum { change maximum := load }
- }
- yield maximum - minimum <= tolerance
+    when kind(loads) != "list" or size(loads) == 0 or kind(tolerance) != "number" or tolerance < 0 {
+        yield false
+    }
+    craft invalid_load(load) {
+        yield kind(load) != "number" or load < 0
+    }
+    when size(keep(loads, invalid_load)) != 0 {
+        yield false
+    }
+    vary minimum := loads[0]
+    vary maximum := loads[0]
+    each load in loads {
+        when load < minimum {
+            change minimum := load
+        }
+        when load > maximum {
+            change maximum := load
+        }
+    }
+    yield maximum - minimum <= tolerance
 }
