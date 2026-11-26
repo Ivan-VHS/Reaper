@@ -52,16 +52,20 @@ export craft fc_valid_pairs(pairs) {
     vary keys := []
     vary errors := []
     each pair in pairs {
-        when kind(pair) != "list" or size(pair) != 2 {
+        when kind(pair) != "list" {
             change errors := push(errors, ["pair-shape", pair])
         } otherwise {
-            when not fc_nonempty_text(pair[0]) {
-                change errors := push(errors, ["pair-key", pair])
-            }
-            when fc_has(keys, pair[0]) {
-                change errors := push(errors, ["duplicate-key", pair[0]])
+            when size(pair) != 2 {
+                change errors := push(errors, ["pair-shape", pair])
             } otherwise {
-                change keys := push(keys, pair[0])
+                when not fc_nonempty_text(pair[0]) {
+                    change errors := push(errors, ["pair-key", pair])
+                }
+                when fc_has(keys, pair[0]) {
+                    change errors := push(errors, ["duplicate-key", pair[0]])
+                } otherwise {
+                    change keys := push(keys, pair[0])
+                }
             }
         }
     }
@@ -73,9 +77,13 @@ export craft fc_lookup(pairs, key) {
     vary found := false
     vary value := nothing
     each pair in pairs {
-        when kind(pair) == "list" and size(pair) == 2 and pair[0] == key {
-            change found := true
-            change value := pair[1]
+        when kind(pair) == "list" {
+            when size(pair) == 2 {
+                when pair[0] == key {
+                    change found := true
+                    change value := pair[1]
+                }
+            }
         }
     }
     yield [found, value]
@@ -129,7 +137,8 @@ export craft fc_intersect(left, right) {
 }
 
 export craft fc_version_valid(version) {
-    when kind(version) != "list" or size(version) != 3 { yield false }
+    when kind(version) != "list" { yield false }
+    when size(version) != 3 { yield false }
     each part in version {
         when not fc_nonnegative(part) { yield false }
     }
@@ -150,7 +159,8 @@ export craft fc_version_compare(left, right) {
 }
 
 export craft fc_record(value, length) {
-    yield kind(value) == "list" and size(value) == length
+    when kind(value) != "list" { yield false }
+    yield size(value) == length
 }
 
 export craft fc_result_ok(value) {
