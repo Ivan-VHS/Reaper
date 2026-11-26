@@ -36,10 +36,11 @@ export craft checksum(bytes) {
     yield [true, remainder(total, 65536), "additive-corruption-check"]
 }
 
-export craft stable_id(namespace, input) {
+export craft stable_id(namespace, input_bytes) {
     when not fc["fc_nonempty_text"](namespace) { yield [false, nothing, "namespace-required"] }
-    make fingerprint := core_hash([size(text(input))])
-    yield [true, namespace ++ ":" ++ text(fingerprint[1]) ++ ":" ++ text(input), "stable-id-descriptor"]
+    make fingerprint := core_hash(input_bytes)
+    when not fingerprint[0] { yield [false, nothing, fingerprint[2]] }
+    yield [true, namespace ++ ":" ++ text(fingerprint[1]), "stable-non-cryptographic-id"]
 }
 
 export craft text_normalize(value, policy) {
