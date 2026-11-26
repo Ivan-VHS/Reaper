@@ -34,6 +34,8 @@ jobs:
         run: python tools/validate_visual_canon.py reaper/ui_theme.py
       - name: Validate MOST 666 function registry
         run: python tools/validate_most_functions.py
+      - name: Validate framework portfolio JSON
+        run: python -m json.tool frameworks/portfolio.v1.json > /dev/null
       - name: Validate engineering evolution contract
         run: python tools/validate_engineering_evolution.py
       - name: Run unit tests
