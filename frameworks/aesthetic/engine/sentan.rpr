@@ -1,0 +1,102 @@
+# Sentan — architecture graph validation and dependency-cycle analysis.
+import "vorke.rpr" as Vorke
+
+export craft has_path(edges, source, destination, visited, budget) {
+    when source == destination {
+        yield true
+    }
+    when budget <= 0 or contains(visited, source) {
+        yield false
+    }
+    make next_visited := push(visited, source)
+    each edge in edges {
+        when edge[0] == source {
+            when has_path(edges, edge[1], destination, next_visited, budget - 1) {
+                yield true
+            }
+        }
+    }
+    yield false
+}
+
+export craft valid_graph(graph) {
+    when kind(graph) != "list" or size(graph) != 5 {
+        yield false
+    }
+    when graph[0] != "ArchitectureGraph" or graph[1] != Vorke["VERSION"] {
+        yield false
+    }
+    when not Vorke["valid_text"](graph[2], 96)
+        or kind(graph[3]) != "list" or kind(graph[4]) != "list" {
+        yield false
+    }
+
+    each node in graph[3] {
+        when kind(node) != "list" or size(node) != 3 {
+            yield false
+        }
+        when not Vorke["valid_text"](node[0], 96)
+            or not Vorke["valid_text"](node[1], 48)
+            or kind(node[2]) != "list" {
+            yield false
+        }
+        when size(unique(node[2])) != size(node[2]) {
+            yield false
+        }
+        each dependency in node[2] {
+            when dependency == node[0] or not contains(map(graph[3], get_id), dependency) {
+                yield false
+            }
+        }
+    }
+
+    each edge in graph[4] {
+        when kind(edge) != "list" or size(edge) != 3 {
+            yield false
+        }
+        when not contains(map(graph[3], get_id), edge[0])
+            or not contains(map(graph[3], get_id), edge[1]) {
+            yield false
+        }
+        when edge[0] == edge[1] or not Vorke["valid_text"](edge[2], 48) {
+            yield false
+        }
+    }
+
+    each edge in graph[4] {
+        when has_path(graph[4], edge[1], edge[0], [], size(graph[3]) + 1) {
+            yield false
+        }
+    }
+    yield true
+}
+
+export craft get_id(node) {
+    yield node[0]
+}
+
+export craft inspect(graph) {
+    when not valid_graph(graph) {
+        yield ["ArchitectureAssessment", "blocked", ["invalid_graph_or_dependency_cycle"], 0]
+    }
+    yield ["ArchitectureAssessment", "valid", [], 100]
+}
+
+export craft compare(current_graph, proposed_graph) {
+    make current_result := inspect(current_graph)
+    make proposed_result := inspect(proposed_graph)
+    when current_result[1] != "valid" or proposed_result[1] != "valid" {
+        yield ["ArchitectureDelta", "blocked", [], 0]
+    }
+    vary changes := []
+    when size(current_graph[3]) != size(proposed_graph[3]) {
+        change changes := push(changes, "module_set_changed")
+    }
+    when size(current_graph[4]) != size(proposed_graph[4]) {
+        change changes := push(changes, "dependency_edges_changed")
+    }
+    when current_graph[3] != proposed_graph[3] and not contains(changes, "module_set_changed") {
+        change changes := push(changes, "module_contracts_changed")
+    }
+    yield ["ArchitectureDelta", "review_required", changes, size(changes)]
+}
