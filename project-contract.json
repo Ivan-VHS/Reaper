@@ -54,6 +54,21 @@
       ]
     },
     {
+      "id": "modules.maza-live-foundation",
+      "status": "partial",
+      "summary": "Explicit local .rpr foundation attachment with persistent namespaces, source-hash refresh, last-known-good retention and foreground supervision in the Python reference runtime and VM; native C17 AOT is not supported.",
+      "evidence": [
+        "reaper/maza.py",
+        "reaper/lexer.py",
+        "reaper/parser.py",
+        "reaper/runtime.py",
+        "reaper/ir.py",
+        "reaper/vm.py",
+        "tests/test_maza.py",
+        "docs/MAZA.md"
+      ]
+    },
+    {
       "id": "resources.bounded-managed-ledger",
       "status": "implemented",
       "summary": "Managed resource accounting, heap and open-file quotas, deterministic cleanup and execution limits.",
@@ -213,7 +228,8 @@
     "Filesystem, process, network, clock, shell and native-library effects remain explicit or opt-in rather than ambient expression behavior.",
     "Native FFI executes in-process native code and must only load trusted ABI-compatible libraries.",
     "The native C17 implementation and self-hosting frontend remain partial; Python is the compatibility reference.",
-    "The architecture foundation registry validates metadata and declared dependency graphs only; it does not load code, start runtimes, isolate containers or grant hardware privileges."
+    "The architecture foundation registry validates metadata and declared dependency graphs only; it does not load code, start runtimes, isolate containers or grant hardware privileges.",
+    "MAZA attaches local .rpr sources only; it does not fetch URLs or implicitly load native libraries or binaries. The last known-good namespace is retained after a failed refresh."
   ],
   "extension_points": [
     "Canonical IR and selectable execution engines.",
@@ -221,6 +237,7 @@
     "Opt-in C ABI adapters and validated versioned JSON interchange.",
     "Native C17 frontend stages with Python reference behavior as the compatibility oracle.",
     "Bounded vertical self-composition for deterministic compiler and data-flow transformation pipelines.",
-    "Stable architecture concept IDs, layer metadata and bounded dependency graph validation."
+    "Stable architecture concept IDs, layer metadata and bounded dependency graph validation.",
+    "MAZA live local .rpr foundation namespaces with bounded source-hash refresh and last-known-good retention; non-Reaper peers still require explicit versioned adapters."
   ]
 }

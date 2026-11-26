@@ -50,7 +50,7 @@ When a changed source is valid, MAZA refreshes the export set and increments its
 - `maza_refresh("alias")` requests an immediate refresh and returns the resulting status.
 - `maza_detach("alias")` detaches a namespace.
 
-The default limits are 128 live links, 2 MiB per foundation source (inherited from the module loader), and a 50–60,000 ms polling interval. Existing execution-step, call-depth, memory and collection limits remain in force.
+The default limits are 128 live links, 2,000,000 bytes per foundation source (inherited from the module loader), and a 50–60,000 ms polling interval. Existing execution-step, call-depth, memory and collection limits remain in force.
 
 ## Trust and compatibility boundaries
 

@@ -8,11 +8,12 @@
 | Native C17 | token stream, expression AST, checked IR, limited lowering |
 | MOST | exact keyword canonicalization before the same parser |
 | QCS | independent hardware-domain syntax validation |
+| MAZA live foundations | explicit local .rpr namespaces, bounded fingerprint refresh, last-known-good retention and foreground supervision | Python reference runtime and VM; native C17 AOT unsupported |
 | Adapters | versioned JSON and explicitly selected native ABI |
 | Native architecture registry | 66 stable concepts, nine layers, bounded dependency-graph validation and deterministic ordering |
 | Tests | syntax, semantics, bounds, negative cases and integrations |
 
-Reaper source → tokens → AST → bounded reference runtime → explicit output. The C17 track is separate until full language conformance. Studio is Windows-only.
+Reaper source → tokens → AST → bounded reference runtime → explicit output. MAZA keeps local Reaper foundations live inside the reference runtime and VM. The C17 track is separate until full language conformance and currently rejects MAZA. Studio is Windows-only.
 
 ## Integrated product layer
 

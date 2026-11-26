@@ -13,6 +13,7 @@ Reaper is a systems-programming language and local development workbench for com
 ## What is included
 
 - Reaper source language, lexer/parser, reference runtime and diagnostics.
+- MAZA live local `.rpr` foundation federation in the reference runtime and VM; native AOT support is not yet available.
 - CLI, REPL, Windows Studio foundation, LSP and DAP services.
 - Experimental native C17 implementation; it is not yet feature-equivalent to the reference runtime.
 - NOO TAH delegates JavaScript execution to the official Node.js runtime.

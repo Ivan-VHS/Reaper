@@ -3,7 +3,7 @@
 | Component | Current scope | Status |
 |---|---|---|
 | Python runtime | lexer, parser, interpreter, CLI, REPL, modules | available |
-| MAZA | explicit local `.rpr` foundation attachment, stable namespaces, last-good hot refresh, foreground supervision | reference runtime and VM; native AOT unsupported |
+| MAZA | explicit local `.rpr` foundation attachment, stable namespaces, last-good hot refresh, foreground supervision | partial: reference runtime and VM implementation; required CI pending; native AOT unsupported |
 | Static type analysis | conservative AST inference, numeric/operator checks, collection/index checks, mutability and call-arity diagnostics | partial; built into `reaper --check`, Studio and LSP; static-only, no source execution |
 | Quotas/resources | steps, calls, collections, text, heap, open handles | reference runtime |
 | Division | Euclidean divmod, quotient/remainder, divisibility | implemented |
