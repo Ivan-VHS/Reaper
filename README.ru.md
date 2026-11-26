@@ -20,7 +20,7 @@ Reaper — язык системного программирования и л�
 - RAAEF — отдельная ветка разработки типизированных эстетических профилей, HIR/MIR/LIR и планирования эволюции архитектуры, дизайна и кода; выполнение и интеграция с общим native backend ещё требуют проверки.
 - Единый [каталог фреймворков](frameworks/catalog.v1.json) показывает известные семейства и статус их PR; открытые PR не считаются частью main.
 
-Документы: [Эстетика и эволюция архитектуры](docs/AESTHETIC_EVOLUTION.md) · [Каталог фреймворков](frameworks/catalog.v1.json) · [Возможности](docs/FEATURES.md) · [Архитектура](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Фабрика Jora](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md).
+Документы: [Эстетика и эволюция архитектуры](docs/AESTHETIC_EVOLUTION.md) · [Каталог фреймворков](frameworks/README.md) · [Возможности](docs/FEATURES.md) · [Архитектура](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Фабрика Jora](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md).
 
 ## Быстрый старт
 
