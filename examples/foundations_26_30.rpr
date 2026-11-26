@@ -1,0 +1,8 @@
+import "../frameworks/foundation_26_30.rpr" as base
+
+emit "All thirty frameworks valid = " ++ text(base["foundation_validate_catalog_30"]())
+emit "Hosted C17 stack valid = " ++ text(base["technology_stack_validate_selection"]("hosted-c17-x86_64"))
+emit "CLI template valid = " ++ text(base["template_validate_request"](["cli-tool", [["project_name", "sample"], ["entry_module", "main.rpr"]]]))
+emit "Skeleton canonical ID = " ++ text(base["skeleton_alias_resolve"]("Skeleton"))
+emit "Boilerplate source = " ++ base["boilerplate_source"]("identity-function")
+emit "Base layer valid = " ++ text(base["base_layer_validate_profile"](["core-syntax", "scopes-and-bindings", "module-loading", "reference-runtime", "resource-limits"]))
