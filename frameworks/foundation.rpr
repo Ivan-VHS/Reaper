@@ -75,7 +75,7 @@ export craft foundation_validate_scaffold(paths) {
         yield false
     }
     each required in foundation_scaffold_requirements() {
-        when NOT contains(paths, required) {
+        when not contains(paths, required) {
             yield false
         }
     }
@@ -141,7 +141,7 @@ export craft foundation_validate_budget(budget) {
         yield false
     }
     each value in budget {
-        when kind(value) != "number" OR value <= 0 {
+        when kind(value) != "number" or value <= 0 {
             yield false
         }
     }
