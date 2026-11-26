@@ -42,6 +42,8 @@ From the repository root, browse the unified catalogue without opening source fi
     python -m reaper --frameworks
     python -m reaper --framework-info Vorke
     python -m reaper --framework-search federation
+    python -m reaper --framework-info Plague
+    python -m reaper --framework-search rforge
 
 Run the source-level smoke programs:
 
@@ -64,8 +66,7 @@ The machine-readable portfolio also indexes:
 - Kora, the eighteen internal products, the Native Capability Suite, System
   Runtime ABI, DABI64, Jora, self-hosting, MOST/QCS and NEXUS/OCTA.
 
-Each entry records its source path or PR/branch and current maturity. Open or
-draft PRs are not presented as merged features.
+Each entry records its source path or PR/branch and current maturity. The 20 RForge archetypes are searchable as a separate adjacent collection and remain outside the 60-entry core count. Open or draft PRs are not presented as merged features.
 
 ## Runtime and safety boundaries
 
