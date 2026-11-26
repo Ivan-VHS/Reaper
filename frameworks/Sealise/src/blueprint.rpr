@@ -198,6 +198,10 @@ export craft blueprint_profile_select(profiles, requested_name, requested_platfo
     yield [false, "blueprint_profile_not_found"]
 }
 
+export craft migration_step_with_inverse(kind, source, target, reason, inverse) {
+    yield [kind, source, target, reason, inverse]
+}
+
 export craft migration_reversible(steps) {
     vary index := 0
     loop while index < size(steps) {
