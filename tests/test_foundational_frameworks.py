@@ -32,6 +32,18 @@ class FoundationalFrameworkTests(unittest.TestCase):
             ["Framework frame"],
         )
         self.assertEqual(self.run_expression('size(foundation["foundation_framework_ids"]())'), ["5"])
+        expected_ids = [
+            "architecture.framework-frame.v1",
+            "architecture.platform.v1",
+            "architecture.environment.v1",
+            "architecture.infrastructure.v1",
+            "architecture.architecture.v1",
+        ]
+        for index, identifier in enumerate(expected_ids):
+            self.assertEqual(
+                self.run_expression(f'foundation["foundation_framework_ids"]()[{index}]'),
+                [identifier],
+            )
 
     def test_scaffold_requires_all_project_areas(self) -> None:
         self.assertEqual(
