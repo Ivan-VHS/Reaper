@@ -1,0 +1,284 @@
+# Reaper-native validation for typed craft signatures and Result/Option returns.
+# Type expressions are [name, arguments]; e.g. Result<u32, IoError> is
+# ["Result", [["u32", []], ["IoError", []]]].
+
+craft signature_error(code, message, token) {
+    make line := 1
+    make column := 1
+    when size(token) >= 4 {
+        change line := token[2]
+        change column := token[3]
+    }
+    yield ["ERROR", code, message, line, column]
+}
+
+craft signature_name_in(names, expected) {
+    each name in names {
+        when name == expected {
+            yield true
+        }
+    }
+    yield false
+}
+
+craft signature_declares_type(declarations, expected) {
+    each declaration in declarations {
+        when size(declaration) == 4 {
+            when declaration[0] == "struct" or declaration[0] == "union" or declaration[0] == "enum" {
+                when size(declaration[2]) > 0 and declaration[2][0] == expected {
+                    yield true
+                }
+            }
+        }
+    }
+    yield false
+}
+
+craft signature_primitive_type(name) {
+    yield name == "bool" or name == "i8" or name == "u8" or
+        name == "i16" or name == "u16" or name == "i32" or name == "u32" or
+        name == "i64" or name == "u64" or name == "f32" or name == "f64" or
+        name == "usize" or name == "isize" or name == "c_char" or
+        name == "c_short" or name == "c_int" or name == "c_long" or
+        name == "c_longlong" or name == "text" or name == "bytes" or
+        name == "number" or name == "boolean" or name == "list" or
+        name == "unit" or name == "nothing"
+}
+
+export craft signature_validate_type(type_expression, generic_parameters, declarations) {
+    when size(type_expression) != 2 or type_expression[0] == "" {
+        yield ["ERROR", "RPR-SIG-0001", "type expression must contain a name and argument list"]
+    }
+    make name := type_expression[0]
+    make arguments := type_expression[1]
+
+    when name == "Result" {
+        when size(arguments) != 2 {
+            yield ["ERROR", "RPR-SIG-0002", "Result requires exactly two type arguments: Result<T, E>"]
+        }
+    } otherwise {
+        when name == "Option" {
+            when size(arguments) != 1 {
+                yield ["ERROR", "RPR-SIG-0003", "Option requires exactly one type argument: Option<T>"]
+            }
+        } otherwise {
+            when name == "unknown" {
+                when size(arguments) != 0 {
+                    yield ["ERROR", "RPR-SIG-0004", "unknown cannot have generic arguments"]
+                }
+                yield ["OK"]
+            }
+            when signature_primitive_type(name) {
+                when size(arguments) != 0 {
+                    yield ["ERROR", "RPR-SIG-0005", "primitive type cannot have generic arguments: " ++ name]
+                }
+                yield ["OK"]
+            }
+            when signature_name_in(generic_parameters, name) {
+                when size(arguments) != 0 {
+                    yield ["ERROR", "RPR-SIG-0006", "generic type parameter cannot have arguments: " ++ name]
+                }
+                yield ["OK"]
+            }
+            when signature_declares_type(declarations, name) {
+                when size(arguments) != 0 {
+                    yield ["ERROR", "RPR-SIG-0007", "non-generic declaration cannot have type arguments: " ++ name]
+                }
+                yield ["OK"]
+            }
+            yield ["ERROR", "RPR-SIG-0008", "unknown type name: " ++ name]
+        }
+    }
+
+    each argument in arguments {
+        make checked := signature_validate_type(argument, generic_parameters, declarations)
+        when checked[0] == "ERROR" {
+            yield checked
+        }
+    }
+    yield ["OK"]
+}
+
+craft signature_collect_yields(node, collected) {
+    when size(node) != 4 {
+        yield collected
+    }
+    when node[0] == "function" {
+        yield collected
+    }
+    when node[0] == "yield" {
+        yield push(collected, node)
+    }
+    each child in node[3] {
+        when size(child) == 4 {
+            change collected := signature_collect_yields(child, collected)
+        }
+    }
+    yield collected
+}
+
+craft signature_result_constructor(expression, expected_name) {
+    when size(expression) != 4 or expression[0] != "call" {
+        yield false
+    }
+    when size(expression[3]) != 2 {
+        yield false
+    }
+    make callee := expression[3][0]
+    when size(callee) != 4 or callee[0] != "name" {
+        yield false
+    }
+    yield callee[2] == expected_name
+}
+
+craft signature_return_matches(yield_node, return_type) {
+    when size(yield_node[3]) != 1 {
+        yield false
+    }
+    make expression := yield_node[3][0]
+    when return_type[0] == "Result" {
+        yield signature_result_constructor(expression, "ok") or
+            signature_result_constructor(expression, "err")
+    }
+    when return_type[0] == "Option" {
+        when size(expression) == 4 and expression[0] == "literal" and expression[1][0] == "NOTHING" {
+            yield true
+        }
+        yield signature_result_constructor(expression, "some")
+    }
+    yield true
+}
+
+craft signature_validate_result_returns(function_node, return_type) {
+    when return_type[0] != "Result" and return_type[0] != "Option" {
+        yield ["OK"]
+    }
+    when size(function_node[3]) != 1 {
+        yield signature_error("RPR-SIG-0009", "typed craft must have exactly one body block", function_node[1])
+    }
+    make returns := signature_collect_yields(function_node[3][0], [])
+    when size(returns) == 0 {
+        yield signature_error("RPR-SIG-0010", "Result/Option craft must contain an explicit yield", function_node[1])
+    }
+    each returned in returns {
+        when not signature_return_matches(returned, return_type) {
+            when return_type[0] == "Result" {
+                yield signature_error("RPR-SIG-0011", "Result return must yield ok(value) or err(error)", returned[1])
+            }
+            yield signature_error("RPR-SIG-0012", "Option return must yield some(value) or nothing", returned[1])
+        }
+    }
+    yield ["OK"]
+}
+
+export craft signature_validate_function(function_node, declarations) {
+    when size(function_node) != 4 or function_node[0] != "function" {
+        yield ["ERROR", "RPR-SIG-0013", "expected a function AST"]
+    }
+    when size(function_node[2]) == 2 {
+        yield ["OK", ["legacy", function_node[2][0]]]
+    }
+    when size(function_node[2]) != 5 {
+        yield signature_error("RPR-SIG-0014", "typed function metadata has an invalid shape", function_node[1])
+    }
+
+    make name := function_node[2][0]
+    make parameters := function_node[2][1]
+    make parameter_types := function_node[2][2]
+    make return_type := function_node[2][3]
+    make generic_parameters := function_node[2][4]
+
+    when name == "" {
+        yield signature_error("RPR-SIG-0015", "function name cannot be empty", function_node[1])
+    }
+    when size(parameters) != size(parameter_types) {
+        yield signature_error("RPR-SIG-0016", "parameter names and parameter types must have equal lengths", function_node[1])
+    }
+
+    vary parameter_index := 0
+    loop while parameter_index < size(parameters) {
+        when parameters[parameter_index] == "" {
+            yield signature_error("RPR-SIG-0017", "parameter name cannot be empty", function_node[1])
+        }
+        vary prior_parameter := 0
+        loop while prior_parameter < parameter_index {
+            when parameters[prior_parameter] == parameters[parameter_index] {
+                yield signature_error("RPR-SIG-0018", "duplicate function parameter: " ++ parameters[parameter_index], function_node[1])
+            }
+            change prior_parameter := prior_parameter + 1
+        }
+        change parameter_index := parameter_index + 1
+    }
+
+    vary generic_index := 0
+    loop while generic_index < size(generic_parameters) {
+        when generic_parameters[generic_index] == "" or generic_parameters[generic_index] == "Result" or generic_parameters[generic_index] == "Option" or signature_primitive_type(generic_parameters[generic_index]) {
+            yield signature_error("RPR-SIG-0019", "generic parameter name is empty, reserved or shadows a primitive type", function_node[1])
+        }
+        vary prior_generic := 0
+        loop while prior_generic < generic_index {
+            when generic_parameters[prior_generic] == generic_parameters[generic_index] {
+                yield signature_error("RPR-SIG-0020", "duplicate generic parameter: " ++ generic_parameters[generic_index], function_node[1])
+            }
+            change prior_generic := prior_generic + 1
+        }
+        change generic_index := generic_index + 1
+    }
+
+    each parameter_type in parameter_types {
+        make checked := signature_validate_type(parameter_type, generic_parameters, declarations)
+        when checked[0] == "ERROR" {
+            yield signature_error(checked[1], checked[2], function_node[1])
+        }
+    }
+
+    make checked_return := signature_validate_type(return_type, generic_parameters, declarations)
+    when checked_return[0] == "ERROR" {
+        yield signature_error(checked_return[1], checked_return[2], function_node[1])
+    }
+
+    make checked_returns := signature_validate_result_returns(function_node, return_type)
+    when checked_returns[0] == "ERROR" {
+        yield checked_returns
+    }
+
+    yield ["OK", [name, generic_parameters, parameters, parameter_types, return_type]]
+}
+
+craft signature_unwrap_export(node) {
+    when size(node) == 4 and node[0] == "export" and size(node[3]) == 1 {
+        yield node[3][0]
+    }
+    yield node
+}
+
+export craft signature_validate_program(program_node) {
+    when size(program_node) != 4 or program_node[0] != "program" {
+        yield ["ERROR", "RPR-SIG-0021", "expected a program AST"]
+    }
+    make raw_declarations := program_node[3]
+    vary declarations := []
+    each raw_declaration in raw_declarations {
+        change declarations := push(declarations, signature_unwrap_export(raw_declaration))
+    }
+
+    vary names := []
+    vary signatures := []
+
+    each declaration in declarations {
+        when size(declaration) == 4 and declaration[0] == "function" {
+            make function_name := declaration[2][0]
+            when signature_name_in(names, function_name) {
+                yield signature_error("RPR-SIG-0022", "duplicate craft declaration: " ++ function_name, declaration[1])
+            }
+            change names := push(names, function_name)
+            make checked := signature_validate_function(declaration, declarations)
+            when checked[0] == "ERROR" {
+                yield checked
+            }
+            change signatures := push(signatures, checked[1])
+        }
+    }
+
+    yield ["OK", signatures]
+}

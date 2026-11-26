@@ -166,7 +166,7 @@ export craft tokenize(source) {
             yield ["CATALOG_OPERATOR", triplet, start_line, start_column]
         } otherwise {
             make pair := current(0) ++ current(1)
-            when pair == ":=" or pair == "==" or pair == "!=" or pair == "<=" or pair == ">=" or pair == "//" or pair == "**" or pair == "++" or pair == "::" {
+            when pair == ":=" or pair == "==" or pair == "!=" or pair == "<=" or pair == ">=" or pair == "//" or pair == "**" or pair == "++" or pair == "::" or pair == "->" {
                 make ignored_first := advance()
                 make ignored_second := advance()
                 yield [pair, pair, start_line, start_column]
@@ -283,5 +283,9 @@ assert(field_separator == [
     ["IDENT", "u32", 1, 4],
     ["EOF", "", 1, 7]
 ], "typed field separator tokenization mismatch")
+
+make typed_signature := tokenize("craft id<T>(value: T) -> Result<T, Error>")
+assert(typed_signature[10][0] == "->", "typed craft return arrow tokenization mismatch")
+assert(typed_signature[12][0] == "<" and typed_signature[16][0] == ">", "generic type delimiters mismatch")
 
 emit "SELFHOST_LEXER_OK"
