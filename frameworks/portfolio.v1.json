@@ -884,12 +884,215 @@
         357
       ],
       "branch": "feat/rforge-framework-archetypes",
-      "role": "20 separately named Reaper-source product archetypes; current catalogue says runtime validation is pending and native AOT is unsupported for this source slice.",
+      "role": "Separate 20-module Reaper-source archetype collection, catalogued by name and source. Current branch reports source present but runtime validation pending; keep separate from the 60 core portfolio entries until contracts, tests and ownership are reconciled.",
       "evidence": [
         "docs/RFORGE_ARCHETYPE_CATALOG.md",
         "examples/rforge/frameworks.v1.json",
         "frameworks/rforge/all.rpr"
-      ]
+      ],
+      "members": [
+        {
+          "id": "plague",
+          "name": "Plague",
+          "source": "frameworks/rforge/plague_soft_frame.rpr",
+          "status": "source_present_runtime_validation_pending",
+          "implementation_language": "Reaper",
+          "source_branch": "feat/rforge-framework-archetypes",
+          "responsibility": "Soft-frame kernel for frame geometry, opacity, hit testing and legal lifecycle transitions.",
+          "counted_in_core_60": false
+        },
+        {
+          "id": "outbreak",
+          "name": "Outbreak",
+          "source": "frameworks/rforge/outbreak_frame_soft.rpr",
+          "status": "source_present_runtime_validation_pending",
+          "implementation_language": "Reaper",
+          "source_branch": "feat/rforge-framework-archetypes",
+          "responsibility": "Frame-first shell composer with bounded slots, duplicate-mount rejection and soft-surface readiness.",
+          "counted_in_core_60": false
+        },
+        {
+          "id": "pestilence",
+          "name": "Pestilence",
+          "source": "frameworks/rforge/pestilence_frame_saas.rpr",
+          "status": "source_present_runtime_validation_pending",
+          "implementation_language": "Reaper",
+          "source_branch": "feat/rforge-framework-archetypes",
+          "responsibility": "Tenant-isolated frame binding, tenant ownership checks, quotas and session transitions.",
+          "counted_in_core_60": false
+        },
+        {
+          "id": "malady",
+          "name": "Malady",
+          "source": "frameworks/rforge/malady_saas_frame.rpr",
+          "status": "source_present_runtime_validation_pending",
+          "implementation_language": "Reaper",
+          "source_branch": "feat/rforge-framework-archetypes",
+          "responsibility": "SaaS-first frame routing with plan feature gates, tenant route validation and frame admission.",
+          "counted_in_core_60": false
+        },
+        {
+          "id": "epidemic",
+          "name": "Epidemic",
+          "source": "frameworks/rforge/epidemic_framework_native.rpr",
+          "status": "source_present_runtime_validation_pending",
+          "implementation_language": "Reaper",
+          "source_branch": "feat/rforge-framework-archetypes",
+          "responsibility": "Native systems contract layer for scalar widths, DABI64/C17 ABI declarations, alignment and memory regions.",
+          "counted_in_core_60": false
+        },
+        {
+          "id": "miasma",
+          "name": "Miasma",
+          "source": "frameworks/rforge/miasma_native_framework.rpr",
+          "status": "source_present_runtime_validation_pending",
+          "implementation_language": "Reaper",
+          "source_branch": "feat/rforge-framework-archetypes",
+          "responsibility": "Native-host framework kernel for ABI compatibility, module lifecycle, memory admission and extension grants.",
+          "counted_in_core_60": false
+        },
+        {
+          "id": "pandemic",
+          "name": "Pandemic",
+          "source": "frameworks/rforge/pandemic_program_summary.rpr",
+          "status": "source_present_runtime_validation_pending",
+          "implementation_language": "Reaper",
+          "source_branch": "feat/rforge-framework-archetypes",
+          "responsibility": "Program-first execution accounting with bounded counters, completion rate, remaining work and outcome.",
+          "counted_in_core_60": false
+        },
+        {
+          "id": "fever",
+          "name": "Fever",
+          "source": "frameworks/rforge/fever_summary_program.rpr",
+          "status": "source_present_runtime_validation_pending",
+          "implementation_language": "Reaper",
+          "source_branch": "feat/rforge-framework-archetypes",
+          "responsibility": "Summary-first diagnostics aggregation with severity classification, validated report lines and release gates.",
+          "counted_in_core_60": false
+        },
+        {
+          "id": "scourge",
+          "name": "Scourge",
+          "source": "frameworks/rforge/scourge_system_control.rpr",
+          "status": "source_present_runtime_validation_pending",
+          "implementation_language": "Reaper",
+          "source_branch": "feat/rforge-framework-archetypes",
+          "responsibility": "System-first control state machine with authorization and guard requirements for privileged transitions.",
+          "counted_in_core_60": false
+        },
+        {
+          "id": "bane",
+          "name": "Bane",
+          "source": "frameworks/rforge/bane_control_system.rpr",
+          "status": "source_present_runtime_validation_pending",
+          "implementation_language": "Reaper",
+          "source_branch": "feat/rforge-framework-archetypes",
+          "responsibility": "Control-first rule evaluation, safe action plans, enforcement levels and verified transitions.",
+          "counted_in_core_60": false
+        },
+        {
+          "id": "blight",
+          "name": "Blight",
+          "source": "frameworks/rforge/blight_tunnel_justice.rpr",
+          "status": "source_present_runtime_validation_pending",
+          "implementation_language": "Reaper",
+          "source_branch": "feat/rforge-framework-archetypes",
+          "responsibility": "Tunnel-first route admission with endpoint validation, clearance comparison, reason checks and bounded leases.",
+          "counted_in_core_60": false
+        },
+        {
+          "id": "curse",
+          "name": "Curse",
+          "source": "frameworks/rforge/curse_justice_tunnel.rpr",
+          "status": "source_present_runtime_validation_pending",
+          "implementation_language": "Reaper",
+          "source_branch": "feat/rforge-framework-archetypes",
+          "responsibility": "Justice-first evidence disposition, appeal handling, signed release and auditable case records.",
+          "counted_in_core_60": false
+        },
+        {
+          "id": "calamity",
+          "name": "Calamity",
+          "source": "frameworks/rforge/calamity_native_realisation.rpr",
+          "status": "source_present_runtime_validation_pending",
+          "implementation_language": "Reaper",
+          "source_branch": "feat/rforge-framework-archetypes",
+          "responsibility": "Native-realisation pipeline with explicit source, parse, type, IR, lowering and link stages.",
+          "counted_in_core_60": false
+        },
+        {
+          "id": "menace",
+          "name": "Menace",
+          "source": "frameworks/rforge/menace_realisation_native.rpr",
+          "status": "source_present_runtime_validation_pending",
+          "implementation_language": "Reaper",
+          "source_branch": "feat/rforge-framework-archetypes",
+          "responsibility": "Realisation-first native transaction planning, commit authorization, bounded transient retries and stage ordering.",
+          "counted_in_core_60": false
+        },
+        {
+          "id": "affliction",
+          "name": "Affliction",
+          "source": "frameworks/rforge/affliction_ui_unreal.rpr",
+          "status": "source_present_runtime_validation_pending",
+          "implementation_language": "Reaper",
+          "source_branch": "feat/rforge-framework-archetypes",
+          "responsibility": "UI-first Unreal bridge contracts for widget geometry, focused event routing and viewport bounds.",
+          "counted_in_core_60": false
+        },
+        {
+          "id": "cataclysm",
+          "name": "Cataclysm",
+          "source": "frameworks/rforge/cataclysm_unreal_ui.rpr",
+          "status": "source_present_runtime_validation_pending",
+          "implementation_language": "Reaper",
+          "source_branch": "feat/rforge-framework-archetypes",
+          "responsibility": "Unreal-first UI host compatibility, widget lifecycle, bounded batches and frame commit gates.",
+          "counted_in_core_60": false
+        },
+        {
+          "id": "infestation",
+          "name": "Infestation",
+          "source": "frameworks/rforge/infestation_concrete_cosmos.rpr",
+          "status": "source_present_runtime_validation_pending",
+          "implementation_language": "Reaper",
+          "source_branch": "feat/rforge-framework-archetypes",
+          "responsibility": "Concrete-entity-first scene graph with parent identity, typed relations and bounded nesting depth.",
+          "counted_in_core_60": false
+        },
+        {
+          "id": "devastation",
+          "name": "Devastation",
+          "source": "frameworks/rforge/devastation_cosmos_concrete.rpr",
+          "status": "source_present_runtime_validation_pending",
+          "implementation_language": "Reaper",
+          "source_branch": "feat/rforge-framework-archetypes",
+          "responsibility": "Cosmos-first spatial cell indexing, concrete bounds checks and bounded entity materialization.",
+          "counted_in_core_60": false
+        },
+        {
+          "id": "contagion",
+          "name": "Contagion",
+          "source": "frameworks/rforge/contagion_base_space.rpr",
+          "status": "source_present_runtime_validation_pending",
+          "implementation_language": "Reaper",
+          "source_branch": "feat/rforge-framework-archetypes",
+          "responsibility": "Base-space geometry with coordinate limits, squared distance, axis-aligned bounds and translation.",
+          "counted_in_core_60": false
+        },
+        {
+          "id": "desolation",
+          "name": "Desolation",
+          "source": "frameworks/rforge/desolation_space_base.rpr",
+          "status": "source_present_runtime_validation_pending",
+          "implementation_language": "Reaper",
+          "source_branch": "feat/rforge-framework-archetypes",
+          "responsibility": "Space-first coordinate authority with invertible basis checks and local/world transformations.",
+          "counted_in_core_60": false
+        }
+      ],
+      "external_framework_count": 20
     },
     {
       "id": "rivet",
