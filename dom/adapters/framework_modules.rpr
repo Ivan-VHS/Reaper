@@ -1,4 +1,4 @@
-# ДОМ adapters for the eight standalone Reaper framework modules.
+# ДОМ adapters for the eighteen standalone Reaper framework modules.
 # This layer reuses each module through its public contract; it does not copy
 # their algorithms into the ДОМ runtime or give them independent authority.
 
@@ -10,6 +10,16 @@ import "../../frameworks/most.rpr" as most
 import "../../frameworks/blau.rpr" as blau
 import "../../frameworks/shashio.rpr" as shashio
 import "../../frameworks/showel_fleppery_code.rpr" as showel
+import "../../frameworks/vorke.rpr" as vorke
+import "../../frameworks/jellymeat.rpr" as jellymeat
+import "../../frameworks/lejjyfish.rpr" as lejjyfish
+import "../../frameworks/lejjy.rpr" as lejjy
+import "../../frameworks/oplos.rpr" as oplos
+import "../../frameworks/holmosaptimu.rpr" as holmosaptimu
+import "../../frameworks/sentan.rpr" as sentan
+import "../../frameworks/cellene.rpr" as cellene
+import "../../frameworks/kolir.rpr" as kolir
+import "../../frameworks/somo.rpr" as somo
 
 export craft resolve_module_graph(nodes, edges) {
     yield galhero["topological_order"](nodes, edges)
@@ -74,4 +84,75 @@ export craft reachable_states(states, transitions, initial_state) {
 
 export craft run_bounded_transform(pipeline, source, max_steps) {
     yield showel["run_bounded"](pipeline, source, max_steps)
+}
+
+
+# New v1.1 adapters. The underlying frameworks retain domain ownership.
+export craft standalone_module_count() {
+    yield 18
+}
+
+export craft standalone_module_names() {
+    yield [
+        "GalHero", "Call-and-Back", "Stacked Options", "PerenosiMOST",
+        "MOST", "Blau", "Shashio", "Showel Fleppery CODE",
+        "Vorke", "Jellymeat", "LejjyFish", "Lejjy", "Oplos",
+        "Holmosaptimu", "Sentan", "Cellene", "Kolir", "SOMO"
+    ]
+}
+
+export craft validate_application_manifest(manifest) {
+    yield vorke["validate_manifest"](manifest)
+}
+
+export craft plan_application_start(manifest) {
+    yield vorke["phase_plan"](manifest)
+}
+
+export craft validate_data_record(schema, record) {
+    yield jellymeat["validate_record"](schema, record)
+}
+
+export craft project_data_record(record, fields) {
+    yield jellymeat["project"](record, fields)
+}
+
+export craft append_stream_event(events, event, capacity) {
+    yield lejjyfish["append"](events, event, capacity)
+}
+
+export craft resolve_service_provider(bindings, service_id) {
+    yield lejjy["resolve"](bindings, service_id)
+}
+
+export craft validate_service_scopes(bindings, requests) {
+    yield lejjy["validate_dependencies"](bindings, requests)
+}
+
+export craft validate_transport_routes(routes) {
+    yield oplos["validate_routes"](routes)
+}
+
+export craft summarize_local_metric(catalog, samples, metric_id) {
+    yield holmosaptimu["summarize"](catalog, samples, metric_id)
+}
+
+export craft evaluate_policy_rules(rules, request) {
+    yield sentan["evaluate"](rules, request)
+}
+
+export craft validate_component_composition(manifests, abi_major, abi_minor) {
+    yield cellene["validate_composition"](manifests, abi_major, abi_minor)
+}
+
+export craft validate_ui_tree(nodes) {
+    yield kolir["validate_tree"](nodes)
+}
+
+export craft evaluate_test_scenario(scenario, outcomes) {
+    yield somo["evaluate"](scenario, outcomes)
+}
+
+export craft compare_replay_traces(expected_trace, actual_trace) {
+    yield somo["replay_equal"](expected_trace, actual_trace)
 }
