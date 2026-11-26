@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   test:
-    name: Python ${{ matrix.python-version }}
+    name: Python \${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: \${{ matrix.python-version }}
       - name: Compile package and tests
         run: python -m compileall -q reaper tests
       - name: Validate localized README links
@@ -48,3 +48,21 @@ jobs:
         run: |
           python -m reaper examples/device_audit.rpr
           python -c "import json; report=json.load(open('device-audit-report.json', encoding='utf-8')); assert report['schema'] == 'reaper.oplage-comparison.v1'; assert report['mode'] == 'read_only'"
+      - name: Validate PLAGUE Reaper modules
+        run: |
+          python -m reaper --check plague/engine/policy.rpr
+          python -m reaper --check plague/engine/registry.rpr
+          python -m reaper --check plague/examples/policy_smoke.rpr
+      - name: Run PLAGUE policy and registry smoke
+        run: |
+          python -m reaper plague/examples/policy_smoke.rpr | tee plague-smoke.log
+          grep -F "PASS default mode is observe" plague-smoke.log
+          grep -F "PASS observe can read source" plague-smoke.log
+          grep -F "PASS propose cannot write a branch" plague-smoke.log
+          grep -F "PASS apply can write a topic branch" plague-smoke.log
+          grep -F "PASS merge is denied" plague-smoke.log
+          grep -F "PASS secret access is denied" plague-smoke.log
+          grep -F "PASS untrusted execution is denied" plague-smoke.log
+          grep -F "PASS unknown mode is denied" plague-smoke.log
+          grep -F "PASS registry contains ten components" plague-smoke.log
+          grep -F "PASS registry recognizes blightforge" plague-smoke.log
