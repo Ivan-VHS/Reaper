@@ -24,6 +24,28 @@
   },
   "capabilities": [
     {
+      "id": "foundations.ninth-five-frameworks",
+      "status": "partial",
+      "summary": "Adds executable contracts for an evidence-led engineering methodology, compatible approach profiles, system manifests and canonical component order, owned subsystem flows, and versioned .rpr module exports/imports/effects; compiler-enforced module ownership and effect checking remain partial.",
+      "evidence": [
+        "frameworks/foundation_41_45.rpr",
+        "frameworks/foundation_36_40.rpr",
+        "frameworks/foundation_31_35.rpr",
+        "frameworks/foundation_26_30.rpr",
+        "frameworks/foundation_21_25.rpr",
+        "frameworks/foundation_16_20.rpr",
+        "frameworks/foundation_11_15.rpr",
+        "frameworks/foundation_6_10.rpr",
+        "frameworks/foundation.rpr",
+        "docs/FOUNDATIONAL_FRAMEWORKS_41_45.md",
+        "examples/foundations_41_45.rpr",
+        "tests/test_foundational_frameworks_41_45.py",
+        "reaper/modules.py",
+        "docs/ARCHITECTURE.md",
+        "docs/REAPER_UNIFIED_ARCHITECTURE.md"
+      ]
+    },
+    {
       "id": "foundations.eighth-five-frameworks",
       "status": "partial",
       "summary": "Adds executable contracts for source/execution context and Span validation, runtime/typed value model descriptors, reusable pattern requirements, language-paradigm maturity and a cross-framework concept graph; complete source maps, typed systems syntax and compiler semantics remain partial.",
