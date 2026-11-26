@@ -23,9 +23,9 @@
       "source_files": [
         "frameworks/Lokaliza/src/locale.rpr"
       ],
-      "current_source_characters": 5488,
+      "current_source_characters": 9177,
       "target_source_characters": 666666,
-      "remaining_source_characters": 661178,
+      "remaining_source_characters": 657489,
       "maturity": "Genesis"
     },
     {
@@ -34,9 +34,9 @@
       "source_files": [
         "frameworks/Sealise/src/blueprint.rpr"
       ],
-      "current_source_characters": 5071,
+      "current_source_characters": 8931,
       "target_source_characters": 666666,
-      "remaining_source_characters": 661595,
+      "remaining_source_characters": 657735,
       "maturity": "Genesis"
     },
     {
@@ -45,9 +45,9 @@
       "source_files": [
         "frameworks/Blebby/src/package.rpr"
       ],
-      "current_source_characters": 6430,
+      "current_source_characters": 11534,
       "target_source_characters": 666666,
-      "remaining_source_characters": 660236,
+      "remaining_source_characters": 655132,
       "maturity": "Genesis"
     },
     {
@@ -56,9 +56,9 @@
       "source_files": [
         "frameworks/Centen/src/resource.rpr"
       ],
-      "current_source_characters": 5863,
+      "current_source_characters": 9710,
       "target_source_characters": 666666,
-      "remaining_source_characters": 660803,
+      "remaining_source_characters": 656956,
       "maturity": "Genesis"
     },
     {
@@ -67,9 +67,9 @@
       "source_files": [
         "frameworks/Kaso/src/template.rpr"
       ],
-      "current_source_characters": 7195,
+      "current_source_characters": 12350,
       "target_source_characters": 666666,
-      "remaining_source_characters": 659471,
+      "remaining_source_characters": 654316,
       "maturity": "Genesis"
     },
     {
@@ -78,9 +78,9 @@
       "source_files": [
         "frameworks/Shinnn/src/graph.rpr"
       ],
-      "current_source_characters": 5941,
+      "current_source_characters": 10000,
       "target_source_characters": 666666,
-      "remaining_source_characters": 660725,
+      "remaining_source_characters": 656666,
       "maturity": "Genesis"
     },
     {
@@ -89,9 +89,9 @@
       "source_files": [
         "frameworks/Porteo/src/lifecycle.rpr"
       ],
-      "current_source_characters": 6041,
+      "current_source_characters": 9184,
       "target_source_characters": 666666,
-      "remaining_source_characters": 660625,
+      "remaining_source_characters": 657482,
       "maturity": "Genesis"
     },
     {
@@ -100,9 +100,9 @@
       "source_files": [
         "frameworks/Portable-Bortable/src/target.rpr"
       ],
-      "current_source_characters": 5454,
+      "current_source_characters": 8908,
       "target_source_characters": 666666,
-      "remaining_source_characters": 661212,
+      "remaining_source_characters": 657758,
       "maturity": "Genesis"
     },
     {
@@ -111,9 +111,9 @@
       "source_files": [
         "frameworks/SWO/src/pipeline.rpr"
       ],
-      "current_source_characters": 6325,
+      "current_source_characters": 10076,
       "target_source_characters": 666666,
-      "remaining_source_characters": 660341,
+      "remaining_source_characters": 656590,
       "maturity": "Genesis"
     },
     {
@@ -122,9 +122,9 @@
       "source_files": [
         "frameworks/ScoHOPE/src/application.rpr"
       ],
-      "current_source_characters": 7840,
+      "current_source_characters": 11658,
       "target_source_characters": 666666,
-      "remaining_source_characters": 658826,
+      "remaining_source_characters": 655008,
       "maturity": "Genesis"
     }
   ],
