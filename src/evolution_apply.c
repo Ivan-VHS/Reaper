@@ -170,6 +170,8 @@ static int request_digest(const ReaperEvolutionApplyRequest *request, char outpu
         !hash_field(&context, request->target_branch, strlen(request->target_branch)) ||
         !hash_field(&context, request->revision_algorithm, strlen(request->revision_algorithm)) ||
         !hash_field(&context, request->base_revision, strlen(request->base_revision)) ||
+        !hash_u64(&context, request->now_unix_seconds) ||
+        !hash_field(&context, request->signed_grant, request->signed_grant_size) ||
         !hash_u64(&context, (uint64_t)request->patch_count)) return 0;
     for (index = 0u; index < request->patch_count; ++index) {
         const ReaperSourcePatch *patch = &request->patches[index];
@@ -239,7 +241,7 @@ static int rollback_entries(const ReaperEvolutionApplyHost *host,
 static int rollback_published_branch(const ReaperEvolutionApplyHost *host,
                                      const ReaperEvolutionApplyRequest *request,
                                      void **published_rollback) {
-    if (published_rollback == NULL || *published_rollback == NULL) return 1;
+    if (published_rollback == NULL || *published_rollback == NULL) return 0;
     if (host->rollback_topic_branch(host->context, *published_rollback)) {
         host->release_rollback(host->context, *published_rollback);
         *published_rollback = NULL;
@@ -373,8 +375,6 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
         result.status = REAPER_APPLY_INVALID_ARGUMENT;
         return result;
     }
-    (void)snprintf(result.published_branch, sizeof result.published_branch,
-                   "%s", request->target_branch);
     if (!host->audit_append(host->context, "apply.started", request->request_id,
             request->repository_id, request->target_branch, request->base_revision,
             "", result.request_digest, "grant and immutable base revision verified")) {
@@ -491,6 +491,8 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
         goto fail;
     }
     branch_published = 1;
+    (void)snprintf(result.published_branch, sizeof result.published_branch,
+                   "%s", request->target_branch);
     if (published_rollback == NULL ||
         !valid_revision(&(ReaperEvolutionApplyRequest){
             .revision_algorithm = request->revision_algorithm,
