@@ -182,7 +182,7 @@ craft type_join(left, right) {
     make left_bits := type_integer_bits(left[1])
     make right_bits := type_integer_bits(right[1])
     when left_bits > 0 and right_bits > 0 {
-        make widest := left_bits
+        vary widest := left_bits
         when right_bits > widest { change widest := right_bits }
         when type_is_signed_integer(left[1]) and type_is_signed_integer(right[1]) {
             when widest == 8 { yield type_primitive("i8") }
