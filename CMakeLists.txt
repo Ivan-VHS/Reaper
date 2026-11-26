@@ -10,7 +10,7 @@ endif()
 if(MSVC)
  add_compile_options(/utf-8)
 endif()
-add_library(reaper_core STATIC src/lexer.c src/ir.c src/parser.c src/ast_json.c src/optimizer.c src/lower.c src/evolution.c src/compiler_ir.c src/sha256.c src/evolution_apply.c src/token_catalog.c src/division.c src/capability_suite.c src/hardware.c src/command_palette.c src/lineage.c)
+add_library(reaper_core STATIC src/lexer.c src/ir.c src/parser.c src/ast_json.c src/optimizer.c src/lower.c src/evolution.c src/compiler_ir.c src/compiler_frontend.c src/sha256.c src/evolution_apply.c src/token_catalog.c src/division.c src/capability_suite.c src/hardware.c src/command_palette.c src/lineage.c)
 target_include_directories(reaper_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_library(reaper_system STATIC src/system.c)
