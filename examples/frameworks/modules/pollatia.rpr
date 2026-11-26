@@ -61,8 +61,10 @@ export craft histogram_observe(histogram, observation) {
     vary previous_bound := nothing
     each bound in histogram[0] {
         when not fc["fc_is_number"](bound) { yield [false, histogram, "histogram-bound-invalid"] }
-        when previous_bound != nothing and bound <= previous_bound {
-            yield [false, histogram, "histogram-bounds-not-increasing"]
+        when previous_bound != nothing {
+            when bound <= previous_bound {
+                yield [false, histogram, "histogram-bounds-not-increasing"]
+            }
         }
         change previous_bound := bound
     }
@@ -95,6 +97,9 @@ export craft histogram_observe(histogram, observation) {
 export craft metrics_export(snapshot, policy) {
     when not fc["fc_record"](snapshot, 3) or not fc["fc_record"](policy, 2) {
         yield [false, [], "metrics-export-shape"]
+    }
+    when not fc["fc_valid_pairs"](snapshot[2])[0] {
+        yield [false, [], "metrics-snapshot-counters-invalid"]
     }
     when kind(policy[0]) != "list" or not fc["fc_nonnegative"](policy[1]) {
         yield [false, [], "metrics-export-policy-invalid"]
