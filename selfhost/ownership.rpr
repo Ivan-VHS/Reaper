@@ -18,9 +18,8 @@ export craft region_tree_validate(regions) {
             }
             change prior := prior + 1
         }
-        when region[1] != "root" and not contains(regions |> map(??), region[1]) {
-            # Parent existence is checked in region_parent_exists below.
-            when region[1] == "" { yield ["ERROR", "region parent cannot be empty"] }
+        when region[1] == "" {
+            yield ["ERROR", "region parent cannot be empty"]
         }
         change index := index + 1
     }
