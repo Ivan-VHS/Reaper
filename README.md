@@ -14,11 +14,11 @@ Reaper is a systems-programming language and local development workbench for com
 
 - Reaper source language, lexer/parser, reference runtime and diagnostics.
 - CLI, REPL, Windows Studio foundation, LSP and DAP services.
-- Experimental native C17 implementation; it is not yet feature-equivalent to the reference runtime.
+- Experimental native C17 implementation; it is not yet feature-equivalent to the reference runtime. The native core now includes a shared typed HIR/MIR/LIR contract for bounded scalar and aesthetic nodes, plus deterministic C17 instruction-table emission; full parser/backend parity remains incomplete.
 - NOO TAH delegates JavaScript execution to the official Node.js runtime.
 - Jora application scaffolding and capability composition; catalog packs remain specifications, not installable editors.
-- PLAGUE 1.0.0 repository-evolution foundation is proposed in a separate open PR; repository discovery, patch application and autonomous writes are not yet implemented.
-- RAAEF adds a proposed Reaper-native typed aesthetic-profile pipeline (HIR/MIR/LIR) and architecture/design/source evolution planner; runtime execution and general native compiler integration are pending.
+- PLAGUE 1.0.0 repository-evolution foundation is proposed in a separate open PR. The native C17 core also now provides SHA-256-pinned patch descriptors and a fail-closed transaction engine contract for signed grants, path scopes, isolated workspaces, sandboxed registered checks, topic-branch publication, audit and rollback. Concrete Windows/POSIX Git and sandbox adapters are not yet shipped, and SOMO apply remains blocked.
+- RAAEF adds a proposed Reaper-native typed aesthetic-profile pipeline and architecture/design/source evolution planner. Its C17 core IR now handles the bounded scalar/design node set, but compilation of the full imported .rpr family and native renderer integration remain pending.
 
 See [Framework catalogue](frameworks/README.md), [Aesthetic & Architecture Evolution](docs/AESTHETIC_EVOLUTION.md), [Features](docs/FEATURES.md), [Architecture](docs/ARCHITECTURE.md), [Hardware Language](docs/HARDWARE_LANGUAGE.md), [Jora factory](docs/JORA_APPLICATION_FACTORY.md), [PLAGUE](docs/PLAGUE.md), [Studio and IDE](docs/REAPER_IDE.md) and [NOO TAH](docs/NOO_TAH.md).
 
