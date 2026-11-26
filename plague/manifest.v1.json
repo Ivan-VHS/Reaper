@@ -21,16 +21,14 @@
     "bounded_repository_profile_validation",
     "bounded_evolution_proposal_validation",
     "compatibility_scope_budget_and_gate_assessment",
-    "risk_benefit_candidate_selection",
+    "risk_aware_candidate_scoring",
+    "deterministic_candidate_selection",
     "policy_and_evolution_smoke_programs",
-    "versioned_repository_profile_contract",
-    "versioned_evolution_proposal_contract",
-    "policy_smoke_program",
     "versioned_repository_target_contract",
     "versioned_change_plan_contract",
     "versioned_evidence_contract",
-    "risk_aware_change_assessment",
-    "deterministic_candidate_selection"
+    "versioned_repository_profile_contract",
+    "versioned_evolution_proposal_contract"
   ],
   "not_implemented": [
     "repository_discovery_adapter",
@@ -61,14 +59,15 @@
       "status": "partial",
       "implemented": [
         "mode_gated_action_policy",
-        "bounded_evolution_assessment",
-        "risk_benefit_candidate_selection",
         "bounded_repository_profile_validation",
-        "risk_aware_change_assessment",
+        "bounded_evolution_proposal_validation",
+        "compatibility_scope_budget_and_gate_assessment",
+        "risk_aware_candidate_scoring",
         "deterministic_candidate_selection"
       ],
       "missing": [
         "grant_validation",
+        "path_allowlist_enforcement",
         "task_orchestration",
         "persistent_state",
         "adapter_dispatch",
