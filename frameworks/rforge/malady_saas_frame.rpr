@@ -1,0 +1,45 @@
+# Malady — SaaS Frame
+# SaaS-first routing, plan gates and frame admission.
+
+export make FRAMEWORK_ID := "malady.saas_frame"
+export make FRAMEWORK_VERSION := "1.0.0"
+export make FRAMEWORK_PROFILE := "Saas Frame"
+
+export craft malady_plan_frame_limit(plan) {
+    when plan == "free" {
+        yield 3
+    }
+    when plan == "pro" {
+        yield 20
+    }
+    when plan == "enterprise" {
+        yield 100
+    }
+    yield 0
+}
+
+export craft malady_feature_allowed(plan, feature) {
+    when feature == "workspace" {
+        yield plan == "free" or plan == "pro" or plan == "enterprise"
+    }
+    when feature == "collaboration" {
+        yield plan == "pro" or plan == "enterprise"
+    }
+    when feature == "governance" {
+        yield plan == "enterprise"
+    }
+    yield false
+}
+
+export craft malady_route_valid(tenant_key, frame_key) {
+    yield size(trim(tenant_key)) > 0 and size(trim(frame_key)) > 0
+}
+
+export craft malady_frame_quota_allowed(plan, active_frames) {
+    make limit := malady_plan_frame_limit(plan)
+    yield limit > 0 and active_frames >= 0 and active_frames < limit
+}
+
+export craft malady_route_admit(plan, tenant_key, frame_key, active_frames, feature) {
+    yield malady_route_valid(tenant_key, frame_key) and malady_frame_quota_allowed(plan, active_frames) and malady_feature_allowed(plan, feature)
+}
