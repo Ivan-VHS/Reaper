@@ -45,6 +45,7 @@ assert(pestilence["pestilence_quota_valid"](4, 8), "Pestilence quota")
 assert(malady["malady_plan_frame_limit"]("pro") == 20, "Malady plan limit")
 assert(malady["malady_feature_allowed"]("enterprise", "governance"), "Malady feature gate")
 assert(malady["malady_route_admit"]("pro", "tenant-a", "frame-a", 3, "collaboration"), "Malady route")
+assert(not malady["malady_route_admit"]("free", "tenant-a", "frame-a", 2, "collaboration"), "Malady plan denial")
 
 # Epidemic — Framework native
 assert(epidemic["epidemic_abi_valid"]("DABI64-v1", 64, "little"), "Epidemic DABI64")
@@ -143,4 +144,4 @@ assert(desolation["desolation_local_to_world"](2, 10, 3) == 16, "Desolation loca
 assert(desolation["desolation_world_to_local"](16, 10, 3) == 2, "Desolation world-to-local")
 assert(desolation["desolation_base_compatible"](1, 3), "Desolation base")
 
-emit "RForge framework smoke suite: 80 assertions passed."
+emit "RForge framework smoke suite: 80 assertions ready."
