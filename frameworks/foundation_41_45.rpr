@@ -26,7 +26,7 @@ export craft methodology_validate_plan(stages) {
     vary previous_index := -1
     each stage in stages {
         make current_index := methodology_stage_index(stage)
-        when current_index == nothing or current_index <= previous_index {
+        when current_index == nothing or current_index != previous_index + 1 {
             yield false
         }
         change previous_index := current_index
@@ -255,7 +255,7 @@ export craft module_validate_contract(module) {
             yield false
         }
     }
-    when contains(module[6], "pure") and size(module[6]) != 1 {
+    when size(unique(module[6])) != size(module[6]) or contains(module[6], "pure") and size(module[6]) != 1 {
         yield false
     }
     yield true
