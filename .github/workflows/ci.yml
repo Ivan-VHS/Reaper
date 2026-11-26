@@ -48,6 +48,10 @@ jobs:
         run: python -m reaper examples/flow.rpr
       - name: Run Reaper framework metadata client
         run: python -m reaper examples/frameworks/manifest_client.rpr
+      - name: Validate all Reaper federation handlers
+        run: python -m reaper --check examples/frameworks/federation_handlers_smoke.rpr
+      - name: Run all Reaper federation handlers
+        run: python -m reaper examples/frameworks/federation_handlers_smoke.rpr
       - name: Run end-to-end read-only device audit example
         run: |
           python -m reaper examples/device_audit.rpr
