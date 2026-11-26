@@ -244,8 +244,7 @@ export craft locale_terminology_find(terms, term_id) {
 }
 
 export craft locale_text_direction(locale, fallback_direction) {
-    make found := locale_find(locale, locale)
-    when found[0] { yield found[1][2] }
+    when locale_is_valid(locale) { yield locale[2] }
     when fallback_direction == "rtl" { yield "rtl" }
     yield "ltr"
 }
