@@ -7,6 +7,7 @@
 
 static int fail(ReaperCompilerIrError *error, size_t index, const char *message) {
     if (error != NULL) {
+        memset(error, 0, sizeof *error);
         error->node_index = index;
         (void)snprintf(error->message, sizeof error->message, "%s", message);
     }
@@ -20,6 +21,18 @@ static int bounded_text(const char *value, size_t capacity, int allow_empty) {
         const unsigned char ch = (unsigned char)value[index];
         if (ch == 0u) return allow_empty || index > 0u;
         if (ch < 0x20u || ch == 0x7fu) return 0;
+    }
+    return 0;
+}
+
+/* Text payloads may contain decoded newline/tab/return bytes. The C17
+ * emitter encodes all non-ASCII and control bytes with fixed-width octal
+ * escapes, so they are safe to carry in a bounded, NUL-terminated field. */
+static int bounded_payload(const char *value, size_t capacity, int allow_empty) {
+    size_t index;
+    if (value == NULL) return 0;
+    for (index = 0u; index < capacity; ++index) {
+        if (value[index] == '\\0') return allow_empty || index > 0u;
     }
     return 0;
 }
@@ -65,7 +78,7 @@ static int valid_value(const ReaperCompilerIrNode *node) {
     if (node->type <= REAPER_COMPILER_IR_TYPE_INVALID ||
         node->type > REAPER_COMPILER_IR_TYPE_RATIO) return 0;
     if (is_text_type(node->type)) {
-        if (!bounded_text(node->text, REAPER_COMPILER_IR_TEXT_MAX, 0)) return 0;
+        if (!bounded_payload(node->text, REAPER_COMPILER_IR_TEXT_MAX, 0)) return 0;
         if (node->type == REAPER_COMPILER_IR_TYPE_COLOR && !valid_color(node->text)) return 0;
     } else if (node->type == REAPER_COMPILER_IR_TYPE_F64 ||
                node->type == REAPER_COMPILER_IR_TYPE_LENGTH ||
@@ -95,7 +108,9 @@ static int valid_span(const ReaperCompilerSourceSpan *span) {
 static int valid_node(const ReaperCompilerIrNode *node,
                       ReaperCompilerIrStage stage, size_t index,
                       const ReaperCompilerIrNode *nodes) {
-    if (node == NULL || !valid_span(&node->span)) return 0;
+    if (node == NULL || !valid_span(&node->span) ||
+        !bounded_payload(node->key, sizeof node->key, 1) ||
+        !bounded_payload(node->text, sizeof node->text, 1)) return 0;
     switch (stage) {
     case REAPER_COMPILER_IR_HIR:
         switch (node->opcode) {
@@ -108,7 +123,7 @@ static int valid_node(const ReaperCompilerIrNode *node,
                 node->type > REAPER_COMPILER_IR_TYPE_INVALID &&
                 node->type <= REAPER_COMPILER_IR_TYPE_RATIO &&
                 (!is_text_type(node->type) ||
-                 bounded_text(node->text, REAPER_COMPILER_IR_TEXT_MAX, 1)) &&
+                 bounded_payload(node->text, REAPER_COMPILER_IR_TEXT_MAX, 1)) &&
                 node->lhs == REAPER_COMPILER_IR_NO_VALUE &&
                 node->rhs == REAPER_COMPILER_IR_NO_VALUE;
         case REAPER_COMPILER_IR_HIR_UNARY:
@@ -256,8 +271,13 @@ int reaper_compiler_ir_verify(const ReaperCompilerIrModule *module,
         !bounded_text(module->target, sizeof module->target, 0))
         return fail(error, 0u, "LIR target must be non-empty bounded text");
     for (index = 0u; index < module->length; ++index) {
-        if (!valid_node(&module->nodes[index], module->stage, index, module->nodes))
-            return fail(error, index, "IR node has invalid opcode, key, type, operand or source span");
+        if (!valid_node(&module->nodes[index], module->stage, index, module->nodes)) {
+            (void)fail(error, index, "IR node has invalid opcode, key, type, value, operand or source span");
+            if (error != NULL) {
+                error->span = module->nodes[index].span;
+            }
+            return 0;
+        }
     }
     return 1;
 }
