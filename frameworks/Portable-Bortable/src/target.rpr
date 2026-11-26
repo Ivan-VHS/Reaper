@@ -70,3 +70,62 @@ export craft target_matrix(profiles, requirement) {
     }
     yield [compatible, rejected]
 }
+
+
+# ABI compatibility, target feature intersection and multi-target support.
+export craft abi_record(name, arch, pointer_bits, alignment, convention, endian) {
+    yield [name, arch, pointer_bits, alignment, convention, endian]
+}
+export craft abi_valid(abi) {
+    when size(abi) != 6 { yield false }
+    when abi[2] != 32 and abi[2] != 64 and abi[2] != 128 { yield false }
+    when abi[3] < 1 or abi[3] > 256 { yield false }
+    when abi[4] != "c" and abi[4] != "dabi64.v1" and abi[4] != "reaper-native.v1" { yield false }
+    when abi[5] != "little" and abi[5] != "big" { yield false }
+    yield true
+}
+export craft abi_compatible(required, provided) {
+    when not abi_valid(required) or not abi_valid(provided) { yield [false, "invalid_abi"] }
+    when required[1] != provided[1] or required[2] != provided[2] or required[4] != provided[4] or required[5] != provided[5] {
+        yield [false, "abi_mismatch"]
+    }
+    when required[3] > provided[3] { yield [false, "alignment_not_supported"] }
+    yield [true, []]
+}
+export craft target_feature_intersection(left, right) {
+    when not target_valid(left) or not target_valid(right) { yield [false, "invalid_target"] }
+    when left[1] != right[1] or left[2] != right[2] or left[3] != right[3] { yield [false, "target_domain_mismatch"] }
+    vary common := []
+    vary index := 0
+    loop while index < size(left[5]) {
+        when target_has_feature(right, left[5][index]) { change common := push(common, left[5][index]) }
+        change index := index + 1
+    }
+    yield [true, common]
+}
+export craft target_requirement(arch, bits, endian, abi, features) {
+    yield ["requirement", arch, bits, endian, abi, features]
+}
+export craft target_satisfies(target, requirement) {
+    when not target_valid(target) or size(requirement) != 6 { yield [false, "invalid_target_requirement"] }
+    when requirement[1] != "any" and target[1] != requirement[1] { yield [false, "architecture_mismatch"] }
+    when target[2] != requirement[2] or target[3] != requirement[3] or target[4] != requirement[4] { yield [false, "target_abi_mismatch"] }
+    vary index := 0
+    loop while index < size(requirement[5]) {
+        when not target_has_feature(target, requirement[5][index]) { yield [false, "feature_missing:" ++ requirement[5][index]] }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+export craft target_matrix(profiles, requirement) {
+    vary accepted := []
+    vary rejected := []
+    vary index := 0
+    loop while index < size(profiles) {
+        make test := target_satisfies(profiles[index], requirement)
+        when test[0] { change accepted := push(accepted, profiles[index][0]) }
+        otherwise { change rejected := push(rejected, [profiles[index][0], test[1]]) }
+        change index := index + 1
+    }
+    yield [accepted, rejected]
+}
