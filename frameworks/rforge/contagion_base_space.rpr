@@ -1,0 +1,29 @@
+# Contagion — base Space
+# Base coordinate-space validation, distance and axis-aligned bounds.
+
+export make FRAMEWORK_ID := "contagion.base_space"
+export make FRAMEWORK_VERSION := "1.0.0"
+export make FRAMEWORK_PROFILE := "base Space"
+
+export craft contagion_point_valid(x, y, z) {
+    yield x >= -1000000 and x <= 1000000 and y >= -1000000 and y <= 1000000 and z >= -1000000 and z <= 1000000
+}
+
+export craft contagion_distance_squared(ax, ay, az, bx, by, bz) {
+    make dx := ax - bx
+    make dy := ay - by
+    make dz := az - bz
+    yield dx * dx + dy * dy + dz * dz
+}
+
+export craft contagion_inside_box(x, y, z, min_x, min_y, min_z, max_x, max_y, max_z) {
+    yield min_x <= max_x and min_y <= max_y and min_z <= max_z and x >= min_x and x <= max_x and y >= min_y and y <= max_y and z >= min_z and z <= max_z
+}
+
+export craft contagion_translate(value, offset) {
+    yield value + offset
+}
+
+export craft contagion_space_valid(minimum_extent, maximum_extent) {
+    yield minimum_extent < maximum_extent and minimum_extent >= -1000000 and maximum_extent <= 1000000
+}
