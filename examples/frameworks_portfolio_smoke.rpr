@@ -10,6 +10,11 @@ import "../frameworks/sentan.rpr" as sentan
 import "../frameworks/cellene.rpr" as cellene
 import "../frameworks/kolir.rpr" as kolir
 import "../frameworks/somo.rpr" as somo
+import "../dom/adapters/framework_modules.rpr" as dom_frameworks
+
+# ДОМ adapter exposes one discoverable surface over all 18 standalone modules.
+assert(dom_frameworks["standalone_module_count"]() == 18, "ДОМ adapter indexes 18 standalone modules")
+assert(size(dom_frameworks["standalone_module_names"]()) == 18, "ДОМ adapter lists module names")
 
 # Vorke: validate app manifests and emit a declarative startup plan.
 make app_manifest := [
