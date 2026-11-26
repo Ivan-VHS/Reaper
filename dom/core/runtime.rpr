@@ -1,0 +1,80 @@
+# ДОМ Core: deterministic runtime-instance composition.
+# Runtime row: [runtime_id, app_id, app_version, profile, state, generation,
+#               ordered_modules, granted_capabilities, resource_budget].
+
+import "../Establish/manifest.rpr" as establish
+import "../JLOM/lifecycle.rpr" as lifecycle
+
+export craft create(manifest, host_grants, runtime_id) {
+    when kind(runtime_id) != "text" or size(runtime_id) == 0 { yield [false, [], "invalid-runtime-id"] }
+    make resolved := establish["validate_with_host"](manifest, host_grants)
+    when not resolved[0] { yield [false, [], resolved[2]] }
+    make instance := [
+        runtime_id,
+        manifest[1],
+        manifest[2],
+        manifest[3],
+        "Declared",
+        0,
+        resolved[1],
+        host_grants,
+        manifest[6]
+    ]
+    make lifecycle_record := [runtime_id, "Declared", 0, manifest[1]]
+    make resolve_step := lifecycle["move"](lifecycle_record, "Resolved")
+    when not resolve_step[0] { yield [false, [], resolve_step[2]] }
+    make prepare_step := lifecycle["move"](resolve_step[1], "Prepared")
+    when not prepare_step[0] { yield [false, [], prepare_step[2]] }
+    yield [true, [
+        instance[0], instance[1], instance[2], instance[3],
+        prepare_step[1][1], prepare_step[1][2],
+        instance[6], instance[7], instance[8]
+    ], "prepared"]
+}
+
+export craft move(instance, target_state) {
+    when kind(instance) != "list" or size(instance) != 9 { yield [false, instance, "invalid-runtime-instance"] }
+    make record := [instance[0], instance[4], instance[5], instance[1]]
+    make moved := lifecycle["move"](record, target_state)
+    when not moved[0] { yield [false, instance, moved[2]] }
+    yield [true, [
+        instance[0], instance[1], instance[2], instance[3],
+        moved[1][1], moved[1][2],
+        instance[6], instance[7], instance[8]
+    ], "transitioned"]
+}
+
+export craft start(instance) {
+    yield move(instance, "Running")
+}
+
+export craft ready(instance) {
+    yield move(instance, "Ready")
+}
+
+export craft quiesce(instance) {
+    yield move(instance, "Quiescing")
+}
+
+export craft stop(instance) {
+    yield move(instance, "Stopped")
+}
+
+export craft fail(instance) {
+    yield move(instance, "Failed")
+}
+
+export craft inspect(instance) {
+    when kind(instance) != "list" or size(instance) != 9 { yield [false, [], "invalid-runtime-instance"] }
+    yield [true, [
+        ["runtime_id", instance[0]],
+        ["application_id", instance[1]],
+        ["version", instance[2]],
+        ["profile", instance[3]],
+        ["state", instance[4]],
+        ["generation", instance[5]],
+        ["module_count", size(instance[6])],
+        ["capability_count", size(instance[7])],
+        ["resource_budget", instance[8]]
+    ], "inspected"]
+}
