@@ -28,7 +28,9 @@
     "policy_smoke_program",
     "versioned_repository_target_contract",
     "versioned_change_plan_contract",
-    "versioned_evidence_contract"
+    "versioned_evidence_contract",
+    "risk_aware_change_assessment",
+    "deterministic_candidate_selection"
   ],
   "not_implemented": [
     "repository_discovery_adapter",
@@ -40,7 +42,10 @@
     "sandboxed_command_runner",
     "persistent_audit_store",
     "rollback_executor",
-    "runtime_feature_evidence_collector"
+    "runtime_feature_evidence_collector",
+    "repository_grant_validation",
+    "path_allowlist_enforcement",
+    "evidence_reference_verification"
   ],
   "components": [
     {
@@ -57,7 +62,10 @@
       "implemented": [
         "mode_gated_action_policy",
         "bounded_evolution_assessment",
-        "risk_benefit_candidate_selection"
+        "risk_benefit_candidate_selection",
+        "bounded_repository_profile_validation",
+        "risk_aware_change_assessment",
+        "deterministic_candidate_selection"
       ],
       "missing": [
         "grant_validation",
