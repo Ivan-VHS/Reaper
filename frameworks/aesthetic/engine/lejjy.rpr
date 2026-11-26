@@ -1,0 +1,52 @@
+# Lejjy — deterministic HIR to normalized MIR pass.
+import "vorke.rpr" as Vorke
+import "lejjyfish.rpr" as LejjyFish
+
+export craft normalize(hir) {
+    when not LejjyFish["valid_hir"](hir) {
+        yield ["AestheticError", "RPR-AE1201", "MIR input is not valid HIR"]
+    }
+
+    vary reduce_motion := false
+    each node in hir[3] {
+        when node[1] == "motion.reduce" and node[3] == true {
+            change reduce_motion := true
+        }
+    }
+
+    vary operations := []
+    each node in hir[3] {
+        when node[0] == "color" {
+            change operations := push(operations, ["paint.color", node[1], node[3], "hex"])
+        }
+        when node[0] == "font" {
+            change operations := push(operations, ["text.font", node[1], node[3], "family"])
+        }
+        when node[1] == "motion.reduce" {
+            change operations := push(operations, ["motion.reduce", node[1], node[3], "bool"])
+        }
+        when node[0] == "motion" and node[2] == "Duration" {
+            make duration := node[3]
+            when reduce_motion {
+                change duration := 0
+            }
+            change operations := push(operations, ["motion.duration", node[1], duration, "ms"])
+        }
+        when node[0] == "motion" and node[2] == "Easing" {
+            make easing := node[3]
+            when reduce_motion {
+                change easing := "linear"
+            }
+            change operations := push(operations, ["motion.easing", node[1], easing, "curve"])
+        }
+        when node[0] == "metric" or node[0] == "flag" {
+            change operations := push(operations, ["layout.metric", node[1], node[3], node[2]])
+        }
+    }
+
+    make result := ["AestheticMIR", Vorke["VERSION"], hir[2], operations]
+    when size(result[3]) == 0 {
+        yield ["AestheticError", "RPR-AE1202", "MIR pass produced no operations"]
+    }
+    yield result
+}
