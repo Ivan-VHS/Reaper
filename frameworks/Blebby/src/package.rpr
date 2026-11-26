@@ -69,3 +69,87 @@ export craft package_register(packages, package_info) {
     when not dependencies[0] { yield dependencies }
     yield [true, push(packages, package_info)]
 }
+
+
+# Version ranges, immutable lock snapshots and provenance records.
+export craft package_version_satisfies(version, minimum, maximum) {
+    when not package_version_valid(version) or not package_version_valid(minimum) { yield [false, "invalid_version"] }
+    make lower := package_version_compare(version, minimum)
+    when lower[1] < 0 { yield [true, false] }
+    when size(maximum) == 0 { yield [true, true] }
+    when not package_version_valid(maximum) { yield [false, "invalid_maximum"] }
+    make upper := package_version_compare(version, maximum)
+    yield [true, upper[1] <= 0]
+}
+export craft package_constraint(name, minimum, maximum) {
+    yield [name, minimum, maximum]
+}
+export craft package_constraint_check(constraint, packages) {
+    when size(constraint) != 3 { yield [false, "invalid_constraint"] }
+    make found := package_find(packages, constraint[0])
+    when not found[0] { yield found }
+    make match := package_version_satisfies(found[1][1], constraint[1], constraint[2])
+    when not match[0] { yield match }
+    when not match[1] { yield [false, "version_outside_range"] }
+    yield [true, found[1]]
+}
+export craft package_registry_validate(packages) {
+    vary index := 0
+    loop while index < size(packages) {
+        when not package_valid(packages[index]) { yield [false, "invalid_package"] }
+        vary other := index + 1
+        loop while other < size(packages) {
+            when packages[index][0] == packages[other][0] { yield [false, "duplicate_package_name"] }
+            change other := other + 1
+        }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+export craft package_lockfile_build(packages) {
+    make valid := package_registry_validate(packages)
+    when not valid[0] { yield valid }
+    vary entries := []
+    vary index := 0
+    loop while index < size(packages) {
+        change entries := push(entries, [packages[index][0], packages[index][1], packages[index][3]])
+        change index := index + 1
+    }
+    yield [true, ["reaper.lock.v1", entries]]
+}
+export craft package_lockfile_validate(lockfile, packages) {
+    when size(lockfile) != 2 or lockfile[0] != "reaper.lock.v1" { yield [false, "unsupported_lockfile"] }
+    when size(lockfile[1]) != size(packages) { yield [false, "lockfile_cardinality_mismatch"] }
+    vary index := 0
+    loop while index < size(packages) {
+        when lockfile[1][index] != [packages[index][0], packages[index][1], packages[index][3]] {
+            yield [false, "lockfile_mismatch"]
+        }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+export craft package_provenance(name, version, source, publisher, reviewed) {
+    yield [name, version, source, publisher, reviewed]
+}
+export craft package_provenance_valid(record) {
+    when size(record) != 5 { yield false }
+    when size(record[0]) == 0 or size(record[2]) == 0 or size(record[3]) == 0 { yield false }
+    when record[4] != true and record[4] != false { yield false }
+    yield true
+}
+export craft package_dependency_closure(name, packages, visited) {
+    when size(visited) > size(packages) { yield [false, "dependency_budget_exceeded"] }
+    when contains(visited, name) { yield [true, visited] }
+    make found := package_find(packages, name)
+    when not found[0] { yield [false, "dependency_missing:" ++ name] }
+    vary closure := push(visited, name)
+    vary index := 0
+    loop while index < size(found[1][2]) {
+        make next := package_dependency_closure(found[1][2][index][0], packages, closure)
+        when not next[0] { yield next }
+        change closure := next[1]
+        change index := index + 1
+    }
+    yield [true, closure]
+}
