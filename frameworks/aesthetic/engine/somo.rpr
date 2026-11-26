@@ -1,0 +1,66 @@
+# SOMO — deterministic architecture/design/source evolution orchestration.
+# Observe and propose are pure planning modes. Apply is deliberately blocked
+# until authenticated grants, path enforcement, sandboxing and rollback exist.
+import "vorke.rpr" as Vorke
+import "holmosaptimu.rpr" as Holmosaptimu
+import "sentan.rpr" as Sentan
+import "cellene.rpr" as Cellene
+import "kolir.rpr" as Kolir
+
+export craft evolve(current_profile, target_profile, architecture, request, mode) {
+    when mode != "observe" and mode != "propose" and mode != "apply" {
+        yield ["EvolutionResult", "blocked", ["unknown_mode"], [], []]
+    }
+    when not Vorke["valid_profile"](current_profile)
+        or not Vorke["valid_profile"](target_profile) {
+        yield ["EvolutionResult", "blocked", ["invalid_profile"], [], []]
+    }
+
+    make compiled := Holmosaptimu["compile"](current_profile, current_profile[3])
+    when compiled[0] != "AestheticCompileResult" {
+        yield ["EvolutionResult", "blocked", ["baseline_profile_compile_failed"], [compiled], []]
+    }
+
+    make design_assessment := Cellene["assess"](target_profile)
+    make design_proposal := Cellene["propose"](current_profile, target_profile)
+    make architecture_assessment := Sentan["inspect"](architecture)
+    make source_plan := Kolir["plan"](request)
+
+    when architecture_assessment[1] != "valid" {
+        yield [
+            "EvolutionResult", "blocked", ["architecture_validation_failed"],
+            [design_assessment, design_proposal, architecture_assessment], [source_plan]
+        ]
+    }
+    when source_plan[0] != "SourceEvolutionPlan" {
+        yield [
+            "EvolutionResult", "blocked", ["source_plan_rejected"],
+            [design_assessment, design_proposal, architecture_assessment], [source_plan]
+        ]
+    }
+    when design_proposal[0] != "DesignEvolutionProposal" {
+        yield [
+            "EvolutionResult", "blocked", ["design_proposal_rejected"],
+            [design_assessment, design_proposal, architecture_assessment], [source_plan]
+        ]
+    }
+    when mode == "apply" {
+        yield [
+            "EvolutionResult", "blocked",
+            ["apply_adapter_not_implemented", "repository_grant_validation_required",
+             "path_allowlist_enforcement_required", "sandbox_and_rollback_required"],
+            [design_assessment, design_proposal, architecture_assessment], [source_plan]
+        ]
+    }
+
+    when mode == "observe" {
+        yield [
+            "EvolutionResult", "observed", [],
+            [compiled, design_assessment, architecture_assessment], []
+        ]
+    }
+    yield [
+        "EvolutionResult", "proposed", [],
+        [compiled, design_assessment, design_proposal, architecture_assessment], [source_plan]
+    ]
+}
