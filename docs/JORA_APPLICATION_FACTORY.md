@@ -2,7 +2,7 @@
 
 **Projects:** Reaper / DuckOS  
 **Contract:** \`reaper.jora.application.v1\`  
-**Status:** first generator increment implemented; selected feature packs remain specification-only
+**Status:** first generator increment implemented; 21 catalogue packs remain specification-only; the 16-component HARVEST pack includes real Reaper source and versioned schemas, with runtime maturity still unverified
 
 ## Product definition
 
@@ -88,6 +88,20 @@ The existing Reaper language matrix is a toolchain/capability inventory, not pro
 
 Supporting contracts include document and media models, a timeline model, local storage, localization and a translation provider. Locale files are generated. Storage, translation services, and audio-engine behavior are not silently supplied by the scaffold.
 
+
+## HARVEST source pack
+
+Jora recognizes sixteen first-party `harvest.*` components registered by the versioned `harvest.jora.pack.v1` manifest. Each entry exposes a Reaper source module, domain input/output/IR schema identifiers, provided/consumed capabilities, dependency edges and an explicit maturity label. `harvest.engine` resolves to the fifteen specialist frameworks plus `harvest.runtime`.
+
+The Reaper repository carries the source pack as sixteen ordered, base64-encoded archive segments under `harvest/bundle/chunk-*.b64`. At Jora import time, the host validates the complete segment set, base64 encoding, compressed archive size, archive member paths/types, pack identity, source-module names and every referenced core/schema/framework file. The archive is never extracted with `tar.extract` or `extractall`.
+
+When a request selects one or more HARVEST components, Jora includes the transitive framework dependency closure, shared Reaper core, JSON Schema 2020-12 files, registry and architecture document under the generated project's `src/harvest/` tree. The generated `src/main.rpr` imports the selected domain modules and the `harvest/core/jora_adapter.rpr` facade, then builds the versioned application plan and application IR.
+
+Every generated `.rpr` source is passed through the existing Reaper parser and conservative static type checker before the project directory is published. Jora does not execute the generated modules, install packages, grant host capabilities or mark the application installable. The `jora.app.json` and lock metadata retain the archive SHA-256, included framework closure and `authored_unverified` source status. Promote individual modules only after Reaper runtime, module-loader, storage and integration tests pass.
+
+The source bundle's current transaction store is deliberately single-writer: the host's atomic single-file replacement does not provide a cross-process compare-and-swap or lock. A generated HARVEST application must not run concurrent writers against one snapshot log. Rollback appends a new snapshot and preserves prior history.
+
+
 ## Generated project layout
 
 \`\`\`text
@@ -97,6 +111,11 @@ Supporting contracts include document and media models, a timeline model, local 
   jora.lock.json
   src/
     main.rpr
+    harvest/                 # present only when HARVEST is selected
+      core/
+      frameworks/
+      schemas/
+      registry/
     components/
       text_editor.rpr
       audio_editor.rpr
