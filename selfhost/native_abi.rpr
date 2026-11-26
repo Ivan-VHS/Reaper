@@ -1,0 +1,184 @@
+# Aggregate ABI classification v1.
+# Supported classes are bounded: no vectors, x87, variadic register-save
+# areas, language-specific exceptions or final register spills.
+import "type_platform.rpr"
+
+export craft abi_error(code, message) {
+    yield [false, code, message]
+}
+
+export craft abi_shape(eightbyte_classes, hfa_element, hfa_count, has_unaligned_field) {
+    yield ["ABI_SHAPE_V1", eightbyte_classes, hfa_element, hfa_count, has_unaligned_field]
+}
+
+export craft abi_classify_sysv(size_bytes, shape, purpose) {
+    when size_bytes < 1 or size_bytes > 9223372036854775807 {
+        yield abi_error("RPR-ABI-0001", "aggregate size must be positive and representable")
+    }
+    when size(shape) != 5 or shape[0] != "ABI_SHAPE_V1" or (purpose != "argument" and purpose != "return") {
+        yield abi_error("RPR-ABI-0002", "ABI shape or classification purpose is invalid")
+    }
+    when size_bytes > 16 or shape[4] == true {
+        yield [true, ["MEMORY"], "indirect", "stack", purpose == "return", ""]
+    }
+    make expected_eightbytes := (size_bytes + 7) // 8
+    when size(shape[1]) != expected_eightbytes {
+        yield abi_error("RPR-ABI-0003", "SysV aggregate needs one class per occupied eightbyte")
+    }
+    vary classes := []
+    each value in shape[1] {
+        when value != "INTEGER" and value != "SSE" {
+            yield abi_error("RPR-ABI-0004", "SysV v1 accepts INTEGER and SSE classes only")
+        }
+        change classes := push(classes, value)
+    }
+    yield [true, classes, "direct", "gpr_or_sse", false, ""]
+}
+
+export craft abi_classify_ms_x64(size_bytes, purpose) {
+    when purpose != "argument" and purpose != "return" {
+        yield abi_error("RPR-ABI-0005", "classification purpose must be argument or return")
+    }
+    when size_bytes == 1 or size_bytes == 2 or size_bytes == 4 or size_bytes == 8 {
+        yield [true, ["INTEGER"], "direct", "gpr", false, ""]
+    }
+    yield [true, ["INDIRECT"], "indirect", "caller_storage", purpose == "return", ""]
+}
+
+export craft abi_classify_aapcs64(size_bytes, shape, purpose) {
+    when size_bytes < 1 or size_bytes > 9223372036854775807 or size(shape) != 5 or shape[0] != "ABI_SHAPE_V1" {
+        yield abi_error("RPR-ABI-0006", "AAPCS64 aggregate size or shape is invalid")
+    }
+    when purpose != "argument" and purpose != "return" {
+        yield abi_error("RPR-ABI-0007", "classification purpose must be argument or return")
+    }
+    when shape[2] == "f32" or shape[2] == "f64" {
+        when shape[3] >= 1 and shape[3] <= 4 {
+            when (shape[2] == "f32" and size_bytes == shape[3] * 4) or (shape[2] == "f64" and size_bytes == shape[3] * 8) {
+                yield [true, ["HFA", shape[2], shape[3]], "direct", "v_registers", false, ""]
+            }
+        }
+    }
+    when size_bytes <= 16 and shape[4] != true {
+        vary count := 1
+        when size_bytes > 8 { change count := 2 }
+        yield [true, ["INTEGER", count], "direct", "x_registers", false, ""]
+    }
+    yield [true, ["INDIRECT"], "indirect", "caller_storage", purpose == "return", ""]
+}
+
+export craft native_abi_classify(platform, layout, shape, purpose) {
+    make checked := platform_validate(platform)
+    when not checked[0] { yield checked }
+    when not platform_process_abi_declared(platform) {
+        yield abi_error("RPR-ABI-0008", "platform process ABI is not finalized")
+    }
+    when size(layout) != 3 or layout[0] < 1 or layout[1] < 1 {
+        yield abi_error("RPR-ABI-0009", "aggregate layout must contain positive size and alignment")
+    }
+
+    vary classification := []
+    when platform[9] == "SYSV_X86_64" {
+        change classification := abi_classify_sysv(layout[0], shape, purpose)
+    } otherwise {
+        when platform[9] == "MS_X64" {
+            change classification := abi_classify_ms_x64(layout[0], purpose)
+        } otherwise {
+            when platform[9] == "AAPCS64" {
+                change classification := abi_classify_aapcs64(layout[0], shape, purpose)
+            } otherwise {
+                yield abi_error("RPR-ABI-0010", "no aggregate classifier is registered for process ABI: " ++ platform[9])
+            }
+        }
+    }
+    when not classification[0] { yield classification }
+    yield [true, [
+        "ABI_PLAN_V1", platform[1], platform[9], purpose,
+        classification[2], classification[1], classification[3],
+        classification[4], "classified_not_lowered"
+    ], ""]
+}
+
+export craft native_abi_classify_signature(platform, arguments, result_layout, result_shape) {
+    vary argument_plans := []
+    each argument in arguments {
+        when size(argument) != 4 or argument[0] != "ABI_ARGUMENT_V1" {
+            yield abi_error("RPR-ABI-0011", "function argument descriptor is malformed")
+        }
+        make planned := native_abi_classify(platform, argument[2], argument[3], "argument")
+        when not planned[0] { yield planned }
+        change argument_plans := push(argument_plans, [argument[1], planned[1]])
+    }
+    make result_plan := native_abi_classify(platform, result_layout, result_shape, "return")
+    when not result_plan[0] { yield result_plan }
+    yield [true, ["ABI_SIGNATURE_V1", platform[1], platform[9], argument_plans, result_plan[1], "register_allocation_pending"], ""]
+}
+
+export craft native_abi_lower_aggregate(platform, plan, layout) {
+    make checked := platform_validate(platform)
+    when not checked[0] { yield checked }
+    when size(plan) != 9 or plan[0] != "ABI_PLAN_V1" or size(layout) != 3 or layout[0] < 1 or layout[1] < 1 {
+        yield abi_error("RPR-ABI-0012", "aggregate lowering requires a valid ABI plan and positive layout")
+    }
+    when not platform_process_abi_declared(platform) {
+        yield abi_error("RPR-ABI-0008", "platform process ABI is not finalized")
+    }
+    when plan[4] != "direct" and plan[4] != "indirect" {
+        yield abi_error("RPR-ABI-0018", "aggregate ABI plan has an unknown transport mode")
+    }
+    when plan[1] != platform[1] or plan[2] != platform[9] {
+        yield abi_error("RPR-ABI-0013", "ABI plan target does not match the selected platform")
+    }
+    when plan[8] != "classified_not_lowered" {
+        yield abi_error("RPR-ABI-0014", "ABI plan state is not eligible for aggregate piece lowering")
+    }
+
+    vary pieces := []
+    when plan[4] == "indirect" {
+        change pieces := push(pieces, ["ABI_PIECE_V1", "INDIRECT_POINTER", 0, platform[5]])
+    } otherwise {
+        make classes := plan[5]
+        when size(classes) == 0 {
+            yield abi_error("RPR-ABI-0015", "direct aggregate plan has no ABI classes")
+        }
+        when classes[0] == "HFA" {
+            vary index := 0
+            vary element_size := 0
+            when classes[1] == "f32" { change element_size := 4 }
+            when classes[1] == "f64" { change element_size := 8 }
+            when element_size == 0 or classes[2] < 1 or classes[2] > 4 {
+                yield abi_error("RPR-ABI-0016", "HFA lowering requires one to four f32/f64 members")
+            }
+            loop while index < classes[2] {
+                change pieces := push(pieces, ["ABI_PIECE_V1", "HFA_" ++ classes[1], index * element_size, element_size])
+                change index := index + 1
+            }
+        } otherwise {
+            when classes[0] == "INTEGER" and size(classes) == 2 and (classes[1] == 1 or classes[1] == 2) and platform[9] == "AAPCS64" {
+                vary index := 0
+                loop while index < classes[1] {
+                    vary piece_size := layout[0] - (index * 8)
+                    when piece_size > 8 { change piece_size := 8 }
+                    change pieces := push(pieces, ["ABI_PIECE_V1", "INTEGER", index * 8, piece_size])
+                    change index := index + 1
+                }
+            } otherwise {
+                vary index := 0
+                each class_name in classes {
+                    vary piece_size := layout[0] - (index * 8)
+                    when piece_size > 8 { change piece_size := 8 }
+                    when piece_size < 1 {
+                        yield abi_error("RPR-ABI-0017", "ABI class list extends beyond the aggregate layout")
+                    }
+                    change pieces := push(pieces, ["ABI_PIECE_V1", class_name, index * 8, piece_size])
+                    change index := index + 1
+                }
+            }
+        }
+    }
+    yield [true, [
+        "ABI_AGGREGATE_LOWERING_V1", platform[1], platform[9],
+        plan[3], plan[4], pieces, plan[7],
+        "register_assignment_and_stack_frame_pending"
+    ], ""]
+}

@@ -139,6 +139,61 @@
         "examples/typed_platforms.rpr",
         "docs/TYPED_STRUCTURES_AND_PLATFORMS_V1.md"
       ]
+    },
+    {
+      "id": "compiler.canonical-typed-ir-source-map",
+      "status": "partial",
+      "summary": "Reaper-native versioned typed IR nodes with checked source spans and one-to-one SourceMap provenance; frontend normalization and byte-offset spans are not complete.",
+      "evidence": [
+        "selfhost/typed_ir.rpr",
+        "selfhost/typed_ir_tests.rpr"
+      ]
+    },
+    {
+      "id": "types.generics-interface-contracts",
+      "status": "partial",
+      "summary": "Generic parameter binding, interface constraints, bounded type substitution and explicit method signature conformance; inference and native monomorphization are incomplete.",
+      "evidence": [
+        "selfhost/generic_types.rpr",
+        "selfhost/generic_types_tests.rpr"
+      ]
+    },
+    {
+      "id": "compiler.typed-hir-mir-lir",
+      "status": "partial",
+      "summary": "Typed IR to HIR, HIR to MIR and MIR to target-specific virtual-register LIR pass chain for a bounded linear operation set; CFG/SSA and machine encoding are not implemented.",
+      "evidence": [
+        "selfhost/typed_lowering.rpr",
+        "selfhost/typed_lowering_tests.rpr"
+      ]
+    },
+    {
+      "id": "compiler.native-aggregate-abi-classification",
+      "status": "partial",
+      "summary": "Bounded aggregate classification and byte-offset piece lowering plans for SysV x86_64, Microsoft x64 and AAPCS64; field-driven class computation, full register assignment and call-frame lowering remain incomplete.",
+      "evidence": [
+        "selfhost/native_abi.rpr",
+        "selfhost/native_abi_tests.rpr"
+      ]
+    },
+    {
+      "id": "compiler.elf-pe-object-link-load",
+      "status": "planned",
+      "summary": "Fail-closed contracts define the object, linker and loader boundary. ELF64/PE32+ serialization, relocation, symbol resolution, executable writing and memory loading are not implemented.",
+      "evidence": [
+        "selfhost/object_pipeline_contract.rpr",
+        "selfhost/object_pipeline_tests.rpr"
+      ]
+    },
+    {
+      "id": "compiler.host-native-runtime-smoke",
+      "status": "partial",
+      "summary": "The existing scalar C17 AOT path is compiled and executed on Linux, macOS and Windows CI hosts; typed aggregate ABI, cross-target execution and DAK runtime are not covered.",
+      "evidence": [
+        "examples/native_target_runtime_smoke.rpr",
+        ".github/workflows/typed-compiler-pipeline.yml",
+        "reaper/native_compiler.py"
+      ]
     }
   ],
   "interfaces": [

@@ -1,0 +1,25 @@
+import "typed_ir.rpr"
+
+make span := source_span("sample.rpr", 2, 3, 2, 12)
+make node_a := typed_ir_node(1, "const", "i64", [], span, [], 42)
+make node_b := typed_ir_node(2, "return", "i64", [], source_span("sample.rpr", 3, 1, 3, 8), [1], nothing)
+make nodes := [node_a, node_b]
+make source_map := typed_ir_build_source_map("sample.rpr", nodes)
+assert(source_map[0], "SourceMap construction must preserve each node")
+make module := typed_ir_module("sample", "sample.rpr", [], nodes, source_map[1])
+make valid := typed_ir_validate(module)
+assert(valid[0], "typed IR with exact Span provenance must validate")
+make found := source_map_find(source_map[1], 2)
+assert(found[0] and found[1] == node_b[5], "SourceMap lookup must return the node Span")
+make missing := source_map_find(source_map[1], 99)
+assert(not missing[0] and missing[1] == "RPR-SPAN-0009", "missing provenance must fail explicitly")
+make altered := typed_ir_module("sample", "sample.rpr", [], nodes, source_map_create("other.rpr", source_map[1][2]))
+make altered_result := typed_ir_validate(altered)
+assert(not altered_result[0] and altered_result[1] == "RPR-TIR-0004", "SourceMap source identity mismatch must fail")
+make duplicate := typed_ir_node(1, "copy", "i64", [], span, [], 1)
+make duplicate_nodes := [node_a, duplicate]
+make duplicate_map := typed_ir_build_source_map("sample.rpr", duplicate_nodes)
+make duplicate_module := typed_ir_module("sample", "sample.rpr", [], duplicate_nodes, duplicate_map[1])
+make duplicate_result := typed_ir_validate(duplicate_module)
+assert(not duplicate_result[0] and duplicate_result[1] == "RPR-TIR-0008", "duplicate canonical node ids must fail")
+emit "REAPER_TYPED_IR_CONFORMANCE_OK"

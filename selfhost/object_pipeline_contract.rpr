@@ -1,0 +1,110 @@
+# ELF/PE object, linker and loader boundary v1.
+# These are fail-closed contracts, not fake writers or loaders. Serialization
+# follows real target-specific LIR, relocation and symbol implementations.
+import "type_platform.rpr"
+
+export craft object_pipeline_status() {
+    yield [
+        "OBJECT_PIPELINE_STATUS_V1",
+        ["ELF64", "planned"],
+        ["PE32_PLUS", "planned"],
+        ["LINKER", "planned"],
+        ["LOADER", "planned"]
+    ]
+}
+
+export craft object_expected_machine(platform, format) {
+    when format == "ELF" and platform[2] == "x86_64" { yield 62 }
+    when format == "ELF" and platform[2] == "aarch64" { yield 183 }
+    when format == "PE_COFF" and platform[2] == "x86_64" { yield 34404 }
+    yield -1
+}
+
+export craft object_request(platform, format, machine, sections, symbols, relocations) {
+    yield ["OBJECT_REQUEST_V1", platform[1], format, machine, sections, symbols, relocations]
+}
+
+export craft object_request_validate(request, platform) {
+    when size(request) != 7 or request[0] != "OBJECT_REQUEST_V1" {
+        yield [false, "RPR-OBJ-0001", "object request schema is invalid"]
+    }
+    make checked := platform_validate(platform)
+    when not checked[0] { yield checked }
+    when request[1] != platform[1] {
+        yield [false, "RPR-OBJ-0002", "object request target does not match the selected platform"]
+    }
+    when not platform_process_abi_declared(platform) {
+        yield [false, "RPR-OBJ-0003", "object emission requires a finalized process ABI"]
+    }
+    when request[2] != platform[8] {
+        yield [false, "RPR-OBJ-0004", "object format does not match the target profile"]
+    }
+    when request[2] != "ELF" and request[2] != "PE_COFF" {
+        yield [false, "RPR-OBJ-0005", "object format is not supported by the v1 contract"]
+    }
+    when request[3] != object_expected_machine(platform, request[2]) {
+        yield [false, "RPR-OBJ-0011", "machine identifier does not match the target architecture and object format"]
+    }
+    when size(request[4]) == 0 or size(request[5]) == 0 {
+        yield [false, "RPR-OBJ-0006", "object request requires sections and a symbol table"]
+    }
+    yield [true, ["OBJECT_VALIDATION_V1", request, "serialization_not_implemented"], ""]
+}
+
+export craft object_write_elf64(request, platform) {
+    make checked := object_request_validate(request, platform)
+    when not checked[0] { yield checked }
+    when request[2] != "ELF" {
+        yield [false, "RPR-OBJ-0007", "ELF writer requires an ELF target"]
+    }
+    yield [false, "RPR-OBJ-0008", "ELF64 byte serialization and relocation emission are not implemented"]
+}
+
+export craft object_write_pe32_plus(request, platform) {
+    make checked := object_request_validate(request, platform)
+    when not checked[0] { yield checked }
+    when request[2] != "PE_COFF" {
+        yield [false, "RPR-OBJ-0009", "PE/COFF writer requires a PE/COFF target"]
+    }
+    yield [false, "RPR-OBJ-0010", "PE32+ section, symbol and relocation serialization are not implemented"]
+}
+
+export craft link_request_validate(objects, target_id) {
+    when target_id == "" or size(objects) == 0 {
+        yield [false, "RPR-LINK-0001", "link request requires input objects and an explicit target"]
+    }
+    each object in objects {
+        when size(object) != 4 or object[0] != "OBJECT_ARTIFACT_V1" {
+            yield [false, "RPR-LINK-0002", "link input is not a verified object artifact"]
+        }
+        when object[1] != target_id or object[3] != "verified" {
+            yield [false, "RPR-LINK-0003", "link inputs must share a target and pass object verification"]
+        }
+    }
+    yield [true, ["LINK_REQUEST_V1", target_id, objects, "linker_not_implemented"], ""]
+}
+
+export craft link_executable(objects, target_id) {
+    make checked := link_request_validate(objects, target_id)
+    when not checked[0] { yield checked }
+    yield [false, "RPR-LINK-0004", "symbol resolution, relocation application and executable writing are not implemented"]
+}
+
+export craft loader_request_validate(artifact, target_id, integrity_verified) {
+    when size(artifact) != 5 or artifact[0] != "EXECUTABLE_ARTIFACT_V1" {
+        yield [false, "RPR-LOAD-0001", "loader input is not an executable artifact descriptor"]
+    }
+    when artifact[1] != target_id or artifact[2] != "linked" {
+        yield [false, "RPR-LOAD-0002", "loader requires a linked artifact for the exact target"]
+    }
+    when integrity_verified != true {
+        yield [false, "RPR-LOAD-0003", "loader requires independent artifact integrity verification"]
+    }
+    yield [true, ["LOAD_REQUEST_V1", target_id, artifact, "loader_not_implemented"], ""]
+}
+
+export craft load_executable(artifact, target_id, integrity_verified) {
+    make checked := loader_request_validate(artifact, target_id, integrity_verified)
+    when not checked[0] { yield checked }
+    yield [false, "RPR-LOAD-0004", "memory mapping, relocations, imports and entrypoint transfer are not implemented"]
+}

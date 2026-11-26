@@ -1,0 +1,106 @@
+name: Reaper typed compiler pipeline conformance
+
+on:
+  push:
+    branches: [main, "feat/**", "integration/**"]
+    paths:
+      - "selfhost/typed_ir.rpr"
+      - "selfhost/generic_types.rpr"
+      - "selfhost/typed_lowering.rpr"
+      - "selfhost/native_abi.rpr"
+      - "selfhost/object_pipeline_contract.rpr"
+      - "selfhost/*_tests.rpr"
+      - "examples/native_target_runtime_smoke.rpr"
+      - ".github/workflows/typed-compiler-pipeline.yml"
+  pull_request:
+    paths:
+      - "selfhost/typed_ir.rpr"
+      - "selfhost/generic_types.rpr"
+      - "selfhost/typed_lowering.rpr"
+      - "selfhost/native_abi.rpr"
+      - "selfhost/object_pipeline_contract.rpr"
+      - "selfhost/*_tests.rpr"
+      - "examples/native_target_runtime_smoke.rpr"
+      - ".github/workflows/typed-compiler-pipeline.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reaper-source-conformance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Execute Canonical Typed IR and SourceMap checks
+        run: python -m reaper selfhost/typed_ir_tests.rpr
+      - name: Execute generic, constraint and interface checks
+        run: python -m reaper selfhost/generic_types_tests.rpr
+      - name: Execute HIR, MIR and LIR lowering checks
+        run: python -m reaper selfhost/typed_lowering_tests.rpr
+      - name: Execute aggregate ABI classification checks
+        run: python -m reaper selfhost/native_abi_tests.rpr
+      - name: Execute fail-closed ELF/PE/linker/loader boundary checks
+        run: python -m reaper selfhost/object_pipeline_tests.rpr
+      - name: Validate target runtime smoke source
+        run: python -m reaper --check examples/native_target_runtime_smoke.rpr
+
+  native-host-runtime:
+    name: Native host runtime (${{ matrix.runner }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Reaper reference toolchain
+        run: python -m pip install -e .
+      - name: Compile Reaper source with the host C toolchain
+        shell: bash
+        run: |
+          mkdir -p build
+          python -m reaper examples/native_target_runtime_smoke.rpr --native build/native-target-smoke
+      - name: Execute the produced native binary
+        shell: bash
+        run: |
+          ./build/native-target-smoke > build/native-target-smoke.out
+          test "$(cat build/native-target-smoke.out)" = "42"
+
+  native-windows-host-runtime:
+    name: Native host runtime (windows-latest)
+    runs-on: windows-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: mingw-w64-x86_64-gcc
+      - name: Install Reaper reference toolchain
+        run: python -m pip install -e .
+      - name: Compile Reaper source with MinGW GCC
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force build | Out-Null
+          python -m reaper examples/native_target_runtime_smoke.rpr --native build/native-target-smoke.exe --cc C:\msys64\mingw64\bin\gcc.exe
+      - name: Execute the produced Windows binary
+        shell: pwsh
+        run: |
+          $output = & .\build\native-target-smoke.exe
+          if ($LASTEXITCODE -ne 0 -or (($output -join "`n").Trim() -ne "42")) {
+            Write-Error "Unexpected native output: $output"
+            exit 1
+          }

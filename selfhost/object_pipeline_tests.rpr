@@ -1,0 +1,29 @@
+import "object_pipeline_contract.rpr"
+import "type_platform.rpr"
+
+make linux := platform_linux_x86_64()
+make elf_request := object_request(linux, "ELF", 62, ["text", "data"], ["main"], [])
+make wrong_elf_request := object_request(linux, "ELF", 183, ["text", "data"], ["main"], [])
+make wrong_elf := object_request_validate(wrong_elf_request, linux)
+assert(not wrong_elf[0] and wrong_elf[1] == "RPR-OBJ-0011", "ELF machine ID must match x86_64")
+make rejected_elf := object_write_elf64(elf_request, linux)
+assert(not rejected_elf[0] and rejected_elf[1] == "RPR-OBJ-0008", "ELF writer must fail closed until serialization exists")
+make windows := platform_windows_x86_64()
+make pe_request := object_request(windows, "PE_COFF", 34404, [".text", ".data"], ["main"], [])
+make wrong_pe_request := object_request(windows, "PE_COFF", 62, [".text"], ["main"], [])
+make wrong_pe := object_request_validate(wrong_pe_request, windows)
+assert(not wrong_pe[0] and wrong_pe[1] == "RPR-OBJ-0011", "PE machine ID must match AMD64")
+make rejected_pe := object_write_pe32_plus(pe_request, windows)
+assert(not rejected_pe[0] and rejected_pe[1] == "RPR-OBJ-0010", "PE writer must fail closed until serialization exists")
+make mixed_objects := link_request_validate([
+    ["OBJECT_ARTIFACT_V1", "LINUX_X86_64", "ELF", "verified"],
+    ["OBJECT_ARTIFACT_V1", "WINDOWS_X86_64", "PE_COFF", "verified"]
+], "LINUX_X86_64")
+assert(not mixed_objects[0] and mixed_objects[1] == "RPR-LINK-0003", "linker must reject mixed targets")
+make not_linked := loader_request_validate(["EXECUTABLE_ARTIFACT_V1", "LINUX_X86_64", "object", "hash", "unlinked"], "LINUX_X86_64", true)
+assert(not not_linked[0] and not_linked[1] == "RPR-LOAD-0002", "loader must reject unlinked artifacts")
+make unverified := loader_request_validate(["EXECUTABLE_ARTIFACT_V1", "LINUX_X86_64", "linked", "hash", "verified"], "LINUX_X86_64", false)
+assert(not unverified[0] and unverified[1] == "RPR-LOAD-0003", "loader must require independent integrity verification")
+make status := object_pipeline_status()
+assert(status[1][1] == "planned" and status[2][1] == "planned" and status[3][1] == "planned" and status[4][1] == "planned", "unimplemented binary pipeline stages must remain planned")
+emit "REAPER_OBJECT_PIPELINE_BOUNDARY_OK"

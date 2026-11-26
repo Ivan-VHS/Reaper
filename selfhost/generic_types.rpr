@@ -1,0 +1,228 @@
+# Generic parameters, constraints and interface contracts v1.
+# Bindings and type substitution are implemented; native monomorphization is a
+# separate backend milestone.
+
+import "type_platform.rpr"
+
+export craft generic_type_variable(name) {
+    yield ["TYPE_VAR_V1", name]
+}
+
+export craft generic_type_application(name, arguments) {
+    yield ["TYPE_APPLY_V1", name, arguments]
+}
+
+export craft generic_parameter(name, bounds, default_type) {
+    yield ["GENERIC_PARAM_V1", name, bounds, default_type]
+}
+
+export craft generic_definition(name, parameters, body_type) {
+    yield ["GENERIC_DEF_V1", name, parameters, body_type]
+}
+
+export craft interface_method(name, parameters, result_type, effects) {
+    yield ["METHOD_V1", name, parameters, result_type, effects]
+}
+
+export craft interface_associated_type(name) {
+    yield ["ASSOCIATED_TYPE_V1", name]
+}
+
+export craft interface_descriptor(name, parameters, associated_types, methods, superinterfaces) {
+    yield ["INTERFACE_V1", name, parameters, associated_types, methods, superinterfaces]
+}
+
+export craft interface_implementation(type_name, interface_name, methods, associated_types) {
+    yield ["INTERFACE_IMPL_V1", type_name, interface_name, methods, associated_types]
+}
+
+export craft generic_error(code, message) {
+    yield [false, code, message]
+}
+
+export craft generic_type_identity(type_descriptor) {
+    when size(type_descriptor) == 3 and type_descriptor[0] == "TYPE_V1" { yield type_descriptor[2] }
+    when size(type_descriptor) == 2 and type_descriptor[0] == "TYPE_VAR_V1" { yield type_descriptor[1] }
+    when size(type_descriptor) >= 3 and (type_descriptor[0] == "STRUCT_V1" or type_descriptor[0] == "UNION_V1" or type_descriptor[0] == "ENUM_V1" or type_descriptor[0] == "DISTINCT_V1" or type_descriptor[0] == "OPAQUE_V1") {
+        yield type_descriptor[1]
+    }
+    yield ""
+}
+
+export craft generic_definition_validate(definition) {
+    when size(definition) != 4 or definition[0] != "GENERIC_DEF_V1" or definition[1] == "" {
+        yield generic_error("RPR-GEN-0001", "generic definition schema or identity is invalid")
+    }
+    vary seen := []
+    each parameter in definition[2] {
+        when size(parameter) != 4 or parameter[0] != "GENERIC_PARAM_V1" or parameter[1] == "" {
+            yield generic_error("RPR-GEN-0002", "generic parameter is malformed")
+        }
+        when list_has(seen, parameter[1]) {
+            yield generic_error("RPR-GEN-0003", "generic parameter names must be unique")
+        }
+        change seen := push(seen, parameter[1])
+        vary bounds_seen := []
+        each bound in parameter[2] {
+            when bound == "" or list_has(bounds_seen, bound) {
+                yield generic_error("RPR-GEN-0004", "generic interface bounds must be non-empty and unique")
+            }
+            change bounds_seen := push(bounds_seen, bound)
+        }
+    }
+    when size(definition[3]) == 0 {
+        yield generic_error("RPR-GEN-0005", "generic definition requires a result type")
+    }
+    yield [true, definition, ""]
+}
+
+export craft interface_validate(interface_value) {
+    when size(interface_value) != 6 or interface_value[0] != "INTERFACE_V1" or interface_value[1] == "" {
+        yield generic_error("RPR-IFACE-0003", "interface schema or identity is invalid")
+    }
+    make generic_check := generic_definition_validate(generic_definition(interface_value[1], interface_value[2], type_primitive("u8")))
+    when not generic_check[0] { yield generic_check }
+
+    vary seen_methods := []
+    each method in interface_value[4] {
+        when size(method) != 5 or method[0] != "METHOD_V1" or method[1] == "" {
+            yield generic_error("RPR-IFACE-0004", "interface method signature is malformed")
+        }
+        when list_has(seen_methods, method[1]) {
+            yield generic_error("RPR-IFACE-0005", "interface method names must be unique")
+        }
+        change seen_methods := push(seen_methods, method[1])
+        when size(method[3]) == 0 {
+            yield generic_error("RPR-IFACE-0006", "interface method requires a result type")
+        }
+    }
+
+    vary seen_types := []
+    each associated in interface_value[3] {
+        when size(associated) != 2 or associated[0] != "ASSOCIATED_TYPE_V1" or associated[1] == "" {
+            yield generic_error("RPR-IFACE-0007", "associated type declaration is malformed")
+        }
+        when list_has(seen_types, associated[1]) {
+            yield generic_error("RPR-IFACE-0008", "associated type names must be unique")
+        }
+        change seen_types := push(seen_types, associated[1])
+    }
+
+    vary seen_superinterfaces := []
+    each superinterface in interface_value[5] {
+        when superinterface == "" or list_has(seen_superinterfaces, superinterface) {
+            yield generic_error("RPR-IFACE-0009", "superinterface names must be non-empty and unique")
+        }
+        change seen_superinterfaces := push(seen_superinterfaces, superinterface)
+    }
+    yield [true, interface_value, ""]
+}
+
+export craft generic_implementation_has(implementations, type_name, interface_name) {
+    each implementation in implementations {
+        when size(implementation) == 5 and implementation[0] == "INTERFACE_IMPL_V1" and implementation[1] == type_name and implementation[2] == interface_name {
+            yield true
+        }
+    }
+    yield false
+}
+
+export craft generic_bind_arguments(definition, arguments, implementations) {
+    make checked := generic_definition_validate(definition)
+    when not checked[0] { yield checked }
+    when size(arguments) > size(definition[2]) {
+        yield generic_error("RPR-GEN-0006", "too many generic type arguments")
+    }
+
+    vary bindings := []
+    vary index := 0
+    each parameter in definition[2] {
+        vary argument := nothing
+        when index < size(arguments) {
+            change argument := arguments[index]
+        } otherwise {
+            when parameter[3] != nothing {
+                change argument := parameter[3]
+            } otherwise {
+                yield generic_error("RPR-GEN-0007", "missing generic type argument: " ++ parameter[1])
+            }
+        }
+        make identity := generic_type_identity(argument)
+        when identity == "" {
+            yield generic_error("RPR-GEN-0008", "generic argument must be a typed descriptor")
+        }
+        each bound in parameter[2] {
+            when not generic_implementation_has(implementations, identity, bound) {
+                yield generic_error("RPR-GEN-0009", "generic argument does not satisfy interface bound: " ++ bound)
+            }
+        }
+        change bindings := push(bindings, ["TYPE_BINDING_V1", parameter[1], argument])
+        change index := index + 1
+    }
+    yield [true, bindings, ""]
+}
+
+export craft generic_substitute(type_descriptor, bindings) {
+    when size(type_descriptor) == 2 and type_descriptor[0] == "TYPE_VAR_V1" {
+        each binding in bindings {
+            when binding[1] == type_descriptor[1] { yield [true, binding[2], ""] }
+        }
+        yield generic_error("RPR-GEN-0010", "unbound generic type variable: " ++ type_descriptor[1])
+    }
+    when size(type_descriptor) == 4 and type_descriptor[0] == "TYPE_V1" and type_descriptor[1] == "pointer" {
+        make pointee := generic_substitute(type_descriptor[2], bindings)
+        when not pointee[0] { yield pointee }
+        yield [true, ["TYPE_V1", "pointer", pointee[1], type_descriptor[3]], ""]
+    }
+    when size(type_descriptor) == 4 and type_descriptor[0] == "TYPE_V1" and type_descriptor[1] == "array" {
+        make element := generic_substitute(type_descriptor[2], bindings)
+        when not element[0] { yield element }
+        yield [true, ["TYPE_V1", "array", element[1], type_descriptor[3]], ""]
+    }
+    when size(type_descriptor) == 3 and type_descriptor[0] == "DISTINCT_V1" {
+        make underlying := generic_substitute(type_descriptor[2], bindings)
+        when not underlying[0] { yield underlying }
+        yield [true, ["DISTINCT_V1", type_descriptor[1], underlying[1]], ""]
+    }
+    yield [true, type_descriptor, ""]
+}
+
+export craft generic_instantiate(definition, arguments, implementations) {
+    make bound := generic_bind_arguments(definition, arguments, implementations)
+    when not bound[0] { yield bound }
+    make specialized := generic_substitute(definition[3], bound[1])
+    when not specialized[0] { yield specialized }
+    yield [true, ["GENERIC_INSTANCE_V1", definition[1], bound[1], specialized[1]], ""]
+}
+
+export craft interface_validate_implementation(interface_value, implementation) {
+    make checked_interface := interface_validate(interface_value)
+    when not checked_interface[0] { yield checked_interface }
+    when size(implementation) != 5 or implementation[0] != "INTERFACE_IMPL_V1" or implementation[1] == "" or implementation[2] != interface_value[1] {
+        yield generic_error("RPR-IFACE-0010", "implementation identity does not match the interface")
+    }
+    each required in interface_value[4] {
+        vary found := false
+        each supplied in implementation[3] {
+            when size(supplied) == 5 and supplied[0] == "METHOD_V1" and supplied[1] == required[1] {
+                change found := true
+                when supplied[2] != required[2] or supplied[3] != required[3] or supplied[4] != required[4] {
+                    yield generic_error("RPR-IFACE-0011", "method signature does not satisfy interface: " ++ required[1])
+                }
+            }
+        }
+        when not found { yield generic_error("RPR-IFACE-0012", "implementation is missing method: " ++ required[1]) }
+    }
+    each required_type in interface_value[3] {
+        vary found_type := false
+        each supplied_type in implementation[4] {
+            when size(supplied_type) == 3 and supplied_type[0] == "ASSOCIATED_TYPE_V1" and supplied_type[1] == required_type[1] {
+                change found_type := true
+            }
+        }
+        when not found_type {
+            yield generic_error("RPR-IFACE-0013", "implementation is missing associated type: " ++ required_type[1])
+        }
+    }
+    yield [true, implementation, ""]
+}
