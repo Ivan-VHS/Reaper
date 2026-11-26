@@ -3,8 +3,8 @@
   "total_target_framework_count": 330,
   "remaining_target_framework_count": 325,
   "existing_batch_01_source_count": 5,
-  "new_source_count": 125,
-  "remaining_source_count": 200,
+  "new_source_count": 150,
+  "remaining_source_count": 175,
   "domains": [
     {
       "number": 1,
@@ -220,7 +220,7 @@
       "name": "Шаблон",
       "framework_slots": 5,
       "source_frameworks": 0,
-      "state": "queued"
+      "state": "tests-first"
     },
     {
       "number": 28,
@@ -228,7 +228,7 @@
       "name": "Скелет",
       "framework_slots": 5,
       "source_frameworks": 0,
-      "state": "queued"
+      "state": "tests-first"
     },
     {
       "number": 29,
@@ -236,7 +236,7 @@
       "name": "Бойлерплейт",
       "framework_slots": 5,
       "source_frameworks": 0,
-      "state": "queued"
+      "state": "tests-first"
     },
     {
       "number": 30,
@@ -244,7 +244,7 @@
       "name": "Базовый слой",
       "framework_slots": 5,
       "source_frameworks": 0,
-      "state": "queued"
+      "state": "tests-first"
     },
     {
       "number": 31,
@@ -252,7 +252,7 @@
       "name": "Прослойка",
       "framework_slots": 5,
       "source_frameworks": 0,
-      "state": "queued"
+      "state": "tests-first"
     },
     {
       "number": 32,
@@ -2958,6 +2958,481 @@
       },
       "negative": {
         "args": "([[1, \"add adapter\"], [3, \"remove legacy\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "27.parameters",
+      "domain_number": 27,
+      "domain": "Шаблон",
+      "slug": "27-template",
+      "name": "Template Parameter Framework",
+      "role": "parameters",
+      "path": "reaper/frameworks/27-template/parameters.rpr",
+      "api": "valid_template_parameters",
+      "purpose": "Validate unique typed template parameters and explicit required/optional flags.",
+      "positive": {
+        "args": "([[\"name\", \"text\", true], [\"width\", \"u32\", false]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"name\", \"text\", true], [\"name\", \"text\", false]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "27.placeholders",
+      "domain_number": 27,
+      "domain": "Шаблон",
+      "slug": "27-template",
+      "name": "Template Placeholder Framework",
+      "role": "placeholders",
+      "path": "reaper/frameworks/27-template/placeholders.rpr",
+      "api": "template_missing_placeholders",
+      "purpose": "Report placeholders that have no supplied replacement value.",
+      "positive": {
+        "args": "([\"project\", \"author\"], [[\"project\", \"Reaper\"]])",
+        "output": "[author]"
+      },
+      "negative": {
+        "args": "([\"project\"], [[\"project\", \"Reaper\"]])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "27.version",
+      "domain_number": 27,
+      "domain": "Шаблон",
+      "slug": "27-template",
+      "name": "Template Version Framework",
+      "role": "version",
+      "path": "reaper/frameworks/27-template/version.rpr",
+      "api": "valid_template_version",
+      "purpose": "Validate a versioned template identity and supported schema version.",
+      "positive": {
+        "args": "([\"desktop-app\", [1, 2, 0], 1])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"\", [1, 2, 0], 9])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "27.expansion-budget",
+      "domain_number": 27,
+      "domain": "Шаблон",
+      "slug": "27-template",
+      "name": "Template Expansion Budget Framework",
+      "role": "expansion-budget",
+      "path": "reaper/frameworks/27-template/expansion_budget.rpr",
+      "api": "template_expansion_within_budget",
+      "purpose": "Bound template expansion by source size, instance count and output ceiling.",
+      "positive": {
+        "args": "(1024, 4, 8192)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(4096, 4, 8192)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "27.template-path",
+      "domain_number": 27,
+      "domain": "Шаблон",
+      "slug": "27-template",
+      "name": "Template Path Framework",
+      "role": "template-path",
+      "path": "reaper/frameworks/27-template/template_path.rpr",
+      "api": "safe_template_output_path",
+      "purpose": "Reject unsafe template output paths before generation.",
+      "positive": {
+        "args": "(\"src/main.rpr\")",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(\"../outside/file\")",
+        "output": "false"
+      }
+    },
+    {
+      "id": "28.manifest",
+      "domain_number": 28,
+      "domain": "Скелет",
+      "slug": "28-skeleton",
+      "name": "Skeleton Manifest Framework",
+      "role": "manifest",
+      "path": "reaper/frameworks/28-skeleton/manifest.rpr",
+      "api": "valid_skeleton_manifest",
+      "purpose": "Require the declared project skeleton components with unique non-empty names.",
+      "positive": {
+        "args": "([\"source\", \"tests\", \"docs\"], [\"source\", \"tests\", \"docs\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"source\", \"tests\"], [\"source\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "28.entrypoint",
+      "domain_number": 28,
+      "domain": "Скелет",
+      "slug": "28-skeleton",
+      "name": "Skeleton Entrypoint Framework",
+      "role": "entrypoint",
+      "path": "reaper/frameworks/28-skeleton/entrypoint.rpr",
+      "api": "valid_skeleton_entrypoint",
+      "purpose": "Validate a relative source entrypoint and a declared exported symbol.",
+      "positive": {
+        "args": "([\"src/main.rpr\", \"main\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"../main.rpr\", \"\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "28.layer-graph",
+      "domain_number": 28,
+      "domain": "Скелет",
+      "slug": "28-skeleton",
+      "name": "Skeleton Layer Framework",
+      "role": "layer-graph",
+      "path": "reaper/frameworks/28-skeleton/layer_graph.rpr",
+      "api": "valid_skeleton_layer_graph",
+      "purpose": "Validate the skeleton's ordered module-layer graph.",
+      "positive": {
+        "args": "(4, [[0, 1], [1, 3]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(3, [[2, 0]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "28.sections",
+      "domain_number": 28,
+      "domain": "Скелет",
+      "slug": "28-skeleton",
+      "name": "Skeleton Section Framework",
+      "role": "sections",
+      "path": "reaper/frameworks/28-skeleton/sections.rpr",
+      "api": "skeleton_missing_sections",
+      "purpose": "Report required project sections absent from a generated skeleton.",
+      "positive": {
+        "args": "([\"manifest\", \"source\", \"tests\"], [\"manifest\", \"source\"])",
+        "output": "[tests]"
+      },
+      "negative": {
+        "args": "([], [\"source\"])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "28.initialization",
+      "domain_number": 28,
+      "domain": "Скелет",
+      "slug": "28-skeleton",
+      "name": "Skeleton Initialization Framework",
+      "role": "initialization",
+      "path": "reaper/frameworks/28-skeleton/initialization.rpr",
+      "api": "valid_skeleton_initialization_order",
+      "purpose": "Validate a unique initialization sequence that begins with core and ends with entry.",
+      "positive": {
+        "args": "([\"core\", \"platform\", \"services\", \"entry\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"platform\", \"core\", \"entry\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "29.tokens",
+      "domain_number": 29,
+      "domain": "Бойлерплейт",
+      "slug": "29-boilerplate",
+      "name": "Boilerplate Token Framework",
+      "role": "tokens",
+      "path": "reaper/frameworks/29-boilerplate/tokens.rpr",
+      "api": "valid_boilerplate_tokens",
+      "purpose": "Validate unique named replacement tokens using an explicit placeholder prefix.",
+      "positive": {
+        "args": "([[\"{{name}}\", \"Reaper\"], [\"{{year}}\", \"2026\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"{{name}}\", \"Reaper\"], [\"{{name}}\", \"Duck\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "29.project-name",
+      "domain_number": 29,
+      "domain": "Бойлерплейт",
+      "slug": "29-boilerplate",
+      "name": "Boilerplate Project Name Framework",
+      "role": "project-name",
+      "path": "reaper/frameworks/29-boilerplate/project_name.rpr",
+      "api": "valid_boilerplate_project_name",
+      "purpose": "Validate a portable project identifier without path or shell metacharacters.",
+      "positive": {
+        "args": "(\"reaper_studio\")",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(\"../reaper\")",
+        "output": "false"
+      }
+    },
+    {
+      "id": "29.license",
+      "domain_number": 29,
+      "domain": "Бойлерплейт",
+      "slug": "29-boilerplate",
+      "name": "Boilerplate License Framework",
+      "role": "license",
+      "path": "reaper/frameworks/29-boilerplate/license.rpr",
+      "api": "valid_boilerplate_license",
+      "purpose": "Accept only known SPDX license identifiers for generated boilerplate.",
+      "positive": {
+        "args": "(\"Apache-2.0\")",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(\"Unknown-License\")",
+        "output": "false"
+      }
+    },
+    {
+      "id": "29.output-collision",
+      "domain_number": 29,
+      "domain": "Бойлерплейт",
+      "slug": "29-boilerplate",
+      "name": "Boilerplate Output Collision Framework",
+      "role": "output-collision",
+      "path": "reaper/frameworks/29-boilerplate/output_collision.rpr",
+      "api": "boilerplate_output_collisions",
+      "purpose": "Report generated output paths that appear more than once.",
+      "positive": {
+        "args": "([\"src/main.rpr\", \"tests/main.rpr\", \"src/main.rpr\"])",
+        "output": "[src/main.rpr]"
+      },
+      "negative": {
+        "args": "([\"src/main.rpr\", \"tests/main.rpr\"])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "29.render-budget",
+      "domain_number": 29,
+      "domain": "Бойлерплейт",
+      "slug": "29-boilerplate",
+      "name": "Boilerplate Render Budget Framework",
+      "role": "render-budget",
+      "path": "reaper/frameworks/29-boilerplate/render_budget.rpr",
+      "api": "boilerplate_render_within_budget",
+      "purpose": "Bound output size after token expansion based on source size and replacement count.",
+      "positive": {
+        "args": "(1024, 4, 8192)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(4096, 4, 8192)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "30.contract",
+      "domain_number": 30,
+      "domain": "Базовый слой",
+      "slug": "30-base-layer",
+      "name": "Base Contract Framework",
+      "role": "contract",
+      "path": "reaper/frameworks/30-base-layer/contract.rpr",
+      "api": "valid_base_layer_contracts",
+      "purpose": "Validate unique base-layer components with explicit version and stability class.",
+      "positive": {
+        "args": "([[\"lexer\", 1, \"stable\"], [\"ir\", 1, \"experimental\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"lexer\", 1, \"unknown\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "30.dependency",
+      "domain_number": 30,
+      "domain": "Базовый слой",
+      "slug": "30-base-layer",
+      "name": "Base Dependency Framework",
+      "role": "dependency",
+      "path": "reaper/frameworks/30-base-layer/dependency.rpr",
+      "api": "valid_base_layer_dependencies",
+      "purpose": "Validate base-layer dependency edges as an acyclic graph.",
+      "positive": {
+        "args": "(4, [[0, 1], [1, 3]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(2, [[0, 1], [1, 0]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "30.limits",
+      "domain_number": 30,
+      "domain": "Базовый слой",
+      "slug": "30-base-layer",
+      "name": "Base Limits Framework",
+      "role": "limits",
+      "path": "reaper/frameworks/30-base-layer/limits.rpr",
+      "api": "valid_base_layer_limits",
+      "purpose": "Validate positive bounded core resource limits for a base profile.",
+      "positive": {
+        "args": "([1000000, 256, 1048576, 64])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([0, 256, 1048576, 64])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "30.compatibility",
+      "domain_number": 30,
+      "domain": "Базовый слой",
+      "slug": "30-base-layer",
+      "name": "Base Compatibility Framework",
+      "role": "compatibility",
+      "path": "reaper/frameworks/30-base-layer/compatibility.rpr",
+      "api": "base_layer_version_compatible",
+      "purpose": "Check a version against an inclusive base compatibility interval.",
+      "positive": {
+        "args": "(3, 2, 4)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(5, 2, 4)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "30.invariant",
+      "domain_number": 30,
+      "domain": "Базовый слой",
+      "slug": "30-base-layer",
+      "name": "Base Invariant Framework",
+      "role": "invariant",
+      "path": "reaper/frameworks/30-base-layer/invariant.rpr",
+      "api": "valid_base_layer_invariants",
+      "purpose": "Validate a base set of unique named numeric invariants with ordered bounds.",
+      "positive": {
+        "args": "([[\"heap\", 1, 1024], [\"stack\", 1, 256]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"heap\", 1024, 1]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "31.adapter-contract",
+      "domain_number": 31,
+      "domain": "Прослойка",
+      "slug": "31-interlayer",
+      "name": "Adapter Contract Framework",
+      "role": "adapter-contract",
+      "path": "reaper/frameworks/31-interlayer/adapter_contract.rpr",
+      "api": "valid_interlayer_adapter_contracts",
+      "purpose": "Validate explicit typed adapters between distinct source and destination layers.",
+      "positive": {
+        "args": "([[\"parser\", \"tokens\", \"ir\", 1, true]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"parser\", \"tokens\", \"tokens\", 1, true]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "31.type-mapping",
+      "domain_number": 31,
+      "domain": "Прослойка",
+      "slug": "31-interlayer",
+      "name": "Type Mapping Framework",
+      "role": "type-mapping",
+      "path": "reaper/frameworks/31-interlayer/type_mapping.rpr",
+      "api": "valid_interlayer_type_mappings",
+      "purpose": "Validate explicit unique source/target type conversion declarations.",
+      "positive": {
+        "args": "([[\"u32\", \"u64\", true], [\"text\", \"bytes\", false]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"u32\", \"u64\", true], [\"u32\", \"i64\", false]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "31.protocol-version",
+      "domain_number": 31,
+      "domain": "Прослойка",
+      "slug": "31-interlayer",
+      "name": "Protocol Version Framework",
+      "role": "protocol-version",
+      "path": "reaper/frameworks/31-interlayer/protocol_version.rpr",
+      "api": "interlayer_protocol_compatible",
+      "purpose": "Require producer and consumer to agree on a supported protocol major version.",
+      "positive": {
+        "args": "([1, 2], [1, 4])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([1, 2], [2, 0])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "31.typed-flow",
+      "domain_number": 31,
+      "domain": "Прослойка",
+      "slug": "31-interlayer",
+      "name": "Typed Flow Framework",
+      "role": "typed-flow",
+      "path": "reaper/frameworks/31-interlayer/typed_flow.rpr",
+      "api": "valid_interlayer_typed_flow",
+      "purpose": "Validate type continuity across a sequence of interlayer connections.",
+      "positive": {
+        "args": "([[\"language\", \"ast\", \"ir\"], [\"native\", \"ir\", \"object\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"language\", \"ast\", \"ir\"], [\"native\", \"tokens\", \"object\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "31.adapter-order",
+      "domain_number": 31,
+      "domain": "Прослойка",
+      "slug": "31-interlayer",
+      "name": "Adapter Order Framework",
+      "role": "adapter-order",
+      "path": "reaper/frameworks/31-interlayer/adapter_order.rpr",
+      "api": "valid_interlayer_adapter_order",
+      "purpose": "Validate an ordered adapter graph with no duplicate or backward edges.",
+      "positive": {
+        "args": "(4, [[0, 1], [1, 3]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(3, [[2, 0]])",
         "output": "false"
       }
     }
