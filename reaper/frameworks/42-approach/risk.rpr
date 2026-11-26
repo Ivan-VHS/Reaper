@@ -1,0 +1,30 @@
+# ApproachRisk — validate unique risk records with bounded probability and impact.
+# Risk: [name, probability_1_to_5, impact_1_to_5, mitigation].
+
+export craft valid_approach_risk_register(risks) {
+    when kind(risks) != "list" or size(risks) == 0 {
+        yield false
+    }
+    craft valid_risk(risk) {
+        when kind(risk) != "list" or size(risk) != 4 {
+            yield false
+        }
+        when kind(risk[0]) != "text" or kind(risk[1]) != "number" or kind(risk[2]) != "number" or kind(risk[3]) != "text" {
+            yield false
+        }
+        when size(trim(risk[0])) == 0 or size(trim(risk[3])) == 0 or risk[1] % 1 != 0 or risk[2] % 1 != 0 {
+            yield false
+        }
+        yield risk[1] >= 1 and risk[1] <= 5 and risk[2] >= 1 and risk[2] <= 5
+    }
+    craft invalid_risk(risk) {
+        yield not valid_risk(risk)
+    }
+    craft risk_name(risk) {
+        yield risk[0]
+    }
+    when size(keep(risks, invalid_risk)) != 0 {
+        yield false
+    }
+    yield size(unique(map(risks, risk_name))) == size(risks)
+}

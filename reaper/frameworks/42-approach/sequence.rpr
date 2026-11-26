@@ -1,0 +1,47 @@
+# ApproachSequence — validate a task permutation respecting prerequisite edges.
+
+export craft valid_approach_sequence(task_count, order, prerequisites) {
+    when kind(task_count) != "number" or task_count % 1 != 0 or task_count < 1 {
+        yield false
+    }
+    when kind(order) != "list" or kind(prerequisites) != "list" or size(order) != task_count {
+        yield false
+    }
+    craft valid_task(task) {
+        yield kind(task) == "number" and task % 1 == 0 and task >= 0 and task < task_count
+    }
+    craft invalid_task(task) {
+        yield not valid_task(task)
+    }
+    when size(keep(order, invalid_task)) != 0 or size(unique(order)) != task_count {
+        yield false
+    }
+    craft valid_edge(edge) {
+        when kind(edge) != "list" or size(edge) != 2 {
+            yield false
+        }
+        yield valid_task(edge[0]) and valid_task(edge[1]) and edge[0] != edge[1]
+    }
+    craft invalid_edge(edge) {
+        yield not valid_edge(edge)
+    }
+    when size(keep(prerequisites, invalid_edge)) != 0 or size(unique(prerequisites)) != size(prerequisites) {
+        yield false
+    }
+    craft position_of(task) {
+        vary position := -1
+        each index in range(0, size(order)) {
+            when order[index] == task {
+                change position := index
+            }
+        }
+        yield position
+    }
+    vary valid := true
+    each edge in prerequisites {
+        when position_of(edge[0]) >= position_of(edge[1]) {
+            change valid := false
+        }
+    }
+    yield valid
+}

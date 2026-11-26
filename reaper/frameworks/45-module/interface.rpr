@@ -1,0 +1,29 @@
+# ModuleInterface — validate stable interface identifier and unique typed methods.
+
+export craft valid_module_interface(interface) {
+    when kind(interface) != "list" or size(interface) != 2 {
+        yield false
+    }
+    when kind(interface[0]) != "text" or kind(interface[1]) != "list" or size(trim(interface[0])) == 0 {
+        yield false
+    }
+    craft valid_method(method) {
+        when kind(method) != "list" or size(method) != 2 {
+            yield false
+        }
+        when kind(method[0]) != "text" or kind(method[1]) != "text" {
+            yield false
+        }
+        yield size(trim(method[0])) > 0 and size(trim(method[1])) > 0
+    }
+    craft invalid_method(method) {
+        yield not valid_method(method)
+    }
+    craft method_name(method) {
+        yield method[0]
+    }
+    when size(keep(interface[1], invalid_method)) != 0 {
+        yield false
+    }
+    yield size(unique(map(interface[1], method_name))) == size(interface[1])
+}

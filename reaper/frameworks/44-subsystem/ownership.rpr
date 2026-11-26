@@ -1,0 +1,26 @@
+# SubsystemOwnership — unique resource-to-owner assignments.
+
+export craft valid_subsystem_ownership(assignments) {
+    when kind(assignments) != "list" or size(assignments) == 0 {
+        yield false
+    }
+    craft valid_assignment(item) {
+        when kind(item) != "list" or size(item) != 2 {
+            yield false
+        }
+        when kind(item[0]) != "text" or kind(item[1]) != "text" {
+            yield false
+        }
+        yield size(trim(item[0])) > 0 and size(trim(item[1])) > 0
+    }
+    craft invalid_assignment(item) {
+        yield not valid_assignment(item)
+    }
+    craft resource_name(item) {
+        yield item[0]
+    }
+    when size(keep(assignments, invalid_assignment)) != 0 {
+        yield false
+    }
+    yield size(unique(map(assignments, resource_name))) == size(assignments)
+}

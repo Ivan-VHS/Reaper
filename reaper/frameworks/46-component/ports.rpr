@@ -1,0 +1,26 @@
+# ComponentPorts — validate unique typed input/output port declarations.
+
+export craft valid_component_ports(ports) {
+    when kind(ports) != "list" or size(ports) == 0 {
+        yield false
+    }
+    craft valid_port(port) {
+        when kind(port) != "list" or size(port) != 3 {
+            yield false
+        }
+        when kind(port[0]) != "text" or kind(port[1]) != "text" or kind(port[2]) != "text" {
+            yield false
+        }
+        yield size(trim(port[0])) > 0 and contains(["input", "output"], port[1]) and size(trim(port[2])) > 0
+    }
+    craft invalid_port(port) {
+        yield not valid_port(port)
+    }
+    craft port_name(port) {
+        yield port[0]
+    }
+    when size(keep(ports, invalid_port)) != 0 {
+        yield false
+    }
+    yield size(unique(map(ports, port_name))) == size(ports)
+}

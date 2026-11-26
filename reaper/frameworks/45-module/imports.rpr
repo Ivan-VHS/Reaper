@@ -1,0 +1,30 @@
+# ModuleImports — validate unique module imports and visibility declarations.
+# Entry: [module_name, required_major_version, visibility].
+
+export craft valid_module_import_contract(imports) {
+    when kind(imports) != "list" {
+        yield false
+    }
+    craft valid_import(item) {
+        when kind(item) != "list" or size(item) != 3 {
+            yield false
+        }
+        when kind(item[0]) != "text" or kind(item[1]) != "number" or kind(item[2]) != "text" {
+            yield false
+        }
+        when size(trim(item[0])) == 0 or item[1] % 1 != 0 or item[1] < 1 {
+            yield false
+        }
+        yield contains(["public", "private"], item[2])
+    }
+    craft invalid_import(item) {
+        yield not valid_import(item)
+    }
+    craft import_name(item) {
+        yield item[0]
+    }
+    when size(keep(imports, invalid_import)) != 0 {
+        yield false
+    }
+    yield size(unique(map(imports, import_name))) == size(imports)
+}

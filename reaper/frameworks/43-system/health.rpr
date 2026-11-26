@@ -1,0 +1,24 @@
+# SystemHealth — reduce service states to healthy/degraded/unhealthy.
+
+export craft reduce_system_health(states) {
+    when kind(states) != "list" or size(states) == 0 {
+        yield "unhealthy"
+    }
+    vary health := "healthy"
+    each state in states {
+        when state == "unhealthy" or state == "failed" {
+            change health := "unhealthy"
+        } otherwise {
+            when state == "degraded" or state == "starting" {
+                when health != "unhealthy" {
+                    change health := "degraded"
+                }
+            } otherwise {
+                when state != "healthy" and state != "ready" {
+                    change health := "unhealthy"
+                }
+            }
+        }
+    }
+    yield health
+}

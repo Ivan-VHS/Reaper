@@ -21,6 +21,7 @@ Start with the [project README](../README.md) for installation, first commands a
 - [Template, Skeleton, Boilerplate, Base Layer and Interlayer: batches 27–31](TEMPLATE_SKELETON_BOILERPLATE_BASE_INTERLAYER.md)
 - [Middleware, Integration, Container, Host and Context: batches 32–36](MIDDLEWARE_INTEGRATION_CONTAINER_HOST_CONTEXT.md)
 - [Model, Pattern, Paradigm, Concept and Methodology: batches 37–41](MODEL_PATTERN_PARADIGM_CONCEPT_METHODOLOGY.md)
+- [Approach, System, Subsystem, Module and Component: batches 42–46](APPROACH_SYSTEM_SUBSYSTEM_MODULE_COMPONENT.md)
 - [Skeleton Frameworks: batch 01](SKELETON_FRAMEWORKS.md)
 - [Studio and IDE](REAPER_IDE.md)
 - [Mora archive contracts](MORA_ARCHIVE_CONTRACTS.md) — executable `.rpr` validators, record layouts, provenance rules and offline regression fixture.

@@ -1,0 +1,17 @@
+# ApproachStrategy — validate a named strategy, trade-offs, phases and review cadence.
+
+export craft valid_approach_strategy(strategy) {
+    when kind(strategy) != "list" or size(strategy) != 4 {
+        yield false
+    }
+    when kind(strategy[0]) != "text" or kind(strategy[1]) != "list" or kind(strategy[2]) != "number" or kind(strategy[3]) != "text" {
+        yield false
+    }
+    when size(trim(strategy[0])) == 0 or size(strategy[1]) == 0 or strategy[2] % 1 != 0 or strategy[2] < 1 or strategy[2] > 100 {
+        yield false
+    }
+    craft invalid_tradeoff(item) {
+        yield kind(item) != "text" or size(trim(item)) == 0
+    }
+    yield size(keep(strategy[1], invalid_tradeoff)) == 0 and size(unique(strategy[1])) == size(strategy[1]) and contains(["each-phase", "daily", "weekly", "release"], strategy[3])
+}

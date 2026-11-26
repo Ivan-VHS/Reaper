@@ -64,11 +64,11 @@ Each numbered row is one independent implementation batch with five framework sl
 | 39 | Парадигма | 5 | Tests first — implementation next |
 | 40 | Концепция | 5 | Tests first — implementation next |
 | 41 | Методология | 5 | Tests first — implementation next |
-| 42 | Подход | 5 | Queued |
-| 43 | Система | 5 | Queued |
-| 44 | Подсистема | 5 | Queued |
-| 45 | Модуль | 5 | Queued |
-| 46 | Компонент | 5 | Queued |
+| 42 | Подход | 5 | Tests first — implementation next |
+| 43 | Система | 5 | Tests first — implementation next |
+| 44 | Подсистема | 5 | Tests first — implementation next |
+| 45 | Модуль | 5 | Tests first — implementation next |
+| 46 | Компонент | 5 | Tests first — implementation next |
 | 47 | Блок | 5 | Queued |
 | 48 | Узел | 5 | Queued |
 | 49 | Интерфейс | 5 | Queued |
