@@ -15,6 +15,7 @@ typedef struct {
     int audit_count;
     int checks_fail;
     int commit_fail;
+    int partial_commit_fail;
     int publish_fail_after_create;
     int branch_rollback_fail;
     int audit_fail_commit;
@@ -165,8 +166,13 @@ static int commit_staged(void *context, void *workspace,
     memcpy(snapshot->original, stage->original, snapshot->original_length);
     memcpy(fake->current, stage->replacement, stage->replacement_length);
     fake->current_length = stage->replacement_length;
-    free(stage); /* Successful commit consumes the stage handle. */
     *rollback = snapshot;
+    if (fake->partial_commit_fail) {
+        /* Simulate a host that wrote bytes, then reported an I/O error.
+         * It leaves the stage alive and returns the independent snapshot. */
+        return 0;
+    }
+    free(stage); /* Successful commit consumes the stage handle. */
     return 1;
 }
 
@@ -352,6 +358,24 @@ static void test_checks_failure_discards_workspace(void) {
     assert(fake.workspace_end_count == 1);
 }
 
+static void test_partial_commit_failure_uses_independent_rollback_snapshot(void) {
+    FakeHost fake;
+    ReaperEvolutionApplyHost host;
+    ReaperEvolutionApplyRequest request;
+    ReaperEvolutionApplyResult result;
+    ReaperSourcePatch patch;
+
+    setup(&fake, &host, &request, &patch);
+    fake.partial_commit_fail = 1;
+    result = reaper_evolution_apply(&host, &request);
+
+    assert(result.status == REAPER_APPLY_COMMIT_FAILED);
+    assert(strcmp(fake.current, "old source") == 0);
+    assert(result.rolled_back_files == 1u);
+    assert(fake.branch_exists == 0);
+    assert(fake.workspace_end_count == 1);
+}
+
 static void test_audit_failure_rolls_back_files_and_topic_ref(void) {
     FakeHost fake;
     ReaperEvolutionApplyHost host;
@@ -496,6 +520,7 @@ static void test_host_authorization_and_revision_denials(void) {
 int main(void) {
     test_success_creates_topic_branch();
     test_checks_failure_discards_workspace();
+    test_partial_commit_failure_uses_independent_rollback_snapshot();
     test_audit_failure_rolls_back_files_and_topic_ref();
     test_partial_publish_failure_rolls_back_ref();
     test_failed_ref_rollback_is_preserved_for_recovery();
@@ -503,6 +528,6 @@ int main(void) {
     test_untrusted_host_and_stale_source_are_rejected();
     test_host_authorization_and_revision_denials();
     test_canonical_path_alias_is_denied_before_second_stage();
-    puts("native evolution apply tests: 9 groups passed");
+    puts("native evolution apply tests: 10 groups passed");
     return 0;
 }
