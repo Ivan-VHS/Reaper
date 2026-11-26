@@ -28,3 +28,5 @@ This hub groups related specifications and implementation references. The linked
 - Follow links within this cluster when a shared compiler, runtime, IDE or quality contract is involved.
 - Use the central map for cross-cluster navigation and project boundaries.
 - Update this hub and the central catalog whenever a page is added, moved or retired.
+
+- [Architecture foundation: 66 concepts](../REAPER_ARCHITECTURE_FOUNDATION_66.md) — stable native catalog, layer model and dependency validation API.
