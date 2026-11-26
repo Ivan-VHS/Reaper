@@ -60,14 +60,24 @@ export craft test_evidence(report, minimum_tests) {
 
 # Metric rows: [name, value, preferred_direction] where lower/higher/exact are explicit.
 export craft regression_compare(before_snapshot, after_snapshot) {
-    when not fc["fc_valid_pairs"](before_snapshot)[0] or not fc["fc_valid_pairs"](after_snapshot)[0] {
+    when kind(before_snapshot) != "list" or kind(after_snapshot) != "list" {
         yield [false, [], "metric-snapshot-invalid"]
     }
     vary regressions := []
     vary changes := []
     each before in before_snapshot {
-        make after := fc["fc_lookup"](after_snapshot, before[0])
-        when after[0] {
+        when not fc["fc_record"](before, 3) {
+            yield [false, [], ["before-metric-shape", before]]
+        }
+        vary after := nothing
+        each candidate in after_snapshot {
+            when fc["fc_record"](candidate, 3) and candidate[0] == before[0] {
+                change after := candidate
+            }
+        }
+        when after == nothing {
+            change regressions := push(regressions, ["metric-missing", before[0]])
+        } otherwise {
             when kind(before[1]) == "number" and kind(after[1]) == "number" {
                 change changes := push(changes, [before[0], before[1], after[1], after[1] - before[1]])
                 when before[2] == "lower" and after[1] > before[1] {
@@ -82,8 +92,6 @@ export craft regression_compare(before_snapshot, after_snapshot) {
             } otherwise {
                 when before[1] != after[1] { change regressions := push(regressions, before[0]) }
             }
-        } otherwise {
-            change regressions := push(regressions, ["metric-missing", before[0]])
         }
     }
     yield [size(regressions) == 0, changes, regressions]
