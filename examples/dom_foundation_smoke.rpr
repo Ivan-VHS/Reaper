@@ -1,0 +1,95 @@
+# Reaper-native ДОМ Foundation integration checks.
+
+import "../dom/Uu/core.rpr" as uu
+import "../dom/Nonconcrete/contracts.rpr" as contracts
+import "../dom/poooVERTY/budgets.rpr" as budgets
+import "../dom/JLOM/lifecycle.rpr" as lifecycle
+import "../dom/Establish/manifest.rpr" as establish
+import "../dom/System-Carriere/envelope.rpr" as carriere
+import "../dom/JennyFlash/signals.rpr" as jenny_flash
+import "../dom/Jenny-Flashing-Boy/reload.rpr" as flashing_boy
+import "../dom/core/runtime.rpr" as dom
+
+assert(uu["contains"](["a", "b"], "b"), "Uu contains")
+assert(uu["all_unique"](["a", "b", "c"]), "Uu unique validation")
+assert(not uu["all_unique"](["a", "b", "a"]), "Uu duplicate rejection")
+assert(uu["clamp"](12, 0, 10)[1] == 10, "Uu clamp upper bound")
+
+make actual_contract := ["reaper.dom.message.v1", 1, 2, [["id", "text"]], ["send"], ["message.send"]]
+make required_contract := ["reaper.dom.message.v1", 1, 1, [["id", "text"]], ["send"], ["message.send"]]
+assert(contracts["validate_contract"](actual_contract)[0], "contract is valid")
+assert(contracts["compatible"](actual_contract, required_contract)[0], "compatible minor version")
+assert(not contracts["missing_capabilities"](["message.send"], ["storage.read"])[0], "capability denial")
+
+make budget := [1024, 8, 32, 16]
+make usage := [128, 1, 4, 2]
+make request := [256, 2, 8, 1]
+make admitted := budgets["admit"](budget, usage, request)
+assert(admitted[0], "resource request should fit")
+assert(admitted[1] == [384, 3, 12, 3], "resource accounting")
+assert(not budgets["admit"](budget, usage, [2048, 0, 0, 0])[0], "resource over-budget denied")
+assert(budgets["release"](admitted[1], request)[1] == usage, "resource release")
+
+make made := lifecycle["create_instance"]("runtime-smoke", "sample.app")
+assert(made[0], "JLOM creates instance")
+make resolved := lifecycle["move"](made[1], "Resolved")
+make prepared := lifecycle["move"](resolved[1], "Prepared")
+make running := lifecycle["move"](prepared[1], "Running")
+assert(running[0], "JLOM prepares and starts")
+assert(not lifecycle["move"](made[1], "Ready")[0], "JLOM rejects skipped state")
+
+make manifest := [
+    "reaper.dom.manifest.v1",
+    "sample.app",
+    "1.0.0",
+    "standard",
+    [
+        ["app.ui", "1.0.0", ["app.core"]],
+        ["app.core", "1.0.0", []]
+    ],
+    ["message.send", "storage.read"],
+    budget
+]
+make manifest_check := establish["validate_manifest"](manifest)
+assert(manifest_check[0], "Establish accepts a valid manifest")
+assert(manifest_check[1] == ["app.core", "app.ui"], "Establish sorts dependencies")
+assert(not establish["validate_with_host"](manifest, ["storage.read"])[0], "Establish enforces grants")
+assert(establish["validate_with_host"](manifest, ["message.send", "storage.read"])[0], "Establish accepts explicit grants")
+
+make envelope := [
+    "msg-1", "trace-1", "sample.event.v1", "1",
+    "app.ui", "app.core", 100, "at-least-once", ["changed", 42]
+]
+assert(carriere["validate_envelope"](envelope)[0], "message envelope is valid")
+assert(carriere["delivery_policy"](envelope)[1] == [3, true, true], "at-least-once policy")
+assert(carriere["resolve_recipient"](envelope, [["app.core", "service", "active"]])[0], "recipient resolves")
+assert(not carriere["authorize"](envelope, ["storage.read"])[0], "message capability required")
+
+make signal := jenny_flash["create"]("theme", "noir", [])
+assert(signal[0], "signal is created")
+make watched := jenny_flash["subscribe"](signal[1], "ui.panel")
+make changed := jenny_flash["compare_and_set"](watched[1], 0, "yellow")
+assert(changed[0] and changed[1][1] == 1, "signal version advances")
+assert(not jenny_flash["compare_and_set"](changed[1], 0, "red")[0], "stale signal update rejected")
+make signal_batch := jenny_flash["apply_batch"]([changed[1]], [["theme", 1, "black"]])
+assert(signal_batch[0] and signal_batch[1][0][2] == "black", "signal batch commits")
+
+make old_module := ["app.core", "1.0.0", "dabi64.v1"]
+make new_module := ["app.core", "1.1.0", "dabi64.v1"]
+make reload_plan := flashing_boy["build_plan"](old_module, new_module, true, true, true)
+assert(reload_plan[0] and flashing_boy["authorize_commit"](reload_plan[1])[0], "compatible reload authorized")
+make unsafe_plan := flashing_boy["build_plan"](old_module, ["app.core", "2.0.0", "dabi64.v2"], false, false, false)
+assert(not flashing_boy["authorize_commit"](unsafe_plan[1])[0], "unsafe reload denied")
+assert(flashing_boy["rollback"](reload_plan[1])[1][1] == "1.0.0", "reload rollback retains old module")
+
+make instance_result := dom["create"](manifest, ["message.send", "storage.read"], "dom-instance-1")
+assert(instance_result[0] and instance_result[1][4] == "Prepared", "DOM creates prepared runtime")
+make started := dom["start"](instance_result[1])
+make ready := dom["ready"](started[1])
+assert(ready[0] and ready[1][4] == "Ready", "DOM reaches ready")
+make quiescing := dom["quiesce"](ready[1])
+make stopped := dom["stop"](quiescing[1])
+assert(stopped[0] and stopped[1][4] == "Stopped", "DOM shuts down in order")
+assert(not dom["start"](stopped[1])[0], "DOM prevents restart after terminal stop")
+
+emit "dom foundation smoke checks passed"
