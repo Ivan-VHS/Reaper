@@ -120,7 +120,16 @@
     "current_proposed_architecture_graph_comparison",
     "dependency_edge_consistency_validation",
     "observe_without_mutation_or_plan_generation",
-    "risk_benefit_gate_for_evolution_proposals"
+    "risk_benefit_gate_for_evolution_proposals",
+    "shared_typed_c17_compiler_ir_contract",
+    "typed_hir_mir_lir_scalar_and_aesthetic_property_lowering",
+    "deterministic_c17_lir_instruction_table_emitter",
+    "generated_c17_compilation_smoke_target",
+    "native_sha256_implementation_and_vectors",
+    "sha256_pinned_whole_file_patch_descriptor_generator",
+    "capability_gated_transactional_apply_engine_contract",
+    "isolated_workspace_and_atomic_topic_branch_publication_contract",
+    "durable_audit_and_conditional_rollback_recovery_callbacks"
   ],
   "not_implemented": [
     "first_class_reaper_struct_and_enum_syntax",
@@ -139,12 +148,20 @@
     "authenticated_repository_grant_enforcement",
     "per_path_scope_enforcement",
     "baseline_digest_verification_against_git_object",
-    "computed_color_pair_contrast_measurement"
+    "computed_color_pair_contrast_measurement",
+    "full_reaper_parser_to_general_hir_frontend",
+    "complete_native_c17_parity_for_reaper_modules_collections_control_flow_and_effects",
+    "concrete_windows_repository_and_git_host_adapter",
+    "concrete_posix_repository_and_git_host_adapter",
+    "operating_system_sandbox_and_resource_enforcement_adapter",
+    "reaper_to_native_evolution_apply_bridge",
+    "verified_real_repository_apply_and_rollback_evidence",
+    "native_renderer_and_gpu_canvas_adapter"
   ],
   "safety": {
     "default_mode": "observe",
     "propose_writes": false,
-    "apply_mode": "blocked_until_adapters_and_grants_exist",
+    "apply_mode": "blocked_until_real_host_adapters_and_reaper_bridge_are_verified",
     "default_branch_writes": false,
     "automatic_merge": false,
     "automatic_release": false
@@ -153,7 +170,10 @@
     "source_files_added": true,
     "reaper_runtime_execution": "pending",
     "schema_validation": "pending",
-    "ci": "not_yet_wired"
+    "ci": "not_yet_wired",
+    "native_c17_ir_and_apply_tests": "wired_pending_ci",
+    "generated_c17_module_compile": "wired_pending_ci",
+    "real_host_adapter": "not_implemented"
   },
   "dependencies": [
     "PLAGUE 1.0.0 action-policy foundation (stacked base PR #358)"
