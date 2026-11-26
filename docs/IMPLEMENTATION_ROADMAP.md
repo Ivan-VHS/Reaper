@@ -102,18 +102,6 @@ Never move a row to Delivered because a registry, design, README, schema or gene
 
 **Acceptance:** deterministic output comparison, path/symlink rejection, dependency-cycle rejection, generated-project static checks and explicit non-installable maturity metadata.
 
-### R9 — Rivet framework and multitool assembly
-
-**Status: Partial planning increment; project generation, executable module assembly and packaging are not implemented.**
-
-- Keep the catalogue and composition engine in Reaper source.
-- Resolve dependencies deterministically; reject cycles, unknown modules, conflicts, missing capabilities and incompatible product profiles.
-- Keep generated product identity independent from the factory name.
-- Collect required permissions without granting them; keep registry resolution local/offline by default.
-- Do not report a framework or multitool as built until source generation, module conformance, resource tests, provenance and package integrity gates pass.
-
-**Acceptance:** Reaper-native examples and negative planner fixtures pass; graph order is deterministic; permissions remain ungranted; current output remains `plan_only` until the source-emission and package ABIs are implemented.
-
 ### R7 — Federation and compatibility
 
 **Status: Metadata adapters delivered; deeper runtime integrations are Partial or Planned.**
@@ -135,6 +123,18 @@ Never move a row to Delivered because a registry, design, README, schema or gene
 - Preserve a rollback path to a previous known-good package.
 
 **Acceptance:** reproducible archive inventory, verified checksums, passing required CI for the tagged commit and a maintainer-approved release.
+
+### R9 — Rivet framework and multitool assembly
+
+**Status: Partial planning increment; project generation, executable module assembly and packaging are not implemented.**
+
+- Keep the catalogue and composition engine in Reaper source.
+- Resolve dependencies deterministically; reject cycles, unknown modules, conflicts, missing capabilities and incompatible product profiles.
+- Keep generated product identity independent from the factory name.
+- Collect required permissions without granting them; keep registry resolution local/offline by default.
+- Do not report a framework or multitool as built until source generation, module conformance, resource tests, provenance and package integrity gates pass.
+
+**Acceptance:** Reaper-native examples and negative planner fixtures pass; graph order is deterministic; permissions remain ungranted; current output remains `plan_only` until the source-emission and package ABIs are implemented.
 
 ## Not a Reaper workstream
 
