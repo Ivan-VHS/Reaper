@@ -1,0 +1,12 @@
+# Matrix Diagonal Framework — Extract the main diagonal of a square numeric matrix.
+
+export craft matrix_diagonal(matrix) {
+when kind(matrix) != "list" or size(matrix) == 0 { yield [] }
+ craft non_number(item) { yield kind(item) != "number" }
+ vary diagonal := []
+ each index in range(0, size(matrix)) {
+  when kind(matrix[index]) != "list" or size(matrix[index]) != size(matrix) or size(keep(matrix[index], non_number)) != 0 { yield [] }
+  change diagonal := push(diagonal, matrix[index][index])
+ }
+ yield diagonal
+}

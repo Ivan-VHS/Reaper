@@ -1,0 +1,8 @@
+# Work Environment Tools Framework — Ensure every required development tool is present and tool identities are unique.
+
+export craft valid_work_environment_tools(required, available) {
+when kind(required) != "list" or kind(available) != "list" { yield false }
+ craft invalid_tool(item) { yield kind(item) != "text" or size(trim(item)) == 0 }
+ craft missing_tool(item) { yield not contains(available, item) }
+ yield size(keep(required, invalid_tool)) == 0 and size(keep(available, invalid_tool)) == 0 and size(unique(required)) == size(required) and size(unique(available)) == size(available) and size(keep(required, missing_tool)) == 0
+}

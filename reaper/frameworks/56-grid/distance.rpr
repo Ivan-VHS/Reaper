@@ -1,0 +1,13 @@
+# Grid Distance Framework — Calculate Manhattan distance between two non-negative integral grid points.
+
+export craft grid_manhattan_distance(left, right) {
+when kind(left) != "list" or kind(right) != "list" or size(left) != 2 or size(right) != 2 { yield -1 }
+ each value in [left[0], left[1], right[0], right[1]] {
+  when kind(value) != "number" or value % 1 != 0 or value < 0 { yield -1 }
+ }
+ vary dx := left[0] - right[0]
+ vary dy := left[1] - right[1]
+ when dx < 0 { change dx := 0 - dx }
+ when dy < 0 { change dy := 0 - dy }
+ yield dx + dy
+}

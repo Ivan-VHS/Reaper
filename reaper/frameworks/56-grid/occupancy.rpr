@@ -1,0 +1,10 @@
+# Grid Occupancy Framework — Validate unique occupied cells, each inside a declared rectangular grid.
+
+export craft valid_grid_occupancy(width, height, cells) {
+when kind(width) != "number" or kind(height) != "number" or width % 1 != 0 or height % 1 != 0 or width < 1 or height < 1 or kind(cells) != "list" { yield false }
+ craft valid_cell(cell) {
+  yield kind(cell) == "list" and size(cell) == 2 and kind(cell[0]) == "number" and kind(cell[1]) == "number" and cell[0] % 1 == 0 and cell[1] % 1 == 0 and cell[0] >= 0 and cell[1] >= 0 and cell[0] < width and cell[1] < height
+ }
+ craft invalid_cell(cell) { yield not valid_cell(cell) }
+ yield size(keep(cells, invalid_cell)) == 0 and size(unique(cells)) == size(cells)
+}

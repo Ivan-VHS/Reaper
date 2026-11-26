@@ -1,0 +1,8 @@
+# Perimeter Rate Limit Framework — Validate request count, window, and burst against an explicit perimeter quota.
+
+export craft valid_perimeter_rate_limit(requests, window_seconds, maximum_requests, burst_limit) {
+each value in [requests, window_seconds, maximum_requests, burst_limit] {
+  when kind(value) != "number" or value % 1 != 0 or value < 0 { yield false }
+ }
+ yield window_seconds > 0 and maximum_requests > 0 and burst_limit <= maximum_requests and requests <= burst_limit
+}

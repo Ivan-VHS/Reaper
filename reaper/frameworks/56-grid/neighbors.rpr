@@ -1,0 +1,12 @@
+# Grid Neighbors Framework — Return in-bounds four-directional orthogonal neighbours in deterministic order.
+
+export craft grid_neighbors4(width, height, x, y) {
+when kind(width) != "number" or kind(height) != "number" or kind(x) != "number" or kind(y) != "number" { yield [] }
+ when width % 1 != 0 or height % 1 != 0 or x % 1 != 0 or y % 1 != 0 or width < 1 or height < 1 or x < 0 or y < 0 or x >= width or y >= height { yield [] }
+ vary neighbors := []
+ when y > 0 { change neighbors := push(neighbors, [x, y - 1]) }
+ when x + 1 < width { change neighbors := push(neighbors, [x + 1, y]) }
+ when y + 1 < height { change neighbors := push(neighbors, [x, y + 1]) }
+ when x > 0 { change neighbors := push(neighbors, [x - 1, y]) }
+ yield neighbors
+}

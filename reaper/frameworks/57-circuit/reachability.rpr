@@ -1,0 +1,24 @@
+# Circuit Reachability Framework — Compute directed reachability with an iterative closure over supplied links.
+
+export craft circuit_reachable(count, edges, source, target) {
+when kind(count) != "number" or count % 1 != 0 or count < 1 or kind(edges) != "list" { yield false }
+ when kind(source) != "number" or kind(target) != "number" or source % 1 != 0 or target % 1 != 0 or source < 0 or target < 0 or source >= count or target >= count { yield false }
+ craft valid_edge(edge) {
+  yield kind(edge) == "list" and size(edge) == 2 and kind(edge[0]) == "number" and kind(edge[1]) == "number" and edge[0] >= 0 and edge[0] < count and edge[1] >= 0 and edge[1] < count and edge[0] != edge[1]
+ }
+ craft invalid_edge(edge) { yield not valid_edge(edge) }
+ when size(keep(edges, invalid_edge)) != 0 { yield false }
+ when source == target { yield true }
+ vary reached := [source]
+ vary changed := true
+ while changed {
+  change changed := false
+  each edge in edges {
+   when contains(reached, edge[0]) and not contains(reached, edge[1]) {
+    change reached := push(reached, edge[1])
+    change changed := true
+   }
+  }
+ }
+ yield contains(reached, target)
+}

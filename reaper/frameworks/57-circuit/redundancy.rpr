@@ -1,0 +1,6 @@
+# Circuit Redundancy Framework — Require enough independent circuit paths to tolerate the declared failure count.
+
+export craft valid_circuit_redundancy(path_count, failure_budget) {
+when kind(path_count) != "number" or kind(failure_budget) != "number" { yield false }
+ yield path_count % 1 == 0 and failure_budget % 1 == 0 and path_count >= 1 and failure_budget >= 0 and path_count > failure_budget
+}

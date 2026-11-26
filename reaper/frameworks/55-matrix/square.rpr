@@ -1,0 +1,10 @@
+# Square Matrix Framework — Validate a non-empty square matrix containing only numeric values.
+
+export craft valid_square_numeric_matrix(matrix) {
+when kind(matrix) != "list" or size(matrix) == 0 { yield false }
+ craft non_number(item) { yield kind(item) != "number" }
+ each row in matrix {
+  when kind(row) != "list" or size(row) != size(matrix) or size(keep(row, non_number)) != 0 { yield false }
+ }
+ yield true
+}

@@ -1,0 +1,7 @@
+# Perimeter Route Framework — Return required trust-boundary routes that have no explicit rule.
+
+export craft missing_perimeter_routes(required, declared) {
+when kind(required) != "list" or kind(declared) != "list" { yield [] }
+ craft missing(route) { yield not contains(declared, route) }
+ yield keep(required, missing)
+}

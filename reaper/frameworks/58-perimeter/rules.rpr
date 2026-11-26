@@ -1,0 +1,12 @@
+# Perimeter Rule Framework — Validate unique source-zone, target-zone and action perimeter rules.
+
+export craft valid_perimeter_rules(rules) {
+when kind(rules) != "list" { yield false }
+ craft valid_rule(rule) {
+  when kind(rule) != "list" or size(rule) != 3 { yield false }
+  each item in rule { when kind(item) != "text" or size(trim(item)) == 0 { yield false } }
+  yield rule[0] != rule[1]
+ }
+ craft invalid_rule(rule) { yield not valid_rule(rule) }
+ yield size(keep(rules, invalid_rule)) == 0 and size(unique(rules)) == size(rules)
+}

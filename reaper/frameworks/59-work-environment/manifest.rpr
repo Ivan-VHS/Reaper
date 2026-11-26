@@ -1,0 +1,9 @@
+# Work Environment Manifest Framework — Validate unique non-empty process-independent environment key/value pairs.
+
+export craft valid_work_environment_manifest(entries) {
+when kind(entries) != "list" { yield false }
+ craft valid_entry(item) { yield kind(item) == "list" and size(item) == 2 and kind(item[0]) == "text" and kind(item[1]) == "text" and size(trim(item[0])) > 0 }
+ craft invalid_entry(item) { yield not valid_entry(item) }
+ craft entry_key(item) { yield item[0] }
+ yield size(keep(entries, invalid_entry)) == 0 and size(unique(map(entries, entry_key))) == size(entries)
+}
