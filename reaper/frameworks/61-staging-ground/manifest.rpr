@@ -1,11 +1,28 @@
-# Staging Manifest Framework — Validate unique staged artifact names and fixed-length content digests.
+# Staging Manifest Framework — Validate unique staged artifact names and canonical SHA-256 hexadecimal digests.
 
 export craft valid_staging_manifest(artifacts) {
-when kind(artifacts) != "list" { yield false }
- craft valid_artifact(item) {
-  yield kind(item) == "list" and size(item) == 2 and kind(item[0]) == "text" and kind(item[1]) == "text" and size(trim(item[0])) > 0 and size(item[1]) == 64
- }
- craft invalid_artifact(item) { yield not valid_artifact(item) }
- craft artifact_name(item) { yield item[0] }
- yield size(keep(artifacts, invalid_artifact)) == 0 and size(unique(map(artifacts, artifact_name))) == size(artifacts)
+    when kind(artifacts) != "list" {
+        yield false
+    }
+    craft valid_digest(digest) {
+        when kind(digest) != "text" or size(digest) != 64 {
+            yield false
+        }
+        each digit in digest {
+            when not contains("0123456789abcdef", digit) {
+                yield false
+            }
+        }
+        yield true
+    }
+    craft valid_artifact(item) {
+        yield kind(item) == "list" and size(item) == 2 and kind(item[0]) == "text" and size(trim(item[0])) > 0 and valid_digest(item[1])
+    }
+    craft invalid_artifact(item) {
+        yield not valid_artifact(item)
+    }
+    craft artifact_name(item) {
+        yield item[0]
+    }
+    yield size(keep(artifacts, invalid_artifact)) == 0 and size(unique(map(artifacts, artifact_name))) == size(artifacts)
 }
