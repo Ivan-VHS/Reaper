@@ -16,6 +16,14 @@ class LanguageServiceTests(unittest.TestCase):
         self.assertTrue(any(item.code == "RPR-W0001" for item in analysis.diagnostics))
         self.assertTrue(any(item.code == "RPR-E0013" for item in analysis.diagnostics))
 
+    def test_local_type_diagnostics_are_published_with_source_spans(self):
+        uri = "file:///typed.rpr"
+        self.service.open(uri, 'emit "text" * 2')
+        analysis = self.service.analyze(uri)
+        diagnostic = next(item for item in analysis.diagnostics if item.code == "RPR-T0004")
+        self.assertEqual(diagnostic.severity, "error")
+        self.assertEqual(diagnostic.span.line, 0)
+
     def test_cross_document_definition_and_references(self):
         declaration_uri = "file:///project/model.rpr"
         usage_uri = "file:///project/main.rpr"
@@ -171,6 +179,56 @@ class LspAdapterTests(unittest.TestCase):
             "textDocument": {"uri": uri}
         }})
         self.assertEqual(self.server.drain_notifications()[0]["params"]["diagnostics"], [])
+
+    def test_semantic_tokens_advertise_legend_and_classify_source(self):
+        initialized = self.server.dispatch({
+            "jsonrpc": "2.0", "id": 30, "method": "initialize"
+        })
+        provider = initialized["result"]["capabilities"]["semanticTokensProvider"]
+        self.assertTrue(provider["full"])
+        self.assertIn("function", provider["legend"]["tokenTypes"])
+        self.assertIn("keyword", provider["legend"]["tokenTypes"])
+
+        uri = "file:///semantic.rpr"
+        source = 'craft hello(name) {\n make title := "😀"\n emit title\n}'
+        self.server.dispatch({"method": "textDocument/didOpen", "params": {
+            "textDocument": {"uri": uri, "version": 1, "text": source}
+        }})
+        response = self.server.dispatch({
+            "jsonrpc": "2.0", "id": 31, "method": "textDocument/semanticTokens/full",
+            "params": {"textDocument": {"uri": uri}},
+        })
+        data = response["result"]["data"]
+        self.assertEqual(len(data) % 5, 0)
+
+        token_types = provider["legend"]["tokenTypes"]
+        seen = set()
+        string_lengths = []
+        declaration_modifiers = []
+        line = 0
+        start = 0
+        for index in range(0, len(data), 5):
+            delta_line, delta_start, length, token_type, modifiers = data[index:index + 5]
+            line += delta_line
+            start = start + delta_start if delta_line == 0 else delta_start
+            kind = token_types[token_type]
+            seen.add(kind)
+            if kind == "string":
+                string_lengths.append(length)
+            if modifiers & 1:
+                declaration_modifiers.append(kind)
+        self.assertTrue({"keyword", "function", "variable", "string"} <= seen)
+        self.assertEqual(string_lengths, [4])
+        self.assertIn("function", declaration_modifiers)
+        self.assertIn("variable", declaration_modifiers)
+
+    def test_semantic_tokens_reject_closed_documents(self):
+        response = self.server.dispatch({
+            "jsonrpc": "2.0", "id": 32, "method": "textDocument/semanticTokens/full",
+            "params": {"textDocument": {"uri": "file:///not-open.rpr"}},
+        })
+        self.assertEqual(response["error"]["code"], -32602)
+
 
 if __name__ == "__main__":
     unittest.main()

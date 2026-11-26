@@ -4,7 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 import re
-from typing import Iterator
+from collections.abc import Iterable, Mapping
+from typing import Any, Iterator
 
 SOURCE_EXTENSIONS = frozenset({".rpr", ".most", ".js", ".mjs", ".cjs"})
 IGNORED_DIRECTORIES = frozenset({"__pycache__", "node_modules", "build", "dist", ".venv"})
@@ -33,6 +34,101 @@ _TOKEN_PATTERN = re.compile(
     r'|(?P<identifier>[^\W\d]\w*)',
     re.UNICODE,
 )
+
+
+
+DIAGNOSTIC_SEVERITIES = frozenset({"error", "warning", "information", "hint"})
+
+
+@dataclass(frozen=True, slots=True)
+class IdeDiagnostic:
+    """Stable IDE diagnostic record with one-based source coordinates."""
+
+    file: str
+    start_line: int
+    start_column: int
+    end_line: int
+    end_column: int
+    severity: str
+    code: str
+    message: str
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "file": self.file,
+            "range": {
+                "start": {"line": self.start_line, "column": self.start_column},
+                "end": {"line": self.end_line, "column": self.end_column},
+            },
+            "severity": self.severity,
+            "code": self.code,
+            "message": self.message,
+        }
+
+
+def normalize_diagnostics(
+    source_file: str | Path,
+    diagnostics: Iterable[Any],
+) -> tuple[IdeDiagnostic, ...]:
+    """Normalize compiler-owned diagnostics without inventing semantic ranges.
+
+    The current typechecker exposes a point location rather than a source span,
+    so the end position equals the start position until the compiler provides a
+    real range. Coordinates remain one-based, matching native diagnostics and
+    the Tk editor contract.
+    """
+    file_name = str(source_file)
+    normalized: list[IdeDiagnostic] = []
+
+    def field(item: Any, name: str, default: Any = None) -> Any:
+        if isinstance(item, Mapping):
+            return item.get(name, default)
+        return getattr(item, name, default)
+
+    def positive_position(value: Any, fallback: int) -> int:
+        if isinstance(value, bool):
+            return fallback
+        try:
+            position = int(value)
+        except (TypeError, ValueError, OverflowError):
+            return fallback
+        return max(1, position)
+
+    for item in diagnostics:
+        line = positive_position(field(item, "line", 1), 1)
+        column = positive_position(field(item, "column", 1), 1)
+        end_line = positive_position(field(item, "end_line", line), line)
+        end_column = positive_position(field(item, "end_column", column), column)
+        if (end_line, end_column) < (line, column):
+            end_line, end_column = line, column
+
+        severity = str(field(item, "severity", "error")).lower()
+        if severity not in DIAGNOSTIC_SEVERITIES:
+            severity = "error"
+        code = str(field(item, "code", "RPR-UNKNOWN")).strip() or "RPR-UNKNOWN"
+        message = str(field(item, "message", ""))
+
+        normalized.append(IdeDiagnostic(
+            file=file_name,
+            start_line=line,
+            start_column=column,
+            end_line=end_line,
+            end_column=end_column,
+            severity=severity,
+            code=code,
+            message=message,
+        ))
+
+    return tuple(sorted(
+        normalized,
+        key=lambda diagnostic: (
+            diagnostic.start_line,
+            diagnostic.start_column,
+            diagnostic.severity,
+            diagnostic.code,
+            diagnostic.message,
+        ),
+    ))
 
 
 @dataclass(frozen=True, slots=True)

@@ -4,7 +4,27 @@ from __future__ import annotations
 import json
 import re
 import sys
-from .language_service import LanguageService, Span, _offset
+from .language_service import BUILTINS, KEYWORDS, LanguageService, Span, _offset
+from .lexer import KEYWORD_ALIASES
+from .formatter import format_document
+
+SEMANTIC_TOKEN_TYPES = [
+    "namespace", "type", "class", "enum", "interface", "struct",
+    "typeParameter", "parameter", "variable", "property", "enumMember",
+    "event", "function", "method", "macro", "keyword", "modifier",
+    "comment", "string", "number", "regexp", "operator", "decorator",
+]
+SEMANTIC_TOKEN_MODIFIERS = [
+    "declaration", "readonly", "static", "deprecated", "abstract",
+    "async", "modification", "documentation", "defaultLibrary",
+]
+_SEMANTIC_TOKEN_RE = re.compile(
+    r'"(?:\\.|[^"\\])*"|#.*$|(?:\d+(?:\.\d+)?)|'
+    r'(?:[A-Za-z_][A-Za-z0-9_]*|[^\W\d]\w*)|'
+    r'(?:~>|::|:=|==|!=|<=|>=|\*\*|//|[+\-*/%<>=!{}()[\],.:])',
+    re.UNICODE,
+)
+_DECLARATION_KEYWORDS = {"make", "vary", "craft", "fn", "let", "const", "функция", "процедура", "пусть", "переменная", "связать"}
 
 HOVER = {
     "make": "Immutable binding: `make name := expression`.",
@@ -70,6 +90,58 @@ class LspServer:
         previous = [m for m in re.finditer(r"[\wА-Яа-яЁё]+|~>|::", line) if m.end() <= column]
         return previous[-1].group(0) if previous else ""
 
+    def _semantic_tokens(self, uri):
+        """Return LSP delta-encoded lexical tokens in UTF-16 coordinates."""
+        snapshot = self.service._docs.get(uri)
+        if snapshot is None:
+            raise ValueError(f"document is not open: {uri}")
+
+        token_index = {name: index for index, name in enumerate(SEMANTIC_TOKEN_TYPES)}
+        keyword_words = set(KEYWORDS) | set(KEYWORD_ALIASES)
+        data = []
+        previous_line = 0
+        previous_start = 0
+
+        for row, source in enumerate(snapshot.text.splitlines()):
+            previous_word = ""
+            for match in _SEMANTIC_TOKEN_RE.finditer(source):
+                value = match.group(0)
+                if value.startswith("#"):
+                    kind = "comment"
+                elif value.startswith('"'):
+                    kind = "string"
+                elif value[0].isdigit():
+                    kind = "number"
+                elif value[0].isalpha() or value[0] == "_" or not value.isascii():
+                    if value in keyword_words:
+                        kind = "keyword"
+                    elif value in BUILTINS:
+                        kind = "function"
+                    elif previous_word in _DECLARATION_KEYWORDS:
+                        kind = "function" if previous_word in {"craft", "fn", "функция", "процедура"} else "variable"
+                    else:
+                        kind = "variable"
+                else:
+                    kind = "operator"
+
+                start = len(source[:match.start()].encode("utf-16-le")) // 2
+                length = len(value.encode("utf-16-le")) // 2
+                if length:
+                    delta_line = row - previous_line
+                    delta_start = start - previous_start if delta_line == 0 else start
+                    modifiers = 1 if (
+                        previous_word in _DECLARATION_KEYWORDS and kind in {"function", "variable"}
+                    ) else 0
+                    data.extend((delta_line, delta_start, length, token_index[kind], modifiers))
+                    previous_line = row
+                    previous_start = start
+
+                previous_word = value if (
+                    value[0].isalpha() or value[0] == "_" or not value.isascii()
+                ) else ""
+
+        return data
+
     def dispatch(self, message):
         method = message.get("method")
         params = message.get("params") or {}
@@ -86,7 +158,16 @@ class LspServer:
                         "referencesProvider": True,
                         "renameProvider": {"prepareProvider": False},
                         "documentSymbolProvider": True,
+                        "documentFormattingProvider": True,
                         "workspaceSymbolProvider": True,
+                        "semanticTokensProvider": {
+                            "legend": {
+                                "tokenTypes": SEMANTIC_TOKEN_TYPES,
+                                "tokenModifiers": SEMANTIC_TOKEN_MODIFIERS,
+                            },
+                            "full": True,
+                            "range": False,
+                        },
                     },
                     "serverInfo": {"name": "reaper-language-server", "version": "0.2.0"},
                 }
@@ -164,6 +245,32 @@ class LspServer:
                     "range": self._range(analysis.snapshot.text, symbol.span),
                     "selectionRange": self._range(analysis.snapshot.text, symbol.span),
                 } for symbol in analysis.symbols]
+            elif method == "textDocument/formatting":
+                uri = params["textDocument"]["uri"]
+                snapshot = self.service._docs.get(uri)
+                if snapshot is None:
+                    raise ValueError(f"document is not open: {uri}")
+                options = params.get("options", {})
+                tab_size = options.get("tabSize", 4) if isinstance(options, dict) else 4
+                if isinstance(tab_size, bool) or not isinstance(tab_size, int):
+                    tab_size = 4
+                formatted = format_document(snapshot.text, indent_width=tab_size)
+                if formatted != snapshot.text:
+                    end_line = snapshot.text.count("\n")
+                    last_line = snapshot.text.rsplit("\n", 1)[-1]
+                    end_character = len(last_line.encode("utf-16-le")) // 2
+                    result = [{
+                        "range": {
+                            "start": {"line": 0, "character": 0},
+                            "end": {"line": end_line, "character": end_character},
+                        },
+                        "newText": formatted,
+                    }]
+                else:
+                    result = []
+            elif method == "textDocument/semanticTokens/full":
+                uri = params["textDocument"]["uri"]
+                result = {"data": self._semantic_tokens(uri)}
             elif method == "shutdown":
                 self.service.shutdown()
             elif method == "exit":

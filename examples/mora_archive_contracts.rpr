@@ -1,0 +1,167 @@
+# Executable Mora archive contract fixture.
+# Run with: python -m reaper examples/mora_archive_contracts.rpr
+#
+# Numeric measurements and archive claims below are supplied fixture data.
+# Passing these checks proves structural consistency, not historical truth or
+# real-world benchmark results.
+
+import "../mora/archive_contracts.rpr" as contracts
+
+make metadata := [
+    "ARCHIVE-2021-12-01-DUALITY",
+    "DAK Studio Edition",
+    "2021-12-01T22:42:00+03:00",
+    "Аудиобратья, Санкт-Петербург",
+    "Danny Zuckerman",
+    "Макс Кравцов",
+    "The Orchard (независимый каталог)",
+    22,
+    4028,
+    "Абстрактная композиция «Портрет Неизвестного И» (2018) — комплементарный оранжевый акцент на зелёном поле",
+    false,
+    "unverified",
+    "not-provided"
+]
+
+# Fixture values only. Replace with measurements collected by a documented
+# local benchmark before treating them as performance evidence.
+make performance_budget := [8.3, 8.1, 100.0, 48.0, 819, 428, 1.0, 0.7]
+
+make acl_rules := [
+    ["mora.indexer", "network.outbound", "none", "permanent_deny", false, false],
+    ["ventu.sample", "audio.microphone", "single_session", "until_stop", true, false],
+    ["ventu.sample", "fs.directory", "/Audio/Export", "on_demand", true, false]
+]
+
+make snapshot_deltas := [
+    ["SNAP-10-18", "10:18", "ui.scale", "125%", "100%", true],
+    ["SNAP-10-18", "10:18", "wm.layout", "free", "two_columns", true],
+    ["SNAP-10-18", "10:18", "fx.glass_blur", "enabled", "simplified", true]
+]
+
+make timeline_segments := [
+    [
+        "01_PREHISTORY_OUTDOOR",
+        "Этап I: Наружная кампания и анонс",
+        0,
+        600,
+        "Личное",
+        "accent.amber.focus",
+        "22.11.2021: размещение визуальных носителей в 9 городах после завершения цикла микстейпа «Смутное время»."
+    ],
+    [
+        "02_STUDIO_PRODUCTION",
+        "Этап II: Студийные сессии и сведение",
+        600,
+        1500,
+        "Разработка",
+        "surface.emerald.matte",
+        "Накопление демо-материала с лета 2019 по 2021 год, переработка аранжировок и финальная полировка звука 26.11.2021."
+    ],
+    [
+        "03_DUALITY_CONCEPT",
+        "Этап III: Архитектура контрастов",
+        1500,
+        2700,
+        "Творчество",
+        "accent.ochre.warm",
+        "Исследование полярных состояний, субъективности восприятия и поиска точки опоры в плотном информационном потоке."
+    ],
+    [
+        "04_RELEASE_METRICS",
+        "Этап IV: Выпуск и статистика прослушиваний",
+        2700,
+        4028,
+        "Система",
+        "surface.slate.noir",
+        "Публикация 22 композиций общей длительностью 01:07:08; остальные публичные показатели требуют независимого источника."
+    ]
+]
+
+# Partial marker set: no missing track titles or positions are invented.
+# A marker is marked verified only when an evidence reference is supplied.
+make track_markers := [
+    [1, 1510, "SEG_01_OPENING_THESIS", "intro", "contrast", false, "not-provided"],
+    [2, 1620, "SEG_02_DUALITY_CORE", "manifesto", "duality", false, "not-provided"],
+    [3, 1750, "SEG_03_NON_FICTION_PRISM", "analytical", "perception", false, "not-provided"],
+    [4, 1890, "SEG_04_EARLY_BEAT_REVIVAL", "archive", "iteration", false, "not-provided"],
+    [5, 2040, "SEG_05_MORTALITY_PULSE", "narrative", "resilience", false, "not-provided"],
+    [6, 2210, "SEG_06_SENSORY_ANCHOR", "ambient", "presence", false, "not-provided"],
+    [7, 2380, "SEG_07_PARTISAN_SIGNAL", "broadcast", "autonomy", false, "not-provided"],
+    [8, 2540, "SEG_08_MOSS_VISUAL_STUDY", "multimedia", "texture", false, "not-provided"],
+    [22, 3900, "SEG_22_DREIDL_FINAL_MIX", "finale", "closure", false, "not-provided"]
+]
+
+make result := contracts["validate_archive"](
+    metadata,
+    performance_budget,
+    acl_rules,
+    snapshot_deltas,
+    timeline_segments,
+    track_markers,
+    true
+)
+
+each report in result[1] {
+    emit report[0] ++ " [" ++ report[2] ++ "]: " ++ report[3]
+    assert(report[1], report[2] ++ " — " ++ report[3])
+}
+
+assert(result[0], "archive validation failed")
+
+# Negative cases are executable regression checks for known failure modes.
+make gap_report := contracts["verify_segments"]([
+    ["A", "A", 0, 3, "Test", "test.color", "gap fixture"],
+    ["B", "B", 4, 5, "Test", "test.color", "gap fixture"]
+], 5)
+assert(not gap_report[1] and gap_report[2] == "ERR_SEGMENT_GAP", "timeline gap was not detected")
+
+make overlap_report := contracts["verify_segments"]([
+    ["A", "A", 0, 4, "Test", "test.color", "overlap fixture"],
+    ["B", "B", 3, 5, "Test", "test.color", "overlap fixture"]
+], 5)
+assert(not overlap_report[1] and overlap_report[2] == "ERR_OVERLAP_SEGMENT", "timeline overlap was not detected")
+
+make silent_grant_report := contracts["check_permission_policy"]([
+    ["test.app", "fs.directory", "/tmp/test", "on_demand", true, true]
+], true)
+assert(not silent_grant_report[1] and silent_grant_report[2] == "ERR_SILENT_GRANT", "silent grant was not rejected")
+
+make network_grant_report := contracts["check_permission_policy"]([
+    ["test.app", "network.outbound", "host:any", "on_demand", true, false]
+], true)
+assert(not network_grant_report[1] and network_grant_report[2] == "ERR_LOCAL_NETWORK", "local-only network grant was not rejected")
+
+make unsafe_snapshot_report := contracts["verify_snapshot_safety"]([
+    ["SNAP-UNSAFE", "2026-11-26T10:00:00Z", "ui.scale", "100%", "125%", false]
+])
+assert(not unsafe_snapshot_report[1] and unsafe_snapshot_report[2] == "ERR_UNSAFE_ROLLBACK", "unsafe rollback was not rejected")
+
+make invalid_marker_report := contracts["verify_track_markers"]([
+    [1, 100, "MARKER_A", "intro", "test", false, "not-provided"],
+    [1, 200, "MARKER_B", "verse", "test", false, "not-provided"]
+], 22, 4028)
+assert(not invalid_marker_report[1] and invalid_marker_report[2] == "ERR_MARKER_ORDER", "duplicate marker index was not rejected")
+
+make invalid_provenance := [
+    "ARCHIVE-INVALID",
+    "DAK Studio Edition",
+    "2021-12-01T22:42:00+03:00",
+    "Studio",
+    "Producer",
+    "Engineer",
+    "Distributor",
+    1,
+    60,
+    "Visual reference",
+    true,
+    "unverified",
+    "not-provided"
+]
+make provenance_report := contracts["check_archive_metadata"](invalid_provenance)
+assert(not provenance_report[1] and provenance_report[2] == "ERR_ARCHIVE_EVIDENCE_REQUIRED", "unsubstantiated verification claim was not rejected")
+
+emit "Mora archive contracts: PASS"
+emit "Track markers supplied: " ++ text(result[2]) ++ "/" ++ text(result[3]) ++ " (partial coverage)"
+emit "Archive provenance: unverified; evidence references have not been supplied"
+emit "Performance data: sample fixture, not a measured benchmark"

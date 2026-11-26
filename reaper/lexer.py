@@ -8,6 +8,10 @@ from .errors import LexError
 from .token_catalog import token_is_reserved
 
 
+MAX_SOURCE_CHARS = 4_000_000
+MAX_TOKEN_COUNT = 1_000_000
+
+
 KEYWORDS = {
     "make", "vary", "change", "craft", "yield", "emit", "when",
     "otherwise", "each", "in", "loop", "while", "true", "false",
@@ -98,6 +102,10 @@ class Lexer:
         self.tokens: list[Token] = []
 
     def tokenize(self) -> list[Token]:
+        if len(self.source) > MAX_SOURCE_CHARS:
+            raise LexError(
+                f"{self.filename}: source exceeds the {MAX_SOURCE_CHARS}-character limit"
+            )
         while not self._at_end():
             char = self._peek()
             if char in " \t\r":
@@ -115,7 +123,7 @@ class Lexer:
                 self._identifier()
             else:
                 self._operator_or_punctuation()
-        self.tokens.append(Token("EOF", "", self.line, self.column))
+        self._append_token(Token("EOF", "", self.line, self.column))
         return self.tokens
 
     def _at_end(self) -> bool:
@@ -135,8 +143,16 @@ class Lexer:
             self.column += 1
         return char
 
+    def _append_token(self, token: Token) -> None:
+        if len(self.tokens) >= MAX_TOKEN_COUNT:
+            raise LexError(
+                f"{self.filename}:{self.line}:{self.column}: "
+                f"token limit ({MAX_TOKEN_COUNT}) exceeded"
+            )
+        self.tokens.append(token)
+
     def _token(self, kind: str, value: str) -> None:
-        self.tokens.append(Token(kind, value, self.line, self.column))
+        self._append_token(Token(kind, value, self.line, self.column))
 
     def _skip_comment(self) -> None:
         while not self._at_end() and self._peek() != "\n":
@@ -165,7 +181,7 @@ class Lexer:
         if self._at_end():
             raise LexError(f"{self.filename}:{start_line}:{start_column}: unterminated string literal")
         self._advance()
-        self.tokens.append(Token("STRING", "".join(value), start_line, start_column))
+        self._append_token(Token("STRING", "".join(value), start_line, start_column))
 
     def _number(self) -> None:
         start = self.index
@@ -176,7 +192,7 @@ class Lexer:
             self._advance()
             while self._peek().isdigit():
                 self._advance()
-        self.tokens.append(Token("NUMBER", self.source[start:self.index], start_line, start_column))
+        self._append_token(Token("NUMBER", self.source[start:self.index], start_line, start_column))
 
     def _identifier(self) -> None:
         start = self.index
@@ -188,7 +204,7 @@ class Lexer:
         kind = canonical.upper() if canonical is not None else (
             value.upper() if value in KEYWORDS else "IDENT"
         )
-        self.tokens.append(Token(kind, value, start_line, start_column))
+        self._append_token(Token(kind, value, start_line, start_column))
 
     def _operator_or_punctuation(self) -> None:
         start_line, start_column = self.line, self.column
@@ -196,18 +212,18 @@ class Lexer:
         if token_is_reserved(triplet):
             for _ in range(3):
                 self._advance()
-            self.tokens.append(Token("CATALOG_OPERATOR", triplet, start_line, start_column))
+            self._append_token(Token("CATALOG_OPERATOR", triplet, start_line, start_column))
             return
         pair = self._peek() + self._peek(1)
         if pair in self._TWO_CHAR:
             self._advance()
             self._advance()
-            self.tokens.append(Token(pair, pair, start_line, start_column))
+            self._append_token(Token(pair, pair, start_line, start_column))
             return
         char = self._peek()
         if char in self._ONE_CHAR or char == "=":
             self._advance()
-            self.tokens.append(Token(char, char, start_line, start_column))
+            self._append_token(Token(char, char, start_line, start_column))
             return
         raise LexError(f"{self.filename}:{self.line}:{self.column}: unexpected character {char!r}")
 
