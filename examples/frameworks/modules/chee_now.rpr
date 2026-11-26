@@ -1,17 +1,73 @@
-# Reaper framework metadata and source-level helper functions.
-# Operation contracts: language/frameworks.v1.json
+# CheeNow: bounded in-memory channels and back-pressure decisions.
+import "../federation_common.rpr" as fc
 
-export make framework_id := "chee_now"
+export make framework_id := "chee-now"
 export make display_name := "CheeNow"
 export make feature_key := "RPR-FWK-012"
 export make operation_keys := ["RPR-FWK-012-F01", "RPR-FWK-012-F02", "RPR-FWK-012-F03", "RPR-FWK-012-F04", "RPR-FWK-012-F05", "RPR-FWK-012-F06"]
-export make maturity := "contract-only"
+export make maturity := "reference-handler-v1-partial"
 export make native_registry := "reaper.framework-cabi.v1"
 
-export craft operation_key(index) {
-    yield operation_keys[index]
+export craft operation_key(index) { yield operation_keys[index] }
+export craft framework_manifest() { yield [framework_id, display_name, feature_key, operation_keys, maturity] }
+
+# Channel: [id, capacity, queue, status].
+export craft channel_open(channel_id, capacity) {
+    when not fc["fc_nonempty_text"](channel_id) or not fc["fc_nonnegative"](capacity) or capacity <= 0 {
+        yield [false, nothing, "invalid-channel-descriptor"]
+    }
+    yield [true, [channel_id, capacity, [], "open"], "channel-described"]
 }
 
-export craft framework_manifest() {
-    yield [framework_id, display_name, feature_key, operation_keys, maturity]
+export craft channel_send(channel, message) {
+    when not fc["fc_record"](channel, 4) { yield [false, channel, "channel-shape"] }
+    when channel[3] != "open" { yield [false, channel, "channel-closed"] }
+    when size(channel[2]) >= channel[1] { yield [false, channel, "channel-full"] }
+    yield [true, [channel[0], channel[1], push(channel[2], message), channel[3]], "queued"]
+}
+
+# Nonblocking receive descriptor: wait policy [max_items_to_consume, deadline].
+export craft channel_receive(channel, wait_policy) {
+    when not fc["fc_record"](channel, 4) or not fc["fc_record"](wait_policy, 2) {
+        yield [false, channel, "receive-input-shape"]
+    }
+    when not fc["fc_nonnegative"](wait_policy[0]) or not fc["fc_nonnegative"](wait_policy[1]) {
+        yield [false, channel, "wait-policy-invalid"]
+    }
+    when size(channel[2]) == 0 { yield [true, channel, nothing, "empty-nonblocking"] }
+    make message := first(channel[2])
+    make remaining := rest(channel[2])
+    yield [true, [channel[0], channel[1], remaining, channel[3]], message, "received"]
+}
+
+export craft channel_close(channel) {
+    when not fc["fc_record"](channel, 4) { yield [false, channel, "channel-shape"] }
+    when channel[3] == "closed" { yield [true, channel, "already-closed"] }
+    yield [true, [channel[0], channel[1], channel[2], "closed"], "closed"]
+}
+
+export craft backpressure_check(queue, limits) {
+    when kind(queue) != "list" or not fc["fc_record"](limits, 2) {
+        yield [false, nothing, "backpressure-input-shape"]
+    }
+    when not fc["fc_nonnegative"](limits[0]) or not fc["fc_nonnegative"](limits[1]) {
+        yield [false, nothing, "backpressure-limits-invalid"]
+    }
+    when limits[1] > limits[0] { yield [false, nothing, "watermark-exceeds-capacity"] }
+    when size(queue) > limits[0] { yield [true, "over-capacity", size(queue)] }
+    when size(queue) >= limits[1] { yield [true, "backpressure", size(queue)] }
+    yield [true, "below-watermark", size(queue)]
+}
+
+export craft fanout_dispatch(message, recipients) {
+    make unique_recipients := fc["fc_unique"](recipients)
+    when not unique_recipients[0] { yield [false, [], "recipient-set-invalid"] }
+    vary deliveries := []
+    each recipient in unique_recipients[1] {
+        when not fc["fc_nonempty_text"](recipient) {
+            yield [false, [], "recipient-identity-invalid"]
+        }
+        change deliveries := push(deliveries, [recipient, message, "pending-host-delivery"])
+    }
+    yield [true, deliveries, "fanout-plan"]
 }
