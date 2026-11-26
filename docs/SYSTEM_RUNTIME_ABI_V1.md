@@ -1,86 +1,63 @@
 # Reaper System Runtime ABI v1
 
-**Status:** native C17 host-dispatch boundary implemented; per-platform syscall adapters and source-language bindings remain separate gates.  
-**Scope:** process and thread lifecycle, synchronization, filesystem, clocks, networking and cryptographic services.  
-**Compatibility:** additive ABI; the existing Reaper FFI v1 symbols and the 18-module capability suite remain unchanged.
+**Status:** native C17 host-dispatch boundary implemented; DABI64 Desktop Host request/response framing and validators are added as a separate library. Platform syscall adapters, privileged kernel dispatch and Reaper source-level bindings remain separate gates.
+**Scope:** process/thread lifecycle, synchronization, filesystem, clock, networking, cryptography and desktop services.
+**Compatibility:** additive operation catalogue. Existing Reaper FFI v1 symbols and capability-suite registrations are unchanged.
 
-## Why this boundary exists
+## Purpose
 
-Reaper needs a stable way to ask a host operating system for services without pretending that a hosted program can safely perform kernel work by itself. The system ABI is therefore a capability-gated dispatch boundary. A trusted adapter may be supplied by DuckOS, another host OS, a simulator or a reviewed runtime. Reaper does not issue raw syscalls, map physical memory, load drivers, or elevate privilege through this API.
-
-The ABI is implemented in include/reaper/system.h and src/system.c as the standalone C17 reaper_system library. It does not depend on the reference Python runtime or the partial scalar AOT frontend.
-
-## Expansion measure
-
-The existing native capability suite registers 18 modules with 6 operations each (108 registrations). System ABI v1 adds 7 domains with 6 operation IDs each (42 additional contracts). The declared operation surface therefore grows from 108 to 150 entries, a 38.9% increase. This is a registry/API-surface measurement, not a claim that every host service or language construct is implemented on every platform.
+Reaper exposes a capability-gated host dispatch boundary. A trusted adapter may be supplied by DuckOS, another host OS, a simulator or a reviewed runtime. Reaper does not issue raw syscalls, map physical memory, load drivers or elevate privilege through this API. The C17 implementation lives in include/reaper/system.h and src/system.c.
 
 ## Operation catalogue
 
-| Domain | Operation IDs | Required capability |
+The native capability suite has 108 registrations. System Runtime API v1 now declares 84 host operations in 14 domains. The combined declared surface is 192 registry entries. This is an API-surface count, not evidence that kernel services, drivers or source bindings exist for every operation.
+
+| Domain | Operations | Capability |
 |---|---|---|
-| Process | process.spawn, process.wait, process.signal, process.exit, process.current_id, process.parent_id | PROCESS_CONTROL or PROCESS_INSPECT per operation |
-| Thread | thread.spawn, thread.join, thread.detach, thread.yield, thread.sleep, thread.set_priority | THREAD_CONTROL |
-| Synchronization | sync.mutex_create, sync.mutex_lock, sync.mutex_unlock, sync.semaphore_post, sync.semaphore_wait, sync.event_signal | SYNC |
-| Filesystem | fs.open, fs.read, fs.write, fs.seek, fs.stat, fs.close | FS_HANDLE, FS_READ or FS_WRITE per operation |
-| Clock and timers | clock.monotonic_ns, clock.realtime_ns, timer.create, timer.wait, clock.sleep_until, clock.deadline_after | CLOCK |
-| Networking | net.socket_open, net.connect, net.send, net.receive, net.shutdown, net.resolve | NETWORK |
-| Cryptography | crypto.random_fill, crypto.sha256, crypto.hmac_sha256, crypto.constant_time_equal, crypto.zeroize, crypto.key_import | CRYPTO |
+| Process | spawn, wait, signal, exit, current_id, parent_id | PROCESS_CONTROL / PROCESS_INSPECT |
+| Thread | spawn, join, detach, yield, sleep, set_priority | THREAD_CONTROL |
+| Synchronization | mutex_create, mutex_lock, mutex_unlock, semaphore_post, semaphore_wait, event_signal | SYNC |
+| Filesystem | open, read, write, seek, stat, close | FS_HANDLE / FS_READ / FS_WRITE |
+| Clock | monotonic_ns, realtime_ns, timer_create, timer_wait, sleep_until, deadline_after | CLOCK |
+| Network | socket_open, connect, send, receive, shutdown, resolve | NETWORK |
+| Cryptography | random_fill, sha256, hmac_sha256, constant_time_equal, zeroize, key_import | CRYPTO |
+| Window manager | create, destroy, set_geometry, set_state, focus, query | DESKTOP_WINDOW |
+| Display | enumerate, query, set_mode, set_scale, set_primary, subscribe | DESKTOP_DISPLAY / DESKTOP_DISPLAY_ADMIN |
+| Input | subscribe, unsubscribe, next_event, pointer_capture, release_capture, query_state | DESKTOP_INPUT |
+| Session | profile_read, profile_write, snapshot_save, snapshot_restore, lock, request_unlock | DESKTOP_SESSION / DESKTOP_SESSION_ADMIN |
+| Framebuffer compositor | surface_create, surface_destroy, surface_attach_buffer, surface_detach_buffer, submit_frame, frame_state | DESKTOP_COMPOSITOR |
+| GPU | device_query, buffer_allocate, buffer_release, submit, fence_wait, reset | DESKTOP_GPU / DESKTOP_GPU_ADMIN |
+| Native shell | launcher_query, launcher_open, menu_open, notification_post, notification_clear, settings_query | DESKTOP_SHELL |
 
-reaper_system_operation_count, reaper_system_operation_at and reaper_system_operation_find expose the stable catalogue to native tools and adapters.
+Existing operation IDs remain stable. Desktop operations use additive ID ranges. The exported catalogue functions enumerate all 84 operations.
 
-## Host contract
+## Host contract and authority
 
-A ReaperSystemHost carries:
+ReaperSystemHost contains ABI version, structure size, an explicit host-granted capability mask, an opaque context and a dispatch callback. Invocation checks the ABI, known operation, required capability, pointer/length consistency and one MiB I/O ceilings before dispatch. The output length is reset on failure, and over-reported output sizes are rejected.
 
-- abi_version and struct_size for forward-compatible validation;
-- an explicit capability bitmask granted by the host;
-- an opaque host context;
-- one synchronous dispatch callback.
+Desktop capabilities are split by trust boundary. Display topology reads do not imply permission to change display mode. Ordinary GPU operations do not imply GPU reset. Session profile access does not authenticate a user or unlock a session. Input grants are scoped to events routed to an authorized focused surface; they do not grant global input capture. All window, surface, display and GPU handles are host-issued and must be validated against the calling process.
 
-reaper_system_invoke validates the host ABI, operation ID, required capability, pointer/length pairs and one MiB input/output ceilings before calling the adapter. A missing grant is rejected before dispatch. The output length is reset on every failure. If the adapter reports more output than its declared capacity, Reaper returns host-contract-violation.
+A host should grant the smallest possible mask. Zero grants are valid. There is no implicit grant, global fallback, shell execution, environment-based library search or automatic privilege escalation.
 
-The adapter is trusted platform code. It must validate the operation-specific payload, validate all handles and path/name values, enforce cancellation and timeouts where relevant, and never retain the input/output pointers after the callback returns. Operation IDs are stable; payload layouts belong to a separately versioned host/platform contract and must not be guessed from an operation name.
+## DABI64 Desktop wire framing
 
-## Effects and least authority
-
-| Capability | Meaning |
-|---|---|
-| PROCESS_INSPECT | Inspect process identity and wait for an authorized child |
-| PROCESS_CONTROL | Spawn, signal or terminate only processes in the adapter's permitted scope |
-| THREAD_CONTROL | Create, join, detach or schedule threads within host policy |
-| SYNC | Create and operate synchronization objects owned by the calling runtime |
-| FS_HANDLE | Open, seek, inspect or close adapter-approved file handles |
-| FS_READ | Read bytes from an already authorized file handle |
-| FS_WRITE | Write bytes to an already authorized file handle |
-| CLOCK | Read clocks and wait on adapter-managed timers/deadlines |
-| NETWORK | Resolve names and open/use network endpoints allowed by host policy |
-| CRYPTO | Use host entropy and cryptographic services |
-
-A host should grant the smallest possible mask. A zero mask is valid. There is no implicit grant, global fallback, shell execution, environment-based library search or automatic privilege escalation.
+DABI64 Desktop Host v1 has a fixed 40-byte request header and 32-byte response header. Multi-byte fields are little-endian; payloads are limited to 65,536 bytes and must exactly match the frame length. The wire header contains no native pointer, sender PID or caller-supplied capability mask. The kernel transport must derive identity from trusted task state. Structural validation is not authentication, IPC delivery, authorization or syscall entry. See DABI64_DESKTOP_HOST_V1.md.
 
 ## Safety rules
 
-1. Process creation receives structured argument data from the platform adapter; it must not turn a string into an implicit shell command. process.exit must be scoped to the Reaper task/process, never the host desktop or supervisor.
-2. Filesystem adapters should expose directory-rooted or handle-relative operations. They must reject path traversal, symlink escapes and access outside the granted root.
-3. File handles, process IDs, thread IDs, sockets, mutexes and timers are opaque host-owned values. Adapters must reject stale, forged, cross-process or wrong-kind handles.
-4. Network access is denied unless NETWORK is granted. The adapter applies endpoint policy, bounded DNS, connection and I/O timeouts, and maximum message sizes.
-5. crypto.random_fill must use a cryptographically secure host source. It must fail closed; it must never silently substitute a time-seeded PRNG.
-6. Key material must not be copied into logs or diagnostics. Adapters define key lifetime and zeroization guarantees. A successful crypto.zeroize is a host contract, not a guarantee made by ordinary C memset.
-7. The system ABI does not grant MMIO, DMA, IRQ, port I/O, firmware flashing or driver installation. Those remain separate hardware/driver capabilities and trusted platform operations.
-8. Callbacks are synchronous and must not retain caller-owned buffers. Long-running operations need adapter-defined cancellation/deadline payloads and bounded completion semantics.
+1. Process creation uses structured arguments, never implicit shell text; exit is scoped to the caller.
+2. Filesystem adapters use authorized roots or handles and reject path traversal and symlink escapes.
+3. Handles are opaque, owned by the host and rejected when stale, forged, cross-process or wrong-kind.
+4. Network access is denied unless explicitly granted and bounded by endpoint policy and timeouts.
+5. Cryptographic entropy must come from a secure host source and fail closed; secrets never enter logs.
+6. Input is routed only to focused authorized surfaces. Applications never receive unrestricted physical framebuffer or GPU register access.
+7. Framebuffer/GPU adapters validate dimensions, pitch, format, ownership, quotas and fences.
+8. Session restore and unlock remain subject to identity, authentication and crash-safe recovery.
+9. Async adapters copy or pin request data before use and must not retain caller buffers after a synchronous callback.
 
 ## Language and compiler boundary
 
-This release provides the native host ABI and operation catalogue. It does not claim that the current .rpr parser, reference runtime or scalar AOT compiler can yet type-check or lower all 42 operations directly. Source-level effect, ownership, handle-lifetime and typed payload bindings are the next compiler gate. Until then, a native Reaper integration may use this C ABI only through a separately reviewed adapter boundary.
-
-The intended language contract is:
-
-- effects are explicit in function signatures and checked against manifest grants;
-- OS handles are opaque, typed, non-copyable resources with deterministic close/drop;
-- filesystem and network operations return explicit Result values;
-- blocking calls declare deadlines/cancellation behavior;
-- unsafe is local, explicit and cannot manufacture a host capability;
-- the same operation IDs and effect names are shared by hosted, simulator and future DuckOS targets.
+This release provides the host operation catalogue and DABI64 desktop message validators. It does not claim the current parser, reference runtime or scalar AOT compiler can type-check or lower all operations directly. Source-level effect, ownership, handle-lifetime and typed payload bindings remain a separate compiler gate.
 
 ## Build and verification
 
@@ -88,12 +65,12 @@ The intended language contract is:
     cmake --build build --parallel
     ctest --test-dir build --output-on-failure
 
-The native-system-abi test covers catalogue cardinality and lookup, ABI/version/size checks, unknown capability rejection, denial before host dispatch, pointer/length validation, one MiB bounds, successful bounded dispatch, host failure and over-reported output lengths. Tests use a fake adapter; they do not invoke real processes, open files, access networks or manipulate devices.
+Native System Runtime tests cover catalogue lookup, ABI/version/size checks, capability denial before dispatch, pointer/length validation, buffer limits and host contract violations. DABI64 tests cover fixed header sizes and offsets, version/operation checks, request and sequence identifiers, reserved flags, payload bounds, exact frame length and response validation. The tests use local fake data; they do not invoke a kernel, create windows, read devices, persist sessions, render pixels or submit GPU work.
 
 ## Adoption gates
 
-- DuckOS: implement a policy-enforcing adapter over reviewed kernel services; keep process, filesystem and network rights off by default; preserve x86-64 Intel/AMD as the primary target and retain Elbrus as a separate supported backend.
-- Pytyliki: consume only explicitly granted host services and keep its processor/hardware evidence APIs read-only; preserve the existing pytyliki.c-abi.v1 contract.
-- OPlague: use only read-only filesystem/clock/crypto capabilities for package evidence workflows unless a separately reviewed capability is approved; never use this ABI to install, remove, enable, disable or flash drivers.
+- DuckOS: implement IPC and policy-enforcing adapters over real kernel services; derive sender identity from kernel task state; keep display administration, global input, session administration and GPU reset off by default.
+- Pytyliki and OPlague: request only window/shell capabilities needed by their native utility panels; keep hardware inventory, driver and package evidence read-only.
+- VentuSample: use window, compositor-surface and focused-input services only; audio-device access is separate.
 
-Each adopter must add its own adapter tests and cross-repository contract checks before describing an operation as available on that platform.
+Each adopter needs adapter tests and cross-repository checks before describing a service as available on its platform.
