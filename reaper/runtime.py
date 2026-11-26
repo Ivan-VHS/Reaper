@@ -7,6 +7,19 @@ from dataclasses import dataclass
 from typing import Any, Callable
 
 from .errors import ExecutionLimitError, ReaperRuntimeError
+from .fixed_width import fixed_integer_bounds, fixed_integer_fits, is_fixed_integer_type
+
+
+class FixedInteger(int):
+    """A checked integer that retains its declared Reaper width at runtime."""
+
+    def __new__(cls, value: int, type_name: str):
+        if not fixed_integer_fits(value, type_name):
+            raise ValueError(f"value is outside the {type_name} range")
+        instance = int.__new__(cls, value)
+        instance.type_name = type_name
+        return instance
+
 from .governance import ConsentAuthority
 from .lexer import Token
 from .parser import Node, parse
@@ -26,6 +39,7 @@ from .token_catalog import token_catalog, token_info, token_is_reserved
 class Binding:
     value: Any
     mutable: bool
+    type_name: str | None = None
 
 
 class Environment:
@@ -34,10 +48,19 @@ class Environment:
         self.values: dict[str, Binding] = {}
         self.exports: set[str] = set()
 
-    def define(self, name: str, value: Any, mutable: bool = False) -> None:
+    def define(
+        self, name: str, value: Any, mutable: bool = False, type_name: str | None = None
+    ) -> None:
         if name in self.values:
             raise ReaperRuntimeError(f"'{name}' is already defined in this scope")
-        self.values[name] = Binding(value, mutable)
+        if type_name is not None:
+            if not is_fixed_integer_type(type_name):
+                raise ReaperRuntimeError(f"unsupported fixed-width integer type '{type_name}'")
+            if not fixed_integer_fits(value, type_name):
+                raise ReaperRuntimeError(f"value is outside the {type_name} range")
+        if type_name is not None:
+            value = FixedInteger(value, type_name)
+        self.values[name] = Binding(value, mutable, type_name)
 
     def get(self, name: str) -> Any:
         if name in self.values:
@@ -51,6 +74,10 @@ class Environment:
             binding = self.values[name]
             if not binding.mutable:
                 raise ReaperRuntimeError(f"'{name}' was declared with 'make' and cannot be changed; use 'vary'")
+            if binding.type_name is not None:
+                if not fixed_integer_fits(value, binding.type_name):
+                    raise ReaperRuntimeError(f"assigned value is outside the {binding.type_name} range")
+                value = FixedInteger(value, binding.type_name)
             binding.value = value
             return
         if self.parent is not None:
@@ -212,8 +239,10 @@ class Interpreter:
                 raise self._error(node.token, f"cannot export undefined local name '{name}'")
             environment.exports.add(name)
         elif node.kind == "declare":
-            name, mutable = node.value
-            environment.define(name, self._evaluate(children[0], environment), mutable)
+            name, mutable = node.value[:2]
+            declared_type = node.value[2] if len(node.value) > 2 else None
+            value = self._evaluate(children[0], environment)
+            environment.define(name, value, mutable, declared_type)
         elif node.kind == "change":
             environment.change(node.value, self._evaluate(children[0], environment))
         elif node.kind == "emit":
@@ -282,11 +311,7 @@ class Interpreter:
                 raise self._error(node.token, f"cannot read this index: {error}") from error
         if node.kind == "unary":
             value = self._evaluate(children[0], environment)
-            if node.value == "NOT":
-                return not self._truthy(value)
-            if node.value == "-" and self._is_number(value):
-                return -value
-            raise self._error(node.token, "unary '-' expects a number")
+            return self._unary(node.value, value, node.token)
         if node.kind == "call":
             callee = self._evaluate(children[0], environment)
             arguments = [self._evaluate(arg, environment) for arg in children[1:]]
@@ -310,7 +335,35 @@ class Interpreter:
             return self._binary(operator, left, right, node.token)
         raise self._error(node.token, f"unknown expression kind '{node.kind}'")
 
+    def _unary(self, operator: str, value: Any, token: Token) -> Any:
+        if operator == "NOT":
+            return not self._truthy(value)
+        if operator == "-" and self._is_number(value):
+            if isinstance(value, FixedInteger):
+                if value.type_name.startswith("u"):
+                    raise self._error(token, f"unary '-' is not valid for {value.type_name}")
+                result = -int(value)
+                if not fixed_integer_fits(result, value.type_name):
+                    raise self._error(token, f"unary '-' overflows {value.type_name}")
+                return FixedInteger(result, value.type_name)
+            return -value
+        raise self._error(token, "unary '-' expects a number")
+
     def _binary(self, operator: str, left: Any, right: Any, token: Token) -> Any:
+        left_fixed = left.type_name if isinstance(left, FixedInteger) else None
+        right_fixed = right.type_name if isinstance(right, FixedInteger) else None
+        fixed_type = left_fixed or right_fixed
+        if fixed_type is not None:
+            if left_fixed is not None and right_fixed is not None and left_fixed != right_fixed:
+                raise self._error(token, f"fixed-width operation requires matching types, got {left_fixed} and {right_fixed}")
+            if left_fixed is None:
+                if not fixed_integer_fits(left, fixed_type):
+                    raise self._error(token, f"left operand is outside the {fixed_type} range")
+                left = FixedInteger(left, fixed_type)
+            if right_fixed is None:
+                if not fixed_integer_fits(right, fixed_type):
+                    raise self._error(token, f"right operand is outside the {fixed_type} range")
+                right = FixedInteger(right, fixed_type)
         if operator == "==":
             return self._equal(left, right)
         if operator == "!=":
@@ -339,6 +392,24 @@ class Interpreter:
                 raise self._error(token, f"'{operator}' needs two numbers")
             if operator in {"/", "//", "%"} and right == 0:
                 raise self._error(token, "division by zero")
+            if fixed_type is not None and operator == "**":
+                exponent = int(right)
+                if exponent < 0:
+                    raise self._error(token, f"negative exponent is not supported for {fixed_type}")
+                base = int(left)
+                result = 1
+                remaining = exponent
+                while remaining:
+                    if remaining & 1:
+                        result *= base
+                        if not fixed_integer_fits(result, fixed_type):
+                            raise self._error(token, f"numeric result overflows {fixed_type}")
+                    remaining >>= 1
+                    if remaining:
+                        base *= base
+                        if not fixed_integer_fits(base, fixed_type):
+                            raise self._error(token, f"numeric result overflows {fixed_type}")
+                return FixedInteger(result, fixed_type)
             try:
                 result = {
                     "+": lambda: left + right,
@@ -355,6 +426,12 @@ class Interpreter:
                 raise self._error(token, "numeric operations must produce real numbers")
             if isinstance(result, float) and not math.isfinite(result):
                 raise self._error(token, "numeric result is not finite")
+            if fixed_type is not None and operator != "/" and not isinstance(result, float):
+                if not fixed_integer_fits(result, fixed_type):
+                    minimum, _maximum = fixed_integer_bounds(fixed_type)
+                    direction = "underflows" if result < minimum else "overflows"
+                    raise self._error(token, f"numeric result {direction} {fixed_type}")
+                return FixedInteger(result, fixed_type)
             return result
         raise self._error(token, f"unknown operator '{operator}'")
 

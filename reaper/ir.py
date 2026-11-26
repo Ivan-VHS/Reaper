@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from .parser import Node
+from .fixed_width import is_fixed_integer_type
 
 
 @dataclass(frozen=True, slots=True)
@@ -22,9 +23,19 @@ class IRFunction:
 
 
 @dataclass(frozen=True, slots=True)
+class SourceMapEntry:
+    scope: str
+    instruction_index: int
+    operation: str
+    line: int
+    column: int
+
+
+@dataclass(frozen=True, slots=True)
 class CanonicalIR:
     code: tuple[IRInstruction, ...]
     source_name: str = "<memory>"
+    source_map: tuple[SourceMapEntry, ...] = ()
 
 
 class IRVerificationError(ValueError):
@@ -193,7 +204,23 @@ _ALLOWED = {
 def lower(tree: Node, source_name: str = "<memory>") -> CanonicalIR:
     compiler = _Lowerer()
     compiler.statements(tree.children)
-    module = CanonicalIR(tuple(compiler.code), source_name)
+    code = tuple(compiler.code)
+    source_map: list[SourceMapEntry] = []
+
+    def map_code(instructions: tuple[IRInstruction, ...], scope: str) -> None:
+        for index, instruction in enumerate(instructions):
+            token = instruction.token
+            source_line = getattr(token, "line", 1)
+            source_column = getattr(token, "column", 1)
+            source_map.append(SourceMapEntry(
+                scope, index, instruction.op, source_line, source_column
+            ))
+            if instruction.op == "MAKE_FUNCTION":
+                function = instruction.argument
+                map_code(function.code, function.name)
+
+    map_code(code, "<module>")
+    module = CanonicalIR(code, source_name, tuple(source_map))
     verify(module)
     return module
 
@@ -239,11 +266,13 @@ def verify(module: CanonicalIR) -> None:
                     raise IRVerificationError(f"{where}: argument count must be a non-negative integer")
 
             elif op == "DEFINE":
-                if not isinstance(argument, tuple) or len(argument) != 2:
-                    raise IRVerificationError(f"{where}: DEFINE requires (name, mutable)")
+                if not isinstance(argument, tuple) or len(argument) not in {2, 3}:
+                    raise IRVerificationError(f"{where}: DEFINE requires (name, mutable[, fixed_type])")
                 require_name(argument[0], where)
                 if type(argument[1]) is not bool:
                     raise IRVerificationError(f"{where}: DEFINE mutable flag must be boolean")
+                if len(argument) == 3 and argument[2] is not None and not is_fixed_integer_type(argument[2]):
+                    raise IRVerificationError(f"{where}: DEFINE fixed type must be a supported integer type")
 
             elif op in {"LOAD", "ASSIGN", "EXPORT", "ITER_INIT"}:
                 require_name(argument, where)
@@ -285,3 +314,16 @@ def verify(module: CanonicalIR) -> None:
                     raise IRVerificationError(f"{where}: unsupported binary operator {argument!r}")
 
     check(module.code, module.source_name)
+    if not isinstance(module.source_map, tuple):
+        raise IRVerificationError("source map must be an immutable tuple")
+    for entry in module.source_map:
+        if not isinstance(entry, SourceMapEntry):
+            raise IRVerificationError("source map entries must be SourceMapEntry records")
+        if not isinstance(entry.scope, str) or not entry.scope:
+            raise IRVerificationError("source map scope must be non-empty text")
+        if type(entry.instruction_index) is not int or entry.instruction_index < 0:
+            raise IRVerificationError("source map instruction index must be non-negative")
+        if not isinstance(entry.operation, str) or not entry.operation:
+            raise IRVerificationError("source map operation must be non-empty text")
+        if type(entry.line) is not int or entry.line < 1 or type(entry.column) is not int or entry.column < 1:
+            raise IRVerificationError("source map locations must be one-based positive integers")

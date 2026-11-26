@@ -87,3 +87,20 @@ The backend does not infer that an unsupported construct is safe, and it does no
 5. Do not describe the backend as a direct ELF linker, a full native interpreter, or self-hosting. Those milestones require their own implementation and acceptance tests.
 
 The next compiler milestones are typed collection lowering, explicit runtime-call contracts, ownership and deterministic drop, a versioned canonical native IR, and a direct object/ELF backend. Each remains separate from this first AOT slice until its conformance tests pass.
+
+
+## Native IR scalar extension — checked u32
+
+The C17 IR verifier/executor now has a distinct u32 subset: bounded constants, typed add/subtract/multiply/divide, and explicit failure for overflow, underflow and division by zero. This is a lower-level IR primitive, not a new source-language feature.
+
+The current .rpr parser, Python Canonical IR/VM and C17 AOT lowering do not yet emit or execute source-level u32 operations. The AOT compiler remains the limited scalar subset documented above; no direct ELF writer, DABI64 backend or freestanding runtime is implied. The next gate is to connect the type through the source AST, canonical IR and AOT lowering with differential boundary tests.
+
+## Fixed-width scalar bindings — experimental subset
+
+The parser accepts typed scalar declarations such as `make count: u32 := 42` and `vary index: u8 := 0`. The supported integer widths are `i8/u8`, `i16/u16`, `i32/u32` and `i64/u64`.
+
+The fixed-width contract now travels through the source AST, Canonical IR declaration metadata, static typechecker, reference tree-walk runtime and bytecode VM. Runtime values retain their width, so arithmetic results are checked even when they are emitted directly instead of being assigned back to a variable. Compile-time integer literals are accepted only when they fit the declared width; a literal next to a fixed-width operand may be contextually converted only after the same range check.
+
+The scalar C17 AOT backend lowers the same annotated bindings to fixed-width C types. Unsigned arithmetic checks overflow, underflow, division by zero and exponentiation at each step. Narrow signed arithmetic checks its declared minimum/maximum before returning a value. Generated C includes source `#line` directives, while Canonical IR and the VM retain explicit source-map entries.
+
+**Current boundary:** this is scalar binding and expression support. Function parameters and return types remain the existing integer subset; records/struct layout, bounded aggregate types, ownership/borrow checking, regions, ABI lowering for aggregates, freestanding startup/runtime, target-specific object writing and direct ELF emission are not part of this change. Host AOT still uses the installed C compiler and linker.

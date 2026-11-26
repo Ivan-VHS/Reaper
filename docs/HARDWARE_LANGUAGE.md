@@ -158,3 +158,23 @@ Use three separate labels:
 - **Planned:** a design or roadmap entry without executable support.
 
 A capability enters marketing copy as available only after its contract, implementation, tests and supported-target evidence are published together.
+
+
+## Native C17 IR — checked u32 primitive (2026-11-25)
+
+The native C17 IR now includes an experimental fixed-width unsigned 32-bit scalar subset:
+
+- a distinct `u32` IR type and CONST_U32 opcode;
+- typed ADD/SUB/MUL/DIV operations with checked overflow, underflow and division-by-zero behavior;
+- rejection of negative or out-of-range constants and mixed signed/unsigned operands;
+- caller-owned scratch storage and a result that is committed only after the final RETURN succeeds.
+
+This is implemented in the C17 IR verifier/executor and covered by the native C test target. It is **not yet** a source-level `.rpr` u32 declaration, does not flow through the parser/lowering or canonical Python IR, and is not yet emitted by the scalar C17 AOT compiler. The public capability remains Partial until those paths share one typed IR and differential fixtures.
+
+Next compiler steps: propagate fixed-width types through AST/Canonical IR, add source-located type diagnostics, lower supported u32 expressions, generate C17 with the same checked semantics, and compare reference/VM/native outputs on boundary fixtures. Do not treat a C IR primitive as freestanding kernel code or a DABI64 implementation.
+
+## Fixed-width source scalar path — 2026-11-25
+
+Reaper now accepts fixed-width integer annotations on scalar bindings (`i8/u8/i16/u16/i32/u32/i64/u64`). The source AST stores the declaration annotation; Canonical IR keeps it as verified DEFINE metadata and carries a source map; the typechecker checks literal bounds and rejects mixed-width arithmetic; the tree-walk runtime and bytecode VM preserve a checked runtime integer value; and the scalar C17 AOT backend emits the corresponding C integer type with explicit checked arithmetic.
+
+The current source-level milestone is deliberately narrower than the complete systems-language target. Typed function signatures, record/aggregate layout, bounded collections as static types, ownership/borrowing, regions, MMIO-safe pointer types, freestanding ABI/runtime and direct ELF/object generation remain unimplemented. A passing host C build is not evidence of a bootable DuckOS kernel.

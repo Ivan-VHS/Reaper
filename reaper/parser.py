@@ -63,9 +63,17 @@ class Parser:
         if self._match("MAKE", "VARY"):
             declaration = self._previous()
             name = self._consume("IDENT", "expected a name after declaration")
-            self._consume(":=", "expected ':=' after the name")
+            declared_type = None
+            if self._match(":"):
+                declared_type = self._consume("IDENT", "expected a fixed-width type after ':'").value
+            self._consume(":=", "expected ':=' after the name or type annotation")
             value = self._expression()
-            return Node("declare", declaration, value=(name.value, declaration.kind == "VARY"), children=[value])
+            return Node(
+                "declare",
+                declaration,
+                value=(name.value, declaration.kind == "VARY", declared_type),
+                children=[value],
+            )
         if self._match("CHANGE"):
             token = self._previous()
             name = self._consume("IDENT", "expected a mutable name after 'change'")
