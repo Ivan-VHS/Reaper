@@ -1,0 +1,35 @@
+# FrameManifest — required component and duplicate validation.
+# Inputs are lists of non-empty component names.
+
+craft invalid_name(value) {
+    when kind(value) != "text" {
+        yield true
+    }
+    yield size(trim(value)) == 0
+}
+
+export craft missing_components(required, present) {
+    craft absent(component) {
+        yield not contains(present, component)
+    }
+    yield keep(required, absent)
+}
+
+export craft valid_manifest(required, present) {
+    when kind(required) != "list" {
+        yield false
+    }
+    when kind(present) != "list" {
+        yield false
+    }
+    when size(required) == 0 {
+        yield false
+    }
+    when size(keep(required, invalid_name)) != 0 {
+        yield false
+    }
+    when size(keep(present, invalid_name)) != 0 {
+        yield false
+    }
+    yield size(missing_components(required, present)) == 0 and size(unique(required)) == size(required) and size(unique(present)) == size(present)
+}
