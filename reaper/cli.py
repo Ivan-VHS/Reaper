@@ -217,7 +217,18 @@ def main(argv: list[str] | None = None) -> int:
                 {"record_type": "integration_surface", **item}
                 for item in portfolio.get("integration_surfaces", [])
             ]
-            records = module_records + integration_records
+            external_framework_records = []
+            for surface in portfolio.get("integration_surfaces", []):
+                for member in surface.get("members", []):
+                    external_framework_records.append({
+                        "record_type": "adjacent_framework",
+                        "collection_id": surface.get("id"),
+                        "collection_name": surface.get("name"),
+                        "collection_status": surface.get("status"),
+                        "collection_branch": surface.get("branch"),
+                        **member,
+                    })
+            records = module_records + external_framework_records + integration_records
             if args.framework_info is not None:
                 query = args.framework_info.casefold()
                 matches = [
@@ -251,6 +262,8 @@ def main(argv: list[str] | None = None) -> int:
                     "scale_policy": portfolio["scale_policy"],
                     "module_count": len(module_records),
                     "integration_surface_count": len(integration_records),
+                    "external_framework_count": len(external_framework_records),
+                    "total_discoverable_entries": len(records),
                     "groups": portfolio["groups"],
                     "integration_surfaces": integration_records,
                 }
