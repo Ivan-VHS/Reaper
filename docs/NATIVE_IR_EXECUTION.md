@@ -10,13 +10,27 @@ This is a compiler-core API, not a claim that every Reaper source construct is a
 ## Pipeline
 
 ```text
-typed HIR
+Reaper lexer/parser AST (expression subset)
+  -> typed HIR with source spans
   -> stage/type/operand/source-span verification
   -> MIR lowering and reduced-motion normalization
   -> LIR target lowering
   -> deterministic C17 instruction-table emission
   -> host C17 compiler
 ```
+
+## Native AST frontend
+
+`reaper_compiler_ir_lower_ast_to_hir` consumes the existing native C17 expression AST and produces typed HIR directly from source-located nodes. The current accepted subset is:
+
+- signed i64 integer literals;
+- finite decimal literals using the Reaper lexer's decimal grammar;
+- decoded string literals, including escaped quote/newline/tab/return bytes within the fixed HIR text bound;
+- boolean literals;
+- unary i64 `+` and `-`;
+- binary i64 `+`, `-`, `*` and `/`.
+
+Every emitted node carries the original source name, line and column. The frontend validates the AST's topological references and rejects unreachable nodes, unknown identifiers, `nothing`/null, unsupported operators and non-i64 arithmetic rather than assigning guessed types. Decimal and text literal values are represented in HIR, but arithmetic, name resolution, function calls and module semantics for those types are not yet implemented.
 
 ## Current v1 node coverage
 
@@ -37,7 +51,7 @@ Reduced-motion is a module-level lowering rule: declared motion durations become
 
 `reaper_compiler_ir_emit_c17` emits a deterministic C17 static instruction table with target metadata and typed values. The native CMake build compiles the generated source as an additional build target. CTest covers IR verification/lowering/emission and SHA-256 vectors.
 
-This validates the typed IR and generated-C contract. It does **not** yet mean the complete Reaper grammar or imported `.rpr` module graph is compiled to C17. Parser-to-general-HIR mapping, complete source maps, control-flow/collection/effect lowering, native runtime calls and differential parity are still separate compiler milestones.
+This validates a bounded native expression AST-to-HIR frontend, the typed IR and generated-C contract. It does **not** yet mean complete Reaper programs or imported `.rpr` module graphs are compiled to C17. Semantic name resolution, module declarations/imports, functions/calls, collections, complete control-flow, effects/ownership, runtime calls, complete SourceMap integration and differential parity are still separate compiler milestones.
 
 ## Error contract
 
