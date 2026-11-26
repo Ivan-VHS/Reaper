@@ -13,6 +13,7 @@ This directory is the discovery point for the framework families currently ident
 | Family | Purpose | Current review state |
 |---|---|---|
 | [RAAEF](aesthetic/README.md) | Typed aesthetic profiles, HIR/MIR/LIR, architecture/design/source evolution planning | [#364 — draft, stacked on #358](https://github.com/Ivan-VHS/Reaper/pull/364) |
+| Native Typed IR and Apply Engine | Shared C17 HIR/MIR/LIR, SHA-256 patch descriptors and guarded isolated topic-branch apply contract | [#382 — draft, stacked on #364](https://github.com/Ivan-VHS/Reaper/pull/382) |
 | AESTHETICA | Evidence-based aesthetic evaluation on independent beauty and ugliness axes | [#360 — open](https://github.com/Ivan-VHS/Reaper/pull/360) |
 | Repository Engineering 66 | Native registry of 66 repository-engineering profiles with evidence gates | [#363 — open](https://github.com/Ivan-VHS/Reaper/pull/363) |
 | Foundational Five | Scaffold, Platform, Environment, Infrastructure and Architecture contracts | [#362 — open](https://github.com/Ivan-VHS/Reaper/pull/362) |
@@ -27,7 +28,7 @@ This directory is the discovery point for the framework families currently ident
 | ДОМ Runtime Foundation | Canonical application/system runtime architecture | [#350 — draft](https://github.com/Ivan-VHS/Reaper/pull/350) |
 | ДОМ Native Foundation Slice | Initial Reaper source implementation on top of the framework modules | [#353 — draft, depends on #336](https://github.com/Ivan-VHS/Reaper/pull/353) |
 
-The inventory contains **14 registered family lines**. The 66-profile registry and 20-namespace federation each contain many individual entries; they are not counted as 66 or 20 separate repository PRs.
+The inventory contains **15 registered family lines**. The 66-profile registry and 20-namespace federation each contain many individual entries; they are not counted as 66 or 20 separate repository PRs.
 
 ## Integration order
 

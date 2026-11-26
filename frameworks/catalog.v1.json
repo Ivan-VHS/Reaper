@@ -334,6 +334,39 @@
         "reference_runtime_vertical_slice",
         "not_complete_native_runtime"
       ]
+    },
+    {
+      "id": "native-typed-ir-and-apply-engine",
+      "name": "Native Typed Compiler IR and Guarded Evolution Apply Engine",
+      "source": "include/reaper/compiler_ir.h; include/reaper/evolution_apply.h",
+      "branch": "feat/aesthetic-native-apply-engine",
+      "base_branch": "feat/aesthetic-architecture-evolution",
+      "status": "open_draft_pr",
+      "maturity": "Genesis",
+      "pull_request": 382,
+      "url": "https://github.com/Ivan-VHS/Reaper/pull/382",
+      "dependencies": [
+        "aesthetic-architecture-evolution"
+      ],
+      "capabilities": [
+        "shared_typed_HIR_MIR_LIR_C17_core",
+        "bounded_scalar_and_aesthetic_node_verification",
+        "deterministic_C17_LIR_instruction_table_emission",
+        "SHA256_source_patch_descriptors",
+        "capability_gated_apply_transaction",
+        "isolated_workspace_contract",
+        "sandboxed_registered_checks_contract",
+        "atomic_topic_branch_publish_contract",
+        "durable_audit_and_conditional_rollback_contract"
+      ],
+      "limitations": [
+        "general_Reaper_parser_to_HIR_frontend_pending",
+        "full_native_language_parity_pending",
+        "concrete_Windows_and_POSIX_Git_workspace_adapters_pending",
+        "concrete_cryptographic_grant_and_sandbox_adapters_pending",
+        "Reaper_to_native_apply_bridge_pending",
+        "real_repository_apply_evidence_pending"
+      ]
     }
   ],
   "integration_rules": [

@@ -12,7 +12,9 @@ Start with the [project README](../README.md) for installation, first commands a
 - [DABI64 Desktop Host v1](DABI64_DESKTOP_HOST_V1.md)
 - [Implementation roadmap](IMPLEMENTATION_ROADMAP.md)
 - [Framework catalogue](../frameworks/catalog.v1.json) — central index of known Reaper framework families, source entry points, PR states and dependencies.
-- [Aesthetic & Architecture Evolution](AESTHETIC_EVOLUTION.md) — typed aesthetic profiles, domain HIR/MIR/LIR and controlled evolution.
+- [Aesthetic & Architecture Evolution](AESTHETIC_EVOLUTION.md) — typed aesthetic profiles and controlled architecture/design/source evolution.
+- [Native typed compiler IR](NATIVE_IR_EXECUTION.md) — shared HIR/MIR/LIR contracts and C17 emission boundaries.
+- [Native evolution apply engine](REAPER_AUTONOMOUS_EVOLUTION.md) — signed grant, isolated workspace, topic-branch publication, audit and rollback contract.
 - [PLAGUE — Repository Evolution Framework](PLAGUE.md)
 - [PLAGUE v1 bounded evolution policy](PLAGUE_FOUNDATION_V1.md)
 - [Studio and IDE](REAPER_IDE.md)

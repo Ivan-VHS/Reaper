@@ -10,7 +10,7 @@ endif()
 if(MSVC)
  add_compile_options(/utf-8)
 endif()
-add_library(reaper_core STATIC src/lexer.c src/ir.c src/parser.c src/ast_json.c src/optimizer.c src/lower.c src/evolution.c src/token_catalog.c src/division.c src/capability_suite.c src/hardware.c src/command_palette.c src/lineage.c)
+add_library(reaper_core STATIC src/lexer.c src/ir.c src/parser.c src/ast_json.c src/optimizer.c src/lower.c src/evolution.c src/compiler_ir.c src/compiler_frontend.c src/sha256.c src/evolution_apply.c src/token_catalog.c src/division.c src/capability_suite.c src/hardware.c src/command_palette.c src/lineage.c)
 target_include_directories(reaper_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_library(reaper_system STATIC src/system.c)
@@ -53,6 +53,37 @@ if(REAPER_BUILD_TESTS)
  add_executable(reaper-ir-tests tests/test_ir.c)
  target_link_libraries(reaper-ir-tests PRIVATE reaper_core)
  add_test(NAME native-ir COMMAND reaper-ir-tests)
+ add_executable(reaper-compiler-ir-tests tests/test_compiler_ir.c)
+ target_link_libraries(reaper-compiler-ir-tests PRIVATE reaper_core)
+ add_test(NAME native-typed-compiler-ir COMMAND reaper-compiler-ir-tests)
+ set(REAPER_GENERATED_IR_SOURCE ${CMAKE_CURRENT_BINARY_DIR}/reaper-generated-ir-smoke.c)
+ set(REAPER_GENERATED_IR_OBJECT ${CMAKE_CURRENT_BINARY_DIR}/reaper-generated-ir-smoke${CMAKE_C_OUTPUT_EXTENSION})
+ if(MSVC)
+  add_custom_command(
+   OUTPUT ${REAPER_GENERATED_IR_OBJECT}
+   COMMAND $<TARGET_FILE:reaper-compiler-ir-tests> --emit-c17 ${REAPER_GENERATED_IR_SOURCE}
+   COMMAND ${CMAKE_C_COMPILER} /nologo /std:c17 /W4 /c
+           ${REAPER_GENERATED_IR_SOURCE} /Fo${REAPER_GENERATED_IR_OBJECT}
+   DEPENDS reaper-compiler-ir-tests
+   VERBATIM
+  )
+ else()
+  add_custom_command(
+   OUTPUT ${REAPER_GENERATED_IR_OBJECT}
+   COMMAND $<TARGET_FILE:reaper-compiler-ir-tests> --emit-c17 ${REAPER_GENERATED_IR_SOURCE}
+   COMMAND ${CMAKE_C_COMPILER} -std=c17 -Wall -Wextra -Wpedantic -Wconversion -Wshadow
+           -c ${REAPER_GENERATED_IR_SOURCE} -o ${REAPER_GENERATED_IR_OBJECT}
+   DEPENDS reaper-compiler-ir-tests
+   VERBATIM
+  )
+ endif()
+ add_custom_target(reaper-generated-c17-smoke ALL DEPENDS ${REAPER_GENERATED_IR_OBJECT})
+ add_executable(reaper-sha256-tests tests/test_sha256.c)
+ target_link_libraries(reaper-sha256-tests PRIVATE reaper_core)
+ add_test(NAME native-sha256 COMMAND reaper-sha256-tests)
+ add_executable(reaper-evolution-apply-tests tests/test_evolution_apply.c)
+ target_link_libraries(reaper-evolution-apply-tests PRIVATE reaper_core)
+ add_test(NAME native-evolution-apply COMMAND reaper-evolution-apply-tests)
  add_executable(reaper-parser-tests tests/test_parser.c)
  target_link_libraries(reaper-parser-tests PRIVATE reaper_core)
  add_test(NAME native-parser COMMAND reaper-parser-tests)
@@ -118,7 +149,8 @@ if(REAPER_BUILD_TESTS)
  endif()
 endif()
 install(TARGETS reaper-c RUNTIME DESTINATION bin)
+install(TARGETS reaper_core ARCHIVE DESTINATION lib)
 install(TARGETS reaper_ffi ARCHIVE DESTINATION lib)
 install(TARGETS reaper_system ARCHIVE DESTINATION lib)
 install(TARGETS reaper_dabi64_desktop ARCHIVE DESTINATION lib)
-install(FILES include/reaper/ffi.h include/reaper/system.h include/reaper/dabi64_desktop.h DESTINATION include/reaper)
+install(FILES include/reaper/ffi.h include/reaper/system.h include/reaper/dabi64_desktop.h include/reaper/ast.h include/reaper/lexer.h include/reaper/compiler_ir.h include/reaper/sha256.h include/reaper/evolution_apply.h DESTINATION include/reaper)

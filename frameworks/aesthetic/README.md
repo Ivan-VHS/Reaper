@@ -38,7 +38,7 @@ The stable import surface is [all.rpr](all.rpr). The central discovery index is 
 - LIR lowers those operations to target-facing style and motion instructions.
 - The current LIR is a declarative render plan. It does not call a native widget toolkit or draw to a GPU surface.
 
-The profile IR is a domain-specific compiler pipeline implemented in Reaper. It is not yet the general-purpose HIR/MIR/LIR of the Reaper source-language compiler. In particular, it does not extend the experimental scalar C17 backend, which currently lacks module and collection support.
+The profile IR remains a domain-specific Reaper pipeline. The native C17 core now provides a shared typed HIR/MIR/LIR API covering bounded scalar expressions plus aesthetic property nodes, and emits a deterministic C17 instruction table. The existing native expression AST also lowers into typed HIR for i64 and finite decimal literals, decoded strings (including empty strings), booleans, unary +/- over i64/f64 and binary + - * / over matching i64 or matching f64 operands. Mixed numeric promotion is rejected. The frontend carries source name/line/column and rejects unknown identifiers or unsupported AST kinds. It is not full Reaper grammar parity: semantic name resolution, imports/modules, functions/calls, collections, control flow, effects and native runtime calls remain incomplete. Consequently, this does not yet compile the full RAAEF .rpr module family to native code.
 
 ## Typed profile contract
 
@@ -62,14 +62,14 @@ SOMO coordinates a deterministic pipeline and consults the PLAGUE v1 action poli
 
 1. Validate the requested mode through PLAGUE's default-deny action policy.
 2. Validate the current and target aesthetic profiles.
-2. Compile the baseline profile through HIR, MIR and LIR.
-3. Assess the target design against the declared accessibility contract.
-4. Validate both current and proposed architecture graphs, check that node dependency declarations match graph edges, reject cycles, and compute an explicit architecture delta.
-5. In `observe`, return evidence and graph comparisons without generating source-change plans.
-6. In `propose`, generate bounded Cellene/Kolir proposals only after the PLAGUE plan capability is allowed; defer changes whose declared risk is not lower than their expected benefit.
-7. Return the profile compile products, architecture delta and source plan as a reviewable proposal.
+3. Compile the baseline profile through HIR, MIR and LIR.
+4. Assess the target design against the declared accessibility contract.
+5. Validate both current and proposed architecture graphs, check that node dependency declarations match graph edges, reject cycles, and compute an explicit architecture delta.
+6. In `observe`, return evidence and graph comparisons without generating source-change plans.
+7. In `propose`, generate bounded Cellene/Kolir proposals only after the PLAGUE plan capability is allowed; defer changes whose declared risk is not lower than their expected benefit.
+8. Return the profile compile products, architecture delta and source plan as a reviewable proposal.
 
-Observe performs assessment only. Propose emits a bounded change plan. Apply is intentionally blocked until repository grants, path allowlists, revision pinning, patch application, isolated checks, immutable audit and tested rollback are implemented. The system never treats an account's repository visibility as write authorization. PLAGUE currently provides an action-policy matrix, not authenticated repository grants or path-level authorization.
+Observe performs assessment only. Propose emits a bounded change plan. A native C17 transactional apply engine now defines SHA-256-pinned whole-file patch descriptors, signed repository/path grant callbacks, exact Git revision verification, an isolated workspace, sandboxed registered checks, atomic topic-branch publication, durable audit and conditional rollback/recovery callbacks. The engine fails closed without every host capability. However, concrete Windows/POSIX Git/workspace and sandbox adapters, plus a Reaper-to-native bridge, are not yet available. SOMO therefore continues to block apply. The system never treats account repository visibility as write authorization. PLAGUE's current Reaper module is an action-policy matrix, not the cryptographic host grant implementation.
 
 ## Example
 
@@ -77,6 +77,6 @@ See [examples/pipeline_smoke.rpr](examples/pipeline_smoke.rpr). It loads the DAK
 
 ## Maturity and limitations
 
-Implemented source slices are listed in [manifest.v1.json](manifest.v1.json). The current Cellene assessment checks declared focus, keyboard-navigation and reduced-motion requirements; it does not calculate actual foreground/background contrast ratios or compare rendered screenshots. This increment does not claim native C17 support for aesthetic modules, visual-regression tooling, live theme switching, source patch application, privileged host effects, automatic PR creation, automatic merging or release.
+Implemented source slices are listed in [manifest.v1.json](manifest.v1.json). The current Cellene assessment checks declared focus, keyboard-navigation and reduced-motion requirements; it does not calculate actual foreground/background contrast ratios or compare rendered screenshots. The native C17 core can now lower the bounded native expression AST into typed HIR and represent aesthetic property nodes through HIR/MIR/LIR, but it does not yet compile the complete imported RAAEF .rpr module family. The transactional apply engine provides SHA-256-pinned patches and a fail-closed host ABI; real repository writes remain unavailable until concrete Windows/POSIX Git, grant-verification and sandbox adapters plus the Reaper/native bridge are implemented and verified. Visual-regression tooling, live theme switching, privileged host effects, automatic PR creation, automatic merging and release are not claimed.
 
-The smoke source has been added but has not yet been executed by a Reaper runtime in this session. JSON schemas and CI wiring also remain pending validation. These limitations are part of the contract, not hidden roadmap footnotes.
+The native CTest suite now includes typed compiler IR, SHA-256, generated-C17 compilation and in-memory transaction-host scenarios. These tests are wired into the native CMake build but their CI result must be observed before the work can be marked verified. The original Reaper smoke program and its runtime CI also remain subject to the separate RAAEF PR checks. The in-memory host is not evidence that a real Git or OS sandbox adapter is secure.

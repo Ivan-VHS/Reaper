@@ -14,13 +14,13 @@ Reaper — мова системного програмування та лок�
 
 - Мова Reaper, lexer/parser, еталонне середовище та діагностика.
 - CLI, REPL, основа Windows Studio, служби LSP і DAP.
-- Експериментальна реалізація на C17; вона ще не має повного паритету з еталонним середовищем.
+- Експериментальна реалізація на C17; вона ще не має повного паритету з еталонним середовищем. Нативне ядро тепер містить спільний типізований контракт HIR/MIR/LIR, frontend з expression AST у HIR для обмеженого піднабору (i64, f64, text, bool та арифметика без змішування числових типів), а також детерміновану генерацію C17-таблиці інструкцій; повний паритет мови й backend ще не досягнуто.
 - NOO TAH делегує виконання JavaScript офіційному Node.js.
 - Генерація каркасів Jora та композиція можливостей; пакети каталогу поки є специфікаціями, а не встановлюваними редакторами.
-- RAAEF — окрема гілка розробки типізованих естетичних профілів, HIR/MIR/LIR і планування еволюції архітектури, дизайну та коду; виконання й інтеграція із загальним native backend ще потребують перевірки.
+- RAAEF — окрема гілка типізованих естетичних профілів і планування еволюції архітектури, дизайну та коду. Нативне ядро C17 також має SHA-256/HMAC-SHA-256, digest-примітиви hash-chain для аудиту та SHA-256-прив’язані patch descriptors і fail-closed контракт транзакційного застосування: підписані grants, файлові області, ізольований workspace, sandbox-перевірки за ID, публікація topic-гілки, аудит і rollback. Конкретні Windows/POSIX Git- та sandbox-адаптери ще не постачаються; SOMO apply залишається заблокованим.
 - Єдиний [каталог фреймворків](frameworks/README.md) показує відомі сімейства та статус їхніх PR; відкриті PR не вважаються частиною main.
 
-Документи: [Естетика та еволюція архітектури](docs/AESTHETIC_EVOLUTION.md) · [Каталог фреймворків](frameworks/README.md) · [Можливості](docs/FEATURES.md) · [Архітектура](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Фабрика Jora](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md).
+Документи: [Естетика та еволюція архітектури](docs/AESTHETIC_EVOLUTION.md) · [Нативний типізований IR](docs/NATIVE_IR_EXECUTION.md) · [Нативний рушій застосування патчів](docs/REAPER_AUTONOMOUS_EVOLUTION.md) · [Каталог фреймворків](frameworks/README.md) · [Можливості](docs/FEATURES.md) · [Архітектура](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Фабрика Jora](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md).
 
 ## Швидкий старт
 
