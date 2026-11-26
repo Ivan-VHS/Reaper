@@ -1,0 +1,7 @@
+# Regulation Controls Framework — Find required policy controls absent from an approved regulation profile.
+
+export craft missing_regulation_controls(required, present) {
+when kind(required) != "list" or kind(present) != "list" { yield [] }
+ craft missing(control) { yield not contains(present, control) }
+ yield keep(required, missing)
+}

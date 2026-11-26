@@ -1,0 +1,9 @@
+# Schema Required Field Framework — Return required field names absent from a schema record.
+
+export craft schema_missing_required_fields(fields, values) {
+when kind(fields) != "list" or kind(values) != "list" { yield [] }
+ craft value_name(item) { yield item[0] }
+ craft required_missing(field) { yield field[2] and not contains(map(values, value_name), field[0]) }
+ craft field_name(field) { yield field[0] }
+ yield map(keep(fields, required_missing), field_name)
+}

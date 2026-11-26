@@ -1,0 +1,6 @@
+# Regulation Review Framework — Require periodic review before the maximum permitted policy age.
+
+export craft valid_regulation_review_window(review_days, maximum_age_days) {
+when kind(review_days) != "number" or kind(maximum_age_days) != "number" { yield false }
+ yield review_days % 1 == 0 and maximum_age_days % 1 == 0 and review_days > 0 and maximum_age_days > 0 and review_days <= maximum_age_days
+}

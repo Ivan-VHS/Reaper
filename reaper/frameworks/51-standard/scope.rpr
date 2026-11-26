@@ -1,0 +1,6 @@
+# Standard Scope Framework — Check whether a release is inside an inclusive standard applicability range.
+
+export craft standard_scope_applies(release, first_release, last_release) {
+when kind(release) != "number" or kind(first_release) != "number" or kind(last_release) != "number" { yield false }
+ yield release % 1 == 0 and first_release % 1 == 0 and last_release % 1 == 0 and first_release >= 0 and first_release <= last_release and release >= first_release and release <= last_release
+}

@@ -1,0 +1,7 @@
+# Specification Requirement Framework — List normative specification requirements without implementation evidence.
+
+export craft missing_spec_requirements(required, evidence) {
+when kind(required) != "list" or kind(evidence) != "list" { yield [] }
+ craft missing(requirement) { yield not contains(evidence, requirement) }
+ yield keep(required, missing)
+}

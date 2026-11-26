@@ -1,0 +1,7 @@
+# Standard Controls Framework — List mandatory controls absent from compliance evidence.
+
+export craft missing_standard_controls(required, evidence) {
+when kind(required) != "list" or kind(evidence) != "list" { yield [] }
+ craft missing(control) { yield not contains(evidence, control) }
+ yield keep(required, missing)
+}
