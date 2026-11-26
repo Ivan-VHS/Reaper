@@ -18,6 +18,6 @@
 | THESIS | versioned assertion/evidence graph | no auto-verification |
 | Pytyliki | optional C ABI metric calls | explicit trusted path |
 | Registries | 813 proposals; 666 API contracts; 666 symbolic lexemes | specification, not completion |
-| PLAGUE | Reaper-native ten-component registry, default-deny action matrix, scope/change/evidence contracts and CI smoke | Genesis foundation; repository adapters, autonomous patching and sandboxed checks are not delivered |
+| PLAGUE | Ten-component Reaper registry, default-deny action policy, bounded profile/proposal evaluator, deterministic risk/benefit selection and versioned evidence contracts | Genesis foundation; repository adapters, autonomous patching and sandboxed checks are not delivered |
 
-Python remains the compatibility reference. Native C17 is not yet a full interpreter or general machine-code backend. The MMIO API is a checked adapter contract, not a complete hardware runtime. PLAGUE currently enforces only a mode-to-action matrix in Reaper source; repository grants, path matching and side-effect adapters remain unimplemented. The systems-language migration and maturity gates are documented in [HARDWARE_LANGUAGE.md](HARDWARE_LANGUAGE.md).
+Python remains the compatibility reference. Native C17 is not yet a full interpreter or general machine-code backend. The MMIO API is a checked adapter contract, not a complete hardware runtime. PLAGUE evaluates proposals but does not discover or modify repositories; repository grants, path matching, source adapters and side-effect enforcement remain unimplemented. The systems-language migration and maturity gates are documented in [HARDWARE_LANGUAGE.md](HARDWARE_LANGUAGE.md).
