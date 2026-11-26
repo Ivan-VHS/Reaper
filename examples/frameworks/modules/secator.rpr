@@ -18,9 +18,11 @@ export craft access_decide(policy, principal, resource) {
     }
     vary decision := "deny"
     each rule in policy {
-        when fc["fc_record"](rule, 3) and rule[0] == principal and rule[1] == resource {
-            when rule[2] == "allow" { change decision := "allow" }
-            when rule[2] == "deny" { change decision := "deny" }
+        when fc["fc_record"](rule, 3) {
+            when rule[0] == principal and rule[1] == resource {
+                when rule[2] == "allow" { change decision := "allow" }
+                when rule[2] == "deny" { change decision := "deny" }
+            }
         }
     }
     yield [true, decision, "explicit-policy-evaluation"]
@@ -49,9 +51,13 @@ export craft token_validate(token, policy) {
     when not fc["fc_record"](token, 4) or not fc["fc_record"](policy, 3) {
         yield [false, false, "token-policy-shape"]
     }
+    when kind(token[1]) != "list" { yield [false, false, "token-scopes-invalid"] }
+    when not fc["fc_nonnegative"](token[2]) or not fc["fc_nonnegative"](policy[2]) {
+        yield [false, false, "token-expiry-invalid"]
+    }
     when token[0] != policy[0] { yield [true, false, "issuer-mismatch"] }
     when token[3] { yield [true, false, "token-revoked"] }
-    when not fc["fc_nonnegative"](policy[2]) or token[2] <= policy[2] {
+    when token[2] <= policy[2] {
         yield [true, false, "token-expired"]
     }
     yield [true, fc["fc_has"](token[1], policy[1]), "scope-checked"]
