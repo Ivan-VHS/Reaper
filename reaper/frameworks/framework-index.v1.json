@@ -52,7 +52,7 @@
       "name": "Базис",
       "framework_slots": 5,
       "source_frameworks": 5,
-      "state": "tests-first"
+      "state": "source-added-ci-pending"
     },
     {
       "number": 7,
@@ -60,7 +60,7 @@
       "name": "Основа",
       "framework_slots": 5,
       "source_frameworks": 5,
-      "state": "tests-first"
+      "state": "source-added-ci-pending"
     },
     {
       "number": 8,
@@ -978,7 +978,13 @@
       "negative": {
         "args": "(250, 10, 8, false)",
         "output": "[]"
-      }
+      },
+      "additional_negative": [
+        [
+          "(200, -100, 8, true)",
+          "[]"
+        ]
+      ]
     },
     {
       "id": "06.checked-multiply",
@@ -997,7 +1003,13 @@
       "negative": {
         "args": "(16, 16, 8, false)",
         "output": "[]"
-      }
+      },
+      "additional_negative": [
+        [
+          "(200, 1, 8, true)",
+          "[]"
+        ]
+      ]
     },
     {
       "id": "06.ratio",
@@ -1016,7 +1028,13 @@
       "negative": {
         "args": "(5, 0)",
         "output": "[]"
-      }
+      },
+      "additional_positive": [
+        [
+          "(6, -8)",
+          "[-3, 4]"
+        ]
+      ]
     },
     {
       "id": "06.alignment",
@@ -1130,7 +1148,13 @@
       "negative": {
         "args": "([[1, \"invalid\"], [2, \"rejected\"]])",
         "output": "[]"
-      }
+      },
+      "additional_negative": [
+        [
+          "([[1, \"unknown\"]])",
+          "[]"
+        ]
+      ]
     }
   ]
 }
