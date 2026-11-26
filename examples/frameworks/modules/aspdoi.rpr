@@ -36,15 +36,19 @@ export craft task_cancel(scope, task_id) {
     vary tasks := []
     vary found := false
     each task in scope[3] {
-        when task[0] == task_id {
-            change found := true
-            when task[1] == "completed" or task[1] == "failed" or task[1] == "cancelled" {
-                change tasks := push(tasks, task)
-            } otherwise {
-                change tasks := push(tasks, [task[0], "cancelled", task[2], task[3]])
-            }
+        when not fc["fc_record"](task, 4) {
+            yield [false, scope, "scope-contains-invalid-task"]
         } otherwise {
-            change tasks := push(tasks, task)
+            when task[0] == task_id {
+                change found := true
+                when task[1] == "completed" or task[1] == "failed" or task[1] == "cancelled" {
+                    change tasks := push(tasks, task)
+                } otherwise {
+                    change tasks := push(tasks, [task[0], "cancelled", task[2], task[3]])
+                }
+            } otherwise {
+                change tasks := push(tasks, task)
+            }
         }
     }
     when not found { yield [false, scope, "task-not-found"] }
@@ -87,9 +91,13 @@ export craft join_scope(scope) {
     vary pending := []
     vary failed := []
     each task in scope[3] {
-        when task[1] == "failed" { change failed := push(failed, task[0]) }
-        when task[1] != "completed" and task[1] != "failed" and task[1] != "cancelled" {
-            change pending := push(pending, task[0])
+        when not fc["fc_record"](task, 4) {
+            yield [false, [], "scope-contains-invalid-task"]
+        } otherwise {
+            when task[1] == "failed" { change failed := push(failed, task[0]) }
+            when task[1] != "completed" and task[1] != "failed" and task[1] != "cancelled" {
+                change pending := push(pending, task[0])
+            }
         }
     }
     yield [size(pending) == 0 and size(failed) == 0, [pending, failed], "scope-join-inspection"]
