@@ -1,0 +1,162 @@
+# Shared bounded helpers for the Reaper Framework Federation handlers.
+# These helpers validate and transform caller-owned values only. They do not
+# grant host capabilities, perform I/O, or claim privileged host execution.
+
+export craft fc_is_list(value) {
+    yield kind(value) == "list"
+}
+
+export craft fc_is_text(value) {
+    yield kind(value) == "text"
+}
+
+export craft fc_nonempty_text(value) {
+    when kind(value) != "text" { yield false }
+    yield size(trim(value)) > 0
+}
+
+export craft fc_is_number(value) {
+    yield kind(value) == "number"
+}
+
+export craft fc_nonnegative(value) {
+    when kind(value) != "number" { yield false }
+    yield value >= 0
+}
+
+export craft fc_has(values, target) {
+    vary found := false
+    when kind(values) != "list" { yield false }
+    each value in values {
+        when value == target { change found := true }
+    }
+    yield found
+}
+
+export craft fc_unique(values) {
+    when kind(values) != "list" { yield [false, []] }
+    vary result := []
+    vary valid := true
+    each value in values {
+        when fc_has(result, value) {
+            change valid := false
+        } otherwise {
+            change result := push(result, value)
+        }
+    }
+    yield [valid, result]
+}
+
+export craft fc_valid_pairs(pairs) {
+    when kind(pairs) != "list" { yield [false, ["pairs-must-be-list"]] }
+    vary keys := []
+    vary errors := []
+    each pair in pairs {
+        when kind(pair) != "list" or size(pair) != 2 {
+            change errors := push(errors, ["pair-shape", pair])
+        } otherwise {
+            when not fc_nonempty_text(pair[0]) {
+                change errors := push(errors, ["pair-key", pair])
+            }
+            when fc_has(keys, pair[0]) {
+                change errors := push(errors, ["duplicate-key", pair[0]])
+            } otherwise {
+                change keys := push(keys, pair[0])
+            }
+        }
+    }
+    yield [size(errors) == 0, errors]
+}
+
+export craft fc_lookup(pairs, key) {
+    when kind(pairs) != "list" { yield [false, nothing] }
+    vary found := false
+    vary value := nothing
+    each pair in pairs {
+        when kind(pair) == "list" and size(pair) == 2 and pair[0] == key {
+            change found := true
+            change value := pair[1]
+        }
+    }
+    yield [found, value]
+}
+
+export craft fc_put(pairs, key, value) {
+    make checked := fc_valid_pairs(pairs)
+    when not checked[0] { yield [false, pairs, checked[1]] }
+    vary result := []
+    vary inserted := false
+    each pair in pairs {
+        when pair[0] == key {
+            when not inserted {
+                change result := push(result, [key, value])
+                change inserted := true
+            }
+        } otherwise {
+            change result := push(result, pair)
+        }
+    }
+    when not inserted { change result := push(result, [key, value]) }
+    yield [true, result, "updated"]
+}
+
+export craft fc_remove(pairs, key) {
+    make checked := fc_valid_pairs(pairs)
+    when not checked[0] { yield [false, pairs, checked[1]] }
+    vary result := []
+    vary removed := false
+    each pair in pairs {
+        when pair[0] == key {
+            change removed := true
+        } otherwise {
+            change result := push(result, pair)
+        }
+    }
+    yield [true, result, removed]
+}
+
+export craft fc_intersect(left, right) {
+    when kind(left) != "list" or kind(right) != "list" {
+        yield [false, [], "intersection-input-must-be-lists"]
+    }
+    vary result := []
+    each value in left {
+        when fc_has(right, value) and not fc_has(result, value) {
+            change result := push(result, value)
+        }
+    }
+    yield [true, result, "intersected"]
+}
+
+export craft fc_version_valid(version) {
+    when kind(version) != "list" or size(version) != 3 { yield false }
+    each part in version {
+        when not fc_nonnegative(part) { yield false }
+    }
+    yield true
+}
+
+export craft fc_version_compare(left, right) {
+    when not fc_version_valid(left) or not fc_version_valid(right) {
+        yield [false, 0, "invalid-semver-tuple"]
+    }
+    vary index := 0
+    loop while index < 3 {
+        when left[index] < right[index] { yield [true, -1, "older"] }
+        when left[index] > right[index] { yield [true, 1, "newer"] }
+        change index := index + 1
+    }
+    yield [true, 0, "equal"]
+}
+
+export craft fc_record(value, length) {
+    yield kind(value) == "list" and size(value) == length
+}
+
+export craft fc_result_ok(value) {
+    yield [true, value, "ok"]
+}
+
+export craft fc_result_err(code, details) {
+    yield [false, nothing, [code, details]]
+}
