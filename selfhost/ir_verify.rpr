@@ -1,0 +1,137 @@
+# Stage-3 bootstrap slice: deterministic validation for a compact Reaper IR.
+# This verifier accepts an explicit, versioned instruction-array representation.
+# It does not yet replace the canonical Python IR verifier.
+
+craft ir_error(code, message) {
+    yield [false, code, message]
+}
+
+craft ir_ok() {
+    yield [true, "", ""]
+}
+
+craft valid_name(value) {
+    yield value != ""
+}
+
+craft verify_instruction(instruction, code_size) {
+    when size(instruction) != 2 {
+        yield ir_error("RPR-IR0001", "instruction must contain opcode and operand")
+    }
+
+    make opcode := instruction[0]
+    make operand := instruction[1]
+
+    when contains(["CONST", "EMIT", "RETURN", "POP", "ITER_END"], opcode) {
+        yield ir_ok()
+    }
+
+    when contains(["JUMP", "JUMP_IF_FALSE", "AND_JUMP", "OR_JUMP"], opcode) {
+        when operand < 0 or operand > code_size {
+            yield ir_error("RPR-IR0002", "jump target is outside the module")
+        }
+        yield ir_ok()
+    }
+
+    when contains(["CALL", "PIPE_CALL", "BUILD_LIST"], opcode) {
+        when operand < 0 {
+            yield ir_error("RPR-IR0003", "operand count must be non-negative")
+        }
+        yield ir_ok()
+    }
+
+    when contains(["LOAD", "ASSIGN", "EXPORT", "ITER_INIT"], opcode) {
+        when not valid_name(operand) {
+            yield ir_error("RPR-IR0004", "name operand must be non-empty")
+        }
+        yield ir_ok()
+    }
+
+    when opcode == "DEFINE" {
+        when size(operand) != 2 or not valid_name(operand[0]) {
+            yield ir_error("RPR-IR0005", "DEFINE requires a name and mutability flag")
+        }
+        when operand[1] != true and operand[1] != false {
+            yield ir_error("RPR-IR0005", "DEFINE mutability flag must be boolean")
+        }
+        yield ir_ok()
+    }
+
+    when opcode == "ITER_NEXT" {
+        when size(operand) != 2 or not valid_name(operand[0]) {
+            yield ir_error("RPR-IR0006", "ITER_NEXT requires a name and exit target")
+        }
+        when operand[1] < 0 or operand[1] > code_size {
+            yield ir_error("RPR-IR0006", "iterator exit target is outside the module")
+        }
+        yield ir_ok()
+    }
+
+    when opcode == "UNARY" {
+        when not contains(["-", "NOT"], operand) {
+            yield ir_error("RPR-IR0007", "unsupported unary operator")
+        }
+        yield ir_ok()
+    }
+
+    when opcode == "BINARY" {
+        when not contains(["==", "!=", "<", "<=", ">", ">=", "++", "+", "-", "*", "/", "//", "%", "**"], operand) {
+            yield ir_error("RPR-IR0008", "unsupported binary operator")
+        }
+        yield ir_ok()
+    }
+
+    when opcode == "IMPORT" {
+        when size(operand) != 2 or not valid_name(operand[0]) {
+            yield ir_error("RPR-IR0009", "IMPORT requires a module name and optional alias")
+        }
+        yield ir_ok()
+    }
+
+    yield ir_error("RPR-IR0010", "unknown IR opcode")
+}
+
+craft verify_module(module) {
+    when size(module) != 3 {
+        yield ir_error("RPR-IR0011", "module must contain schema, source name and code")
+    }
+    when module[0] != "reaper.ir.v1" {
+        yield ir_error("RPR-IR0012", "unsupported IR schema")
+    }
+    when not valid_name(module[1]) {
+        yield ir_error("RPR-IR0013", "source name must be non-empty")
+    }
+
+    make code := module[2]
+    each instruction in code {
+        make checked := verify_instruction(instruction, size(code))
+        when not checked[0] {
+            yield checked
+        }
+    }
+    yield ir_ok()
+}
+
+make valid_module := [
+    "reaper.ir.v1",
+    "sample.rpr",
+    [["CONST", 42], ["EMIT", nothing], ["JUMP", 3]]
+]
+make valid_result := verify_module(valid_module)
+assert(valid_result[0], "valid IR module was rejected")
+
+make invalid_jump := verify_module([
+    "reaper.ir.v1",
+    "bad-jump.rpr",
+    [["JUMP", 99]]
+])
+assert(not invalid_jump[0] and invalid_jump[1] == "RPR-IR0002", "out-of-range jump was accepted")
+
+make invalid_opcode := verify_module([
+    "reaper.ir.v1",
+    "bad-opcode.rpr",
+    [["EXECUTE_HOST", nothing]]
+])
+assert(not invalid_opcode[0] and invalid_opcode[1] == "RPR-IR0010", "unknown opcode was accepted")
+
+emit "SELFHOST_IR_VERIFY_OK"

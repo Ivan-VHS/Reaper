@@ -1,0 +1,132 @@
+# Stage-3 bootstrap slice: Reaper-written expression-to-stack-IR lowering.
+# Statement lowering and canonical IR parity remain separate acceptance gates.
+
+craft append_code(first, second) {
+    vary combined := first
+    each instruction in second {
+        change combined := push(combined, instruction)
+    }
+    yield combined
+}
+
+craft lower_expression(node) {
+    make node_kind := node[0]
+
+    when node_kind == "literal" {
+        yield [true, [["CONST", node[2]]], ""]
+    }
+
+    when node_kind == "name" {
+        yield [true, [["LOAD", node[1]]], ""]
+    }
+
+    when node_kind == "list" {
+        vary code := []
+        each item in node[1] {
+            make lowered := lower_expression(item)
+            when not lowered[0] { yield lowered }
+            change code := append_code(code, lowered[1])
+        }
+        change code := push(code, ["BUILD_LIST", size(node[1])])
+        yield [true, code, ""]
+    }
+
+    when node_kind == "index" {
+        make target := lower_expression(node[1])
+        when not target[0] { yield target }
+        make index_code := lower_expression(node[2])
+        when not index_code[0] { yield index_code }
+        make code := append_code(target[1], index_code[1])
+        change code := push(code, ["INDEX", nothing])
+        yield [true, code, ""]
+    }
+
+    when node_kind == "unary" {
+        make operand := lower_expression(node[2])
+        when not operand[0] { yield operand }
+        make code := push(operand[1], ["UNARY", node[1]])
+        yield [true, code, ""]
+    }
+
+    when node_kind == "call" {
+        make callee := lower_expression(node[1])
+        when not callee[0] { yield callee }
+        vary code := callee[1]
+        each argument in node[2] {
+            make lowered := lower_expression(argument)
+            when not lowered[0] { yield lowered }
+            change code := append_code(code, lowered[1])
+        }
+        change code := push(code, ["CALL", size(node[2])])
+        yield [true, code, ""]
+    }
+
+    when node_kind == "binary" {
+        make left := lower_expression(node[2])
+        when not left[0] { yield left }
+        make operator := node[1]
+
+        when operator == "::" {
+            make right := node[3]
+            when right[0] == "call" {
+                make callee := lower_expression(right[1])
+                when not callee[0] { yield callee }
+                make code := append_code(left[1], callee[1])
+                each argument in right[2] {
+                    make lowered := lower_expression(argument)
+                    when not lowered[0] { yield lowered }
+                    change code := append_code(code, lowered[1])
+                }
+                change code := push(code, ["PIPE_CALL", size(right[2])])
+                yield [true, code, ""]
+            }
+            make right_code := lower_expression(right)
+            when not right_code[0] { yield right_code }
+            make code := append_code(left[1], right_code[1])
+            change code := push(code, ["PIPE_CALL", 0])
+            yield [true, code, ""]
+        }
+
+        make right := lower_expression(node[3])
+        when not right[0] { yield right }
+        make code := append_code(left[1], right[1])
+        change code := push(code, ["BINARY", operator])
+        yield [true, code, ""]
+    }
+
+    yield [false, [], "RPR-B0001"]
+}
+
+make arithmetic := lower_expression([
+    "binary", "+",
+    ["literal", "NUMBER", "2", 1, 1],
+    ["literal", "NUMBER", "3", 1, 5],
+    1, 3
+])
+assert(arithmetic[0], "arithmetic expression lowering failed")
+assert(arithmetic[1] == [["CONST", "2"], ["CONST", "3"], ["BINARY", "+"]], "arithmetic stack order changed")
+
+make flow := lower_expression([
+    "binary", "::",
+    ["name", "values", 2, 1],
+    ["call", ["name", "map", 2, 10], [["name", "double", 2, 14]], 2, 13],
+    2, 8
+])
+assert(flow[0], "flow expression lowering failed")
+assert(flow[1][0] == ["LOAD", "values"], "flow must evaluate the left value first")
+assert(flow[1][size(flow[1]) - 1] == ["PIPE_CALL", 1], "flow call must record explicit argument count")
+
+make nested_list := lower_expression([
+    "list",
+    [
+        ["literal", "NUMBER", "1", 4, 2],
+        ["literal", "NUMBER", "2", 4, 5]
+    ],
+    4, 1
+])
+assert(nested_list[0] and nested_list[1][2] == ["BUILD_LIST", 2], "list lowering failed")
+
+make unsupported := lower_expression(["lambda", "capture"])
+assert(not unsupported[0] and unsupported[2] == "RPR-B0001", "unsupported AST node must be rejected")
+
+emit "SELFHOST_BYTECODE_LOWERING_OK"

@@ -1,0 +1,239 @@
+# Stage-2 bootstrap slice: conservative expression semantics in Reaper.
+# The reference checker remains authoritative until corpus parity is proven.
+# AST shapes match selfhost/parser.rpr.
+
+craft node_line(node) {
+    when node[0] == "literal" { yield node[3] }
+    when node[0] == "name" { yield node[2] }
+    when node[0] == "list" { yield node[2] }
+    when node[0] == "unary" { yield node[3] }
+    when node[0] == "binary" { yield node[4] }
+    when node[0] == "call" { yield node[3] }
+    when node[0] == "index" { yield node[3] }
+    yield 1
+}
+
+craft node_column(node) {
+    when node[0] == "literal" { yield node[4] }
+    when node[0] == "name" { yield node[3] }
+    when node[0] == "list" { yield node[3] }
+    when node[0] == "unary" { yield node[4] }
+    when node[0] == "binary" { yield node[5] }
+    when node[0] == "call" { yield node[4] }
+    when node[0] == "index" { yield node[4] }
+    yield 1
+}
+
+craft semantic_ok(type_name, node) {
+    yield [true, type_name, "", "", node_line(node), node_column(node)]
+}
+
+craft semantic_error(code, message, node) {
+    yield [false, "Any", code, message, node_line(node), node_column(node)]
+}
+
+craft numeric_type(type_name) {
+    yield type_name == "Int" or type_name == "Float" or type_name == "Number" or type_name == "Any"
+}
+
+craft unify_type(left, right) {
+    when left == right { yield left }
+    when numeric_type(left) and numeric_type(right) { yield "Number" }
+    when left == "Any" { yield right }
+    when right == "Any" { yield left }
+    yield "Any"
+}
+
+craft find_binding(bindings, name) {
+    each binding in bindings {
+        when binding[0] == name {
+            yield binding[1]
+        }
+    }
+    yield "Any"
+}
+
+craft find_function(functions, name) {
+    each signature in functions {
+        when signature[0] == name {
+            yield signature
+        }
+    }
+    yield []
+}
+
+craft infer_expression(node, bindings, functions) {
+    make node_kind := node[0]
+
+    when node_kind == "literal" {
+        when node[1] == "NUMBER" { yield semantic_ok("Number", node) }
+        when node[1] == "STRING" { yield semantic_ok("Text", node) }
+        when node[1] == "TRUE" or node[1] == "FALSE" { yield semantic_ok("Bool", node) }
+        when node[1] == "NOTHING" { yield semantic_ok("Nothing", node) }
+        yield semantic_ok("Any", node)
+    }
+
+    when node_kind == "name" {
+        yield semantic_ok(find_binding(bindings, node[1]), node)
+    }
+
+    when node_kind == "list" {
+        vary element_type := "Any"
+        vary has_element := false
+        each item in node[1] {
+            make item_result := infer_expression(item, bindings, functions)
+            when not item_result[0] { yield item_result }
+            when not has_element {
+                change element_type := item_result[1]
+                change has_element := true
+            } otherwise {
+                change element_type := unify_type(element_type, item_result[1])
+            }
+        }
+        yield semantic_ok("List[" ++ element_type ++ "]", node)
+    }
+
+    when node_kind == "unary" {
+        make operand := infer_expression(node[2], bindings, functions)
+        when not operand[0] { yield operand }
+        when node[1] == "-" and not numeric_type(operand[1]) {
+            yield semantic_error("RPR-T0004", "unary '-' requires a numeric value", node)
+        }
+        when node[1] == "NOT" { yield semantic_ok("Bool", node) }
+        yield semantic_ok(operand[1], node)
+    }
+
+    when node_kind == "binary" {
+        make left := infer_expression(node[2], bindings, functions)
+        when not left[0] { yield left }
+        make right := infer_expression(node[3], bindings, functions)
+        when not right[0] { yield right }
+        make operator := node[1]
+
+        when contains(["+", "-", "*", "/", "//", "%", "**"], operator) {
+            when not numeric_type(left[1]) or not numeric_type(right[1]) {
+                yield semantic_error("RPR-T0004", "numeric operator received a non-numeric operand", node)
+            }
+            yield semantic_ok("Number", node)
+        }
+
+        when operator == "++" {
+            when (left[1] != "Text" and left[1] != "Any") or (right[1] != "Text" and right[1] != "Any") {
+                yield semantic_error("RPR-T0005", "text concatenation requires Text operands", node)
+            }
+            yield semantic_ok("Text", node)
+        }
+
+        when contains(["<", "<=", ">", ">="], operator) {
+            when not (numeric_type(left[1]) and numeric_type(right[1])) and not (left[1] == "Text" and right[1] == "Text") and left[1] != "Any" and right[1] != "Any" {
+                yield semantic_error("RPR-T0006", "comparison operands have incompatible types", node)
+            }
+            yield semantic_ok("Bool", node)
+        }
+
+        when contains(["==", "!=", "AND", "OR"], operator) {
+            yield semantic_ok("Bool", node)
+        }
+
+        when operator == "::" {
+            yield semantic_ok("Any", node)
+        }
+
+        yield semantic_error("RPR-T0010", "unsupported binary operator", node)
+    }
+
+    when node_kind == "call" {
+        make callee := node[1]
+        make arguments := node[2]
+        when callee[0] != "name" {
+            each argument in arguments {
+                make checked := infer_expression(argument, bindings, functions)
+                when not checked[0] { yield checked }
+            }
+            yield semantic_ok("Any", node)
+        }
+
+        each argument in arguments {
+            make checked := infer_expression(argument, bindings, functions)
+            when not checked[0] { yield checked }
+        }
+
+        make name := callee[1]
+        when name == "size" or name == "text" or name == "number" or name == "kind" or name == "sum" {
+            when size(arguments) != 1 {
+                yield semantic_error("RPR-T0007", name ++ "() expects one argument", node)
+            }
+            when name == "size" { yield semantic_ok("Int", node) }
+            when name == "text" or name == "kind" { yield semantic_ok("Text", node) }
+            when name == "number" { yield semantic_ok("Number", node) }
+            yield semantic_ok("Number", node)
+        }
+
+        when name == "range" {
+            when size(arguments) < 1 or size(arguments) > 3 {
+                yield semantic_error("RPR-T0007", "range() expects one to three arguments", node)
+            }
+            yield semantic_ok("List[Int]", node)
+        }
+
+        make signature := find_function(functions, name)
+        when size(signature) == 0 {
+            yield semantic_ok("Any", node)
+        }
+        when size(arguments) != signature[1] {
+            yield semantic_error("RPR-T0007", name ++ "() received the wrong number of arguments", node)
+        }
+        yield semantic_ok(signature[2], node)
+    }
+
+    when node_kind == "index" {
+        make target := infer_expression(node[1], bindings, functions)
+        when not target[0] { yield target }
+        make index_type := infer_expression(node[2], bindings, functions)
+        when not index_type[0] { yield index_type }
+        when index_type[1] != "Int" and index_type[1] != "Number" and index_type[1] != "Any" {
+            yield semantic_error("RPR-T0003", "sequence index must be an integer", node)
+        }
+        when target[1] == "Text" { yield semantic_ok("Text", node) }
+        when target[1] == "Any" { yield semantic_ok("Any", node) }
+        when size(target[1]) >= 5 and starts_with(target[1], "List[") {
+            yield semantic_ok("Any", node)
+        }
+        yield semantic_error("RPR-T0008", "value is not indexable", node)
+    }
+
+    yield semantic_error("RPR-T0011", "unknown expression node", node)
+}
+
+# Numeric expressions and source locations.
+make numeric := infer_expression([
+    "binary", "+",
+    ["literal", "NUMBER", "20", 2, 3],
+    ["literal", "NUMBER", "22", 2, 8],
+    2, 6
+], [], [])
+assert(numeric[0] and numeric[1] == "Number", "numeric inference failed")
+assert(numeric[4] == 2 and numeric[5] == 6, "semantic source location was lost")
+
+# Invalid text concatenation must be rejected with a stable diagnostic.
+make invalid_text := infer_expression([
+    "binary", "++",
+    ["literal", "NUMBER", "7", 4, 1],
+    ["literal", "STRING", "seven", 4, 6],
+    4, 3
+], [], [])
+assert(not invalid_text[0] and invalid_text[2] == "RPR-T0005", "invalid concatenation was accepted")
+
+# Function signatures are explicit inputs, not implicit host lookups.
+make known_call := infer_expression([
+    "call", ["name", "triple", 6, 1],
+    [["literal", "NUMBER", "14", 6, 8]], 6, 7
+], [], [["triple", 1, "Number"]])
+assert(known_call[0] and known_call[1] == "Number", "function signature inference failed")
+
+make bad_arity := infer_expression([
+    "call", ["name", "size", 8, 1], [], 8, 5
+], [], [])
+assert(not bad_arity[0] and bad_arity[2] == "RPR-T0007", "builtin arity error was missed")
+
+emit "SELFHOST_SEMANTIC_OK"

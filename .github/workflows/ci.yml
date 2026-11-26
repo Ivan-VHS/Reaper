@@ -2,7 +2,7 @@ name: Reaper CI
 
 on:
   push:
-    branches: [main, "feat/**"]
+    branches: [main, "feat/**", "integration/**"]
   pull_request:
   workflow_dispatch:
 
@@ -42,6 +42,18 @@ jobs:
         run: python -m reaper --check examples/flow.rpr
       - name: Validate federated audit program
         run: python -m reaper --check examples/device_audit.rpr
+      - name: Validate Reaper-written semantic and IR stages
+        run: |
+          python -m reaper --check selfhost/semantic.rpr
+          python -m reaper --check selfhost/ir_verify.rpr
+          python -m reaper --check selfhost/bytecode.rpr
+      - name: Execute Reaper-written bootstrap stages
+        run: |
+          python -m reaper selfhost/lexer.rpr
+          python -m reaper selfhost/parser.rpr
+          python -m reaper selfhost/semantic.rpr
+          python -m reaper selfhost/ir_verify.rpr
+          python -m reaper selfhost/bytecode.rpr
       - name: Run example
         run: python -m reaper examples/flow.rpr
       - name: Run end-to-end read-only device audit example
