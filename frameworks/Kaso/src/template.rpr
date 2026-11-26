@@ -217,7 +217,41 @@ export craft template_render_blocks_bounded(blocks, context, depth, max_depth, m
     when max_depth < 0 or max_blocks < 0 { yield [false, "invalid_render_budget"] }
     when depth > max_depth { yield [false, "render_depth_exceeded"] }
     when size(blocks) > max_blocks { yield [false, "render_block_budget_exceeded"] }
-    yield template_render_blocks(blocks, context, depth)
+    vary output := ""
+    vary index := 0
+    loop while index < size(blocks) {
+        make block := blocks[index]
+        when size(block) != 2 { yield [false, "invalid_template_block"] }
+        when block[0] == "text" {
+            change output := output ++ block[1]
+        } otherwise {
+            when block[0] == "slot" or block[0] == "escaped_slot" {
+                make value := template_context_find(context, block[1])
+                when not value[0] { yield [false, "missing_slot:" ++ block[1]] }
+                when block[0] == "slot" {
+                    change output := output ++ text(value[1])
+                } otherwise {
+                    change output := output ++ template_escape_html(value[1])
+                }
+            } otherwise {
+                when block[0] == "when" {
+                    when size(block[1]) != 4 { yield [false, "invalid_when_block"] }
+                    make condition := template_context_find(context, block[1][0])
+                    when not condition[0] { yield [false, "missing_condition"] }
+                    vary selected := block[1][3]
+                    when condition[1] == block[1][1] { change selected := block[1][2] }
+                    make nested := template_render_blocks_bounded(selected, context, depth + 1, max_depth, max_blocks)
+                    when not nested[0] { yield nested }
+                    change output := output ++ nested[1]
+                } otherwise {
+                    yield [false, "unsupported_template_block"]
+                }
+            }
+        }
+        when size(output) > 1000000 { yield [false, "rendered_text_limit_exceeded"] }
+        change index := index + 1
+    }
+    yield [true, output]
 }
 
 export craft template_render_optional(blocks, context, condition_name) {
