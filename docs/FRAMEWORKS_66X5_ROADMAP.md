@@ -30,10 +30,10 @@ Each numbered row is one independent implementation batch with five framework sl
 | 05 | Архитектура | 5 | Source added — CI pending |
 | 06 | Базис | 5 | Queued |
 | 07 | Основа | 5 | Queued |
-| 08 | Фундамент | 5 | Queued |
-| 09 | Остов | 5 | Queued |
-| 10 | Костяк | 5 | Queued |
-| 11 | Структура | 5 | Queued |
+| 08 | Фундамент | 5 | Tests first — implementation next |
+| 09 | Остов | 5 | Tests first — implementation next |
+| 10 | Костяк | 5 | Tests first — implementation next |
+| 11 | Структура | 5 | Tests first — implementation next |
 | 12 | Конструкция | 5 | Queued |
 | 13 | Экосистема | 5 | Queued |
 | 14 | Надстройка | 5 | Queued |

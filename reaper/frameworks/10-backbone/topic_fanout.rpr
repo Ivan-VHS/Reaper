@@ -1,0 +1,21 @@
+# BackboneTopicFanout — resolve unique subscribers for an exact topic.
+# Subscription: [subscriber_id, topic].
+
+export craft backbone_topic_subscribers(topic, subscriptions) {
+    when kind(topic) != "text" or kind(subscriptions) != "list" {
+        yield []
+    }
+    vary subscribers := []
+    each subscription in subscriptions {
+        when kind(subscription) == "list" {
+            when size(subscription) == 2 and kind(subscription[0]) == "text" and kind(subscription[1]) == "text" {
+                when subscription[1] == topic and size(trim(subscription[0])) > 0 {
+                    when not contains(subscribers, subscription[0]) {
+                        change subscribers := push(subscribers, subscription[0])
+                    }
+                }
+            }
+        }
+    }
+    yield subscribers
+}

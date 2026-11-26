@@ -1,0 +1,11 @@
+# FundamentalInvariant — inclusive scalar interval invariant.
+
+export craft valid_fundamental_invariant(value, lower, upper) {
+    when kind(value) != "number" or kind(lower) != "number" or kind(upper) != "number" {
+        yield false
+    }
+    when lower > upper {
+        yield false
+    }
+    yield value >= lower and value <= upper
+}

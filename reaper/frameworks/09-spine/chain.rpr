@@ -1,0 +1,17 @@
+# SpineChain — ordered unique node identifiers for a linear dependency spine.
+
+export craft valid_spine_chain(nodes) {
+    when kind(nodes) != "list" or size(nodes) == 0 {
+        yield false
+    }
+    craft invalid_node(node) {
+        when kind(node) == "text" {
+            yield size(trim(node)) == 0
+        }
+        yield kind(node) != "number" or node % 1 != 0
+    }
+    when size(keep(nodes, invalid_node)) != 0 {
+        yield false
+    }
+    yield size(unique(nodes)) == size(nodes)
+}

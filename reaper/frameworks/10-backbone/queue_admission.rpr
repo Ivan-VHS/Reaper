@@ -1,0 +1,14 @@
+# BackboneQueueAdmission — bounded queue-depth admission rule.
+
+export craft backbone_queue_admission(current_depth, incoming, capacity) {
+    when kind(current_depth) != "number" or kind(incoming) != "number" or kind(capacity) != "number" {
+        yield false
+    }
+    when current_depth % 1 != 0 or incoming % 1 != 0 or capacity % 1 != 0 {
+        yield false
+    }
+    when current_depth < 0 or incoming < 0 or capacity < 0 {
+        yield false
+    }
+    yield current_depth + incoming <= capacity
+}

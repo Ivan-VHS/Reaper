@@ -1,0 +1,23 @@
+# BackboneRouteSelection — longest-prefix topic routing.
+# Route: [topic_prefix, destination].
+
+export craft backbone_select_route(topic, routes) {
+    when kind(topic) != "text" or kind(routes) != "list" {
+        yield ""
+    }
+    vary selected := ""
+    vary best_length := -1
+    each route in routes {
+        when kind(route) == "list" {
+            when size(route) == 2 and kind(route[0]) == "text" and kind(route[1]) == "text" {
+                when size(route[0]) > 0 and starts_with(topic, route[0]) {
+                    when size(route[0]) > best_length {
+                        change best_length := size(route[0])
+                        change selected := route[1]
+                    }
+                }
+            }
+        }
+    }
+    yield selected
+}

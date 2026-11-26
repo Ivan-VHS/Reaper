@@ -1,0 +1,20 @@
+# BackboneMessageEnvelope — validate a bounded versioned message envelope.
+
+export craft valid_backbone_envelope(envelope) {
+    when kind(envelope) != "list" or size(envelope) != 4 {
+        yield false
+    }
+    when kind(envelope[0]) != "text" or kind(envelope[2]) != "text" {
+        yield false
+    }
+    when kind(envelope[1]) != "number" or kind(envelope[3]) != "number" {
+        yield false
+    }
+    when size(trim(envelope[0])) == 0 or size(trim(envelope[2])) == 0 {
+        yield false
+    }
+    when envelope[1] % 1 != 0 or envelope[3] % 1 != 0 {
+        yield false
+    }
+    yield envelope[1] >= 1 and envelope[3] >= 0 and envelope[3] <= 1048576
+}

@@ -1,0 +1,30 @@
+# FundamentalUnitScale — exact binary byte-unit conversion.
+
+export craft fundamental_bytes(value, unit) {
+    when kind(value) != "number" or value % 1 != 0 or value < 0 {
+        yield []
+    }
+    vary multiplier := 1
+    when unit == "B" {
+        change multiplier := 1
+    } otherwise {
+        when unit == "KiB" {
+            change multiplier := 1024
+        } otherwise {
+            when unit == "MiB" {
+                change multiplier := 1048576
+            } otherwise {
+                when unit == "GiB" {
+                    change multiplier := 1073741824
+                } otherwise {
+                    yield []
+                }
+            }
+        }
+    }
+    vary bytes := value * multiplier
+    when bytes > 18446744073709551615 {
+        yield []
+    }
+    yield bytes
+}

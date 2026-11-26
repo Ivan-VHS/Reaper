@@ -1,0 +1,25 @@
+# BackboneRetrySchedule — bounded exponential retry delays.
+
+export craft backbone_retry_delays(base_delay, factor, attempts, cap) {
+    when kind(base_delay) != "number" or kind(factor) != "number" or kind(attempts) != "number" or kind(cap) != "number" {
+        yield []
+    }
+    when base_delay % 1 != 0 or factor % 1 != 0 or attempts % 1 != 0 or cap % 1 != 0 {
+        yield []
+    }
+    when base_delay < 1 or factor < 1 or attempts < 1 or attempts > 32 or cap < base_delay {
+        yield []
+    }
+    vary delay := base_delay
+    vary result := []
+    each attempt in range(0, attempts) {
+        when delay > cap {
+            change delay := cap
+        }
+        change result := push(result, delay)
+        when delay < cap {
+            change delay := delay * factor
+        }
+    }
+    yield result
+}

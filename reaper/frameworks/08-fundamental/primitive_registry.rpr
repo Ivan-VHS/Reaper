@@ -1,0 +1,17 @@
+# FundamentalPrimitiveRegistry — closed primitive vocabulary with unique names.
+
+export craft valid_fundamental_primitives(types) {
+    when kind(types) != "list" or size(types) == 0 {
+        yield false
+    }
+    craft valid_primitive(value) {
+        yield kind(value) == "text" and contains(["bool", "u8", "u16", "u32", "u64", "u128", "i8", "i16", "i32", "i64", "i128", "f32", "f64", "text", "bytes", "unit"], value)
+    }
+    craft invalid_primitive(value) {
+        yield not valid_primitive(value)
+    }
+    when size(keep(types, invalid_primitive)) != 0 {
+        yield false
+    }
+    yield size(unique(types)) == size(types)
+}

@@ -1,0 +1,64 @@
+# SpineTree — validate a rooted directed tree with full reachability.
+
+export craft valid_spine_tree(node_count, root, edges) {
+    when kind(node_count) != "number" or node_count % 1 != 0 or node_count < 1 {
+        yield false
+    }
+    when kind(root) != "number" or root % 1 != 0 or root < 0 or root >= node_count {
+        yield false
+    }
+    when kind(edges) != "list" or size(edges) != node_count - 1 {
+        yield false
+    }
+    craft valid_edge(edge) {
+        when kind(edge) != "list" or size(edge) != 2 {
+            yield false
+        }
+        when kind(edge[0]) != "number" or kind(edge[1]) != "number" {
+            yield false
+        }
+        when edge[0] % 1 != 0 or edge[1] % 1 != 0 {
+            yield false
+        }
+        yield edge[0] >= 0 and edge[0] < node_count and edge[1] >= 0 and edge[1] < node_count and edge[0] != edge[1]
+    }
+    craft invalid_edge(edge) {
+        yield not valid_edge(edge)
+    }
+    craft parent_count(node) {
+        vary count := 0
+        each edge in edges {
+            when edge[1] == node {
+                change count := count + 1
+            }
+        }
+        yield count
+    }
+    when size(keep(edges, invalid_edge)) != 0 or size(unique(edges)) != size(edges) {
+        yield false
+    }
+    when parent_count(root) != 0 {
+        yield false
+    }
+    vary valid := true
+    each node in range(0, node_count) {
+        when node != root and parent_count(node) != 1 {
+            change valid := false
+        }
+    }
+    when not valid {
+        yield false
+    }
+    vary reachable := [root]
+    vary changed := true
+    while changed {
+        change changed := false
+        each edge in edges {
+            when contains(reachable, edge[0]) and not contains(reachable, edge[1]) {
+                change reachable := push(reachable, edge[1])
+                change changed := true
+            }
+        }
+    }
+    yield size(reachable) == node_count
+}

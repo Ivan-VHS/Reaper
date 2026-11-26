@@ -1,0 +1,21 @@
+# StructureMatrixShape — return [row_count, column_count] for rectangular matrices.
+
+export craft structure_matrix_shape(matrix) {
+    when kind(matrix) != "list" or size(matrix) == 0 {
+        yield []
+    }
+    when kind(matrix[0]) != "list" or size(matrix[0]) == 0 {
+        yield []
+    }
+    vary columns := size(matrix[0])
+    vary valid := true
+    each row in matrix {
+        when kind(row) != "list" or size(row) != columns {
+            change valid := false
+        }
+    }
+    when not valid {
+        yield []
+    }
+    yield [size(matrix), columns]
+}

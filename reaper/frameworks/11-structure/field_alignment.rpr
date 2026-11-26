@@ -1,0 +1,48 @@
+# StructureFieldAlignment — validate aligned, non-overlapping typed field regions.
+# Field: [offset, byte_width, required_alignment].
+
+export craft valid_structure_field_alignment(fields) {
+    when kind(fields) != "list" or size(fields) == 0 {
+        yield false
+    }
+    craft valid_field(field) {
+        when kind(field) != "list" or size(field) != 3 {
+            yield false
+        }
+        each value in field {
+            when kind(value) != "number" or value % 1 != 0 {
+                yield false
+            }
+        }
+        when field[0] < 0 or field[1] < 1 or field[2] < 1 {
+            yield false
+        }
+        vary alignment := field[2]
+        while alignment > 1 {
+            when alignment % 2 != 0 {
+                yield false
+            }
+            change alignment := alignment // 2
+        }
+        yield field[0] % field[2] == 0
+    }
+    craft invalid_field(field) {
+        yield not valid_field(field)
+    }
+    when size(keep(fields, invalid_field)) != 0 {
+        yield false
+    }
+    vary valid := true
+    each index in range(0, size(fields)) {
+        each other_index in range(0, size(fields)) {
+            when index < other_index {
+                vary left := fields[index]
+                vary right := fields[other_index]
+                when left[0] < right[0] + right[1] and right[0] < left[0] + left[1] {
+                    change valid := false
+                }
+            }
+        }
+    }
+    yield valid
+}

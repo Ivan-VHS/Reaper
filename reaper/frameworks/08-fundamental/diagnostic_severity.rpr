@@ -1,0 +1,17 @@
+# FundamentalDiagnosticSeverity — stable severity classification by diagnostic prefix.
+
+export craft fundamental_diagnostic_severity(code) {
+    when kind(code) != "text" {
+        yield "unknown"
+    }
+    when starts_with(code, "RPR-E") {
+        yield "error"
+    }
+    when starts_with(code, "RPR-W") {
+        yield "warning"
+    }
+    when starts_with(code, "RPR-I") {
+        yield "info"
+    }
+    yield "unknown"
+}
