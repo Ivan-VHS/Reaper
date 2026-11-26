@@ -77,11 +77,21 @@ Every subsystem advances through reviewable, independently testable increments:
 
 Each delivery is a separate PR, with protected `main`, Conventional Commits, required CI and sequential review/squash merge. Do not make direct changes to `main` or report an unmerged branch as shipped.
 
-## First vertical slice in this expansion
+## Expansion work delivered on the working branch
 
-The first source addition is `selfhost/source_map.rpr`. It builds a position table for Reaper string-index offsets, handles LF, CRLF and standalone CR as line breaks, treats Unicode code points as one Reaper string-index unit in the reference runtime, and rejects out-of-range lookups. It does **not** claim to provide UTF-8 byte offsets or UTF-16 LSP columns; those are separate projections to be added under R01 with explicit tests.
+The branch now contains seven Reaper-native foundational modules:
 
-This slice is intentionally small. It establishes a reusable, tested source-location primitive before the lexer and parser are expanded. It does not satisfy R01's 50,000-line target or complete self-hosting.
+- `selfhost/source_map.rpr` — dense codepoint-offset positions with LF/CRLF/CR handling.
+- `selfhost/line_index.rpr` — sparse line starts, binary-search offset lookup, line extraction and reverse line/column lookup.
+- `selfhost/span.rpr` — half-open spans with validated creation, bounds, containment, overlap, adjacency, union, intersection, shift and clamp.
+- `selfhost/token_stream.rpr` — canonical four-field token record checks, EOF/ordering validation, immutable cursor operations, kind counts and value filtering.
+- `selfhost/diagnostics.rpr` — structured diagnostic records, severity validation, stable ordering, count summaries and severity filters.
+- `selfhost/operator_table.rpr` — precedence, associativity, binding powers and semantic categories for expression operators.
+- `selfhost/ast.rpr` — canonical array-form AST nodes, recursive source-span validation, child access, node count and depth.
+
+These modules intentionally expose a bounded initial contract. They do not claim full Unicode category handling, UTF-8 byte offsets, UTF-16 LSP positions, full statement parsing, native compiler execution or self-hosting closure. Reaper-level assertions are included and the branch's existing bootstrap test orchestration invokes each module.
+
+The additions are the start of R01/R02 and the compiler front-end foundations; they do not satisfy any subsystem's 50,000-line target.
 
 ## Explicit exclusions and boundaries
 
