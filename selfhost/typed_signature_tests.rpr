@@ -1,0 +1,53 @@
+import "lexer.rpr" as lexer
+import "program_parser.rpr" as frontend
+import "typed_signatures.rpr" as signatures
+
+make source := "struct ParseError {\ncode: u32\n}\ncraft parse_count(raw: text) -> Result<Option<u64>, ParseError> {\nwhen raw == \"\" {\nyield err(\"empty\")\n} otherwise {\nyield ok(some(42))\n}\n}\ncraft maybe_count<T>(value: T) -> Option<T> {\nwhen value == nothing {\nyield nothing\n} otherwise {\nyield some(value)\n}\n}\ncraft identity<T>(value: T) -> T {\nyield value\n}\ncraft legacy(value) {\nyield value\n}\n"
+
+make parsed := frontend["parse_program"](lexer["tokenize"](source))
+assert(parsed[0] == "OK", "typed craft signature fixture must parse")
+make checked := signatures["signature_validate_program"](parsed[1])
+assert(checked[0] == "OK", "valid typed craft signatures and Result/Option returns must pass")
+assert(size(checked[1]) == 4, "all typed and legacy craft declarations must be retained")
+
+make parse_count := checked[1][0]
+assert(parse_count[0] == "parse_count", "first craft signature name mismatch")
+assert(parse_count[3][0] == ["text", []], "typed parameter annotation must be retained")
+assert(parse_count[4] == ["Result", [["Option", [["u64", []]]], ["ParseError", []]]], "nested Result/Option signature must be retained")
+
+make maybe_count := checked[1][1]
+assert(maybe_count[1] == ["T"], "generic type parameter must be retained")
+assert(maybe_count[4] == ["Option", [["T", []]]], "generic Option return type mismatch")
+
+make identity := checked[1][2]
+assert(identity[3] == [["T", []]] and identity[4] == ["T", []], "generic parameter and return types must match")
+
+make legacy := checked[1][3]
+assert(legacy[0] == "legacy", "legacy untyped craft must remain source-compatible")
+
+make wrong_option_source := "craft broken(value: u32) -> Option<u32, text> {\nyield some(value)\n}\n"
+make wrong_option := frontend["parse_program"](lexer["tokenize"](wrong_option_source))
+make wrong_option_check := signatures["signature_validate_program"](wrong_option[1])
+assert(wrong_option_check[0] == "ERROR" and wrong_option_check[1] == "RPR-SIG-0003", "Option arity mismatch must be rejected")
+
+make wrong_result_source := "craft broken(value: u32) -> Result<u32, text> {\nyield some(value)\n}\n"
+make wrong_result := frontend["parse_program"](lexer["tokenize"](wrong_result_source))
+make wrong_result_check := signatures["signature_validate_program"](wrong_result[1])
+assert(wrong_result_check[0] == "ERROR" and wrong_result_check[1] == "RPR-SIG-0011", "Result must not accept an Option constructor")
+
+make unknown_type_source := "craft broken(value: MissingType) -> u32 {\nyield 1\n}\n"
+make unknown_type := frontend["parse_program"](lexer["tokenize"](unknown_type_source))
+make unknown_type_check := signatures["signature_validate_program"](unknown_type[1])
+assert(unknown_type_check[0] == "ERROR" and unknown_type_check[1] == "RPR-SIG-0008", "unknown parameter type must be rejected")
+
+make duplicate_parameter_source := "craft broken(value: u32, value: text) -> u32 {\nyield 1\n}\n"
+make duplicate_parameter := frontend["parse_program"](lexer["tokenize"](duplicate_parameter_source))
+make duplicate_parameter_check := signatures["signature_validate_program"](duplicate_parameter[1])
+assert(duplicate_parameter_check[0] == "ERROR" and duplicate_parameter_check[1] == "RPR-SIG-0018", "duplicate parameter names must be rejected")
+
+make duplicate_generic_source := "craft broken<T, T>(value: T) -> T {\nyield value\n}\n"
+make duplicate_generic := frontend["parse_program"](lexer["tokenize"](duplicate_generic_source))
+make duplicate_generic_check := signatures["signature_validate_program"](duplicate_generic[1])
+assert(duplicate_generic_check[0] == "ERROR" and duplicate_generic_check[1] == "RPR-SIG-0020", "duplicate generic parameters must be rejected")
+
+emit "SELFHOST_TYPED_SIGNATURES_OK"
