@@ -1,0 +1,29 @@
+# ConstructionArtifactGraph — validate forward-only artifact transformation edges.
+
+export craft valid_construction_artifact_graph(artifact_count, edges) {
+    when kind(artifact_count) != "number" or artifact_count % 1 != 0 or artifact_count < 1 {
+        yield false
+    }
+    when kind(edges) != "list" {
+        yield false
+    }
+    craft valid_edge(edge) {
+        when kind(edge) != "list" or size(edge) != 2 {
+            yield false
+        }
+        when kind(edge[0]) != "number" or kind(edge[1]) != "number" {
+            yield false
+        }
+        when edge[0] % 1 != 0 or edge[1] % 1 != 0 {
+            yield false
+        }
+        yield edge[0] >= 0 and edge[0] < edge[1] and edge[1] < artifact_count
+    }
+    craft invalid_edge(edge) {
+        yield not valid_edge(edge)
+    }
+    when size(keep(edges, invalid_edge)) != 0 {
+        yield false
+    }
+    yield size(unique(edges)) == size(edges)
+}

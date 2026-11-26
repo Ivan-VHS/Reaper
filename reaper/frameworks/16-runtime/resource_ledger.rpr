@@ -1,0 +1,34 @@
+# RuntimeResourceLedger — validate named resource entries and return total units.
+# Entry: [resource_name, units].
+
+export craft runtime_resource_total(entries) {
+    when kind(entries) != "list" or size(entries) == 0 {
+        yield []
+    }
+    craft valid_entry(entry) {
+        when kind(entry) != "list" or size(entry) != 2 {
+            yield false
+        }
+        when kind(entry[0]) != "text" or kind(entry[1]) != "number" {
+            yield false
+        }
+        when size(trim(entry[0])) == 0 or entry[1] % 1 != 0 {
+            yield false
+        }
+        yield entry[1] >= 0
+    }
+    craft invalid_entry(entry) {
+        yield not valid_entry(entry)
+    }
+    craft entry_name(entry) {
+        yield entry[0]
+    }
+    when size(keep(entries, invalid_entry)) != 0 or size(unique(map(entries, entry_name))) != size(entries) {
+        yield []
+    }
+    vary total := 0
+    each entry in entries {
+        change total := total + entry[1]
+    }
+    yield total
+}

@@ -1,0 +1,13 @@
+# RuntimeQuota — validate positive bounded interpreter resource quotas.
+
+export craft valid_runtime_quotas(quotas) {
+    when kind(quotas) != "list" or size(quotas) != 4 {
+        yield false
+    }
+    each quota in quotas {
+        when kind(quota) != "number" or quota % 1 != 0 or quota < 1 {
+            yield false
+        }
+    }
+    yield quotas[0] <= 1000000000 and quotas[1] <= 65536 and quotas[2] <= 68719476736 and quotas[3] <= 10000000
+}

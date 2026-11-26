@@ -1,0 +1,20 @@
+# ShellExitStatus — classify an observed exit code without invoking a process.
+
+export craft shell_exit_status_class(status) {
+    when kind(status) != "number" or status % 1 != 0 or status < 0 or status > 255 {
+        yield "invalid"
+    }
+    when status == 0 {
+        yield "success"
+    }
+    when status == 126 {
+        yield "permission-denied"
+    }
+    when status == 127 {
+        yield "command-not-found"
+    }
+    when status >= 128 {
+        yield "signal"
+    }
+    yield "failure"
+}

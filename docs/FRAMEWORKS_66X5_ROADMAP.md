@@ -34,11 +34,11 @@ Each numbered row is one independent implementation batch with five framework sl
 | 09 | Остов | 5 | Tests first — implementation next |
 | 10 | Костяк | 5 | Tests first — implementation next |
 | 11 | Структура | 5 | Tests first — implementation next |
-| 12 | Конструкция | 5 | Queued |
-| 13 | Экосистема | 5 | Queued |
-| 14 | Надстройка | 5 | Queued |
-| 15 | Оболочка | 5 | Queued |
-| 16 | Рантайм | 5 | Queued |
+| 12 | Конструкция | 5 | Tests first — implementation next |
+| 13 | Экосистема | 5 | Tests first — implementation next |
+| 14 | Надстройка | 5 | Tests first — implementation next |
+| 15 | Оболочка | 5 | Tests first — implementation next |
+| 16 | Рантайм | 5 | Tests first — implementation next |
 | 17 | Среда выполнения | 5 | Queued |
 | 18 | Движок | 5 | Queued |
 | 19 | Ядро | 5 | Queued |

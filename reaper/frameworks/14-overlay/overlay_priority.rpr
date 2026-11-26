@@ -1,0 +1,31 @@
+# OverlayPriority — choose the value with the highest numeric priority.
+
+export craft overlay_highest_priority(candidates) {
+    when kind(candidates) != "list" or size(candidates) == 0 {
+        yield ""
+    }
+    craft valid_candidate(candidate) {
+        when kind(candidate) != "list" or size(candidate) != 2 {
+            yield false
+        }
+        when kind(candidate[0]) != "number" or kind(candidate[1]) != "text" {
+            yield false
+        }
+        yield candidate[0] % 1 == 0 and size(trim(candidate[1])) > 0
+    }
+    craft invalid_candidate(candidate) {
+        yield not valid_candidate(candidate)
+    }
+    when size(keep(candidates, invalid_candidate)) != 0 {
+        yield ""
+    }
+    vary selected := ""
+    vary highest := -1
+    each candidate in candidates {
+        when candidate[0] > highest {
+            change highest := candidate[0]
+            change selected := candidate[1]
+        }
+    }
+    yield selected
+}

@@ -1,0 +1,46 @@
+# ConstructionFlagMerge — local key/value flags override inherited values.
+
+export craft construction_merge_flags(base_flags, local_flags) {
+    when kind(base_flags) != "list" or kind(local_flags) != "list" {
+        yield []
+    }
+    craft valid_flag(flag) {
+        when kind(flag) != "list" or size(flag) != 2 {
+            yield false
+        }
+        when kind(flag[0]) != "text" or kind(flag[1]) != "text" {
+            yield false
+        }
+        yield size(trim(flag[0])) > 0
+    }
+    craft invalid_flag(flag) {
+        yield not valid_flag(flag)
+    }
+    craft flag_key(flag) {
+        yield flag[0]
+    }
+    when size(keep(base_flags, invalid_flag)) != 0 or size(keep(local_flags, invalid_flag)) != 0 {
+        yield []
+    }
+    when size(unique(map(base_flags, flag_key))) != size(base_flags) or size(unique(map(local_flags, flag_key))) != size(local_flags) {
+        yield []
+    }
+    vary merged := base_flags
+    each override in local_flags {
+        vary replaced := false
+        vary next := []
+        each current in merged {
+            when current[0] == override[0] {
+                change next := push(next, override)
+                change replaced := true
+            } otherwise {
+                change next := push(next, current)
+            }
+        }
+        when not replaced {
+            change next := push(next, override)
+        }
+        change merged := next
+    }
+    yield merged
+}

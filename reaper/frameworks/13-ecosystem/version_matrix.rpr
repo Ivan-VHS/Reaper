@@ -1,0 +1,37 @@
+# EcosystemVersionMatrix — validate unique peers on one major compatibility line.
+
+export craft valid_ecosystem_version_matrix(versions) {
+    when kind(versions) != "list" or size(versions) == 0 {
+        yield false
+    }
+    vary common_major := -1
+    craft valid_version(item) {
+        when kind(item) != "list" or size(item) != 3 {
+            yield false
+        }
+        when kind(item[0]) != "text" or kind(item[1]) != "number" or kind(item[2]) != "number" {
+            yield false
+        }
+        when size(trim(item[0])) == 0 or item[1] % 1 != 0 or item[2] % 1 != 0 {
+            yield false
+        }
+        yield item[1] >= 0 and item[2] >= 0
+    }
+    craft invalid_version(item) {
+        yield not valid_version(item)
+    }
+    craft peer_name(item) {
+        yield item[0]
+    }
+    when size(keep(versions, invalid_version)) != 0 or size(unique(map(versions, peer_name))) != size(versions) {
+        yield false
+    }
+    change common_major := versions[0][1]
+    vary compatible := true
+    each version in versions {
+        when version[1] != common_major {
+            change compatible := false
+        }
+    }
+    yield compatible
+}

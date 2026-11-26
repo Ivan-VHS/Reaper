@@ -1,0 +1,29 @@
+# ConstructionArtifactManifest — unique named build outputs with bounded sizes.
+
+export craft valid_construction_manifest(artifacts) {
+    when kind(artifacts) != "list" or size(artifacts) == 0 {
+        yield false
+    }
+    craft valid_artifact(item) {
+        when kind(item) != "list" or size(item) != 3 {
+            yield false
+        }
+        when kind(item[0]) != "text" or kind(item[1]) != "text" or kind(item[2]) != "number" {
+            yield false
+        }
+        when size(trim(item[0])) == 0 or item[2] % 1 != 0 {
+            yield false
+        }
+        yield contains(["source", "object", "binary", "library", "document"], item[1]) and item[2] >= 0 and item[2] <= 4294967296
+    }
+    craft invalid_artifact(item) {
+        yield not valid_artifact(item)
+    }
+    craft artifact_name(item) {
+        yield item[0]
+    }
+    when size(keep(artifacts, invalid_artifact)) != 0 {
+        yield false
+    }
+    yield size(unique(map(artifacts, artifact_name))) == size(artifacts)
+}

@@ -1,0 +1,14 @@
+# RuntimeCancellation — cooperative execution cancellation state machine.
+
+export craft valid_runtime_cancellation_transition(current_state, next_state) {
+    when kind(current_state) != "text" or kind(next_state) != "text" {
+        yield false
+    }
+    when current_state == "running" {
+        yield next_state == "cancel-requested" or next_state == "completed"
+    }
+    when current_state == "cancel-requested" {
+        yield next_state == "cancelled" or next_state == "running"
+    }
+    yield false
+}

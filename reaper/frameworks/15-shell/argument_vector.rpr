@@ -1,0 +1,14 @@
+# ShellArgumentVector — validate explicit text arguments; no implicit tokenization.
+
+export craft valid_shell_argument_vector(arguments) {
+    when kind(arguments) != "list" {
+        yield false
+    }
+    craft invalid_argument(argument) {
+        when kind(argument) != "text" {
+            yield true
+        }
+        yield contains(argument, "\n") or contains(argument, "\r")
+    }
+    yield size(keep(arguments, invalid_argument)) == 0
+}
