@@ -3,8 +3,8 @@
   "total_target_framework_count": 330,
   "remaining_target_framework_count": 325,
   "existing_batch_01_source_count": 5,
-  "new_source_count": 75,
-  "remaining_source_count": 250,
+  "new_source_count": 100,
+  "remaining_source_count": 225,
   "domains": [
     {
       "number": 1,
@@ -140,7 +140,7 @@
       "name": "Среда выполнения",
       "framework_slots": 5,
       "source_frameworks": 0,
-      "state": "queued"
+      "state": "tests-first"
     },
     {
       "number": 18,
@@ -148,7 +148,7 @@
       "name": "Движок",
       "framework_slots": 5,
       "source_frameworks": 0,
-      "state": "queued"
+      "state": "tests-first"
     },
     {
       "number": 19,
@@ -156,7 +156,7 @@
       "name": "Ядро",
       "framework_slots": 5,
       "source_frameworks": 0,
-      "state": "queued"
+      "state": "tests-first"
     },
     {
       "number": 20,
@@ -164,7 +164,7 @@
       "name": "Библиотека",
       "framework_slots": 5,
       "source_frameworks": 0,
-      "state": "queued"
+      "state": "tests-first"
     },
     {
       "number": 21,
@@ -172,7 +172,7 @@
       "name": "Набор инструментов",
       "framework_slots": 5,
       "source_frameworks": 0,
-      "state": "queued"
+      "state": "tests-first"
     },
     {
       "number": 22,
@@ -2009,6 +2009,481 @@
       "negative": {
         "args": "(1000, 1200)",
         "output": "[]"
+      }
+    },
+    {
+      "id": "17.execution-profile",
+      "domain_number": 17,
+      "domain": "Среда выполнения",
+      "slug": "17-execution-environment",
+      "name": "Execution Profile Framework",
+      "role": "execution-profile",
+      "path": "reaper/frameworks/17-execution-environment/execution_profile.rpr",
+      "api": "valid_execution_profile",
+      "purpose": "Validate hosted/freestanding/boot/kernel/MCU mode against allocator, threading and host-I/O settings.",
+      "positive": {
+        "args": "([\"hosted\", true, true, true])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"kernel\", true, false, true])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "17.execution-phase",
+      "domain_number": 17,
+      "domain": "Среда выполнения",
+      "slug": "17-execution-environment",
+      "name": "Execution Phase Framework",
+      "role": "execution-phase",
+      "path": "reaper/frameworks/17-execution-environment/execution_phase.rpr",
+      "api": "valid_execution_phase_order",
+      "purpose": "Require the lifecycle phases load, initialize, run and shutdown in canonical order.",
+      "positive": {
+        "args": "([\"load\", \"initialize\", \"run\", \"shutdown\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"run\", \"initialize\", \"shutdown\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "17.scheduler-weight",
+      "domain_number": 17,
+      "domain": "Среда выполнения",
+      "slug": "17-execution-environment",
+      "name": "Scheduler Weight Framework",
+      "role": "scheduler-weight",
+      "path": "reaper/frameworks/17-execution-environment/scheduler_weight.rpr",
+      "api": "valid_execution_scheduler_weights",
+      "purpose": "Validate unique task IDs and bounded positive integer scheduler weights.",
+      "positive": {
+        "args": "([[\"compiler\", 4], [\"lsp\", 2], [\"indexer\", 1]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"compiler\", 0]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "17.resource-lifetime",
+      "domain_number": 17,
+      "domain": "Среда выполнения",
+      "slug": "17-execution-environment",
+      "name": "Resource Lifetime Framework",
+      "role": "resource-lifetime",
+      "path": "reaper/frameworks/17-execution-environment/resource_lifetime.rpr",
+      "api": "valid_execution_resource_lifetimes",
+      "purpose": "Validate resource acquisition/release intervals and unique resource identifiers.",
+      "positive": {
+        "args": "([[\"buffer\", 1, 4], [\"file\", 2, 3]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"buffer\", 4, 1]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "17.host-effect-policy",
+      "domain_number": 17,
+      "domain": "Среда выполнения",
+      "slug": "17-execution-environment",
+      "name": "Host Effect Policy Framework",
+      "role": "host-effect-policy",
+      "path": "reaper/frameworks/17-execution-environment/host_effect_policy.rpr",
+      "api": "valid_execution_host_effect_policy",
+      "purpose": "Require requested host effects to be granted, allowlisted and not denied.",
+      "positive": {
+        "args": "([\"clock\", \"read\"], [\"clock\", \"read\"], [\"clock\", \"read\", \"write\"], [\"shell\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"shell\"], [\"shell\"], [\"shell\"], [\"shell\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "18.pipeline",
+      "domain_number": 18,
+      "domain": "Движок",
+      "slug": "18-engine",
+      "name": "Engine Pipeline Framework",
+      "role": "pipeline",
+      "path": "reaper/frameworks/18-engine/pipeline.rpr",
+      "api": "valid_engine_pipeline",
+      "purpose": "Validate type continuity between ordered compiler/execution stages.",
+      "positive": {
+        "args": "([[\"lex\", \"text\", \"tokens\"], [\"parse\", \"tokens\", \"ast\"], [\"lower\", \"ast\", \"ir\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"lex\", \"text\", \"tokens\"], [\"parse\", \"source\", \"ast\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "18.optimization-passes",
+      "domain_number": 18,
+      "domain": "Движок",
+      "slug": "18-engine",
+      "name": "Optimization Pass Framework",
+      "role": "optimization-passes",
+      "path": "reaper/frameworks/18-engine/optimization_passes.rpr",
+      "api": "valid_engine_optimization_passes",
+      "purpose": "Validate unique optimization passes ordered by non-decreasing compiler phase.",
+      "positive": {
+        "args": "([[\"fold\", 1], [\"dce\", 2], [\"lower\", 3]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"lower\", 3], [\"fold\", 1]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "18.backend-features",
+      "domain_number": 18,
+      "domain": "Движок",
+      "slug": "18-engine",
+      "name": "Backend Feature Framework",
+      "role": "backend-features",
+      "path": "reaper/frameworks/18-engine/backend_features.rpr",
+      "api": "engine_missing_backend_features",
+      "purpose": "Return target-required features unavailable in the chosen code-generation backend.",
+      "positive": {
+        "args": "([\"i64\", \"atomics\"], [\"i64\"])",
+        "output": "[atomics]"
+      },
+      "negative": {
+        "args": "([\"i64\"], [\"i64\"])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "18.cache-key",
+      "domain_number": 18,
+      "domain": "Движок",
+      "slug": "18-engine",
+      "name": "Engine Cache Key Framework",
+      "role": "cache-key",
+      "path": "reaper/frameworks/18-engine/cache_key.rpr",
+      "api": "engine_cache_key",
+      "purpose": "Create a stable delimiter-joined cache identity from non-empty text components.",
+      "positive": {
+        "args": "([\"reaper\", \"x86_64\", \"O2\"])",
+        "output": "reaper|x86_64|O2"
+      },
+      "negative": {
+        "args": "([\"reaper\", \"\"])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "18.optimization-budget",
+      "domain_number": 18,
+      "domain": "Движок",
+      "slug": "18-engine",
+      "name": "Optimization Budget Framework",
+      "role": "optimization-budget",
+      "path": "reaper/frameworks/18-engine/optimization_budget.rpr",
+      "api": "engine_within_optimization_budget",
+      "purpose": "Admit an optimization plan only when iterations times work items fit the declared budget.",
+      "positive": {
+        "args": "(100, 5, 1000)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(100, 20, 1000)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "19.interrupt-vector",
+      "domain_number": 19,
+      "domain": "Ядро",
+      "slug": "19-kernel",
+      "name": "Interrupt Vector Framework",
+      "role": "interrupt-vector",
+      "path": "reaper/frameworks/19-kernel/interrupt_vector.rpr",
+      "api": "valid_kernel_interrupt_vectors",
+      "purpose": "Validate unique interrupt vectors, handler names and architecture vector bounds.",
+      "positive": {
+        "args": "([[1, \"timer\"], [2, \"keyboard\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[1, \"timer\"], [1, \"keyboard\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "19.privilege-transition",
+      "domain_number": 19,
+      "domain": "Ядро",
+      "slug": "19-kernel",
+      "name": "Privilege Transition Framework",
+      "role": "privilege-transition",
+      "path": "reaper/frameworks/19-kernel/privilege_transition.rpr",
+      "api": "valid_kernel_privilege_transition",
+      "purpose": "Validate allowed user/kernel privilege transitions and explicit transition reasons.",
+      "positive": {
+        "args": "([\"user\", \"kernel\", \"syscall\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"user\", \"kernel\", \"implicit\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "19.memory-protection",
+      "domain_number": 19,
+      "domain": "Ядро",
+      "slug": "19-kernel",
+      "name": "Memory Protection Framework",
+      "role": "memory-protection",
+      "path": "reaper/frameworks/19-kernel/memory_protection.rpr",
+      "api": "valid_kernel_memory_protection_map",
+      "purpose": "Validate non-overlapping kernel memory regions and reject writable-executable mappings.",
+      "positive": {
+        "args": "([[0, 4096, \"rx\"], [4096, 4096, \"rw\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[0, 4096, \"rwx\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "19.syscall-contract",
+      "domain_number": 19,
+      "domain": "Ядро",
+      "slug": "19-kernel",
+      "name": "Syscall Contract Framework",
+      "role": "syscall-contract",
+      "path": "reaper/frameworks/19-kernel/syscall_contract.rpr",
+      "api": "valid_kernel_syscall_contracts",
+      "purpose": "Validate unique syscall numbers/names and bounded argument counts.",
+      "positive": {
+        "args": "([[1, \"yield\", 0], [2, \"write\", 2]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[1, \"yield\", 0], [1, \"write\", 2]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "19.kernel-handle",
+      "domain_number": 19,
+      "domain": "Ядро",
+      "slug": "19-kernel",
+      "name": "Kernel Handle Framework",
+      "role": "kernel-handle",
+      "path": "reaper/frameworks/19-kernel/kernel_handle.rpr",
+      "api": "valid_kernel_handle_table",
+      "purpose": "Validate object handle IDs, generations, kinds and ownership identities.",
+      "positive": {
+        "args": "([[\"h1\", 1, \"file\", \"proc-a\"], [\"h2\", 2, \"buffer\", \"proc-a\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"h1\", 1, \"file\", \"proc-a\"], [\"h1\", 2, \"file\", \"proc-b\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "20.dependency-constraint",
+      "domain_number": 20,
+      "domain": "Библиотека",
+      "slug": "20-library",
+      "name": "Dependency Constraint Framework",
+      "role": "dependency-constraint",
+      "path": "reaper/frameworks/20-library/dependency_constraint.rpr",
+      "api": "valid_library_dependency_constraint",
+      "purpose": "Validate dependency major line and inclusive minor-version interval.",
+      "positive": {
+        "args": "([\"kora\", 1, 2, 5])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"kora\", 1, 5, 2])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "20.export-table",
+      "domain_number": 20,
+      "domain": "Библиотека",
+      "slug": "20-library",
+      "name": "Export Table Framework",
+      "role": "export-table",
+      "path": "reaper/frameworks/20-library/export_table.rpr",
+      "api": "valid_library_export_table",
+      "purpose": "Validate unique public symbol names and non-empty type signatures.",
+      "positive": {
+        "args": "([[\"parse\", \"fn(text)->ast\"], [\"emit\", \"fn(ast)->text\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"parse\", \"fn(text)\"], [\"parse\", \"fn(bytes)\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "20.module-visibility",
+      "domain_number": 20,
+      "domain": "Библиотека",
+      "slug": "20-library",
+      "name": "Module Visibility Framework",
+      "role": "module-visibility",
+      "path": "reaper/frameworks/20-library/module_visibility.rpr",
+      "api": "valid_library_module_visibility",
+      "purpose": "Validate module IDs and public/private visibility declarations.",
+      "positive": {
+        "args": "([[\"lexer\", \"public\"], [\"internal.cache\", \"private\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"lexer\", \"public\"], [\"lexer\", \"private\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "20.dependency-graph",
+      "domain_number": 20,
+      "domain": "Библиотека",
+      "slug": "20-library",
+      "name": "Library Dependency Graph Framework",
+      "role": "dependency-graph",
+      "path": "reaper/frameworks/20-library/dependency_graph.rpr",
+      "api": "valid_library_dependency_graph",
+      "purpose": "Validate module dependency edges as a directed acyclic graph.",
+      "positive": {
+        "args": "(3, [[0, 1], [1, 2]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(2, [[0, 1], [1, 0]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "20.version-selection",
+      "domain_number": 20,
+      "domain": "Библиотека",
+      "slug": "20-library",
+      "name": "Version Selection Framework",
+      "role": "version-selection",
+      "path": "reaper/frameworks/20-library/version_selection.rpr",
+      "api": "library_select_highest_version",
+      "purpose": "Select the highest semantic version on a required major compatibility line.",
+      "positive": {
+        "args": "([[1, 2, 0], [1, 4, 1], [2, 0, 0]], 1)",
+        "output": "[1, 4, 1]"
+      },
+      "negative": {
+        "args": "([[2, 0, 0]], 1)",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "21.toolchain-manifest",
+      "domain_number": 21,
+      "domain": "Набор инструментов",
+      "slug": "21-tool-suite",
+      "name": "Toolchain Manifest Framework",
+      "role": "toolchain-manifest",
+      "path": "reaper/frameworks/21-tool-suite/toolchain_manifest.rpr",
+      "api": "valid_tool_suite_manifest",
+      "purpose": "Validate unique tool names with explicit versions and target identifiers.",
+      "positive": {
+        "args": "([[\"clang\", \"18.1\", \"x86_64-linux\"], [\"cmake\", \"3.30\", \"host\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"clang\", \"\", \"x86_64-linux\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "21.build-command",
+      "domain_number": 21,
+      "domain": "Набор инструментов",
+      "slug": "21-tool-suite",
+      "name": "Build Command Framework",
+      "role": "build-command",
+      "path": "reaper/frameworks/21-tool-suite/build_command.rpr",
+      "api": "valid_tool_suite_command",
+      "purpose": "Validate a structured tool invocation with an explicit executable and text argument vector.",
+      "positive": {
+        "args": "([\"cmake\", [\"--build\", \"build\"], 300])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"\", [\"--build\"], 300])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "21.tool-capability",
+      "domain_number": 21,
+      "domain": "Набор инструментов",
+      "slug": "21-tool-suite",
+      "name": "Tool Capability Framework",
+      "role": "tool-capability",
+      "path": "reaper/frameworks/21-tool-suite/tool_capability.rpr",
+      "api": "tool_suite_capability_owner",
+      "purpose": "Resolve the first tool that provides a requested capability.",
+      "positive": {
+        "args": "(\"link\", [[\"clang\", [\"compile\"]], [\"lld\", [\"link\"]]])",
+        "output": "lld"
+      },
+      "negative": {
+        "args": "(\"flash\", [[\"clang\", [\"compile\"]]])",
+        "output": ""
+      }
+    },
+    {
+      "id": "21.tool-output",
+      "domain_number": 21,
+      "domain": "Набор инструментов",
+      "slug": "21-tool-suite",
+      "name": "Tool Output Framework",
+      "role": "tool-output",
+      "path": "reaper/frameworks/21-tool-suite/tool_output.rpr",
+      "api": "valid_tool_suite_output_record",
+      "purpose": "Validate a bounded tool output record with exit status, output length and stable tool ID.",
+      "positive": {
+        "args": "([\"clang\", 0, 4096])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"clang\", 999, 4096])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "21.toolchain-compatibility",
+      "domain_number": 21,
+      "domain": "Набор инструментов",
+      "slug": "21-tool-suite",
+      "name": "Toolchain Compatibility Framework",
+      "role": "toolchain-compatibility",
+      "path": "reaper/frameworks/21-tool-suite/toolchain_compatibility.rpr",
+      "api": "tool_suite_target_supported",
+      "purpose": "Check whether a tool explicitly declares support for a requested target triple.",
+      "positive": {
+        "args": "(\"clang\", \"aarch64-linux\", [[\"clang\", [\"x86_64-linux\", \"aarch64-linux\"]]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(\"clang\", \"armv7-none\", [[\"clang\", [\"x86_64-linux\"]]])",
+        "output": "false"
       }
     }
   ]
