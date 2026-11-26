@@ -23,6 +23,8 @@ on:
       - "selfhost/type_declarations.rpr"
       - "selfhost/typed_declarations.rpr"
       - "selfhost/typed_declarations_tests.rpr"
+      - "selfhost/typed_signature_tests.rpr"
+      - "selfhost/typed_signatures.rpr"
       - "selfhost/type_platform.rpr"
       - "selfhost/type_platform_tests.rpr"
       - "examples/typed_platforms.rpr"
