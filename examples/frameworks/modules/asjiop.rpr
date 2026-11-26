@@ -1,17 +1,105 @@
-# Reaper framework metadata and source-level helper functions.
-# Operation contracts: language/frameworks.v1.json
+# ASJIOP: versioned ABI descriptors and safe binary-layout validation.
+import "../federation_common.rpr" as fc
 
 export make framework_id := "asjiop"
 export make display_name := "ASJIOP"
 export make feature_key := "RPR-FWK-007"
 export make operation_keys := ["RPR-FWK-007-F01", "RPR-FWK-007-F02", "RPR-FWK-007-F03", "RPR-FWK-007-F04", "RPR-FWK-007-F05", "RPR-FWK-007-F06"]
-export make maturity := "contract-only"
+export make maturity := "reference-handler-v1-partial"
 export make native_registry := "reaper.framework-cabi.v1"
 
-export craft operation_key(index) {
-    yield operation_keys[index]
+export craft operation_key(index) { yield operation_keys[index] }
+export craft framework_manifest() { yield [framework_id, display_name, feature_key, operation_keys, maturity] }
+
+# ABI descriptor: [family, [major, minor, patch], features].
+export craft abi_negotiate(local_abi, remote_abi) {
+    when not fc["fc_record"](local_abi, 3) or not fc["fc_record"](remote_abi, 3) {
+        yield [false, nothing, "abi-descriptor-shape"]
+    }
+    when local_abi[0] != remote_abi[0] { yield [false, nothing, "abi-family-mismatch"] }
+    make version := fc["fc_version_compare"](local_abi[1], remote_abi[1])
+    when not version[0] { yield [false, nothing, version[2]] }
+    when local_abi[1][0] != remote_abi[1][0] { yield [false, nothing, "abi-major-mismatch"] }
+    make features := fc["fc_intersect"](local_abi[2], remote_abi[2])
+    when not features[0] { yield [false, nothing, features[2]] }
+    yield [true, [local_abi[0], [local_abi[1][0], local_abi[1][1], remote_abi[1][1]], features[1]], "negotiated"]
 }
 
-export craft framework_manifest() {
-    yield [framework_id, display_name, feature_key, operation_keys, maturity]
+export craft encode_frame(layout, payload) {
+    when not fc["fc_record"](layout, 3) { yield [false, nothing, "frame-layout-shape"] }
+    when not fc["fc_nonempty_text"](layout[0]) or not fc["fc_nonnegative"](layout[1]) {
+        yield [false, nothing, "frame-layout-invalid"]
+    }
+    when kind(payload) != "list" { yield [false, nothing, "frame-payload-must-be-list"] }
+    when size(payload) > layout[1] { yield [false, nothing, "frame-payload-limit"] }
+    yield [true, [layout[0], layout[2], payload, size(payload)], "validated-frame"]
+}
+
+export craft decode_frame(frame, expected_layout) {
+    when not fc["fc_record"](frame, 4) or not fc["fc_record"](expected_layout, 3) {
+        yield [false, nothing, "frame-or-layout-shape"]
+    }
+    when frame[0] != expected_layout[0] or frame[1] != expected_layout[2] {
+        yield [false, nothing, "frame-abi-or-layout-mismatch"]
+    }
+    when kind(frame[2]) != "list" or frame[3] != size(frame[2]) or frame[3] > expected_layout[1] {
+        yield [false, nothing, "frame-payload-invalid"]
+    }
+    yield [true, frame[2], "decoded"]
+}
+
+# Stable textual fingerprint, explicitly not a cryptographic hash.
+export craft type_fingerprint(type_descriptor) {
+    when not fc["fc_nonempty_text"](type_descriptor) { yield [false, nothing, "type-descriptor-required"] }
+    yield [true, "reaper-type-v1:" ++ type_descriptor, "stable-text-fingerprint"]
+}
+
+export craft call_descriptor(name, signature) {
+    when not fc["fc_nonempty_text"](name) or not fc["fc_record"](signature, 3) {
+        yield [false, nothing, "call-signature-shape"]
+    }
+    when kind(signature[0]) != "list" or not fc["fc_nonempty_text"](signature[1]) or not fc["fc_nonempty_text"](signature[2]) {
+        yield [false, nothing, "call-signature-fields"]
+    }
+    yield [true, [name, signature[0], signature[1], signature[2]], "call-descriptor"]
+}
+
+# Layout: [total_size, alignment, fields]; each field [name, offset, size, alignment].
+export craft validate_layout(layout, abi_constraints) {
+    when not fc["fc_record"](layout, 3) or not fc["fc_record"](abi_constraints, 2) {
+        yield [false, ["layout-shape"]]
+    }
+    when not fc["fc_nonnegative"](layout[0]) or not fc["fc_nonnegative"](layout[1]) or layout[1] <= 0 {
+        yield [false, ["layout-size-or-alignment"]]
+    }
+    when layout[1] > abi_constraints[0] { yield [false, ["alignment-exceeds-abi"]] }
+    when kind(layout[2]) != "list" { yield [false, ["layout-fields"]] }
+    vary errors := []
+    vary ranges := []
+    each field in layout[2] {
+        when not fc["fc_record"](field, 4) {
+            change errors := push(errors, ["field-shape", field])
+        } otherwise {
+            when not fc["fc_nonempty_text"](field[0]) or not fc["fc_nonnegative"](field[1]) or not fc["fc_nonnegative"](field[2]) or not fc["fc_nonnegative"](field[3]) {
+                change errors := push(errors, ["field-values", field])
+            } otherwise {
+                when field[1] + field[2] > layout[0] {
+                    change errors := push(errors, ["field-out-of-bounds", field[0]])
+                }
+                when field[3] <= 0 or field[1] / field[3] != number(text(field[1] / field[3])) {
+                    change errors := push(errors, ["field-alignment", field[0]])
+                }
+                each previous in ranges {
+                    when field[1] < previous[1] and field[1] + field[2] > previous[0] {
+                        change errors := push(errors, ["overlapping-field", field[0]])
+                    }
+                    when field[1] >= previous[1] and field[1] < previous[0] {
+                        change errors := push(errors, ["overlapping-field", field[0]])
+                    }
+                }
+                change ranges := push(ranges, [field[1] + field[2], field[1]])
+            }
+        }
+    }
+    yield [size(errors) == 0, errors]
 }
