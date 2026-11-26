@@ -1,0 +1,28 @@
+# BasisRatio — reduce an integer fraction to coprime terms with positive denominator.
+
+export craft normalize_basis_ratio(numerator, denominator) {
+    when kind(numerator) != "number" or kind(denominator) != "number" {
+        yield []
+    }
+    when numerator % 1 != 0 or denominator % 1 != 0 or denominator == 0 {
+        yield []
+    }
+    when numerator == 0 {
+        yield [0, 1]
+    }
+    when denominator < 0 {
+        change numerator := 0 - numerator
+        change denominator := 0 - denominator
+    }
+    vary left := numerator
+    when left < 0 {
+        change left := 0 - left
+    }
+    vary right := denominator
+    while right != 0 {
+        vary remainder := left % right
+        change left := right
+        change right := remainder
+    }
+    yield [numerator // left, denominator // left]
+}
