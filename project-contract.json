@@ -94,13 +94,16 @@
     {
       "id": "selfhosting.frontend-bootstrap",
       "status": "partial",
-      "summary": "Reaper-written tokenizer and statement/expression frontend include partial typed-structure and platform-declaration parsing, explicit target-profile validation and scalar C-ABI record layout; the bootstrap is not yet a complete self-hosting compiler.",
+      "summary": "Reaper-written tokenizer and statement/expression frontend include partial typed aggregate, platform and craft-signature parsing, generic parameter metadata, Result/Option signature validation and scalar C-ABI layout; bootstrap is not a complete self-hosting compiler.",
       "evidence": [
         "selfhost/lexer.rpr",
         "selfhost/parser.rpr",
         "selfhost/program_parser.rpr",
         "selfhost/type_declarations.rpr",
-        "tests/test_self_hosting.py"
+        "tests/test_self_hosting.py",
+        "selfhost/typed_signatures.rpr",
+        "selfhost/typed_signature_tests.rpr",
+        "docs/TYPED_CRAFT_SIGNATURES_RESULT_OPTION_V1.md"
       ]
     },
     {
@@ -138,6 +141,19 @@
         "selfhost/typed_declarations_tests.rpr",
         "examples/typed_platforms.rpr",
         "docs/TYPED_STRUCTURES_AND_PLATFORMS_V1.md"
+      ]
+    },
+    {
+      "id": "language.typed-craft-signatures-result-option",
+      "status": "partial",
+      "summary": "The Reaper-written parser accepts typed craft parameters and return types, including nested Result<T, E> and Option<T> forms. A Reaper-native validator checks generic parameter metadata, nominal type references, Result/Option arity and explicit return-constructor shape; payload checking, complete control-flow analysis and runtime propagation remain incomplete.",
+      "evidence": [
+        "selfhost/lexer.rpr",
+        "selfhost/program_parser.rpr",
+        "selfhost/typed_signatures.rpr",
+        "selfhost/typed_signature_tests.rpr",
+        "docs/TYPED_CRAFT_SIGNATURES_RESULT_OPTION_V1.md",
+        ".github/workflows/typed-platform-conformance.yml"
       ]
     }
   ],
