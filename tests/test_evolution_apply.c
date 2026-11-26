@@ -20,6 +20,7 @@ typedef struct {
     int branch_rollback_fail;
     int audit_fail_commit;
     int recovery_saved;
+    int deny_clock;
     int deny_grant;
     int deny_revision;
     int deny_path;
@@ -46,8 +47,8 @@ typedef struct {
 static const char *CHECK_IDS[] = {"reaper.unit"};
 
 static int trusted_time(void *context, uint64_t *now) {
-    (void)context;
-    if (now == NULL) return 0;
+    FakeHost *fake = (FakeHost *)context;
+    if (fake->deny_clock || now == NULL) return 0;
     *now = 100u;
     return 1;
 }
@@ -477,6 +478,21 @@ static void test_untrusted_host_and_stale_source_are_rejected(void) {
     assert(fake.branch_exists == 0);
 }
 
+static void test_missing_trusted_host_clock_denies_apply(void) {
+    FakeHost fake;
+    ReaperEvolutionApplyHost host;
+    ReaperEvolutionApplyRequest request;
+    ReaperEvolutionApplyResult result;
+    ReaperSourcePatch patch;
+
+    setup(&fake, &host, &request, &patch);
+    fake.deny_clock = 1;
+    result = reaper_evolution_apply(&host, &request);
+    assert(result.status == REAPER_APPLY_HOST_UNTRUSTED);
+    assert(fake.workspace_count == 0);
+    assert(fake.branch_exists == 0);
+}
+
 static void test_canonical_path_alias_is_denied_before_second_stage(void) {
     FakeHost fake;
     ReaperEvolutionApplyHost host;
@@ -535,6 +551,7 @@ int main(void) {
     test_untrusted_host_and_stale_source_are_rejected();
     test_host_authorization_and_revision_denials();
     test_canonical_path_alias_is_denied_before_second_stage();
-    puts("native evolution apply tests: 10 groups passed");
+    test_missing_trusted_host_clock_denies_apply();
+    puts("native evolution apply tests: 11 groups passed");
     return 0;
 }
