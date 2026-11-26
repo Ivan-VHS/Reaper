@@ -18,8 +18,9 @@ Reaper 是一款面向编译器工具、嵌入式软件和硬件相关程序的�
 - NOO TAH 将 JavaScript 执行交给官方 Node.js 运行时。
 - Jora 项目脚手架和能力组合；目录中的应用包仍是规范，不是可安装的编辑器。
 - 八个原生 Reaper 框架模块，涵盖依赖规划、回调、分层选项、MOST 别名、版本化状态、状态机和代码转换。
+- Reaper 原生 ДОМ 基础运行时的首个切片，覆盖子系统契约、资源预算、生命周期、清单验证和统一运行时组合；尚未宣称原生编译器功能对等。
 
-文档：[框架模块](docs/FRAMEWORKS_V1.md) · [功能](docs/FEATURES.md) · [架构](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Jora 工厂](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md)。
+文档：[框架模块](docs/FRAMEWORKS_V1.md) · [ДОМ Foundation](docs/DOM_FOUNDATION_IMPLEMENTATION.md) · [框架组合目录](docs/FRAMEWORK_PORTFOLIO_EXPANSION.md) · [功能](docs/FEATURES.md) · [架构](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Jora 工厂](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md)。
 
 ## 快速开始
 
@@ -31,6 +32,7 @@ python -m pip install -e .
 python -m reaper --check examples/flow.rpr
 python -m reaper examples/flow.rpr
 python -m reaper examples/frameworks_smoke.rpr
+python -m reaper examples/dom_foundation_smoke.rpr
 ```
 
 启动 Studio 或 REPL：
