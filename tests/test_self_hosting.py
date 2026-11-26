@@ -43,6 +43,18 @@ class SelfHostingBootstrapTests(unittest.TestCase):
     def test_reaper_written_unicode_lexer_runs_on_the_reference_runtime(self) -> None:
         self._run_selfhost_program("selfhost/lexer.rpr", "SELFHOST_LEXER_OK")
 
+    def test_reaper_written_type_system_runs_on_the_reference_runtime(self) -> None:
+        self._run_selfhost_program("selfhost/type_system.rpr", "SELFHOST_TYPE_SYSTEM_OK")
+
+    def test_reaper_written_ir_verifier_runs_on_the_reference_runtime(self) -> None:
+        self._run_selfhost_program("selfhost/ir.rpr", "SELFHOST_IR_OK")
+
+    def test_reaper_written_optimizer_runs_on_the_reference_runtime(self) -> None:
+        self._run_selfhost_program("selfhost/optimizer.rpr", "SELFHOST_OPTIMIZER_OK")
+
+    def test_reaper_written_bytecode_engine_runs_on_the_reference_runtime(self) -> None:
+        self._run_selfhost_program("selfhost/bytecode.rpr", "SELFHOST_BYTECODE_OK")
+
 
 if __name__ == "__main__":
     unittest.main()
