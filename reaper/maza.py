@@ -74,7 +74,7 @@ class MazaManager:
             target = self.interpreter.module_loader.resolve(str(candidate), importer)
         except Exception as error:
             raise MazaError(f"MAZA cannot resolve {specifier!r}: {error}") from error
-        if target.is_symlink():
+        if candidate.is_symlink() or target.is_symlink():
             raise MazaError(f"MAZA refuses symbolic-link sources: {target}")
         return target
 
@@ -126,7 +126,7 @@ class MazaManager:
 
         signature, digest = self._fingerprint(path)
         try:
-            exports = self.interpreter.module_loader.load(specifier, importer, reload=True)
+            exports = self.interpreter.module_loader.load(str(path), importer, reload=True)
             after_signature, after_digest = self._fingerprint(path)
             if signature != after_signature or digest != after_digest:
                 raise MazaError(f"MAZA source changed during attachment: {path}")
@@ -140,7 +140,7 @@ class MazaManager:
         now = time.monotonic_ns()
         timestamp = self._utc_now()
         self._links[alias] = MazaLink(
-            alias=alias, specifier=specifier, importer=importer, path=path,
+            alias=alias, specifier=str(path), importer=importer, path=path,
             namespace=namespace, environment=environment, signature=after_signature,
             sha256=after_digest, poll_interval_ms=self.poll_interval_ms,
             last_checked_utc=timestamp, last_updated_utc=timestamp,
