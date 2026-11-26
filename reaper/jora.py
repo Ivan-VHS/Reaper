@@ -1,8 +1,8 @@
 """Jora: deterministic composition of Reaper-first application projects.
 
-The first increment generates reproducible project scaffolds and localization
-bundles from a closed catalogue of capability contracts. It never claims that
-specification-only packs are executable applications.
+Jora generates reproducible Reaper projects from a closed catalogue of
+capability contracts and may bundle explicitly versioned first-party source
+packs. Bundled source is validated but never executed or installed.
 """
 from __future__ import annotations
 
@@ -315,6 +315,7 @@ _DEPENDENCIES: dict[str, dict[str, Any]] = {
 _HARVEST_BUNDLE_DIR = Path(__file__).resolve().parents[1] / "harvest" / "bundle"
 _HARVEST_ARCHIVE_LIMIT = 4 * 1024 * 1024
 _HARVEST_FILES_LIMIT = 128
+_HARVEST_ARCHIVE_EXPECTED_SHA256 = "64d8b6738f27a4d03ba9e10537effc28d781c1c9efb9390004451bba40ae520a"
 _HARVEST_COMPONENTS: dict[str, dict[str, Any]] = {}
 _HARVEST_ARCHIVE_BYTES: bytes | None = None
 _HARVEST_ARCHIVE_SHA256: str | None = None
@@ -422,6 +423,8 @@ def _read_harvest_pack() -> dict[str, Any] | None:
 
     _HARVEST_ARCHIVE_BYTES = archive_bytes
     _HARVEST_ARCHIVE_SHA256 = hashlib.sha256(archive_bytes).hexdigest()
+    if _HARVEST_ARCHIVE_SHA256 != _HARVEST_ARCHIVE_EXPECTED_SHA256:
+        raise JoraError("HARVEST source archive checksum does not match the pinned release")
     return pack
 
 
@@ -1342,10 +1345,14 @@ def compose_application(request: dict[str, Any]) -> dict[str, Any]:
         "installable": False,
         "executable_capabilities": [],
         "limitations": [
-            "Component packs are versioned specifications; their feature implementations are not yet bundled.",
-            "The generated Reaper entry point is a project scaffold, not a completed editor or translation engine.",
+            "Non-HARVEST catalogue packs remain versioned specifications; their feature implementations are not bundled.",
+            "The generated Reaper entry point remains a project scaffold; HARVEST source maturity is authored_unverified until runtime and integration checks pass.",
             "Additional programming-language targets remain adapter_pending until a tested backend is delivered.",
             "Jora does not install, execute, or grant permissions to generated projects.",
+            *(
+                ["HARVEST snapshot storage has a single-writer concurrency contract; no cross-process lock or compare-and-swap is provided."]
+                if source_bundle is not None else []
+            ),
         ],
     }
 
@@ -1624,7 +1631,7 @@ def build_application(request: dict[str, Any], output: str | Path) -> dict[str, 
             "- graphs/variant-*.mmd: readable Mermaid diagrams for each graph alternative.\n\n"
             "## Maturity\n\n"
             "This directory is a reproducible scaffold, not an installable application. "
-            "The selected feature packs are specification-only. Storage, translation and "
+            "Non-HARVEST catalogue packs remain specification-only. Storage, translation and "
             "audio host adapters need separate implementations. No source was executed.\n"
             + (
                 "\n## HARVEST source bundle\n\n"
