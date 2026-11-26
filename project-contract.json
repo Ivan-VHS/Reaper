@@ -24,6 +24,22 @@
   },
   "capabilities": [
     {
+      "id": "foundations.fourth-five-frameworks",
+      "status": "partial",
+      "summary": "Adds executable Reaper contracts for runtime lifecycle transitions, execution-context quotas and engine maturity, a capability-matched System Runtime host boundary, and versioned reusable-module dependencies; scheduler, native backend and privileged host dispatch remain partial.",
+      "evidence": [
+        "frameworks/foundation_16_20.rpr",
+        "frameworks/foundation_11_15.rpr",
+        "frameworks/foundation_6_10.rpr",
+        "frameworks/foundation.rpr",
+        "docs/FOUNDATIONAL_FRAMEWORKS_16_20.md",
+        "examples/foundations_16_20.rpr",
+        "tests/test_foundational_frameworks_16_20.py",
+        "include/reaper/system.h",
+        "docs/SYSTEM_RUNTIME_ABI_V1.md"
+      ]
+    },
+    {
       "id": "foundations.third-five-frameworks",
       "status": "partial",
       "summary": "Adds executable Reaper contracts for typed aggregate schemas and fixed-width scalar validation, deterministic dependency-order construction plans, the canonical four-project OCTA-8 peer inventory, capability-declared extension manifests and host-shell lifecycle/request validation; compiler-native layout, extension loading and host dispatch remain partial.",
