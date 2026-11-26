@@ -1,17 +1,87 @@
-# Reaper framework metadata and source-level helper functions.
-# Operation contracts: language/frameworks.v1.json
+# Joint Baby: explicit language binding and ABI value-boundary contracts.
+import "../federation_common.rpr" as fc
 
 export make framework_id := "joint_baby"
 export make display_name := "Joint Baby"
 export make feature_key := "RPR-FWK-002"
 export make operation_keys := ["RPR-FWK-002-F01", "RPR-FWK-002-F02", "RPR-FWK-002-F03", "RPR-FWK-002-F04", "RPR-FWK-002-F05", "RPR-FWK-002-F06"]
-export make maturity := "contract-only"
+export make maturity := "reference-handler-v1-partial"
 export make native_registry := "reaper.framework-cabi.v1"
 
-export craft operation_key(index) {
-    yield operation_keys[index]
+export craft operation_key(index) { yield operation_keys[index] }
+export craft framework_manifest() { yield [framework_id, display_name, feature_key, operation_keys, maturity] }
+
+export craft bind_language(source_language, target_language, policy) {
+    when not fc["fc_nonempty_text"](source_language) or not fc["fc_nonempty_text"](target_language) {
+        yield [false, nothing, "language-identifiers-required"]
+    }
+    when source_language == target_language {
+        yield [false, nothing, "source-and-target-must-differ"]
+    }
+    when kind(policy) != "list" {
+        yield [false, nothing, "binding-policy-must-be-list"]
+    }
+    yield [true, [source_language, target_language, policy, "explicit-adapter-required"], "binding-described"]
 }
 
-export craft framework_manifest() {
-    yield [framework_id, display_name, feature_key, operation_keys, maturity]
+export craft validate_abi(local_abi, remote_abi) {
+    when not fc["fc_record"](local_abi, 3) or not fc["fc_record"](remote_abi, 3) {
+        yield [false, nothing, "abi-descriptor-shape"]
+    }
+    when local_abi[0] != remote_abi[0] {
+        yield [false, nothing, "abi-family-mismatch"]
+    }
+    make versions := fc["fc_version_compare"](local_abi[1], remote_abi[1])
+    when not versions[0] { yield [false, nothing, versions[2]] }
+    when versions[1] != 0 { yield [false, nothing, "abi-major-version-mismatch"] }
+    make features := fc["fc_intersect"](local_abi[2], remote_abi[2])
+    when not features[0] { yield [false, nothing, features[2]] }
+    yield [true, [local_abi[0], local_abi[1], features[1]], "abi-compatible"]
+}
+
+# This function creates a bounded dispatch request; it never invokes foreign code.
+export craft invoke_foreign(descriptor, payload, policy) {
+    when not fc["fc_record"](descriptor, 4) { yield [false, nothing, "call-descriptor-shape"] }
+    when not fc["fc_nonempty_text"](descriptor[0]) or not fc["fc_nonempty_text"](descriptor[1]) {
+        yield [false, nothing, "call-identity-required"]
+    }
+    when kind(payload) != "list" { yield [false, nothing, "payload-must-be-explicit-list"] }
+    when not fc["fc_record"](policy, 2) { yield [false, nothing, "dispatch-policy-shape"] }
+    when not fc["fc_nonnegative"](policy[0]) or not fc["fc_nonnegative"](policy[1]) {
+        yield [false, nothing, "dispatch-bounds-invalid"]
+    }
+    when size(payload) > policy[0] { yield [false, nothing, "payload-item-limit-exceeded"] }
+    yield [true, [descriptor, payload, policy, "host-callback-required"], "dispatch-plan"]
+}
+
+export craft marshal_value(value, layout) {
+    when not fc["fc_record"](layout, 2) { yield [false, nothing, "layout-shape"] }
+    when not fc["fc_nonempty_text"](layout[0]) { yield [false, nothing, "type-name-required"] }
+    when layout[0] != "any" and kind(value) != layout[0] {
+        yield [false, nothing, ["value-kind-mismatch", layout[0], kind(value)]]
+    }
+    when not fc["fc_nonnegative"](layout[1]) { yield [false, nothing, "maximum-size-invalid"] }
+    when size(value) > layout[1] { yield [false, nothing, "value-size-exceeds-layout"] }
+    yield [true, [layout[0], value, size(value)], "marshalled-value"]
+}
+
+export craft unmarshal_value(frame, expected_layout) {
+    when not fc["fc_record"](frame, 3) or not fc["fc_record"](expected_layout, 2) {
+        yield [false, nothing, "frame-or-layout-shape"]
+    }
+    when frame[0] != expected_layout[0] { yield [false, nothing, "frame-type-mismatch"] }
+    when frame[2] > expected_layout[1] { yield [false, nothing, "frame-size-exceeds-layout"] }
+    when kind(frame[1]) != expected_layout[0] and expected_layout[0] != "any" {
+        yield [false, nothing, "decoded-kind-mismatch"]
+    }
+    yield [true, frame[1], "decoded-value"]
+}
+
+export craft release_foreign(handle) {
+    when not fc["fc_record"](handle, 3) { yield [false, nothing, "foreign-handle-shape"] }
+    when not fc["fc_nonempty_text"](handle[0]) or not fc["fc_nonempty_text"](handle[1]) {
+        yield [false, nothing, "foreign-handle-identity"]
+    }
+    when handle[2] != "active" { yield [false, handle, "foreign-handle-not-active"] }
+    yield [true, [handle[0], handle[1], "released"], "release-requested"]
 }
