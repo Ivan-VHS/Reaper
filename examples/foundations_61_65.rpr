@@ -1,0 +1,8 @@
+import "../frameworks/foundation_61_65.rpr" as platform
+
+emit "All sixty-five frameworks valid = " ++ text(platform["foundation_validate_catalog_65"]())
+emit "Host bridge handoff valid = " ++ text(platform["bridgehead_validate_handoff"](["bridge.host-reference", "host-python-compat", 1024, false]))
+emit "System ABI anchor valid = " ++ text(platform["anchor_validate_reference"]("anchor.reaper.system.abi", "interface", 1))
+emit "Resilience structure valid = " ++ text(platform["supporting_validate_structure"](["api-resilience", [["api", "primary", "runtime", "required"], ["replica", "replica", "runtime", "optional"], ["fallback", "fallback", "stub", "optional"]], [["replica", "api", "replicates"], ["fallback", "api", "backs-up"]]]))
+emit "Host hardware profile valid = " ++ text(platform["hardware_validate_profile"](platform["hardware_profiles"]()[0]))
+emit "Memory map valid = " ++ text(platform["hardware_validate_memory_map"]([["ram", "ram", 0, 4096, "read-write"], ["mmio", "mmio", 4096, 256, "device"]]))
