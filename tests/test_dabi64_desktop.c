@@ -4,8 +4,20 @@
 #undef NDEBUG
 #endif
 #include <assert.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+
+_Static_assert(sizeof(ReaperDabi64DesktopRequestV1) == 40U, "request v1 size");
+_Static_assert(_Alignof(ReaperDabi64DesktopRequestV1) == 8U, "request v1 alignment");
+_Static_assert(offsetof(ReaperDabi64DesktopRequestV1, request_id) == 16U, "request id offset");
+_Static_assert(offsetof(ReaperDabi64DesktopRequestV1, object_handle) == 24U, "request handle offset");
+_Static_assert(offsetof(ReaperDabi64DesktopRequestV1, sequence) == 32U, "request sequence offset");
+_Static_assert(sizeof(ReaperDabi64DesktopResponseV1) == 32U, "response v1 size");
+_Static_assert(_Alignof(ReaperDabi64DesktopResponseV1) == 8U, "response v1 alignment");
+_Static_assert(offsetof(ReaperDabi64DesktopResponseV1, request_id) == 16U, "response id offset");
+_Static_assert(offsetof(ReaperDabi64DesktopResponseV1, object_handle) == 24U, "response handle offset");
+
 static ReaperDabi64DesktopRequestV1 make_request(void) {
  ReaperDabi64DesktopRequestV1 r = {0};
  r.struct_size = (uint32_t)sizeof(r);
@@ -18,6 +30,7 @@ static ReaperDabi64DesktopRequestV1 make_request(void) {
 static void test_request(void) {
  ReaperDabi64DesktopRequestV1 r = make_request();
  assert(sizeof(r) == 40U);
+ assert(_Alignof(ReaperDabi64DesktopRequestV1) == 8U);
  assert(reaper_dabi64_desktop_request_validate(&r,sizeof(r)) == REAPER_DABI64_DESKTOP_STATUS_OK);
  assert(reaper_dabi64_desktop_request_validate(NULL,sizeof(r)) == REAPER_DABI64_DESKTOP_STATUS_INVALID_ARGUMENT);
  r.abi_version=2U;
@@ -44,6 +57,7 @@ static void test_response(void) {
  r.struct_size=(uint32_t)sizeof(r); r.abi_version=REAPER_DABI64_DESKTOP_ABI_VERSION;
  r.status=REAPER_DABI64_DESKTOP_STATUS_OK; r.request_id=7U;
  assert(sizeof(r)==32U);
+ assert(_Alignof(ReaperDabi64DesktopResponseV1)==8U);
  assert(reaper_dabi64_desktop_response_validate(&r,sizeof(r))==REAPER_DABI64_DESKTOP_STATUS_OK);
  r.flags=1U;
  assert(reaper_dabi64_desktop_response_validate(&r,sizeof(r))==REAPER_DABI64_DESKTOP_STATUS_MALFORMED_FRAME);
