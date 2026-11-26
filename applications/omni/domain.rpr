@@ -1,0 +1,36 @@
+# Omni — unified workspace and service-domain rules.
+export make product_names := ["Omni", "Pomni", "LoLo", "PePe", "Hyper-kinetic Charge", "Judo"]
+
+export craft count_entries(total, item) {
+    yield total + 1
+}
+
+export craft product_count() {
+    yield product_names :: fold(0, count_entries)
+}
+
+export craft readiness_percent(available, required) {
+    when required <= 0 { yield 0 } otherwise {
+        when available >= required { yield 100 } otherwise {
+            when available <= 0 { yield 0 } otherwise {
+                yield available * 100 / required
+            }
+        }
+    }
+}
+
+export craft service_label(is_running, is_degraded) {
+    when is_running {
+        when is_degraded { yield "DEGRADED" } otherwise { yield "READY" }
+    } otherwise { yield "STOPPED" }
+}
+
+export craft launch_decision(installed, enabled, consent, runtime_ready) {
+    when installed {
+        when enabled {
+            when consent {
+                when runtime_ready { yield "ALLOW_HOST_REQUEST" } otherwise { yield "WAIT_FOR_RUNTIME" }
+            } otherwise { yield "NEEDS_USER_CONSENT" }
+        } otherwise { yield "DISABLED_BY_USER" }
+    } otherwise { yield "NOT_INSTALLED" }
+}

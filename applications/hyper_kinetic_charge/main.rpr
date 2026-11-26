@@ -1,0 +1,16 @@
+# Hyper-kinetic Charge — sample telemetry is caller supplied, not read from hardware.
+import "domain.rpr" as charge
+
+make temperature := 72
+make battery := 64
+make load := charge["load_percent"](68, 100)
+make thermal := charge["temperature_band"](temperature)
+make profile := charge["recommended_profile"](temperature, battery, load)
+make boost := charge["boost_decision"](false, temperature, battery, true)
+
+emit "Hyper-kinetic Charge — performance observatory"
+emit "Thermal: " ++ text(temperature) ++ "C / " ++ thermal
+emit "System load: " ++ text(load) ++ "%"
+emit "Recommended profile: " ++ profile
+emit "Boost gate: " ++ boost
+emit "No firmware or hardware state is changed by this application foundation"

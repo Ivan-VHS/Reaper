@@ -1,0 +1,42 @@
+# Pomni — tasks, notes and personal-knowledge domain rules.
+export craft remaining_effort(estimate, spent) {
+    when estimate <= 0 { yield 0 } otherwise {
+        when spent >= estimate { yield 0 } otherwise { yield estimate - spent }
+    }
+}
+
+export craft progress_percent(completed, total) {
+    when total <= 0 { yield 0 } otherwise {
+        when completed >= total { yield 100 } otherwise {
+            when completed <= 0 { yield 0 } otherwise { yield completed * 100 / total }
+        }
+    }
+}
+
+export craft task_state(is_complete, is_archived) {
+    when is_archived { yield "ARCHIVED" } otherwise {
+        when is_complete { yield "COMPLETE" } otherwise { yield "OPEN" }
+    }
+}
+
+export craft priority_weight(priority) {
+    when priority == "critical" { yield 100 } otherwise {
+        when priority == "high" { yield 75 } otherwise {
+            when priority == "normal" { yield 50 } otherwise {
+                when priority == "low" { yield 25 } otherwise { yield 0 }
+            }
+        }
+    }
+}
+
+export craft reminder_decision(enabled, muted, quiet_hours, permission_granted) {
+    when enabled {
+        when muted { yield "SUPPRESSED_TASK_MUTED" } otherwise {
+            when quiet_hours { yield "DEFER_UNTIL_ALLOWED_WINDOW" } otherwise {
+                when permission_granted { yield "READY_FOR_NOTIFICATION_ADAPTER" } otherwise {
+                    yield "NOTIFICATION_PERMISSION_REQUIRED"
+                }
+            }
+        }
+    } otherwise { yield "REMINDERS_DISABLED" }
+}

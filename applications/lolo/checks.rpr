@@ -1,0 +1,7 @@
+# LoLo domain smoke checks. Expected output: four PASS lines.
+import "domain.rpr" as lolo
+
+when lolo["queue_has_room"](2, 4) == true { emit "PASS lolo.queue_room" } otherwise { emit "FAIL lolo.queue_room" }
+when lolo["queue_has_room"](4, 4) == false { emit "PASS lolo.queue_limit" } otherwise { emit "FAIL lolo.queue_limit" }
+when lolo["outbound_decision"](true, true, true, false, true) == "QUEUE_LOCALLY" { emit "PASS lolo.offline_queue" } otherwise { emit "FAIL lolo.offline_queue" }
+when lolo["outbound_decision"](false, true, true, true, true) == "CONSENT_REQUIRED" { emit "PASS lolo.consent_gate" } otherwise { emit "FAIL lolo.consent_gate" }

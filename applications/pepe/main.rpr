@@ -1,0 +1,12 @@
+# PePe — metadata-first file and digital-asset organizer.
+import "domain.rpr" as pepe
+
+make category := pepe["classify_extension"](".png")
+make size_label := pepe["size_band"](7340032)
+make decision := pepe["asset_action"](true, false, true, false)
+
+emit "PePe — digital asset organizer"
+emit "cover-art.png | " ++ category ++ " | " ++ size_label
+emit "Collection: DAK project assets"
+emit "Planned action: " ++ decision
+emit "Filesystem indexing and writes require explicit DAK host adapters"

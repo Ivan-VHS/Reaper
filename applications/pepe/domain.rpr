@@ -1,0 +1,36 @@
+# PePe — digital-asset classification from caller-supplied metadata.
+export craft classify_extension(extension) {
+    when extension == ".png" { yield "IMAGE" } otherwise {
+        when extension == ".jpg" { yield "IMAGE" } otherwise {
+            when extension == ".jpeg" { yield "IMAGE" } otherwise {
+                when extension == ".wav" { yield "AUDIO" } otherwise {
+                    when extension == ".flac" { yield "AUDIO" } otherwise {
+                        when extension == ".mp4" { yield "VIDEO" } otherwise {
+                            when extension == ".txt" { yield "TEXT" } otherwise {
+                                when extension == ".rpr" { yield "SOURCE" } otherwise { yield "OTHER" }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+export craft size_band(bytes) {
+    when bytes < 0 { yield "INVALID" } otherwise {
+        when bytes <= 1048576 { yield "SMALL" } otherwise {
+            when bytes <= 104857600 { yield "MEDIUM" } otherwise { yield "LARGE" }
+        }
+    }
+}
+
+export craft asset_action(is_read_only, is_duplicate, is_supported, user_approved) {
+    when is_read_only { yield "INSPECT_ONLY" } otherwise {
+        when is_duplicate { yield "REVIEW_DUPLICATE" } otherwise {
+            when is_supported {
+                when user_approved { yield "READY_FOR_STORAGE_ADAPTER" } otherwise { yield "USER_APPROVAL_REQUIRED" }
+            } otherwise { yield "UNSUPPORTED_FORMAT" }
+        }
+    }
+}

@@ -1,0 +1,7 @@
+# Pomni domain smoke checks. Expected output: four PASS lines.
+import "domain.rpr" as pomni
+
+when pomni["remaining_effort"](60, 80) == 0 { emit "PASS pomni.remaining_effort" } otherwise { emit "FAIL pomni.remaining_effort" }
+when pomni["progress_percent"](2, 4) == 50 { emit "PASS pomni.progress_percent" } otherwise { emit "FAIL pomni.progress_percent" }
+when pomni["task_state"](true, false) == "COMPLETE" { emit "PASS pomni.task_state" } otherwise { emit "FAIL pomni.task_state" }
+when pomni["reminder_decision"](true, false, true, true) == "DEFER_UNTIL_ALLOWED_WINDOW" { emit "PASS pomni.quiet_hours" } otherwise { emit "FAIL pomni.quiet_hours" }

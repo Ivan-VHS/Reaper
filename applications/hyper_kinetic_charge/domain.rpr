@@ -1,0 +1,40 @@
+# Hyper-kinetic Charge — read-only telemetry interpretation.
+export craft temperature_band(celsius) {
+    when celsius < 0 { yield "SENSOR_INVALID" } otherwise {
+        when celsius < 65 { yield "COOL" } otherwise {
+            when celsius < 80 { yield "WARM" } otherwise {
+                when celsius < 92 { yield "HOT" } otherwise { yield "CRITICAL" }
+            }
+        }
+    }
+}
+
+export craft load_percent(used, capacity) {
+    when capacity <= 0 { yield 0 } otherwise {
+        when used <= 0 { yield 0 } otherwise {
+            when used >= capacity { yield 100 } otherwise { yield used * 100 / capacity }
+        }
+    }
+}
+
+export craft recommended_profile(temperature, battery_percent, load) {
+    when temperature >= 92 { yield "THERMAL_SAFE" } otherwise {
+        when temperature >= 80 { yield "BALANCED" } otherwise {
+            when battery_percent <= 15 { yield "POWER_SAVER" } otherwise {
+                when load >= 85 { yield "PERFORMANCE_CANDIDATE" } otherwise { yield "BALANCED" }
+            }
+        }
+    }
+}
+
+export craft boost_decision(user_approved, temperature, battery_percent, sensor_valid) {
+    when sensor_valid {
+        when user_approved {
+            when temperature >= 80 { yield "BOOST_BLOCKED_THERMAL" } otherwise {
+                when battery_percent <= 20 { yield "BOOST_BLOCKED_BATTERY" } otherwise {
+                    yield "READY_FOR_PRIVILEGED_HOST_REVIEW"
+                }
+            }
+        } otherwise { yield "USER_APPROVAL_REQUIRED" }
+    } otherwise { yield "SENSOR_VALIDATION_REQUIRED" }
+}

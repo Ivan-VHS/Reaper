@@ -1,0 +1,32 @@
+# LoLo — local communication and consent-aware queue rules.
+export craft message_state(is_sent, is_draft) {
+    when is_sent { yield "SENT" } otherwise {
+        when is_draft { yield "DRAFT" } otherwise { yield "QUEUED" }
+    }
+}
+
+export craft queue_has_room(queued, limit) {
+    when limit <= 0 { yield false } otherwise {
+        when queued < limit { yield true } otherwise { yield false }
+    }
+}
+
+export craft outbound_decision(consent, recipient_allowed, content_allowed, online, queue_open) {
+    when consent {
+        when recipient_allowed {
+            when content_allowed {
+                when online { yield "READY_FOR_NETWORK_ADAPTER" } otherwise {
+                    when queue_open { yield "QUEUE_LOCALLY" } otherwise { yield "QUEUE_LIMIT_REACHED" }
+                }
+            } otherwise { yield "CONTENT_POLICY_BLOCK" }
+        } otherwise { yield "RECIPIENT_NOT_ALLOWED" }
+    } otherwise { yield "CONSENT_REQUIRED" }
+}
+
+export craft attachment_decision(is_local, user_approved, size_allowed) {
+    when is_local {
+        when size_allowed {
+            when user_approved { yield "READY_FOR_TRANSFER_ADAPTER" } otherwise { yield "USER_APPROVAL_REQUIRED" }
+        } otherwise { yield "ATTACHMENT_LIMIT_EXCEEDED" }
+    } otherwise { yield "LOCAL_SOURCE_REQUIRED" }
+}

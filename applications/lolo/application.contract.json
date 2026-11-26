@@ -1,0 +1,78 @@
+{
+  "schema": "reaper.application.foundation.v1",
+  "id": "dak.lolo",
+  "name": "LoLo",
+  "purpose": "Local communication, contact profiles, consent-aware drafts and bounded outbound queue.",
+  "source_language": "Reaper",
+  "source_format": ".rpr",
+  "source_files": [
+    "domain.rpr",
+    "main.rpr",
+    "checks.rpr"
+  ],
+  "source_lines_target": 20000,
+  "maturity": "foundation",
+  "executable_scope": [
+    "deterministic domain rules",
+    "explicit policy decisions",
+    "local demonstration entry point",
+    "smoke-check scenarios"
+  ],
+  "pending": [
+    "DOM lifecycle and task contracts",
+    "DAK native application shell and UI",
+    "persistent local storage adapters",
+    "localization and accessibility implementation",
+    "runtime conformance and CI evidence"
+  ],
+  "safety": {
+    "ambient_filesystem_access": false,
+    "ambient_network_access": false,
+    "ambient_process_launch": false,
+    "ambient_privilege_changes": false,
+    "hardware_control": false,
+    "default_mode": "local-first-read-only"
+  },
+  "planned_line_budget": [
+    {
+      "area": "Contacts and local identities",
+      "planned_source_lines": 2000
+    },
+    {
+      "area": "Conversation and thread model",
+      "planned_source_lines": 2000
+    },
+    {
+      "area": "Composer and draft lifecycle",
+      "planned_source_lines": 2000
+    },
+    {
+      "area": "Bounded local outbox",
+      "planned_source_lines": 2000
+    },
+    {
+      "area": "Local sharing and handoff",
+      "planned_source_lines": 2000
+    },
+    {
+      "area": "Transport adapter contracts",
+      "planned_source_lines": 2000
+    },
+    {
+      "area": "Search and archive",
+      "planned_source_lines": 2000
+    },
+    {
+      "area": "Attachment metadata and limits",
+      "planned_source_lines": 2000
+    },
+    {
+      "area": "Privacy and consent policies",
+      "planned_source_lines": 2000
+    },
+    {
+      "area": "Localization and observability",
+      "planned_source_lines": 2000
+    }
+  ]
+}

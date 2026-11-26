@@ -1,0 +1,7 @@
+# Judo domain smoke checks. Expected output: four PASS lines.
+import "domain.rpr" as judo
+
+when judo["risk_band"](82) == "HIGH" { emit "PASS judo.high_risk" } otherwise { emit "FAIL judo.high_risk" }
+when judo["risk_band"](55) == "MEDIUM" { emit "PASS judo.medium_risk" } otherwise { emit "FAIL judo.medium_risk" }
+when judo["permission_decision"](false, true, true, false) == "DENY_UNDECLARED_CAPABILITY" { emit "PASS judo.undeclared_capability" } otherwise { emit "FAIL judo.undeclared_capability" }
+when judo["permission_decision"](true, true, true, true) == "MANUAL_SECURITY_REVIEW_REQUIRED" { emit "PASS judo.high_risk_review" } otherwise { emit "FAIL judo.high_risk_review" }

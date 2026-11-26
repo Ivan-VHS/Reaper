@@ -1,0 +1,7 @@
+# Hyper-kinetic Charge domain smoke checks. Expected output: four PASS lines.
+import "domain.rpr" as charge
+
+when charge["temperature_band"](85) == "HOT" { emit "PASS charge.temperature_band" } otherwise { emit "FAIL charge.temperature_band" }
+when charge["load_percent"](120, 100) == 100 { emit "PASS charge.load_clamp" } otherwise { emit "FAIL charge.load_clamp" }
+when charge["recommended_profile"](94, 90, 95) == "THERMAL_SAFE" { emit "PASS charge.thermal_priority" } otherwise { emit "FAIL charge.thermal_priority" }
+when charge["boost_decision"](true, 86, 80, true) == "BOOST_BLOCKED_THERMAL" { emit "PASS charge.boost_guard" } otherwise { emit "FAIL charge.boost_guard" }
