@@ -18,8 +18,10 @@ export craft source_map_lookup(source_map, ir_offset) {
     }
     vary matches := []
     each mapping in source_map {
-        when fc["fc_record"](mapping, 5) and ir_offset >= mapping[0] and ir_offset < mapping[1] {
-            change matches := push(matches, mapping)
+        when fc["fc_record"](mapping, 5) {
+            when ir_offset >= mapping[0] and ir_offset < mapping[1] {
+                change matches := push(matches, mapping)
+            }
         }
     }
     when size(matches) == 0 { yield [false, nothing, "source-location-not-mapped"] }
