@@ -294,6 +294,16 @@ class JoraCompositionTests(unittest.TestCase):
         self.assertTrue(all(item["source_module"].endswith(".rpr") for item in items))
         self.assertTrue(all(item["input_schema"] and item["ir_schema"] and item["output_schema"] for item in items))
 
+    def test_harvest_source_bundle_manifest_matches_versioned_schema(self):
+        root = Path(__file__).resolve().parents[1]
+        schema = json.loads((root / "schemas/reaper.jora.harvest-source-bundle.v1.schema.json").read_text(encoding="utf-8"))
+        self.assertEqual(schema["$schema"], "https://json-schema.org/draft/2020-12/schema")
+        self.assertEqual(schema["properties"]["schema"]["const"], "harvest.jora.source-bundle.v1")
+        result = compose_application(self.request(components=["harvest.engine"]))
+        bundle = result["source_bundle"]
+        self.assertEqual(bundle["archive_sha256"], "64d8b6738f27a4d03ba9e10537effc28d781c1c9efb9390004451bba40ae520a")
+        self.assertTrue(set(schema["required"]).issubset(bundle))
+
     def test_harvest_engine_resolves_every_framework_dependency(self):
         result = compose_application(self.request(components=["harvest.engine"]))
         bundle = result["source_bundle"]
