@@ -64,13 +64,16 @@ static int valid_slash_identifier(const char *value, size_t maximum) {
     return 1;
 }
 
-static int hash_field(ReaperSha256Context *context, const void *bytes, size_t length) {
-    uint8_t encoded_length[8];
-    uint64_t value = (uint64_t)length;
+static int hash_u64(ReaperSha256Context *context, uint64_t value) {
+    uint8_t encoded[8];
     size_t index;
     for (index = 0u; index < 8u; ++index)
-        encoded_length[7u - index] = (uint8_t)(value >> (index * 8u));
-    return reaper_sha256_update(context, encoded_length, sizeof encoded_length) &&
+        encoded[7u - index] = (uint8_t)(value >> (index * 8u));
+    return reaper_sha256_update(context, encoded, sizeof encoded);
+}
+
+static int hash_field(ReaperSha256Context *context, const void *bytes, size_t length) {
+    return hash_u64(context, (uint64_t)length) &&
            reaper_sha256_update(context, bytes, length);
 }
 
@@ -165,20 +168,24 @@ static int request_digest(const ReaperEvolutionApplyRequest *request, char outpu
         !hash_field(&context, request->target_branch, strlen(request->target_branch)) ||
         !hash_field(&context, request->revision_algorithm, strlen(request->revision_algorithm)) ||
         !hash_field(&context, request->base_revision, strlen(request->base_revision)) ||
-        !hash_field(&context, &patch_count, sizeof patch_count)) return 0;
+        !hash_u64(&context, patch_count)) return 0;
     for (index = 0u; index < request->patch_count; ++index) {
         const ReaperSourcePatch *patch = &request->patches[index];
         const uint64_t replacement_size = (uint64_t)patch->replacement_size;
         if (!hash_field(&context, patch->relative_path, strlen(patch->relative_path)) ||
             !hash_field(&context, patch->expected_original_sha256, 64u) ||
-            !hash_field(&context, &replacement_size, sizeof replacement_size) ||
+            !hash_u64(&context, replacement_size) ||
             !hash_field(&context, patch->replacement, patch->replacement_size)) return 0;
     }
-    if (!hash_field(&context, &check_count, sizeof check_count)) return 0;
+    if (!hash_u64(&context, check_count)) return 0;
     for (index = 0u; index < request->check_count; ++index) {
         if (!hash_field(&context, request->check_ids[index], strlen(request->check_ids[index]))) return 0;
     }
-    if (!hash_field(&context, &request->limits, sizeof request->limits)) return 0;
+    if (!hash_u64(&context, request->limits.timeout_ms) ||
+        !hash_u64(&context, request->limits.memory_limit_bytes) ||
+        !hash_u64(&context, request->limits.output_limit_bytes) ||
+        !hash_u64(&context, request->limits.process_limit) ||
+        !hash_u64(&context, request->limits.file_limit)) return 0;
     reaper_sha256_final(&context, digest);
     reaper_sha256_hex(digest, output);
     return 1;
@@ -206,6 +213,7 @@ static void cleanup_committed_backups(const ReaperEvolutionApplyHost *host,
 }
 
 static int rollback_entries(const ReaperEvolutionApplyHost *host,
+                            const ReaperEvolutionApplyRequest *request,
                             ApplyEntry *entries, size_t count,
                             ReaperEvolutionApplyResult *result) {
     size_t index;
@@ -219,10 +227,12 @@ static int rollback_entries(const ReaperEvolutionApplyHost *host,
                 entry->rollback = NULL;
                 entry->staged = NULL;
             } else {
-                if (!host->preserve_failed_rollback(host->context, entry->rollback,
-                        "pending-apply-recovery", entry->path)) ok = 0;
-                entry->rollback = NULL;
-                entry->staged = NULL;
+                if (host->preserve_failed_rollback(host->context, entry->rollback,
+                        request->request_id, entry->path)) {
+                    /* Ownership moves to the host's durable recovery store. */
+                    entry->rollback = NULL;
+                    entry->staged = NULL;
+                }
                 ok = 0;
             }
         } else if (!entry->committed && entry->staged != NULL) {
@@ -434,13 +444,17 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
     }
 
     for (index = 0u; index < request->patch_count; ++index) {
-        if (!host->commit_staged(host->context, entries[index].staged, &entries[index].rollback) ||
-            entries[index].rollback == NULL) {
+        if (!host->commit_staged(host->context, entries[index].staged, &entries[index].rollback)) {
             result.status = REAPER_APPLY_COMMIT_FAILED;
             (void)snprintf(result.failed_path, sizeof result.failed_path, "%s", entries[index].path);
             goto fail;
         }
         entries[index].committed = 1;
+        if (entries[index].rollback == NULL) {
+            result.status = REAPER_APPLY_ROLLBACK_FAILED;
+            (void)snprintf(result.failed_path, sizeof result.failed_path, "%s", entries[index].path);
+            goto fail;
+        }
         ++result.applied_files;
     }
 
@@ -458,7 +472,7 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
 fail:
     if (current_bytes != NULL) host->release_buffer(host->context, current_bytes);
     {
-        const int rollback_ok = rollback_entries(host, entries, request->patch_count, &result);
+        const int rollback_ok = rollback_entries(host, request, entries, request->patch_count, &result);
         if (!host->audit_append(host->context, "apply.rolled_back", request->request_id,
                 request->repository_id, request->target_branch, request->base_revision,
                 result.failed_path, result.request_digest,
