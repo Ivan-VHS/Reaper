@@ -11,6 +11,7 @@ This hub groups related specifications and implementation references. The linked
 - [HARDWARE LANGUAGE](../HARDWARE_LANGUAGE.md) — systems-language target, MMIO safety contract and hardware qualification gates.
 - [ARCHITECTURE 66](../ARCHITECTURE_66.md)
 - [ARCHITECTURE](../ARCHITECTURE.md)
+- [FOUNDATIONAL FRAMEWORKS V1](../FOUNDATIONAL_FRAMEWORKS_V1.md) — executable contracts for the first five foundations.
 - [ATOMIC QUANTUM 133](../ATOMIC_QUANTUM_133.md)
 - [CLINICAL SYSTEMS CSR120](../CLINICAL_SYSTEMS_CSR120.md)
 - [CONSTITUTION 666 PROFILE](../CONSTITUTION_666_PROFILE.md)
