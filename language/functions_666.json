@@ -885,7 +885,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-002",
@@ -923,7 +924,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-003",
@@ -942,7 +944,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-004",
@@ -961,7 +964,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-005",
@@ -980,7 +984,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-006",
@@ -999,7 +1004,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-007",
@@ -1018,7 +1024,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-008",
@@ -1037,7 +1044,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-009",
@@ -1056,7 +1064,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-010",
@@ -1075,7 +1084,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-011",
@@ -1094,7 +1104,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-012",
@@ -1113,7 +1124,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-013",
@@ -1132,7 +1144,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-014",
@@ -1151,7 +1164,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-015",
@@ -1170,7 +1184,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-016",
@@ -1189,7 +1204,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-017",
@@ -1208,7 +1224,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-018",
@@ -1236,7 +1253,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-019",
@@ -1263,7 +1281,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-020",
@@ -1289,7 +1308,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-021",
@@ -1308,7 +1328,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-022",
@@ -1327,7 +1348,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-023",
@@ -1346,7 +1368,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-024",
@@ -1365,7 +1388,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-025",
@@ -1384,7 +1408,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-026",
@@ -1403,7 +1428,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-027",
@@ -1422,7 +1448,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-028",
@@ -1441,7 +1468,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-029",
@@ -1460,7 +1488,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-030",
@@ -1479,7 +1508,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-031",
@@ -1498,7 +1528,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-032",
@@ -1524,7 +1555,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-033",
@@ -1543,7 +1575,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-034",
@@ -1562,7 +1595,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-035",
@@ -1581,7 +1615,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-036",
@@ -1600,7 +1635,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-037",
@@ -1619,7 +1655,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-038",
@@ -1638,7 +1675,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-039",
@@ -1657,7 +1695,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-040",
@@ -1676,7 +1715,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-041",
@@ -1695,7 +1735,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-042",
@@ -1714,7 +1755,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "desktop-ui"
     },
     {
       "id": "MOST-FN-043",
@@ -1733,7 +1775,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "desktop-ui"
     },
     {
       "id": "MOST-FN-044",
@@ -1752,7 +1795,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "desktop-ui"
     },
     {
       "id": "MOST-FN-045",
@@ -1771,7 +1815,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "desktop-ui"
     },
     {
       "id": "MOST-FN-046",
@@ -1790,7 +1835,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "desktop-ui"
     },
     {
       "id": "MOST-FN-047",
@@ -1809,7 +1855,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "desktop-ui"
     },
     {
       "id": "MOST-FN-048",
@@ -1828,7 +1875,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "desktop-ui"
     },
     {
       "id": "MOST-FN-049",
@@ -1847,7 +1895,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "desktop-ui"
     },
     {
       "id": "MOST-FN-050",
@@ -1866,7 +1915,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "desktop-ui"
     },
     {
       "id": "MOST-FN-051",
@@ -1885,7 +1935,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "desktop-ui"
     },
     {
       "id": "MOST-FN-052",
@@ -1904,7 +1955,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "desktop-ui"
     },
     {
       "id": "MOST-FN-053",
@@ -1923,7 +1975,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "desktop-ui"
     },
     {
       "id": "MOST-FN-054",
@@ -1942,7 +1995,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "desktop-ui"
     },
     {
       "id": "MOST-FN-055",
@@ -1961,7 +2015,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "desktop-ui"
     },
     {
       "id": "MOST-FN-056",
@@ -1980,7 +2035,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "desktop-ui"
     },
     {
       "id": "MOST-FN-057",
@@ -1999,7 +2055,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "desktop-ui"
     },
     {
       "id": "MOST-FN-058",
@@ -2018,7 +2075,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "desktop-ui"
     },
     {
       "id": "MOST-FN-059",
@@ -2037,7 +2095,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "desktop-ui"
     },
     {
       "id": "MOST-FN-060",
@@ -2056,7 +2115,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "desktop-ui"
     },
     {
       "id": "MOST-FN-061",
@@ -2075,7 +2135,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "desktop-ui"
     },
     {
       "id": "MOST-FN-062",
@@ -2094,7 +2155,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "desktop-ui"
     },
     {
       "id": "MOST-FN-063",
@@ -2113,7 +2175,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "desktop-ui"
     },
     {
       "id": "MOST-FN-064",
@@ -2140,7 +2203,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "network-distributed"
     },
     {
       "id": "MOST-FN-065",
@@ -2172,7 +2236,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "network-distributed"
     },
     {
       "id": "MOST-FN-066",
@@ -2191,7 +2256,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "network-distributed"
     },
     {
       "id": "MOST-FN-067",
@@ -2210,7 +2276,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "network-distributed"
     },
     {
       "id": "MOST-FN-068",
@@ -2229,7 +2296,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "network-distributed"
     },
     {
       "id": "MOST-FN-069",
@@ -2248,7 +2316,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "network-distributed"
     },
     {
       "id": "MOST-FN-070",
@@ -2267,7 +2336,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "network-distributed"
     },
     {
       "id": "MOST-FN-071",
@@ -2286,7 +2356,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "network-distributed"
     },
     {
       "id": "MOST-FN-072",
@@ -2305,7 +2376,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "network-distributed"
     },
     {
       "id": "MOST-FN-073",
@@ -2324,7 +2396,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "network-distributed"
     },
     {
       "id": "MOST-FN-074",
@@ -2343,7 +2416,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "network-distributed"
     },
     {
       "id": "MOST-FN-075",
@@ -2362,7 +2436,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "network-distributed"
     },
     {
       "id": "MOST-FN-076",
@@ -2381,7 +2456,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "network-distributed"
     },
     {
       "id": "MOST-FN-077",
@@ -2413,7 +2489,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "network-distributed"
     },
     {
       "id": "MOST-FN-078",
@@ -2432,7 +2509,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "network-distributed"
     },
     {
       "id": "MOST-FN-079",
@@ -2451,7 +2529,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "network-distributed"
     },
     {
       "id": "MOST-FN-080",
@@ -2470,7 +2549,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "network-distributed"
     },
     {
       "id": "MOST-FN-081",
@@ -2502,7 +2582,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "network-distributed"
     },
     {
       "id": "MOST-FN-082",
@@ -2521,7 +2602,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "network-distributed"
     },
     {
       "id": "MOST-FN-083",
@@ -2540,7 +2622,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "network-distributed"
     },
     {
       "id": "MOST-FN-084",
@@ -2559,7 +2642,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "network-distributed"
     },
     {
       "id": "MOST-FN-085",
@@ -2578,7 +2662,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-086",
@@ -2597,7 +2682,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-087",
@@ -2616,7 +2702,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-088",
@@ -2635,7 +2722,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-089",
@@ -2654,7 +2742,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-090",
@@ -2673,7 +2762,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-091",
@@ -2692,7 +2782,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-092",
@@ -2711,7 +2802,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-093",
@@ -2730,7 +2822,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-094",
@@ -2749,7 +2842,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-095",
@@ -2768,7 +2862,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-096",
@@ -2787,7 +2882,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-097",
@@ -2806,7 +2902,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-098",
@@ -2825,7 +2922,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-099",
@@ -2844,7 +2942,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-100",
@@ -2863,7 +2962,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-101",
@@ -2882,7 +2982,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-102",
@@ -2901,7 +3002,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-103",
@@ -2920,7 +3022,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-104",
@@ -2939,7 +3042,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-105",
@@ -2958,7 +3062,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-106",
@@ -2977,7 +3082,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-107",
@@ -2996,7 +3102,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-108",
@@ -3015,7 +3122,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-109",
@@ -3034,7 +3142,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-110",
@@ -3053,7 +3162,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-111",
@@ -3072,7 +3182,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-112",
@@ -3091,7 +3202,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-113",
@@ -3110,7 +3222,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-114",
@@ -3129,7 +3242,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-115",
@@ -3148,7 +3262,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-116",
@@ -3167,7 +3282,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-117",
@@ -3186,7 +3302,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-118",
@@ -3205,7 +3322,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-119",
@@ -3224,7 +3342,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-120",
@@ -3243,7 +3362,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-121",
@@ -3262,7 +3382,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-122",
@@ -3281,7 +3402,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-123",
@@ -3300,7 +3422,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-124",
@@ -3319,7 +3442,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-125",
@@ -3338,7 +3462,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-126",
@@ -3357,7 +3482,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-127",
@@ -3376,7 +3502,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "ecosystem-tooling"
     },
     {
       "id": "MOST-FN-128",
@@ -3395,7 +3522,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "ecosystem-tooling"
     },
     {
       "id": "MOST-FN-129",
@@ -3414,7 +3542,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "ecosystem-tooling"
     },
     {
       "id": "MOST-FN-130",
@@ -3433,7 +3562,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "ecosystem-tooling"
     },
     {
       "id": "MOST-FN-131",
@@ -3452,7 +3582,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "ecosystem-tooling"
     },
     {
       "id": "MOST-FN-132",
@@ -3471,7 +3602,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "ecosystem-tooling"
     },
     {
       "id": "MOST-FN-133",
@@ -3490,7 +3622,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "ecosystem-tooling"
     },
     {
       "id": "MOST-FN-134",
@@ -3509,7 +3642,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "ecosystem-tooling"
     },
     {
       "id": "MOST-FN-135",
@@ -3528,7 +3662,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "ecosystem-tooling"
     },
     {
       "id": "MOST-FN-136",
@@ -3547,7 +3682,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "ecosystem-tooling"
     },
     {
       "id": "MOST-FN-137",
@@ -3566,7 +3702,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "ecosystem-tooling"
     },
     {
       "id": "MOST-FN-138",
@@ -3585,7 +3722,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "ecosystem-tooling"
     },
     {
       "id": "MOST-FN-139",
@@ -3604,7 +3742,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "ecosystem-tooling"
     },
     {
       "id": "MOST-FN-140",
@@ -3623,7 +3762,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "ecosystem-tooling"
     },
     {
       "id": "MOST-FN-141",
@@ -3642,7 +3782,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "ecosystem-tooling"
     },
     {
       "id": "MOST-FN-142",
@@ -3674,7 +3815,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "ecosystem-tooling"
     },
     {
       "id": "MOST-FN-143",
@@ -3693,7 +3835,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "ecosystem-tooling"
     },
     {
       "id": "MOST-FN-144",
@@ -3720,7 +3863,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "ecosystem-tooling"
     },
     {
       "id": "MOST-FN-145",
@@ -3739,7 +3883,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "ecosystem-tooling"
     },
     {
       "id": "MOST-FN-146",
@@ -3758,7 +3903,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "ecosystem-tooling"
     },
     {
       "id": "MOST-FN-147",
@@ -3785,7 +3931,8 @@
         "explicit effect/error contract",
         "target and resource-bound checks",
         "passing tests required before implementation"
-      ]
+      ],
+      "architecture_category": "ecosystem-tooling"
     },
     {
       "id": "MOST-FN-148",
@@ -3806,7 +3953,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-149",
@@ -3827,7 +3975,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-150",
@@ -3848,7 +3997,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-151",
@@ -3869,7 +4019,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-152",
@@ -3890,7 +4041,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-153",
@@ -3911,7 +4063,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-154",
@@ -3932,7 +4085,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-155",
@@ -3953,7 +4107,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-156",
@@ -3974,7 +4129,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-157",
@@ -3995,7 +4151,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-158",
@@ -4016,7 +4173,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-159",
@@ -4037,7 +4195,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-160",
@@ -4058,7 +4217,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-161",
@@ -4079,7 +4239,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-162",
@@ -4100,7 +4261,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-163",
@@ -4121,7 +4283,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-164",
@@ -4142,7 +4305,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-165",
@@ -4163,7 +4327,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-166",
@@ -4184,7 +4349,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-167",
@@ -4205,7 +4371,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-168",
@@ -4226,7 +4393,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-169",
@@ -4247,7 +4415,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-170",
@@ -4268,7 +4437,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-171",
@@ -4289,7 +4459,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-172",
@@ -4310,7 +4481,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-173",
@@ -4331,7 +4503,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-174",
@@ -4352,7 +4525,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-175",
@@ -4373,7 +4547,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-176",
@@ -4394,7 +4569,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-177",
@@ -4415,7 +4591,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-178",
@@ -4436,7 +4613,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-179",
@@ -4457,7 +4635,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-180",
@@ -4478,7 +4657,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-181",
@@ -4499,7 +4679,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-182",
@@ -4520,7 +4701,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-183",
@@ -4541,7 +4723,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-184",
@@ -4562,7 +4745,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-185",
@@ -4583,7 +4767,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-186",
@@ -4604,7 +4789,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-187",
@@ -4625,7 +4811,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-188",
@@ -4646,7 +4833,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-189",
@@ -4667,7 +4855,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-190",
@@ -4688,7 +4877,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-191",
@@ -4709,7 +4899,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-192",
@@ -4730,7 +4921,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-193",
@@ -4751,7 +4943,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-194",
@@ -4772,7 +4965,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-195",
@@ -4793,7 +4987,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-196",
@@ -4814,7 +5009,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-197",
@@ -4835,7 +5031,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-198",
@@ -4856,7 +5053,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-199",
@@ -4877,7 +5075,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-200",
@@ -4898,7 +5097,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-201",
@@ -4919,7 +5119,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-202",
@@ -4940,7 +5141,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-203",
@@ -4961,7 +5163,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-204",
@@ -4982,7 +5185,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-205",
@@ -5003,7 +5207,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-206",
@@ -5024,7 +5229,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-207",
@@ -5045,7 +5251,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-208",
@@ -5066,7 +5273,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-209",
@@ -5087,7 +5295,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-210",
@@ -5108,7 +5317,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-211",
@@ -5129,7 +5339,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-212",
@@ -5150,7 +5361,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-213",
@@ -5171,7 +5383,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-214",
@@ -5192,7 +5405,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-215",
@@ -5213,7 +5427,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-216",
@@ -5234,7 +5449,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-217",
@@ -5255,7 +5471,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-218",
@@ -5276,7 +5493,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-219",
@@ -5297,7 +5515,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-220",
@@ -5318,7 +5537,8 @@
         "Unicode source-span preservation",
         "deterministic name resolution",
         "equivalent canonical AST/IR"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-221",
@@ -5339,7 +5559,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-222",
@@ -5360,7 +5581,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-223",
@@ -5381,7 +5603,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-224",
@@ -5402,7 +5625,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-225",
@@ -5423,7 +5647,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-226",
@@ -5444,7 +5669,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-227",
@@ -5465,7 +5691,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-228",
@@ -5486,7 +5713,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-229",
@@ -5507,7 +5735,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-230",
@@ -5528,7 +5757,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-231",
@@ -5549,7 +5779,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-232",
@@ -5570,7 +5801,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-233",
@@ -5591,7 +5823,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-234",
@@ -5612,7 +5845,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-235",
@@ -5633,7 +5867,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-236",
@@ -5654,7 +5889,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-237",
@@ -5675,7 +5911,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-238",
@@ -5696,7 +5933,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-239",
@@ -5717,7 +5955,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-240",
@@ -5738,7 +5977,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-241",
@@ -5759,7 +5999,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-242",
@@ -5780,7 +6021,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-243",
@@ -5801,7 +6043,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-244",
@@ -5822,7 +6065,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-245",
@@ -5843,7 +6087,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-246",
@@ -5864,7 +6109,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-247",
@@ -5885,7 +6131,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-248",
@@ -5906,7 +6153,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-249",
@@ -5927,7 +6175,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-250",
@@ -5948,7 +6197,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-251",
@@ -5969,7 +6219,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-252",
@@ -5990,7 +6241,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-253",
@@ -6011,7 +6263,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-254",
@@ -6032,7 +6285,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-255",
@@ -6053,7 +6307,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-256",
@@ -6074,7 +6329,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-257",
@@ -6095,7 +6351,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-258",
@@ -6116,7 +6373,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-259",
@@ -6137,7 +6395,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-260",
@@ -6158,7 +6417,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-261",
@@ -6179,7 +6439,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-262",
@@ -6200,7 +6461,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-263",
@@ -6221,7 +6483,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-264",
@@ -6242,7 +6505,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-265",
@@ -6263,7 +6527,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-266",
@@ -6284,7 +6549,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-267",
@@ -6305,7 +6571,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-268",
@@ -6326,7 +6593,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-269",
@@ -6347,7 +6615,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-270",
@@ -6368,7 +6637,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-271",
@@ -6389,7 +6659,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-272",
@@ -6410,7 +6681,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-273",
@@ -6431,7 +6703,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-274",
@@ -6452,7 +6725,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-275",
@@ -6473,7 +6747,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-276",
@@ -6494,7 +6769,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-277",
@@ -6515,7 +6791,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-278",
@@ -6536,7 +6813,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-279",
@@ -6557,7 +6835,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-280",
@@ -6578,7 +6857,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-281",
@@ -6599,7 +6879,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-282",
@@ -6620,7 +6901,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-283",
@@ -6641,7 +6923,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-284",
@@ -6662,7 +6945,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-285",
@@ -6683,7 +6967,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-286",
@@ -6704,7 +6989,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-287",
@@ -6725,7 +7011,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-288",
@@ -6746,7 +7033,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-289",
@@ -6767,7 +7055,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-290",
@@ -6788,7 +7077,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-291",
@@ -6809,7 +7099,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-292",
@@ -6830,7 +7121,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-293",
@@ -6851,7 +7143,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-294",
@@ -6872,7 +7165,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-295",
@@ -6893,7 +7187,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-296",
@@ -6914,7 +7209,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-297",
@@ -6935,7 +7231,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-298",
@@ -6956,7 +7253,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-299",
@@ -6977,7 +7275,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-300",
@@ -6998,7 +7297,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-301",
@@ -7019,7 +7319,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-302",
@@ -7040,7 +7341,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-303",
@@ -7061,7 +7363,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-304",
@@ -7082,7 +7385,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-305",
@@ -7103,7 +7407,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-306",
@@ -7124,7 +7429,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-307",
@@ -7145,7 +7451,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-308",
@@ -7166,7 +7473,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-309",
@@ -7187,7 +7495,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-310",
@@ -7208,7 +7517,8 @@
         "overflow and domain-boundary tests",
         "ABI/layout fixtures",
         "deterministic type diagnostics"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-311",
@@ -7229,7 +7539,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-312",
@@ -7250,7 +7561,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-313",
@@ -7271,7 +7583,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-314",
@@ -7292,7 +7605,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-315",
@@ -7313,7 +7627,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-316",
@@ -7334,7 +7649,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-317",
@@ -7355,7 +7671,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-318",
@@ -7376,7 +7693,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-319",
@@ -7397,7 +7715,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-320",
@@ -7418,7 +7737,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-321",
@@ -7439,7 +7759,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-322",
@@ -7460,7 +7781,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-323",
@@ -7481,7 +7803,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-324",
@@ -7502,7 +7825,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-325",
@@ -7523,7 +7847,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-326",
@@ -7544,7 +7869,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-327",
@@ -7565,7 +7891,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-328",
@@ -7586,7 +7913,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-329",
@@ -7607,7 +7935,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-330",
@@ -7628,7 +7957,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-331",
@@ -7649,7 +7979,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-332",
@@ -7670,7 +8001,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-333",
@@ -7691,7 +8023,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-334",
@@ -7712,7 +8045,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-335",
@@ -7733,7 +8067,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-336",
@@ -7754,7 +8089,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-337",
@@ -7775,7 +8111,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-338",
@@ -7796,7 +8133,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-339",
@@ -7817,7 +8155,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-340",
@@ -7838,7 +8177,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-341",
@@ -7859,7 +8199,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-342",
@@ -7880,7 +8221,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-343",
@@ -7901,7 +8243,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-344",
@@ -7922,7 +8265,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-345",
@@ -7943,7 +8287,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-346",
@@ -7964,7 +8309,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-347",
@@ -7985,7 +8331,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-348",
@@ -8006,7 +8353,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-349",
@@ -8027,7 +8375,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-350",
@@ -8048,7 +8397,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-351",
@@ -8069,7 +8419,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-352",
@@ -8090,7 +8441,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-353",
@@ -8111,7 +8463,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-354",
@@ -8132,7 +8485,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-355",
@@ -8153,7 +8507,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-356",
@@ -8174,7 +8529,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-357",
@@ -8195,7 +8551,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-358",
@@ -8216,7 +8573,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-359",
@@ -8237,7 +8595,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-360",
@@ -8258,7 +8617,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-361",
@@ -8279,7 +8639,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-362",
@@ -8300,7 +8661,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-363",
@@ -8321,7 +8683,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-364",
@@ -8342,7 +8705,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-365",
@@ -8363,7 +8727,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-366",
@@ -8384,7 +8749,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-367",
@@ -8405,7 +8771,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-368",
@@ -8426,7 +8793,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-369",
@@ -8447,7 +8815,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-370",
@@ -8468,7 +8837,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-371",
@@ -8489,7 +8859,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-372",
@@ -8510,7 +8881,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-373",
@@ -8531,7 +8903,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-374",
@@ -8552,7 +8925,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-375",
@@ -8573,7 +8947,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-376",
@@ -8594,7 +8969,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-377",
@@ -8615,7 +8991,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-378",
@@ -8636,7 +9013,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-379",
@@ -8657,7 +9035,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-380",
@@ -8678,7 +9057,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-381",
@@ -8699,7 +9079,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-382",
@@ -8720,7 +9101,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-383",
@@ -8741,7 +9123,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-384",
@@ -8762,7 +9145,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-385",
@@ -8783,7 +9167,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-386",
@@ -8804,7 +9189,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-387",
@@ -8825,7 +9211,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-388",
@@ -8846,7 +9233,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-389",
@@ -8867,7 +9255,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-390",
@@ -8888,7 +9277,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-391",
@@ -8909,7 +9299,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-392",
@@ -8930,7 +9321,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-393",
@@ -8951,7 +9343,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-394",
@@ -8972,7 +9365,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-395",
@@ -8993,7 +9387,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-396",
@@ -9014,7 +9409,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-397",
@@ -9035,7 +9431,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-398",
@@ -9056,7 +9453,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-399",
@@ -9077,7 +9475,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-400",
@@ -9098,7 +9497,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-401",
@@ -9119,7 +9519,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-402",
@@ -9140,7 +9541,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-403",
@@ -9161,7 +9563,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-404",
@@ -9182,7 +9585,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-405",
@@ -9203,7 +9607,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-406",
@@ -9224,7 +9629,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-407",
@@ -9245,7 +9651,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-408",
@@ -9266,7 +9673,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-409",
@@ -9287,7 +9695,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-410",
@@ -9308,7 +9717,8 @@
         "ownership and bounds checks",
         "race and memory-order fixtures",
         "repeatable scheduler traces"
-      ]
+      ],
+      "architecture_category": "kernel-runtime"
     },
     {
       "id": "MOST-FN-411",
@@ -9329,7 +9739,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-412",
@@ -9350,7 +9761,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-413",
@@ -9371,7 +9783,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-414",
@@ -9392,7 +9805,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-415",
@@ -9413,7 +9827,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-416",
@@ -9434,7 +9849,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-417",
@@ -9455,7 +9871,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-418",
@@ -9476,7 +9893,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-419",
@@ -9497,7 +9915,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-420",
@@ -9518,7 +9937,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-421",
@@ -9539,7 +9959,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-422",
@@ -9560,7 +9981,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-423",
@@ -9581,7 +10003,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-424",
@@ -9602,7 +10025,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-425",
@@ -9623,7 +10047,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-426",
@@ -9644,7 +10069,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-427",
@@ -9665,7 +10091,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-428",
@@ -9686,7 +10113,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-429",
@@ -9707,7 +10135,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-430",
@@ -9728,7 +10157,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-431",
@@ -9749,7 +10179,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-432",
@@ -9770,7 +10201,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-433",
@@ -9791,7 +10223,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-434",
@@ -9812,7 +10245,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-435",
@@ -9833,7 +10267,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-436",
@@ -9854,7 +10289,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-437",
@@ -9875,7 +10311,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-438",
@@ -9896,7 +10333,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-439",
@@ -9917,7 +10355,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-440",
@@ -9938,7 +10377,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-441",
@@ -9959,7 +10399,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-442",
@@ -9980,7 +10421,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-443",
@@ -10001,7 +10443,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-444",
@@ -10022,7 +10465,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-445",
@@ -10043,7 +10487,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-446",
@@ -10064,7 +10509,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-447",
@@ -10085,7 +10531,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-448",
@@ -10106,7 +10553,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-449",
@@ -10127,7 +10575,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-450",
@@ -10148,7 +10597,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-451",
@@ -10169,7 +10619,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-452",
@@ -10190,7 +10641,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-453",
@@ -10211,7 +10663,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-454",
@@ -10232,7 +10685,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-455",
@@ -10253,7 +10707,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-456",
@@ -10274,7 +10729,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-457",
@@ -10295,7 +10751,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-458",
@@ -10316,7 +10773,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-459",
@@ -10337,7 +10795,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-460",
@@ -10358,7 +10817,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-461",
@@ -10379,7 +10839,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-462",
@@ -10400,7 +10861,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-463",
@@ -10421,7 +10883,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-464",
@@ -10442,7 +10905,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-465",
@@ -10463,7 +10927,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-466",
@@ -10484,7 +10949,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-467",
@@ -10505,7 +10971,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-468",
@@ -10526,7 +10993,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-469",
@@ -10547,7 +11015,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-470",
@@ -10568,7 +11037,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-471",
@@ -10589,7 +11059,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-472",
@@ -10610,7 +11081,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-473",
@@ -10631,7 +11103,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-474",
@@ -10652,7 +11125,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-475",
@@ -10673,7 +11147,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-476",
@@ -10694,7 +11169,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-477",
@@ -10715,7 +11191,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-478",
@@ -10736,7 +11213,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-479",
@@ -10757,7 +11235,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-480",
@@ -10778,7 +11257,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-481",
@@ -10799,7 +11279,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-482",
@@ -10820,7 +11301,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-483",
@@ -10841,7 +11323,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-484",
@@ -10862,7 +11345,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-485",
@@ -10883,7 +11367,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-486",
@@ -10904,7 +11389,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-487",
@@ -10925,7 +11411,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-488",
@@ -10946,7 +11433,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-489",
@@ -10967,7 +11455,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-490",
@@ -10988,7 +11477,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-491",
@@ -11009,7 +11499,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-492",
@@ -11030,7 +11521,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-493",
@@ -11051,7 +11543,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-494",
@@ -11072,7 +11565,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-495",
@@ -11093,7 +11587,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-496",
@@ -11114,7 +11609,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-497",
@@ -11135,7 +11631,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-498",
@@ -11156,7 +11653,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-499",
@@ -11177,7 +11675,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-500",
@@ -11198,7 +11697,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-501",
@@ -11219,7 +11719,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-502",
@@ -11240,7 +11741,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-503",
@@ -11261,7 +11763,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-504",
@@ -11282,7 +11785,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-505",
@@ -11303,7 +11807,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-506",
@@ -11324,7 +11829,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-507",
@@ -11345,7 +11851,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-508",
@@ -11366,7 +11873,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-509",
@@ -11387,7 +11895,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-510",
@@ -11408,7 +11917,8 @@
         "malformed/truncated input rejection",
         "depth/size/item quotas",
         "round-trip and fuzz tests"
-      ]
+      ],
+      "architecture_category": "storage-data"
     },
     {
       "id": "MOST-FN-511",
@@ -11429,7 +11939,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-512",
@@ -11450,7 +11961,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-513",
@@ -11471,7 +11983,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-514",
@@ -11492,7 +12005,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-515",
@@ -11513,7 +12027,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-516",
@@ -11534,7 +12049,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-517",
@@ -11555,7 +12071,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-518",
@@ -11576,7 +12093,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-519",
@@ -11597,7 +12115,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-520",
@@ -11618,7 +12137,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-521",
@@ -11639,7 +12159,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-522",
@@ -11660,7 +12181,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-523",
@@ -11681,7 +12203,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-524",
@@ -11702,7 +12225,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-525",
@@ -11723,7 +12247,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-526",
@@ -11744,7 +12269,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-527",
@@ -11765,7 +12291,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-528",
@@ -11786,7 +12313,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-529",
@@ -11807,7 +12335,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-530",
@@ -11828,7 +12357,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-531",
@@ -11849,7 +12379,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-532",
@@ -11870,7 +12401,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-533",
@@ -11891,7 +12423,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-534",
@@ -11912,7 +12445,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-535",
@@ -11933,7 +12467,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-536",
@@ -11954,7 +12489,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-537",
@@ -11975,7 +12511,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-538",
@@ -11996,7 +12533,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-539",
@@ -12017,7 +12555,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-540",
@@ -12038,7 +12577,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-541",
@@ -12059,7 +12599,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-542",
@@ -12080,7 +12621,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-543",
@@ -12101,7 +12643,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-544",
@@ -12122,7 +12665,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-545",
@@ -12143,7 +12687,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-546",
@@ -12164,7 +12709,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-547",
@@ -12185,7 +12731,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-548",
@@ -12206,7 +12753,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-549",
@@ -12227,7 +12775,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-550",
@@ -12248,7 +12797,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-551",
@@ -12269,7 +12819,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-552",
@@ -12290,7 +12841,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-553",
@@ -12311,7 +12863,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-554",
@@ -12332,7 +12885,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-555",
@@ -12353,7 +12907,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-556",
@@ -12374,7 +12929,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-557",
@@ -12395,7 +12951,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-558",
@@ -12416,7 +12973,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-559",
@@ -12437,7 +12995,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-560",
@@ -12458,7 +13017,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-561",
@@ -12479,7 +13039,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-562",
@@ -12500,7 +13061,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-563",
@@ -12521,7 +13083,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-564",
@@ -12542,7 +13105,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-565",
@@ -12563,7 +13127,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-566",
@@ -12584,7 +13149,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-567",
@@ -12605,7 +13171,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-568",
@@ -12626,7 +13193,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-569",
@@ -12647,7 +13215,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-570",
@@ -12668,7 +13237,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-571",
@@ -12689,7 +13259,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-572",
@@ -12710,7 +13281,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-573",
@@ -12731,7 +13303,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-574",
@@ -12752,7 +13325,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-575",
@@ -12773,7 +13347,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-576",
@@ -12794,7 +13369,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-577",
@@ -12815,7 +13391,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-578",
@@ -12836,7 +13413,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-579",
@@ -12857,7 +13435,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-580",
@@ -12878,7 +13457,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-581",
@@ -12899,7 +13479,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-582",
@@ -12920,7 +13501,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-583",
@@ -12941,7 +13523,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-584",
@@ -12962,7 +13545,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-585",
@@ -12983,7 +13567,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-586",
@@ -13004,7 +13589,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-587",
@@ -13025,7 +13611,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-588",
@@ -13046,7 +13633,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-589",
@@ -13067,7 +13655,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-590",
@@ -13088,7 +13677,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-591",
@@ -13109,7 +13699,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-592",
@@ -13130,7 +13721,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-593",
@@ -13151,7 +13743,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-594",
@@ -13172,7 +13765,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-595",
@@ -13193,7 +13787,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-596",
@@ -13214,7 +13809,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-597",
@@ -13235,7 +13831,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-598",
@@ -13256,7 +13853,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-599",
@@ -13277,7 +13875,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-600",
@@ -13298,7 +13897,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-601",
@@ -13319,7 +13919,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-602",
@@ -13340,7 +13941,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-603",
@@ -13361,7 +13963,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-604",
@@ -13382,7 +13985,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-605",
@@ -13403,7 +14007,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-606",
@@ -13424,7 +14029,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-607",
@@ -13445,7 +14051,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-608",
@@ -13466,7 +14073,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-609",
@@ -13487,7 +14095,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-610",
@@ -13508,7 +14117,8 @@
         "tamper/path/ABI rejection",
         "audit and secret-redaction checks",
         "explicit capability tests"
-      ]
+      ],
+      "architecture_category": "security-resilience"
     },
     {
       "id": "MOST-FN-611",
@@ -13529,7 +14139,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-612",
@@ -13550,7 +14161,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-613",
@@ -13571,7 +14183,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-614",
@@ -13592,7 +14205,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-615",
@@ -13613,7 +14227,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-616",
@@ -13634,7 +14249,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-617",
@@ -13655,7 +14271,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-618",
@@ -13676,7 +14293,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-619",
@@ -13697,7 +14315,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-620",
@@ -13718,7 +14337,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-621",
@@ -13739,7 +14359,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-622",
@@ -13760,7 +14381,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-623",
@@ -13781,7 +14403,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-624",
@@ -13802,7 +14425,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-625",
@@ -13823,7 +14447,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-626",
@@ -13844,7 +14469,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-627",
@@ -13865,7 +14491,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-628",
@@ -13886,7 +14513,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-629",
@@ -13907,7 +14535,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-630",
@@ -13928,7 +14557,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-631",
@@ -13949,7 +14579,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-632",
@@ -13970,7 +14601,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-633",
@@ -13991,7 +14623,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-634",
@@ -14012,7 +14645,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-635",
@@ -14033,7 +14667,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-636",
@@ -14054,7 +14689,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-637",
@@ -14075,7 +14711,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-638",
@@ -14096,7 +14733,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-639",
@@ -14117,7 +14755,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-640",
@@ -14138,7 +14777,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-641",
@@ -14159,7 +14799,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-642",
@@ -14180,7 +14821,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-643",
@@ -14201,7 +14843,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-644",
@@ -14222,7 +14865,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-645",
@@ -14243,7 +14887,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-646",
@@ -14264,7 +14909,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-647",
@@ -14285,7 +14931,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-648",
@@ -14306,7 +14953,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-649",
@@ -14327,7 +14975,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-650",
@@ -14348,7 +14997,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-651",
@@ -14369,7 +15019,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-652",
@@ -14390,7 +15041,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-653",
@@ -14411,7 +15063,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-654",
@@ -14432,7 +15085,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-655",
@@ -14453,7 +15107,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-656",
@@ -14474,7 +15129,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-657",
@@ -14495,7 +15151,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-658",
@@ -14516,7 +15173,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-659",
@@ -14537,7 +15195,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-660",
@@ -14558,7 +15217,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-661",
@@ -14579,7 +15239,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-662",
@@ -14600,7 +15261,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-663",
@@ -14621,7 +15283,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-664",
@@ -14642,7 +15305,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-665",
@@ -14663,7 +15327,8 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
     },
     {
       "id": "MOST-FN-666",
@@ -14684,7 +15349,87 @@
         "deterministic output",
         "resource/performance budgets",
         "documented failure path"
-      ]
+      ],
+      "architecture_category": "language-compiler"
+    }
+  ],
+  "category_scheme": "duckos-reaper-architecture/v1",
+  "architecture_categories": [
+    {
+      "id": "kernel-runtime",
+      "title": "Ядро, память и конкурентное исполнение",
+      "count": 121,
+      "source_groups": [
+        "MOST-MEM-BASE",
+        "MOST-EXEC"
+      ],
+      "description": "Физическая и виртуальная память, регионы, аллокаторы, управление задачами, потоки, атомики, блокировки, очереди и IPC-примитивы.",
+      "primary_owner": "DuckOS kernel and Reaper systems runtime"
+    },
+    {
+      "id": "language-compiler",
+      "title": "Язык Reaper, типовая система и компилятор",
+      "count": 260,
+      "source_groups": [
+        "MOST-TYPE-BASE",
+        "MOST-COMP-BASE",
+        "MOST-BRIDGE",
+        "MOST-TYPES",
+        "MOST-TOOL"
+      ],
+      "description": "Семантика и типы языка, MOST frontend, компиляция и анализ, IR, контракты, математика, диагностические и toolchain API.",
+      "primary_owner": "Reaper"
+    },
+    {
+      "id": "desktop-ui",
+      "title": "Рабочий стол, UI и взаимодействие",
+      "count": 22,
+      "source_groups": [
+        "MOST-UI-BASE"
+      ],
+      "description": "Компоненты UI, сигналы, рендеринг, состояние интерфейса, доступность, жесты, offline UI и интерактивность.",
+      "primary_owner": "DuckOS Mora and native desktop"
+    },
+    {
+      "id": "network-distributed",
+      "title": "Сеть и распределённые системы",
+      "count": 21,
+      "source_groups": [
+        "MOST-NET-BASE"
+      ],
+      "description": "Сетевые кадры и сокеты, ограниченные потоки, таймауты, идемпотентность, трассировка, backpressure и распределённые сообщения.",
+      "primary_owner": "DuckOS network services and Reaper adapters"
+    },
+    {
+      "id": "storage-data",
+      "title": "Хранение, схемы и данные",
+      "count": 121,
+      "source_groups": [
+        "MOST-DATA-BASE",
+        "MOST-DATA"
+      ],
+      "description": "Файловые пути и потоки, схемы и миграции, форматы сериализации, кодеки, текст, таблицы, индексы и потоковая обработка данных.",
+      "primary_owner": "DuckOS storage and Reaper standard library"
+    },
+    {
+      "id": "security-resilience",
+      "title": "Безопасность, доверие и восстановление",
+      "count": 100,
+      "source_groups": [
+        "MOST-SEC"
+      ],
+      "description": "Capabilities, политики доступа, аудит, криптография, валидация границ, лимиты ресурсов, отказоустойчивость и восстановление.",
+      "primary_owner": "DuckOS security and BAV"
+    },
+    {
+      "id": "ecosystem-tooling",
+      "title": "Экосистема, интеграции и сопровождение",
+      "count": 21,
+      "source_groups": [
+        "MOST-ECOSYS-BASE"
+      ],
+      "description": "Сборка, конфигурации, локализация, зависимости, ресурсы, диагностика, профилирование и федеративные интерфейсы.",
+      "primary_owner": "Reaper and Ivan-VHS federation"
     }
   ]
 }

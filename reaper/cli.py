@@ -93,6 +93,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Typical causes\n  {definition['causes']}\n")
         print(f"How to fix it\n  {definition['help']}")
         return 0
+    if arguments and arguments[0] == "jora":
+        from .jora import main as jora_main
+        return jora_main(arguments[1:])
     if arguments and arguments[0] == "lsp":
         from .lsp import serve as lsp_serve
         return lsp_serve()
