@@ -1,0 +1,29 @@
+# Desolation — Space base
+# Space-first basis transforms and coordinate-frame compatibility.
+
+export make FRAMEWORK_ID := "desolation.space_base"
+export make FRAMEWORK_VERSION := "1.0.0"
+export make FRAMEWORK_PROFILE := "Space base"
+
+export craft desolation_basis_valid(scale_x, scale_y, scale_z) {
+    yield scale_x != 0 and scale_y != 0 and scale_z != 0
+}
+
+export craft desolation_local_to_world(local_value, origin, scale) {
+    yield origin + local_value * scale
+}
+
+export craft desolation_world_to_local(world_value, origin, scale) {
+    when scale != 0 {
+        yield (world_value - origin) / scale
+    }
+    yield nothing
+}
+
+export craft desolation_base_compatible(base_id, dimensions) {
+    yield base_id > 0 and dimensions == 3
+}
+
+export craft desolation_cell_valid(cell_index, cell_size) {
+    yield cell_index >= 0 and cell_size > 0
+}
