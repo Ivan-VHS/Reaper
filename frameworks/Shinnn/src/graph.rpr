@@ -84,3 +84,80 @@ export craft graph_dependents_of(edges, node_name) {
     }
     yield dependents
 }
+
+
+# Deterministic topological order, reachability, impact and graph budgets.
+export craft graph_topological_order(nodes, edges) {
+    make valid := graph_validate(nodes, edges)
+    when not valid[0] { yield valid }
+    vary ordered := []
+    vary stalled := false
+    loop while size(ordered) < size(nodes) and not stalled {
+        vary added := false
+        vary index := 0
+        loop while index < size(nodes) {
+            when not graph_has_node(ordered, nodes[index]) {
+                make dependencies := graph_dependencies_of(edges, nodes[index])
+                vary ready := true
+                vary dep := 0
+                loop while dep < size(dependencies) {
+                    when not graph_has_node(ordered, dependencies[dep]) { change ready := false }
+                    change dep := dep + 1
+                }
+                when ready {
+                    change ordered := push(ordered, nodes[index])
+                    change added := true
+                }
+            }
+            change index := index + 1
+        }
+        when not added { change stalled := true }
+    }
+    when stalled { yield [false, "graph_not_acyclic"] }
+    yield [true, ordered]
+}
+export craft graph_dependency_closure(edges, node_name, visited) {
+    when graph_has_node(visited, node_name) { yield [true, visited] }
+    vary next := push(visited, node_name)
+    make dependencies := graph_dependencies_of(edges, node_name)
+    vary index := 0
+    loop while index < size(dependencies) {
+        make found := graph_dependency_closure(edges, dependencies[index], next)
+        when not found[0] { yield found }
+        change next := found[1]
+        change index := index + 1
+    }
+    yield [true, next]
+}
+export craft graph_reachable(nodes, edges, source, target) {
+    when not graph_has_node(nodes, source) or not graph_has_node(nodes, target) { yield [false, "unknown_node"] }
+    make valid := graph_validate(nodes, edges)
+    when not valid[0] { yield valid }
+    make closure := graph_dependency_closure(edges, source, [])
+    yield [true, graph_has_node(closure[1], target)]
+}
+export craft graph_impact_set(edges, changed) {
+    vary result := [changed]
+    vary growing := true
+    loop while growing {
+        change growing := false
+        vary index := 0
+        loop while index < size(edges) {
+            when graph_has_node(result, edges[index][1]) and not graph_has_node(result, edges[index][0]) {
+                change result := push(result, edges[index][0])
+                change growing := true
+            }
+            change index := index + 1
+        }
+    }
+    yield result
+}
+export craft graph_node_degree(edges, name) {
+    yield [size(graph_dependencies_of(edges, name)), size(graph_dependents_of(edges, name))]
+}
+export craft graph_validate_bounded(nodes, edges, max_nodes, max_edges) {
+    when max_nodes < 1 or max_edges < 0 { yield [false, "invalid_budget"] }
+    when size(nodes) > max_nodes { yield [false, "node_budget_exceeded"] }
+    when size(edges) > max_edges { yield [false, "edge_budget_exceeded"] }
+    yield graph_validate(nodes, edges)
+}
