@@ -17,7 +17,7 @@ Reaper is a systems-programming language and local development workbench for com
 - Experimental native C17 implementation; it is not yet feature-equivalent to the reference runtime.
 - NOO TAH delegates JavaScript execution to the official Node.js runtime.
 - Jora application scaffolding and capability composition; catalog packs remain specifications, not installable editors.
-- PLAGUE repository-evolution framework foundation: Reaper-native component registry, default-deny action policy, versioned contracts and CI smoke program. Repository mutation adapters are not yet implemented.
+- PLAGUE 1.0.0 foundation: Reaper-native ten-component registry, default-deny action policy, bounded proposal assessment, deterministic risk/benefit selection, versioned contracts and CI smoke tests. It does not yet modify repositories autonomously.
 
 See [Features](docs/FEATURES.md), [Architecture](docs/ARCHITECTURE.md), [Hardware Language](docs/HARDWARE_LANGUAGE.md), [Jora factory](docs/JORA_APPLICATION_FACTORY.md), [PLAGUE](docs/PLAGUE.md), [Studio and IDE](docs/REAPER_IDE.md) and [NOO TAH](docs/NOO_TAH.md).
 
