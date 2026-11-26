@@ -66,6 +66,11 @@ class FoundationalFrameworksFiftySixToSixtyTests(unittest.TestCase):
             ["false"],
         )
         self.assertEqual(
+            self.run_expression('workspace["grid_validate_descriptor"](["bad", [["row"], ["column"]], ["r"], ["c"]])'),
+            ["false"],
+        )
+
+        self.assertEqual(
             self.run_expression(
                 'workspace["grid_validate_descriptor"](["coverage", [["row", "runtime", 3], ["column", "platform", 2]], ["runtime", "compiler"], ["hosted", "native"]])'
             ),
