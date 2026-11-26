@@ -29,6 +29,20 @@ make graph := [
 make architecture_result := Sentan["inspect"](graph)
 assert(architecture_result[1] == "valid", "acyclic architecture must pass")
 
+make cyclic_graph := [
+    "ArchitectureGraph", "1.0.0", "cyclic-sample",
+    [
+        ["module.alpha", "service", ["module.beta"]],
+        ["module.beta", "service", ["module.alpha"]]
+    ],
+    [
+        ["module.alpha", "module.beta", "depends_on"],
+        ["module.beta", "module.alpha", "depends_on"]
+    ]
+]
+make cycle_result := Sentan["inspect"](cyclic_graph)
+assert(cycle_result[1] == "blocked", "dependency cycles must fail closed")
+
 make request := [
     "SourceEvolutionRequest", "sample-evolution",
     "sha256:baseline-pinned-by-caller",
