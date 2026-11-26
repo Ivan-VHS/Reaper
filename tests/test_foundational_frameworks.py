@@ -75,6 +75,10 @@ class FoundationalFrameworkTests(unittest.TestCase):
             ["false"],
         )
         self.assertEqual(
+            self.run_expression('foundation["foundation_validate_budget"]([1000, 32, 1000, 4096.5, 65536, 8])'),
+            ["false"],
+        )
+        self.assertEqual(
             self.run_expression('foundation["foundation_validate_budget"]([1000, 32])'),
             ["false"],
         )
