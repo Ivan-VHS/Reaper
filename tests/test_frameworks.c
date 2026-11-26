@@ -1,6 +1,7 @@
 #include "reaper/frameworks.h"
 
 #include <assert.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -88,7 +89,9 @@ static void canonical_names_preserve_the_supplied_order(void) {
         const ReaperFrameworkSpec *spec = reaper_framework_catalog_at(index);
         assert(spec != NULL);
         assert(strcmp(spec->name, EXPECTED_NAMES[index]) == 0);
-        assert(strcmp(spec->id, EXPECTED_NAMES[index]) != 0);
+        for (size_t offset = 0U; EXPECTED_NAMES[index][offset] != '\0'; ++offset) {
+            assert(spec->id[offset] == (char)tolower((unsigned char)EXPECTED_NAMES[index][offset]));
+        }
     }
 }
 
