@@ -1,0 +1,55 @@
+# Oplos — target-aware MIR to low-level design IR (LIR) lowering.
+import "vorke.rpr" as Vorke
+
+export craft valid_mir(mir) {
+    when kind(mir) != "list" or size(mir) != 4 {
+        yield false
+    }
+    when mir[0] != "AestheticMIR" or mir[1] != Vorke["VERSION"] or kind(mir[3]) != "list" {
+        yield false
+    }
+    each operation in mir[3] {
+        when kind(operation) != "list" or size(operation) != 4 {
+            yield false
+        }
+        when not Vorke["valid_text"](operation[0], 48)
+            or not Vorke["valid_text"](operation[1], 96)
+            or not Vorke["valid_text"](operation[3], 32) {
+            yield false
+        }
+    }
+    yield true
+}
+
+export craft lower(mir, target) {
+    when not valid_mir(mir) {
+        yield ["AestheticError", "RPR-AE1301", "LIR input is not valid MIR"]
+    }
+    when not Vorke["valid_target"](target) {
+        yield ["AestheticError", "RPR-AE1302", "LIR target tuple is invalid"]
+    }
+
+    vary instructions := []
+    each operation in mir[3] {
+        when operation[0] == "paint.color" {
+            change instructions := push(instructions, ["style.color", operation[1], operation[2], "rgba-token"])
+        }
+        when operation[0] == "text.font" {
+            change instructions := push(instructions, ["style.font", operation[1], operation[2], "font-token"])
+        }
+        when operation[0] == "layout.metric" {
+            change instructions := push(instructions, ["style.metric", operation[1], operation[2], operation[3]])
+        }
+        when operation[0] == "motion.duration" {
+            change instructions := push(instructions, ["motion.duration", operation[1], operation[2], "milliseconds"])
+        }
+        when operation[0] == "motion.easing" {
+            change instructions := push(instructions, ["motion.easing", operation[1], operation[2], "curve-token"])
+        }
+        when operation[0] == "motion.reduce" {
+            change instructions := push(instructions, ["motion.policy", operation[1], operation[2], "boolean"])
+        }
+    }
+
+    yield ["AestheticLIR", Vorke["VERSION"], mir[2], target[0], target[1], instructions]
+}
