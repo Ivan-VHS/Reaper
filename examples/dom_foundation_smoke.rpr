@@ -9,6 +9,7 @@ import "../dom/System-Carriere/envelope.rpr" as carriere
 import "../dom/JennyFlash/signals.rpr" as jenny_flash
 import "../dom/Jenny-Flashing-Boy/reload.rpr" as flashing_boy
 import "../dom/core/runtime.rpr" as dom
+import "../dom/adapters/framework_modules.rpr" as dom_frameworks
 
 
 craft increment(value) {
@@ -107,8 +108,6 @@ assert(not dom["start"](stopped[1])[0], "DOM prevents restart after terminal sto
 
 
 # Standalone framework modules remain focused components behind ДОМ adapters.
-import "../dom/adapters/framework_modules.rpr" as dom_frameworks
-
 make graph_adapter := dom_frameworks["resolve_module_graph"](
     ["editor", "core", "compiler"],
     [["compiler", "core"], ["editor", "compiler"]]
