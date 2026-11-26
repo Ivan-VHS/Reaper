@@ -1,37 +1,42 @@
 # Reaper documentation
 
-Start with the [project README](../README.md) for installation, first commands and current implementation status. The [documentation map](INFORMATION_ARCHITECTURE.md) links every topic area.
+**Documentation baseline:** 2026-11-26 · **Project status:** alpha / multiple implementation tracks.
 
-## Key pages
+Start with the [root README](../README.md) for the language/runtime boundary, build commands and current limitations. The [Information Architecture](INFORMATION_ARCHITECTURE.md) page catalogs the complete documentation library.
+
+## Core references
 
 - [Features and maturity](FEATURES.md)
-- [Psychoporter 666 function categories](FUNCTION_CATEGORIES_666.md)
 - [Architecture](ARCHITECTURE.md)
+- [Runtime platform and quotas](RUNTIME_PLATFORM.md)
+- [Native compiler](NATIVE_COMPILER.md)
 - [Hardware language track](HARDWARE_LANGUAGE.md)
+- [Canonical IR execution](NATIVE_IR_EXECUTION.md)
 - [System Runtime ABI v1](SYSTEM_RUNTIME_ABI_V1.md)
 - [DABI64 Desktop Host v1](DABI64_DESKTOP_HOST_V1.md)
-- [Implementation roadmap](IMPLEMENTATION_ROADMAP.md)
 - [Studio and IDE](REAPER_IDE.md)
-- [Mora archive contracts](MORA_ARCHIVE_CONTRACTS.md) — executable `.rpr` validators, record layouts, provenance rules and offline regression fixture.
-- [NEXUS federation profile](NEXUS_FEDERATION_PROFILE_V1.md) — Reaper ownership, peer contracts and compatibility boundaries.
+- [Diagnostics](errors/DIAGNOSTICS.md)
+- [Federated integration](FEDERATED_INTEGRATION.md)
+- [Unified project contract](UNIFIED_PROJECT_CONTRACT.md)
 
 ## Browse by topic
 
 - [Language and toolchain](clusters/language-toolchain.md)
-- [Psychoporter 666 function categories](FUNCTION_CATEGORIES_666.md)
-- [Architecture and systems](clusters/architecture-systems.md)
-- [Studio and IDE](clusters/studio-ide-ui.md)
+- [Studio, IDE and UI](clusters/studio-ide-ui.md)
+- [Architecture and system contracts](clusters/architecture-systems.md)
 - [Quality and evidence](clusters/quality-evidence.md)
 - [Federation and integration](clusters/federation-integration.md)
 - [Planning and governance](clusters/planning-governance.md)
 
-## Shared rules
+## Shared standards
 
-- [Psychoporter 666 coding and human-layer standard](PSYCHOPORTER_666.md)
-- [Documentation standard](UNIFIED_DOCUMENTATION_STANDARD.md)
+- [Canonical documentation and publication standard](UNIFIED_DOCUMENTATION_STANDARD.md)
+- [Unified engineering standard](UNIFIED_ENGINEERING_STANDARD.md)
 - [Engineering evolution framework](ENGINEERING_EVOLUTION_FRAMEWORK.md)
 - [Repository evolution directives](REPOSITORY_EVOLUTION_DIRECTIVES.md)
+- [Contribution guide](../CONTRIBUTING.md)
+- [Security policy](../SECURITY.md)
 
-Treat the Python reference runtime, native compiler track, System Runtime host ABI and privileged hardware work as separate maturity levels. Source, tests and CI are the evidence for implemented behavior.
+## Evidence rule
 
-- [OPlague GPU telemetry v1 ingestion](OPLAGE_GPU_TELEMETRY.md)
+The Python reference runtime, native C17 implementation, hardware adapter contracts and self-hosting frontend are separate maturity levels. Source and tests prove only the paths they exercise. Resource quotas are not a sandbox, an MMIO descriptor is not a physical mapping, and a feature registry is not compiler completeness.
