@@ -258,7 +258,9 @@ export craft parse_program(tokens) {
         vary arguments := []
         when match_kind("<") {
             skip_newlines()
-            when not check(">") {
+            when check(">") {
+                make ignored := fail("generic type argument list cannot be empty", peek())
+            } otherwise {
                 change arguments := push(arguments, parse_type_expression())
                 skip_newlines()
                 loop while not failed and match_kind(",") {
@@ -276,7 +278,9 @@ export craft parse_program(tokens) {
         vary names := []
         when match_kind("<") {
             skip_newlines()
-            when not check(">") {
+            when check(">") {
+                make ignored := fail("generic parameter list cannot be empty", peek())
+            } otherwise {
                 change names := push(names, consume("IDENT", "expected a generic parameter name")[1])
                 skip_newlines()
                 loop while not failed and match_kind(",") {
