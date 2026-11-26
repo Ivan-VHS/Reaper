@@ -1,35 +1,39 @@
 # Reaper Framework Family
 
-Ten independent Reaper-source frameworks with one standard-library facade.
+Ten independent Reaper-source frameworks with a single family entry point and an application-facing standard-library facade.
 
-| Framework | Responsibility | Primary API |
+| Framework | Responsibility | Main capabilities |
 |---|---|---|
-| Lokaliza | Locale negotiation, plural rules, catalogs, fallback and message formatting | `locale.rpr` |
-| Sealise | Project blueprints, public contracts, layering and migrations | `blueprint.rpr` |
-| Blebby | Packages, semantic versions, constraints, lock snapshots and provenance | `package.rpr` |
-| Centen | Resource ledgers, quotas, atomic reservation batches and lexical region models | `resource.rpr` |
-| Kaso | Typed template contexts, escaping, conditionals and bounded rendering | `template.rpr` |
-| Shinnn | Architecture graphs, deterministic topology, reachability and impact | `graph.rpr` |
-| Porteo | Component lifecycle, readiness, launch plans, health and bounded restart policy | `lifecycle.rpr` |
-| Portable Bortable | Target profiles, ABI compatibility and target matrices | `target.rpr` |
-| SWO | Workflows, quality gates, retry schedules and release candidates | `pipeline.rpr` |
-| ScoHOPE | Application profiles, typed configuration and service readiness | `application.rpr` |
+| Lokaliza | Locale and language infrastructure | Locale negotiation, plural rules, catalog coverage/validation, regional fallback, message formatting and terminology |
+| Sealise | Project blueprints and contracts | Project profiles, public contract compatibility, layering, migration planning and baseline validation |
+| Blebby | Package and library infrastructure | Semantic versions, dependency closure, version selection, lock snapshots/diffs and provenance metadata |
+| Centen | Fundamental resource primitives | Bounded ledgers, quotas, staged multi-resource transactions, usage policies and lexical regions |
+| Kaso | Template and construction engine | Typed contexts, nested lookup, safe interpolation, conditionals, schema checks and bounded rendering |
+| Shinnn | Architecture and structural graphs | DAG validation, dependency-first ordering, reachability, graph metrics, component boundaries and impact analysis |
+| Porteo | Component integration and orchestration | Lifecycle transitions, dependency readiness, health reports, capability checks, event journals and restart policies |
+| Portable Bortable | Target and ABI portability | Target profiles, ABI validation, capability matrices and memory-region layout validation |
+| SWO | Engineering and release tooling | Workflow validation, quality gates, retry schedules, evidence tracking, waivers and release manifests |
+| ScoHOPE | Application foundation | App profiles, typed configuration scopes, environment compatibility, service readiness and extension contracts |
 
 ## Reaper entry points
 
-- `frameworks/family.rpr`: direct family import surface.
-- `stdlib/frameworks.rpr`: standard-library facade for applications.
-- `frameworks/smoke.rpr`: executable positive/negative integration coverage.
-- `language/framework-adoption.v1.json`: traceability for all 666 catalogued API contracts and current feature records.
+- `frameworks/family.rpr`: exports all ten framework namespaces.
+- `stdlib/frameworks.rpr`: Reaper-source facade for applications that want to discover and import a framework by name.
+- `frameworks/smoke.rpr`: positive and negative source-level integration checks; CI invokes it with the current reference runtime.
+- `language/framework-adoption.v1.json`: traceability for all 666 API contracts in the existing registry and the current 22 language feature records.
 
 ## Source budget
 
-Each framework targets exactly **666,666 Unicode code points** of implementation source. Only tracked `.rpr` files under that framework's `src/` directory count. Whitespace and comments count; docs, tests, manifests and generated files do not. The manifest stores actual counts and remaining balances.
+Each framework has a target of exactly **666,666 Unicode code points** of implementation source. Current measured counts in this branch total **101,528 characters** across the ten `src/` directories. The exact count and remaining balance for each framework are recorded in `frameworks/manifest.json`.
 
-## Capability boundaries
+Only tracked `.rpr` files under each framework's `src/` directory count toward the target. Whitespace and comments count; docs, tests, manifests and generated files do not.
 
-These are executable Reaper-source libraries on the current reference runtime. The current native AOT backend does not yet support every list, module and dynamic-call construct used here. The source library therefore does not claim native-AOT parity.
+## Compatibility and safety
 
-Pure transformations do not grant filesystem, process, network, clock, device or privileged access. Any such capability must be explicitly supplied by a host adapter. Package provenance metadata is not signature verification; target compatibility checks are not cross-compilation; resource ledgers are not a process memory allocator.
+These modules are Reaper source programs that use the existing language surface and reference runtime. The current native AOT compiler still lacks complete support for list-heavy module programs; native-AOT parity is not claimed.
 
-ДОМ remains the shared runtime owner. The frameworks do not implement a competing scheduler, resource manager or application lifecycle.
+The 666-entry function registry is a catalogue of contracts, not a claim that every entry is implemented. The adoption map records the intended Reaper layer for each contract and preserves its current status. Compiler syntax, typed IR, ownership/effects, memory model, concurrency and native code generation require work in the language/compiler. Filesystem, process, network, clock, device and privileged operations require explicit host adapters and capabilities.
+
+Package provenance metadata is not signature verification. Target/ABI validation does not perform cross-compilation. Resource ledgers are policy models, not a physical memory allocator. These boundaries remain explicit.
+
+ДОМ remains the shared runtime owner. The framework family does not introduce a competing scheduler, resource manager or application lifecycle runtime.
