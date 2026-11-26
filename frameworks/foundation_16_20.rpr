@@ -1,0 +1,327 @@
+# Fourth group of Reaper foundations.
+# This module extends the first fifteen without duplicating their ownership.
+import "foundation_11_15.rpr" as previous
+
+export make FOUNDATION_FOURTH_SCHEMA := "reaper.foundation.fourth.v1"
+export make FOUNDATION_FOURTH_VERSION := 1
+
+export craft runtime_lifecycle_states() {
+    yield ["created", "initialized", "ready", "running", "draining", "stopped", "failed"]
+}
+
+export craft runtime_lifecycle_transitions() {
+    yield [
+        ["created", "initialized"],
+        ["created", "failed"],
+        ["initialized", "ready"],
+        ["initialized", "failed"],
+        ["ready", "running"],
+        ["ready", "failed"],
+        ["running", "draining"],
+        ["running", "failed"],
+        ["draining", "stopped"],
+        ["draining", "failed"]
+    ]
+}
+
+export craft runtime_resource_scopes() {
+    yield ["execution", "module", "function", "region", "host"]
+}
+
+export craft runtime_validate_transition(from_state, to_state) {
+    yield contains(runtime_lifecycle_transitions(), [from_state, to_state])
+}
+
+export craft runtime_validate_scope(scope) {
+    yield contains(runtime_resource_scopes(), scope)
+}
+
+export craft runtime_validate_lifecycle(trace) {
+    when kind(trace) != "list" or size(trace) < 2 {
+        yield false
+    }
+    vary previous_state := nothing
+    vary position := 0
+    each state in trace {
+        when kind(state) != "text" or not contains(runtime_lifecycle_states(), state) {
+            yield false
+        }
+        when position == 0 and state != "created" {
+            yield false
+        }
+        when position > 0 and not runtime_validate_transition(previous_state, state) {
+            yield false
+        }
+        when previous_state == "stopped" or previous_state == "failed" {
+            yield false
+        }
+        change previous_state := state
+        change position := position + 1
+    }
+    yield previous_state == "stopped" or previous_state == "failed"
+}
+
+export craft runtime_lifecycle_contract() {
+    yield [
+        ["entry", "create a fresh runtime instance"],
+        ["ready", "validate configuration and initialize resources"],
+        ["run", "execute within declared quotas"],
+        ["drain", "stop accepting new work and finish or cancel owned work"],
+        ["shutdown", "close resources and adapter sessions"],
+        ["terminal", "stopped or failed; no implicit restart"]
+    ]
+}
+
+export craft execution_engines() {
+    yield [
+        ["treewalk", "rpr-ast", "runtime-value", "implemented"],
+        ["canonical-vm", "canonical-ir", "runtime-value", "implemented"],
+        ["scalar-c17-aot", "rpr-subset", "host-executable", "partial"],
+        ["native-object", "typed-ir", "target-object", "planned"]
+    ]
+}
+
+craft execution_find_engine(identifier) {
+    vary found := nothing
+    each engine in execution_engines() {
+        when engine[0] == identifier {
+            change found := engine
+        }
+    }
+    yield found
+}
+
+export craft execution_context_fields() {
+    yield ["engine", "platform_profile", "max_steps", "max_call_depth", "max_collection_items", "max_text_length"]
+}
+
+export craft execution_validate_context(context) {
+    when kind(context) != "list" or size(context) != 6 {
+        yield false
+    }
+    when kind(context[0]) != "text" or kind(context[1]) != "text" {
+        yield false
+    }
+    make engine := execution_find_engine(context[0])
+    when engine == nothing or engine[3] == "planned" {
+        yield false
+    }
+    when not contains(["hosted-reference", "native-c17-host", "simulator-adapter"], context[1]) {
+        yield false
+    }
+    vary position := 2
+    each limit in [context[2], context[3], context[4], context[5]] {
+        when kind(limit) != "number" or limit < 1 or limit % 1 != 0 {
+            yield false
+        }
+        change position := position + 1
+    }
+    yield true
+}
+
+export craft execution_default_context() {
+    yield ["treewalk", "hosted-reference", 1000000, 256, 100000, 1000000]
+}
+
+export craft engine_catalog() {
+    yield [
+        ["treewalk", "rpr-ast", "runtime-value", "implemented", "reference tree-walk interpreter"],
+        ["canonical-vm", "canonical-ir", "runtime-value", "implemented", "bytecode VM over canonical IR"],
+        ["scalar-c17-aot", "rpr-subset", "host-executable", "partial", "scalar subset through generated C17 and host toolchain"],
+        ["native-object", "typed-ir", "target-object", "planned", "future target object writer"]
+    ]
+}
+
+export craft engine_routes() {
+    yield [
+        ["treewalk", ["source", "lexer", "parser", "ast", "treewalk", "runtime-value"], "implemented"],
+        ["canonical-vm", ["source", "lexer", "parser", "semantic-analysis", "canonical-ir", "canonical-vm", "runtime-value"], "implemented"],
+        ["scalar-c17-aot", ["source", "lexer", "parser", "semantic-analysis", "scalar-lowering", "c17", "host-toolchain"], "partial"],
+        ["native-object", ["source", "lexer", "parser", "semantic-analysis", "typed-ir", "target-lowering", "object-file"], "planned"]
+    ]
+}
+
+export craft engine_validate_selection(selection) {
+    when kind(selection) != "list" or size(selection) != 3 {
+        yield false
+    }
+    each engine in engine_catalog() {
+        when selection[0] == engine[0] and selection[1] == engine[1] and selection[2] == engine[2] and engine[3] != "planned" {
+            yield true
+        }
+    }
+    yield false
+}
+
+export craft engine_validate_route(route) {
+    each item in engine_routes() {
+        when route == item[1] and item[2] != "planned" {
+            yield true
+        }
+    }
+    yield false
+}
+
+export craft kernel_domains() {
+    yield ["process", "thread", "synchronization", "filesystem", "clock", "network", "cryptography", "desktop-window", "desktop-display", "desktop-input", "desktop-session", "desktop-compositor", "desktop-gpu", "desktop-shell"]
+}
+
+export craft kernel_capabilities() {
+    yield ["PROCESS_INSPECT", "PROCESS_CONTROL", "THREAD_CONTROL", "SYNC", "FS_HANDLE", "FS_READ", "FS_WRITE", "CLOCK", "NETWORK", "CRYPTO", "DESKTOP_WINDOW", "DESKTOP_DISPLAY", "DESKTOP_INPUT", "DESKTOP_SESSION", "DESKTOP_COMPOSITOR", "DESKTOP_GPU", "DESKTOP_SHELL", "DESKTOP_DISPLAY_ADMIN", "DESKTOP_SESSION_ADMIN", "DESKTOP_GPU_ADMIN"]
+}
+
+export craft kernel_operation_catalog() {
+    yield [
+        ["process.spawn", "PROCESS_CONTROL"],
+        ["thread.spawn", "THREAD_CONTROL"],
+        ["sync.mutex_lock", "SYNC"],
+        ["filesystem.open", "FS_HANDLE"],
+        ["filesystem.read", "FS_READ"],
+        ["filesystem.write", "FS_WRITE"],
+        ["clock.monotonic_ns", "CLOCK"],
+        ["network.connect", "NETWORK"],
+        ["crypto.random_fill", "CRYPTO"],
+        ["desktop.window.create", "DESKTOP_WINDOW"],
+        ["desktop.shell.notification_post", "DESKTOP_SHELL"]
+    ]
+}
+
+export craft kernel_validate_capabilities(capabilities) {
+    when kind(capabilities) != "list" {
+        yield false
+    }
+    each capability in capabilities {
+        when not contains(kernel_capabilities(), capability) {
+            yield false
+        }
+    }
+    yield size(unique(capabilities)) == size(capabilities)
+}
+
+export craft kernel_validate_adapter(adapter) {
+    when kind(adapter) != "list" or size(adapter) != 4 {
+        yield false
+    }
+    when adapter[0] != 1 or kind(adapter[1]) != "text" or adapter[1] == "" {
+        yield false
+    }
+    when not contains(["trusted-host", "simulator"], adapter[2]) or not kernel_validate_capabilities(adapter[3]) {
+        yield false
+    }
+    yield true
+}
+
+export craft kernel_validate_request(request) {
+    when kind(request) != "list" or size(request) != 3 {
+        yield false
+    }
+    when kind(request[0]) != "text" or kind(request[1]) != "text" {
+        yield false
+    }
+    vary matched := false
+    each operation in kernel_operation_catalog() {
+        when request[0] == operation[0] and request[1] == operation[1] {
+            change matched := true
+        }
+    }
+    when not matched {
+        yield false
+    }
+    yield kind(request[2]) == "number" and request[2] % 1 == 0 and request[2] >= 0 and request[2] <= 1048576
+}
+
+export craft kernel_authority_rules() {
+    yield [
+        ["identity", "host derives caller identity from trusted task state"],
+        ["grant", "host grants only explicitly authorized capabilities"],
+        ["dispatch", "operation and capability must match"],
+        ["handles", "opaque handles are host-issued and process-scoped"],
+        ["privilege", "no raw syscall, privilege escalation or physical mapping in this framework"]
+    ]
+}
+
+export craft library_modules() {
+    yield [
+        ["reaper.modules", 1, 0, "implemented"],
+        ["reaper.memory", 1, 0, "implemented"],
+        ["reaper.resources", 1, 0, "implemented"],
+        ["reaper.arithmetic", 1, 0, "implemented"],
+        ["reaper.metric_space", 1, 0, "implemented"],
+        ["reaper.ffi", 1, 0, "opt-in"],
+        ["reaper.native_compiler", 1, 0, "partial"]
+    ]
+}
+
+craft library_find_module(identifier) {
+    vary found := nothing
+    each module in library_modules() {
+        when module[0] == identifier {
+            change found := module
+        }
+    }
+    yield found
+}
+
+export craft library_validate_descriptor(descriptor) {
+    when kind(descriptor) != "list" or size(descriptor) != 4 {
+        yield false
+    }
+    when kind(descriptor[0]) != "text" or kind(descriptor[1]) != "number" or kind(descriptor[2]) != "number" or not contains(["import", "export", "inspect"], descriptor[3]) {
+        yield false
+    }
+    when descriptor[1] % 1 != 0 or descriptor[2] % 1 != 0 or descriptor[1] < 0 or descriptor[2] < 0 {
+        yield false
+    }
+    make module := library_find_module(descriptor[0])
+    when module == nothing {
+        yield false
+    }
+    yield descriptor[1] == module[1] and descriptor[2] <= module[2]
+}
+
+export craft library_validate_dependencies(dependencies) {
+    when kind(dependencies) != "list" {
+        yield false
+    }
+    vary identifiers := []
+    each dependency in dependencies {
+        when kind(dependency) != "list" or size(dependency) != 3 {
+            yield false
+        }
+        when not library_validate_descriptor([dependency[0], dependency[1], dependency[2], "import"]) {
+            yield false
+        }
+        change identifiers := push(identifiers, dependency[0])
+    }
+    yield size(unique(identifiers)) == size(identifiers)
+}
+
+export craft foundation_fourth_five() {
+    yield [
+        ["foundation.runtime.v1", "Runtime", "execution lifecycle, terminal states and resource scopes", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_16_20.md"],
+        ["foundation.execution-context.v1", "Execution Context", "engine, platform and bounded execution quotas", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_16_20.md"],
+        ["foundation.engine.v1", "Engine", "selectable tree-walk, VM and native AOT routes", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_16_20.md"],
+        ["foundation.kernel.v1", "Kernel", "trusted host ABI and capability dispatch boundary", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_16_20.md"],
+        ["foundation.library.v1", "Library", "versioned contracts for reusable runtime modules", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_16_20.md"]
+    ]
+}
+
+export craft foundation_all_frameworks_20() {
+    vary rows := previous["foundation_all_frameworks_15"]()
+    each row in foundation_fourth_five() {
+        change rows := push(rows, row)
+    }
+    yield rows
+}
+
+export craft foundation_validate_catalog_20() {
+    make rows := foundation_all_frameworks_20()
+    vary identifiers := []
+    each row in rows {
+        when size(row) != 5 {
+            yield false
+        }
+        change identifiers := push(identifiers, row[0])
+    }
+    yield previous["foundation_validate_catalog_15"]() and size(rows) == 20 and size(unique(identifiers)) == 20
+}
