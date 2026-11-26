@@ -17,32 +17,28 @@ Reaper — мова системного програмування та лок�
 - Експериментальна реалізація на C17; вона ще не має повного паритету з еталонним середовищем.
 - NOO TAH делегує виконання JavaScript офіційному Node.js.
 - Генерація каркасів Jora та композиція можливостей; пакети каталогу поки є специфікаціями, а не встановлюваними редакторами.
+- RAAEF — окрема гілка розробки типізованих естетичних профілів, HIR/MIR/LIR і планування еволюції архітектури, дизайну та коду; виконання й інтеграція із загальним native backend ще потребують перевірки.
+- Єдиний [каталог фреймворків](frameworks/catalog.v1.json) показує відомі сімейства та статус їхніх PR; відкриті PR не вважаються частиною main.
 
-Документи: [Можливості](docs/FEATURES.md) · [Архітектура](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Фабрика Jora](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md).
+Документи: [Естетика та еволюція архітектури](docs/AESTHETIC_EVOLUTION.md) · [Каталог фреймворків](frameworks/catalog.v1.json) · [Можливості](docs/FEATURES.md) · [Архітектура](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Фабрика Jora](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md).
 
 ## Швидкий старт
 
 Вимоги: Python 3.10–3.12 для еталонного середовища; Node.js 22/24 для необов’язкових compatibility-тестів; Tkinter для Windows Studio; CMake 3.16+ і компілятор C17 для нативної гілки.
 
-```sh
-python -m venv .venv
-python -m pip install -e .
-python -m reaper --check examples/flow.rpr
-python -m reaper examples/flow.rpr
-```
+    python -m venv .venv
+    python -m pip install -e .
+    python -m reaper --check examples/flow.rpr
+    python -m reaper examples/flow.rpr
 
 Studio та REPL:
 
-```sh
-python reaper_desktop.py
-python -m reaper --repl
-```
+    python reaper_desktop.py
+    python -m reaper --repl
 
 Тести еталонного середовища:
 
-```sh
-python -m unittest discover -s tests -v
-```
+    python -m unittest discover -s tests -v
 
 ## Архітектура та стан
 
@@ -51,6 +47,6 @@ python -m unittest discover -s tests -v
 - [План реалізації](docs/IMPLEMENTATION_ROADMAP.md)
 - [Бібліотека Kora](docs/KORA.md)
 - [Індекс документації](docs/README.md)
-- [Спільні стандарти екосистеми](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/SHARED_STANDARDS.md)
+- [Спільні стандарти екосистеми](https://github.com/Ivan-VHS/DAK/blob/main/docs/SHARED_STANDARDS.md)
 
 [Внесок у проєкт](CONTRIBUTING.md) · [Безпека](SECURITY.md) · [Apache-2.0](LICENSE)
