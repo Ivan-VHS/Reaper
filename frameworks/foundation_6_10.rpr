@@ -121,7 +121,7 @@ export craft root_validate_relative_path(path) {
     when kind(path) != "text" or path == "" {
         yield false
     }
-    when starts_with(path, "/") or starts_with(path, "\\") or contains(path, ":") or path == ".." or contains(path, "../") or contains(path, "/..") or contains(path, "\\\\") {
+    when starts_with(path, "/") or starts_with(path, "\\") or contains(path, ":") or path == ".." or contains(path, "../") or contains(path, "/..") or contains(path, "\\") {
         yield false
     }
     yield true
