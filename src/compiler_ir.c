@@ -451,8 +451,17 @@ int reaper_compiler_ir_emit_c17(const ReaperCompilerIrModule *lir,
     for (index = 0u; index < lir->length; ++index) {
         const ReaperCompilerIrNode *node = &lir->nodes[index];
         uint64_t number_bits = UINT64_C(0);
-        if (sizeof node->number == sizeof number_bits)
+        long long integer_value = 0;
+        if (node->type == REAPER_COMPILER_IR_TYPE_F64 ||
+            node->type == REAPER_COMPILER_IR_TYPE_LENGTH ||
+            node->type == REAPER_COMPILER_IR_TYPE_RATIO) {
             memcpy(&number_bits, &node->number, sizeof number_bits);
+        }
+        if (node->type == REAPER_COMPILER_IR_TYPE_I64 ||
+            node->type == REAPER_COMPILER_IR_TYPE_BOOL ||
+            node->type == REAPER_COMPILER_IR_TYPE_DURATION) {
+            integer_value = (long long)node->integer;
+        }
         if (!appendf(output, output_capacity, &length, error, "    {")) return 0;
         if (!append_c_string(output, output_capacity, &length, error,
                              reaper_compiler_ir_opcode_name(node->opcode)) ||
@@ -466,7 +475,7 @@ int reaper_compiler_ir_emit_c17(const ReaperCompilerIrModule *lir,
                               is_text_type(node->type) ? node->text : "") ||
             !appendf(output, output_capacity, &length, error,
                       ", %u, %u, %lld, UINT64_C(0x%016llx) },\n",
-                      node->lhs, node->rhs, (long long)node->integer,
+                      node->lhs, node->rhs, integer_value,
                       (unsigned long long)number_bits)) return 0;    }
     if (!appendf(output, output_capacity, &length, error,
         "};\n"
