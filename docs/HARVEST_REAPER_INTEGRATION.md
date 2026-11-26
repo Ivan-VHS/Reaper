@@ -97,7 +97,7 @@ python -m unittest discover -s tests -v
 python -m reaper --check examples/flow.rpr
 python -m reaper --check harvest/core/diagnostics.rpr
 python -m reaper --check harvest/core/ir.rpr
-python -m reaper harvest/tests/harvest_conformance.rpr
+python -m reaper tests/harvest_conformance.rpr
 python -m reaper jora catalog --json
 python -m reaper jora compose --request examples/jora/harvest-chronicle.request.json --json
 python -m reaper jora build --request examples/jora/harvest-chronicle.request.json --output ./out/Chronicle --json
