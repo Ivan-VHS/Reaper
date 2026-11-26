@@ -1,0 +1,82 @@
+# Nonconcrete: typed contract metadata, compatibility and capability checks.
+# Contract row: [id, major, minor, fields, effects, capabilities].
+# Field row: [field_name, field_kind].
+
+import "../Uu/core.rpr" as uu
+
+export craft validate_contract(contract) {
+    when kind(contract) != "list" or size(contract) != 6 {
+        yield [false, ["contract-shape"]]
+    }
+    vary errors := []
+    when not uu["nonempty_text"](contract[0]) { change errors := push(errors, ["contract-id"]) }
+    when not uu["nonnegative_number"](contract[1]) { change errors := push(errors, ["contract-major"]) }
+    when not uu["nonnegative_number"](contract[2]) { change errors := push(errors, ["contract-minor"]) }
+    when kind(contract[3]) != "list" {
+        change errors := push(errors, ["contract-fields"])
+    } otherwise {
+        vary field_names := []
+        each field in contract[3] {
+            when kind(field) != "list" or size(field) != 2 {
+                change errors := push(errors, ["field-shape", field])
+            } otherwise {
+                when not uu["nonempty_text"](field[0]) or not uu["nonempty_text"](field[1]) {
+                    change errors := push(errors, ["field-name-or-kind", field])
+                }
+                change field_names := push(field_names, field[0])
+            }
+        }
+        when not uu["all_unique"](field_names) { change errors := push(errors, ["duplicate-field"]) }
+    }
+    when kind(contract[4]) != "list" { change errors := push(errors, ["contract-effects"]) }
+    when kind(contract[5]) != "list" { change errors := push(errors, ["contract-capabilities"]) }
+    when not uu["all_unique"](contract[4]) { change errors := push(errors, ["duplicate-effect"]) }
+    when not uu["all_unique"](contract[5]) { change errors := push(errors, ["duplicate-capability"]) }
+    yield [size(errors) == 0, errors]
+}
+
+export craft compatible(actual, required) {
+    make actual_check := validate_contract(actual)
+    make required_check := validate_contract(required)
+    when not actual_check[0] or not required_check[0] { yield [false, "invalid-contract"] }
+    when actual[0] != required[0] { yield [false, "contract-id-mismatch"] }
+    when actual[1] != required[1] { yield [false, "major-version-mismatch"] }
+    when actual[2] < required[2] { yield [false, "minor-version-too-old"] }
+    yield [true, "compatible"]
+}
+
+export craft missing_capabilities(requested, granted) {
+    when kind(requested) != "list" or kind(granted) != "list" {
+        yield [false, ["invalid-capability-set"]]
+    }
+    vary missing := []
+    each capability in requested {
+        when not uu["contains"](granted, capability) {
+            change missing := push(missing, capability)
+        }
+    }
+    yield [size(missing) == 0, missing]
+}
+
+export craft validate_dependencies(dependencies, module_ids) {
+    when kind(dependencies) != "list" or kind(module_ids) != "list" {
+        yield [false, ["invalid-dependency-input"]]
+    }
+    vary errors := []
+    vary seen := []
+    each dependency in dependencies {
+        when kind(dependency) != "text" or size(dependency) == 0 {
+            change errors := push(errors, ["invalid-dependency", dependency])
+        } otherwise {
+            when uu["contains"](seen, dependency) {
+                change errors := push(errors, ["duplicate-dependency", dependency])
+            } otherwise {
+                change seen := push(seen, dependency)
+            }
+            when not uu["contains"](module_ids, dependency) {
+                change errors := push(errors, ["missing-dependency", dependency])
+            }
+        }
+    }
+    yield [size(errors) == 0, errors]
+}
