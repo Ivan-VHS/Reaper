@@ -17,4 +17,48 @@ static void json_test(void){
  assert(strstr(b,"\"kind\":\"binary\""));assert(strstr(b,"\"text\":\"a\\\"b\""));
  fclose(f);reaper_ast_free(&a);
 }
-int main(void){precedence_test();power_test();bridge_test();legacy_flow_test();literal_test();trailing_test();paren_test();json_test();puts("native parser tests: 8 groups passed");return 0;}
+
+static void source_map_span_test(void)
+{
+    const char *source = "λ + 2";
+    ReaperTokenArray tokens = {0};
+    ReaperLexError lex_error = {{0}, 0u, 0u};
+    ReaperAst ast;
+    ReaperParseError parse_error = {{0}, 0u, 0u};
+
+    assert(reaper_lex(source, &tokens, &lex_error));
+    assert(tokens.items[0].byte_start == 0u && tokens.items[0].byte_end == 2u);
+    assert(tokens.items[1].byte_start == 3u && tokens.items[1].byte_end == 4u);
+    assert(tokens.items[2].byte_start == 5u && tokens.items[2].byte_end == 6u);
+
+    assert(reaper_parse_expression_with_source(&tokens, 17u, &ast, &parse_error));
+    const ReaperAstNode *root = &ast.items[ast.root];
+    assert(root->kind == REAPER_AST_BINARY);
+    assert(root->source_id == 17u);
+    assert(root->byte_start == 0u && root->byte_end == 6u);
+    assert(root->line == 1u && root->column == 3u);
+    assert(ast.items[root->left].byte_start == 0u &&
+           ast.items[root->left].byte_end == 2u);
+    assert(ast.items[root->right].byte_start == 5u &&
+           ast.items[root->right].byte_end == 6u);
+    reaper_ast_free(&ast);
+    reaper_tokens_free(&tokens);
+}
+
+static void grouping_span_covers_parentheses(void)
+{
+    ReaperTokenArray tokens = {0};
+    ReaperLexError lex_error = {{0}, 0u, 0u};
+    ReaperAst ast;
+    ReaperParseError parse_error = {{0}, 0u, 0u};
+    assert(reaper_lex("(λ + 2)", &tokens, &lex_error));
+    assert(reaper_parse_expression_with_source(&tokens, 5u, &ast, &parse_error));
+    const ReaperAstNode *root = &ast.items[ast.root];
+    assert(root->source_id == 5u);
+    assert(root->byte_start == 0u && root->byte_end == 8u);
+    assert(root->line == 1u && root->column == 1u);
+    reaper_ast_free(&ast);
+    reaper_tokens_free(&tokens);
+}
+
+int main(void){precedence_test();power_test();bridge_test();legacy_flow_test();literal_test();trailing_test();paren_test();json_test();source_map_span_test();grouping_span_covers_parentheses();puts("native parser tests: 8 groups passed");return 0;}
