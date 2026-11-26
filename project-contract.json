@@ -24,6 +24,20 @@
   },
   "capabilities": [
     {
+      "id": "foundations.second-five-frameworks",
+      "status": "partial",
+      "summary": "Adds executable Reaper contracts for semantic invariants, versioned compatibility descriptors, project/module roots, application composition and compiler/runtime backbone flow; complete static effect/ownership checking and native integration remain partial.",
+      "evidence": [
+        "frameworks/foundation_6_10.rpr",
+        "frameworks/foundation.rpr",
+        "docs/FOUNDATIONAL_FRAMEWORKS_6_10.md",
+        "examples/foundations_6_10.rpr",
+        "tests/test_foundational_frameworks_6_10.py",
+        "reaper/modules.py",
+        "docs/HARDWARE_LANGUAGE.md"
+      ]
+    },
+    {
       "id": "foundations.first-five-frameworks",
       "status": "partial",
       "summary": "Executable Reaper module defining Scaffold, Platform, Environment, Infrastructure and Architecture contracts with validation for repository areas, profile maturity, positive resource budgets and canonical layer ordering; native target integration remains partial.",
