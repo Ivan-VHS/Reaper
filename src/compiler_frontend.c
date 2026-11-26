@@ -1,5 +1,6 @@
 #include "reaper/compiler_ir.h"
 
+#include <ctype.h>
 #include <errno.h>
 #include <inttypes.h>
 #include <limits.h>
@@ -49,13 +50,41 @@ static int parse_i64_literal(const char *text, int64_t *value) {
 }
 
 static int parse_f64_literal(const char *text, double *value) {
-    char *end = NULL;
-    double parsed;
+    const unsigned char *cursor = (const unsigned char *)text;
+    double parsed = 0.0;
+    int saw_fraction_digit = 0;
+    double scale = 0.1;
     if (text == NULL || text[0] == '\0' || value == NULL) return 0;
-    errno = 0;
-    parsed = strtod(text, &end);
-    if (errno == ERANGE || end == text || end == NULL || *end != '\0' ||
-        !isfinite(parsed)) return 0;
+
+    /* The native lexer currently accepts decimal digits with one fractional
+     * part and no exponent. Parse this grammar directly so host LC_NUMERIC
+     * cannot change Reaper source semantics. */
+    if (!isdigit(*cursor)) return 0;
+    while (isdigit(*cursor)) {
+        parsed = parsed * 10.0 + (double)(*cursor - (unsigned char)'0');
+        if (!isfinite(parsed)) return 0;
+        ++cursor;
+    }
+    if (*cursor == (unsigned char)'.') {
+        ++cursor;
+        while (isdigit(*cursor)) {
+            const unsigned int digit = (unsigned int)(*cursor - (unsigned char)'0');
+            saw_fraction_digit = 1;
+            parsed += (double)digit * scale;
+            if (!isfinite(parsed)) return 0;
+            scale *= 0.1;
+            if (scale == 0.0 && cursor[1] != 0u) {
+                const unsigned char *remaining = cursor + 1;
+                while (isdigit(*remaining)) {
+                    if (*remaining != (unsigned char)'0') return 0;
+                    ++remaining;
+                }
+            }
+            ++cursor;
+        }
+        if (!saw_fraction_digit) return 0;
+    }
+    if (*cursor != 0u || !isfinite(parsed)) return 0;
     *value = parsed;
     return 1;
 }
@@ -90,6 +119,47 @@ int reaper_compiler_ir_lower_ast_to_hir(
         output == NULL || hir == NULL || output_capacity < ast->length) {
         return frontend_fail(error, 0u, source_name, 0u, 0u,
             "valid AST, source name and sufficient HIR output storage are required");
+    }
+
+    {
+        uint8_t reachable[REAPER_COMPILER_IR_MAX_NODES] = {0u};
+        uint32_t pending[REAPER_COMPILER_IR_MAX_NODES];
+        size_t pending_count = 0u;
+        pending[pending_count++] = ast->root;
+        while (pending_count > 0u) {
+            const uint32_t current = pending[--pending_count];
+            const ReaperAstNode *item;
+            if ((size_t)current >= ast->length) {
+                return frontend_fail(error, current, source_name, 0u, 0u,
+                    "AST contains an out-of-range node reference");
+            }
+            if (reachable[current] != 0u) continue;
+            reachable[current] = 1u;
+            item = &ast->items[current];
+            if (item->kind == REAPER_AST_UNARY) {
+                if (item->left >= current || item->right != REAPER_AST_NO_NODE)
+                    return frontend_fail(error, current, source_name, item->line, item->column,
+                        "unary AST node has invalid child references");
+                pending[pending_count++] = item->left;
+            } else if (item->kind == REAPER_AST_BINARY) {
+                if (item->left >= current || item->right >= current ||
+                    pending_count + 2u > REAPER_COMPILER_IR_MAX_NODES)
+                    return frontend_fail(error, current, source_name, item->line, item->column,
+                        "binary AST node has invalid child references");
+                pending[pending_count++] = item->left;
+                pending[pending_count++] = item->right;
+            } else if (item->left != REAPER_AST_NO_NODE ||
+                       item->right != REAPER_AST_NO_NODE) {
+                return frontend_fail(error, current, source_name, item->line, item->column,
+                    "literal and leaf AST nodes cannot have child references");
+            }
+        }
+        for (index = 0u; index < ast->length; ++index) {
+            if (reachable[index] == 0u)
+                return frontend_fail(error, index, source_name,
+                    ast->items[index].line, ast->items[index].column,
+                    "AST contains a node that is unreachable from its root");
+        }
     }
 
     for (index = 0u; index < ast->length; ++index) {
