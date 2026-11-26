@@ -3,8 +3,8 @@
   "total_target_framework_count": 330,
   "remaining_target_framework_count": 325,
   "existing_batch_01_source_count": 5,
-  "new_source_count": 200,
-  "remaining_source_count": 125,
+  "new_source_count": 225,
+  "remaining_source_count": 100,
   "domains": [
     {
       "number": 1,
@@ -340,7 +340,7 @@
       "name": "Подход",
       "framework_slots": 5,
       "source_frameworks": 0,
-      "state": "queued"
+      "state": "tests-first"
     },
     {
       "number": 43,
@@ -348,7 +348,7 @@
       "name": "Система",
       "framework_slots": 5,
       "source_frameworks": 0,
-      "state": "queued"
+      "state": "tests-first"
     },
     {
       "number": 44,
@@ -356,7 +356,7 @@
       "name": "Подсистема",
       "framework_slots": 5,
       "source_frameworks": 0,
-      "state": "queued"
+      "state": "tests-first"
     },
     {
       "number": 45,
@@ -364,7 +364,7 @@
       "name": "Модуль",
       "framework_slots": 5,
       "source_frameworks": 0,
-      "state": "queued"
+      "state": "tests-first"
     },
     {
       "number": 46,
@@ -372,7 +372,7 @@
       "name": "Компонент",
       "framework_slots": 5,
       "source_frameworks": 0,
-      "state": "queued"
+      "state": "tests-first"
     },
     {
       "number": 47,
@@ -4383,6 +4383,481 @@
       },
       "negative": {
         "args": "(5, 4, 6)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "42.strategy",
+      "domain_number": 42,
+      "domain": "Подход",
+      "slug": "42-approach",
+      "name": "Approach Strategy Framework",
+      "role": "strategy",
+      "path": "reaper/frameworks/42-approach/strategy.rpr",
+      "api": "valid_approach_strategy",
+      "purpose": "Validate a named strategy with explicit trade-offs, phase count and review cadence.",
+      "positive": {
+        "args": "([\"incremental\", [\"risk\", \"feedback\"], 4, \"each-phase\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"\", [\"risk\"], 0, \"none\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "42.selection",
+      "domain_number": 42,
+      "domain": "Подход",
+      "slug": "42-approach",
+      "name": "Approach Selection Framework",
+      "role": "selection",
+      "path": "reaper/frameworks/42-approach/selection.rpr",
+      "api": "approach_select_strategy",
+      "purpose": "Select the highest-scoring strategy that satisfies all mandatory requirements.",
+      "positive": {
+        "args": "([[\"simple\", 4, [\"local\"]], [\"full\", 8, [\"local\", \"audit\"]]], [\"local\", \"audit\"])",
+        "output": "full"
+      },
+      "negative": {
+        "args": "([[\"simple\", 4, [\"local\"]]], [\"audit\"])",
+        "output": ""
+      }
+    },
+    {
+      "id": "42.sequence",
+      "domain_number": 42,
+      "domain": "Подход",
+      "slug": "42-approach",
+      "name": "Approach Sequence Framework",
+      "role": "sequence",
+      "path": "reaper/frameworks/42-approach/sequence.rpr",
+      "api": "valid_approach_sequence",
+      "purpose": "Validate an ordered implementation sequence with all prerequisites preceding dependents.",
+      "positive": {
+        "args": "(4, [0, 1, 2, 3], [[0, 2], [1, 2], [2, 3]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(4, [0, 2, 1, 3], [[0, 2]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "42.risk",
+      "domain_number": 42,
+      "domain": "Подход",
+      "slug": "42-approach",
+      "name": "Approach Risk Framework",
+      "role": "risk",
+      "path": "reaper/frameworks/42-approach/risk.rpr",
+      "api": "valid_approach_risk_register",
+      "purpose": "Validate unique named risks with probability, impact and mitigation.",
+      "positive": {
+        "args": "([[\"ABI drift\", 2, 5, \"pin contract\"], [\"memory leak\", 3, 4, \"add tests\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"ABI drift\", 2, 5, \"pin contract\"], [\"ABI drift\", 1, 1, \"ignore\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "42.acceptance",
+      "domain_number": 42,
+      "domain": "Подход",
+      "slug": "42-approach",
+      "name": "Approach Acceptance Framework",
+      "role": "acceptance",
+      "path": "reaper/frameworks/42-approach/acceptance.rpr",
+      "api": "valid_approach_acceptance",
+      "purpose": "Require acceptance evidence for all declared approach objectives.",
+      "positive": {
+        "args": "([\"tests\", \"docs\", \"review\"], [[\"tests\", \"ci:123\"], [\"docs\", \"docs/design.md\"], [\"review\", \"pr:4\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"tests\", \"docs\"], [[\"tests\", \"ci:123\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "43.manifest",
+      "domain_number": 43,
+      "domain": "Система",
+      "slug": "43-system",
+      "name": "System Manifest Framework",
+      "role": "manifest",
+      "path": "reaper/frameworks/43-system/manifest.rpr",
+      "api": "valid_system_manifest",
+      "purpose": "Validate unique system services and declared system identity/version.",
+      "positive": {
+        "args": "([\"compiler\", [1, 0, 0], [\"lexer\", \"parser\", \"runtime\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"\", [1, 0, 0], [\"lexer\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "43.composition",
+      "domain_number": 43,
+      "domain": "Система",
+      "slug": "43-system",
+      "name": "System Composition Framework",
+      "role": "composition",
+      "path": "reaper/frameworks/43-system/composition.rpr",
+      "api": "valid_system_composition",
+      "purpose": "Validate an acyclic system service composition graph.",
+      "positive": {
+        "args": "(4, [[0, 1], [1, 3]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(3, [[0, 1], [1, 0]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "43.health",
+      "domain_number": 43,
+      "domain": "Система",
+      "slug": "43-system",
+      "name": "System Health Framework",
+      "role": "health",
+      "path": "reaper/frameworks/43-system/health.rpr",
+      "api": "reduce_system_health",
+      "purpose": "Reduce service states to healthy, degraded or unhealthy system status.",
+      "positive": {
+        "args": "([\"healthy\", \"degraded\", \"healthy\"])",
+        "output": "degraded"
+      },
+      "negative": {
+        "args": "([\"healthy\", \"unknown\"])",
+        "output": "unhealthy"
+      }
+    },
+    {
+      "id": "43.configuration",
+      "domain_number": 43,
+      "domain": "Система",
+      "slug": "43-system",
+      "name": "System Configuration Framework",
+      "role": "configuration",
+      "path": "reaper/frameworks/43-system/configuration.rpr",
+      "api": "valid_system_configuration",
+      "purpose": "Validate unique required system configuration keys and explicit text values.",
+      "positive": {
+        "args": "([[\"locale\", \"uk\"], [\"mode\", \"safe\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"locale\", \"uk\"], [\"locale\", \"ru\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "43.resources",
+      "domain_number": 43,
+      "domain": "Система",
+      "slug": "43-system",
+      "name": "System Resource Framework",
+      "role": "resources",
+      "path": "reaper/frameworks/43-system/resources.rpr",
+      "api": "valid_system_resource_budget",
+      "purpose": "Validate resource categories and ensure allocated totals stay within system ceilings.",
+      "positive": {
+        "args": "([[\"heap\", 256, 1024], [\"handles\", 10, 64]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"heap\", 2048, 1024]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "44.boundary",
+      "domain_number": 44,
+      "domain": "Подсистема",
+      "slug": "44-subsystem",
+      "name": "Subsystem Boundary Framework",
+      "role": "boundary",
+      "path": "reaper/frameworks/44-subsystem/boundary.rpr",
+      "api": "valid_subsystem_boundary",
+      "purpose": "Validate a subsystem boundary with unique provided and consumed contracts.",
+      "positive": {
+        "args": "([\"compiler\", [\"token.api\", \"ir.api\"], [\"fs.read\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"\", [\"token.api\"], [\"fs.read\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "44.ownership",
+      "domain_number": 44,
+      "domain": "Подсистема",
+      "slug": "44-subsystem",
+      "name": "Subsystem Ownership Framework",
+      "role": "ownership",
+      "path": "reaper/frameworks/44-subsystem/ownership.rpr",
+      "api": "valid_subsystem_ownership",
+      "purpose": "Validate unique resource ownership and release responsibility.",
+      "positive": {
+        "args": "([[\"heap\", \"memory-manager\"], [\"files\", \"resource-manager\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"heap\", \"memory-manager\"], [\"heap\", \"runtime\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "44.lifecycle",
+      "domain_number": 44,
+      "domain": "Подсистема",
+      "slug": "44-subsystem",
+      "name": "Subsystem Lifecycle Framework",
+      "role": "lifecycle",
+      "path": "reaper/frameworks/44-subsystem/lifecycle.rpr",
+      "api": "valid_subsystem_lifecycle",
+      "purpose": "Validate an explicit subsystem lifecycle transition sequence.",
+      "positive": {
+        "args": "(\"created\", [\"configured\", \"ready\", \"stopped\"], [[\"created\", \"configured\"], [\"configured\", \"ready\"], [\"ready\", \"stopped\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(\"created\", [\"ready\"], [[\"created\", \"configured\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "44.dependency",
+      "domain_number": 44,
+      "domain": "Подсистема",
+      "slug": "44-subsystem",
+      "name": "Subsystem Dependency Framework",
+      "role": "dependency",
+      "path": "reaper/frameworks/44-subsystem/dependency.rpr",
+      "api": "valid_subsystem_dependencies",
+      "purpose": "Validate subsystem dependencies as an acyclic directed graph.",
+      "positive": {
+        "args": "(4, [[0, 1], [1, 3]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(3, [[0, 1], [1, 0]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "44.isolation",
+      "domain_number": 44,
+      "domain": "Подсистема",
+      "slug": "44-subsystem",
+      "name": "Subsystem Isolation Framework",
+      "role": "isolation",
+      "path": "reaper/frameworks/44-subsystem/isolation.rpr",
+      "api": "valid_subsystem_isolation",
+      "purpose": "Require every declared isolation property for a sensitive subsystem.",
+      "positive": {
+        "args": "([true, true, true])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([true, false, true])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "45.imports",
+      "domain_number": 45,
+      "domain": "Модуль",
+      "slug": "45-module",
+      "name": "Module Import Framework",
+      "role": "imports",
+      "path": "reaper/frameworks/45-module/imports.rpr",
+      "api": "valid_module_import_contract",
+      "purpose": "Validate unique module imports with explicit version and visibility declarations.",
+      "positive": {
+        "args": "([[\"lexer\", 1, \"public\"], [\"parser\", 1, \"private\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"lexer\", 1, \"public\"], [\"lexer\", 2, \"private\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "45.exports",
+      "domain_number": 45,
+      "domain": "Модуль",
+      "slug": "45-module",
+      "name": "Module Export Framework",
+      "role": "exports",
+      "path": "reaper/frameworks/45-module/exports.rpr",
+      "api": "valid_module_export_contract",
+      "purpose": "Validate unique module exports with public symbol names and type signatures.",
+      "positive": {
+        "args": "([[\"parse\", \"fn(text)->ast\"], [\"emit\", \"fn(ast)->text\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"parse\", \"fn(text)\"], [\"parse\", \"fn(bytes)\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "45.dependency-graph",
+      "domain_number": 45,
+      "domain": "Модуль",
+      "slug": "45-module",
+      "name": "Module Dependency Framework",
+      "role": "dependency-graph",
+      "path": "reaper/frameworks/45-module/dependency_graph.rpr",
+      "api": "valid_module_dependency_graph",
+      "purpose": "Validate an acyclic module import graph.",
+      "positive": {
+        "args": "(4, [[0, 1], [1, 3]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(2, [[0, 1], [1, 0]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "45.version",
+      "domain_number": 45,
+      "domain": "Модуль",
+      "slug": "45-module",
+      "name": "Module Version Framework",
+      "role": "version",
+      "path": "reaper/frameworks/45-module/version.rpr",
+      "api": "module_version_compatible",
+      "purpose": "Validate module API compatibility by major version and non-regressing minor version.",
+      "positive": {
+        "args": "([1, 2], [1, 3])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([1, 2], [2, 0])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "45.interface",
+      "domain_number": 45,
+      "domain": "Модуль",
+      "slug": "45-module",
+      "name": "Module Interface Framework",
+      "role": "interface",
+      "path": "reaper/frameworks/45-module/interface.rpr",
+      "api": "valid_module_interface",
+      "purpose": "Validate stable module interface identity and unique typed method declarations.",
+      "positive": {
+        "args": "([\"reaper.module.v1\", [[\"load\", \"fn(path)->module\"], [\"unload\", \"fn(module)->unit\"]]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"\", [[\"load\", \"fn(path)\"]]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "46.contract",
+      "domain_number": 46,
+      "domain": "Компонент",
+      "slug": "46-component",
+      "name": "Component Contract Framework",
+      "role": "contract",
+      "path": "reaper/frameworks/46-component/contract.rpr",
+      "api": "valid_component_contract",
+      "purpose": "Validate component identity, version, lifecycle profile and public API name.",
+      "positive": {
+        "args": "([\"parser\", [1, 0, 0], \"managed\", \"parse\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"\", [1, 0, 0], \"managed\", \"parse\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "46.ports",
+      "domain_number": 46,
+      "domain": "Компонент",
+      "slug": "46-component",
+      "name": "Component Port Framework",
+      "role": "ports",
+      "path": "reaper/frameworks/46-component/ports.rpr",
+      "api": "valid_component_ports",
+      "purpose": "Validate unique typed component ports and explicit input/output direction.",
+      "positive": {
+        "args": "([[\"source\", \"input\", \"text\"], [\"ast\", \"output\", \"node\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"source\", \"input\", \"text\"], [\"source\", \"output\", \"node\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "46.wiring",
+      "domain_number": 46,
+      "domain": "Компонент",
+      "slug": "46-component",
+      "name": "Component Wiring Framework",
+      "role": "wiring",
+      "path": "reaper/frameworks/46-component/wiring.rpr",
+      "api": "valid_component_wiring",
+      "purpose": "Validate source output ports connect to target input ports with matching types.",
+      "positive": {
+        "args": "([[\"parser\", \"ast\", \"node\", \"checker\", \"ast\", \"node\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"parser\", \"ast\", \"text\", \"checker\", \"ast\", \"node\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "46.lifecycle",
+      "domain_number": 46,
+      "domain": "Компонент",
+      "slug": "46-component",
+      "name": "Component Lifecycle Framework",
+      "role": "lifecycle",
+      "path": "reaper/frameworks/46-component/lifecycle.rpr",
+      "api": "valid_component_lifecycle",
+      "purpose": "Validate component lifecycle transitions through declared states.",
+      "positive": {
+        "args": "(\"created\", [\"ready\", \"stopped\"], [[\"created\", \"ready\"], [\"ready\", \"stopped\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(\"created\", [\"running\"], [[\"created\", \"ready\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "46.compatibility",
+      "domain_number": 46,
+      "domain": "Компонент",
+      "slug": "46-component",
+      "name": "Component Compatibility Framework",
+      "role": "compatibility",
+      "path": "reaper/frameworks/46-component/compatibility.rpr",
+      "api": "component_contract_compatible",
+      "purpose": "Check component versions against an inclusive compatible major/minor interval.",
+      "positive": {
+        "args": "([1, 3], [1, 2], [1, 4])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([2, 0], [1, 2], [1, 4])",
         "output": "false"
       }
     }

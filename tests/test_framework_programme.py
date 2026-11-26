@@ -35,10 +35,10 @@ class FrameworkProgrammeTests(unittest.TestCase):
         self.assertEqual(self.index["remaining_target_framework_count"], 325)
         self.assertEqual(len(self.index["domains"]), 66)
         self.assertEqual(sum(domain["framework_slots"] for domain in self.index["domains"]), 330)
-        self.assertEqual(len(self.frameworks), 200)
+        self.assertEqual(len(self.frameworks), 225)
         self.assertEqual(self.index["remaining_source_count"], 305)
-        self.assertEqual(len({item["id"] for item in self.frameworks}), 200)
-        self.assertEqual(len({item["path"] for item in self.frameworks}), 200)
+        self.assertEqual(len({item["id"] for item in self.frameworks}), 225)
+        self.assertEqual(len({item["path"] for item in self.frameworks}), 225)
 
     def test_each_new_framework_is_an_independent_reaper_module(self) -> None:
         missing = [item["path"] for item in self.frameworks if not (ROOT / item["path"]).is_file()]
