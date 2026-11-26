@@ -125,6 +125,11 @@ static void release_rollback(void *context, void *handle) {
     (void)context;
     free(handle);
 }
+static int preserve_recovery(void *context, void *handle,
+                             const char *request_id, const char *path) {
+    (void)context; (void)handle; (void)request_id; (void)path;
+    return 1;
+}
 static int audit_append(void *context, const char *event, const char *request,
                         const char *repo, const char *branch, const char *revision,
                         const char *path, const char *digest, const char *details) {
@@ -154,6 +159,7 @@ static ReaperEvolutionApplyHost make_host(FakeHost *fake) {
     host.rollback_committed = rollback_committed;
     host.discard_staged = discard_staged;
     host.release_rollback = release_rollback;
+    host.preserve_failed_rollback = preserve_recovery;
     host.audit_append = audit_append;
     return host;
 }
