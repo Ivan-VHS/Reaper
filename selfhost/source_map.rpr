@@ -1,0 +1,88 @@
+# Reaper-native source position mapping.
+# Offsets and columns use Reaper string-index units (Unicode code points in the
+# reference runtime). UTF-8 byte offsets and UTF-16 LSP columns are separate
+# projections and are intentionally not guessed by this stage.
+
+craft build_source_position_map(source) {
+    vary index := 0
+    vary line := 1
+    vary column := 1
+    vary positions := []
+    make source_length := size(source)
+
+    loop while index < source_length {
+        change positions := push(positions, [index, line, column])
+        make char := source[index]
+
+        when char == "\r" {
+            when index + 1 < source_length and source[index + 1] == "\n" {
+                change positions := push(positions, [index + 1, line, column])
+                change index := index + 2
+            } otherwise {
+                change index := index + 1
+            }
+            change line := line + 1
+            change column := 1
+        } otherwise {
+            when char == "\n" {
+                change line := line + 1
+                change column := 1
+            } otherwise {
+                change column := column + 1
+            }
+            change index := index + 1
+        }
+    }
+
+    change positions := push(positions, [source_length, line, column])
+    yield positions
+}
+
+craft source_position_at(position_map, offset) {
+    when offset < 0 or offset >= size(position_map) {
+        yield ["ERR", "source offset outside position map", offset]
+    }
+    yield ["OK", position_map[offset]]
+}
+
+make empty_map := build_source_position_map("")
+assert(empty_map == [[0, 1, 1]], "empty source must have an EOF position")
+
+make line_feed_map := build_source_position_map("a\nb")
+assert(line_feed_map == [
+    [0, 1, 1],
+    [1, 1, 2],
+    [2, 2, 1],
+    [3, 2, 2]
+], "LF source positions must advance exactly one line")
+
+make crlf_map := build_source_position_map("a\r\nb")
+assert(crlf_map == [
+    [0, 1, 1],
+    [1, 1, 2],
+    [2, 1, 2],
+    [3, 2, 1],
+    [4, 2, 2]
+], "CRLF must count as one line break")
+
+make cr_map := build_source_position_map("a\rb")
+assert(cr_map == [
+    [0, 1, 1],
+    [1, 1, 2],
+    [2, 2, 1],
+    [3, 2, 2]
+], "standalone CR must advance exactly one line")
+
+make unicode_map := build_source_position_map("a€b")
+assert(unicode_map == [
+    [0, 1, 1],
+    [1, 1, 2],
+    [2, 1, 3],
+    [3, 1, 4]
+], "Unicode positions must use Reaper string-index units")
+
+assert(source_position_at(crlf_map, 3) == ["OK", [3, 2, 1]], "valid source offset lookup mismatch")
+assert(source_position_at(crlf_map, -1) == ["ERR", "source offset outside position map", -1], "negative source offset must fail")
+assert(source_position_at(crlf_map, size(crlf_map)) == ["ERR", "source offset outside position map", size(crlf_map)], "out-of-range source offset must fail")
+
+emit "SELFHOST_SOURCE_MAP_OK"
