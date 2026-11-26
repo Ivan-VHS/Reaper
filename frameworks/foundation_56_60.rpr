@@ -19,8 +19,21 @@ export craft grid_validate_axis(axis) {
 }
 
 export craft grid_validate_descriptor(grid) {
-    when kind(grid) != "list" or size(grid) != 4 or kind(grid[0]) != "text" or grid[0] == "" or kind(grid[1]) != "list" or size(grid[1]) < 2 or kind(grid[2]) != "list" or kind(grid[3]) != "list" {
+    when kind(grid) != "list" or size(grid) != 4 or kind(grid[0]) != "text" or grid[0] == "" or kind(grid[1]) != "list" or size(grid[1]) != 2 or kind(grid[2]) != "list" or kind(grid[3]) != "list" {
         yield false
+    }
+    when grid[1][0][0] != "row" or grid[1][1][0] != "column" or grid[1][0][2] != size(grid[2]) or grid[1][1][2] != size(grid[3]) {
+        yield false
+    }
+    each coordinate in grid[2] {
+        when kind(coordinate) != "text" or coordinate == "" {
+            yield false
+        }
+    }
+    each coordinate in grid[3] {
+        when kind(coordinate) != "text" or coordinate == "" {
+            yield false
+        }
     }
     vary kinds := []
     vary names := []
@@ -248,7 +261,7 @@ export craft workspace_validate_membership(workspace, path) {
 }
 
 export craft workspace_mutation_allowed(workspace) {
-    when kind(workspace) != "list" or size(workspace) != 6 or not contains(workspace_states(), workspace[4]) {
+    when not workspace_validate_descriptor(workspace) {
         yield false
     }
     yield workspace[4] == "clean" or workspace[4] == "modified"
