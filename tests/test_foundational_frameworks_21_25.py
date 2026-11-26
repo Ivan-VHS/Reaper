@@ -70,11 +70,15 @@ class FoundationalFrameworksTwentyOneToTwentyFiveTests(unittest.TestCase):
             ["true"],
         )
         self.assertEqual(
-            self.run_expression('tools["tooling_validate_probe"](["gcc", "/usr/bin/gcc", "not-probed"])'),
+            self.run_expression('tools["tooling_validate_probe"](["gcc", "", "not-probed"])'),
             ["true"],
         )
         self.assertEqual(
             self.run_expression('tools["tooling_validate_probe"](["unknown-compiler", "/usr/bin/unknown", "available"])'),
+            ["false"],
+        )
+        self.assertEqual(
+            self.run_expression('tools["tooling_validate_probe"](["gcc", "", "available"])'),
             ["false"],
         )
         self.assertEqual(
