@@ -76,7 +76,18 @@ export craft structure_value_matches(type_name, value) {
         yield kind(value) == "text"
     }
     when type_name == "bytes" {
-        yield kind(value) == "text" or kind(value) == "list"
+        when kind(value) == "text" {
+            yield true
+        }
+        when kind(value) != "list" {
+            yield false
+        }
+        each byte in value {
+            when not structure_value_matches("u8", byte) {
+                yield false
+            }
+        }
+        yield true
     }
     make bounds := structure_find_bounds(type_name)
     when bounds == nothing {
