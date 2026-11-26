@@ -32,5 +32,13 @@ jobs:
           python-version: "3.12"
       - name: Run Reaper-native type and platform conformance
         run: python -m reaper selfhost/type_platform_tests.rpr
+      - name: Run Reaper-native compiler foundation conformance
+        run: |
+          python -m reaper selfhost/type_system.rpr
+          python -m reaper selfhost/ownership.rpr
+          python -m reaper selfhost/typed_pipeline.rpr
+          python -m reaper selfhost/package_contract.rpr
+      - name: Run compiler foundation Python harness
+        run: python -m unittest tests.test_compiler_foundations -v
       - name: Type-check the system-data example
         run: python -m reaper --check examples/typed_platforms.rpr
