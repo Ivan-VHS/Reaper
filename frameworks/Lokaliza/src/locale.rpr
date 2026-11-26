@@ -147,3 +147,105 @@ export craft locale_missing_keys(catalog, tag, required) {
     }
     yield missing
 }
+
+
+# Language negotiation, translation coverage and terminology consistency.
+export craft locale_tag_parse(tag) {
+    when size(tag) < 2 { yield [false, "locale_tag_too_short"] }
+    make parts := split(tag, "-")
+    when size(parts) == 0 or size(parts[0]) < 2 or size(parts[0]) > 8 {
+        yield [false, "invalid_language_subtag"]
+    }
+    vary index := 0
+    loop while index < size(parts) {
+        when size(parts[index]) == 0 { yield [false, "empty_locale_subtag"] }
+        when size(parts[index]) > 8 { yield [false, "locale_subtag_too_long"] }
+        change index := index + 1
+    }
+    yield [true, parts]
+}
+
+export craft locale_negotiate(requested, supported, default_tag) {
+    vary request_index := 0
+    loop while request_index < size(requested) {
+        make exact := locale_find(supported, requested[request_index])
+        when exact[0] { yield [true, exact[1], "exact"] }
+        make parent := locale_region_fallback(requested[request_index])
+        make regional := locale_find(supported, parent)
+        when regional[0] { yield [true, regional[1], "language"] }
+        change request_index := request_index + 1
+    }
+    make fallback := locale_find(supported, default_tag)
+    when fallback[0] { yield [true, fallback[1], "default"] }
+    yield [false, "no_supported_locale"]
+}
+
+export craft locale_catalog_coverage(catalog, locale_tag, required_keys) {
+    make missing := locale_catalog_missing_keys(catalog, locale_tag, required_keys)
+    make total := size(required_keys)
+    make translated := total - size(missing)
+    when total == 0 { yield [true, [0, 0, 1], missing] }
+    yield [true, [translated, total, translated / total], missing]
+}
+
+export craft locale_catalog_keys(catalog, locale_tag) {
+    vary keys := []
+    vary index := 0
+    loop while index < size(catalog) {
+        when size(catalog[index]) == 3 and catalog[index][0] == locale_tag {
+            when not contains(keys, catalog[index][1]) {
+                change keys := push(keys, catalog[index][1])
+            }
+        }
+        change index := index + 1
+    }
+    yield keys
+}
+
+export craft locale_catalog_compare_keys(catalog, reference_tag, candidate_tag) {
+    make reference_keys := locale_catalog_keys(catalog, reference_tag)
+    make candidate_keys := locale_catalog_keys(catalog, candidate_tag)
+    yield [
+        locale_catalog_missing_keys(catalog, candidate_tag, reference_keys),
+        locale_catalog_missing_keys(catalog, reference_tag, candidate_keys)
+    ]
+}
+
+export craft locale_terminology_record(term_id, canonical, aliases, domain) {
+    yield [term_id, canonical, aliases, domain]
+}
+
+export craft locale_terminology_validate(terms) {
+    vary index := 0
+    loop while index < size(terms) {
+        when size(terms[index]) != 4 { yield [false, "invalid_term_record"] }
+        when size(terms[index][0]) == 0 or size(terms[index][1]) == 0 {
+            yield [false, "term_identity_missing"]
+        }
+        vary other := index + 1
+        loop while other < size(terms) {
+            when terms[index][0] == terms[other][0] {
+                yield [false, "duplicate_term_id"]
+            }
+            change other := other + 1
+        }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+
+export craft locale_terminology_find(terms, term_id) {
+    vary index := 0
+    loop while index < size(terms) {
+        when terms[index][0] == term_id { yield [true, terms[index]] }
+        change index := index + 1
+    }
+    yield [false, "term_not_found"]
+}
+
+export craft locale_text_direction(locale, fallback_direction) {
+    make found := locale_find(locale, locale)
+    when found[0] { yield found[1][2] }
+    when fallback_direction == "rtl" { yield "rtl" }
+    yield "ltr"
+}
