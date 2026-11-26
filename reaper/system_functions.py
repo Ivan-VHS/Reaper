@@ -7,13 +7,14 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import heapq
 import hmac
 import json
 import secrets
 import threading
 import time
 from collections import defaultdict, deque
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from typing import Any
 
 from .errors import ReaperRuntimeError
@@ -140,6 +141,12 @@ class ReaperSystemFunctions:
                 errors.append(f"{contract_id}: depends_on must be a list of contract ids")
             if not isinstance(fields, Mapping):
                 errors.append(f"{contract_id}: fields must be a mapping")
+            elif any(
+                not isinstance(field_name, str) or not field_name
+                or not isinstance(field_type, str) or not field_type
+                for field_name, field_type in fields.items()
+            ):
+                errors.append(f"{contract_id}: fields must map non-empty names to non-empty type names")
             by_id[contract_id] = record
 
         graph: dict[str, list[str]] = {}
@@ -154,41 +161,56 @@ class ReaperSystemFunctions:
             for dependency in graph[contract_id]:
                 if dependency not in by_id:
                     errors.append(f"{contract_id}: unknown dependency '{dependency}'")
-                    continue
-                child_fields = by_id[contract_id].get("fields", {})
-                parent_fields = by_id[dependency].get("fields", {})
-                if isinstance(child_fields, Mapping) and isinstance(parent_fields, Mapping):
-                    for field_name in sorted(set(child_fields) & set(parent_fields)):
-                        if child_fields[field_name] != parent_fields[field_name]:
-                            errors.append(
-                                f"{contract_id}: field '{field_name}' conflicts with "
-                                f"dependency '{dependency}'"
-                            )
 
-        state: dict[str, int] = {}
+        # Kahn ordering is iterative, deterministic and avoids Python recursion limits.
+        pending = {
+            contract_id: {dependency for dependency in dependencies if dependency in by_id}
+            for contract_id, dependencies in graph.items()
+        }
+        dependents: dict[str, list[str]] = defaultdict(list)
+        for contract_id, dependencies in pending.items():
+            for dependency in dependencies:
+                dependents[dependency].append(contract_id)
+        ready = [contract_id for contract_id, dependencies in pending.items() if not dependencies]
+        heapq.heapify(ready)
         order: list[str] = []
-        stack: list[str] = []
-
-        def visit(contract_id: str) -> None:
-            mark = state.get(contract_id, 0)
-            if mark == 2:
-                return
-            if mark == 1:
-                start = stack.index(contract_id)
-                cycle = stack[start:] + [contract_id]
-                errors.append("dependency cycle: " + " -> ".join(cycle))
-                return
-            state[contract_id] = 1
-            stack.append(contract_id)
-            for dependency in graph.get(contract_id, []):
-                if dependency in by_id:
-                    visit(dependency)
-            stack.pop()
-            state[contract_id] = 2
+        while ready:
+            contract_id = heapq.heappop(ready)
             order.append(contract_id)
+            for dependent in sorted(dependents.get(contract_id, [])):
+                pending[dependent].discard(contract_id)
+                if not pending[dependent]:
+                    heapq.heappush(ready, dependent)
 
-        for contract_id in sorted(by_id):
-            visit(contract_id)
+        cyclic = sorted(contract_id for contract_id, dependencies in pending.items() if dependencies)
+        if cyclic:
+            errors.append("dependency cycle involving: " + ", ".join(cyclic[:32]))
+
+        effective_fields: dict[str, dict[str, str]] = {}
+        for contract_id in order:
+            inherited: dict[str, str] = {}
+            origins: dict[str, str] = {}
+            for dependency in graph.get(contract_id, []):
+                for field_name, field_type in effective_fields.get(dependency, {}).items():
+                    if field_name in inherited and inherited[field_name] != field_type:
+                        errors.append(
+                            f"{contract_id}: inherited field '{field_name}' conflicts between "
+                            f"'{origins[field_name]}' and '{dependency}'"
+                        )
+                    else:
+                        inherited[field_name] = field_type
+                        origins[field_name] = dependency
+            own_fields = by_id[contract_id].get("fields", {})
+            if isinstance(own_fields, Mapping):
+                for field_name, field_type in own_fields.items():
+                    if field_name in inherited and inherited[field_name] != field_type:
+                        errors.append(
+                            f"{contract_id}: field '{field_name}' conflicts with inherited "
+                            f"type from '{origins[field_name]}'"
+                        )
+                    inherited[field_name] = field_type
+                    origins[field_name] = contract_id
+            effective_fields[contract_id] = inherited
 
         return {
             "ok": not errors,
@@ -206,7 +228,7 @@ class ReaperSystemFunctions:
         previous_environment = self.interpreter._current_environment
         try:
             value = self._invoke(function, [], "arena_slot")
-            detached = copy.deepcopy(value)
+            detached = _json_copy(value, max_bytes=capacity)
         except Exception:
             self.interpreter._current_environment = previous_environment
             try:
@@ -401,13 +423,6 @@ class ReaperSystemFunctions:
             left_digest = None
             right_digest = None
 
-    def issue_override(self, scope: Any, ttl_ms: Any) -> str:
-        if self.override_authority is None:
-            raise SystemFunctionError("override token issuance requires a host-injected OverrideAuthority")
-        if not isinstance(scope, str) or scope != "mutation:override":
-            raise SystemFunctionError("only the mutation:override scope is supported")
-        return self.override_authority.issue(scope, _integer(ttl_ms, "ttl_ms", 1))
-
     def guarded_mutation(
         self, current: Any, candidate: Any, mode: Any,
         validator: Any = None, token: Any = None,
@@ -455,7 +470,7 @@ class ReaperSystemFunctions:
             "active": now < expires and now >= start,
             "starts_at_ms": start,
             "expires_at_ms": expires,
-            "remaining_ms": max(0, expires - now) if now >= start else expires - start,
+            "remaining_ms": max(0, expires - now),
             "days": duration_days,
         }
 
@@ -503,7 +518,7 @@ class ReaperSystemFunctions:
         import_items = _list(imports, "declared imports")
         denied_prefixes = (
             "network", "http", "https", "socket", "tcp", "udp", "dns",
-            "web", "remote", "cloud", "net.",
+            "web", "remote", "cloud", "grpc", "quic", "ws", "wss",
         )
         violations: list[str] = []
         if enabled:
@@ -512,7 +527,14 @@ class ReaperSystemFunctions:
                     if not isinstance(raw, str):
                         raise SystemFunctionError(f"{category} declarations must be text")
                     normalized = raw.strip().lower()
-                    if any(normalized == prefix or normalized.startswith(prefix + ".") for prefix in denied_prefixes):
+                    denied = normalized.startswith("net.") or any(
+                        normalized == prefix
+                        or normalized.startswith(prefix + ".")
+                        or normalized.startswith(prefix + ":")
+                        or normalized.startswith(prefix + "/")
+                        for prefix in denied_prefixes
+                    )
+                    if denied:
                         violations.append(f"{category}:{raw}")
         return {"ok": not violations, "local_only": enabled, "violations": violations}
 

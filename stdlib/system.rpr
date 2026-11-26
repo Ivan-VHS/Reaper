@@ -25,10 +25,6 @@ export craft ephemeral_match(left, right) {
     yield _ephemeral_match(left, right)
 }
 
-export craft issue_override(scope, ttl_ms) {
-    yield _override_issue(scope, ttl_ms)
-}
-
 export craft guarded_mutation(current, candidate, mode, validator, token) {
     yield _guarded_mutation(current, candidate, mode, validator, token)
 }

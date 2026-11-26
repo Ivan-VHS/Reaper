@@ -68,8 +68,7 @@ make plan := system["diff_reconcile"](input["before"], input["after"], "id")
 make applied := system["reconcile_apply"](input["before"], plan, accept)
 make matched := system["ephemeral_match"]("temporary-secret", "temporary-secret")
 make lease := system["lease_window"](0, 2, 86400000)
-make token := system["issue_override"]("mutation:override", 30000)
-make mutation := system["guarded_mutation"](input["before"], input["after"], "override", nothing, token)
+make mutation := system["guarded_mutation"](input["before"], input["after"], "override", nothing, manual_token)
 make measured := system["latency_measure"]("double", double, [21])
 make profile := system["latency_report"]()
 make local_ok := system["local_only_check"](true, ["file.read"], ["reaper.core"])
@@ -95,9 +94,12 @@ emit rollback_result["ok"]
             path = work / "main.rpr"
             path.write_text(source, encoding="utf-8")
             output: list[str] = []
-            Interpreter(output=output.append, override_authority=OverrideAuthority()).run(
-                source, str(path), engine=engine
+            authority = OverrideAuthority()
+            interpreter = Interpreter(output=output.append, override_authority=authority)
+            interpreter.globals.define(
+                "manual_token", authority.issue("mutation:override", 30_000)
             )
+            interpreter.run(source, str(path), engine=engine)
             return output
 
     def test_public_reaper_functions_work_in_treewalk_and_vm(self) -> None:
@@ -122,15 +124,41 @@ emit rollback_result["ok"]
             with self.subTest(engine=engine):
                 self.assertEqual(self._run_library(engine), expected)
 
-    def test_contract_graph_reports_cycles_and_field_conflicts(self) -> None:
+    def test_contract_graph_reports_cycles_and_inherited_field_conflicts(self) -> None:
         interpreter = Interpreter(output=lambda _line: None)
-        result = interpreter.system_functions.contract_graph_check([
+        cyclic = interpreter.system_functions.contract_graph_check([
             {"id": "alpha", "depends_on": ["beta"], "fields": {"state": "u32"}},
             {"id": "beta", "depends_on": ["alpha"], "fields": {"state": "text"}},
         ])
-        self.assertFalse(result["ok"])
-        self.assertTrue(any("cycle" in item for item in result["errors"]))
-        self.assertTrue(any("conflicts" in item for item in result["errors"]))
+        self.assertFalse(cyclic["ok"])
+        self.assertTrue(any("cycle" in item for item in cyclic["errors"]))
+
+        conflicting_parents = interpreter.system_functions.contract_graph_check([
+            {"id": "base_a", "fields": {"state": "u32"}},
+            {"id": "base_b", "fields": {"state": "text"}},
+            {"id": "child", "depends_on": ["base_a", "base_b"], "fields": {}},
+        ])
+        self.assertFalse(conflicting_parents["ok"])
+        self.assertTrue(any("inherited field 'state' conflicts" in item
+                            for item in conflicting_parents["errors"]))
+
+    def test_script_cannot_issue_its_own_override_token(self) -> None:
+        with self.assertRaisesRegex(Exception, "unknown name '_override_issue'"):
+            Interpreter(output=lambda _line: None, override_authority=OverrideAuthority()).run(
+                '_override_issue("mutation:override", 30000)'
+            )
+
+    def test_lease_remaining_includes_future_start_delay(self) -> None:
+        lease = Interpreter(output=lambda _line: None).system_functions.lease_window(
+            86_400_000, 2, 0
+        )
+        self.assertFalse(lease["active"])
+        self.assertEqual(lease["remaining_ms"], 3 * 86_400_000)
+
+    def test_local_only_detects_url_schemes_and_net_imports(self) -> None:
+        functions = Interpreter(output=lambda _line: None).system_functions
+        self.assertFalse(functions.local_only_check(True, ["https://example.test"], [])["ok"])
+        self.assertFalse(functions.local_only_check(True, [], ["net.socket"])["ok"])
 
     def test_worker_memory_budget_halts_without_claiming_process_isolation(self) -> None:
         source = '''

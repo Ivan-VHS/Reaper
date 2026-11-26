@@ -604,7 +604,6 @@ class Interpreter:
         register("_diff_reconcile", self.system_functions.diff_reconcile, 3, 3)
         register("_reconcile_apply", self.system_functions.reconcile_apply, 3, 3)
         register("_ephemeral_match", self.system_functions.ephemeral_match, 2, 2)
-        register("_override_issue", self.system_functions.issue_override, 2, 2)
         register("_guarded_mutation", self.system_functions.guarded_mutation, 5, 5)
         register("_revision_log", self.system_functions.revision_log, 0, 0)
         register("_lease_window", self.system_functions.lease_window, 3, 3)

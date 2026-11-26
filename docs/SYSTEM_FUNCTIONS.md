@@ -20,7 +20,7 @@ They are not yet implemented by the partial native C17 frontend/runtime.
 | Budgeted worker | `worker_budget(ms, bytes, function, args, state)` | Cooperative deadline checks at Reaper execution steps and a tracked-allocation region limit. Returns a bounded state snapshot and a halted/completed status. Not a process sandbox, hard CPU scheduler, or RSS cap; blocking host calls cannot be pre-empted. |
 | Diff / reconcile | `diff_reconcile(before, after, key)`, `reconcile_apply(current, plan, invariant)` | Stable keyed upsert/drop/noop plan, target checksum, copy-on-apply, invariant validation, and checksum verification before returning a committed candidate. Caller-owned state is not mutated. |
 | Ephemeral match | `ephemeral_match(left, right)` | Compares temporary SHA-256 digests and overwrites the function-owned mutable working buffers. It cannot erase the caller's original strings/bytes, copies made elsewhere, or immutable digest values. |
-| Guarded mutation | `guarded_mutation(current, candidate, mode, validator, token)`, `issue_override(scope, ttl_ms)` | Automatic updates require a validator returning true. Manual overrides require a host-injected, expiring, single-use `mutation:override` token. Revision metadata is retained in a bounded in-memory journal. |
+| Guarded mutation | `guarded_mutation(current, candidate, mode, validator, token)` | Automatic updates require a validator returning true. Manual overrides require an expiring, single-use `mutation:override` token issued by the embedding host through `OverrideAuthority.issue`; Reaper code cannot mint its own token. Revision metadata is retained in a bounded in-memory journal. |
 | Lease window | `lease_window(start_ms, days, now_ms)` | Runtime calculation with explicit UTC epoch-millisecond inputs. The current type checker does not enforce type-level expiry. |
 | Latency profiler | `latency_measure(label, function, args)`, `latency_report()` | In-memory per-label count/min/p95/p99/max measurements. No external agent, network export, or socket endpoint is started. |
 | Local-only guard | `local_only_check(enabled, effects, imports)` | Explicit-effect/import preflight that rejects declared network-like capabilities. It is not yet a compiler-enforced module header; current runtime networking remains unavailable as an ambient builtin. |
@@ -29,6 +29,7 @@ They are not yet implemented by the partial native C17 frontend/runtime.
 Additional host API:
 
 - `revision_log()` returns the bounded mutation audit journal.
+- The embedding host creates override tokens with `OverrideAuthority.issue("mutation:override", ttl_ms)` and injects the token into the Reaper execution environment; no token-issuance builtin is registered for source code.
 - `latency_reset()` clears local profiler samples.
 - `reconcile_apply` is the only operation that constructs the reconciled candidate; it does not persist or publish it.
 
@@ -59,8 +60,9 @@ Three requested guarantees require future compiler/runtime work rather than a
 wrapper function: genuine compile-time contract evaluation, type-level leases
 and compile-time `local_only` enforcement. The worker currently provides
 cooperative quotas, not OS-enforced isolation. The arena is a bounded tracked
-region over the host allocator, not proof of zero host allocations. Ephemeral
-comparison wipes only buffers owned by the function. These limits are explicit
+region over the host allocator, not proof of zero host allocations. Arena callback
+results must be finite JSON-compatible values that fit the slot byte budget.
+Ephemeral comparison wipes only buffers owned by the function. These limits are explicit
 so the API does not imply stronger guarantees than it provides.
 
 ## Verification
