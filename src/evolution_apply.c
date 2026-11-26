@@ -171,7 +171,7 @@ static int request_digest(const ReaperEvolutionApplyRequest *request, char outpu
         !hash_field(&context, request->revision_algorithm, strlen(request->revision_algorithm)) ||
         !hash_field(&context, request->base_revision, strlen(request->base_revision)) ||
         !hash_u64(&context, request->now_unix_seconds) ||
-        !hash_field(&context, request->signed_grant, request->signed_grant_size) ||
+        /* The grant signs this digest, so its signature bytes are excluded. */
         !hash_u64(&context, (uint64_t)request->patch_count)) return 0;
     for (index = 0u; index < request->patch_count; ++index) {
         const ReaperSourcePatch *patch = &request->patches[index];
@@ -411,6 +411,13 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
             (void)snprintf(result.failed_path, sizeof result.failed_path, "%s", patch->relative_path);
             goto fail;
         }
+        for (size_t prior = 0u; prior < index; ++prior) {
+            if (strcmp(entries[prior].canonical_path, canonical_path) == 0) {
+                result.status = REAPER_APPLY_PATH_DENIED;
+                (void)snprintf(result.failed_path, sizeof result.failed_path, "%s", patch->relative_path);
+                goto fail;
+            }
+        }
         current_bytes = NULL;
         current_size = 0u;
         if (!host->read_file(host->context, workspace, canonical_path,
@@ -445,13 +452,6 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
             result.status = REAPER_APPLY_STAGE_FAILED;
             (void)snprintf(result.failed_path, sizeof result.failed_path, "%s", patch->relative_path);
             goto fail;
-        }
-        for (size_t prior = 0u; prior < index; ++prior) {
-            if (strcmp(entries[prior].canonical_path, canonical_path) == 0) {
-                result.status = REAPER_APPLY_PATH_DENIED;
-                (void)snprintf(result.failed_path, sizeof result.failed_path, "%s", patch->relative_path);
-                goto fail;
-            }
         }
         (void)snprintf(entries[index].path, sizeof entries[index].path, "%s", patch->relative_path);
         (void)snprintf(entries[index].canonical_path, sizeof entries[index].canonical_path,
