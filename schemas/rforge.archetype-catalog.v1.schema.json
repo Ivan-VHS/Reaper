@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:reaper:schema:rforge.archetype-catalog.v1",
-  "title": "RForge proposed product archetype catalogue",
+  "title": "RForge implemented Reaper framework archetype catalogue",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -22,7 +22,7 @@
       "maxLength": 160
     },
     "status": {
-      "const": "proposal_catalog"
+      "const": "source_implemented_unverified"
     },
     "composition_policy": {
       "type": "object",
@@ -104,7 +104,11 @@
           "semantic_contract",
           "maturity",
           "generator_status",
-          "executable_capabilities"
+          "executable_capabilities",
+          "module_path",
+          "public_api",
+          "runtime_validation",
+          "native_aot"
         ],
         "properties": {
           "id": {
@@ -154,20 +158,40 @@
             ]
           },
           "family_assignment": {
-            "const": "pending"
+            "const": "framework"
           },
           "semantic_contract": {
-            "const": "pending"
+            "const": "reaper.rforge.framework-catalog.v1"
           },
           "maturity": {
-            "const": "proposal"
+            "const": "source_present"
           },
           "generator_status": {
-            "const": "not_generated"
+            "const": "source_present"
           },
           "executable_capabilities": {
             "type": "array",
             "maxItems": 0
+          },
+          "module_path": {
+            "type": "string",
+            "pattern": "^frameworks/rforge/[a-z0-9_]+\\.rpr$"
+          },
+          "public_api": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 16,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            }
+          },
+          "runtime_validation": {
+            "const": "pending"
+          },
+          "native_aot": {
+            "const": "not_supported_by_current_backend"
           }
         }
       }
