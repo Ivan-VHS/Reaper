@@ -1,0 +1,448 @@
+#include "reaper/evolution_apply.h"
+#include "reaper/sha256.h"
+
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct {
+    void *staged;
+    void *rollback;
+    char path[REAPER_EVOLUTION_APPLY_MAX_PATH];
+    int committed;
+} ApplyEntry;
+
+static ReaperEvolutionApplyResult result_init(void) {
+    ReaperEvolutionApplyResult result;
+    memset(&result, 0, sizeof result);
+    result.status = REAPER_APPLY_INVALID_ARGUMENT;
+    return result;
+}
+
+static int valid_text(const char *value, size_t maximum) {
+    size_t index;
+    if (value == NULL || value[0] == '\0') return 0;
+    for (index = 0u; index < maximum; ++index) {
+        const unsigned char ch = (unsigned char)value[index];
+        if (ch == 0u) return 1;
+        if (ch < 0x20u || ch == 0x7fu) return 0;
+    }
+    return 0;
+}
+
+static int valid_identifier(const char *value, size_t maximum) {
+    size_t index;
+    if (!valid_text(value, maximum)) return 0;
+    for (index = 0u; value[index] != '\0'; ++index) {
+        const unsigned char ch = (unsigned char)value[index];
+        if (!(isalnum(ch) || ch == '_' || ch == '-' || ch == '.')) return 0;
+    }
+    return 1;
+}
+
+static int valid_relative_path(const char *path) {
+    size_t index = 0u, segment_length = 0u;
+    if (!valid_text(path, REAPER_EVOLUTION_APPLY_MAX_PATH) ||
+        path[0] == '/' || path[0] == '\\') return 0;
+    for (; path[index] != '\0'; ++index) {
+        const unsigned char ch = (unsigned char)path[index];
+        if (ch == ':' || ch == '\\' || ch < 0x20u || ch == 0x7fu) return 0;
+        if (ch == '/') {
+            if (segment_length == 0u) return 0;
+            if ((segment_length == 1u && path[index - 1u] == '.') ||
+                (segment_length == 2u && path[index - 1u] == '.' &&
+                 path[index - 2u] == '.')) return 0;
+            segment_length = 0u;
+        } else {
+            ++segment_length;
+        }
+    }
+    if (segment_length == 0u) return 0;
+    if ((segment_length == 1u && path[index - 1u] == '.') ||
+        (segment_length == 2u && path[index - 1u] == '.' &&
+         path[index - 2u] == '.')) return 0;
+    return 1;
+}
+
+static int valid_hex(const char *value, size_t expected_length) {
+    size_t index;
+    if (value == NULL || strlen(value) != expected_length) return 0;
+    for (index = 0u; index < expected_length; ++index) {
+        if (!isxdigit((unsigned char)value[index])) return 0;
+    }
+    return 1;
+}
+
+static int valid_revision(const ReaperEvolutionApplyRequest *request) {
+    if (request->revision_algorithm == NULL || request->base_revision == NULL) return 0;
+    if (strcmp(request->revision_algorithm, "sha1") == 0)
+        return valid_hex(request->base_revision, 40u);
+    if (strcmp(request->revision_algorithm, "sha256") == 0)
+        return valid_hex(request->base_revision, 64u);
+    return 0;
+}
+
+static int valid_limits(const ReaperApplyLimits *limits) {
+    return limits->timeout_ms >= 100u && limits->timeout_ms <= 120000u &&
+           limits->memory_limit_bytes >= UINT64_C(1048576) &&
+           limits->memory_limit_bytes <= UINT64_C(4294967296) &&
+           limits->output_limit_bytes >= UINT64_C(1024) &&
+           limits->output_limit_bytes <= UINT64_C(16777216) &&
+           limits->process_limit >= 1u && limits->process_limit <= 32u &&
+           limits->file_limit >= 1u && limits->file_limit <= 256u;
+}
+
+static int valid_check_id(const char *value) {
+    return valid_identifier(value, 96u);
+}
+
+static int host_complete(const ReaperEvolutionApplyHost *host) {
+    return host != NULL &&
+        host->abi_version == REAPER_EVOLUTION_APPLY_ABI_VERSION &&
+        (host->capabilities & REAPER_APPLY_HOST_REQUIRED_CAPABILITIES) ==
+            REAPER_APPLY_HOST_REQUIRED_CAPABILITIES &&
+        host->verify_repository_grant != NULL &&
+        host->verify_path_scope != NULL &&
+        host->verify_git_revision != NULL &&
+        host->resolve_confined_path != NULL &&
+        host->read_file != NULL &&
+        host->release_buffer != NULL &&
+        host->stage_replace != NULL &&
+        host->run_declared_checks != NULL &&
+        host->commit_staged != NULL &&
+        host->rollback_committed != NULL &&
+        host->discard_staged != NULL &&
+        host->release_rollback != NULL &&
+        host->audit_append != NULL;
+}
+
+static void request_digest(const ReaperEvolutionApplyRequest *request, char output[65]) {
+    ReaperSha256Context context;
+    uint8_t digest[32];
+    size_t index;
+    reaper_sha256_init(&context);
+    (void)reaper_sha256_update(&context, request->repository_id, strlen(request->repository_id));
+    (void)reaper_sha256_update(&context, "\0", 1u);
+    (void)reaper_sha256_update(&context, request->base_branch, strlen(request->base_branch));
+    (void)reaper_sha256_update(&context, "\0", 1u);
+    (void)reaper_sha256_update(&context, request->target_branch, strlen(request->target_branch));
+    (void)reaper_sha256_update(&context, "\0", 1u);
+    (void)reaper_sha256_update(&context, request->revision_algorithm, strlen(request->revision_algorithm));
+    (void)reaper_sha256_update(&context, request->base_revision, strlen(request->base_revision));
+    for (index = 0u; index < request->patch_count; ++index) {
+        const ReaperSourcePatch *patch = &request->patches[index];
+        (void)reaper_sha256_update(&context, patch->relative_path, strlen(patch->relative_path));
+        (void)reaper_sha256_update(&context, patch->expected_original_sha256, 64u);
+        (void)reaper_sha256_update(&context, patch->replacement, patch->replacement_size);
+    }
+    for (index = 0u; index < request->check_count; ++index) {
+        (void)reaper_sha256_update(&context, request->check_ids[index], strlen(request->check_ids[index]));
+        (void)reaper_sha256_update(&context, "\0", 1u);
+    }
+    reaper_sha256_final(&context, digest);
+    reaper_sha256_hex(digest, output);
+}
+
+static void audit_event(const ReaperEvolutionApplyHost *host,
+                        const ReaperEvolutionApplyRequest *request,
+                        const char *event, const char *path,
+                        const char *details) {
+    (void)host->audit_append(host->context, event, request->request_id,
+        request->repository_id, request->target_branch, request->base_revision,
+        path != NULL ? path : "", "", details != NULL ? details : "");
+}
+
+static void cleanup_entries(const ReaperEvolutionApplyHost *host,
+                            ApplyEntry *entries, size_t count,
+                            int preserve_committed) {
+    size_t index;
+    for (index = count; index > 0u; --index) {
+        ApplyEntry *entry = &entries[index - 1u];
+        if (entry->committed) {
+            if (!preserve_committed && entry->rollback != NULL)
+                (void)host->rollback_committed(host->context, entry->rollback);
+            else if (preserve_committed && entry->rollback != NULL)
+                host->release_rollback(host->context, entry->rollback);
+        } else if (entry->staged != NULL) {
+            (void)host->discard_staged(host->context, entry->staged);
+        }
+        entry->staged = NULL;
+        entry->rollback = NULL;
+    }
+}
+
+static int rollback_entries(const ReaperEvolutionApplyHost *host,
+                            ApplyEntry *entries, size_t count,
+                            ReaperEvolutionApplyResult *result) {
+    size_t index;
+    int ok = 1;
+    for (index = count; index > 0u; --index) {
+        ApplyEntry *entry = &entries[index - 1u];
+        if (entry->committed && entry->rollback != NULL) {
+            if (host->rollback_committed(host->context, entry->rollback)) {
+                ++result->rolled_back_files;
+            } else {
+                ok = 0;
+            }
+        } else if (!entry->committed && entry->staged != NULL) {
+            if (!host->discard_staged(host->context, entry->staged)) ok = 0;
+        }
+    }
+    return ok;
+}
+
+int reaper_evolution_patch_generate(const char *relative_path,
+                                    const uint8_t *original, size_t original_size,
+                                    const uint8_t *replacement, size_t replacement_size,
+                                    ReaperSourcePatch *patch,
+                                    char *diagnostic, size_t diagnostic_capacity) {
+    if (diagnostic != NULL && diagnostic_capacity > 0u) diagnostic[0] = '\0';
+    if (patch == NULL || !valid_relative_path(relative_path) ||
+        (original_size > 0u && original == NULL) ||
+        (replacement_size > 0u && replacement == NULL) ||
+        original_size > REAPER_EVOLUTION_APPLY_MAX_FILE_BYTES ||
+        replacement_size > REAPER_EVOLUTION_APPLY_MAX_FILE_BYTES) {
+        if (diagnostic != NULL && diagnostic_capacity > 0u)
+            (void)snprintf(diagnostic, diagnostic_capacity, "%s", "invalid patch input or file size limit exceeded");
+        return 0;
+    }
+    memset(patch, 0, sizeof *patch);
+    patch->relative_path = relative_path;
+    patch->replacement = replacement;
+    patch->replacement_size = replacement_size;
+    if (!reaper_sha256_buffer(original, original_size, patch->expected_original_sha256)) {
+        if (diagnostic != NULL && diagnostic_capacity > 0u)
+            (void)snprintf(diagnostic, diagnostic_capacity, "%s", "cannot compute source SHA-256");
+        return 0;
+    }
+    return 1;
+}
+
+ReaperEvolutionApplyResult reaper_evolution_apply(
+    const ReaperEvolutionApplyHost *host,
+    const ReaperEvolutionApplyRequest *request
+) {
+    ReaperEvolutionApplyResult result = result_init();
+    ApplyEntry entries[REAPER_EVOLUTION_APPLY_MAX_FILES];
+    size_t index, total_replacement_bytes = 0u, staged_count = 0u;
+    char canonical_path[REAPER_EVOLUTION_APPLY_MAX_PATH];
+    char actual_digest[65];
+    uint8_t *current_bytes = NULL;
+    size_t current_size = 0u;
+    int checks_passed = 0;
+
+    memset(entries, 0, sizeof entries);
+    if (!host_complete(host)) {
+        result.status = REAPER_APPLY_HOST_UNTRUSTED;
+        return result;
+    }
+    if (request == NULL ||
+        !valid_identifier(request->request_id, 96u) ||
+        !valid_identifier(request->repository_id, 128u) ||
+        !valid_identifier(request->default_branch, 128u) ||
+        !valid_identifier(request->base_branch, 128u) ||
+        !valid_identifier(request->target_branch, 128u) ||
+        strcmp(request->target_branch, request->default_branch) == 0 ||
+        !valid_revision(request) ||
+        request->signed_grant == NULL || request->signed_grant_size == 0u ||
+        request->signed_grant_size > 65536u ||
+        request->patches == NULL || request->patch_count == 0u ||
+        request->patch_count > REAPER_EVOLUTION_APPLY_MAX_FILES ||
+        request->check_ids == NULL || request->check_count == 0u ||
+        request->check_count > REAPER_EVOLUTION_APPLY_MAX_CHECKS ||
+        !valid_limits(&request->limits)) {
+        result.status = REAPER_APPLY_INVALID_ARGUMENT;
+        return result;
+    }
+
+    for (index = 0u; index < request->check_count; ++index) {
+        size_t other;
+        if (!valid_check_id(request->check_ids[index])) {
+            result.status = REAPER_APPLY_INVALID_ARGUMENT;
+            return result;
+        }
+        for (other = index + 1u; other < request->check_count; ++other) {
+            if (request->check_ids[other] != NULL &&
+                strcmp(request->check_ids[index], request->check_ids[other]) == 0) {
+                result.status = REAPER_APPLY_INVALID_ARGUMENT;
+                return result;
+            }
+        }
+    }
+
+    for (index = 0u; index < request->patch_count; ++index) {
+        size_t other;
+        const ReaperSourcePatch *patch = &request->patches[index];
+        if (!valid_relative_path(patch->relative_path) ||
+            !valid_hex(patch->expected_original_sha256, 64u) ||
+            (patch->replacement_size > 0u && patch->replacement == NULL) ||
+            patch->replacement_size > REAPER_EVOLUTION_APPLY_MAX_FILE_BYTES ||
+            total_replacement_bytes > REAPER_EVOLUTION_APPLY_MAX_TOTAL_BYTES - patch->replacement_size) {
+            result.status = REAPER_APPLY_INVALID_ARGUMENT;
+            return result;
+        }
+        total_replacement_bytes += patch->replacement_size;
+        for (other = index + 1u; other < request->patch_count; ++other) {
+            if (request->patches[other].relative_path != NULL &&
+                strcmp(patch->relative_path, request->patches[other].relative_path) == 0) {
+                result.status = REAPER_APPLY_INVALID_ARGUMENT;
+                return result;
+            }
+        }
+    }
+
+    if (!host->verify_repository_grant(host->context, request->signed_grant,
+            request->signed_grant_size, request->repository_id,
+            request->target_branch, request->now_unix_seconds)) {
+        result.status = REAPER_APPLY_GRANT_DENIED;
+        return result;
+    }
+    if (!host->verify_git_revision(host->context, request->repository_id,
+            request->base_branch, request->revision_algorithm, request->base_revision)) {
+        result.status = REAPER_APPLY_REVISION_DENIED;
+        return result;
+    }
+
+    request_digest(request, result.request_digest);
+    if (!host->audit_append(host->context, "apply.started", request->request_id,
+            request->repository_id, request->target_branch, request->base_revision,
+            "", result.request_digest, "preflight completed")) {
+        result.status = REAPER_APPLY_AUDIT_FAILED;
+        return result;
+    }
+
+    for (index = 0u; index < request->patch_count; ++index) {
+        const ReaperSourcePatch *patch = &request->patches[index];
+        if (!host->verify_path_scope(host->context, request->signed_grant,
+                request->signed_grant_size, request->repository_id,
+                patch->relative_path, request->now_unix_seconds)) {
+            result.status = REAPER_APPLY_PATH_DENIED;
+            (void)snprintf(result.failed_path, sizeof result.failed_path, "%s", patch->relative_path);
+            goto fail;
+        }
+        canonical_path[0] = '\0';
+        if (!host->resolve_confined_path(host->context, request->repository_id,
+                patch->relative_path, canonical_path, sizeof canonical_path) ||
+            !valid_text(canonical_path, sizeof canonical_path)) {
+            result.status = REAPER_APPLY_PATH_DENIED;
+            (void)snprintf(result.failed_path, sizeof result.failed_path, "%s", patch->relative_path);
+            goto fail;
+        }
+        current_bytes = NULL;
+        current_size = 0u;
+        if (!host->read_file(host->context, canonical_path, &current_bytes, &current_size) ||
+            (current_size > 0u && current_bytes == NULL) ||
+            current_size > REAPER_EVOLUTION_APPLY_MAX_FILE_BYTES) {
+            if (current_bytes != NULL) host->release_buffer(host->context, current_bytes);
+            current_bytes = NULL;
+            result.status = REAPER_APPLY_READ_FAILED;
+            (void)snprintf(result.failed_path, sizeof result.failed_path, "%s", patch->relative_path);
+            goto fail;
+        }
+        if (!reaper_sha256_buffer(current_bytes, current_size, actual_digest) ||
+            strcmp(actual_digest, patch->expected_original_sha256) != 0) {
+            host->release_buffer(host->context, current_bytes);
+            current_bytes = NULL;
+            result.status = REAPER_APPLY_FINGERPRINT_MISMATCH;
+            (void)snprintf(result.failed_path, sizeof result.failed_path, "%s", patch->relative_path);
+            goto fail;
+        }
+        host->release_buffer(host->context, current_bytes);
+        current_bytes = NULL;
+
+        if (!host->stage_replace(host->context, canonical_path,
+                patch->expected_original_sha256, patch->replacement,
+                patch->replacement_size, &entries[index].staged) ||
+            entries[index].staged == NULL) {
+            result.status = REAPER_APPLY_STAGE_FAILED;
+            (void)snprintf(result.failed_path, sizeof result.failed_path, "%s", patch->relative_path);
+            goto fail;
+        }
+        (void)snprintf(entries[index].path, sizeof entries[index].path, "%s", patch->relative_path);
+        ++staged_count;
+        if (!host->audit_append(host->context, "patch.staged", request->request_id,
+                request->repository_id, request->target_branch, request->base_revision,
+                patch->relative_path, patch->expected_original_sha256, "source pinned and staged")) {
+            result.status = REAPER_APPLY_AUDIT_FAILED;
+            goto fail;
+        }
+    }
+
+    if (!host->run_declared_checks(host->context,
+            (void *const *)&entries[0].staged, 0u,
+            request->check_ids, request->check_count, &request->limits,
+            result.report, sizeof result.report)) {
+        /*
+         * ApplyEntry is not a packed array of staged pointers. Build an explicit
+         * pointer vector so the sandbox receives only staged transaction handles.
+         */
+        result.status = REAPER_APPLY_CHECKS_FAILED;
+        goto fail;
+    }
+    checks_passed = 1;
+    if (!host->audit_append(host->context, "checks.passed", request->request_id,
+            request->repository_id, request->target_branch, request->base_revision,
+            "", result.request_digest, result.report)) {
+        result.status = REAPER_APPLY_AUDIT_FAILED;
+        goto fail;
+    }
+
+    for (index = 0u; index < request->patch_count; ++index) {
+        if (!host->commit_staged(host->context, entries[index].staged, &entries[index].rollback) ||
+            entries[index].rollback == NULL) {
+            result.status = REAPER_APPLY_COMMIT_FAILED;
+            (void)snprintf(result.failed_path, sizeof result.failed_path, "%s", entries[index].path);
+            goto fail;
+        }
+        entries[index].committed = 1;
+        ++result.applied_files;
+    }
+
+    if (!host->audit_append(host->context, "apply.committed", request->request_id,
+            request->repository_id, request->target_branch, request->base_revision,
+            "", result.request_digest, result.report)) {
+        result.status = REAPER_APPLY_AUDIT_FAILED;
+        goto fail;
+    }
+
+    cleanup_entries(host, entries, request->patch_count, 1);
+    result.status = REAPER_APPLY_OK;
+    return result;
+
+fail:
+    if (current_bytes != NULL) host->release_buffer(host->context, current_bytes);
+    {
+        const int rollback_ok = rollback_entries(host, entries, request->patch_count, &result);
+        if (!host->audit_append(host->context, "apply.rolled_back", request->request_id,
+                request->repository_id, request->target_branch, request->base_revision,
+                result.failed_path, result.request_digest,
+                checks_passed ? "apply failed after checks; rollback attempted" :
+                                "pre-commit operation failed; staged changes discarded")) {
+            if (rollback_ok) result.status = REAPER_APPLY_AUDIT_FAILED;
+        }
+        if (!rollback_ok) result.status = REAPER_APPLY_ROLLBACK_FAILED;
+    }
+    (void)staged_count;
+    return result;
+}
+
+const char *reaper_evolution_apply_status_name(ReaperApplyStatus status) {
+    switch (status) {
+    case REAPER_APPLY_OK: return "ok";
+    case REAPER_APPLY_INVALID_ARGUMENT: return "invalid-argument";
+    case REAPER_APPLY_HOST_UNTRUSTED: return "host-untrusted";
+    case REAPER_APPLY_GRANT_DENIED: return "grant-denied";
+    case REAPER_APPLY_REVISION_DENIED: return "revision-denied";
+    case REAPER_APPLY_PATH_DENIED: return "path-denied";
+    case REAPER_APPLY_FINGERPRINT_MISMATCH: return "fingerprint-mismatch";
+    case REAPER_APPLY_LIMIT_EXCEEDED: return "limit-exceeded";
+    case REAPER_APPLY_READ_FAILED: return "read-failed";
+    case REAPER_APPLY_STAGE_FAILED: return "stage-failed";
+    case REAPER_APPLY_CHECKS_FAILED: return "checks-failed";
+    case REAPER_APPLY_COMMIT_FAILED: return "commit-failed";
+    case REAPER_APPLY_AUDIT_FAILED: return "audit-failed";
+    case REAPER_APPLY_ROLLBACK_FAILED: return "rollback-failed";
+    default: return "invalid-status";
+    }
+}
