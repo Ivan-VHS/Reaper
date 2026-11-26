@@ -20,7 +20,7 @@ Reaper is a systems-programming language and local development workbench for com
 - PLAGUE 1.0.0 repository-evolution foundation is proposed in a separate open PR; repository discovery, patch application and autonomous writes are not yet implemented.
 - RAAEF adds a proposed Reaper-native typed aesthetic-profile pipeline (HIR/MIR/LIR) and architecture/design/source evolution planner; runtime execution and general native compiler integration are pending.
 
-See [Framework catalogue](frameworks/catalog.v1.json), [Aesthetic & Architecture Evolution](docs/AESTHETIC_EVOLUTION.md), [Features](docs/FEATURES.md), [Architecture](docs/ARCHITECTURE.md), [Hardware Language](docs/HARDWARE_LANGUAGE.md), [Jora factory](docs/JORA_APPLICATION_FACTORY.md), [PLAGUE](docs/PLAGUE.md), [Studio and IDE](docs/REAPER_IDE.md) and [NOO TAH](docs/NOO_TAH.md).
+See [Framework catalogue](frameworks/README.md), [Aesthetic & Architecture Evolution](docs/AESTHETIC_EVOLUTION.md), [Features](docs/FEATURES.md), [Architecture](docs/ARCHITECTURE.md), [Hardware Language](docs/HARDWARE_LANGUAGE.md), [Jora factory](docs/JORA_APPLICATION_FACTORY.md), [PLAGUE](docs/PLAGUE.md), [Studio and IDE](docs/REAPER_IDE.md) and [NOO TAH](docs/NOO_TAH.md).
 
 ## Quick start
 
