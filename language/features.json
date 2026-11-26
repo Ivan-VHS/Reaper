@@ -301,6 +301,23 @@
         "partition-conservation",
         "proportional-conservation"
       ]
+    },
+    {
+      "id": "REAPER-STD-003",
+      "name": "bounded aggregate snapshot integrity audit",
+      "area": "stdlib",
+      "status": "specified",
+      "depends_on": [
+        "MOST-STD-001"
+      ],
+      "acceptance": [
+        "native-manifest-validation",
+        "deterministic-aggregate-diff",
+        "bounded-utc-expiry",
+        "transient-no-persist-comparison",
+        "native-c17-conformance",
+        "rpr-binding-parity-before-promotion"
+      ]
     }
   ],
   "profile": "МОСТ — exact Russian keyword aliases; no separate parser, semantics, runtime or backend"
