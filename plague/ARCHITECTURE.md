@@ -57,7 +57,15 @@ The function does not itself authenticate a grant or inspect a path. A future ho
 
 If any step fails, no write or command is started.
 
-## Bounded proposal assessment\n\nThe Reaper v1 policy evaluator sits between planning and any future patch adapter. It validates a repository profile and a proposed change, then returns blockers or an advisory status. The profile constrains the platform, stack, maximum 100 changed paths, maximum 1 MiB patch, granted scope names, required assurance gates, rollback requirement, approval mode and risk ceiling. Proposals carry the declared affected-path count, patch size, requested scopes, completed gates, rollback availability, risk, expected benefit, evidence references and baseline digest.\n\nThe evaluator rejects malformed inputs, target mismatches, ungranted scope labels, missing gates, exceeded budgets, absent required rollback and risk above the profile ceiling. It defers changes whose declared risk equals or exceeds expected benefit. Otherwise, it returns `review_required` or `eligible_for_review` according to the approval profile. Candidate selection is bounded to 128 proposals and deterministic: highest `expected_benefit - risk` wins; ties use ascending proposal ID.\n\nThese profile scopes do not replace repository grants, and evidence references are opaque caller-provided identifiers. Individual paths are not matched against the grant's allow/exclude patterns. The result cannot authorize writes, checks, merges or releases. Those actions remain behind the separate default-deny mode policy and still require future host-side grant, path, approval and audit validation.\n\n## Repository-wide modification model
+## Bounded proposal assessment
+
+The Reaper v1 policy evaluator sits between planning and any future patch adapter. It validates a repository profile and a proposed change, then returns blockers or an advisory status. The profile constrains the platform, stack, maximum 100 changed paths, maximum 1 MiB patch, granted scope names, required assurance gates, rollback requirement, approval mode and risk ceiling. Proposals carry the declared affected-path count, patch size, requested scopes, completed gates, rollback availability, risk, expected benefit, evidence references and baseline digest.
+
+The evaluator rejects malformed inputs, target mismatches, ungranted scope labels, missing gates, exceeded budgets, absent required rollback and risk above the profile ceiling. It defers changes whose declared risk equals or exceeds expected benefit. Otherwise, it returns `review_required` or `eligible_for_review` according to the approval profile. Candidate selection is bounded to 128 proposals and deterministic: highest `expected_benefit - risk` wins; ties use ascending proposal ID.
+
+These profile scopes do not replace repository grants, and evidence references are opaque caller-provided identifiers. Individual paths are not matched against the grant's allow/exclude patterns. The result cannot authorize writes, checks, merges or releases. Those actions remain behind the separate default-deny mode policy and still require future host-side grant, path, approval and audit validation.
+
+## Repository-wide modification model
 
 PLAGUE may eventually modify every eligible file within an explicitly delegated repository, but it must not treat "repository-wide" as "unbounded":
 
@@ -110,4 +118,4 @@ A failed operation leaves the default branch untouched. Recovery restores the to
 
 ## Current boundary
 
-The current foundation implements only the Reaper action policy, ten-component registry, smoke fixture and JSON contracts. Repository adapters, file mutation, command execution, persistence, graph ingestion and autonomous planning remain Planned. The architecture above is the target contract, not a claim that those layers already exist.
+The current foundation implements the Reaper action policy, ten-component registry, bounded repository-profile/proposal evaluator, deterministic candidate ranking, smoke fixtures and versioned JSON contracts. Repository adapters, grant authentication, per-path matching, patch generation, command execution, persistence, graph ingestion and autonomous planning remain Planned. The architecture above is the target contract, not a claim that those layers already exist.
