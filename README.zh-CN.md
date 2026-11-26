@@ -20,7 +20,7 @@ Reaper 是一款面向编译器工具、嵌入式软件和硬件相关程序的�
 - RAAEF 是一个独立开发分支，提供类型化美学配置文件及架构、设计和源码演进规划。C17 原生核心还提供 SHA-256 固定源版本的补丁描述符，以及默认拒绝的事务应用接口：签名授权、路径范围、隔离工作区、沙箱检查、主题分支发布、审计和回滚。Windows/POSIX Git 与沙箱适配器尚未交付，因此 SOMO apply 仍保持禁用。
 - [统一框架目录](frameworks/README.md)列出已发现的框架家族及其 PR 状态；未合并的 PR 不视为 main 的功能。
 
-文档：[美学与架构演进](docs/AESTHETIC_EVOLUTION.md) · [框架目录](frameworks/README.md) · [功能](docs/FEATURES.md) · [架构](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Jora 工厂](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md)。
+文档：[美学与架构演进](docs/AESTHETIC_EVOLUTION.md) · [原生类型化编译器 IR](docs/NATIVE_IR_EXECUTION.md) · [原生演进应用引擎](docs/REAPER_AUTONOMOUS_EVOLUTION.md) · [框架目录](frameworks/README.md) · [功能](docs/FEATURES.md) · [架构](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Jora 工厂](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md)。
 
 ## 快速开始
 
