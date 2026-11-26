@@ -72,7 +72,7 @@ export craft symbol_resolve(namespace, symbol) {
 }
 
 export craft origin_chain(artifact) {
-    when not fc["fc_record"](artifact, 2) or kind(artifact[1]) != "list" {
+    when not fc["fc_record"](artifact, 2) or kind(artifact[1]) != "list" or not fc["fc_nonempty_text"](artifact[0]) {
         yield [false, [], "artifact-provenance-shape"]
     }
     vary result := [artifact[0]]
