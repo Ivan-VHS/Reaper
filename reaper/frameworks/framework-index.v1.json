@@ -3,8 +3,8 @@
   "total_target_framework_count": 330,
   "remaining_target_framework_count": 325,
   "existing_batch_01_source_count": 5,
-  "new_source_count": 150,
-  "remaining_source_count": 175,
+  "new_source_count": 175,
+  "remaining_source_count": 150,
   "domains": [
     {
       "number": 1,
@@ -260,7 +260,7 @@
       "name": "Мидлвар",
       "framework_slots": 5,
       "source_frameworks": 0,
-      "state": "queued"
+      "state": "tests-first"
     },
     {
       "number": 33,
@@ -268,7 +268,7 @@
       "name": "Связующее ПО",
       "framework_slots": 5,
       "source_frameworks": 0,
-      "state": "queued"
+      "state": "tests-first"
     },
     {
       "number": 34,
@@ -276,7 +276,7 @@
       "name": "Контейнер",
       "framework_slots": 5,
       "source_frameworks": 0,
-      "state": "queued"
+      "state": "tests-first"
     },
     {
       "number": 35,
@@ -284,7 +284,7 @@
       "name": "Хост",
       "framework_slots": 5,
       "source_frameworks": 0,
-      "state": "queued"
+      "state": "tests-first"
     },
     {
       "number": 36,
@@ -292,7 +292,7 @@
       "name": "Контекст",
       "framework_slots": 5,
       "source_frameworks": 0,
-      "state": "queued"
+      "state": "tests-first"
     },
     {
       "number": 37,
@@ -3433,6 +3433,481 @@
       },
       "negative": {
         "args": "(3, [[2, 0]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "32.chain",
+      "domain_number": 32,
+      "domain": "Мидлвар",
+      "slug": "32-middleware",
+      "name": "Middleware Chain Framework",
+      "role": "chain",
+      "path": "reaper/frameworks/32-middleware/chain.rpr",
+      "api": "valid_middleware_chain",
+      "purpose": "Validate middleware stage type continuity and non-decreasing execution phase.",
+      "positive": {
+        "args": "([[\"auth\", \"request\", \"request\", 1], [\"cache\", \"request\", \"response\", 2]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"auth\", \"request\", \"request\", 2], [\"cache\", \"request\", \"response\", 1]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "32.requirements",
+      "domain_number": 32,
+      "domain": "Мидлвар",
+      "slug": "32-middleware",
+      "name": "Middleware Requirement Framework",
+      "role": "requirements",
+      "path": "reaper/frameworks/32-middleware/requirements.rpr",
+      "api": "middleware_missing_requirements",
+      "purpose": "Report middleware requirements not supplied by the host pipeline.",
+      "positive": {
+        "args": "([\"request-id\", \"clock\"], [\"request-id\"])",
+        "output": "[clock]"
+      },
+      "negative": {
+        "args": "([\"request-id\"], [\"request-id\"])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "32.effect-policy",
+      "domain_number": 32,
+      "domain": "Мидлвар",
+      "slug": "32-middleware",
+      "name": "Middleware Effect Framework",
+      "role": "effect-policy",
+      "path": "reaper/frameworks/32-middleware/effect_policy.rpr",
+      "api": "valid_middleware_effect_policy",
+      "purpose": "Validate stage effects against an explicit middleware allowlist and denylist.",
+      "positive": {
+        "args": "([\"read\", \"clock\"], [\"read\", \"clock\"], [\"read\", \"clock\", \"write\"], [\"write\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"write\"], [\"write\"], [\"write\"], [\"write\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "32.short-circuit",
+      "domain_number": 32,
+      "domain": "Мидлвар",
+      "slug": "32-middleware",
+      "name": "Middleware Short-Circuit Framework",
+      "role": "short-circuit",
+      "path": "reaper/frameworks/32-middleware/short_circuit.rpr",
+      "api": "middleware_short_circuited",
+      "purpose": "Detect whether a middleware sequence contains a terminal short-circuit stage.",
+      "positive": {
+        "args": "([false, false, true, false])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([false, false])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "32.budget",
+      "domain_number": 32,
+      "domain": "Мидлвар",
+      "slug": "32-middleware",
+      "name": "Middleware Budget Framework",
+      "role": "budget",
+      "path": "reaper/frameworks/32-middleware/budget.rpr",
+      "api": "middleware_within_budget",
+      "purpose": "Admit middleware stages when summed cost remains within a latency budget.",
+      "positive": {
+        "args": "([2, 3, 4], 12)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([2, 10, 4], 12)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "33.integration-map",
+      "domain_number": 33,
+      "domain": "Связующее ПО",
+      "slug": "33-integration-software",
+      "name": "Integration Map Framework",
+      "role": "integration-map",
+      "path": "reaper/frameworks/33-integration-software/integration_map.rpr",
+      "api": "valid_integration_map",
+      "purpose": "Validate project-to-project interface mappings with unique interface identities.",
+      "positive": {
+        "args": "([[\"reaper\", \"device.snapshot\", \"oplague\", \"json\", 1]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"reaper\", \"device.snapshot\", \"reaper\", \"json\", 1]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "33.endpoints",
+      "domain_number": 33,
+      "domain": "Связующее ПО",
+      "slug": "33-integration-software",
+      "name": "Integration Endpoint Framework",
+      "role": "endpoints",
+      "path": "reaper/frameworks/33-integration-software/endpoints.rpr",
+      "api": "integration_missing_endpoints",
+      "purpose": "Report integration endpoints required by a contract but not connected.",
+      "positive": {
+        "args": "([\"compiler\", \"runtime\", \"studio\"], [\"compiler\", \"runtime\"])",
+        "output": "[studio]"
+      },
+      "negative": {
+        "args": "([\"compiler\"], [\"compiler\"])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "33.version",
+      "domain_number": 33,
+      "domain": "Связующее ПО",
+      "slug": "33-integration-software",
+      "name": "Integration Version Framework",
+      "role": "version",
+      "path": "reaper/frameworks/33-integration-software/version.rpr",
+      "api": "integration_version_compatible",
+      "purpose": "Require integration producer and consumer contracts to share a major version.",
+      "positive": {
+        "args": "([1, 2], [1, 3])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([1, 2], [2, 0])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "33.federation-graph",
+      "domain_number": 33,
+      "domain": "Связующее ПО",
+      "slug": "33-integration-software",
+      "name": "Federation Graph Framework",
+      "role": "federation-graph",
+      "path": "reaper/frameworks/33-integration-software/federation_graph.rpr",
+      "api": "valid_integration_federation_graph",
+      "purpose": "Validate a directed acyclic graph of project federation relationships.",
+      "positive": {
+        "args": "(4, [[0, 1], [1, 3]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(3, [[0, 1], [1, 0]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "33.data-contract",
+      "domain_number": 33,
+      "domain": "Связующее ПО",
+      "slug": "33-integration-software",
+      "name": "Data Contract Framework",
+      "role": "data-contract",
+      "path": "reaper/frameworks/33-integration-software/data_contract.rpr",
+      "api": "valid_integration_data_contract",
+      "purpose": "Validate a versioned typed data contract with unique field names.",
+      "positive": {
+        "args": "([\"device.snapshot\", 1, [[\"vendor\", \"text\"], [\"memory\", \"u64\"]]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"device.snapshot\", 1, [[\"vendor\", \"text\"], [\"vendor\", \"u64\"]]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "34.manifest",
+      "domain_number": 34,
+      "domain": "Контейнер",
+      "slug": "34-container",
+      "name": "Container Manifest Framework",
+      "role": "manifest",
+      "path": "reaper/frameworks/34-container/manifest.rpr",
+      "api": "valid_container_manifest",
+      "purpose": "Validate container identity, root filesystem size, network mode and privilege profile.",
+      "positive": {
+        "args": "([\"compiler\", [1, 0, 0], 1048576, \"none\", \"unprivileged\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"\", [1, 0, 0], 1048576, \"host\", \"privileged\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "34.mounts",
+      "domain_number": 34,
+      "domain": "Контейнер",
+      "slug": "34-container",
+      "name": "Container Mount Framework",
+      "role": "mounts",
+      "path": "reaper/frameworks/34-container/mounts.rpr",
+      "api": "valid_container_mounts",
+      "purpose": "Validate unique safe mount targets with explicit read-only/read-write policy.",
+      "positive": {
+        "args": "([[\"data\", \"/workspace/data\", true], [\"cache\", \"/workspace/cache\", false]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"data\", \"/workspace\", true], [\"cache\", \"/workspace\", false]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "34.namespaces",
+      "domain_number": 34,
+      "domain": "Контейнер",
+      "slug": "34-container",
+      "name": "Container Namespace Framework",
+      "role": "namespaces",
+      "path": "reaper/frameworks/34-container/namespaces.rpr",
+      "api": "valid_container_namespaces",
+      "purpose": "Validate explicit PID, network, mount and user namespace isolation flags.",
+      "positive": {
+        "args": "([true, true, true, true])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([false, false, false, false])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "34.quota",
+      "domain_number": 34,
+      "domain": "Контейнер",
+      "slug": "34-container",
+      "name": "Container Quota Framework",
+      "role": "quota",
+      "path": "reaper/frameworks/34-container/quota.rpr",
+      "api": "valid_container_quotas",
+      "purpose": "Validate positive CPU, memory and process quotas.",
+      "positive": {
+        "args": "([2, 1073741824, 128])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([0, 1073741824, 128])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "34.lifecycle",
+      "domain_number": 34,
+      "domain": "Контейнер",
+      "slug": "34-container",
+      "name": "Container Lifecycle Framework",
+      "role": "lifecycle",
+      "path": "reaper/frameworks/34-container/lifecycle.rpr",
+      "api": "valid_container_lifecycle_transition",
+      "purpose": "Validate container lifecycle transitions from created to stopped states.",
+      "positive": {
+        "args": "([\"created\", \"running\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"stopped\", \"running\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "35.abi",
+      "domain_number": 35,
+      "domain": "Хост",
+      "slug": "35-host",
+      "name": "Host ABI Framework",
+      "role": "abi",
+      "path": "reaper/frameworks/35-host/abi.rpr",
+      "api": "valid_host_abi",
+      "purpose": "Validate host architecture, calling convention, word size and endianness.",
+      "positive": {
+        "args": "([\"x86_64\", \"sysv\", 64, \"little\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"x86_64\", \"aapcs\", 64, \"little\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "35.features",
+      "domain_number": 35,
+      "domain": "Хост",
+      "slug": "35-host",
+      "name": "Host Feature Framework",
+      "role": "features",
+      "path": "reaper/frameworks/35-host/features.rpr",
+      "api": "host_missing_features",
+      "purpose": "Report target requirements unavailable in the host feature set.",
+      "positive": {
+        "args": "([\"sse2\", \"avx2\"], [\"sse2\"])",
+        "output": "[avx2]"
+      },
+      "negative": {
+        "args": "([\"sse2\"], [\"sse2\"])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "35.call-contract",
+      "domain_number": 35,
+      "domain": "Хост",
+      "slug": "35-host",
+      "name": "Host Call Contract Framework",
+      "role": "call-contract",
+      "path": "reaper/frameworks/35-host/call_contract.rpr",
+      "api": "valid_host_call_contract",
+      "purpose": "Validate host call name, signature identifier and explicit effect declaration.",
+      "positive": {
+        "args": "([\"read_file\", \"fn(path)->bytes\", [\"filesystem.read\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"\", \"fn()->unit\", []])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "35.capabilities",
+      "domain_number": 35,
+      "domain": "Хост",
+      "slug": "35-host",
+      "name": "Host Capability Framework",
+      "role": "capabilities",
+      "path": "reaper/frameworks/35-host/capabilities.rpr",
+      "api": "valid_host_capabilities",
+      "purpose": "Validate unique host capabilities and return required capabilities absent from the host.",
+      "positive": {
+        "args": "([\"clock\", \"filesystem.read\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"clock\", \"clock\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "35.target",
+      "domain_number": 35,
+      "domain": "Хост",
+      "slug": "35-host",
+      "name": "Host Target Framework",
+      "role": "target",
+      "path": "reaper/frameworks/35-host/target.rpr",
+      "api": "host_supports_target",
+      "purpose": "Check whether a host supports a declared compilation target.",
+      "positive": {
+        "args": "(\"aarch64-linux\", [\"x86_64-linux\", \"aarch64-linux\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(\"armv7-none\", [\"x86_64-linux\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "36.entries",
+      "domain_number": 36,
+      "domain": "Контекст",
+      "slug": "36-context",
+      "name": "Context Entry Framework",
+      "role": "entries",
+      "path": "reaper/frameworks/36-context/entries.rpr",
+      "api": "valid_context_entries",
+      "purpose": "Validate unique named, typed context entries with text keys.",
+      "positive": {
+        "args": "([[\"locale\", \"text\", \"uk\"], [\"mode\", \"text\", \"safe\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"locale\", \"text\", \"uk\"], [\"locale\", \"text\", \"ru\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "36.scope",
+      "domain_number": 36,
+      "domain": "Контекст",
+      "slug": "36-context",
+      "name": "Context Scope Framework",
+      "role": "scope",
+      "path": "reaper/frameworks/36-context/scope.rpr",
+      "api": "valid_context_scope_tree",
+      "purpose": "Validate a rooted context-scope tree and unique parent relationships.",
+      "positive": {
+        "args": "(4, 0, [[0, 1], [0, 2], [2, 3]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(3, 0, [[0, 1], [1, 0]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "36.snapshot",
+      "domain_number": 36,
+      "domain": "Контекст",
+      "slug": "36-context",
+      "name": "Context Snapshot Framework",
+      "role": "snapshot",
+      "path": "reaper/frameworks/36-context/snapshot.rpr",
+      "api": "valid_context_snapshot",
+      "purpose": "Validate immutable snapshot identity, revision and digest metadata.",
+      "positive": {
+        "args": "([\"ctx-1\", 7, \"sha256:abcdef123456\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"\", 7, \"sha256:abcdef123456\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "36.merge",
+      "domain_number": 36,
+      "domain": "Контекст",
+      "slug": "36-context",
+      "name": "Context Merge Framework",
+      "role": "merge",
+      "path": "reaper/frameworks/36-context/merge.rpr",
+      "api": "context_merge_values",
+      "purpose": "Merge ordered context values with explicit local shadowing.",
+      "positive": {
+        "args": "([[\"locale\", \"uk\"], [\"mode\", \"safe\"]], [[\"mode\", \"fast\"]])",
+        "output": "[[locale, uk], [mode, fast]]"
+      },
+      "negative": {
+        "args": "([[\"locale\", \"uk\"], [\"locale\", \"ru\"]], [])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "36.budget",
+      "domain_number": 36,
+      "domain": "Контекст",
+      "slug": "36-context",
+      "name": "Context Budget Framework",
+      "role": "budget",
+      "path": "reaper/frameworks/36-context/budget.rpr",
+      "api": "context_within_budget",
+      "purpose": "Bound context size from key/value byte lengths and a maximum allocation.",
+      "positive": {
+        "args": "([[\"locale\", \"uk\"], [\"mode\", \"safe\"]], 32)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"locale\", \"uk\"], [\"mode\", \"safe\"]], 8)",
         "output": "false"
       }
     }
