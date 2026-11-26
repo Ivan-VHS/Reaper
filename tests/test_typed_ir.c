@@ -183,7 +183,7 @@ static void by_value_cycles_are_rejected_but_pointer_recursion_is_allowed(void) 
 static void target_pointer_layout_must_match(void) {
     ReaperTypedIrError error;
     uint32_t original = module.pointer_size;
-    module.pointer_size = 4u;
+    module.pointer_size = 16u;
     assert(!reaper_typed_ir_verify(&module, &error));
     assert(error.code == REAPER_TIR_ERROR_LAYOUT ||
            error.code == REAPER_TIR_ERROR_MODULE);
