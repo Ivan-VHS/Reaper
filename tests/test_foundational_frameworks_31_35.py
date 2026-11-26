@@ -85,28 +85,41 @@ class FoundationalFrameworksThirtyOneToThirtyFiveTests(unittest.TestCase):
     def test_integration_envelopes_match_direction_version_and_size(self) -> None:
         self.assertEqual(
             self.run_expression(
-                'host["integration_validate_envelope"](["oplage.device-snapshot.v1", 1, 0, "consumes", 4096])'
+                'host["integration_validate_envelope"](["oplage.device-snapshot.v1", 1, 0, "consumes", 4096, false])'
             ),
             ["true"],
         )
         self.assertEqual(
             self.run_expression(
-                'host["integration_validate_envelope"](["oplage.device-snapshot.v1", 1, 0, "provides", 4096])'
+                'host["integration_validate_envelope"](["oplage.device-snapshot.v1", 1, 0, "provides", 4096, false])'
             ),
             ["false"],
         )
         self.assertEqual(
             self.run_expression(
-                'host["integration_validate_envelope"](["not-applicable.v1", 1, 0, "both", 10])'
+                'host["integration_validate_envelope"](["not-applicable.v1", 1, 0, "both", 10, false])'
             ),
             ["false"],
         )
         self.assertEqual(
             self.run_expression(
-                'host["integration_validate_envelope"](["oplage.device-snapshot.v1", 1, 0, "consumes", 1048577])'
+                'host["integration_validate_envelope"](["oplage.device-snapshot.v1", 1, 0, "consumes", 1048577, false])'
             ),
             ["false"],
         )
+        self.assertEqual(
+            self.run_expression(
+                'host["integration_validate_envelope"](["pytyliki.c-abi.v1", 1, 0, "both", 1024, false])'
+            ),
+            ["false"],
+        )
+        self.assertEqual(
+            self.run_expression(
+                'host["integration_validate_envelope"](["pytyliki.c-abi.v1", 1, 0, "both", 1024, true])'
+            ),
+            ["true"],
+        )
+
         self.assertEqual(
             self.run_expression('host["integration_validate_opt_in"]("pytyliki.c-abi.v1", false)'),
             ["false"],
