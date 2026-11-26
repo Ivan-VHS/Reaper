@@ -18,7 +18,7 @@ Reaper — язык системного программирования и л�
 - NOO TAH передаёт выполнение JavaScript официальному Node.js.
 - Генерация каркасов Jora и композиция возможностей; пакеты каталога пока являются спецификациями, а не устанавливаемыми редакторами.
 - RAAEF — отдельная ветка разработки типизированных эстетических профилей, HIR/MIR/LIR и планирования эволюции архитектуры, дизайна и кода; выполнение и интеграция с общим native backend ещё требуют проверки.
-- Единый [каталог фреймворков](frameworks/catalog.v1.json) показывает известные семейства и статус их PR; открытые PR не считаются частью main.
+- Единый [каталог фреймворков](frameworks/README.md) показывает известные семейства и статус их PR; открытые PR не считаются частью main.
 
 Документы: [Эстетика и эволюция архитектуры](docs/AESTHETIC_EVOLUTION.md) · [Каталог фреймворков](frameworks/README.md) · [Возможности](docs/FEATURES.md) · [Архитектура](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Фабрика Jora](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md).
 
