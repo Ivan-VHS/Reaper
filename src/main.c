@@ -50,30 +50,30 @@ int main(int argc,char **argv) {
         if(path||dump||ast_json||catalog_dump||catalog_lookup||capability_dump||
            capability_lookup||(framework_dump&&framework_lookup)){usage(stderr);return 2;}
         if(!reaper_framework_catalog_validate()){
-            fprintf(stderr,"reaper-c: framework catalogue integrity failure\\n");return 1;
+            fprintf(stderr,"reaper-c: framework catalogue integrity failure\n");return 1;
         }
         if(framework_lookup){
             const ReaperFrameworkSpec *framework =
                 reaper_framework_find(framework_lookup);
             if(framework==NULL){
-                fprintf(stderr,"reaper-c: unknown framework %s\\n",framework_lookup);
+                fprintf(stderr,"reaper-c: unknown framework %s\n",framework_lookup);
                 return 1;
             }
-            printf("%s\\t%s\\t%s\\n",framework->id,framework->name,framework->domain);
-            printf("focus: %s\\n",framework->specialization);
-            printf("deliverable: %s\\n",framework->deliverable);
+            printf("%s\t%s\t%s\n",framework->id,framework->name,framework->domain);
+            printf("focus: %s\n",framework->specialization);
+            printf("deliverable: %s\n",framework->deliverable);
             printf("required evidence:");
             for(uint32_t bit=1U;bit<=REAPER_FRAMEWORK_EVIDENCE_ROLLBACK;bit<<=1U){
                 if((framework->required_evidence & bit)!=0U)
                     printf(" %s",reaper_framework_evidence_name(bit));
             }
-            putchar('\\n');
+            putchar('\n');
             puts("mode: evidence assessment only; source mutation and merge are disabled");
             return 0;
         }
         for(size_t i=0U;i<reaper_framework_catalog_count();++i){
             const ReaperFrameworkSpec *framework = reaper_framework_catalog_at(i);
-            printf("%02zu\\t%s\\t%s\\t%s\\n",i+1U,framework->name,
+            printf("%02zu\t%s\t%s\t%s\n",i+1U,framework->name,
                    framework->id,framework->domain);
         }
         return 0;
@@ -110,16 +110,16 @@ int main(int argc,char **argv) {
     }
     if(catalog_dump||catalog_lookup){
         if(path||dump||ast_json||(catalog_dump&&catalog_lookup)){usage(stderr);return 2;}
-        if(!reaper_token_catalog_validate()){fprintf(stderr,"reaper-c: token catalogue integrity failure\\n");return 1;}
+        if(!reaper_token_catalog_validate()){fprintf(stderr,"reaper-c: token catalogue integrity failure\n");return 1;}
         if(catalog_lookup){
             const ReaperCatalogEntry *entry=reaper_token_catalog_lookup(catalog_lookup);
-            if(!entry){fprintf(stderr,"reaper-c: unknown catalogue token %s\\n",catalog_lookup);return 1;}
-            printf("%03zu\\t%s\\t%s\\t%s\\n",entry->ordinal,entry->lexeme,entry->group,entry->name);
+            if(!entry){fprintf(stderr,"reaper-c: unknown catalogue token %s\n",catalog_lookup);return 1;}
+            printf("%03zu\t%s\t%s\t%s\n",entry->ordinal,entry->lexeme,entry->group,entry->name);
             return 0;
         }
         for(size_t i=0;i<reaper_token_catalog_count();++i){
             const ReaperCatalogEntry *entry=reaper_token_catalog_at(i);
-            printf("%03zu\\t%s\\t%s\\t%s\\n",entry->ordinal,entry->lexeme,entry->group,entry->name);
+            printf("%03zu\t%s\t%s\t%s\n",entry->ordinal,entry->lexeme,entry->group,entry->name);
         }
         return 0;
     }
