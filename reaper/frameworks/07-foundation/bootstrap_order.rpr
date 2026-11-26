@@ -1,0 +1,51 @@
+# FoundationBootstrapOrder — deterministic Kahn topological ordering.
+# When more than one step is ready, the smallest step number is selected.
+
+export craft foundation_bootstrap_order(step_count, dependencies) {
+    when kind(step_count) != "number" or step_count % 1 != 0 or step_count < 1 {
+        yield []
+    }
+    when kind(dependencies) != "list" {
+        yield []
+    }
+    craft valid_dependency(edge) {
+        when kind(edge) != "list" or size(edge) != 2 {
+            yield false
+        }
+        when kind(edge[0]) != "number" or kind(edge[1]) != "number" {
+            yield false
+        }
+        when edge[0] % 1 != 0 or edge[1] % 1 != 0 {
+            yield false
+        }
+        yield edge[0] >= 0 and edge[0] < step_count and edge[1] >= 0 and edge[1] < step_count and edge[0] != edge[1]
+    }
+    craft invalid_dependency(edge) {
+        yield not valid_dependency(edge)
+    }
+    when size(keep(dependencies, invalid_dependency)) != 0 or size(unique(dependencies)) != size(dependencies) {
+        yield []
+    }
+    vary order := []
+    while size(order) < step_count {
+        vary candidate := -1
+        each step in range(0, step_count) {
+            when not contains(order, step) {
+                vary blocked := false
+                each edge in dependencies {
+                    when edge[1] == step and not contains(order, edge[0]) {
+                        change blocked := true
+                    }
+                }
+                when not blocked and candidate == -1 {
+                    change candidate := step
+                }
+            }
+        }
+        when candidate == -1 {
+            yield []
+        }
+        change order := push(order, candidate)
+    }
+    yield order
+}
