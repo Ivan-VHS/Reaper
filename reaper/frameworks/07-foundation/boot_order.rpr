@@ -1,0 +1,53 @@
+# FoundationBootOrder — validate a supplied order against prerequisite edges.
+
+export craft valid_foundation_boot_order(step_count, order, dependencies) {
+    when kind(step_count) != "number" or step_count % 1 != 0 or step_count < 1 {
+        yield false
+    }
+    when kind(order) != "list" or kind(dependencies) != "list" or size(order) != step_count {
+        yield false
+    }
+    craft valid_step(step) {
+        when kind(step) != "number" or step % 1 != 0 {
+            yield false
+        }
+        yield step >= 0 and step < step_count
+    }
+    craft invalid_step(step) {
+        yield not valid_step(step)
+    }
+    when size(keep(order, invalid_step)) != 0 or size(unique(order)) != step_count {
+        yield false
+    }
+    craft valid_dependency(edge) {
+        when kind(edge) != "list" or size(edge) != 2 {
+            yield false
+        }
+        when not valid_step(edge[0]) or not valid_step(edge[1]) {
+            yield false
+        }
+        yield edge[0] != edge[1]
+    }
+    craft invalid_dependency(edge) {
+        yield not valid_dependency(edge)
+    }
+    when size(keep(dependencies, invalid_dependency)) != 0 or size(unique(dependencies)) != size(dependencies) {
+        yield false
+    }
+    craft position_of(step) {
+        vary found := -1
+        each position in range(0, size(order)) {
+            when order[position] == step {
+                change found := position
+            }
+        }
+        yield found
+    }
+    vary valid := true
+    each edge in dependencies {
+        when position_of(edge[0]) >= position_of(edge[1]) {
+            change valid := false
+        }
+    }
+    yield valid
+}
