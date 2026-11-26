@@ -1,17 +1,115 @@
-# Reaper framework metadata and source-level helper functions.
-# Operation contracts: language/frameworks.v1.json
+# Kloz: versioned Reaper module metadata and dependency lifecycle.
+import "../federation_common.rpr" as fc
 
 export make framework_id := "kloz"
 export make display_name := "Kloz"
 export make feature_key := "RPR-FWK-015"
 export make operation_keys := ["RPR-FWK-015-F01", "RPR-FWK-015-F02", "RPR-FWK-015-F03", "RPR-FWK-015-F04", "RPR-FWK-015-F05", "RPR-FWK-015-F06"]
-export make maturity := "contract-only"
+export make maturity := "reference-handler-v1-partial"
 export make native_registry := "reaper.framework-cabi.v1"
 
-export craft operation_key(index) {
-    yield operation_keys[index]
+export craft operation_key(index) { yield operation_keys[index] }
+export craft framework_manifest() { yield [framework_id, display_name, feature_key, operation_keys, maturity] }
+
+# Module: [id, version, dependencies, exports, reference_count, state].
+export craft module_load(module, available_modules) {
+    when not fc["fc_record"](module, 6) or kind(available_modules) != "list" {
+        yield [false, nothing, "module-load-shape"]
+    }
+    when not fc["fc_nonempty_text"](module[0]) or not fc["fc_version_valid"](module[1]) {
+        yield [false, nothing, "module-identity-invalid"]
+    }
+    vary missing := []
+    each dependency in module[2] {
+        when not fc["fc_has"](available_modules, dependency) {
+            change missing := push(missing, dependency)
+        }
+    }
+    when size(missing) > 0 { yield [false, nothing, ["missing-dependencies", missing]] }
+    when module[5] != "declared" and module[5] != "resolved" {
+        yield [false, nothing, "module-state-not-loadable"]
+    }
+    yield [true, [module[0], module[1], module[2], module[3], module[4], "prepared"], "load-plan"]
 }
 
-export craft framework_manifest() {
-    yield [framework_id, display_name, feature_key, operation_keys, maturity]
+export craft module_export(module, export_name) {
+    when not fc["fc_record"](module, 6) or not fc["fc_nonempty_text"](export_name) {
+        yield [false, nothing, "module-export-query-shape"]
+    }
+    make found := fc["fc_lookup"](module[3], export_name)
+    when not found[0] { yield [false, nothing, "export-not-found"] }
+    yield [true, found[1], "export-resolved"]
+}
+
+# Request: [importer_id, export_name].
+export craft module_import(module, request) {
+    when not fc["fc_record"](module, 6) or not fc["fc_record"](request, 2) {
+        yield [false, nothing, "module-import-shape"]
+    }
+    make exported := module_export(module, request[1])
+    when not exported[0] { yield [false, nothing, exported[2]] }
+    yield [true, [request[0], module[0], request[1], exported[1]], "import-contract"]
+}
+
+craft kloz_order(modules) {
+    when kind(modules) != "list" { yield [false, [], "modules-must-be-list"] }
+    vary ids := []
+    vary errors := []
+    each module in modules {
+        when not fc["fc_record"](module, 6) {
+            change errors := push(errors, ["module-shape", module])
+        } otherwise {
+            when fc["fc_has"](ids, module[0]) { change errors := push(errors, ["duplicate-module", module[0]]) }
+            change ids := push(ids, module[0])
+        }
+    }
+    when size(errors) > 0 { yield [false, [], errors] }
+    each module in modules {
+        each dependency in module[2] {
+            when not fc["fc_has"](ids, dependency) {
+                change errors := push(errors, ["missing-dependency", module[0], dependency])
+            }
+        }
+    }
+    when size(errors) > 0 { yield [false, [], errors] }
+    vary pending := ids
+    vary ordered := []
+    loop while size(pending) > 0 {
+        vary ready := []
+        vary blocked := []
+        each candidate in pending {
+            vary required_pending := false
+            each module in modules {
+                when module[0] == candidate {
+                    each dependency in module[2] {
+                        when fc["fc_has"](pending, dependency) { change required_pending := true }
+                    }
+                }
+            }
+            when required_pending { change blocked := push(blocked, candidate) }
+            when not required_pending { change ready := push(ready, candidate) }
+        }
+        when size(ready) == 0 { yield [false, ordered, ["dependency-cycle", blocked]] }
+        each item in ready { change ordered := push(ordered, item) }
+        change pending := blocked
+    }
+    yield [true, ordered, "dependency-order"]
+}
+
+export craft dependency_resolve(modules) {
+    yield kloz_order(modules)
+}
+
+export craft module_version(module) {
+    when not fc["fc_record"](module, 6) { yield [false, nothing, "module-shape"] }
+    when not fc["fc_version_valid"](module[1]) { yield [false, nothing, "module-version-invalid"] }
+    yield [true, module[1], "version"]
+}
+
+export craft module_unload(module, owner) {
+    when not fc["fc_record"](module, 6) { yield [false, module, "module-shape"] }
+    when module[0] != owner { yield [false, module, "module-owner-mismatch"] }
+    when module[4] != 0 { yield [false, module, "module-references-active"] }
+    when module[5] == "unloaded" { yield [true, module, "already-unloaded"] }
+    yield [true, [module[0], module[1], module[2], module[3], 0, "unloaded"], "unload-approved"]
 }
