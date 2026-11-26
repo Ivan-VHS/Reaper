@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
-int main(void) {
+int main(int argc, char **argv) {
     const ReaperCompilerIrNode hir_nodes[] = {
         { .opcode = REAPER_COMPILER_IR_HIR_VALUE, .type = REAPER_COMPILER_IR_TYPE_I64,
           .integer = 20, .span = {"math.rpr", 1, 1},
@@ -82,6 +82,15 @@ int main(void) {
             invalid_nodes, 1u
         };
         assert(!reaper_compiler_ir_verify(&invalid, REAPER_COMPILER_IR_HIR, &error));
+    }
+    if (argc == 3 && strcmp(argv[1], "--emit-c17") == 0) {
+        FILE *stream = fopen(argv[2], "wb");
+        if (stream == NULL) return 2;
+        if (fwrite(generated, 1u, generated_length, stream) != generated_length) {
+            (void)fclose(stream);
+            return 3;
+        }
+        if (fclose(stream) != 0) return 4;
     }
     puts("native compiler IR tests: general typed HIR/MIR/LIR and C17 emission passed");
     return 0;
