@@ -161,3 +161,112 @@ export craft graph_validate_bounded(nodes, edges, max_nodes, max_edges) {
     when size(edges) > max_edges { yield [false, "edge_budget_exceeded"] }
     yield graph_validate(nodes, edges)
 }
+
+
+# Architecture scores, dependency audits and graph projections.
+export craft graph_transitive_dependents(edges, node_name) {
+    yield graph_impact_set(edges, node_name)
+}
+
+export craft graph_dependency_count(edges, node_name) {
+    make closure := graph_dependency_closure(edges, node_name, [])
+    when not closure[0] { yield closure }
+    yield [true, size(closure[1]) - 1]
+}
+
+export craft graph_dependency_audit(nodes, edges) {
+    make valid := graph_validate(nodes, edges)
+    when not valid[0] { yield valid }
+    make ordered := graph_topological_order(nodes, edges)
+    when not ordered[0] { yield ordered }
+    vary reports := []
+    vary index := 0
+    loop while index < size(nodes) {
+        make degree := graph_node_degree(edges, nodes[index])
+        make closure := graph_dependency_closure(edges, nodes[index], [])
+        change reports := push(reports, [
+            nodes[index], degree[0], degree[1], size(closure[1]) - 1
+        ])
+        change index := index + 1
+    }
+    yield [true, ordered[1], reports]
+}
+
+export craft graph_edges_for_node(edges, node_name) {
+    vary incoming := []
+    vary outgoing := []
+    vary index := 0
+    loop while index < size(edges) {
+        when edges[index][0] == node_name { change outgoing := push(outgoing, edges[index]) }
+        when edges[index][1] == node_name { change incoming := push(incoming, edges[index]) }
+        change index := index + 1
+    }
+    yield [incoming, outgoing]
+}
+
+export craft graph_nodes_by_layer(nodes, layer_names, layer_rank) {
+    vary grouped := []
+    vary index := 0
+    loop while index < size(layer_names) {
+        vary members := []
+        vary node_index := 0
+        loop while node_index < size(nodes) {
+            when layer_rank(nodes[node_index]) == index {
+                change members := push(members, nodes[node_index])
+            }
+            change node_index := node_index + 1
+        }
+        change grouped := push(grouped, [layer_names[index], members])
+        change index := index + 1
+    }
+    yield grouped
+}
+
+export craft graph_component_boundary(nodes, edges, component_nodes) {
+    when not graph_validate(nodes, edges)[0] { yield [false, "invalid_graph"] }
+    vary internal := []
+    vary incoming := []
+    vary outgoing := []
+    vary index := 0
+    loop while index < size(edges) {
+        make from_inside := graph_has_node(component_nodes, edges[index][0])
+        make to_inside := graph_has_node(component_nodes, edges[index][1])
+        when from_inside and to_inside { change internal := push(internal, edges[index]) }
+        otherwise {
+            when not from_inside and to_inside { change incoming := push(incoming, edges[index]) }
+            when from_inside and not to_inside { change outgoing := push(outgoing, edges[index]) }
+        }
+        change index := index + 1
+    }
+    yield [true, internal, incoming, outgoing]
+}
+
+export craft graph_dependency_depth(edges, node_name, visited) {
+    when graph_has_node(visited, node_name) { yield [false, "cycle_or_repeated_path"] }
+    make next := push(visited, node_name)
+    make dependencies := graph_dependencies_of(edges, node_name)
+    when size(dependencies) == 0 { yield [true, 0] }
+    vary maximum := 0
+    vary index := 0
+    loop while index < size(dependencies) {
+        make depth := graph_dependency_depth(edges, dependencies[index], next)
+        when not depth[0] { yield depth }
+        when depth[1] + 1 > maximum { change maximum := depth[1] + 1 }
+        change index := index + 1
+    }
+    yield [true, maximum]
+}
+
+export craft graph_budget_report(nodes, edges) {
+    make valid := graph_validate(nodes, edges)
+    when not valid[0] { yield valid }
+    vary isolated := graph_isolated_nodes(nodes, edges)
+    vary index := 0
+    vary roots := []
+    loop while index < size(nodes) {
+        make degree := graph_node_degree(edges, nodes[index])
+        when degree[1] == 0 { change roots := push(roots, nodes[index]) }
+        change index := index + 1
+    }
+    yield [true, [size(nodes), size(edges), size(isolated), roots]]
+}
