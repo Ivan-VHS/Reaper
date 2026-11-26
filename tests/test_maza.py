@@ -49,6 +49,29 @@ class MazaSyntaxTests(unittest.TestCase):
         diagnostic = diagnose_exception(MazaError("missing foundation"))
         self.assertEqual(diagnostic.code, "RPR-E0110")
 
+    def test_remote_source_is_rejected_without_fetching(self) -> None:
+        root = self.workspace()
+        interpreter = Interpreter(output=lambda _line: None)
+        with self.assertRaisesRegex(MazaError, "local .rpr paths only"):
+            interpreter.run(
+                'maza "https://example.invalid/foundation.rpr" as remote',
+                str(root / "main.rpr"),
+            )
+
+    def test_symbolic_link_source_is_rejected_before_resolution(self) -> None:
+        root = self.workspace()
+        alias = root / "linked.rpr"
+        try:
+            alias.symlink_to(root / "foundation.rpr")
+        except (OSError, NotImplementedError):
+            self.skipTest("symbolic links are unavailable on this host")
+        interpreter = Interpreter(output=lambda _line: None)
+        with self.assertRaisesRegex(MazaError, "symbolic-link sources"):
+            interpreter.run(
+                'maza "linked.rpr" as linked',
+                str(root / "main.rpr"),
+            )
+
     def test_typechecker_registers_foundation_namespace(self) -> None:
         tree = parse('maza "base.rpr" as base\nemit base["version"]')
         result = TypeChecker().check(tree)

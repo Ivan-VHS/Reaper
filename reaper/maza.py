@@ -65,10 +65,13 @@ class MazaManager:
         if "://" in specifier:
             raise MazaError("MAZA accepts local .rpr paths only; remote sources are not fetched")
         base = Path(importer).resolve().parent if not importer.startswith("<") else Path.cwd()
-        if not Path(specifier).is_absolute():
-            specifier = str(base / specifier)
+        candidate = Path(specifier)
+        if not candidate.is_absolute():
+            candidate = base / candidate
+        if candidate.is_symlink():
+            raise MazaError(f"MAZA refuses symbolic-link sources: {candidate}")
         try:
-            target = self.interpreter.module_loader.resolve(specifier, importer)
+            target = self.interpreter.module_loader.resolve(str(candidate), importer)
         except Exception as error:
             raise MazaError(f"MAZA cannot resolve {specifier!r}: {error}") from error
         if target.is_symlink():
