@@ -16,9 +16,14 @@ export craft evolve(current_profile, target_profile, architecture, request, mode
         yield ["EvolutionResult", "blocked", ["invalid_profile"], [], []]
     }
 
-    make compiled := Holmosaptimu["compile"](current_profile, current_profile[3])
-    when compiled[0] != "AestheticCompileResult" {
-        yield ["EvolutionResult", "blocked", ["baseline_profile_compile_failed"], [compiled], []]
+    make baseline := Holmosaptimu["compile"](current_profile, current_profile[3])
+    when baseline[0] != "AestheticCompileResult" {
+        yield ["EvolutionResult", "blocked", ["baseline_profile_compile_failed"], [baseline], []]
+    }
+
+    make candidate := Holmosaptimu["compile"](target_profile, target_profile[3])
+    when candidate[0] != "AestheticCompileResult" {
+        yield ["EvolutionResult", "blocked", ["candidate_profile_compile_failed"], [baseline, candidate], []]
     }
 
     make design_assessment := Cellene["assess"](target_profile)
@@ -29,19 +34,19 @@ export craft evolve(current_profile, target_profile, architecture, request, mode
     when architecture_assessment[1] != "valid" {
         yield [
             "EvolutionResult", "blocked", ["architecture_validation_failed"],
-            [design_assessment, design_proposal, architecture_assessment], [source_plan]
+            [baseline, candidate, design_assessment, design_proposal, architecture_assessment], [source_plan]
         ]
     }
     when source_plan[0] != "SourceEvolutionPlan" {
         yield [
             "EvolutionResult", "blocked", ["source_plan_rejected"],
-            [design_assessment, design_proposal, architecture_assessment], [source_plan]
+            [baseline, candidate, design_assessment, design_proposal, architecture_assessment], [source_plan]
         ]
     }
     when design_proposal[0] != "DesignEvolutionProposal" {
         yield [
             "EvolutionResult", "blocked", ["design_proposal_rejected"],
-            [design_assessment, design_proposal, architecture_assessment], [source_plan]
+            [baseline, candidate, design_assessment, design_proposal, architecture_assessment], [source_plan]
         ]
     }
     when mode == "apply" {
@@ -49,18 +54,18 @@ export craft evolve(current_profile, target_profile, architecture, request, mode
             "EvolutionResult", "blocked",
             ["apply_adapter_not_implemented", "repository_grant_validation_required",
              "path_allowlist_enforcement_required", "sandbox_and_rollback_required"],
-            [design_assessment, design_proposal, architecture_assessment], [source_plan]
+            [baseline, candidate, design_assessment, design_proposal, architecture_assessment], [source_plan]
         ]
     }
 
     when mode == "observe" {
         yield [
             "EvolutionResult", "observed", [],
-            [compiled, design_assessment, architecture_assessment], []
+            [baseline, candidate, design_assessment, architecture_assessment], []
         ]
     }
     yield [
         "EvolutionResult", "proposed", [],
-        [compiled, design_assessment, design_proposal, architecture_assessment], [source_plan]
+        [baseline, candidate, design_assessment, design_proposal, architecture_assessment], [source_plan]
     ]
 }
