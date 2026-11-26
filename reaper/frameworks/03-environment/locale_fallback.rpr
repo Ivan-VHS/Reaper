@@ -1,0 +1,26 @@
+# EnvironmentLocaleFallback — deterministic requested/fallback/English locale resolution.
+
+export craft resolve_environment_locale(requested, supported, fallback) {
+    when kind(requested) != "text" or kind(fallback) != "text" or kind(supported) != "list" {
+        yield "en"
+    }
+    craft invalid_locale(locale) {
+        when kind(locale) != "text" {
+            yield true
+        }
+        yield size(trim(locale)) == 0
+    }
+    when size(keep(supported, invalid_locale)) != 0 {
+        yield "en"
+    }
+    when size(unique(supported)) != size(supported) {
+        yield "en"
+    }
+    when contains(supported, requested) {
+        yield requested
+    }
+    when contains(supported, fallback) {
+        yield fallback
+    }
+    yield "en"
+}

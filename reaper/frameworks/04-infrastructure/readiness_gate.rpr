@@ -1,0 +1,29 @@
+# InfrastructureReadinessGate — require a declared quorum of ready services.
+
+export craft infrastructure_readiness_gate(states, minimum_ready) {
+    when kind(states) != "list" or size(states) == 0 {
+        yield false
+    }
+    when kind(minimum_ready) != "number" or minimum_ready % 1 != 0 {
+        yield false
+    }
+    when minimum_ready < 0 or minimum_ready > size(states) {
+        yield false
+    }
+    craft valid_state(state) {
+        yield contains(["ready", "starting", "failed", "disabled"], state)
+    }
+    craft invalid_state(state) {
+        yield not valid_state(state)
+    }
+    when size(keep(states, invalid_state)) != 0 {
+        yield false
+    }
+    vary ready_count := 0
+    each state in states {
+        when state == "ready" {
+            change ready_count := ready_count + 1
+        }
+    }
+    yield ready_count >= minimum_ready
+}

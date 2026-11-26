@@ -1,0 +1,33 @@
+# PlatformCrossBuild — verify target selection against explicit toolchain targets.
+# [host_os, target_os, compiler_supported_targets]
+
+export craft valid_platform_cross_build_plan(plan) {
+    when kind(plan) != "list" {
+        yield false
+    }
+    when size(plan) != 3 {
+        yield false
+    }
+    when kind(plan[0]) != "text" or kind(plan[1]) != "text" or kind(plan[2]) != "list" {
+        yield false
+    }
+    when not contains(["windows", "linux", "macos", "baremetal", "wasm"], plan[0]) {
+        yield false
+    }
+    when not contains(["windows", "linux", "macos", "baremetal", "wasm"], plan[1]) {
+        yield false
+    }
+    when size(plan[2]) == 0 {
+        yield false
+    }
+    craft invalid_target(value) {
+        yield kind(value) != "text" or not contains(["windows", "linux", "macos", "baremetal", "wasm"], value)
+    }
+    when size(keep(plan[2], invalid_target)) != 0 {
+        yield false
+    }
+    when size(unique(plan[2])) != size(plan[2]) {
+        yield false
+    }
+    yield contains(plan[2], plan[1])
+}

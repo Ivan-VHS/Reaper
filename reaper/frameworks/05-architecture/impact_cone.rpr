@@ -1,0 +1,45 @@
+# ArchitectureImpactCone — transitive downstream impact of a changed node.
+
+export craft architecture_impact_cone(start_node, node_count, edges) {
+    when kind(start_node) != "number" or kind(node_count) != "number" {
+        yield []
+    }
+    when start_node % 1 != 0 or node_count % 1 != 0 or node_count < 1 {
+        yield []
+    }
+    when start_node < 0 or start_node >= node_count or kind(edges) != "list" {
+        yield []
+    }
+    craft valid_edge(edge) {
+        when kind(edge) != "list" or size(edge) != 2 {
+            yield false
+        }
+        when kind(edge[0]) != "number" or kind(edge[1]) != "number" {
+            yield false
+        }
+        when edge[0] % 1 != 0 or edge[1] % 1 != 0 {
+            yield false
+        }
+        yield edge[0] >= 0 and edge[0] < edge[1] and edge[1] < node_count
+    }
+    craft invalid_edge(edge) {
+        yield not valid_edge(edge)
+    }
+    when size(keep(edges, invalid_edge)) != 0 or size(unique(edges)) != size(edges) {
+        yield []
+    }
+    vary affected := []
+    vary changed := true
+    while changed {
+        change changed := false
+        each edge in edges {
+            when edge[0] == start_node or contains(affected, edge[0]) {
+                when not contains(affected, edge[1]) {
+                    change affected := push(affected, edge[1])
+                    change changed := true
+                }
+            }
+        }
+    }
+    yield affected
+}

@@ -12,6 +12,7 @@ Start with the [project README](../README.md) for installation, first commands a
 - [DABI64 Desktop Host v1](DABI64_DESKTOP_HOST_V1.md)
 - [Implementation roadmap](IMPLEMENTATION_ROADMAP.md)
 - [Framework programme: 66 × 5](FRAMEWORKS_66X5_ROADMAP.md)
+- [Domain Frameworks: batches 02–05](DOMAIN_FRAMEWORKS_02_05.md)
 - [Skeleton Frameworks: batch 01](SKELETON_FRAMEWORKS.md)
 - [Studio and IDE](REAPER_IDE.md)
 - [Mora archive contracts](MORA_ARCHIVE_CONTRACTS.md) — executable `.rpr` validators, record layouts, provenance rules and offline regression fixture.

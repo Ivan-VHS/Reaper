@@ -2,7 +2,7 @@
 
 **Target:** 66 distinct domains × 5 independent frameworks per domain = **330 frameworks**.  
 **Profile:** systems programming, compiler/toolchain engineering, runtime architecture and hardware-adjacent development in Reaper.  
-**Current repository baseline:** batch 01 contains five Reaper-language validation frameworks; the other 65 batches remain queued.
+**Current repository baseline:** batch 01 has five source modules; batches 02–05 add twenty domain-specific modules. The remaining 305 framework slots are not counted as implemented.
 
 ## Implementation gate
 
@@ -24,10 +24,10 @@ Each numbered row is one independent implementation batch with five framework sl
 | # | Domain | Framework slots | Status |
 |---:|---|---:|---|
 | 01 | Каркас | 5 | In review |
-| 02 | Платформа | 5 | Queued |
-| 03 | Среда | 5 | Queued |
-| 04 | Инфраструктура | 5 | Queued |
-| 05 | Архитектура | 5 | Queued |
+| 02 | Платформа | 5 | Source added — CI pending |
+| 03 | Среда | 5 | Source added — CI pending |
+| 04 | Инфраструктура | 5 | Source added — CI pending |
+| 05 | Архитектура | 5 | Source added — CI pending |
 | 06 | Базис | 5 | Queued |
 | 07 | Основа | 5 | Queued |
 | 08 | Фундамент | 5 | Queued |
@@ -92,8 +92,10 @@ Each numbered row is one independent implementation batch with five framework sl
 
 ## Progress
 
-- Implemented source modules in batch 01: 5.
-- Queued framework slots in batches 02–66: 325.
-- Completed total: 5 / 330, subject to the batch 01 CI gate.
+- Batch 01 source modules: 5 (CI status not yet confirmed).
+- Batches 02–05 source modules: 20 (focused and full CI verification pending).
+- Framework source modules currently present: 25 / 330.
+- Remaining source modules: 305 / 330; batches 06–66 remain queued.
+- No batch is declared delivered until its own positive/negative tests and exact-head CI are green.
 
-Continue in order, one five-framework batch at a time. Preserve independent contracts and Reaper-language implementations; update this tracker only after the corresponding tests and CI evidence exist.
+Domain-specific module details: [Batches 02–05](DOMAIN_FRAMEWORKS_02_05.md). Keep privileged runtime, native execution, real host integration and hardware access out of scope until separately specified and tested.

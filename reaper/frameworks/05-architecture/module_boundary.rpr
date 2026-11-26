@@ -1,0 +1,54 @@
+# ArchitectureModuleBoundary — enforce explicit forbidden layer-crossing boundaries.
+# A forbidden boundary B may only be entered from B-1 or an adjacent earlier layer.
+
+export craft valid_architecture_module_boundary(module_count, edges, forbidden_boundaries) {
+    when kind(module_count) != "number" or module_count % 1 != 0 or module_count < 2 {
+        yield false
+    }
+    when kind(edges) != "list" or kind(forbidden_boundaries) != "list" {
+        yield false
+    }
+    craft valid_boundary(boundary) {
+        when kind(boundary) != "number" or boundary % 1 != 0 {
+            yield false
+        }
+        yield boundary >= 1 and boundary < module_count
+    }
+    craft invalid_boundary(boundary) {
+        yield not valid_boundary(boundary)
+    }
+    when size(keep(forbidden_boundaries, invalid_boundary)) != 0 {
+        yield false
+    }
+    when size(unique(forbidden_boundaries)) != size(forbidden_boundaries) {
+        yield false
+    }
+    craft valid_edge(edge) {
+        when kind(edge) != "list" or size(edge) != 2 {
+            yield false
+        }
+        when kind(edge[0]) != "number" or kind(edge[1]) != "number" {
+            yield false
+        }
+        when edge[0] % 1 != 0 or edge[1] % 1 != 0 {
+            yield false
+        }
+        when edge[0] < 0 or edge[1] >= module_count or edge[0] >= edge[1] {
+            yield false
+        }
+        vary allowed := true
+        each boundary in forbidden_boundaries {
+            when edge[0] < boundary - 1 and edge[1] >= boundary {
+                change allowed := false
+            }
+        }
+        yield allowed
+    }
+    craft invalid_edge(edge) {
+        yield not valid_edge(edge)
+    }
+    when size(keep(edges, invalid_edge)) != 0 {
+        yield false
+    }
+    yield size(unique(edges)) == size(edges)
+}

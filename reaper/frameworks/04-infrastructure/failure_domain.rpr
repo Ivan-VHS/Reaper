@@ -1,0 +1,39 @@
+# InfrastructureFailureDomain — spread replicas across distinct failure domains.
+# Placement: [replica_id, failure_domain_id].
+
+export craft resilient_infrastructure_placement(placements, minimum_domains) {
+    when kind(placements) != "list" or size(placements) == 0 {
+        yield false
+    }
+    when kind(minimum_domains) != "number" or minimum_domains % 1 != 0 {
+        yield false
+    }
+    when minimum_domains < 1 or minimum_domains > size(placements) {
+        yield false
+    }
+    craft valid_placement(item) {
+        when kind(item) != "list" or size(item) != 2 {
+            yield false
+        }
+        when kind(item[0]) != "text" or kind(item[1]) != "text" {
+            yield false
+        }
+        yield size(trim(item[0])) > 0 and size(trim(item[1])) > 0
+    }
+    craft invalid_placement(item) {
+        yield not valid_placement(item)
+    }
+    craft replica_id(item) {
+        yield item[0]
+    }
+    craft domain_id(item) {
+        yield item[1]
+    }
+    when size(keep(placements, invalid_placement)) != 0 {
+        yield false
+    }
+    when size(unique(map(placements, replica_id))) != size(placements) {
+        yield false
+    }
+    yield size(unique(map(placements, domain_id))) >= minimum_domains
+}

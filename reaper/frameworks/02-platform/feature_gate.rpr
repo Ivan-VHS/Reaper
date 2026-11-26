@@ -1,0 +1,23 @@
+# PlatformFeatureGate — report target features absent from the selected target.
+
+export craft platform_missing_features(required, available) {
+    when kind(required) != "list" or kind(available) != "list" {
+        yield []
+    }
+    craft invalid_feature(value) {
+        when kind(value) != "text" {
+            yield true
+        }
+        yield size(trim(value)) == 0
+    }
+    when size(keep(required, invalid_feature)) != 0 or size(keep(available, invalid_feature)) != 0 {
+        yield []
+    }
+    when size(unique(required)) != size(required) or size(unique(available)) != size(available) {
+        yield []
+    }
+    craft missing(feature) {
+        yield not contains(available, feature)
+    }
+    yield keep(required, missing)
+}

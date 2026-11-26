@@ -1,0 +1,22 @@
+# InfrastructureHealthReducer — aggregate to the worst known service health.
+
+export craft reduce_infrastructure_health(states) {
+    when kind(states) != "list" or size(states) == 0 {
+        yield "unhealthy"
+    }
+    vary health := "healthy"
+    each state in states {
+        when state == "unhealthy" {
+            change health := "unhealthy"
+        } otherwise {
+            when state == "degraded" and health != "unhealthy" {
+                change health := "degraded"
+            } otherwise {
+                when state != "healthy" {
+                    change health := "unhealthy"
+                }
+            }
+        }
+    }
+    yield health
+}

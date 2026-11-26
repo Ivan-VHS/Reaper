@@ -1,0 +1,41 @@
+# ArchitectureCouplingMatrix — validate square non-negative matrix with zero diagonal.
+# Output is [node_count, directed_nonzero_relationship_count].
+
+export craft architecture_matrix_profile(matrix) {
+    when kind(matrix) != "list" or size(matrix) == 0 {
+        yield []
+    }
+    craft valid_row(row) {
+        when kind(row) != "list" {
+            yield false
+        }
+        yield size(row) == size(matrix)
+    }
+    craft invalid_row(row) {
+        yield not valid_row(row)
+    }
+    when size(keep(matrix, invalid_row)) != 0 {
+        yield []
+    }
+    vary edge_count := 0
+    vary valid := true
+    each row_index in range(0, size(matrix)) {
+        each column_index in range(0, size(matrix)) {
+            vary value := matrix[row_index][column_index]
+            when kind(value) != "number" or value < 0 {
+                change valid := false
+            } otherwise {
+                when row_index == column_index and value != 0 {
+                    change valid := false
+                }
+                when row_index != column_index and value > 0 {
+                    change edge_count := edge_count + 1
+                }
+            }
+        }
+    }
+    when not valid {
+        yield []
+    }
+    yield [size(matrix), edge_count]
+}
