@@ -34,8 +34,12 @@ craft keyword_kind(word) {
                                                                     when word == "or" { yield "OR" } otherwise {
                                                                         when word == "not" { yield "NOT" } otherwise {
                                                                             when word == "struct" { yield "STRUCT" } otherwise {
-                                                                                when word == "platform" { yield "PLATFORM" } otherwise {
-                                                                                    yield "IDENT"
+                                                                                when word == "union" { yield "UNION" } otherwise {
+                                                                                    when word == "enum" { yield "ENUM" } otherwise {
+                                                                                        when word == "platform" { yield "PLATFORM" } otherwise {
+                                                                                            yield "IDENT"
+                                                                                        }
+                                                                                    }
                                                                                 }
                                                                             }
                                                                         }
@@ -262,5 +266,22 @@ assert(pipeline == [
     ["IDENT", "transform", 1, 15],
     ["EOF", "", 1, 24]
 ], "pipeline operator tokenization mismatch")
+
+make declaration_keywords := tokenize("struct union enum platform")
+assert(declaration_keywords == [
+    ["STRUCT", "struct", 1, 1],
+    ["UNION", "union", 1, 8],
+    ["ENUM", "enum", 1, 14],
+    ["PLATFORM", "platform", 1, 19],
+    ["EOF", "", 1, 27]
+], "typed declaration keyword tokenization mismatch")
+
+make field_separator := tokenize("x: u32")
+assert(field_separator == [
+    ["IDENT", "x", 1, 1],
+    [":", ":", 1, 2],
+    ["IDENT", "u32", 1, 4],
+    ["EOF", "", 1, 7]
+], "typed field separator tokenization mismatch")
 
 emit "SELFHOST_LEXER_OK"
