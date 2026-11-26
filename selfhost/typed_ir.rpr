@@ -1,0 +1,389 @@
+# Canonical Typed IR v1 serialization and structural checks in Reaper source.
+#
+# IDs are stable module-local identifiers. SourceMap byte ranges are UTF-8
+# offsets; line/column coordinates are one-based Unicode code-point positions.
+# The C17 verifier applies the complete target-layout, SSA and CFG contract.
+
+export craft tir_source(id, path, source_text, byte_length, line_count) {
+    yield ["TIR_SOURCE_V1", id, path, source_text, byte_length, line_count]
+}
+
+export craft tir_span(id, source_id, byte_start, byte_end,
+                      start_line, start_column, end_line, end_column) {
+    yield [
+        "TIR_SPAN_V1", id, source_id, byte_start, byte_end,
+        start_line, start_column, end_line, end_column
+    ]
+}
+
+export craft tir_source_map(sources, spans) {
+    yield ["TIR_SOURCE_MAP_V1", sources, spans]
+}
+
+export craft tir_type(id, kind, flags, element_type_id, element_count,
+                      byte_size, byte_alignment, first_field, field_count,
+                      span_id, name) {
+    yield [
+        "TIR_TYPE_V1", id, kind, flags, element_type_id, element_count,
+        byte_size, byte_alignment, first_field, field_count, span_id, name
+    ]
+}
+
+export craft tir_field(owner_type_id, type_id, span_id, byte_offset, name) {
+    yield ["TIR_FIELD_V1", owner_type_id, type_id, span_id, byte_offset, name]
+}
+
+export craft tir_parameter(function_id, name, type_id, span_id) {
+    yield ["TIR_PARAMETER_V1", function_id, name, type_id, span_id]
+}
+
+export craft tir_value(id, block_id, type_id, opcode, lhs, rhs, immediate, span_id) {
+    yield ["TIR_VALUE_V1", id, block_id, type_id, opcode, lhs, rhs, immediate, span_id]
+}
+
+export craft tir_block(id, function_id, first_value, value_count, terminator,
+                       operand_value_id, true_target, false_target, span_id) {
+    yield [
+        "TIR_BLOCK_V1", id, function_id, first_value, value_count, terminator,
+        operand_value_id, true_target, false_target, span_id
+    ]
+}
+
+export craft tir_function(id, name, return_type_id, first_parameter,
+                          parameter_count, first_block, block_count,
+                          entry_block_id, span_id) {
+    yield [
+        "TIR_FUNCTION_V1", id, name, return_type_id, first_parameter,
+        parameter_count, first_block, block_count, entry_block_id, span_id
+    ]
+}
+
+export craft tir_module(target_triple, pointer_size, pointer_alignment,
+                        source_map, types, fields, parameters, values, blocks, functions) {
+    yield [
+        "TYPED_IR_V1", 1, target_triple, pointer_size, pointer_alignment,
+        source_map, types, fields, parameters, values, blocks, functions
+    ]
+}
+
+export craft tir_error(code, message) {
+    yield [false, code, message]
+}
+
+export craft tir_ok(value) {
+    yield [true, value, ""]
+}
+
+export craft tir_has_id(entries, id, id_index, tag) {
+    each entry in entries {
+        when size(entry) <= id_index or entry[0] != tag {
+            yield false
+        }
+        when entry[id_index] == id {
+            yield true
+        }
+    }
+    yield false
+}
+
+export craft tir_source_by_id(sources, source_id) {
+    each source in sources {
+        when size(source) == 6 and source[0] == "TIR_SOURCE_V1" and source[1] == source_id {
+            yield source
+        }
+    }
+    yield []
+}
+
+export craft tir_span_by_id(spans, span_id) {
+    each span in spans {
+        when size(span) == 9 and span[0] == "TIR_SPAN_V1" and span[1] == span_id {
+            yield span
+        }
+    }
+    yield []
+}
+
+export craft tir_source_map_validate(source_map) {
+    when size(source_map) != 3 or source_map[0] != "TIR_SOURCE_MAP_V1" {
+        yield tir_error("RPR-TIR-0001", "invalid SourceMap v1 descriptor")
+    }
+    make sources := source_map[1]
+    make spans := source_map[2]
+    when size(sources) == 0 or size(spans) == 0 {
+        yield tir_error("RPR-TIR-0002", "SourceMap requires at least one source file and span")
+    }
+
+    vary source_ids := []
+    each source in sources {
+        when size(source) != 6 or source[0] != "TIR_SOURCE_V1" {
+            yield tir_error("RPR-TIR-0003", "malformed SourceMap source entry")
+        }
+        when source[1] < 0 or source[2] == "" or source[4] < 0 or source[5] < 1 {
+            yield tir_error("RPR-TIR-0004", "source entry requires a stable id, path and valid size")
+        }
+        when list_has(source_ids, source[1]) {
+            yield tir_error("RPR-TIR-0005", "source identifiers must be unique")
+        }
+        change source_ids := push(source_ids, source[1])
+    }
+
+    vary span_ids := []
+    each span in spans {
+        when size(span) != 9 or span[0] != "TIR_SPAN_V1" {
+            yield tir_error("RPR-TIR-0006", "malformed SourceMap span entry")
+        }
+        make source := tir_source_by_id(sources, span[2])
+        when size(source) == 0 {
+            yield tir_error("RPR-TIR-0007", "span references an unknown source file")
+        }
+        when span[3] < 0 or span[4] < span[3] or span[4] > source[4] {
+            yield tir_error("RPR-TIR-0008", "span UTF-8 byte range is outside the source file")
+        }
+        when span[5] < 1 or span[6] < 1 or span[7] < span[5] or span[8] < 1 or span[7] > source[5] {
+            yield tir_error("RPR-TIR-0009", "span source coordinates are invalid")
+        }
+        when span[5] == span[7] and span[6] > span[8] {
+            yield tir_error("RPR-TIR-0010", "span end precedes its start")
+        }
+        when list_has(span_ids, span[1]) {
+            yield tir_error("RPR-TIR-0011", "span identifiers must be unique")
+        }
+        change span_ids := push(span_ids, span[1])
+    }
+    yield tir_ok(source_map)
+}
+
+export craft tir_type_by_id(types, type_id) {
+    each type in types {
+        when size(type) == 12 and type[0] == "TIR_TYPE_V1" and type[1] == type_id {
+            yield type
+        }
+    }
+    yield []
+}
+
+export craft tir_type_registry_validate(types, source_map) {
+    when size(types) == 0 {
+        yield tir_error("RPR-TIR-0012", "Typed IR requires a type table")
+    }
+    vary type_ids := []
+    each type in types {
+        when size(type) != 12 or type[0] != "TIR_TYPE_V1" {
+            yield tir_error("RPR-TIR-0013", "malformed typed IR type entry")
+        }
+        when type[1] < 0 or type[2] == "" or type[6] < 0 or type[7] < 1 {
+            yield tir_error("RPR-TIR-0014", "type identifier, kind, size or alignment is invalid")
+        }
+        when list_has(type_ids, type[1]) {
+            yield tir_error("RPR-TIR-0015", "type identifiers must be unique")
+        }
+        when size(tir_span_by_id(source_map[2], type[10])) == 0 {
+            yield tir_error("RPR-TIR-0016", "type refers to an unknown source span")
+        }
+        change type_ids := push(type_ids, type[1])
+    }
+
+    each type in types {
+        when type[2] == "pointer" or type[2] == "array" or type[2] == "enum" or type[2] == "distinct" {
+            when size(tir_type_by_id(types, type[4])) == 0 {
+                yield tir_error("RPR-TIR-0017", "type refers to an unknown element or underlying type")
+            }
+        }
+        when type[2] == "struct" or type[2] == "union" or type[2] == "opaque" {
+            when type[11] == "" {
+                yield tir_error("RPR-TIR-0018", "nominal and opaque types require a name")
+            }
+        }
+    }
+    yield tir_ok(type_ids)
+}
+
+export craft tir_value_by_id(values, value_id) {
+    each value in values {
+        when size(value) == 9 and value[0] == "TIR_VALUE_V1" and value[1] == value_id {
+            yield value
+        }
+    }
+    yield []
+}
+
+export craft tir_block_by_id(blocks, block_id) {
+    each block in blocks {
+        when size(block) == 10 and block[0] == "TIR_BLOCK_V1" and block[1] == block_id {
+            yield block
+        }
+    }
+    yield []
+}
+
+export craft tir_function_by_id(functions, function_id) {
+    each function in functions {
+        when size(function) == 10 and function[0] == "TIR_FUNCTION_V1" and function[1] == function_id {
+            yield function
+        }
+    }
+    yield []
+}
+
+export craft tir_module_validate(module) {
+    when size(module) != 12 or module[0] != "TYPED_IR_V1" or module[1] != 1 {
+        yield tir_error("RPR-TIR-0019", "expected Canonical Typed IR v1 module")
+    }
+    when module[2] == "" or (module[3] != 4 and module[3] != 8) {
+        yield tir_error("RPR-TIR-0020", "target triple and 32/64-bit pointer size are required")
+    }
+    make source_map := tir_source_map_validate(module[5])
+    when not source_map[0] {
+        yield source_map
+    }
+    make registry := tir_type_registry_validate(module[6], module[5])
+    when not registry[0] {
+        yield registry
+    }
+
+    make types := module[6]
+    make fields := module[7]
+    make parameters := module[8]
+    make values := module[9]
+    make blocks := module[10]
+    make functions := module[11]
+
+    vary field_index := 0
+    each field in fields {
+        when size(field) != 6 or field[0] != "TIR_FIELD_V1" {
+            yield tir_error("RPR-TIR-0021", "malformed aggregate field entry")
+        }
+        when size(tir_type_by_id(types, field[1])) == 0 or size(tir_type_by_id(types, field[2])) == 0 {
+            yield tir_error("RPR-TIR-0022", "aggregate field references an unknown type")
+        }
+        when size(tir_span_by_id(module[5][2], field[3])) == 0 or field[5] == "" {
+            yield tir_error("RPR-TIR-0023", "aggregate field requires a name and valid span")
+        }
+        change field_index := field_index + 1
+    }
+
+    vary parameter_ids := []
+    each parameter in parameters {
+        when size(parameter) != 5 or parameter[0] != "TIR_PARAMETER_V1" {
+            yield tir_error("RPR-TIR-0024", "malformed function parameter")
+        }
+        when size(tir_function_by_id(functions, parameter[1])) == 0 or size(tir_type_by_id(types, parameter[3])) == 0 {
+            yield tir_error("RPR-TIR-0025", "parameter references an unknown function or type")
+        }
+        when size(tir_span_by_id(module[5][2], parameter[4])) == 0 or parameter[2] == "" {
+            yield tir_error("RPR-TIR-0026", "parameter requires a name and source span")
+        }
+        change parameter_ids := push(parameter_ids, parameter[1] ++ ":" ++ parameter[2])
+    }
+
+    vary value_ids := []
+    each value in values {
+        when size(value) != 9 or value[0] != "TIR_VALUE_V1" {
+            yield tir_error("RPR-TIR-0027", "malformed typed IR value")
+        }
+        when list_has(value_ids, value[1]) {
+            yield tir_error("RPR-TIR-0028", "SSA value identifiers must be unique")
+        }
+        when size(tir_type_by_id(types, value[3])) == 0 or size(tir_block_by_id(blocks, value[2])) == 0 {
+            yield tir_error("RPR-TIR-0029", "SSA value references an unknown type or block")
+        }
+        when size(tir_span_by_id(module[5][2], value[8])) == 0 {
+            yield tir_error("RPR-TIR-0030", "SSA value references an unknown source span")
+        }
+        change value_ids := push(value_ids, value[1])
+    }
+
+    vary block_ids := []
+    each block in blocks {
+        when size(block) != 10 or block[0] != "TIR_BLOCK_V1" {
+            yield tir_error("RPR-TIR-0031", "malformed typed IR basic block")
+        }
+        when list_has(block_ids, block[1]) {
+            yield tir_error("RPR-TIR-0032", "basic block identifiers must be unique")
+        }
+        when size(tir_function_by_id(functions, block[2])) == 0 or size(tir_span_by_id(module[5][2], block[9])) == 0 {
+            yield tir_error("RPR-TIR-0033", "basic block references an unknown function or source span")
+        }
+        change block_ids := push(block_ids, block[1])
+    }
+
+    vary function_ids := []
+    each function in functions {
+        when size(function) != 10 or function[0] != "TIR_FUNCTION_V1" {
+            yield tir_error("RPR-TIR-0034", "malformed typed IR function")
+        }
+        when list_has(function_ids, function[1]) or function[2] == "" {
+            yield tir_error("RPR-TIR-0035", "function identifier and name must be unique and non-empty")
+        }
+        when size(tir_type_by_id(types, function[3])) == 0 or size(tir_span_by_id(module[5][2], function[9])) == 0 {
+            yield tir_error("RPR-TIR-0036", "function return type or source span is unknown")
+        }
+        when size(tir_block_by_id(blocks, function[8])) == 0 {
+            yield tir_error("RPR-TIR-0037", "function entry block is unknown")
+        }
+        change function_ids := push(function_ids, function[1])
+    }
+
+    each block in blocks {
+        when block[6] == "return" {
+            when block[7] != -1 and size(tir_value_by_id(values, block[7])) == 0 {
+                yield tir_error("RPR-TIR-0038", "return terminator references an unknown value")
+            }
+        } otherwise {
+            when block[6] == "jump" {
+                when size(tir_block_by_id(blocks, block[8])) == 0 {
+                    yield tir_error("RPR-TIR-0039", "jump terminator references an unknown target")
+                }
+            } otherwise {
+                when block[6] == "cond_jump" {
+                    when size(tir_value_by_id(values, block[7])) == 0 or size(tir_block_by_id(blocks, block[8])) == 0 or size(tir_block_by_id(blocks, block[9])) == 0 {
+                        yield tir_error("RPR-TIR-0040", "conditional jump requires a value and two known targets")
+                    }
+                } otherwise {
+                    when block[6] != "unreachable" {
+                        yield tir_error("RPR-TIR-0041", "unknown basic block terminator")
+                    }
+                }
+            }
+        }
+    }
+    yield tir_ok(module)
+}
+
+# Small executable contract fixture. The native verifier performs the stricter
+# layout, by-value-cycle, SSA ordering and CFG ownership checks.
+make source := tir_source(7, "examples/add.rpr", "20 + 22", 7, 1)
+make span := tir_span(3, 7, 0, 7, 1, 1, 1, 8)
+make source_map := tir_source_map([source], [span])
+make unit := tir_type(0, "unit", 0, -1, 0, 0, 1, 0, 0, 3, "unit")
+make i64 := tir_type(1, "i64", 0, -1, 0, 8, 8, 0, 0, 3, "i64")
+make bool := tir_type(2, "bool", 0, -1, 0, 1, 1, 0, 0, 3, "bool")
+make constant_a := tir_value(0, 10, 1, "const.i64", -1, -1, 20, 3)
+make constant_b := tir_value(1, 10, 1, "const.i64", -1, -1, 22, 3)
+make sum := tir_value(2, 10, 1, "add.i64", 0, 1, 0, 3)
+make block := tir_block(10, 9, 0, 3, "return", 2, -1, -1, 3)
+make function := tir_function(9, "main", 1, 0, 0, 0, 1, 10, 3)
+make module := tir_module(
+    "x86_64-unknown-linux-gnu", 8, 8, source_map,
+    [unit, i64, bool], [], [], [constant_a, constant_b, sum],
+    [block], [function]
+)
+make checked := tir_module_validate(module)
+assert(checked[0], "canonical typed IR fixture must validate")
+assert(tir_span_by_id(source_map[2], 3)[4] == 7, "SourceMap byte end must be retained")
+assert(tir_source_by_id(source_map[1], 7)[2] == "examples/add.rpr", "source path must be retained")
+
+make bad_span := tir_span(4, 7, 0, 8, 1, 1, 1, 9)
+make bad_source_map := tir_source_map([source], [bad_span])
+assert(not tir_source_map_validate(bad_source_map)[0], "out-of-range SourceMap span must fail")
+
+make duplicate_type := tir_type(1, "i64", 0, -1, 0, 8, 8, 0, 0, 3, "i64-copy")
+make duplicate_module := tir_module(
+    "x86_64-unknown-linux-gnu", 8, 8, source_map,
+    [unit, i64, duplicate_type], [], [], [constant_a, constant_b, sum],
+    [block], [function]
+)
+assert(not tir_module_validate(duplicate_module)[0], "duplicate type identifiers must fail")
+
+emit "SELFHOST_TYPED_IR_OK"
