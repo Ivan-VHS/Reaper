@@ -61,8 +61,8 @@ export craft marshal_value(value, layout) {
         yield [false, nothing, ["value-kind-mismatch", layout[0], kind(value)]]
     }
     when not fc["fc_nonnegative"](layout[1]) { yield [false, nothing, "maximum-size-invalid"] }
-    when size(value) > layout[1] { yield [false, nothing, "value-size-exceeds-layout"] }
-    yield [true, [layout[0], value, size(value)], "marshalled-value"]
+    when size(text(value)) > layout[1] { yield [false, nothing, "value-size-exceeds-layout"] }
+    yield [true, [layout[0], value, size(text(value))], "marshalled-value"]
 }
 
 export craft unmarshal_value(frame, expected_layout) {
