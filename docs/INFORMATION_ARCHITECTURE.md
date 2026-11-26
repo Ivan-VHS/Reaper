@@ -91,6 +91,7 @@ Each Markdown page is linked here and from its topic hub, giving readers more th
 - [REAPER 813 FEATURE ARCHITECTURE](REAPER_813_FEATURE_ARCHITECTURE.md)
 - [REAPER UNIFIED ARCHITECTURE](REAPER_UNIFIED_ARCHITECTURE.md)
 - [TRANSACTIONAL RUNTIME](TRANSACTIONAL_RUNTIME.md)
+- [SYSTEM FUNCTIONS](SYSTEM_FUNCTIONS.md) — bounded Reaper runtime APIs, reconciliation, guarded mutations and migration preflight.
 - [UNIFIED PROJECT CONTRACT](UNIFIED_PROJECT_CONTRACT.md)
 
 ### Quality, validation and evidence
