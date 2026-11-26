@@ -51,6 +51,9 @@ export craft histogram_observe(histogram, observation) {
     when not fc["fc_record"](histogram, 2) or not fc["fc_is_number"](observation) {
         yield [false, histogram, "histogram-input-shape"]
     }
+    when kind(histogram[0]) != "list" or kind(histogram[1]) != "list" {
+        yield [false, histogram, "histogram-buckets-invalid"]
+    }
     when size(histogram[1]) != size(histogram[0]) + 1 {
         yield [false, histogram, "histogram-bucket-count"]
     }
