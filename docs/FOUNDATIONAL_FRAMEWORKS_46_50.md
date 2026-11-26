@@ -49,7 +49,7 @@ Edges are:
 
 `[source_node, target_node, interface_id]`
 
-Both endpoints must exist, the source must provide the interface and the target must accept it, and duplicate/self edges are rejected. The topological-order helper returns the supplied node order only after validating the edges; it is not a full cycle-detecting graph sorter yet, so callers must not treat it as a cycle certificate.
+Both endpoints must exist, the source must provide the interface and the target must accept it, duplicate/self edges are rejected, and every source must precede its target in the supplied node order. The topological-order helper returns that validated order; it does not compute a new order.
 
 Public functions: `node_kinds()`, `node_catalog()`, `node_validate_descriptor(node)`, `node_validate_graph(nodes, edges)`, `node_topological_order(nodes, edges)`.
 
