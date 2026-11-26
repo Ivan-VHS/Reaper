@@ -218,6 +218,8 @@ static int rollback_entries(const ReaperEvolutionApplyHost *host,
         ApplyEntry *entry = &entries[index - 1u];
         if (entry->committed) {
             if (entry->rollback == NULL) {
+                /* The host could not provide a snapshot for a possibly partial
+                 * workspace commit. Never discard its staged recovery handle. */
                 ok = 0;
                 continue;
             }
@@ -225,17 +227,23 @@ static int rollback_entries(const ReaperEvolutionApplyHost *host,
                 ++result->rolled_back_files;
                 host->release_rollback(host->context, entry->rollback);
                 entry->rollback = NULL;
-                entry->staged = NULL;
+                if (entry->staged != NULL) {
+                    if (!host->discard_staged(host->context, workspace, entry->staged)) ok = 0;
+                    entry->staged = NULL;
+                }
             } else {
                 if (host->preserve_failed_rollback(host->context, entry->rollback,
                         request->request_id, request->target_branch, entry->path)) {
                     /* Ownership moves to the host's durable recovery store. */
                     entry->rollback = NULL;
-                    entry->staged = NULL;
+                    if (entry->staged != NULL) {
+                        if (!host->discard_staged(host->context, workspace, entry->staged)) ok = 0;
+                        entry->staged = NULL;
+                    }
                 }
                 ok = 0;
             }
-        } else if (!entry->committed && entry->staged != NULL) {
+        } else if (entry->staged != NULL) {
             if (!host->discard_staged(host->context, workspace, entry->staged)) ok = 0;
             entry->staged = NULL;
         }
@@ -468,11 +476,10 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
     for (index = 0u; index < request->patch_count; ++index) {
         if (!host->commit_staged(host->context, workspace,
                 entries[index].staged, &entries[index].rollback)) {
-            if (entries[index].rollback != NULL) {
-                (void)host->preserve_failed_rollback(host->context, entries[index].rollback,
-                    request->request_id, request->target_branch, entries[index].path);
-                entries[index].rollback = NULL;
-            }
+            /* A failed host commit may have partially materialized bytes.
+             * The host contract requires an independent rollback snapshot in
+             * that case. Route it through the common reverse-order rollback. */
+            entries[index].committed = 1;
             result.status = REAPER_APPLY_COMMIT_FAILED;
             (void)snprintf(result.failed_path, sizeof result.failed_path, "%s", entries[index].path);
             goto fail;
