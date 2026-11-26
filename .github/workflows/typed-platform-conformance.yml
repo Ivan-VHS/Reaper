@@ -1,0 +1,36 @@
+name: Reaper typed structure and platform conformance
+
+on:
+  push:
+    branches: [main, "feat/**", "integration/**"]
+    paths:
+      - "selfhost/type_platform.rpr"
+      - "selfhost/type_platform_tests.rpr"
+      - "examples/typed_platforms.rpr"
+      - "docs/TYPED_STRUCTURES_AND_PLATFORMS_V1.md"
+      - ".github/workflows/typed-platform-conformance.yml"
+  pull_request:
+    paths:
+      - "selfhost/type_platform.rpr"
+      - "selfhost/type_platform_tests.rpr"
+      - "examples/typed_platforms.rpr"
+      - "docs/TYPED_STRUCTURES_AND_PLATFORMS_V1.md"
+      - ".github/workflows/typed-platform-conformance.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reaper-source-conformance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run Reaper-native type and platform conformance
+        run: python -m reaper selfhost/type_platform_tests.rpr
+      - name: Type-check the system-data example
+        run: python -m reaper --check examples/typed_platforms.rpr
