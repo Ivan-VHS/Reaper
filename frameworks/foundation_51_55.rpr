@@ -230,6 +230,23 @@ export craft schema_validate_descriptor(schema) {
     yield true
 }
 
+craft schema_numeric_value_matches(type_name, value) {
+    when kind(value) != "number" or value % 1 != 0 {
+        yield false
+    }
+    when type_name == "u8" { yield value >= 0 and value <= 255 }
+    when type_name == "u16" { yield value >= 0 and value <= 65535 }
+    when type_name == "u32" { yield value >= 0 and value <= 4294967295 }
+    when type_name == "u64" { yield value >= 0 and value <= 18446744073709551615 }
+    when type_name == "u128" { yield value >= 0 and value <= 340282366920938463463374607431768211455 }
+    when type_name == "i8" { yield value >= -128 and value <= 127 }
+    when type_name == "i16" { yield value >= -32768 and value <= 32767 }
+    when type_name == "i32" { yield value >= -2147483648 and value <= 2147483647 }
+    when type_name == "i64" { yield value >= -9223372036854775808 and value <= 9223372036854775807 }
+    when type_name == "i128" { yield value >= -170141183460469231731687303715884105728 and value <= 170141183460469231731687303715884105727 }
+    yield true
+}
+
 export craft schema_validate_payload(schema, payload) {
     when not schema_validate_descriptor(schema) or kind(payload) != "list" {
         yield false
@@ -246,16 +263,29 @@ export craft schema_validate_payload(schema, payload) {
             when field[1] == "boolean" and kind(payload[position]) != "boolean" {
                 yield false
             }
+            when field[1] == "number" and kind(payload[position]) != "number" {
+                yield false
+            }
             when field[1] == "text" and kind(payload[position]) != "text" {
                 yield false
             }
             when field[1] == "bytes" and kind(payload[position]) != "text" and kind(payload[position]) != "list" {
                 yield false
             }
+            when field[1] == "bytes" and kind(payload[position]) == "list" {
+                each byte in payload[position] {
+                    when not schema_numeric_value_matches("u8", byte) {
+                        yield false
+                    }
+                }
+            }
             when field[1] == "list" and kind(payload[position]) != "list" {
                 yield false
             }
             when field[1] == "map" and kind(payload[position]) != "map" {
+                yield false
+            }
+            when contains(["u8", "u16", "u32", "u64", "u128", "i8", "i16", "i32", "i64", "i128"], field[1]) and not schema_numeric_value_matches(field[1], payload[position]) {
                 yield false
             }
         }
@@ -282,6 +312,17 @@ export craft schema_validate_compatibility(producer, consumer) {
             when not matched {
                 yield false
             }
+        }
+    }
+    each provided_field in producer[3] {
+        vary accepted := false
+        each consumed_field in consumer[3] {
+            when provided_field[0] == consumed_field[0] and provided_field[1] == consumed_field[1] {
+                change accepted := true
+            }
+        }
+        when not accepted and (consumer[4] == false or provided_field[2] == true) {
+            yield false
         }
     }
     yield true
@@ -320,7 +361,7 @@ export craft matrix_validate_cells(rows, columns, cells) {
         when contains(keys, [cell[0], cell[1]]) {
             yield false
         }
-        when (cell[2] == "covered" or cell[2] == "partial") and cell[3] == "" {
+        when (cell[2] == "covered" or cell[2] == "partial" or cell[2] == "not-applicable") and cell[3] == "" {
             yield false
         }
         change keys := push(keys, [cell[0], cell[1]])
