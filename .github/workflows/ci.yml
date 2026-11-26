@@ -44,6 +44,10 @@ jobs:
         run: python -m reaper --check examples/device_audit.rpr
       - name: Run example
         run: python -m reaper examples/flow.rpr
+      - name: Validate ДОМ Foundation Reaper program
+        run: python -m reaper --check examples/dom_foundation_smoke.rpr
+      - name: Run ДОМ Foundation Reaper program
+        run: python -m reaper examples/dom_foundation_smoke.rpr
       - name: Run end-to-end read-only device audit example
         run: |
           python -m reaper examples/device_audit.rpr
