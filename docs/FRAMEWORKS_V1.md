@@ -31,10 +31,15 @@ parser, execution engine or hidden host capability.
 
 ## Usage
 
-The full integration exercise is in examples/frameworks_smoke.rpr. Run it from
-the repository root:
+The unified portfolio is also available from the CLI: --frameworks lists the 60 owned modules and adjacent integration surfaces, --framework-info NAME_OR_ID opens one record, and --framework-search QUERY filters the catalogue.
 
+The original eight-module integration exercise is in examples/frameworks_smoke.rpr. The ten new modules have a separate conformance program at examples/frameworks_portfolio_smoke.rpr. Run them from the repository root:
+
+    python -m reaper --frameworks
+    python -m reaper --framework-info Vorke
+    python -m reaper --framework-search federation
     python -m reaper examples/frameworks_smoke.rpr
+    python -m reaper examples/frameworks_portfolio_smoke.rpr
 
 The automated test suite executes the same Reaper source through the reference
 interpreter:
