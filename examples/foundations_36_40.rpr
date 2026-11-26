@@ -1,0 +1,8 @@
+import "../frameworks/foundation_36_40.rpr" as concepts
+
+emit "All forty frameworks valid = " ++ text(concepts["foundation_validate_catalog_40"]())
+emit "Source span valid = " ++ text(concepts["context_validate_span"]([10, 18, 2, 4]))
+emit "GPIO model valid = " ++ text(concepts["model_validate_record"](["gpio.pin.v1", [["pin", "u8", false], ["enabled", "boolean", true]]]))
+emit "Module pattern valid = " ++ text(concepts["pattern_validate_request"](["module-boundary", ["import", "export", "cycle-check"]]))
+emit "Paradigm selection valid = " ++ text(concepts["paradigm_validate_selection"](["flow-first", "classic", "most"]))
+emit "Concept relation valid = " ++ text(concepts["concept_validate_link"](["concept.value-model", "concept.canonical-ir", "feeds"]))
