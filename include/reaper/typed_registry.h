@@ -60,6 +60,11 @@ typedef struct {
     uint32_t generation;
 } ReaperTypedHandle;
 
+/*
+ * UTF-8 and byte members are borrowed views. Inputs must remain valid for the
+ * synchronous handler call; returned views must remain valid while consumed.
+ * The registry copies value descriptors, never the pointed-to payload bytes.
+ */
 typedef struct {
     uint32_t kind;
     uint32_t flags;
