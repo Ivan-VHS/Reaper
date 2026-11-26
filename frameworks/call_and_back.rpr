@@ -71,3 +71,98 @@ export craft call_chain(registry, event, initial_value) {
 
     yield [current, remaining]
 }
+
+export craft validate_registry(registry) {
+    when kind(registry) != "list" { yield [false, ["registry-must-be-list"]] }
+    vary errors := []
+    each handler in registry {
+        when kind(handler) != "list" or size(handler) != 4 {
+            change errors := push(errors, ["handler-shape", handler])
+        } otherwise {
+            when kind(handler[0]) != "text" or size(handler[0]) == 0 {
+                change errors := push(errors, ["handler-event", handler])
+            }
+            when kind(handler[1]) != "number" {
+                change errors := push(errors, ["handler-priority", handler])
+            }
+            when kind(handler[2]) != "boolean" {
+                change errors := push(errors, ["handler-once", handler])
+            }
+            when kind(handler[3]) != "craft" {
+                change errors := push(errors, ["handler-callback", handler[0]])
+            }
+        }
+    }
+    yield [size(errors) == 0, errors]
+}
+
+export craft handlers_for(registry, event) {
+    make checked := validate_registry(registry)
+    when not checked[0] { yield [false, [], checked[1]] }
+    vary matching := []
+    each handler in registry {
+        when handler[0] == event {
+            change matching := push(matching, handler)
+        }
+    }
+    yield [true, sort_by(matching, priority_of, "asc"), "ok"]
+}
+
+export craft unsubscribe(registry, event, callback) {
+    make checked := validate_registry(registry)
+    when not checked[0] { yield [false, registry, checked[1]] }
+    vary remaining := []
+    vary removed := 0
+    each handler in registry {
+        when handler[0] == event and handler[3] == callback {
+            change removed := removed + 1
+        } otherwise {
+            change remaining := push(remaining, handler)
+        }
+    }
+    yield [true, remaining, removed]
+}
+
+export craft remove_event(registry, event) {
+    make checked := validate_registry(registry)
+    when not checked[0] { yield [false, registry, checked[1]] }
+    vary remaining := []
+    vary removed := 0
+    each handler in registry {
+        when handler[0] == event {
+            change removed := removed + 1
+        } otherwise {
+            change remaining := push(remaining, handler)
+        }
+    }
+    yield [true, remaining, removed]
+}
+
+export craft subscribe_many(registry, registrations) {
+    make checked := validate_registry(registry)
+    when not checked[0] { yield [false, registry, checked[1]] }
+    when kind(registrations) != "list" { yield [false, registry, "registrations-must-be-list"] }
+    vary next_registry := registry
+    each registration in registrations {
+        when kind(registration) != "list" or size(registration) != 4 {
+            yield [false, registry, ["registration-shape", registration]]
+        }
+        make added := subscribe(next_registry, registration[0], registration[1], registration[2], registration[3])
+        when not added[0] { yield [false, registry, added[2]] }
+        change next_registry := added[1]
+    }
+    yield [true, next_registry, "registered"]
+}
+
+export craft dispatch_bounded(registry, event, payload, max_handlers) {
+    when kind(max_handlers) != "number" or max_handlers < 0 {
+        yield [false, [], registry, "invalid-handler-limit"]
+    }
+    make found := handlers_for(registry, event)
+    when not found[0] { yield [false, [], registry, found[1]] }
+    when size(found[1]) > max_handlers {
+        yield [false, [], registry, "handler-limit-exceeded"]
+    }
+    make delivered := dispatch(registry, event, payload)
+    yield [true, delivered[0], delivered[1], "dispatched"]
+}
