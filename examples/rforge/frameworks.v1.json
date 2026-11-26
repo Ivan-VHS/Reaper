@@ -1,0 +1,608 @@
+{
+  "schema": "reaper.rforge.framework-catalog.v1",
+  "status": "source_implemented_unverified",
+  "target_language": "reaper",
+  "target_runtime": "reference_runtime",
+  "native_aot_status": "blocked_by_current_module_import_export_and_collection_limits",
+  "frameworks": [
+    {
+      "id": "plague",
+      "name": "Plague",
+      "pair_id": "pair-01",
+      "variant": "forward",
+      "profile_tokens": [
+        "Soft",
+        "Frame"
+      ],
+      "profile_expression": "Soft Frame",
+      "product_kind": "framework",
+      "responsibility": "Soft-frame kernel for frame geometry, opacity, hit testing and legal lifecycle transitions.",
+      "module_path": "frameworks/rforge/plague_soft_frame.rpr",
+      "public_api": [
+        "soft_frame_opacity_valid",
+        "soft_frame_phase_valid",
+        "soft_frame_transition_allowed",
+        "soft_frame_create",
+        "soft_frame_hit_test"
+      ],
+      "invariants": [
+        "opacity is 0..100",
+        "frame dimensions are positive",
+        "closed frames do not reopen"
+      ],
+      "maturity": "source_present",
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend",
+      "executable_capabilities": []
+    },
+    {
+      "id": "outbreak",
+      "name": "Outbreak",
+      "pair_id": "pair-01",
+      "variant": "reverse",
+      "profile_tokens": [
+        "Frame",
+        "Soft"
+      ],
+      "profile_expression": "Frame Soft",
+      "product_kind": "framework",
+      "responsibility": "Frame-first shell composer with bounded slots, duplicate-mount rejection and soft-surface readiness.",
+      "module_path": "frameworks/rforge/outbreak_frame_soft.rpr",
+      "public_api": [
+        "outbreak_slot_valid",
+        "outbreak_softness_valid",
+        "outbreak_shell_create",
+        "outbreak_attach_allowed",
+        "outbreak_surface_ready"
+      ],
+      "invariants": [
+        "frame slot is within declared capacity",
+        "a frame slot can be attached once",
+        "softness is 0..100"
+      ],
+      "maturity": "source_present",
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend",
+      "executable_capabilities": []
+    },
+    {
+      "id": "pestilence",
+      "name": "Pestilence",
+      "pair_id": "pair-02",
+      "variant": "forward",
+      "profile_tokens": [
+        "Frame",
+        "Saas"
+      ],
+      "profile_expression": "Frame Saas",
+      "product_kind": "framework",
+      "responsibility": "Tenant-isolated frame binding, tenant ownership checks, quotas and session transitions.",
+      "module_path": "frameworks/rforge/pestilence_frame_saas.rpr",
+      "public_api": [
+        "pestilence_tenant_id_valid",
+        "pestilence_frame_bind",
+        "pestilence_tenant_access",
+        "pestilence_quota_valid",
+        "pestilence_session_transition"
+      ],
+      "invariants": [
+        "tenant identifiers are positive",
+        "caller tenant must match owner tenant",
+        "active frames cannot exceed tenant quota"
+      ],
+      "maturity": "source_present",
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend",
+      "executable_capabilities": []
+    },
+    {
+      "id": "malady",
+      "name": "Malady",
+      "pair_id": "pair-02",
+      "variant": "reverse",
+      "profile_tokens": [
+        "Saas",
+        "Frame"
+      ],
+      "profile_expression": "Saas Frame",
+      "product_kind": "framework",
+      "responsibility": "SaaS-first frame routing with plan feature gates, tenant route validation and frame admission.",
+      "module_path": "frameworks/rforge/malady_saas_frame.rpr",
+      "public_api": [
+        "malady_plan_frame_limit",
+        "malady_feature_allowed",
+        "malady_route_valid",
+        "malady_frame_quota_allowed",
+        "malady_route_admit"
+      ],
+      "invariants": [
+        "unknown plans provide no frame capacity",
+        "feature access follows the plan",
+        "routing requires non-empty tenant and frame keys"
+      ],
+      "maturity": "source_present",
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend",
+      "executable_capabilities": []
+    },
+    {
+      "id": "epidemic",
+      "name": "Epidemic",
+      "pair_id": "pair-03",
+      "variant": "forward",
+      "profile_tokens": [
+        "Framework",
+        "native"
+      ],
+      "profile_expression": "Framework native",
+      "product_kind": "framework",
+      "responsibility": "Native systems contract layer for scalar widths, DABI64/C17 ABI declarations, alignment and memory regions.",
+      "module_path": "frameworks/rforge/epidemic_framework_native.rpr",
+      "public_api": [
+        "epidemic_scalar_width_valid",
+        "epidemic_abi_valid",
+        "epidemic_alignment_valid",
+        "epidemic_region_valid",
+        "epidemic_native_contract"
+      ],
+      "invariants": [
+        "scalar width is 8, 16, 32 or 64 bits",
+        "DABI64-v1 is 64-bit little-endian",
+        "memory regions satisfy declared alignment"
+      ],
+      "maturity": "source_present",
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend",
+      "executable_capabilities": []
+    },
+    {
+      "id": "miasma",
+      "name": "Miasma",
+      "pair_id": "pair-03",
+      "variant": "reverse",
+      "profile_tokens": [
+        "native",
+        "Framework"
+      ],
+      "profile_expression": "native Framework",
+      "product_kind": "framework",
+      "responsibility": "Native-host framework kernel for ABI compatibility, module lifecycle, memory admission and extension grants.",
+      "module_path": "frameworks/rforge/miasma_native_framework.rpr",
+      "public_api": [
+        "miasma_host_compatible",
+        "miasma_lifecycle_transition",
+        "miasma_memory_admit",
+        "miasma_extension_admit",
+        "miasma_publish_ready"
+      ],
+      "invariants": [
+        "host and module ABI must match",
+        "memory admission cannot exceed the budget",
+        "extensions require sufficient explicit grants"
+      ],
+      "maturity": "source_present",
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend",
+      "executable_capabilities": []
+    },
+    {
+      "id": "pandemic",
+      "name": "Pandemic",
+      "pair_id": "pair-04",
+      "variant": "forward",
+      "profile_tokens": [
+        "Program",
+        "Summary"
+      ],
+      "profile_expression": "Program Summary",
+      "product_kind": "framework",
+      "responsibility": "Program-first execution accounting with bounded counters, completion rate, remaining work and outcome.",
+      "module_path": "frameworks/rforge/pandemic_program_summary.rpr",
+      "public_api": [
+        "pandemic_counts_valid",
+        "pandemic_success_rate",
+        "pandemic_outcome",
+        "pandemic_summary",
+        "pandemic_remaining"
+      ],
+      "invariants": [
+        "counters cannot be negative",
+        "reported work cannot exceed total work",
+        "invalid accounting produces no summary"
+      ],
+      "maturity": "source_present",
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend",
+      "executable_capabilities": []
+    },
+    {
+      "id": "fever",
+      "name": "Fever",
+      "pair_id": "pair-04",
+      "variant": "reverse",
+      "profile_tokens": [
+        "Summary",
+        "Program"
+      ],
+      "profile_expression": "Summary Program",
+      "product_kind": "framework",
+      "responsibility": "Summary-first diagnostics aggregation with severity classification, validated report lines and release gates.",
+      "module_path": "frameworks/rforge/fever_summary_program.rpr",
+      "public_api": [
+        "fever_severity",
+        "fever_summary_valid",
+        "fever_program_line",
+        "fever_aggregate",
+        "fever_release_allowed"
+      ],
+      "invariants": [
+        "errors dominate warnings",
+        "report counts stay within reported total",
+        "release is blocked by errors"
+      ],
+      "maturity": "source_present",
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend",
+      "executable_capabilities": []
+    },
+    {
+      "id": "scourge",
+      "name": "Scourge",
+      "pair_id": "pair-05",
+      "variant": "forward",
+      "profile_tokens": [
+        "System",
+        "Control"
+      ],
+      "profile_expression": "System Control",
+      "product_kind": "framework",
+      "responsibility": "System-first control state machine with authorization and guard requirements for privileged transitions.",
+      "module_path": "frameworks/rforge/scourge_system_control.rpr",
+      "public_api": [
+        "scourge_state_valid",
+        "scourge_transition_allowed",
+        "scourge_command_admit",
+        "scourge_system_limits"
+      ],
+      "invariants": [
+        "start and recovery require guarded authorization",
+        "unknown commands are denied",
+        "worker and heartbeat limits must be positive"
+      ],
+      "maturity": "source_present",
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend",
+      "executable_capabilities": []
+    },
+    {
+      "id": "bane",
+      "name": "Bane",
+      "pair_id": "pair-05",
+      "variant": "reverse",
+      "profile_tokens": [
+        "Control",
+        "System"
+      ],
+      "profile_expression": "Control System",
+      "product_kind": "framework",
+      "responsibility": "Control-first rule evaluation, safe action plans, enforcement levels and verified transitions.",
+      "module_path": "frameworks/rforge/bane_control_system.rpr",
+      "public_api": [
+        "bane_rule_matches",
+        "bane_action_safe",
+        "bane_control_plan",
+        "bane_enforcement_level",
+        "bane_transition_verified"
+      ],
+      "invariants": [
+        "locked systems reject mutating actions",
+        "mutating actions require approval",
+        "unknown actions are denied"
+      ],
+      "maturity": "source_present",
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend",
+      "executable_capabilities": []
+    },
+    {
+      "id": "blight",
+      "name": "Blight",
+      "pair_id": "pair-06",
+      "variant": "forward",
+      "profile_tokens": [
+        "Tunnel",
+        "Justice"
+      ],
+      "profile_expression": "Tunnel Justice",
+      "product_kind": "framework",
+      "responsibility": "Tunnel-first route admission with endpoint validation, clearance comparison, reason checks and bounded leases.",
+      "module_path": "frameworks/rforge/blight_tunnel_justice.rpr",
+      "public_api": [
+        "blight_endpoint_valid",
+        "blight_clearance_sufficient",
+        "blight_justice_decision",
+        "blight_route_admit",
+        "blight_tunnel_lease_valid"
+      ],
+      "invariants": [
+        "cross-zone routes require sufficient clearance",
+        "missing audit reason triggers review",
+        "leases cannot exceed the configured maximum"
+      ],
+      "maturity": "source_present",
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend",
+      "executable_capabilities": []
+    },
+    {
+      "id": "curse",
+      "name": "Curse",
+      "pair_id": "pair-06",
+      "variant": "reverse",
+      "profile_tokens": [
+        "Justice",
+        "Tunnel"
+      ],
+      "profile_expression": "Justice Tunnel",
+      "product_kind": "framework",
+      "responsibility": "Justice-first evidence disposition, appeal handling, signed release and auditable case records.",
+      "module_path": "frameworks/rforge/curse_justice_tunnel.rpr",
+      "public_api": [
+        "curse_case_valid",
+        "curse_disposition",
+        "curse_tunnel_release_allowed",
+        "curse_audit_record",
+        "curse_appeal_allowed"
+      ],
+      "invariants": [
+        "missing evidence cannot produce a denial",
+        "appeals hold an otherwise-denied case",
+        "tunnel release requires a signed allow or reversed disposition"
+      ],
+      "maturity": "source_present",
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend",
+      "executable_capabilities": []
+    },
+    {
+      "id": "calamity",
+      "name": "Calamity",
+      "pair_id": "pair-07",
+      "variant": "forward",
+      "profile_tokens": [
+        "native",
+        "Realisation"
+      ],
+      "profile_expression": "native Realisation",
+      "product_kind": "framework",
+      "responsibility": "Native-realisation pipeline with explicit source, parse, type, IR, lowering and link stages.",
+      "module_path": "frameworks/rforge/calamity_native_realisation.rpr",
+      "public_api": [
+        "calamity_stage_index",
+        "calamity_stage_transition",
+        "calamity_realisation_ready",
+        "calamity_native_emit_allowed",
+        "calamity_stage_complete"
+      ],
+      "invariants": [
+        "pipeline stages advance one step at a time",
+        "native emission requires target, source, IR and ABI gates",
+        "stage completion requires evidence"
+      ],
+      "maturity": "source_present",
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend",
+      "executable_capabilities": []
+    },
+    {
+      "id": "menace",
+      "name": "Menace",
+      "pair_id": "pair-07",
+      "variant": "reverse",
+      "profile_tokens": [
+        "Realisation",
+        "native"
+      ],
+      "profile_expression": "Realisation native",
+      "product_kind": "framework",
+      "responsibility": "Realisation-first native transaction planning, commit authorization, bounded transient retries and stage ordering.",
+      "module_path": "frameworks/rforge/menace_realisation_native.rpr",
+      "public_api": [
+        "menace_realisation_plan",
+        "menace_native_commit_allowed",
+        "menace_retry_allowed",
+        "menace_stage_index",
+        "menace_stage_order_valid"
+      ],
+      "invariants": [
+        "commit requires a ready plan and verified artifacts",
+        "retry is bounded and transient-only",
+        "realisation stages cannot be skipped"
+      ],
+      "maturity": "source_present",
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend",
+      "executable_capabilities": []
+    },
+    {
+      "id": "affliction",
+      "name": "Affliction",
+      "pair_id": "pair-08",
+      "variant": "forward",
+      "profile_tokens": [
+        "UI",
+        "Unreal"
+      ],
+      "profile_expression": "UI Unreal",
+      "product_kind": "framework",
+      "responsibility": "UI-first Unreal bridge contracts for widget geometry, focused event routing and viewport bounds.",
+      "module_path": "frameworks/rforge/affliction_ui_unreal.rpr",
+      "public_api": [
+        "affliction_widget_valid",
+        "affliction_event_allowed",
+        "affliction_layout_valid",
+        "affliction_unreal_bridge_compatible",
+        "affliction_widget_route"
+      ],
+      "invariants": [
+        "input routing requires focus, visibility and enablement",
+        "widgets have positive dimensions",
+        "layout rectangles stay within the viewport"
+      ],
+      "maturity": "source_present",
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend",
+      "executable_capabilities": []
+    },
+    {
+      "id": "cataclysm",
+      "name": "Cataclysm",
+      "pair_id": "pair-08",
+      "variant": "reverse",
+      "profile_tokens": [
+        "Unreal",
+        "UI"
+      ],
+      "profile_expression": "Unreal UI",
+      "product_kind": "framework",
+      "responsibility": "Unreal-first UI host compatibility, widget lifecycle, bounded batches and frame commit gates.",
+      "module_path": "frameworks/rforge/cataclysm_unreal_ui.rpr",
+      "public_api": [
+        "cataclysm_engine_supported",
+        "cataclysm_widget_transition",
+        "cataclysm_batch_valid",
+        "cataclysm_ui_commit_allowed",
+        "cataclysm_adapter_version"
+      ],
+      "invariants": [
+        "engine version must fall inside the supported interval",
+        "destroyed widgets cannot be revived",
+        "widget and draw-call batches are bounded"
+      ],
+      "maturity": "source_present",
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend",
+      "executable_capabilities": []
+    },
+    {
+      "id": "infestation",
+      "name": "Infestation",
+      "pair_id": "pair-09",
+      "variant": "forward",
+      "profile_tokens": [
+        "Concrete",
+        "Cosmos"
+      ],
+      "profile_expression": "Concrete Cosmos",
+      "product_kind": "framework",
+      "responsibility": "Concrete-entity-first scene graph with parent identity, typed relations and bounded nesting depth.",
+      "module_path": "frameworks/rforge/infestation_concrete_cosmos.rpr",
+      "public_api": [
+        "infestation_entity_valid",
+        "infestation_link_valid",
+        "infestation_depth_valid",
+        "infestation_attach_allowed",
+        "infestation_entity_record"
+      ],
+      "invariants": [
+        "entity identifiers are positive",
+        "self-links are prohibited",
+        "an already-parented child cannot be attached again"
+      ],
+      "maturity": "source_present",
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend",
+      "executable_capabilities": []
+    },
+    {
+      "id": "devastation",
+      "name": "Devastation",
+      "pair_id": "pair-09",
+      "variant": "reverse",
+      "profile_tokens": [
+        "Cosmos",
+        "Concrete"
+      ],
+      "profile_expression": "Cosmos Concrete",
+      "product_kind": "framework",
+      "responsibility": "Cosmos-first spatial cell indexing, concrete bounds checks and bounded entity materialization.",
+      "module_path": "frameworks/rforge/devastation_cosmos_concrete.rpr",
+      "public_api": [
+        "devastation_cell_valid",
+        "devastation_cell_index",
+        "devastation_bounds_valid",
+        "devastation_materialise_allowed",
+        "devastation_region_capacity"
+      ],
+      "invariants": [
+        "cell coordinates must be inside the grid",
+        "cell indices are deterministic row-major 3D indices",
+        "materialization requires valid cell, bounds and unique identity"
+      ],
+      "maturity": "source_present",
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend",
+      "executable_capabilities": []
+    },
+    {
+      "id": "contagion",
+      "name": "Contagion",
+      "pair_id": "pair-10",
+      "variant": "forward",
+      "profile_tokens": [
+        "base",
+        "Space"
+      ],
+      "profile_expression": "base Space",
+      "product_kind": "framework",
+      "responsibility": "Base-space geometry with coordinate limits, squared distance, axis-aligned bounds and translation.",
+      "module_path": "frameworks/rforge/contagion_base_space.rpr",
+      "public_api": [
+        "contagion_point_valid",
+        "contagion_distance_squared",
+        "contagion_inside_box",
+        "contagion_translate",
+        "contagion_space_valid"
+      ],
+      "invariants": [
+        "coordinates stay within the declared numeric extent",
+        "bounds must have ordered minima and maxima",
+        "distance uses squared Euclidean units"
+      ],
+      "maturity": "source_present",
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend",
+      "executable_capabilities": []
+    },
+    {
+      "id": "desolation",
+      "name": "Desolation",
+      "pair_id": "pair-10",
+      "variant": "reverse",
+      "profile_tokens": [
+        "Space",
+        "base"
+      ],
+      "profile_expression": "Space base",
+      "product_kind": "framework",
+      "responsibility": "Space-first coordinate authority with invertible basis checks and local/world transformations.",
+      "module_path": "frameworks/rforge/desolation_space_base.rpr",
+      "public_api": [
+        "desolation_basis_valid",
+        "desolation_local_to_world",
+        "desolation_world_to_local",
+        "desolation_base_compatible",
+        "desolation_cell_valid"
+      ],
+      "invariants": [
+        "basis scale components cannot be zero",
+        "world-to-local refuses a zero scale",
+        "the current base profile is three-dimensional"
+      ],
+      "maturity": "source_present",
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend",
+      "executable_capabilities": []
+    }
+  ]
+}
