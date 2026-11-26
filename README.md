@@ -18,6 +18,7 @@ Reaper is a systems-programming language and local development workbench for com
 - NOO TAH delegates JavaScript execution to the official Node.js runtime.
 - Jora application scaffolding and capability composition; catalog packs remain specifications, not installable editors.
 - Eight Reaper-native framework modules for dependency planning, callbacks, layered options, МОСТ aliases, versioned state, state machines and code transformation.
+- Initial Reaper-native ДОМ Foundation source slice with one runtime composition path and public subsystem adapters; native compiler parity remains pending.
 
 See [Framework modules](docs/FRAMEWORKS_V1.md), [Features](docs/FEATURES.md), [Architecture](docs/ARCHITECTURE.md), [Hardware Language](docs/HARDWARE_LANGUAGE.md), [Jora factory](docs/JORA_APPLICATION_FACTORY.md), [Studio and IDE](docs/REAPER_IDE.md) and [NOO TAH](docs/NOO_TAH.md).
 
