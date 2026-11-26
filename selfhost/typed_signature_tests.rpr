@@ -2,7 +2,7 @@ import "lexer.rpr" as lexer
 import "program_parser.rpr" as frontend
 import "typed_signatures.rpr" as signatures
 
-make source := "struct ParseError {\ncode: u32\n}\ncraft parse_count(raw: text) -> Result<Option<u64>, ParseError> {\nwhen raw == \"\" {\nyield err(\"empty\")\n} otherwise {\nyield ok(some(42))\n}\n}\ncraft maybe_count<T>(value: T) -> Option<T> {\nwhen value == nothing {\nyield nothing\n} otherwise {\nyield some(value)\n}\n}\ncraft identity<T>(value: T) -> T {\nyield value\n}\ncraft legacy(value) {\nyield value\n}\n"
+make source := "export struct ParseError {\ncode: u32\n}\ncraft parse_count(raw: text) -> Result<Option<u64>, ParseError> {\nwhen raw == \"\" {\nyield err(\"empty\")\n} otherwise {\nyield ok(some(42))\n}\n}\ncraft maybe_count<T>(value: T) -> Option<T> {\nwhen value == nothing {\nyield nothing\n} otherwise {\nyield some(value)\n}\n}\ncraft identity<T>(value: T) -> T {\nyield value\n}\ncraft legacy(value) {\nyield value\n}\n"
 
 make parsed := frontend["parse_program"](lexer["tokenize"](source))
 assert(parsed[0] == "OK", "typed craft signature fixture must parse")
@@ -49,5 +49,10 @@ make duplicate_generic_source := "craft broken<T, T>(value: T) -> T {\nyield val
 make duplicate_generic := frontend["parse_program"](lexer["tokenize"](duplicate_generic_source))
 make duplicate_generic_check := signatures["signature_validate_program"](duplicate_generic[1])
 assert(duplicate_generic_check[0] == "ERROR" and duplicate_generic_check[1] == "RPR-SIG-0020", "duplicate generic parameters must be rejected")
+
+make shadowed_generic_source := "craft broken<u32>(value: u32) -> u32 {\nyield value\n}\n"
+make shadowed_generic := frontend["parse_program"](lexer["tokenize"](shadowed_generic_source))
+make shadowed_generic_check := signatures["signature_validate_program"](shadowed_generic[1])
+assert(shadowed_generic_check[0] == "ERROR" and shadowed_generic_check[1] == "RPR-SIG-0019", "generic parameters must not shadow primitive types")
 
 emit "SELFHOST_TYPED_SIGNATURES_OK"
