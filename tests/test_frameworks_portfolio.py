@@ -9,6 +9,7 @@ from reaper.runtime import Interpreter
 
 ROOT = Path(__file__).resolve().parents[1]
 PORTFOLIO_PATH = ROOT / "frameworks" / "portfolio.v1.json"
+PORTFOLIO_SCHEMA_PATH = ROOT / "schemas" / "framework-portfolio.v1.schema.json"
 EXPECTED_NEW_MODULES = {
     "Vorke",
     "Jellymeat",
@@ -27,6 +28,13 @@ class FrameworkPortfolioTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.portfolio = json.loads(PORTFOLIO_PATH.read_text(encoding="utf-8"))
+
+    def test_portfolio_matches_its_versioned_json_schema(self) -> None:
+        schema = json.loads(PORTFOLIO_SCHEMA_PATH.read_text(encoding="utf-8"))
+        self.assertEqual(schema["$schema"], "https://json-schema.org/draft/2020-12/schema")
+        self.assertEqual(schema["properties"]["schema"]["const"], "reaper.framework-portfolio.v1")
+        self.assertIn("integration_surfaces", schema["required"])
+        self.assertIn("frameworks_portfolio_smoke.rpr", str(ROOT / "examples" / "frameworks_portfolio_smoke.rpr"))
 
     def test_portfolio_counts_all_sixty_owned_modules(self) -> None:
         modules = [
@@ -67,6 +75,7 @@ class FrameworkPortfolioTests(unittest.TestCase):
             item["id"]: item
             for item in self.portfolio["integration_surfaces"]
         }
+        self.assertEqual(len(surfaces), len(self.portfolio["integration_surfaces"]))
         for required in (
             "framework-federation-registry",
             "framework-federation-handlers",
