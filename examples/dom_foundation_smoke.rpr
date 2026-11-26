@@ -10,6 +10,19 @@ import "../dom/JennyFlash/signals.rpr" as jenny_flash
 import "../dom/Jenny-Flashing-Boy/reload.rpr" as flashing_boy
 import "../dom/core/runtime.rpr" as dom
 
+
+craft increment(value) {
+    yield value + 1
+}
+
+craft uppercase_text(value) {
+    yield upper(value)
+}
+
+craft non_empty_text(value) {
+    yield size(trim(value)) > 0
+}
+
 assert(uu["contains"](["a", "b"], "b"), "Uu contains")
 assert(uu["all_unique"](["a", "b", "c"]), "Uu unique validation")
 assert(not uu["all_unique"](["a", "b", "a"]), "Uu duplicate rejection")
@@ -114,8 +127,23 @@ assert(option_adapter[0], "ДОМ reuses Stacked Options")
 make most_adapter := dom_frameworks["normalize_most_word"]("функция")
 assert(most_adapter[0] == "craft" and most_adapter[1] == "runtime", "ДОМ reuses exact МОСТ alias mapping")
 
+
+make callback_adapter := dom_frameworks["dispatch_callbacks"](
+    [["tick", 10, false, increment]],
+    "tick",
+    4
+)
+assert(callback_adapter[0] == [5], "ДОМ reuses Call-and-Back")
+
+make pipeline_adapter := dom_frameworks["transform_in_memory"](
+    [["uppercase", uppercase_text, non_empty_text]],
+    "reaper"
+)
+assert(pipeline_adapter[0] and pipeline_adapter[1] == "REAPER", "ДОМ reuses Showel Fleppery CODE")
+
+make empty_snapshot := dom_frameworks["empty_snapshot"]()
 make snapshot_adapter := dom_frameworks["update_snapshot"](
-    [["theme", "noir"], [0, []]][1],
+    empty_snapshot,
     0,
     "theme",
     "yellow"
