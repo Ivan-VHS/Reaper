@@ -9,6 +9,7 @@ Start with the [project README](../README.md) for installation, first commands a
 - [Architecture](ARCHITECTURE.md)
 - [Hardware language track](HARDWARE_LANGUAGE.md)
 - [System Runtime ABI v1](SYSTEM_RUNTIME_ABI_V1.md)
+- [Typed Registry v1](TYPED_REGISTRY_V1.md) — allocation-free typed contracts, capability-gated dispatch, schema validation and registry lifecycle.
 - [DABI64 Desktop Host v1](DABI64_DESKTOP_HOST_V1.md)
 - [Implementation roadmap](IMPLEMENTATION_ROADMAP.md)
 - [Studio and IDE](REAPER_IDE.md)
