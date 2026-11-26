@@ -52,3 +52,17 @@ This is still **not** a complete parser replacement. Unicode identifier parity, 
 - Define a versioned canonical AST representation and compare parser output with the Python AST over a shared golden corpus.
 - Add differential tests for calls, indexes, list literals, operator precedence, nested blocks and malformed statements.
 - Move the CLI, diagnostics, semantic analysis and compiler pipeline into Reaper in dependency order.
+
+
+## Typed semantic and backend bootstrap slices — partial
+
+The following additional Reaper-written modules execute under the reference bootstrap runtime and are covered by tests/test_compiler_foundations.py:
+
+- selfhost/type_system.rpr: generic type descriptors, Option/Result constructor arity, generic substitution, built-in trait bounds, and effect-set validation.
+- selfhost/ownership.rpr: region ancestry, borrow overlap checks, escape checks, and reverse-declaration drop order.
+- selfhost/typed_pipeline.rpr: scalar typed HIR to deterministic MIR to virtual LIR, with source spans retained and verified at each stage.
+- selfhost/package_contract.rpr: package manifest identity, semantic-version and SHA-256 pin validation, manifest/lock agreement, and offline cache checks.
+
+These modules validate contracts; they do not yet replace the production type checker, bytecode verifier, runtime resource model, package manager, or target object backend. In particular, the LIR is target-independent virtual IR rather than machine code, and package validation performs no install or network operation.
+
+The compiler foundation acceptance guide records all ten workstreams and their remaining implementation gates in COMPILER_FOUNDATIONS_V1.md.
