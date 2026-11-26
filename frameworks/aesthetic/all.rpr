@@ -1,0 +1,31 @@
+# Stable public entry point for the Reaper Aesthetic Evolution framework family.
+import "engine/jellymeat.rpr" as Jellymeat
+import "engine/holmosaptimu.rpr" as Holmosaptimu
+import "engine/somo.rpr" as SOMO
+
+export craft profile(profile_id) {
+    yield Jellymeat["get"](profile_id)
+}
+
+export craft compile(profile_value, target) {
+    yield Holmosaptimu["compile"](profile_value, target)
+}
+
+export craft evolve(current_profile, target_profile, architecture, request, mode) {
+    yield SOMO["evolve"](current_profile, target_profile, architecture, request, mode)
+}
+
+export craft frameworks() {
+    yield [
+        ["Vorke", "typed nominal kernel and contracts"],
+        ["Jellymeat", "aesthetic profile catalogue"],
+        ["LejjyFish", "high-level design IR"],
+        ["Lejjy", "normalized design IR"],
+        ["Oplos", "target-oriented low-level design IR"],
+        ["Holmosaptimu", "Reaper profile compiler adapter"],
+        ["Sentan", "architecture graph and dependency validation"],
+        ["Cellene", "design quality and profile evolution"],
+        ["Kolir", "bounded source evolution plans"],
+        ["SOMO", "evolution orchestration and evidence envelope"]
+    ]
+}
