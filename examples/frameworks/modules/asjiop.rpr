@@ -42,7 +42,8 @@ export craft decode_frame(frame, expected_layout) {
     when frame[0] != expected_layout[0] or frame[1] != expected_layout[2] {
         yield [false, nothing, "frame-abi-or-layout-mismatch"]
     }
-    when kind(frame[2]) != "list" or frame[3] != size(frame[2]) or frame[3] > expected_layout[1] {
+    when kind(frame[2]) != "list" { yield [false, nothing, "frame-payload-invalid"] }
+    when frame[3] != size(frame[2]) or frame[3] > expected_layout[1] {
         yield [false, nothing, "frame-payload-invalid"]
     }
     yield [true, frame[2], "decoded"]
@@ -69,9 +70,10 @@ export craft validate_layout(layout, abi_constraints) {
     when not fc["fc_record"](layout, 3) or not fc["fc_record"](abi_constraints, 2) {
         yield [false, ["layout-shape"]]
     }
-    when not fc["fc_nonnegative"](layout[0]) or not fc["fc_nonnegative"](layout[1]) or layout[1] <= 0 {
+    when not fc["fc_nonnegative"](layout[0]) or not fc["fc_nonnegative"](layout[1]) {
         yield [false, ["layout-size-or-alignment"]]
     }
+    when layout[1] <= 0 { yield [false, ["layout-size-or-alignment"]] }
     when layout[1] > abi_constraints[0] { yield [false, ["alignment-exceeds-abi"]] }
     when kind(layout[2]) != "list" { yield [false, ["layout-fields"]] }
     vary errors := []
@@ -85,23 +87,27 @@ export craft validate_layout(layout, abi_constraints) {
             } otherwise {
                 when field[1] + field[2] > layout[0] {
                     change errors := push(errors, ["field-out-of-bounds", field[0]])
-                }
-                when field[3] <= 0 {
-                    change errors := push(errors, ["field-alignment", field[0]])
                 } otherwise {
-                    when remainder(field[1], field[3]) != 0 {
+                    when field[3] <= 0 {
                         change errors := push(errors, ["field-alignment", field[0]])
+                    } otherwise {
+                        when remainder(field[1], field[3]) != 0 {
+                            change errors := push(errors, ["field-alignment", field[0]])
+                        }
                     }
+                    each previous in ranges {
+                        when field[1] < previous[1] {
+                            when field[1] + field[2] > previous[0] {
+                                change errors := push(errors, ["overlapping-field", field[0]])
+                            }
+                        } otherwise {
+                            when field[1] < previous[0] {
+                                change errors := push(errors, ["overlapping-field", field[0]])
+                            }
+                        }
+                    }
+                    change ranges := push(ranges, [field[1] + field[2], field[1]])
                 }
-                each previous in ranges {
-                    when field[1] < previous[1] and field[1] + field[2] > previous[0] {
-                        change errors := push(errors, ["overlapping-field", field[0]])
-                    }
-                    when field[1] >= previous[1] and field[1] < previous[0] {
-                        change errors := push(errors, ["overlapping-field", field[0]])
-                    }
-                }
-                change ranges := push(ranges, [field[1] + field[2], field[1]])
             }
         }
     }
