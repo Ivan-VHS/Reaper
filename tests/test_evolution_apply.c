@@ -45,11 +45,13 @@ typedef struct {
 static const char *CHECK_IDS[] = {"reaper.unit"};
 
 static int verify_grant(void *context, const void *grant, size_t size,
-                        const char *repo, const char *branch, uint64_t now) {
+                        const char *repo, const char *branch,
+                        const char *request_digest, uint64_t now) {
     FakeHost *fake = (FakeHost *)context;
     return !fake->deny_grant && grant != NULL && size == 6u && memcmp(grant, "signed", 6u) == 0 &&
            strcmp(repo, "Ivan-VHS/Reaper") == 0 &&
-           strcmp(branch, "feat/test-apply") == 0 && now > 0u;
+           strcmp(branch, "feat/test-apply") == 0 &&
+           request_digest != NULL && strlen(request_digest) == 64u && now > 0u;
 }
 
 static int verify_path(void *context, const void *grant, size_t size,
