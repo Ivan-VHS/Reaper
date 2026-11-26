@@ -35,7 +35,7 @@ A system manifest is:
 
 `[system_id, schema_version, components, required_contracts]`
 
-Components are limited to language, compiler, runtime, host, toolchain, tests, documentation and integrations. IDs and contracts must be unique. This validates architecture inventory; it does not instantiate a running system.
+Components are limited to language, compiler, runtime, host, toolchain, tests, documentation and integrations. IDs and contracts must be unique; supplied components must respect the canonical dependency order from language through integrations. This validates architecture inventory; it does not instantiate a running system.
 
 Public functions: `system_component_catalog()`, `system_validate_manifest(manifest)`, `system_validate_dependency_order(components)`.
 
