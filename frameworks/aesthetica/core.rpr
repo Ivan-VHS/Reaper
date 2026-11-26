@@ -1,0 +1,541 @@
+# AESTHETICA 1.0
+# Executable on the current Reaper reference grammar.
+#
+# Public data contracts:
+# Evidence  = [axis, dimension, score, confidence, salience,
+#              intent, explanation, [source, start_line, start_col, end_line, end_col]]
+# Weight   = [dimension, weight]
+# Context  = [perspective_id, purpose, culture_tag]
+# Stage    = [code, start_step, end_step, state_label, summary]
+#
+# Results:
+# ["ok", payload]
+# ["err", [diagnostic_code, message, source_span]]
+#
+# Beauty and ugliness are independent axes. Neither is computed as 1 - the other.
+
+export make API_VERSION := "1.0.0"
+export make REPORT_SCHEMA := "aesthetica.report.v1"
+export make EVOLUTION_SCHEMA := "aesthetica.evolution.v1"
+export make DIAGNOSTIC_SCHEMA := "aesthetica.diagnostic.v1"
+
+make DEFAULT_SPAN := ["<aesthetica>", 1, 1, 1, 1]
+make DIMENSIONS := [
+    "harmony",
+    "proportion",
+    "contrast",
+    "coherence",
+    "complexity",
+    "originality",
+    "expression",
+    "functionality",
+    "context_fit",
+    "emotional_impact",
+    "imperfection",
+    "intentional_tension"
+]
+
+export craft success(payload) {
+    yield ["ok", payload]
+}
+
+export craft failure(code, message, source_span) {
+    yield ["err", [
+        DIAGNOSTIC_SCHEMA,
+        code,
+        "error",
+        message,
+        source_span
+    ]]
+}
+
+craft fail_default(code, message) {
+    yield failure(code, message, DEFAULT_SPAN)
+}
+
+craft known_axis(axis) {
+    yield axis == "beauty" or axis == "ugliness"
+}
+
+craft known_dimension(dimension) {
+    yield contains(DIMENSIONS, dimension)
+}
+
+craft valid_unit(value) {
+    when kind(value) != "number" {
+        yield false
+    }
+    when value < 0.0 {
+        yield false
+    }
+    when value > 1.0 {
+        yield false
+    }
+    yield true
+}
+
+craft valid_position(value) {
+    when kind(value) != "number" {
+        yield false
+    }
+    when value < 1 {
+        yield false
+    }
+    when value % 1 != 0 {
+        yield false
+    }
+    yield true
+}
+
+craft valid_span(source_span) {
+    when kind(source_span) != "list" {
+        yield false
+    }
+    when size(source_span) != 5 {
+        yield false
+    }
+    when kind(source_span[0]) != "text" {
+        yield false
+    }
+    when size(trim(source_span[0])) == 0 {
+        yield false
+    }
+    when not valid_position(source_span[1]) {
+        yield false
+    }
+    when not valid_position(source_span[2]) {
+        yield false
+    }
+    when not valid_position(source_span[3]) {
+        yield false
+    }
+    when not valid_position(source_span[4]) {
+        yield false
+    }
+    when source_span[3] < source_span[1] {
+        yield false
+    }
+    when source_span[3] == source_span[1] and source_span[4] < source_span[2] {
+        yield false
+    }
+    yield true
+}
+
+export craft validate_evidence(item) {
+    when kind(item) != "list" {
+        yield fail_default("AES-E001", "evidence must be a list")
+    }
+    when size(item) != 8 {
+        yield fail_default("AES-E002", "evidence must contain exactly 8 fields")
+    }
+
+    make source_span := item[7]
+    when not valid_span(source_span) {
+        yield failure("AES-E003", "evidence source span is invalid", DEFAULT_SPAN)
+    }
+    when not known_axis(item[0]) {
+        yield failure("AES-E004", "axis must be beauty or ugliness", source_span)
+    }
+    when not known_dimension(item[1]) {
+        yield failure("AES-E005", "unknown aesthetic dimension: " ++ text(item[1]), source_span)
+    }
+    when not valid_unit(item[2]) {
+        yield failure("AES-E006", "score must be a finite number in [0, 1]", source_span)
+    }
+    when not valid_unit(item[3]) {
+        yield failure("AES-E007", "confidence must be a number in [0, 1]", source_span)
+    }
+    when not valid_unit(item[4]) {
+        yield failure("AES-E008", "salience must be a number in [0, 1]", source_span)
+    }
+    when item[5] != "deliberate" and item[5] != "accidental" and item[5] != "unknown" {
+        yield failure("AES-E009", "intent must be deliberate, accidental, or unknown", source_span)
+    }
+    when kind(item[6]) != "text" {
+        yield failure("AES-E010", "explanation must be text", source_span)
+    }
+    when size(trim(item[6])) == 0 {
+        yield failure("AES-E011", "explanation cannot be empty", source_span)
+    }
+
+    yield success(item)
+}
+
+craft has_weight(weights, dimension) {
+    each item in weights {
+        when item[0] == dimension {
+            yield true
+        }
+    }
+    yield false
+}
+
+craft find_weight(weights, dimension) {
+    each item in weights {
+        when item[0] == dimension {
+            yield item[1]
+        }
+    }
+    yield 0.0
+}
+
+export craft validate_weights(weights) {
+    when kind(weights) != "list" {
+        yield fail_default("AES-E020", "weight profile must be a list")
+    }
+    when size(weights) == 0 {
+        yield fail_default("AES-E021", "weight profile cannot be empty")
+    }
+
+    vary seen_dimensions := []
+    vary positive_weights := 0
+
+    each item in weights {
+        when kind(item) != "list" {
+            yield fail_default("AES-E022", "each weight entry must be a two-field list")
+        }
+        when size(item) != 2 {
+            yield fail_default("AES-E023", "each weight entry must contain dimension and weight")
+        }
+        when not known_dimension(item[0]) {
+            yield fail_default("AES-E024", "weight profile contains an unknown dimension")
+        }
+        when not valid_unit(item[1]) {
+            yield fail_default("AES-E025", "dimension weight must be in [0, 1]")
+        }
+        when contains(seen_dimensions, item[0]) {
+            yield fail_default("AES-E026", "weight profile contains a duplicate dimension")
+        }
+
+        change seen_dimensions := push(seen_dimensions, item[0])
+        when item[1] > 0.0 {
+            change positive_weights := positive_weights + 1
+        }
+    }
+
+    when positive_weights == 0 {
+        yield fail_default("AES-E027", "at least one dimension weight must be positive")
+    }
+
+    yield success(weights)
+}
+
+export craft validate_evidence_set(evidence, weights) {
+    when kind(evidence) != "list" {
+        yield fail_default("AES-E030", "evidence collection must be a list")
+    }
+    when size(evidence) == 0 {
+        yield fail_default("AES-E031", "at least one evidence item is required")
+    }
+
+    each item in evidence {
+        make checked := validate_evidence(item)
+        when checked[0] == "err" {
+            yield checked
+        }
+        when not has_weight(weights, item[1]) {
+            yield failure("AES-E032", "no context weight supplied for dimension: " ++ item[1], item[7])
+        }
+    }
+
+    yield success(evidence)
+}
+
+craft minimum(left, right) {
+    when left < right {
+        yield left
+    }
+    yield right
+}
+
+craft absolute(value) {
+    when value < 0.0 {
+        yield 0.0 - value
+    }
+    yield value
+}
+
+export craft aggregate_axis(evidence, weights, axis) {
+    vary weighted_score := 0.0
+    vary weighted_confidence := 0.0
+    vary weight_basis := 0.0
+    vary evidence_count := 0
+
+    each item in evidence {
+        when item[0] == axis {
+            make base_weight := item[4] * find_weight(weights, item[1])
+            change weighted_score := weighted_score + (item[2] * item[3] * base_weight)
+            change weighted_confidence := weighted_confidence + (item[3] * base_weight)
+            change weight_basis := weight_basis + base_weight
+            change evidence_count := evidence_count + 1
+        }
+    }
+
+    when weight_basis <= 0.0 {
+        yield [0.0, 0.0, evidence_count]
+    }
+    when weighted_confidence <= 0.0 {
+        yield [0.0, 0.0, evidence_count]
+    }
+
+    yield [
+        weighted_score / weighted_confidence,
+        weighted_confidence / weight_basis,
+        evidence_count
+    ]
+}
+
+export craft aggregate_dimension(evidence, weights, dimension) {
+    vary weighted_score := 0.0
+    vary weighted_confidence := 0.0
+
+    each item in evidence {
+        when item[1] == dimension {
+            make base_weight := item[3] * item[4] * find_weight(weights, item[1])
+            change weighted_score := weighted_score + (item[2] * base_weight)
+            change weighted_confidence := weighted_confidence + base_weight
+        }
+    }
+
+    when weighted_confidence <= 0.0 {
+        yield 0.0
+    }
+    yield weighted_score / weighted_confidence
+}
+
+craft dimension_coverage(evidence, weights) {
+    vary enabled_count := 0
+    vary observed := []
+
+    each weight in weights {
+        when weight[1] > 0.0 {
+            change enabled_count := enabled_count + 1
+        }
+    }
+
+    each item in evidence {
+        when find_weight(weights, item[1]) > 0.0 {
+            when not contains(observed, item[1]) {
+                change observed := push(observed, item[1])
+            }
+        }
+    }
+
+    when enabled_count == 0 {
+        yield 0.0
+    }
+    yield size(observed) / enabled_count
+}
+
+export craft recommended_action(item) {
+    when item[5] == "deliberate" {
+        yield "preserve"
+    }
+    when item[5] == "unknown" {
+        yield "review"
+    }
+    when item[0] == "ugliness" and item[5] == "accidental" {
+        yield "refine"
+    }
+    yield "clarify"
+}
+
+craft build_findings(evidence) {
+    vary findings := []
+
+    each item in evidence {
+        make finding := [
+            "aesthetica.finding.v1",
+            item[0],
+            item[1],
+            recommended_action(item),
+            item[5],
+            item[2],
+            item[3],
+            item[6],
+            item[7]
+        ]
+        change findings := push(findings, finding)
+    }
+
+    yield findings
+}
+
+export craft evaluate(object_id, context, evidence, weights) {
+    when kind(object_id) != "text" {
+        yield fail_default("AES-E040", "object_id must be text")
+    }
+    when size(trim(object_id)) == 0 {
+        yield fail_default("AES-E041", "object_id cannot be empty")
+    }
+    when kind(context) != "list" {
+        yield fail_default("AES-E042", "context must be a three-field list")
+    }
+    when size(context) != 3 {
+        yield fail_default("AES-E043", "context must contain perspective, purpose, and culture tag")
+    }
+    when kind(context[0]) != "text" or kind(context[1]) != "text" or kind(context[2]) != "text" {
+        yield fail_default("AES-E044", "all context fields must be text")
+    }
+    when size(trim(context[0])) == 0 or size(trim(context[1])) == 0 {
+        yield fail_default("AES-E045", "perspective and purpose cannot be empty")
+    }
+
+    make checked_weights := validate_weights(weights)
+    when checked_weights[0] == "err" {
+        yield checked_weights
+    }
+
+    make checked_evidence := validate_evidence_set(evidence, weights)
+    when checked_evidence[0] == "err" {
+        yield checked_evidence
+    }
+
+    make beauty := aggregate_axis(evidence, weights, "beauty")
+    make ugliness := aggregate_axis(evidence, weights, "ugliness")
+    make contrast := aggregate_dimension(evidence, weights, "contrast")
+    make coexistence := minimum(beauty[0], ugliness[0])
+    make tension := coexistence * contrast
+    make coverage := dimension_coverage(evidence, weights)
+
+    # A transparent heuristic, not a universal aesthetic truth.
+    make expressive_power :=
+        (beauty[0] * 0.30) +
+        (ugliness[0] * 0.25) +
+        (contrast * 0.20) +
+        (tension * 0.15) +
+        (coverage * 0.10)
+
+    make findings := build_findings(evidence)
+
+    make report := [
+        REPORT_SCHEMA,
+        object_id,
+        context[0],
+        context[1],
+        context[2],
+        beauty,
+        ugliness,
+        contrast,
+        tension,
+        coexistence,
+        coverage,
+        expressive_power,
+        findings
+    ]
+
+    yield success(report)
+}
+
+export craft compare_profiles(before, after, stability_threshold) {
+    when not valid_unit(stability_threshold) {
+        yield fail_default("AES-E050", "stability threshold must be in [0, 1]")
+    }
+    when kind(before) != "list" or kind(after) != "list" {
+        yield fail_default("AES-E051", "profile comparison requires two report lists")
+    }
+    when size(before) != 13 or size(after) != 13 {
+        yield fail_default("AES-E052", "report shape is invalid")
+    }
+    when before[0] != REPORT_SCHEMA or after[0] != REPORT_SCHEMA {
+        yield fail_default("AES-E053", "unsupported report schema")
+    }
+    when before[1] != after[1] {
+        yield fail_default("AES-E054", "profiles belong to different object identities")
+    }
+
+    make beauty_delta := after[5][0] - before[5][0]
+    make ugliness_delta := after[6][0] - before[6][0]
+    make contrast_delta := after[7] - before[7]
+
+    make average_distance :=
+        (absolute(beauty_delta) +
+         absolute(ugliness_delta) +
+         absolute(contrast_delta)) / 3.0
+
+    make profile_stability := 1.0 - average_distance
+    make status := "shifted"
+
+    when profile_stability >= stability_threshold {
+        change status := "stable"
+    }
+
+    yield success([
+        EVOLUTION_SCHEMA,
+        before[1],
+        before[2],
+        after[2],
+        [beauty_delta, ugliness_delta, contrast_delta],
+        profile_stability,
+        status,
+        stability_threshold
+    ])
+}
+
+export craft verify_stage(stage) {
+    when kind(stage) != "list" {
+        yield fail_default("AES-E060", "stage must be a five-field list")
+    }
+    when size(stage) != 5 {
+        yield fail_default("AES-E061", "stage must contain code, start, end, state, and summary")
+    }
+    when kind(stage[0]) != "text" or size(trim(stage[0])) == 0 {
+        yield fail_default("AES-E062", "stage code cannot be empty")
+    }
+    when kind(stage[1]) != "number" or kind(stage[2]) != "number" {
+        yield fail_default("AES-E063", "stage boundaries must be numbers")
+    }
+    when stage[1] < 0 or stage[2] <= stage[1] {
+        yield fail_default("AES-E064", "stage end must be greater than its non-negative start")
+    }
+    when kind(stage[3]) != "text" or size(trim(stage[3])) == 0 {
+        yield fail_default("AES-E065", "stage state label cannot be empty")
+    }
+    when kind(stage[4]) != "text" or size(trim(stage[4])) == 0 {
+        yield fail_default("AES-E066", "stage summary cannot be empty")
+    }
+
+    yield success([
+        "aesthetica.stage-check.v1",
+        stage[0],
+        true,
+        stage[1],
+        stage[2],
+        stage[3],
+        stage[4]
+    ])
+}
+
+export craft verify_stages(stages) {
+    when kind(stages) != "list" {
+        yield fail_default("AES-E070", "stage collection must be a list")
+    }
+    when size(stages) == 0 {
+        yield fail_default("AES-E071", "at least one stage is required")
+    }
+
+    vary verified := []
+    vary seen_codes := []
+    vary previous_end := 0
+    vary has_previous := false
+
+    each stage in stages {
+        make checked := verify_stage(stage)
+        when checked[0] == "err" {
+            yield checked
+        }
+        when contains(seen_codes, stage[0]) {
+            yield fail_default("AES-E072", "stage codes must be unique")
+        }
+        when has_previous and stage[1] != previous_end {
+            yield fail_default("AES-E073", "stages must be contiguous and ordered")
+        }
+
+        change seen_codes := push(seen_codes, stage[0])
+        change verified := push(verified, checked[1])
+        change previous_end := stage[2]
+        change has_previous := true
+    }
+
+    yield success(verified)
+}
