@@ -1,10 +1,11 @@
-# Second group of Reaper foundations.
-# Depends on foundation.rpr; exported rows use stable positional contracts.
+# Foundations 6–10, aligned with the native 66-concept registry.
+# The first group remains the shared source for concepts 1–5.
 import "foundation.rpr" as first
 
 export make FOUNDATION_NEXT_SCHEMA := "reaper.foundation.next.v1"
 export make FOUNDATION_NEXT_VERSION := 1
 
+# 6. Basis: agreed semantic primitives and language-level invariants.
 export craft basis_value_kinds() {
     yield ["nothing", "boolean", "number", "text", "list", "map", "craft", "resource"]
 }
@@ -42,6 +43,9 @@ export craft basis_validate_effects(effects) {
             change valid := false
         }
     }
+    when size(unique(effects)) != size(effects) {
+        change valid := false
+    }
     when contains(effects, "pure") and size(effects) != 1 {
         change valid := false
     }
@@ -56,7 +60,67 @@ export craft basis_validate_invariants(rows) {
     yield rows == basis_invariants()
 }
 
-export craft core_foundation_contracts() {
+# 7. Base: stable primitives shared by dependent Reaper capabilities.
+export craft base_primitives() {
+    yield [
+        ["module-loader", "reaper.modules", "implemented", "explicit imports, exports, bounded depth and cycle diagnostics"],
+        ["canonical-ir", "reaper.ir and reaper.vm", "implemented", "canonical instruction stream and selectable bytecode VM"],
+        ["resource-ledger", "reaper.resources", "implemented", "bounded handles and deterministic cleanup"],
+        ["memory-manager", "reaper.memory", "implemented", "heap accounting and region lifecycle"],
+        ["diagnostic-catalog", "reaper.diagnostic_catalog", "implemented", "stable diagnostic identifiers and definitions"],
+        ["host-dispatch", "include/reaper/system.h", "partial", "capability-gated host service ABI"],
+        ["native-backend", "reaper.native_compiler", "partial", "scalar C17 AOT subset"]
+    ]
+}
+
+export craft base_required_primitives() {
+    yield ["module-loader", "canonical-ir", "resource-ledger", "memory-manager", "diagnostic-catalog"]
+}
+
+craft base_find_primitive(identifier) {
+    vary found := nothing
+    each primitive in base_primitives() {
+        when primitive[0] == identifier {
+            change found := primitive
+        }
+    }
+    yield found
+}
+
+export craft base_validate_primitive(primitive) {
+    when kind(primitive) != "list" or size(primitive) != 4 {
+        yield false
+    }
+    make supported := base_find_primitive(primitive[0])
+    yield supported != nothing and primitive == supported
+}
+
+export craft base_validate_selection(selected) {
+    when kind(selected) != "list" {
+        yield false
+    }
+    when size(unique(selected)) != size(selected) {
+        yield false
+    }
+    each item in selected {
+        when kind(item) != "text" or base_find_primitive(item) == nothing {
+            yield false
+        }
+    }
+    each required in base_required_primitives() {
+        when not contains(selected, required) {
+            yield false
+        }
+    }
+    yield true
+}
+
+# 8. Foundation: invariants and versioned compatibility contracts.
+export craft foundation_required_invariants() {
+    yield ["basis.immutability.v1", "basis.bounds.v1", "basis.effects.v1", "basis.ownership.v1"]
+}
+
+export craft foundation_contracts() {
     yield [
         ["reaper.platform-profile.v1", 1, 0, "both"],
         ["reaper.runtime-environment.v1", 1, 0, "both"],
@@ -66,9 +130,9 @@ export craft core_foundation_contracts() {
     ]
 }
 
-craft core_foundation_find_contract(identifier) {
+craft foundation_find_contract(identifier) {
     vary found := nothing
-    each contract in core_foundation_contracts() {
+    each contract in foundation_contracts() {
         when contract[0] == identifier {
             change found := contract
         }
@@ -76,33 +140,28 @@ craft core_foundation_find_contract(identifier) {
     yield found
 }
 
-export craft core_foundation_validate_contract(descriptor) {
+export craft foundation_validate_contract(descriptor) {
     when kind(descriptor) != "list" or size(descriptor) != 4 {
         yield false
     }
-
     when kind(descriptor[0]) != "text" or kind(descriptor[1]) != "number" or kind(descriptor[2]) != "number" or kind(descriptor[3]) != "text" {
         yield false
     }
-
     when descriptor[1] % 1 != 0 or descriptor[2] % 1 != 0 or descriptor[1] < 0 or descriptor[2] < 0 {
         yield false
     }
-
     when not contains(["provides", "consumes", "both"], descriptor[3]) {
         yield false
     }
-
-    make supported := core_foundation_find_contract(descriptor[0])
+    make supported := foundation_find_contract(descriptor[0])
     when supported == nothing {
         yield false
     }
-
-    yield descriptor[1] == supported[1] and descriptor[2] <= supported[2] and (supported[3] == "both" or descriptor[3] == "both" or descriptor[3] == supported[3])
+    yield descriptor[1] == supported[1] and descriptor[2] == supported[2] and (supported[3] == "both" or descriptor[3] == "both" or descriptor[3] == supported[3])
 }
 
-export craft core_foundation_validate_contract_catalog() {
-    make contracts := core_foundation_contracts()
+export craft foundation_validate_contract_catalog() {
+    make contracts := foundation_contracts()
     vary identifiers := []
     each contract in contracts {
         when size(contract) != 4 {
@@ -113,54 +172,24 @@ export craft core_foundation_validate_contract_catalog() {
     yield size(contracts) == 5 and size(unique(identifiers)) == size(identifiers)
 }
 
-export craft root_context_fields() {
-    yield ["project_id", "source_root", "module_root", "build_root", "target_profile"]
-}
-
-export craft root_validate_relative_path(path) {
-    when kind(path) != "text" or path == "" {
+export craft foundation_validate_invariants(invariants) {
+    when kind(invariants) != "list" or size(unique(invariants)) != size(invariants) {
         yield false
     }
-    when starts_with(path, "/") or starts_with(path, "\\") or contains(path, ":") or path == ".." or contains(path, "../") or contains(path, "/..") or contains(path, "\\") {
-        yield false
+    each required in foundation_required_invariants() {
+        when not contains(invariants, required) {
+            yield false
+        }
+    }
+    each invariant in invariants {
+        when not contains(["basis.immutability.v1", "basis.effects.v1", "basis.bounds.v1", "basis.conversion.v1", "basis.ownership.v1", "basis.diagnostics.v1"], invariant) {
+            yield false
+        }
     }
     yield true
 }
 
-export craft root_validate_context(context) {
-    when kind(context) != "list" or size(context) != 5 {
-        yield false
-    }
-    when kind(context[0]) != "text" or context[0] == "" or kind(context[4]) != "text" or context[4] == "" {
-        yield false
-    }
-    yield root_validate_relative_path(context[1]) and root_validate_relative_path(context[2]) and root_validate_relative_path(context[3])
-}
-
-export craft root_validate_import_edge(edge) {
-    when kind(edge) != "list" or size(edge) != 2 {
-        yield false
-    }
-    when kind(edge[0]) != "text" or kind(edge[1]) != "text" or edge[0] == "" or edge[1] == "" {
-        yield false
-    }
-    yield edge[0] != edge[1]
-}
-
-export craft root_validate_import_specifier(specifier) {
-    yield root_validate_relative_path(specifier) and ends_with(specifier, ".rpr")
-}
-
-export craft root_module_boundary_rules() {
-    yield [
-        ["extension", ".rpr", "required"],
-        ["imports", "explicit relative import", "required"],
-        ["exports", "declared public symbols only", "required"],
-        ["cycles", "reject cyclic module graph", "required"],
-        ["effects", "no ambient network or process authority", "required"]
-    ]
-}
-
+# 9. Skeleton: minimal mandatory shape of a complete application.
 export craft skeleton_required_components() {
     yield ["manifest", "entry", "modules", "tests"]
 }
@@ -203,6 +232,7 @@ export craft skeleton_validate_components(components) {
     yield size(unique(components)) == size(components)
 }
 
+# 10. Backbone: essential contracts preserving the source-to-target flow.
 export craft backbone_edges() {
     yield [
         ["source", "lexer", "source-text.v1", "implemented"],
@@ -235,11 +265,11 @@ export craft backbone_find_edge(source, target) {
 
 export craft foundation_next_five() {
     yield [
-        ["foundation.basis.v1", "Basis", "language invariants and semantic guardrails", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_6_10.md"],
-        ["foundation.contracts.v1", "Foundation", "versioned contracts and compatibility rules", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_6_10.md"],
-        ["foundation.root.v1", "Root", "project roots, module boundaries and import constraints", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_6_10.md"],
-        ["foundation.skeleton.v1", "Skeleton", "application composition and required components", "implemented", "docs/FOUNDATIONAL_FRAMEWORKS_6_10.md"],
-        ["foundation.backbone.v1", "Backbone", "cross-layer flow contracts from source to target", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_6_10.md"]
+        ["architecture.basis.v1", "Basis", "minimal agreed primitives and language invariants", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_6_10.md"],
+        ["architecture.base.v1", "Base", "stable shared implementation primitives for dependent capabilities", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_6_10.md"],
+        ["architecture.foundation.v1", "Foundation", "mandatory invariants and versioned compatibility contracts", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_6_10.md"],
+        ["architecture.skeleton.v1", "Skeleton", "minimal mandatory shape of a complete application", "implemented", "docs/FOUNDATIONAL_FRAMEWORKS_6_10.md"],
+        ["architecture.backbone.v1", "Backbone", "essential interfaces preserving the source-to-target flow", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_6_10.md"]
     ]
 }
 
