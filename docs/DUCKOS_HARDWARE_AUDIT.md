@@ -1,10 +1,10 @@
-# DuckOS hardware inventory integration
+# DAK hardware inventory integration
 
-Reaper can verify the versioned read-only inventory emitted by DuckOS. The integration is a file-based contract: no daemon, network connection, driver loading or privileged helper is required.
+Reaper can verify the versioned read-only inventory emitted by DAK. The integration is a file-based contract: no daemon, network connection, driver loading or privileged helper is required.
 
 ## Collect on the host
 
-From a DuckOS source checkout with its Python build tools installed:
+From a DAK source checkout with its Python build tools installed:
 
 ```sh
 python -m duckos hardware-inventory --output hardware-inventory.json
@@ -24,6 +24,6 @@ The audit verifies the exact v1 field set, supported platform, per-device values
 
 ## Trust and implementation boundary
 
-Both commands are read-only. The Reaper report sets `execution_performed`, `disk_writes_performed` and `drivers_changed` to false. A missing driver is a diagnostic finding, not permission to download or install a driver. Before any later installation workflow exists, DuckOS still needs verified vendor provenance, signature validation, kernel-ABI and architecture matching, privilege separation, rollback and physical-device testing.
+Both commands are read-only. The Reaper report sets `execution_performed`, `disk_writes_performed` and `drivers_changed` to false. A missing driver is a diagnostic finding, not permission to download or install a driver. Before any later installation workflow exists, DAK still needs verified vendor provenance, signature validation, kernel-ABI and architecture matching, privilege separation, rollback and physical-device testing.
 
-A passing file audit proves that the snapshot matches its declared contract. It does not prove that a driver is correct, that a device works, or that DuckOS has native kernel support.
+A passing file audit proves that the snapshot matches its declared contract. It does not prove that a driver is correct, that a device works, or that DAK has native kernel support.
