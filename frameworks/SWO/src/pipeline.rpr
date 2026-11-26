@@ -147,3 +147,107 @@ export craft artifact_publish(artifact, verified) {
     when not verified or artifact[4] != "verified" { yield [false, "verification_required"] }
     yield [true, [artifact[0], artifact[1], artifact[2], artifact[3], "published"]]
 }
+
+
+# Verification evidence, policy waivers and immutable release manifests.
+export craft evidence_record(gate_name, evidence_kind, reference, observed, status) {
+    yield [gate_name, evidence_kind, reference, observed, status]
+}
+
+export craft evidence_valid(evidence) {
+    when size(evidence) != 5 { yield false }
+    when size(evidence[0]) == 0 or size(evidence[1]) == 0 or size(evidence[2]) == 0 {
+        yield false
+    }
+    when evidence[4] != "present" and evidence[4] != "missing" and evidence[4] != "invalid" {
+        yield false
+    }
+    yield true
+}
+
+export craft evidence_gate_status(gate_name, evidence_list) {
+    vary seen := 0
+    vary missing := 0
+    vary invalid := 0
+    vary index := 0
+    loop while index < size(evidence_list) {
+        make item := evidence_list[index]
+        when not evidence_valid(item) { yield [false, "invalid_evidence_record"] }
+        when item[0] == gate_name {
+            change seen := seen + 1
+            when item[4] == "missing" { change missing := missing + 1 }
+            when item[4] == "invalid" { change invalid := invalid + 1 }
+        }
+        change index := index + 1
+    }
+    when seen == 0 { yield [true, "no_evidence"] }
+    when invalid > 0 { yield [true, "invalid_evidence"] }
+    when missing > 0 { yield [true, "evidence_missing"] }
+    yield [true, "evidence_present"]
+}
+
+export craft evidence_set_validate(evidence_list) {
+    vary index := 0
+    loop while index < size(evidence_list) {
+        when not evidence_valid(evidence_list[index]) { yield [false, "invalid_evidence_record"] }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+
+export craft waiver_record(gate_name, reason, owner, expires_revision) {
+    yield [gate_name, reason, owner, expires_revision]
+}
+
+export craft waiver_valid(waiver) {
+    when size(waiver) != 4 { yield false }
+    when size(waiver[0]) == 0 or size(waiver[1]) == 0 or size(waiver[2]) == 0 {
+        yield false
+    }
+    when size(waiver[3]) == 0 { yield false }
+    yield true
+}
+
+export craft waiver_find(waivers, gate_name) {
+    vary index := 0
+    loop while index < size(waivers) {
+        when waivers[index][0] == gate_name and waiver_valid(waivers[index]) {
+            yield [true, waivers[index]]
+        }
+        change index := index + 1
+    }
+    yield [false, "waiver_not_found"]
+}
+
+export craft release_manifest(version, revision, targets, artifact_ids, evidence_ids) {
+    yield ["reaper.release.v1", version, revision, targets, artifact_ids, evidence_ids]
+}
+
+export craft release_manifest_validate(manifest) {
+    when size(manifest) != 6 or manifest[0] != "reaper.release.v1" {
+        yield [false, "invalid_release_manifest"]
+    }
+    when size(manifest[1]) != 3 or size(manifest[2]) == 0 { yield [false, "release_identity_missing"] }
+    when size(manifest[3]) == 0 or size(manifest[4]) == 0 { yield [false, "release_targets_or_artifacts_missing"] }
+    yield [true, []]
+}
+
+export craft release_gate_summary(gates, evidence_list, waivers) {
+    make quality := quality_report(gates)
+    when not quality[0] { yield quality }
+    make evidence_check := evidence_set_validate(evidence_list)
+    when not evidence_check[0] { yield evidence_check }
+    vary unresolved := []
+    vary index := 0
+    loop while index < size(gates) {
+        when gates[index][4] != "passed" {
+            make evidence_state := evidence_gate_status(gates[index][0], evidence_list)
+            make waiver := waiver_find(waivers, gates[index][0])
+            when evidence_state[1] != "evidence_present" and not waiver[0] {
+                change unresolved := push(unresolved, gates[index][0])
+            }
+        }
+        change index := index + 1
+    }
+    yield [size(unresolved) == 0, quality[1], unresolved]
+}
