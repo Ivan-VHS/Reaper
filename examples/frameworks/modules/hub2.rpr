@@ -36,13 +36,15 @@ export craft service_resolve(registry, query) {
     }
     vary selected := nothing
     each service in registry {
-        when fc["fc_record"](service, 5) and service[0] == query[0] and service[2] == "active" {
-            make version := fc["fc_version_compare"](service[1], query[1])
-            when version[0] and version[1] >= 0 {
-                when selected == nothing { change selected := service }
-                otherwise {
-                    make newer := fc["fc_version_compare"](service[1], selected[1])
-                    when newer[0] and newer[1] > 0 { change selected := service }
+        when fc["fc_record"](service, 5) {
+            when service[0] == query[0] and service[2] == "active" {
+                make version := fc["fc_version_compare"](service[1], query[1])
+                when version[0] and version[1] >= 0 {
+                    when selected == nothing { change selected := service }
+                    otherwise {
+                        make newer := fc["fc_version_compare"](service[1], selected[1])
+                        when newer[0] and newer[1] > 0 { change selected := service }
+                    }
                 }
             }
         }
