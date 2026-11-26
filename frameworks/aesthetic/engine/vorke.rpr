@@ -1,0 +1,120 @@
+# Vorke — nominal runtime type kernel for aesthetic profiles and design IR.
+# Values are tagged immutable tuples. Constructors/validators are the only
+# supported boundary; callers must not read unvalidated tuple fields.
+
+export make VERSION := "1.0.0"
+export make PROFILE := "AestheticProfile"
+export make HIR := "AestheticHIR"
+export make MIR := "AestheticMIR"
+export make LIR := "AestheticLIR"
+export make ARCHITECTURE := "ArchitectureGraph"
+export make DESIGN_PROPOSAL := "DesignEvolutionProposal"
+export make SOURCE_REQUEST := "SourceEvolutionRequest"
+export make SOURCE_PLAN := "SourceEvolutionPlan"
+
+export craft valid_text(value, maximum) {
+    yield kind(value) == "text" and size(trim(value)) > 0 and size(value) <= maximum
+}
+
+export craft valid_number(value, minimum, maximum) {
+    yield kind(value) == "number" and value >= minimum and value <= maximum
+}
+
+export craft valid_flag(value) {
+    yield kind(value) == "boolean"
+}
+
+export craft valid_color(value) {
+    # Strict hexadecimal syntax is also enforced by profile.v1.schema.json.
+    yield valid_text(value, 7) and size(value) == 7 and starts_with(value, "#")
+}
+
+export craft valid_target(target) {
+    when kind(target) != "list" or size(target) != 3 {
+        yield false
+    }
+    yield valid_text(target[0], 32) and valid_text(target[1], 32)
+        and valid_number(target[2], 0.5, 4)
+}
+
+export craft valid_palette(palette) {
+    when kind(palette) != "list" or size(palette) != 12 {
+        yield false
+    }
+    each color in palette {
+        when not valid_color(color) {
+            yield false
+        }
+    }
+    yield true
+}
+
+export craft valid_typography(typography) {
+    when kind(typography) != "list" or size(typography) != 7 {
+        yield false
+    }
+    yield valid_text(typography[0], 96)
+        and valid_text(typography[1], 96)
+        and valid_number(typography[2], 10, 24)
+        and valid_number(typography[3], 1.05, 1.8)
+        and valid_number(typography[4], 100, 900)
+        and valid_number(typography[5], 100, 900)
+        and valid_number(typography[6], 1, 2)
+}
+
+export craft valid_layout(layout) {
+    when kind(layout) != "list" or size(layout) != 4 {
+        yield false
+    }
+    yield valid_number(layout[0], 4, 16)
+        and valid_number(layout[1], 2, 24)
+        and valid_number(layout[2], 0, 32)
+        and valid_number(layout[3], 0.5, 2)
+}
+
+export craft valid_motion(motion) {
+    when kind(motion) != "list" or size(motion) != 5 {
+        yield false
+    }
+    when not valid_flag(motion[0]) or not valid_text(motion[4], 64) {
+        yield false
+    }
+    when not valid_number(motion[1], 0, 500) or not valid_number(motion[2], 0, 800)
+        or not valid_number(motion[3], 0, 1200) {
+        yield false
+    }
+    yield motion[1] <= motion[2] and motion[2] <= motion[3]
+}
+
+export craft valid_accessibility(accessibility) {
+    when kind(accessibility) != "list" or size(accessibility) != 4 {
+        yield false
+    }
+    yield valid_number(accessibility[0], 4.5, 7)
+        and valid_flag(accessibility[1])
+        and valid_flag(accessibility[2])
+        and valid_flag(accessibility[3])
+}
+
+export craft valid_profile(profile) {
+    when kind(profile) != "list" or size(profile) != 9 {
+        yield false
+    }
+    when profile[0] != PROFILE or profile[1] != VERSION {
+        yield false
+    }
+    yield valid_text(profile[2], 96)
+        and valid_target(profile[3])
+        and valid_palette(profile[4])
+        and valid_typography(profile[5])
+        and valid_layout(profile[6])
+        and valid_motion(profile[7])
+        and valid_accessibility(profile[8])
+}
+
+export craft type_of(value) {
+    when kind(value) != "list" or size(value) == 0 {
+        yield "Invalid"
+    }
+    yield value[0]
+}
