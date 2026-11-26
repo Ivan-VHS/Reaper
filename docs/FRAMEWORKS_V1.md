@@ -1,6 +1,6 @@
-# Reaper framework set v1
+# Reaper framework set v1.1
 
-The framework set adds eight executable modules in Reaper source. Each module
+The framework set contains eighteen executable reference-runtime modules in Reaper source. Each module
 exports ordinary Reaper crafts and can be imported from another .rpr file. It
 uses the existing module loader and reference runtime; it does not add another
 parser, execution engine or hidden host capability.
@@ -17,6 +17,17 @@ parser, execution engine or hidden host capability.
 | Blau | returns immutable key/value snapshots, increments versions, performs compare-and-set and calculates diffs | snapshot is [version, entries] |
 | Shashio | validates finite-state transitions, applies event sequences and provides all-or-nothing batch behavior | transition is [from_state, event, to_state] |
 | Showel Fleppery CODE | builds validated transform pipelines, renders exact placeholders and returns an audit trail | step is [name, transform, validator] |
+
+| Vorke | validates application manifests and produces declarative startup/shutdown phases | manifest is [app_id, version, profile, entrypoint, module_ids, resource_budget] |
+| Jellymeat | validates schema-first records, required fields, projections and adjacent-version migration steps | field is [name, expected_kind, required]; record is [[field, value], ...] |
+| LejjyFish | validates ordered event streams, bounded append, batches, watermarks and topic fanout | event is [sequence, topic, payload] |
+| Lejjy | resolves explicit service providers and checks lifetime-scope dependencies | binding is [service_id, provider_id, scope] |
+| Oplos | validates transport-neutral routes and request/response correlation | route is [id, method, path, request_schema, response_schema] |
+| Holmosaptimu | validates local metric catalogues and computes supplied-sample summaries | metric is [id, kind, unit]; sample is [id, timestamp, value] |
+| Sentan | evaluates explicit policies with deny-by-default and deny precedence | rule is [id, effect, action, resource, required_capabilities] |
+| Cellene | validates component manifests, ABI levels, imports, exports and dependencies | manifest is [id, version, abi_major, abi_minor, exports, imports, dependencies] |
+| Kolir | validates connected declarative UI trees, focus order and accessibility labels | node is [id, role, parent, label, width, height, focusable] |
+| SOMO | evaluates supplied scenario results, replay traces, coverage and release gates | scenario is [id, steps, expected_outcomes, step_budget] |
 
 ## Usage
 
@@ -119,10 +130,20 @@ The standalone modules are domain components, not replacement runtimes. ДОМ i
 | Blau | JennyFlash snapshot/value adapter |
 | Shashio | JLOM state-machine adapter |
 | Showel Fleppery CODE | Jenny Flashing Boy in-memory development pipeline |
+| Vorke | Establish manifest adapter; ДОМ owns runtime lifecycle |
+| Jellymeat | Uu / Nonconcrete record and schema adapter |
+| LejjyFish | System Carriere / JLOM stream-policy adapter |
+| Lejjy | Establish / Nonconcrete service-binding adapter |
+| Oplos | Nonconcrete / System Carriere transport-contract adapter |
+| Holmosaptimu | ДОМ observability boundary over caller-supplied samples |
+| Sentan | Nonconcrete policy contracts; trusted host enforces decisions |
+| Cellene | Nonconcrete manifest checks; Native Framework Core owns activation |
+| Kolir | Studio / platform UI adapter; host owns rendering |
+| SOMO | Sretuo / Vprossee scenario-evidence adapter |
 
 No standalone module may create a competing scheduler, message bus, resource ledger, module registry or application lifecycle. See [Framework Portfolio](FRAMEWORK_PORTFOLIO_EXPANSION.md) for all framework groups and their ownership map.
 
-## Expanded v1.1 contracts
+## Expanded contracts of the original eight modules
 
 The current expansion branch adds the following Reaper operations without changing the original module identity or grammar:
 
