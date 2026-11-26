@@ -52,3 +52,96 @@ export craft run(pipeline, source) {
     }
     yield [true, current, audit, "ok"]
 }
+
+export craft validate_pipeline(pipeline) {
+    when kind(pipeline) != "list" { yield [false, ["pipeline-must-be-list"]] }
+    vary names := []
+    vary errors := []
+    each step in pipeline {
+        when kind(step) != "list" or size(step) != 3 {
+            change errors := push(errors, ["step-shape", step])
+        } otherwise {
+            when kind(step[0]) != "text" or size(step[0]) == 0 {
+                change errors := push(errors, ["step-name", step])
+            }
+            when kind(step[1]) != "craft" or kind(step[2]) != "craft" {
+                change errors := push(errors, ["step-callbacks", step[0]])
+            }
+            when has_step_name(names, step[0]) {
+                change errors := push(errors, ["duplicate-step-name", step[0]])
+            } otherwise {
+                change names := push(names, step[0])
+            }
+        }
+    }
+    yield [size(errors) == 0, errors]
+}
+
+craft has_step_name(names, target) {
+    vary found := false
+    each name in names {
+        when name == target { change found := true }
+    }
+    yield found
+}
+
+export craft inspect_pipeline(pipeline) {
+    make checked := validate_pipeline(pipeline)
+    when not checked[0] { yield [false, [], checked[1]] }
+    vary names := []
+    each step in pipeline {
+        change names := push(names, step[0])
+    }
+    yield [true, names, size(pipeline)]
+}
+
+export craft compose(first_pipeline, second_pipeline) {
+    make first_check := validate_pipeline(first_pipeline)
+    make second_check := validate_pipeline(second_pipeline)
+    when not first_check[0] or not second_check[0] {
+        yield [false, [], ["invalid-pipeline", first_check[1], second_check[1]]]
+    }
+    make combined := first_pipeline
+    each step in second_pipeline {
+        change combined := push(combined, step)
+    }
+    make combined_check := validate_pipeline(combined)
+    when not combined_check[0] { yield [false, [], combined_check[1]] }
+    yield [true, combined, "composed"]
+}
+
+export craft run_bounded(pipeline, source, max_steps) {
+    when kind(max_steps) != "number" or max_steps < 0 {
+        yield [false, source, [], "invalid-step-limit"]
+    }
+    make checked := validate_pipeline(pipeline)
+    when not checked[0] { yield [false, source, [], checked[1]] }
+    when size(pipeline) > max_steps {
+        yield [false, source, [], "step-limit-exceeded"]
+    }
+    yield run(pipeline, source)
+}
+
+export craft render_validated(template, replacements) {
+    when kind(template) != "text" or kind(replacements) != "list" {
+        yield [false, template, "invalid-render-input"]
+    }
+    vary keys := []
+    vary errors := []
+    each replacement in replacements {
+        when kind(replacement) != "list" or size(replacement) != 2 {
+            change errors := push(errors, ["replacement-shape", replacement])
+        } otherwise {
+            when kind(replacement[0]) != "text" or size(replacement[0]) == 0 {
+                change errors := push(errors, ["replacement-key", replacement])
+            }
+            when has_step_name(keys, replacement[0]) {
+                change errors := push(errors, ["duplicate-replacement", replacement[0]])
+            } otherwise {
+                change keys := push(keys, replacement[0])
+            }
+        }
+    }
+    when size(errors) > 0 { yield [false, template, errors] }
+    yield [true, render(template, replacements), "rendered"]
+}
