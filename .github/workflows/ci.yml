@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   test:
-    name: Python \${{ matrix.python-version }}
+    name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
-          python-version: \${{ matrix.python-version }}
+          python-version: ${{ matrix.python-version }}
       - name: Compile package and tests
         run: python -m compileall -q reaper tests
       - name: Validate localized README links
@@ -53,6 +53,13 @@ jobs:
           python -m reaper --check plague/engine/policy.rpr
           python -m reaper --check plague/engine/registry.rpr
           python -m reaper --check plague/examples/policy_smoke.rpr
+      - name: Validate PLAGUE JSON contracts
+        run: |
+          python -m json.tool plague/manifest.v1.json > /dev/null
+          python -m json.tool plague/policies/scope.v1.json > /dev/null
+          python -m json.tool plague/schemas/repository-target.v1.schema.json > /dev/null
+          python -m json.tool plague/schemas/change-plan.v1.schema.json > /dev/null
+          python -m json.tool plague/schemas/evidence-bundle.v1.schema.json > /dev/null
       - name: Run PLAGUE policy and registry smoke
         run: |
           python -m reaper plague/examples/policy_smoke.rpr | tee plague-smoke.log
