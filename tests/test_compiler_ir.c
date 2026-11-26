@@ -83,6 +83,23 @@ int main(int argc, char **argv) {
         };
         assert(!reaper_compiler_ir_verify(&invalid, REAPER_COMPILER_IR_HIR, &error));
     }
+    {
+        ReaperCompilerIrNode invalid_names[1];
+        ReaperCompilerIrModule invalid;
+        memset(invalid_names, 0, sizeof invalid_names);
+        invalid_names[0].opcode = REAPER_COMPILER_IR_HIR_NAME;
+        invalid_names[0].type = REAPER_COMPILER_IR_TYPE_TEXT;
+        (void)snprintf(invalid_names[0].key, sizeof invalid_names[0].key, "%s", "user.name");
+        memset(invalid_names[0].text, 'x', sizeof invalid_names[0].text);
+        invalid_names[0].span = (ReaperCompilerSourceSpan){"math.rpr", 2, 3};
+        invalid_names[0].lhs = REAPER_COMPILER_IR_NO_VALUE;
+        invalid_names[0].rhs = REAPER_COMPILER_IR_NO_VALUE;
+        invalid = (ReaperCompilerIrModule){
+            REAPER_COMPILER_IR_VERSION, REAPER_COMPILER_IR_HIR, 0u, "",
+            invalid_names, 1u
+        };
+        assert(!reaper_compiler_ir_verify(&invalid, REAPER_COMPILER_IR_HIR, &error));
+    }
     if (argc == 3 && strcmp(argv[1], "--emit-c17") == 0) {
         FILE *stream = fopen(argv[2], "wb");
         if (stream == NULL) return 2;
