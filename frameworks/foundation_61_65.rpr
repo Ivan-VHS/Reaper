@@ -115,6 +115,9 @@ export craft anchor_validate_descriptor(anchor) {
 }
 
 export craft anchor_validate_reference(identifier, expected_kind, minimum_version) {
+    when kind(expected_kind) != "text" or kind(minimum_version) != "number" or minimum_version < 1 or minimum_version % 1 != 0 {
+        yield false
+    }
     make anchor := anchor_find(identifier)
     when anchor == nothing or not anchor_validate_descriptor(anchor) {
         yield false
@@ -277,6 +280,10 @@ export craft hardware_memory_permissions() {
     yield ["read-only", "read-write", "write-only", "device"]
 }
 
+export craft hardware_driver_policies() {
+    yield ["read-only-driver-set", "fake-adapter-only", "no-driver-load"]
+}
+
 export craft hardware_profiles() {
     yield [
         ["host-x86_64", "x86_64", 64, "LP64-or-LLP64", "little", "host-c-abi", "hosted-reference", "partial"],
@@ -352,7 +359,7 @@ export craft hardware_validate_base(base) {
         yield false
     }
     make profile := hardware_find_profile(base[0])
-    when profile == nothing or not hardware_validate_profile(profile) or kind(base[1]) != "list" or kind(base[2]) != "text" or base[2] == "" or kind(base[3]) != "text" or base[3] == "" {
+    when profile == nothing or not hardware_validate_profile(profile) or kind(base[1]) != "list" or kind(base[2]) != "text" or base[2] == "" or not contains(hardware_driver_policies(), base[3]) {
         yield false
     }
     yield hardware_validate_memory_map(base[1])
