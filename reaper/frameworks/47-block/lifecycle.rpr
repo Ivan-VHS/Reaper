@@ -1,0 +1,19 @@
+# Block Lifecycle Framework — Replay block states only through declared transitions.
+
+export craft valid_block_lifecycle(initial, steps, transitions) {
+when kind(initial) != "text" or size(trim(initial)) == 0 or kind(steps) != "list" or kind(transitions) != "list" { yield false }
+    craft valid_transition(item) {
+        yield kind(item) == "list" and size(item) == 2 and kind(item[0]) == "text" and kind(item[1]) == "text" and size(trim(item[0])) > 0 and size(trim(item[1])) > 0
+    }
+    craft invalid_transition(item) { yield not valid_transition(item) }
+    when size(keep(transitions, invalid_transition)) != 0 or size(unique(transitions)) != size(transitions) { yield false }
+    vary current := initial
+    vary accepted := true
+    each next_state in steps {
+        when accepted {
+            when contains(transitions, [current, next_state]) { change current := next_state }
+            otherwise { change accepted := false }
+        }
+    }
+    yield accepted
+}

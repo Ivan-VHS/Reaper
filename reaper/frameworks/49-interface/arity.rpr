@@ -1,0 +1,6 @@
+# Interface Arity Framework — Check required and provided callable arities for exact compatibility.
+
+export craft interface_arity_compatible(required, provided) {
+when kind(required) != "number" or kind(provided) != "number" { yield false }
+    yield required % 1 == 0 and provided % 1 == 0 and required >= 0 and required == provided
+}

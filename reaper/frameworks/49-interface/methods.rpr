@@ -1,0 +1,7 @@
+# Interface Method Framework — Resolve required methods absent from an implementation interface.
+
+export craft missing_interface_methods(required, provided) {
+when kind(required) != "list" or kind(provided) != "list" { yield [] }
+    craft missing(method) { yield not contains(provided, method) }
+    yield keep(required, missing)
+}

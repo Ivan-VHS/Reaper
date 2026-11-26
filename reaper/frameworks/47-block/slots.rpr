@@ -1,0 +1,7 @@
+# Block Slot Framework — Return required block slots that have no supplied implementation.
+
+export craft missing_block_slots(required, present) {
+when kind(required) != "list" or kind(present) != "list" { yield [] }
+    craft missing(slot) { yield not contains(present, slot) }
+    yield keep(required, missing)
+}

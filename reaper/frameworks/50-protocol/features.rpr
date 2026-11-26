@@ -1,0 +1,7 @@
+# Protocol Feature Framework — Return protocol extensions required by a peer but absent from local support.
+
+export craft missing_protocol_features(required, supported) {
+when kind(required) != "list" or kind(supported) != "list" { yield [] }
+    craft missing(feature) { yield not contains(supported, feature) }
+    yield keep(required, missing)
+}

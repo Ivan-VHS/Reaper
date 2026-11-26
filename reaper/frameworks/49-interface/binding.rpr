@@ -1,0 +1,14 @@
+# Interface Binding Framework — Validate output-to-input bindings between distinct endpoints with equal types.
+
+export craft valid_interface_bindings(bindings) {
+when kind(bindings) != "list" { yield false }
+    craft valid_binding(item) {
+        when kind(item) != "list" or size(item) != 6 { yield false }
+        each index in [0, 1, 2, 3, 4, 5] {
+            when kind(item[index]) != "text" or size(trim(item[index])) == 0 { yield false }
+        }
+        yield item[0] != item[3] and item[2] == item[5]
+    }
+    craft invalid_binding(item) { yield not valid_binding(item) }
+    yield size(keep(bindings, invalid_binding)) == 0 and size(unique(bindings)) == size(bindings)
+}

@@ -1,0 +1,8 @@
+# Node State Framework — Validate node state against a unique lifecycle vocabulary.
+
+export craft valid_node_state(state, allowed) {
+when kind(state) != "text" or kind(allowed) != "list" { yield false }
+    when size(trim(state)) == 0 or size(unique(allowed)) != size(allowed) { yield false }
+    craft invalid_name(item) { yield kind(item) != "text" or size(trim(item)) == 0 }
+    yield size(keep(allowed, invalid_name)) == 0 and contains(allowed, state)
+}

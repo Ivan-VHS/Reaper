@@ -1,0 +1,10 @@
+# Node Graph Framework — Validate directed node links with unique in-range endpoints and no self-links.
+
+export craft valid_node_graph(count, edges) {
+when kind(count) != "number" or count % 1 != 0 or count < 1 or kind(edges) != "list" { yield false }
+    craft valid_edge(edge) {
+        yield kind(edge) == "list" and size(edge) == 2 and kind(edge[0]) == "number" and kind(edge[1]) == "number" and edge[0] % 1 == 0 and edge[1] % 1 == 0 and edge[0] >= 0 and edge[0] < count and edge[1] >= 0 and edge[1] < count and edge[0] != edge[1]
+    }
+    craft invalid_edge(edge) { yield not valid_edge(edge) }
+    yield size(keep(edges, invalid_edge)) == 0 and size(unique(edges)) == size(edges)
+}

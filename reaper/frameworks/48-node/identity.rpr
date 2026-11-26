@@ -1,0 +1,6 @@
+# Node Identity Framework — Validate stable numeric node identity and non-negative generation.
+
+export craft valid_node_identity(identifier, generation) {
+when kind(identifier) != "number" or kind(generation) != "number" { yield false }
+    yield identifier % 1 == 0 and generation % 1 == 0 and identifier >= 0 and generation >= 0
+}

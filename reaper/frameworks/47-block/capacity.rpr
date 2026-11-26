@@ -1,0 +1,6 @@
+# Block Capacity Framework — Admit items only when they fit the non-negative block capacity.
+
+export craft admit_block_items(requested, capacity) {
+when kind(requested) != "number" or kind(capacity) != "number" { yield false }
+    yield requested % 1 == 0 and capacity % 1 == 0 and requested >= 0 and capacity >= 0 and requested <= capacity
+}

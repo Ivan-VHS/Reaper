@@ -1,0 +1,7 @@
+# Node Requirements Framework — List node prerequisites absent from the supplied dependency set.
+
+export craft missing_node_dependencies(required, available) {
+when kind(required) != "list" or kind(available) != "list" { yield [] }
+    craft missing(dependency) { yield not contains(available, dependency) }
+    yield keep(required, missing)
+}

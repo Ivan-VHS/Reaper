@@ -1,0 +1,9 @@
+# Interface Version Framework — Validate an interface version and inclusive supported minor-version interval.
+
+export craft valid_interface_version_bounds(version) {
+when kind(version) != "list" or size(version) != 3 { yield false }
+    each part in version {
+        when kind(part) != "number" or part % 1 != 0 or part < 0 { yield false }
+    }
+    yield version[0] > 0 and version[1] <= version[2]
+}

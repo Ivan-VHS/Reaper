@@ -1,0 +1,9 @@
+# Node Port Framework — Ensure node input/output port counts fit the declared connection ceiling.
+
+export craft valid_node_ports(counts) {
+when kind(counts) != "list" or size(counts) != 3 { yield false }
+    each count in counts {
+        when kind(count) != "number" or count % 1 != 0 or count < 0 { yield false }
+    }
+    yield counts[0] + counts[1] <= counts[2]
+}
