@@ -196,4 +196,57 @@ assert(scoped_task[0], "JLOM registers scoped task")
 assert(not lifecycle["add_task"](scoped_task[1], "task-1")[0], "JLOM rejects duplicate task")
 assert(lifecycle["cancel_scope"](scoped_task[1])[0], "JLOM cancels scope")
 
+
+make graph_layers := dom_frameworks["graph_layers"](
+    ["editor", "core", "compiler"],
+    [["compiler", "core"], ["editor", "compiler"]]
+)
+assert(graph_layers[0] and graph_layers[1] == [["core"], ["compiler"], ["editor"]], "GalHero emits dependency layers")
+
+make callback_removed := dom_frameworks["unsubscribe_callback"](
+    [["tick", 10, false, increment]],
+    "tick",
+    increment
+)
+assert(callback_removed[0] and callback_removed[1] == [] and callback_removed[2] == 1, "Call-and-Back unsubscribes callbacks")
+
+make provenance := dom_frameworks["resolve_configuration_provenance"](
+    [["mode", "safe"]],
+    [["mode", "strict"]],
+    [],
+    [["mode", "turbo"]]
+)
+assert(provenance[0] and provenance[1][0][2] == "request", "Stacked Options preserves value provenance")
+
+assert(dom_frameworks["validate_most_profile"]()[0], "MOST validates its exact alias profile")
+
+make atomic_snapshot := dom_frameworks["apply_snapshot_operations"](
+    empty_snapshot,
+    [["put", "theme", "amber"], ["put", "contrast", "high"]]
+)
+assert(atomic_snapshot[0] and atomic_snapshot[1][0] == 1, "Blau applies one atomic versioned batch")
+make rejected_snapshot := dom_frameworks["apply_snapshot_operations"](
+    atomic_snapshot[1],
+    [["put", "theme", "red"], ["delete", "missing-key", nothing]]
+)
+assert(not rejected_snapshot[0] and rejected_snapshot[1] == atomic_snapshot[1], "Blau rolls back invalid batch")
+
+make reachable := dom_frameworks["reachable_states"](
+    ["idle", "running", "stopped"],
+    [["idle", "start", "running"], ["running", "stop", "stopped"]],
+    "idle"
+)
+assert(reachable[0] and reachable[1] == ["idle", "running", "stopped"], "Shashio computes reachable states")
+
+assert(dom_frameworks["run_bounded_transform"](
+    [["uppercase", uppercase_text, non_empty_text]],
+    "reaper",
+    1
+)[0], "Showel enforces an explicit execution budget")
+assert(not dom_frameworks["run_bounded_transform"](
+    [["uppercase", uppercase_text, non_empty_text]],
+    "reaper",
+    0
+)[0], "Showel rejects over-budget pipelines")
+
 emit "dom foundation smoke checks passed"
