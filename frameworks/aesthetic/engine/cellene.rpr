@@ -1,0 +1,71 @@
+# Cellene — measurable design quality and aesthetic-profile evolution.
+import "vorke.rpr" as Vorke
+
+export craft assess(profile) {
+    when not Vorke["valid_profile"](profile) {
+        yield ["DesignAssessment", "blocked", ["invalid_profile"], 0]
+    }
+
+    vary issues := []
+    make access := profile[8]
+    make motion := profile[7]
+
+    when access[1] != true {
+        change issues := push(issues, "visible_focus_required")
+    }
+    when access[2] != true {
+        change issues := push(issues, "keyboard_navigation_required")
+    }
+    when access[3] != true {
+        change issues := push(issues, "reduced_motion_support_required")
+    }
+    when access[0] < 4.5 {
+        change issues := push(issues, "minimum_contrast_below_wcag_aa_target")
+    }
+    when motion[0] != access[3] {
+        change issues := push(issues, "motion_preferences_are_not_consistent")
+    }
+
+    make score := 100 - size(issues) * 20
+    when score < 0 {
+        change score := 0
+    }
+    yield ["DesignAssessment", "valid", issues, score]
+}
+
+export craft propose(current_profile, target_profile) {
+    when not Vorke["valid_profile"](current_profile) or not Vorke["valid_profile"](target_profile) {
+        yield ["AestheticError", "RPR-AE1501", "design evolution requires two valid profiles"]
+    }
+
+    vary changes := []
+    when current_profile[3] != target_profile[3] {
+        change changes := push(changes, "target")
+    }
+    when current_profile[4] != target_profile[4] {
+        change changes := push(changes, "palette")
+    }
+    when current_profile[5] != target_profile[5] {
+        change changes := push(changes, "typography")
+    }
+    when current_profile[6] != target_profile[6] {
+        change changes := push(changes, "layout")
+    }
+    when current_profile[7] != target_profile[7] {
+        change changes := push(changes, "motion")
+    }
+    when current_profile[8] != target_profile[8] {
+        change changes := push(changes, "accessibility")
+    }
+
+    when size(changes) == 0 {
+        yield ["DesignEvolutionProposal", Vorke["VERSION"], current_profile[2], [], 0, 0, "no_change"]
+    }
+
+    make benefit := size(changes) * 12
+    make risk := size(changes) * 8
+    yield [
+        "DesignEvolutionProposal", Vorke["VERSION"], current_profile[2],
+        changes, benefit, risk, "review_required"
+    ]
+}
