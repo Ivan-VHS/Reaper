@@ -103,6 +103,12 @@ class FoundationalFrameworksElevenToFifteenTests(unittest.TestCase):
         )
         self.assertEqual(
             self.run_expression(
+                'systems["construction_validate_plan"](["app", [["compile", []], ["test", ["compile", "compile"]]]])'
+            ),
+            ["false"],
+        )
+        self.assertEqual(
+            self.run_expression(
                 'systems["construction_build_order"](["app", [["compile", []], ["test", ["compile"]]]])'
             ),
             ["[compile, test]"],
