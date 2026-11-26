@@ -1,0 +1,126 @@
+# Typed HIR -> MIR -> LIR verification with source-span preservation.
+# LIR is a target-independent virtual instruction layer, not machine code.
+
+export typed_span_valid(span, source_length) {
+    when size(span) != 3 or span[0] != "SPAN" { yield false }
+    when span[1] < 0 or span[2] < span[1] or span[2] > source_length { yield false }
+    yield true
+}
+
+export craft hir_constant(type_name, value, span) {
+    yield ["HIR1", "const", type_name, value, span]
+}
+
+export craft hir_binary(operator, type_name, left, right, span) {
+    yield ["HIR1", "binary", operator, type_name, left, right, span]
+}
+
+export craft hir_name(name, type_name, span) {
+    yield ["HIR1", "load", name, type_name, span]
+}
+
+export craft hir_verify(node, source_length, depth) {
+    when depth > 256 { yield ["ERROR", "HIR nesting limit exceeded"] }
+    when size(node) < 1 or node[0] != "HIR1" { yield ["ERROR", "invalid HIR1 envelope"] }
+    when node[1] == "const" {
+        when size(node) != 5 or node[2] == "" { yield ["ERROR", "invalid HIR constant"] }
+        when not typed_span_valid(node[4], source_length) { yield ["ERROR", "invalid HIR constant span"] }
+        yield ["OK", true]
+    }
+    when node[1] == "load" {
+        when size(node) != 5 or node[2] == "" or node[3] == "" { yield ["ERROR", "invalid HIR load"] }
+        when not typed_span_valid(node[4], source_length) { yield ["ERROR", "invalid HIR load span"] }
+        yield ["OK", true]
+    }
+    when node[1] == "binary" {
+        when size(node) != 7 or node[2] == "" or node[3] == "" { yield ["ERROR", "invalid HIR binary"] }
+        when not (node[2] == "+" or node[2] == "-" or node[2] == "*" or node[2] == "/" or node[2] == "==" or node[2] == "<") {
+            yield ["ERROR", "unsupported HIR operator"]
+        }
+        make left := hir_verify(node[4], source_length, depth + 1)
+        when left[0] == "ERROR" { yield left }
+        make right := hir_verify(node[5], source_length, depth + 1)
+        when right[0] == "ERROR" { yield right }
+        when not typed_span_valid(node[6], source_length) { yield ["ERROR", "invalid HIR binary span"] }
+        yield ["OK", true]
+    }
+    yield ["ERROR", "unsupported HIR node"]
+}
+
+export craft hir_to_mir(node, next_id) {
+    when node[1] == "const" {
+        yield ["OK", [["MIR1", next_id, "CONST", node[2], [node[3]], node[4]], next_id]
+    }
+    when node[1] == "load" {
+        yield ["OK", [["MIR1", next_id, "LOAD", node[3], [node[2]], node[4]], next_id]
+    }
+    when node[1] == "binary" {
+        make left := hir_to_mir(node[4], next_id)
+        when left[0] == "ERROR" { yield left }
+        make right := hir_to_mir(node[5], left[2] + 1)
+        when right[0] == "ERROR" { yield right }
+        make operation_id := right[2] + 1
+        make instruction := ["MIR1", operation_id, "BINARY_" ++ node[2], node[3], [left[2], right[2]], node[6]]
+        yield ["OK", left[1] ++ right[1] ++ [instruction], operation_id]
+    }
+    yield ["ERROR", "HIR node has no MIR lowering"]
+}
+
+export craft mir_verify(instructions, source_length) {
+    when size(instructions) > 100000 { yield ["ERROR", "MIR instruction budget exceeded"] }
+    vary expected_id := 0
+    each instruction in instructions {
+        when size(instruction) != 6 or instruction[0] != "MIR1" { yield ["ERROR", "invalid MIR instruction"] }
+        when instruction[1] != expected_id { yield ["ERROR", "MIR ids must be dense and deterministic"] }
+        when not typed_span_valid(instruction[5], source_length) { yield ["ERROR", "MIR source span is invalid"] }
+        each input in instruction[4] {
+            when input >= instruction[1] or input < 0 { yield ["ERROR", "MIR input must dominate its consumer"] }
+        }
+        change expected_id := expected_id + 1
+    }
+    yield ["OK", size(instructions)]
+}
+
+export craft mir_to_lir(instructions) {
+    vary output := []
+    each instruction in instructions {
+        vary opcode := instruction[2]
+        when opcode == "CONST" { change opcode := "LOAD_IMMEDIATE" }
+        when opcode == "LOAD" { change opcode := "LOAD_SYMBOL" }
+        when opcode == "BINARY_+" { change opcode := "ADD_VREG" }
+        when opcode == "BINARY_-" { change opcode := "SUB_VREG" }
+        when opcode == "BINARY_*" { change opcode := "MUL_VREG" }
+        when opcode == "BINARY_/" { change opcode := "DIV_VREG" }
+        when opcode == "BINARY_==" { change opcode := "CMP_EQ_VREG" }
+        when opcode == "BINARY_<" { change opcode := "CMP_LT_VREG" }
+        when not (opcode == "LOAD_IMMEDIATE" or opcode == "LOAD_SYMBOL" or opcode == "ADD_VREG" or opcode == "SUB_VREG" or opcode == "MUL_VREG" or opcode == "DIV_VREG" or opcode == "CMP_EQ_VREG" or opcode == "CMP_LT_VREG") {
+            yield ["ERROR", "MIR opcode has no LIR lowering"]
+        }
+        change output := push(output, ["LIR1", instruction[1], opcode, instruction[3], instruction[4], instruction[5]])
+    }
+    yield ["OK", output]
+}
+
+export craft lir_verify(instructions, source_length) {
+    when size(instructions) > 100000 { yield ["ERROR", "LIR instruction budget exceeded"] }
+    vary expected_id := 0
+    each instruction in instructions {
+        when size(instruction) != 6 or instruction[0] != "LIR1" { yield ["ERROR", "invalid LIR instruction"] }
+        when instruction[1] != expected_id { yield ["ERROR", "LIR ids must be dense and deterministic"] }
+        when not typed_span_valid(instruction[5], source_length) { yield ["ERROR", "LIR source span is invalid"] }
+        change expected_id := expected_id + 1
+    }
+    yield ["OK", size(instructions)]
+}
+
+make expression := hir_binary("+", "i64", hir_constant("i64", 20, ["SPAN", 0, 2]), hir_constant("i64", 22, ["SPAN", 5, 7]), ["SPAN", 0, 7])
+assert(hir_verify(expression, 7, 0)[0] == "OK", "typed HIR expression should verify")
+make lowered := hir_to_mir(expression, 0)
+assert(lowered[0] == "OK", "HIR must lower to MIR")
+assert(mir_verify(lowered[1], 7)[0] == "OK", "MIR should verify")
+make low := mir_to_lir(lowered[1])
+assert(low[0] == "OK", "MIR must lower to virtual LIR")
+assert(lir_verify(low[1], 7)[0] == "OK", "LIR should verify")
+assert(low[1][2][5] == ["SPAN", 0, 7], "LIR must preserve source span")
+
+emit "SELFHOST_TYPED_PIPELINE_OK"
