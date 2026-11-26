@@ -6,6 +6,7 @@ export make display_name := "Joint Baby"
 export make feature_key := "RPR-FWK-002"
 export make operation_keys := ["RPR-FWK-002-F01", "RPR-FWK-002-F02", "RPR-FWK-002-F03", "RPR-FWK-002-F04", "RPR-FWK-002-F05", "RPR-FWK-002-F06"]
 export make maturity := "reference-handler-v1-partial"
+export make handler_status := "reference-source-handler-v1"
 export make native_registry := "reaper.framework-cabi.v1"
 
 export craft operation_key(index) { yield operation_keys[index] }
