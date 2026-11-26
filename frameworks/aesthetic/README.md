@@ -42,7 +42,7 @@ The profile IR is a domain-specific compiler pipeline implemented in Reaper. It 
 
 ## Typed profile contract
 
-Vorke uses versioned tagged tuples with fixed field positions. JSON Schema contracts define the external interchange format; the Reaper validators enforce the runtime boundary. This is a nominal runtime contract, not first-class structure, enum, generic or ownership syntax in Reaper.
+Vorke uses versioned tagged tuples with fixed field positions. JSON Schema contracts define the external interchange format; the Reaper validators enforce the runtime boundary. The source request requires a canonical `sha256:` plus 64-hex digest shape, but only the future repository adapter can verify that digest against a real Git object. This is a nominal runtime contract, not first-class structure, enum, generic or ownership syntax in Reaper.
 
 The profile shape is:
 
@@ -77,6 +77,6 @@ See [examples/pipeline_smoke.rpr](examples/pipeline_smoke.rpr). It loads the DAK
 
 ## Maturity and limitations
 
-Implemented source slices are listed in [manifest.v1.json](manifest.v1.json). This increment does not claim native C17 support for aesthetic modules, visual-regression tooling, live theme switching, source patch application, privileged host effects, automatic PR creation, automatic merging or release.
+Implemented source slices are listed in [manifest.v1.json](manifest.v1.json). The current Cellene assessment checks declared focus, keyboard-navigation and reduced-motion requirements; it does not calculate actual foreground/background contrast ratios or compare rendered screenshots. This increment does not claim native C17 support for aesthetic modules, visual-regression tooling, live theme switching, source patch application, privileged host effects, automatic PR creation, automatic merging or release.
 
 The smoke source has been added but has not yet been executed by a Reaper runtime in this session. JSON schemas and CI wiring also remain pending validation. These limitations are part of the contract, not hidden roadmap footnotes.
