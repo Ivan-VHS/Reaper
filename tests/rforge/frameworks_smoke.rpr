@@ -1,0 +1,146 @@
+# RForge framework contract smoke suite.
+# Run with: reaper tests/rforge/frameworks_smoke.rpr
+# The suite exercises the Reaper module API through the reference runtime.
+
+import "../../frameworks/rforge/plague_soft_frame.rpr" as plague
+import "../../frameworks/rforge/outbreak_frame_soft.rpr" as outbreak
+import "../../frameworks/rforge/pestilence_frame_saas.rpr" as pestilence
+import "../../frameworks/rforge/malady_saas_frame.rpr" as malady
+import "../../frameworks/rforge/epidemic_framework_native.rpr" as epidemic
+import "../../frameworks/rforge/miasma_native_framework.rpr" as miasma
+import "../../frameworks/rforge/pandemic_program_summary.rpr" as pandemic
+import "../../frameworks/rforge/fever_summary_program.rpr" as fever
+import "../../frameworks/rforge/scourge_system_control.rpr" as scourge
+import "../../frameworks/rforge/bane_control_system.rpr" as bane
+import "../../frameworks/rforge/blight_tunnel_justice.rpr" as blight
+import "../../frameworks/rforge/curse_justice_tunnel.rpr" as curse
+import "../../frameworks/rforge/calamity_native_realisation.rpr" as calamity
+import "../../frameworks/rforge/menace_realisation_native.rpr" as menace
+import "../../frameworks/rforge/affliction_ui_unreal.rpr" as affliction
+import "../../frameworks/rforge/cataclysm_unreal_ui.rpr" as cataclysm
+import "../../frameworks/rforge/infestation_concrete_cosmos.rpr" as infestation
+import "../../frameworks/rforge/devastation_cosmos_concrete.rpr" as devastation
+import "../../frameworks/rforge/contagion_base_space.rpr" as contagion
+import "../../frameworks/rforge/desolation_space_base.rpr" as desolation
+
+# Plague — Soft Frame
+assert(plague["soft_frame_opacity_valid"](50), "Plague opacity")
+assert(plague["soft_frame_transition_allowed"]("active", "suspended"), "Plague lifecycle")
+assert(plague["soft_frame_hit_test"](4, 4, 10, 10), "Plague hit test")
+assert(size(plague["soft_frame_create"](640, 480, 70)) == 5, "Plague frame descriptor")
+
+# Outbreak — Frame Soft
+assert(outbreak["outbreak_slot_valid"](2, 4), "Outbreak slot")
+assert(size(outbreak["outbreak_shell_create"](3, 4, 60)) == 5, "Outbreak shell")
+assert(outbreak["outbreak_attach_allowed"](1, 4, false), "Outbreak attach")
+assert(not outbreak["outbreak_attach_allowed"](1, 4, true), "Outbreak duplicate attach")
+
+# Pestilence — Frame SaaS
+assert(size(pestilence["pestilence_frame_bind"](11, 22)) == 2, "Pestilence tenant bind")
+assert(pestilence["pestilence_tenant_access"](11, 11), "Pestilence tenant isolation")
+assert(not pestilence["pestilence_tenant_access"](11, 12), "Pestilence cross-tenant denial")
+assert(pestilence["pestilence_quota_valid"](4, 8), "Pestilence quota")
+
+# Malady — SaaS Frame
+assert(malady["malady_plan_frame_limit"]("pro") == 20, "Malady plan limit")
+assert(malady["malady_feature_allowed"]("enterprise", "governance"), "Malady feature gate")
+assert(malady["malady_route_admit"]("pro", "tenant-a", "frame-a", 3, "collaboration"), "Malady route")
+
+# Epidemic — Framework native
+assert(epidemic["epidemic_abi_valid"]("DABI64-v1", 64, "little"), "Epidemic DABI64")
+assert(epidemic["epidemic_scalar_width_valid"](64), "Epidemic scalar width")
+assert(epidemic["epidemic_region_valid"](32, 64, 16), "Epidemic region")
+assert(not epidemic["epidemic_region_valid"](33, 64, 16), "Epidemic alignment rejection")
+
+# Miasma — native Framework
+assert(miasma["miasma_host_compatible"]("DABI64-v1", "DABI64-v1"), "Miasma ABI")
+assert(miasma["miasma_lifecycle_transition"]("loaded", "ready"), "Miasma lifecycle")
+assert(miasma["miasma_memory_admit"](64, 128, 256), "Miasma memory budget")
+assert(not miasma["miasma_memory_admit"](129, 128, 256), "Miasma memory rejection")
+
+# Pandemic — Program Summary
+assert(pandemic["pandemic_counts_valid"](10, 7, 1, 1), "Pandemic counters")
+assert(pandemic["pandemic_outcome"](10, 10, 0, 0) == "passed", "Pandemic outcome")
+assert(pandemic["pandemic_remaining"](10, 7, 1, 1) == 1, "Pandemic remaining")
+assert(size(pandemic["pandemic_summary"](10, 7, 1, 1)) == 7, "Pandemic summary")
+
+# Fever — Summary Program
+assert(fever["fever_severity"](1, 0) == "critical", "Fever severity")
+assert(fever["fever_summary_valid"](10, 1, 3), "Fever summary bounds")
+assert(size(fever["fever_aggregate"](1, 2, 0, 1)) == 3, "Fever aggregation")
+assert(not fever["fever_release_allowed"](1, 0, false), "Fever release gate")
+
+# Scourge — System Control
+assert(scourge["scourge_transition_allowed"]("running", "paused", false), "Scourge pause")
+assert(scourge["scourge_command_admit"]("stopped", "start", true, true), "Scourge guarded start")
+assert(not scourge["scourge_command_admit"]("stopped", "start", true, false), "Scourge unguarded start")
+assert(size(scourge["scourge_system_limits"](8, 30)) == 2, "Scourge limits")
+
+# Bane — Control System
+assert(bane["bane_rule_matches"]("ready", "ready", true), "Bane rule")
+assert(bane["bane_action_safe"]("disable", false, true), "Bane guarded action")
+assert(not bane["bane_action_safe"]("reset", true, true), "Bane locked action")
+assert(size(bane["bane_control_plan"]("enabled", "disable", false, true)) == 4, "Bane plan")
+
+# Blight — Tunnel Justice
+assert(blight["blight_endpoint_valid"](1, 2), "Blight endpoint")
+assert(blight["blight_clearance_sufficient"](4, 3), "Blight clearance")
+assert(blight["blight_justice_decision"](4, 3, true) == "allow", "Blight decision")
+assert(blight["blight_route_admit"](1, 2, 4, 3, true), "Blight route")
+
+# Curse — Justice Tunnel
+assert(curse["curse_case_valid"](10, 22, 1), "Curse case")
+assert(curse["curse_disposition"](true, 0, false) == "review", "Curse evidence review")
+assert(curse["curse_tunnel_release_allowed"]("allow", true), "Curse signed release")
+assert(size(curse["curse_audit_record"](10, "deny", 7)) == 4, "Curse audit record")
+
+# Calamity — native Realisation
+assert(calamity["calamity_stage_transition"]("typed", "ir_verified"), "Calamity stage order")
+assert(not calamity["calamity_stage_transition"]("source", "linked"), "Calamity skipped stage")
+assert(calamity["calamity_realisation_ready"](true, true, true, true, true), "Calamity readiness")
+assert(calamity["calamity_native_emit_allowed"](true, true, true, true), "Calamity native gate")
+
+# Menace — Realisation native
+make menace_plan := menace["menace_realisation_plan"](true, true, true)
+assert(menace_plan[1] == "ready", "Menace plan")
+assert(menace["menace_native_commit_allowed"](menace_plan[1], true, true), "Menace commit")
+assert(menace["menace_retry_allowed"](0, 3, "transient"), "Menace retry")
+assert(not menace["menace_retry_allowed"](0, 3, "permanent"), "Menace permanent failure")
+
+# Affliction — UI Unreal
+assert(affliction["affliction_widget_valid"](1, 320, 200), "Affliction widget")
+assert(affliction["affliction_event_allowed"](true, true, true), "Affliction event")
+assert(affliction["affliction_layout_valid"](0, 0, 100, 100, 640, 480), "Affliction layout")
+assert(affliction["affliction_unreal_bridge_compatible"](5, 5), "Affliction bridge")
+
+# Cataclysm — Unreal UI
+assert(cataclysm["cataclysm_engine_supported"](5, 5, 5), "Cataclysm engine")
+assert(cataclysm["cataclysm_widget_transition"]("bound", "visible"), "Cataclysm lifecycle")
+assert(cataclysm["cataclysm_batch_valid"](8, 16, 24, 64), "Cataclysm batch")
+assert(cataclysm["cataclysm_ui_commit_allowed"](true, true, true), "Cataclysm commit")
+
+# Infestation — Concrete Cosmos
+assert(infestation["infestation_entity_valid"](10, "mesh", 3), "Infestation entity")
+assert(infestation["infestation_link_valid"](10, 11, "contains"), "Infestation link")
+assert(infestation["infestation_depth_valid"](4, 8), "Infestation depth")
+assert(infestation["infestation_attach_allowed"](3, 10, 4, 8, false), "Infestation attach")
+
+# Devastation — Cosmos Concrete
+assert(devastation["devastation_cell_valid"](2, 1, 0, 4, 3, 2), "Devastation cell")
+assert(devastation["devastation_cell_index"](2, 1, 0, 4, 3, 2) == 6, "Devastation cell index")
+assert(devastation["devastation_bounds_valid"](0, 0, 0, 10, 10, 10), "Devastation bounds")
+assert(devastation["devastation_materialise_allowed"](true, true, true), "Devastation materialisation")
+
+# Contagion — base Space
+assert(contagion["contagion_point_valid"](12, -4, 99), "Contagion point")
+assert(contagion["contagion_distance_squared"](0, 0, 0, 3, 4, 0) == 25, "Contagion distance")
+assert(contagion["contagion_inside_box"](2, 2, 2, 0, 0, 0, 4, 4, 4), "Contagion bounds")
+assert(contagion["contagion_translate"](4, 3) == 7, "Contagion translate")
+
+# Desolation — Space base
+assert(desolation["desolation_basis_valid"](1, 2, 3), "Desolation basis")
+assert(desolation["desolation_local_to_world"](2, 10, 3) == 16, "Desolation local-to-world")
+assert(desolation["desolation_world_to_local"](16, 10, 3) == 2, "Desolation world-to-local")
+assert(desolation["desolation_base_compatible"](1, 3), "Desolation base")
+
+emit "RForge framework smoke suite: 80 assertions passed."
