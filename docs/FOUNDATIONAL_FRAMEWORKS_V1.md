@@ -75,7 +75,7 @@ The six-value input to `foundation_validate_budget` is ordered as:
 
 `[steps, call_depth, collection_items, text_length, heap_bytes, open_resources]`
 
-It requires six positive numeric limits. The heap figure is accounting, not a process memory sandbox. Host-dispatch and device operations remain adapter- and capability-gated.
+It requires six positive whole-number limits. The heap figure is accounting, not a process memory sandbox. Host-dispatch and device operations remain adapter- and capability-gated.
 
 ### Architecture
 
