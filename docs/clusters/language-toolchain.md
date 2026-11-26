@@ -17,6 +17,7 @@ This hub groups related specifications and implementation references. The linked
 - [MOST 147 FEATURE REGISTRY](../MOST_147_FEATURE_REGISTRY.md)
 - [MOST 400 COMBINATORIAL MATRIX](../MOST_400_COMBINATORIAL_MATRIX.md)
 - [MOST FUNCTIONS 666](../MOST_FUNCTIONS_666.md)
+- [FUNCTION CATEGORIES 666](../FUNCTION_CATEGORIES_666.md)
 - [MOST IMPLEMENTATION STATUS](../MOST_IMPLEMENTATION_STATUS.md)
 - [MOST LANGUAGE SPEC](../MOST_LANGUAGE_SPEC.md)
 - [MOST RUSSIAN 66 RULES](../MOST_RUSSIAN_66_RULES.md)
@@ -36,3 +37,10 @@ This hub groups related specifications and implementation references. The linked
 - Follow links within this cluster when a shared compiler, runtime, IDE or quality contract is involved.
 - Use the central map for cross-cluster navigation and project boundaries.
 - Update this hub and the central catalog whenever a page is added, moved or retired.
+
+
+## Systems and hardware language
+
+- [HARDWARE_LANGUAGE.md](../HARDWARE_LANGUAGE.md) — language target, typed memory and effects, ownership, checked MMIO, native compiler milestones and hardware qualification.
+- [NATIVE_COMPILER.md](../NATIVE_COMPILER.md) — current scalar AOT boundary and explicit unsupported constructs.
+- [EMBEDDED_C_WORKBENCH.md](../EMBEDDED_C_WORKBENCH.md) — MCU profiles, linker generation and cross-compiler invocation boundaries.

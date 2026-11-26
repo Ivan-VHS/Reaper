@@ -29,6 +29,14 @@ PALETTES: dict[str, dict[str, str]] = {
         "border": "#31516F", "focus": "#8AB6FF",
         "selection": "#244F82", "selection_fg": "#FFFFFF", "disabled": "#9BAFC4",
     },
+    "mora": {
+        "bg": "#211913", "surface": "#33261D", "elevated": "#493326",
+        "fg": "#FFF3E2", "secondary": "#E7D2B8", "muted": "#C4A98A",
+        "heading": "#FFD9A1", "blue": "#D58B3D", "blue_hover": "#EAA653", "on_blue": "#211913",
+        "red": "#B64A40", "red_hover": "#C85C50", "on_red": "#FFF3E2",
+        "border": "#75543A", "focus": "#F3C16B",
+        "selection": "#60442E", "selection_fg": "#FFF3E2", "disabled": "#B09A83",
+    },
 }
 
 # Preserve the previously shipped atmospheric theme presets alongside the
@@ -83,6 +91,16 @@ def contrast_ratio(foreground: str, background: str) -> float:
 def _install_semantic_status_tokens() -> None:
     """Add high-contrast status roles without changing the product's blue/red identity."""
     for theme_name, palette in PALETTES.items():
+        if theme_name == "mora":
+            palette.update({
+                "success": "#9EC39A", "warning": "#F0BE73",
+                "error": "#EF8E7C", "info": "#E8C99F",
+                "brand": "#D58B3D", "brand_hover": "#EAA653",
+                "on_brand": "#211913", "brand_secondary": "#526347",
+                "on_brand_secondary": "#FFF3E2",
+            })
+            continue
+
         dark = theme_name in {"dark", "night"}
         palette.update({
             # Status meaning is carried by text/icon; hues stay inside the shared brand canon.
@@ -90,6 +108,13 @@ def _install_semantic_status_tokens() -> None:
             "warning": "#FF7D78" if dark else "#B51A10",
             "error": "#FF7D78" if dark else "#B51A10",
             "info": "#FFFFFF" if dark else "#0A1E46",
+        })
+        palette.update({
+            "brand": "#A78BFA" if dark else "#5B43B5",
+            "brand_hover": "#C1AEFF" if dark else "#49359D",
+            "on_brand": "#1D1730" if dark else "#FFFFFF",
+            "brand_secondary": "#38D4B7" if dark else "#006F68",
+            "on_brand_secondary": "#09231F" if dark else "#FFFFFF",
         })
 
 
@@ -99,7 +124,8 @@ def palette_contrast_issues(palette: dict[str, str]) -> list[str]:
         ("fg", "bg"), ("fg", "surface"), ("muted", "bg"),
         ("heading", "bg"), ("on_blue", "blue"), ("on_red", "red"),
         ("selection_fg", "selection"), ("success", "bg"),
-        ("warning", "bg"), ("error", "bg"), ("info", "bg"),
+        ("warning", "bg"), ("error", "bg"), ("info", "bg"), ("on_brand", "brand"),
+        ("on_brand_secondary", "brand_secondary"),
     )
     issues = []
     for foreground, background in required_pairs:
@@ -142,9 +168,9 @@ def _load_theme(app_key: str) -> str:
     try:
         payload = json.loads(_settings_path(app_key).read_text(encoding="utf-8"))
         theme = payload.get("theme") if isinstance(payload, dict) else None
-        return theme if theme in PALETTES else "light"
+        return theme if theme in PALETTES else "mora"
     except (OSError, ValueError, TypeError):
-        return "light"
+        return "mora"
 
 
 def _save_theme(app_key: str, theme: str) -> None:
@@ -193,14 +219,14 @@ def palette_for(mode: str = "system", *, system_dark: bool | None = None) -> dic
     if requested == "system":
         requested = "dark" if (_system_dark() if system_dark is None else system_dark) else "light"
     if requested not in PALETTES:
-        raise ValueError("Theme must be 'system', 'light', 'dark', 'dawn', 'sunset' or 'night'")
+        raise ValueError("Theme must be 'system', 'light', 'dark', 'mora', 'dawn', 'sunset' or 'night'")
     result = dict(PALETTES[requested])
     issues = palette_contrast_issues(result)
     if issues:
         raise ValueError("Theme palette fails UI/UX 40026 contrast contract: " + "; ".join(issues))
     result.update({
         "mode": requested, "page": result["bg"], "surface_alt": result["elevated"],
-        "text": result["fg"], "accent": result["blue"], "accent_hover": result["blue_hover"],
+        "text": result["fg"], "accent": result["brand"], "accent_hover": result["brand_hover"],
         "danger": result["red"], "editor": result["surface"],
         "editor_text": result["fg"], "log": result["surface"], "log_text": result["fg"],
     })
@@ -293,14 +319,14 @@ def apply_theme(root: tk.Misc, app_key: str, theme: str | None = None) -> str:
         foreground=[("disabled", palette["disabled"]), ("pressed", palette["selection_fg"]), ("active", palette["fg"])],
     )
     style.configure(
-        "Primary.TButton", background=palette["blue"], foreground=palette["on_blue"],
-        bordercolor=palette["blue"], lightcolor=palette["blue"], darkcolor=palette["blue"],
+        "Primary.TButton", background=palette["brand"], foreground=palette["on_brand"],
+        bordercolor=palette["brand"], lightcolor=palette["brand"], darkcolor=palette["brand"],
         padding=(15, 13),
     )
     style.map(
         "Primary.TButton",
-        background=[("disabled", palette["elevated"]), ("pressed", palette["blue"]), ("active", palette["blue_hover"])],
-        foreground=[("disabled", palette["disabled"]), ("!disabled", palette["on_blue"])],
+        background=[("disabled", palette["elevated"]), ("pressed", palette["brand"]), ("active", palette["brand_hover"])],
+        foreground=[("disabled", palette["disabled"]), ("!disabled", palette["on_brand"])],
     )
     style.configure(
         "Danger.TButton", background=palette["surface"], foreground=palette["fg"],
@@ -330,7 +356,7 @@ def apply_theme(root: tk.Misc, app_key: str, theme: str | None = None) -> str:
     style.configure("TLabelFrame", background=palette["bg"], foreground=palette["fg"], bordercolor=palette["border"])
     style.configure("TLabelFrame.Label", background=palette["bg"], foreground=palette["heading"], font=("Georgia", 10, "bold"))
     style.configure("TSeparator", background=palette["border"])
-    style.configure("Horizontal.TProgressbar", background=palette["blue"], troughcolor=palette["elevated"])
+    style.configure("Horizontal.TProgressbar", background=palette["brand"], troughcolor=palette["elevated"])
     _paint_native_widgets(root, palette)
     _save_theme(app_key, selected)
     return selected
@@ -338,7 +364,7 @@ def apply_theme(root: tk.Misc, app_key: str, theme: str | None = None) -> str:
 
 def toggle_theme(root: tk.Misc, app_key: str) -> str:
     current = getattr(root, "_anatidae_theme", _load_theme(app_key))
-    order = ("dawn", "sunset", "night")
+    order = ("mora", "dawn", "sunset", "night")
     if current in {"light", "dark"}:
         current = "night" if current == "dark" else "dawn"
     next_mode = order[(order.index(current) + 1) % len(order)] if current in order else order[0]

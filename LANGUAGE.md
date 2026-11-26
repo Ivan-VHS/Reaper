@@ -1,6 +1,6 @@
-# Reaper language — quick reference
+# Reaper systems language — quick reference
 
-Reaper 0.2 is an expression-oriented language with a Python reference runtime, bytecode VM, developer tooling, and an experimental scalar AOT route through C17.
+Reaper is moving toward a low-level systems and hardware language for firmware, embedded software and platform development. The current product keeps its expression-oriented .rpr language and Python compatibility runtime while the native compiler and hardware contracts are expanded. See [the systems-language architecture](docs/HARDWARE_LANGUAGE.md) for the migration plan and implemented boundaries.
 
 | Syntax | Meaning |
 |---|---|
@@ -19,7 +19,7 @@ make total := [1, 2, 3] :: map(double) :: sum()
 emit "total = " ++ text(total)
 ```
 
-Rules: explicit effects; no implicit file/network/clock access in ordinary expressions; no silent coercion; bounded steps, call depth and collections. See [runtime limits](docs/RUNTIME_PLATFORM.md).
+Rules: explicit effects; no implicit file/network/clock access in ordinary expressions; no silent coercion; bounded steps, call depth and collections. See [runtime limits](docs/RUNTIME_PLATFORM.md).\n\n## Static type analysis\n\nThe optional `reaper typecheck program.rpr` command runs conservative type inference over the existing AST. It checks supported numeric and text operators, collection indexes and iteration, mutable bindings, and known call arity. Unknown values at module and host boundaries remain `Any`. This is a first semantic-analysis slice, not yet a complete sound type system with source annotations, user generics, null-flow refinement or exhaustive pattern matching. See [Polyglot capability layer](docs/POLYGLOT_CAPABILITY_LAYER.md) for the capability map and implementation status.
 
 ## Integrated product layer
 
@@ -34,4 +34,4 @@ python -m reaper program.rpr --emit-c program.c
 python -m reaper program.rpr --native program
 ```
 
-Lists, `each`, collection pipelines, closures, modules, decimals, `nothing`, dynamic dispatch, async/effects, and arbitrary FFI are deliberately outside this first native slice. The Python runtime remains authoritative for those constructs. See [Native AOT Compiler](docs/NATIVE_COMPILER.md).
+Lists, `each`, collection pipelines, closures, modules, decimals, `nothing`, dynamic dispatch, async/effects, and arbitrary FFI are deliberately outside this first native slice. The Python runtime remains authoritative for those constructs. The C17 MMIO adapter validates descriptors and capability grants through a host-supplied bus; it does not map physical memory. QCS remains a separate validation frontend. See [Native AOT Compiler](docs/NATIVE_COMPILER.md) and [Hardware Language](docs/HARDWARE_LANGUAGE.md).

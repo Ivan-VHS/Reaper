@@ -16,6 +16,14 @@ class LanguageServiceTests(unittest.TestCase):
         self.assertTrue(any(item.code == "RPR-W0001" for item in analysis.diagnostics))
         self.assertTrue(any(item.code == "RPR-E0013" for item in analysis.diagnostics))
 
+    def test_local_type_diagnostics_are_published_with_source_spans(self):
+        uri = "file:///typed.rpr"
+        self.service.open(uri, 'emit "text" * 2')
+        analysis = self.service.analyze(uri)
+        diagnostic = next(item for item in analysis.diagnostics if item.code == "RPR-T0004")
+        self.assertEqual(diagnostic.severity, "error")
+        self.assertEqual(diagnostic.span.line, 0)
+
     def test_cross_document_definition_and_references(self):
         declaration_uri = "file:///project/model.rpr"
         usage_uri = "file:///project/main.rpr"

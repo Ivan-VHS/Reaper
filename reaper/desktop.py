@@ -13,6 +13,7 @@ import subprocess
 import threading
 from pathlib import Path
 import tkinter as tk
+from tkinter import font as tkfont
 from tkinter import filedialog, messagebox, simpledialog, ttk
 from tkinter.scrolledtext import ScrolledText
 from typing import Any
@@ -23,13 +24,14 @@ from reaper.embedded import (
     build_project as embedded_build_project,
     init_project as embedded_init_project,
     inspect_project as embedded_inspect_project,
+    list_profiles as list_embedded_profiles,
 )
 from reaper.errors import ReaperError
 from reaper.parser import parse
 from reaper.runtime import Interpreter
 from reaper.debugger import DebuggerStopped, RuntimeDebugger
 from reaper.plugins import PluginError, PluginManager
-from reaper.ide_support import SOURCE_EXTENSIONS, highlight_spans, iter_project_entries
+from reaper.ide_support import SOURCE_EXTENSIONS, highlight_spans, iter_project_entries, normalize_diagnostics
 from reaper.language_service import LanguageService
 from reaper.codex66 import export_json as export_codex66_json
 from reaper.codex66_ui import Codex66Window
@@ -95,7 +97,15 @@ class ReaperStudio(tk.Tk):
         except tk.TclError:
             pass
         style.configure("Treeview", rowheight=24)
-        style.configure("PaneTitle.TLabel", font=("Segoe UI Semibold", 9))
+        try:
+            installed = {family.casefold(): family for family in tkfont.families(self)}
+        except tk.TclError:
+            installed = {}
+        heading_font = next(
+            (installed[name.casefold()] for name in ("Caveat", "Marck Script", "Lobster") if name.casefold() in installed),
+            "Segoe UI Semibold",
+        )
+        style.configure("PaneTitle.TLabel", font=(heading_font, 12))
         style.configure("Toolbar.TButton", padding=(9, 5))
 
     def _build_menu(self) -> None:
@@ -125,10 +135,10 @@ class ReaperStudio(tk.Tk):
         menu.add_cascade(label="Правка", menu=edit_menu)
 
         run_menu = tk.Menu(menu, tearoff=False)
-        run_menu.add_command(label="Проверить исходный код", command=self.check_source, accelerator="Shift+F5")
+        run_menu.add_command(label="Проверить синтаксис и типы", command=self.check_source, accelerator="Shift+F5")
         run_menu.add_command(label="Запустить", command=self.run_source, accelerator="F5")
         run_menu.add_command(label="Отладка с первого шага", command=self.debug_source)
-        run_menu.add_command(label="Точка останова", command=self.toggle_breakpoint, accelerator="F9")
+        run_menu.add_command(label="Точка остановки", command=self.toggle_breakpoint, accelerator="F9")
         run_menu.add_command(label="Продолжить", command=self.continue_debug)
         run_menu.add_command(label="Шаг", command=self.step_debug)
         run_menu.add_command(label="Остановить отладку", command=self.stop_debug)
@@ -144,10 +154,12 @@ class ReaperStudio(tk.Tk):
         menu.add_cascade(label="NOO TAH / Node.js", menu=node_menu)
 
         embedded_menu = tk.Menu(menu, tearoff=False)
-        embedded_menu.add_command(label="Создать проект встроенной C…", command=self.embedded_new_project)
+        embedded_menu.add_command(label="Обзор системного языка и MMIO…", command=self.show_hardware_overview)
+        embedded_menu.add_separator()
+        embedded_menu.add_command(label="Создать embedded-проект…", command=self.embedded_new_project)
         embedded_menu.add_command(label="Проверить профиль микроконтроллера…", command=self.embedded_inspect_project)
         embedded_menu.add_command(label="Собрать прошивку…", command=self.embedded_build)
-        menu.add_cascade(label="Встроенная C", menu=embedded_menu)
+        menu.add_cascade(label="Системы / Hardware", menu=embedded_menu)
 
         plugin_menu = tk.Menu(menu, tearoff=False)
         plugin_menu.add_command(label="Менеджер плагинов…", command=self.show_plugins)
@@ -199,6 +211,9 @@ class ReaperStudio(tk.Tk):
             ("Проверить исходный код", self.check_source),
             ("Запустить программу", self.run_source),
             ("Запустить отладку", self.debug_source),
+            ("Системный язык и MMIO", self.show_hardware_overview),
+            ("Создать embedded-проект", self.embedded_new_project),
+            ("Проверить профиль MCU", self.embedded_inspect_project),
             ("Менеджер плагинов", self.show_plugins),
             ("Настройки движения", self.show_motion_settings),
             ("CODEX-66 — каталог возможностей", self.show_codex66),
@@ -648,7 +663,7 @@ class ReaperStudio(tk.Tk):
         ttk.Button(bar, text="JS Debug", command=lambda: self.run_node_source(inspect=True), style="Toolbar.TButton").pack(side="left", padx=3)
         ttk.Button(bar, text="JS Stop", command=self.stop_node_source, style="Toolbar.TButton").pack(side="left", padx=3)
         ttk.Button(bar, text="Отладка", command=self.debug_source, style="Toolbar.TButton").pack(side="left", padx=3)
-        ttk.Button(bar, text="Точка останова", command=self.toggle_breakpoint, style="Toolbar.TButton").pack(side="left", padx=3)
+        ttk.Button(bar, text="Точка остановки", command=self.toggle_breakpoint, style="Toolbar.TButton").pack(side="left", padx=3)
         ttk.Button(bar, text="Атмосфера", command=self.toggle_ui_theme, style="Toolbar.TButton").pack(side="left", padx=3)
         ttk.Button(bar, text="CODEX-66", command=self.show_codex66, style="Toolbar.TButton").pack(side="left", padx=(7, 3))
         self.file_label = tk.StringVar(value="Untitled.rpr")
@@ -708,12 +723,36 @@ class ReaperStudio(tk.Tk):
         output_page = ttk.Frame(tabs)
         variables_page = ttk.Frame(tabs)
         stack_page = ttk.Frame(tabs)
+        types_page = ttk.Frame(tabs)
         tabs.add(output_page, text="Вывод")
         tabs.add(variables_page, text="Переменные")
         tabs.add(stack_page, text="Стек вызовов")
+        tabs.add(types_page, text="Типы / Диагностика")
         self.output_tabs = tabs
         self.output = ScrolledText(output_page, height=9, wrap="word", font=("Cascadia Code", 9), state="disabled")
         self.output.pack(fill="both", expand=True)
+        self.type_view = ttk.Treeview(
+            types_page,
+            columns=("file", "line", "column", "severity", "code", "message"),
+            show="headings",
+            selectmode="browse",
+        )
+        for column, heading, width, stretch in (
+            ("file", "Файл", 190, False),
+            ("line", "Строка", 65, False),
+            ("column", "Колонка", 70, False),
+            ("severity", "Уровень", 95, False),
+            ("code", "Код", 110, False),
+            ("message", "Диагностика", 550, True),
+        ):
+            self.type_view.heading(column, text=heading)
+            self.type_view.column(
+                column, width=width,
+                anchor="w" if column in {"file", "code", "message"} else "center",
+                stretch=stretch,
+            )
+        self.type_view.pack(fill="both", expand=True)
+        self.type_view.bind("<Double-1>", self._open_type_diagnostic)
         self.variables_view = ttk.Treeview(variables_page, columns=("value",), show="tree headings")
         self.variables_view.heading("#0", text="Имя")
         self.variables_view.heading("value", text="Значение")
@@ -912,18 +951,87 @@ class ReaperStudio(tk.Tk):
         self.output.delete("1.0", "end")
         self.output.configure(state="disabled")
 
+    def _open_type_diagnostic(self, _event: tk.Event | None = None) -> None:
+        selected = self.type_view.selection()
+        if not selected:
+            return
+        values = self.type_view.item(selected[0], "values")
+        if not values:
+            return
+        try:
+            line = max(1, int(values[1]))
+            column = max(1, int(values[2]))
+            location = f"{line}.{column - 1}"
+            self.editor.mark_set("insert", location)
+            self.editor.see(location)
+            self.editor.focus_set()
+            self._update_cursor_status()
+        except (tk.TclError, ValueError, IndexError):
+            return
+
+    def _show_type_diagnostics(
+        self,
+        diagnostics: list[Any],
+        *,
+        source_file: str | Path | None = None,
+    ) -> int:
+        self.type_view.delete(*self.type_view.get_children())
+        errors = 0
+        records = normalize_diagnostics(
+            source_file if source_file is not None else self._source_name(),
+            diagnostics,
+        )
+        for index, item in enumerate(records):
+            if item.severity == "error":
+                errors += 1
+            self.type_view.insert(
+                "",
+                "end",
+                iid=f"type-{index}",
+                values=(
+                    item.file,
+                    item.start_line,
+                    item.start_column,
+                    item.severity.upper(),
+                    item.code,
+                    item.message,
+                ),
+            )
+        return errors
+
     def check_source(self) -> None:
         if self.current_file and self.current_file.suffix.lower() in {".js", ".mjs", ".cjs"}:
             self.check_node_source()
             return
         try:
-            parse(self._source(), self._source_name())
+            tree = parse(self._source(), self._source_name())
+            from reaper.typecheck import TypeChecker
+
+            checked = TypeChecker(self._source_name()).check(tree)
         except ReaperError as error:
+            self.type_view.delete(*self.type_view.get_children())
             self._append_output(f"CHECK FAILED: {error}")
             self.status.set("Проверка исходного кода не пройдена")
+            self.output_tabs.select(0)
             return
-        self._append_output(f"CHECK OK: {self._source_name()} — синтаксис корректен")
-        self.status.set("Проверка пройдена")
+
+        error_count = self._show_type_diagnostics(list(checked.diagnostics), source_file=self._source_name())
+        self._append_output(
+            f"CHECK: {self._source_name()} — синтаксис корректен; "
+            f"типовых ошибок: {error_count}; диагностик: {len(checked.diagnostics)}"
+        )
+        if error_count:
+            for item in checked.diagnostics:
+                if item.severity == "error":
+                    self._append_output(
+                        f"{item.code} ({item.line}:{item.column}): {item.message}"
+                    )
+            self.output_tabs.select(3)
+            self.status.set(f"Проверка типов не пройдена · {error_count} ошибок")
+            return
+
+        self.output_tabs.select(0)
+        self.status.set("Синтаксис и поддерживаемые типы проверены")
 
     def run_source(self) -> None:
         if self.current_file and self.current_file.suffix.lower() in {".js", ".mjs", ".cjs"}:
@@ -979,11 +1087,11 @@ class ReaperStudio(tk.Tk):
         line = int(self.editor.index("insert").split(".")[0])
         if line in self.breakpoints:
             self.breakpoints.remove(line)
-            self.status.set(f"Точка останова удалена: {line}")
+            self.status.set(f"Точка остановки удалена: {line}")
         else:
             self.breakpoints.add(line)
-            self.status.set(f"Точка останова добавлена: {line}")
-        self._append_output("Точки останова: " + (", ".join(map(str, sorted(self.breakpoints))) or "нет"))
+            self.status.set(f"Точка остановки добавлена: {line}")
+        self._append_output("Точки остановки: " + (", ".join(map(str, sorted(self.breakpoints))) or "нет"))
 
     def _pause_for_debug(self, snapshot: Any) -> None:
         self.variables_view.delete(*self.variables_view.get_children())
@@ -1260,6 +1368,87 @@ class ReaperStudio(tk.Tk):
         except (tk.TclError, ValueError):
             pass
         self._redraw_line_numbers()
+
+    def show_hardware_overview(self) -> None:
+        """Show supported embedded profiles and the current hardware boundary."""
+        window = tk.Toplevel(self)
+        window.title("Reaper — Systems & Hardware")
+        window.geometry("880x560")
+        window.minsize(720, 440)
+        window.transient(self)
+
+        frame = ttk.Frame(window, padding=16)
+        frame.pack(fill="both", expand=True)
+        ttk.Label(
+            frame,
+            text="Системное программирование и аппаратные цели",
+            style="PaneTitle.TLabel",
+        ).pack(anchor="w", pady=(0, 6))
+        ttk.Label(
+            frame,
+            text=(
+                "Reaper развивается как системный язык для firmware, embedded и платформенного ПО. "
+                "Текущие профили помогают подготовить проект и linker layout; они не означают, "
+                "что плата подключена или физическое устройство доступно."
+            ),
+            wraplength=820,
+            justify="left",
+        ).pack(anchor="w", pady=(0, 14))
+
+        columns = ("target", "architecture", "clock", "flash", "sram", "compiler")
+        table = ttk.Treeview(frame, columns=columns, show="headings", height=6)
+        headings = {
+            "target": ("Профиль", 170),
+            "architecture": ("Архитектура", 130),
+            "clock": ("Частота", 110),
+            "flash": ("FLASH", 160),
+            "sram": ("SRAM", 150),
+            "compiler": ("Компилятор", 150),
+        }
+        for column, (label, width) in headings.items():
+            table.heading(column, text=label)
+            table.column(column, width=width, anchor="w")
+        table.pack(fill="x", expand=False)
+
+        for profile in list_embedded_profiles():
+            flash = profile["flash"]
+            sram = profile["sram"]
+            table.insert("", "end", values=(
+                profile["id"],
+                profile["architecture"],
+                f"{profile['clock_hz']:,} Hz",
+                f"0x{flash['base']:08X} · {flash['size']:,} B",
+                f"0x{sram['base']:08X} · {sram['size']:,} B",
+                profile["compiler"],
+            ))
+
+        ttk.Separator(frame).pack(fill="x", pady=14)
+        status = (
+            "ДОСТУПНО: MCU-профили, проверка Flash/SRAM, генерация linker.ld и вызов "
+            "установленного cross-compiler; MMIO descriptor API с проверкой границ, "
+            "выравнивания, доступа и capabilities через host adapter.\n\n"
+            "ОГРАНИЧЕНИЯ: Studio пока не читает физические регистры в реальном времени, "
+            "не регистрирует IRQ, не выделяет DMA-буферы, не устанавливает драйверы "
+            "и не прошивает платы автоматически. Текущий MMIO API сам по себе не "
+            "отображает физическую память."
+        )
+        details = ScrolledText(frame, height=7, wrap="word", padx=10, pady=8)
+        details.pack(fill="both", expand=True)
+        details.insert("1.0", status)
+        details.configure(state="disabled")
+
+        buttons = ttk.Frame(frame)
+        buttons.pack(fill="x", pady=(12, 0))
+        ttk.Button(
+            buttons, text="Создать embedded-проект",
+            command=lambda: (window.destroy(), self.embedded_new_project()),
+        ).pack(side="left")
+        ttk.Button(
+            buttons, text="Проверить существующий профиль",
+            command=lambda: (window.destroy(), self.embedded_inspect_project()),
+        ).pack(side="left", padx=(8, 0))
+        ttk.Button(buttons, text="Закрыть", command=window.destroy).pack(side="right")
+        window.grab_set()
 
     def embedded_new_project(self) -> None:
         directory = filedialog.askdirectory(parent=self, title="Создать проект встроенной C")
