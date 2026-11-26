@@ -12,6 +12,7 @@ Start with the [project README](../README.md) for installation, first commands a
 - [DABI64 Desktop Host v1](DABI64_DESKTOP_HOST_V1.md)
 - [Implementation roadmap](IMPLEMENTATION_ROADMAP.md)
 - [Typed structures and target platforms v1](TYPED_STRUCTURES_AND_PLATFORMS_V1.md)
+- [Compiler foundations v1](COMPILER_FOUNDATIONS_V1.md) — typed signatures, Result/Option, effects, ownership, IR, packages, and bootstrap gates.
 - [Studio and IDE](REAPER_IDE.md)
 - [NEXUS federation profile](NEXUS_FEDERATION_PROFILE_V1.md) — Reaper ownership, peer contracts and compatibility boundaries.
 
