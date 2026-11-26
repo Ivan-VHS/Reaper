@@ -76,6 +76,12 @@ class FrameworkPortfolioTests(unittest.TestCase):
             for item in self.portfolio["integration_surfaces"]
         }
         self.assertEqual(len(surfaces), len(self.portfolio["integration_surfaces"]))
+        self.assertEqual(len(surfaces["rforge"]["members"]), 20)
+        self.assertTrue(all(
+            member["counted_in_core_60"] is False
+            and member["status"] == "source_present_runtime_validation_pending"
+            for member in surfaces["rforge"]["members"]
+        ))
         for required in (
             "framework-federation-registry",
             "framework-federation-handlers",
