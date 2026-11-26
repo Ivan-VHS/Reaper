@@ -132,17 +132,19 @@ static int stage_replace(void *context, void *workspace, const char *path,
     return 1;
 }
 
-static int run_checks(void *context, void *workspace, void *const *stages,
-                      size_t count, const char *const *ids, size_t check_count,
+static int run_checks(void *context, void *workspace,
+                      const char *const *ids, size_t check_count,
                       const ReaperApplyLimits *limits, char *report, size_t cap) {
     FakeHost *fake = (FakeHost *)context;
-    if (workspace != fake || count != 1u || check_count != 1u ||
-        stages[0] == NULL || strcmp(ids[0], "reaper.unit") != 0 ||
-        limits->timeout_ms > 120000u || fake->checks_fail) {
-        (void)snprintf(report, cap, "declared-check-failed");
+    if (workspace != fake || check_count != 1u ||
+        strcmp(ids[0], "reaper.unit") != 0 ||
+        limits->timeout_ms > 120000u || fake->checks_fail ||
+        fake->current_length != strlen("new source") ||
+        memcmp(fake->current, "new source", fake->current_length) != 0) {
+        (void)snprintf(report, cap, "declared-check-failed-or-workspace-not-materialized");
         return 0;
     }
-    (void)snprintf(report, cap, "one-registered-check-passed");
+    (void)snprintf(report, cap, "registered-check-passed-on-materialized-workspace");
     return 1;
 }
 
@@ -150,19 +152,27 @@ static int commit_staged(void *context, void *workspace,
                          void *handle, void **rollback) {
     FakeHost *fake = (FakeHost *)context;
     FakeStage *stage = (FakeStage *)handle;
+    FakeStage *snapshot;
     if (workspace != fake || stage == NULL || stage->kind != 1 || fake->commit_fail) return 0;
+    snapshot = (FakeStage *)calloc(1u, sizeof *snapshot);
+    if (snapshot == NULL) return 0;
+    snapshot->kind = 2;
+    snapshot->owner = fake;
+    snapshot->original_length = stage->original_length;
+    memcpy(snapshot->original, stage->original, snapshot->original_length);
     memcpy(fake->current, stage->replacement, stage->replacement_length);
     fake->current_length = stage->replacement_length;
-    *rollback = stage;
+    free(stage); /* Successful commit consumes the stage handle. */
+    *rollback = snapshot;
     return 1;
 }
 
 static int rollback_committed(void *context, void *workspace, void *handle) {
     FakeHost *fake = (FakeHost *)context;
-    FakeStage *stage = (FakeStage *)handle;
-    if (workspace != fake || stage == NULL || stage->kind != 1) return 0;
-    memcpy(fake->current, stage->original, stage->original_length);
-    fake->current_length = stage->original_length;
+    FakeStage *snapshot = (FakeStage *)handle;
+    if (workspace != fake || snapshot == NULL || snapshot->kind != 2) return 0;
+    memcpy(fake->current, snapshot->original, snapshot->original_length);
+    fake->current_length = snapshot->original_length;
     return 1;
 }
 
