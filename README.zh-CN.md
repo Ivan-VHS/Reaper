@@ -17,32 +17,28 @@ Reaper 是一款面向编译器工具、嵌入式软件和硬件相关程序的�
 - 实验性 C17 原生实现；当前尚未与参考运行时功能对等。
 - NOO TAH 将 JavaScript 执行交给官方 Node.js 运行时。
 - Jora 项目脚手架和能力组合；目录中的应用包仍是规范，不是可安装的编辑器。
+- RAAEF 是一个独立开发分支，提供类型化美学配置文件、HIR/MIR/LIR 及架构、设计和源码演进规划；运行时验证与通用 native backend 集成仍待完成。
+- [统一框架目录](frameworks/catalog.v1.json)列出已发现的框架家族及其 PR 状态；未合并的 PR 不视为 main 的功能。
 
-文档：[功能](docs/FEATURES.md) · [架构](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Jora 工厂](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md)。
+文档：[美学与架构演进](docs/AESTHETIC_EVOLUTION.md) · [框架目录](frameworks/catalog.v1.json) · [功能](docs/FEATURES.md) · [架构](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Jora 工厂](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md)。
 
 ## 快速开始
 
 要求：参考运行时使用 Python 3.10–3.12；可选兼容性测试使用 Node.js 22/24；Windows Studio 需要 Tkinter；原生路线需要 CMake 3.16+ 和 C17 编译器。
 
-```sh
-python -m venv .venv
-python -m pip install -e .
-python -m reaper --check examples/flow.rpr
-python -m reaper examples/flow.rpr
-```
+    python -m venv .venv
+    python -m pip install -e .
+    python -m reaper --check examples/flow.rpr
+    python -m reaper examples/flow.rpr
 
 启动 Studio 或 REPL：
 
-```sh
-python reaper_desktop.py
-python -m reaper --repl
-```
+    python reaper_desktop.py
+    python -m reaper --repl
 
 参考运行时测试：
 
-```sh
-python -m unittest discover -s tests -v
-```
+    python -m unittest discover -s tests -v
 
 ## 架构与状态
 
@@ -51,6 +47,6 @@ python -m unittest discover -s tests -v
 - [实现路线图](docs/IMPLEMENTATION_ROADMAP.md)
 - [Kora 标准库助手](docs/KORA.md)
 - [文档索引](docs/README.md)
-- [生态共享标准](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/SHARED_STANDARDS.md)
+- [生态共享标准](https://github.com/Ivan-VHS/DAK/blob/main/docs/SHARED_STANDARDS.md)
 
 [贡献指南](CONTRIBUTING.md) · [安全策略](SECURITY.md) · [Apache-2.0 许可证](LICENSE)
