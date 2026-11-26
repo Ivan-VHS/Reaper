@@ -58,3 +58,60 @@ export craft blueprint_coverage(blueprint, available_files) {
     make missing := blueprint_missing(blueprint[1], available_files)
     yield [size(blueprint[1]) - size(missing), size(blueprint[1])]
 }
+
+
+# Contract compatibility, architecture layering and project migration.
+export craft contract_record(id, version, inputs, outputs, effects, stability) {
+    yield [id, version, inputs, outputs, effects, stability]
+}
+export craft contract_valid(contract) {
+    when size(contract) != 6 { yield [false, "invalid_shape"] }
+    when size(contract[0]) == 0 or size(contract[3]) == 0 { yield [false, "missing_identity_or_output"] }
+    when size(contract[1]) != 3 { yield [false, "invalid_version"] }
+    when contract[5] != "experimental" and contract[5] != "stable" and contract[5] != "deprecated" {
+        yield [false, "invalid_stability"]
+    }
+    yield [true, []]
+}
+export craft contract_compatible(required, provided) {
+    when not contract_valid(required)[0] or not contract_valid(provided)[0] { yield [false, "invalid_contract"] }
+    when required[0] != provided[0] { yield [false, "contract_id_mismatch"] }
+    when required[1][0] != provided[1][0] { yield [false, "major_version_mismatch"] }
+    when required[1][1] > provided[1][1] { yield [false, "provider_too_old"] }
+    when required[2] != provided[2] or required[3] != provided[3] { yield [false, "schema_mismatch"] }
+    yield [true, []]
+}
+export craft blueprint_diff(before, after) {
+    when size(before) != 4 or size(after) != 4 { yield [false, "invalid_blueprint"] }
+    yield [true, blueprint_missing(before[1], after[1]), blueprint_missing(after[1], before[1])]
+}
+export craft architecture_layer_record(name, rank, dependencies) {
+    yield [name, rank, dependencies]
+}
+export craft architecture_layers_validate(layers) {
+    vary index := 0
+    loop while index < size(layers) {
+        when size(layers[index]) != 3 or size(layers[index][0]) == 0 { yield [false, "invalid_layer"] }
+        vary other := index + 1
+        loop while other < size(layers) {
+            when layers[index][0] == layers[other][0] or layers[index][1] == layers[other][1] {
+                yield [false, "duplicate_layer_identity"]
+            }
+            change other := other + 1
+        }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+export craft migration_plan(from_version, to_version, changes) {
+    when size(from_version) != 3 or size(to_version) != 3 { yield [false, "invalid_version"] }
+    when from_version[0] > to_version[0] { yield [false, "downgrade_requires_policy"] }
+    vary plan := []
+    vary index := 0
+    loop while index < size(changes) {
+        when size(changes[index]) != 4 { yield [false, "invalid_migration_step"] }
+        change plan := push(plan, changes[index])
+        change index := index + 1
+    }
+    yield [true, plan]
+}
