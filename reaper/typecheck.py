@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -41,6 +41,12 @@ BUILTIN_ARITY: dict[str, tuple[int, int | None]] = {
     "heap_stats": (0, 0), "heap_collect": (0, 0), "region_begin": (0, 0),
     "region_end": (1, 1), "ffi_open": (1, 1), "ffi_bind": (3, 4),
     "ffi_close": (1, 1), "pytyliki_open": (1, 1),
+    "ok": (1, 1), "err": (1, 1), "some": (1, 1), "none": (0, 0),
+    "result_is_ok": (1, 1), "result_is_err": (1, 1),
+    "result_value": (1, 1), "result_error": (1, 1),
+    "option_is_some": (1, 1), "option_is_none": (1, 1),
+    "option_value": (1, 1), "option_or": (2, 2),
+    "map_ok": (2, 2), "map_err": (2, 2), "zip_ok": (2, 2), "zip3_ok": (3, 3),
 }
 
 BUILTIN_RETURN: dict[str, str] = {
@@ -64,6 +70,24 @@ BUILTIN_RETURN: dict[str, str] = {
     "resource_stats": "Map", "heap_stats": "Map", "heap_collect": "Int",
     "region_begin": "Region", "region_end": "Nothing", "ffi_open": "Library",
     "ffi_bind": "Function", "ffi_close": "Nothing", "pytyliki_open": "Bridge",
+    "result_is_ok": "Bool", "result_is_err": "Bool",
+    "option_is_some": "Bool", "option_is_none": "Bool",
+}
+
+
+SUPPORTED_EFFECTS = frozenset({
+    "console", "filesystem", "network", "clock", "native",
+    "process", "device", "unsafe", "allocate", "synchronize",
+})
+SUPPORTED_TRAITS = frozenset({"Numeric", "Copy", "Clone", "Eq", "Ord", "Display"})
+BUILTIN_EFFECTS: dict[str, str] = {
+    "say": "console", "ask": "console",
+    "file_open": "filesystem", "file_read": "filesystem",
+    "file_write": "filesystem", "file_close": "filesystem", "with_file": "filesystem",
+    "ffi_open": "native", "ffi_bind": "native", "ffi_close": "native",
+    "pytyliki_open": "native",
+    "heap_collect": "allocate", "region_begin": "allocate", "region_end": "allocate",
+    "consent_check": "unsafe", "consent_revoke": "unsafe",
 }
 
 
@@ -95,6 +119,11 @@ class Binding:
 class FunctionInfo:
     arity: int
     return_type: str = ANY
+    parameter_types: tuple[str | None, ...] = ()
+    type_parameters: tuple[str, ...] = ()
+    trait_bounds: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    declared_return_type: str | None = None
+    effects: frozenset[str] | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -127,6 +156,7 @@ class TypeChecker:
         self.functions: dict[str, FunctionInfo] = {}
         self.diagnostics: list[TypeDiagnostic] = []
         self.return_types: list[list[str]] = []
+        self.function_stack: list[FunctionInfo] = []
 
     def check(self, tree: Node) -> TypeCheckResult:
         self._collect_functions(tree)
@@ -140,19 +170,49 @@ class TypeChecker:
         for child in node.children or []:
             if child.kind == "function":
                 name, parameters = child.value
-                self.functions[name] = FunctionInfo(len(parameters))
+                metadata = child.metadata or {}
+                parameter_types = tuple(metadata.get("parameter_types", ()))
+                if parameter_types and len(parameter_types) != len(parameters):
+                    self._report(child, "RPR-T0016", "function parameter type metadata does not match its arity")
+                effects_value = metadata.get("effects")
+                effects = None if effects_value is None else frozenset(effects_value)
+                self.functions[name] = FunctionInfo(
+                    arity=len(parameters),
+                    return_type=metadata.get("return_type") or ANY,
+                    parameter_types=parameter_types,
+                    type_parameters=tuple(metadata.get("type_parameters", ())),
+                    trait_bounds=dict(metadata.get("trait_bounds", {})),
+                    declared_return_type=metadata.get("return_type"),
+                    effects=effects,
+                )
+                for effect in effects or ():
+                    if effect not in SUPPORTED_EFFECTS:
+                        self._report(child, "RPR-EFF0001", f"unknown effect '{effect}'")
 
     def _check_function(self, node: Node) -> None:
         name, parameters = node.value
+        info = self.functions[name]
         previous_scope = self.scopes
         self.scopes = [{}]
-        for parameter in parameters:
-            self.scopes[-1][parameter] = Binding(ANY, False)
+        for index, parameter in enumerate(parameters):
+            parameter_type = info.parameter_types[index] if index < len(info.parameter_types) else None
+            self.scopes[-1][parameter] = Binding(parameter_type or ANY, False)
+        self.function_stack.append(info)
         self.return_types.append([])
         self._visit_block_contents(node.children[0])
         returned = self.return_types.pop()
         inferred = self._unify_all(returned) if returned else NOTHING
-        self.functions[name].return_type = inferred
+        if info.declared_return_type is not None:
+            for actual in returned:
+                if not self._assignable(info.declared_return_type, actual):
+                    self._report(
+                        node, "RPR-T0013",
+                        f"function '{name}' declares {info.declared_return_type} but returns {actual}",
+                    )
+            info.return_type = info.declared_return_type
+        else:
+            info.return_type = inferred
+        self.function_stack.pop()
         self.scopes = previous_scope
 
     def _visit_block_contents(self, block: Node) -> None:
@@ -309,15 +369,55 @@ class TypeChecker:
                 )
                 self._report(node, "RPR-T0007", f"{name}() expects {expected} arguments, got {len(arguments)}")
             self._check_builtin_arguments(node, name, argument_types)
+            self._check_builtin_effect(node, name)
+
+            if name == "ok":
+                return f"Result<{argument_types[0] if argument_types else ANY}, Any>"
+            if name == "err":
+                return f"Result<Any, {argument_types[0] if argument_types else ANY}>"
+            if name == "some":
+                return f"Option<{argument_types[0] if argument_types else ANY}>"
+            if name == "none":
+                return "Option[Any]"
+            if name in {"result_is_ok", "result_is_err", "option_is_some", "option_is_none"}:
+                return "Bool"
+            if name in {"result_value", "result_error", "option_value"} and argument_types:
+                parts = self._generic_parts(argument_types[0])
+                if name == "result_value":
+                    return parts[1][0] if parts and parts[0] == "Result" and len(parts[1]) == 2 else ANY
+                if name == "result_error":
+                    return parts[1][1] if parts and parts[0] == "Result" and len(parts[1]) == 2 else ANY
+                return parts[1][0] if parts and parts[0] == "Option" and len(parts[1]) == 1 else ANY
+            if name == "option_or" and len(argument_types) == 2:
+                parts = self._generic_parts(argument_types[0])
+                value_type = parts[1][0] if parts and parts[0] == "Option" else ANY
+                return self._unify(value_type, argument_types[1])
+            if name == "map_ok" and len(argument_types) == 2:
+                parts = self._generic_parts(argument_types[0])
+                success = self._callback_return(arguments[1])
+                if parts and parts[0] == "Result" and len(parts[1]) == 2:
+                    return f"Result<{success}, {parts[1][1]}>"
+                return "Result[Any, Any]"
+            if name == "map_err" and len(argument_types) == 2:
+                parts = self._generic_parts(argument_types[0])
+                mapped = self._callback_return(arguments[1])
+                if parts and parts[0] == "Result" and len(parts[1]) == 2:
+                    return f"Result<{parts[1][0]}, {mapped}>"
+                return "Result[Any, Any]"
+            if name == "zip_ok" and len(argument_types) == 2:
+                left = self._generic_parts(argument_types[0])
+                right = self._generic_parts(argument_types[1])
+                if left and right and left[0] == right[0] == "Result":
+                    return f"Result<List<{left[1][0]}, {right[1][0]}>, Any>"
+                return "Result<List[Any]>, Any>"
+            if name == "zip3_ok":
+                return "Result<List[Any], Any>"
             if name == "push" and argument_types:
                 item_type = argument_types[1] if len(argument_types) > 1 else ANY
                 element_type = self._element_type(argument_types[0], node)
                 return f"List[{self._unify(element_type, item_type)}]"
             if name == "map" and len(arguments) > 1:
-                callback = arguments[1]
-                if callback.kind == "name" and callback.value in self.functions:
-                    return f"List[{self.functions[callback.value].return_type}]"
-                return "List[Any]"
+                return f"List[{self._callback_return(arguments[1])}]"
             if name in {"keep", "filter"} and argument_types:
                 return argument_types[0]
             if name in {"sorted", "sort_by", "rest", "take", "drop", "unique", "partition"} and argument_types:
@@ -338,12 +438,107 @@ class TypeChecker:
                     return "List[Text]"
                 return "List[Any]"
             return BUILTIN_RETURN.get(name, ANY)
+
         function = self.functions.get(name)
         if function is not None:
             if len(arguments) != function.arity:
                 self._report(node, "RPR-T0007", f"{name}() expects {function.arity} arguments, got {len(arguments)}")
-            return function.return_type
+            if self.function_stack:
+                caller_effects = self.function_stack[-1].effects
+                if caller_effects is not None:
+                    if function.effects is None:
+                        self._report(node, "RPR-EFF0003", f"call to '{name}' has no declared effect contract")
+                    else:
+                        missing = function.effects - caller_effects
+                        if missing:
+                            self._report(node, "RPR-EFF0002", f"call to '{name}' requires undeclared effects: {', '.join(sorted(missing))}")
+
+            bindings: dict[str, str] = {}
+            type_parameters = set(function.type_parameters)
+            for index, actual in enumerate(argument_types):
+                if index >= len(function.parameter_types):
+                    break
+                expected = function.parameter_types[index]
+                if expected is None:
+                    continue
+                if not self._bind_type_variables(expected, actual, type_parameters, bindings):
+                    self._report(node, "RPR-T0014", f"argument {index + 1} to '{name}' expects {self._substitute_type(expected, bindings)}, got {actual}")
+            for parameter, traits in function.trait_bounds.items():
+                actual = bindings.get(parameter)
+                if actual is None:
+                    continue
+                for trait in traits:
+                    if not self._supports_trait(actual, trait):
+                        self._report(node, "RPR-T0015", f"type {actual} does not satisfy trait bound {trait} for {parameter}")
+            return self._substitute_type(function.return_type, bindings)
         return ANY
+
+    def _check_builtin_effect(self, node: Node, name: str) -> None:
+        if not self.function_stack:
+            return
+        allowed = self.function_stack[-1].effects
+        required = BUILTIN_EFFECTS.get(name)
+        if allowed is not None and required is not None and required not in allowed:
+            self._report(node, "RPR-EFF0002", f"call to '{name}' requires effect '{required}'")
+
+    def _callback_return(self, node: Node) -> str:
+        if node.kind == "name" and node.value in self.functions:
+            return self.functions[node.value].return_type
+        return ANY
+
+    def _generic_parts(self, type_name: str) -> tuple[str, list[str]] | None:
+        opening = type_name.find("<")
+        if opening <= 0 or not type_name.endswith(">"):
+            return None
+        head = type_name[:opening]
+        body = type_name[opening + 1:-1]
+        parts: list[str] = []
+        depth = 0
+        start = 0
+        for index, char in enumerate(body):
+            if char == "<":
+                depth += 1
+            elif char == ">":
+                depth -= 1
+            elif char == "," and depth == 0:
+                parts.append(body[start:index].strip())
+                start = index + 1
+        parts.append(body[start:].strip())
+        return head, parts
+
+    def _bind_type_variables(
+        self, expected: str, actual: str, type_parameters: set[str], bindings: dict[str, str]
+    ) -> bool:
+        if expected in type_parameters:
+            previous = bindings.get(expected)
+            if previous is None:
+                bindings[expected] = actual
+                return True
+            return self._assignable(previous, actual) and self._assignable(actual, previous)
+        expected_parts = self._generic_parts(expected)
+        actual_parts = self._generic_parts(actual)
+        if expected_parts and actual_parts and expected_parts[0] == actual_parts[0] and len(expected_parts[1]) == len(actual_parts[1]):
+            return all(
+                self._bind_type_variables(left, right, type_parameters, bindings)
+                for left, right in zip(expected_parts[1], actual_parts[1])
+            )
+        return self._assignable(expected, actual)
+
+    def _substitute_type(self, type_name: str, bindings: dict[str, str]) -> str:
+        parts = self._generic_parts(type_name)
+        if parts:
+            return parts[0] + "<" + ", ".join(self._substitute_type(item, bindings) for item in parts[1]) + ">"
+        return bindings.get(type_name, type_name)
+
+    def _supports_trait(self, type_name: str, trait: str) -> bool:
+        if trait not in SUPPORTED_TRAITS:
+            return False
+        if trait == "Numeric":
+            return self._numeric(type_name)
+        primitive = {"Int", "Float", "Number", "Bool", "Text", "i8", "u8", "i16", "u16", "i32", "u32", "i64", "u64"}
+        if trait in {"Copy", "Clone", "Eq", "Ord", "Display"}:
+            return type_name in primitive
+        return False
 
     def _flow_type(self, left_node: Node, right_node: Node, left_type: str) -> str:
         if right_node.kind != "call":
@@ -426,7 +621,12 @@ class TypeChecker:
         return None
 
     def _numeric(self, type_name: str) -> bool:
-        return type_name in NUMERIC | {"Number", ANY}
+        if type_name in NUMERIC | {"Number", ANY}:
+            return True
+        for function in reversed(self.function_stack):
+            if type_name in function.type_parameters:
+                return "Numeric" in function.trait_bounds.get(type_name, ())
+        return False
 
     def _assignable(self, expected: str, actual: str) -> bool:
         if expected == ANY or actual == ANY or expected == actual:
@@ -435,8 +635,14 @@ class TypeChecker:
             return True
         if expected == "Number" and actual in NUMERIC:
             return True
+        if expected.startswith("&") or actual.startswith("&"):
+            return expected == actual or expected == ANY
         if expected.startswith("List[") and actual.startswith("List["):
             return expected == "List[Any]" or expected == actual
+        expected_parts = self._generic_parts(expected)
+        actual_parts = self._generic_parts(actual)
+        if expected_parts and actual_parts and expected_parts[0] == actual_parts[0] and len(expected_parts[1]) == len(actual_parts[1]):
+            return all(self._assignable(left, right) or left == "Any" for left, right in zip(expected_parts[1], actual_parts[1]))
         return False
 
     def _unify_all(self, types: list[str]) -> str:
