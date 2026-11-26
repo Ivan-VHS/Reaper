@@ -39,6 +39,8 @@ typedef struct {
     char revision[65];
 } FakeBranchRollback;
 
+static const char *CHECK_IDS[] = {"reaper.unit"};
+
 static int verify_grant(void *context, const void *grant, size_t size,
                         const char *repo, const char *branch, uint64_t now) {
     (void)context;
@@ -271,7 +273,6 @@ static void setup(FakeHost *fake, ReaperEvolutionApplyHost *host,
                   ReaperSourcePatch *patch) {
     const uint8_t original[] = "old source";
     const uint8_t replacement[] = "new source";
-    const char *checks[] = {"reaper.unit"};
     char diagnostic[128];
 
     memset(fake, 0, sizeof *fake);
@@ -295,7 +296,7 @@ static void setup(FakeHost *fake, ReaperEvolutionApplyHost *host,
     request->now_unix_seconds = 100u;
     request->patches = patch;
     request->patch_count = 1u;
-    request->check_ids = checks;
+    request->check_ids = CHECK_IDS;
     request->check_count = 1u;
     request->limits = (ReaperApplyLimits){5000u, 64u * 1024u * 1024u,
         1024u * 1024u, 4u, 64u};
