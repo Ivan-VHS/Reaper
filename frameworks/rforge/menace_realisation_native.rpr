@@ -1,0 +1,49 @@
+# Menace — Realisation native
+# Realisation-first transaction planning, commit gates and bounded retries.
+
+export make FRAMEWORK_ID := "menace.realisation_native"
+export make FRAMEWORK_VERSION := "1.0.0"
+export make FRAMEWORK_PROFILE := "Realisation native"
+
+export craft menace_realisation_plan(source_valid, backend_valid, contract_valid) {
+    when source_valid and backend_valid and contract_valid {
+        yield [FRAMEWORK_ID, "ready", "all_gates_satisfied"]
+    }
+    yield [FRAMEWORK_ID, "blocked", "missing_evidence"]
+}
+
+export craft menace_native_commit_allowed(plan_status, artifacts_verified, provenance_verified) {
+    yield plan_status == "ready" and artifacts_verified and provenance_verified
+}
+
+export craft menace_retry_allowed(attempt, maximum_attempts, failure_class) {
+    yield attempt >= 0 and maximum_attempts > 0 and attempt < maximum_attempts and failure_class == "transient"
+}
+
+export craft menace_stage_index(stage) {
+    when stage == "planned" {
+        yield 0
+    }
+    when stage == "parsed" {
+        yield 1
+    }
+    when stage == "typed" {
+        yield 2
+    }
+    when stage == "lowered" {
+        yield 3
+    }
+    when stage == "linked" {
+        yield 4
+    }
+    when stage == "verified" {
+        yield 5
+    }
+    yield -1
+}
+
+export craft menace_stage_order_valid(current, next) {
+    make current_index := menace_stage_index(current)
+    make next_index := menace_stage_index(next)
+    yield current_index >= 0 and next_index == current_index + 1
+}
