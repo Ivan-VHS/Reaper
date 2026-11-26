@@ -111,7 +111,7 @@ reaper --check tests/rforge/frameworks_smoke.rpr
 reaper tests/rforge/frameworks_smoke.rpr
 ```
 
-The smoke suite contains four positive/negative assertions for each module. It has been authored but is not reported as passed until it runs in CI or on a Reaper runtime.
+The smoke suite contains four positive/negative assertions for each framework plus four collection-level assertions (84 total). It has been authored but is not reported as passed until it runs in CI or on a Reaper runtime.
 
 ## Runtime and maturity boundaries
 
@@ -120,5 +120,7 @@ The smoke suite contains four positive/negative assertions for each module. It h
 - No framework currently claims `executable_capabilities`, installation, native compilation, network access, filesystem access or privileged OS effects.
 - The SaaS, tunnel and Unreal names describe contract domains. They do not imply hosted SaaS infrastructure, network tunnel creation or an Unreal Engine dependency.
 - The framework APIs are deterministic validation and composition primitives. Concrete storage, rendering, hosting, network transport, kernel and compiler backends remain explicit adapters or later implementation increments.
+
+The aggregate module `frameworks/rforge/all.rpr` imports all twenty frameworks and exports inventory, profile, lookup and pair-membership helpers.
 
 The machine-readable catalogue is `examples/rforge/frameworks.v1.json`; its schema is `schemas/rforge.framework-catalog.v1.schema.json`.
