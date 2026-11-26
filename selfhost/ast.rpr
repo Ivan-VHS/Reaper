@@ -13,9 +13,6 @@ craft ast_make_node(kind, start, finish, value, children, source_length) {
     when start < 0 or finish < start or finish > source_length {
         yield ["ERR", "AST node span outside source", start, finish]
     }
-    when size(children) < 0 {
-        yield ["ERR", "AST children must be a collection"]
-    }
     yield ["OK", [kind, start, finish, value, children]]
 }
 
