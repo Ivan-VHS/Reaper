@@ -1,0 +1,59 @@
+# Jellymeat — versioned aesthetic profile catalogue.
+import "vorke.rpr" as Vorke
+
+export craft dak_noir() {
+    make profile := [
+        "AestheticProfile", "1.0.0", "dak_noir",
+        ["DAK", "native", 1],
+        [
+            "#070707", "#111111", "#202020", "#FFFFFF", "#B8B8B8",
+            "#FFD400", "#777777", "#35C46A", "#3B82F6", "#E5484D",
+            "#FFD400", "#454545"
+        ],
+        ["Inter", "JetBrains Mono", 14, 1.2, 400, 650, 1.45],
+        [8, 8, 8, 1],
+        [false, 120, 180, 320, "spring.standard"],
+        [4.5, true, true, true]
+    ]
+    when not Vorke["valid_profile"](profile) {
+        yield ["AestheticError", "RPR-AE1001", "built-in DAK profile violates Vorke"]
+    }
+    yield profile
+}
+
+export craft mora_studio() {
+    make profile := [
+        "AestheticProfile", "1.0.0", "mora_studio",
+        ["ReaperStudio", "native", 1],
+        [
+            "#211913", "#33261D", "#493326", "#FFF3E2", "#C4A98A",
+            "#D58B3D", "#526347", "#9EC39A", "#F0BE73", "#EF8E7C",
+            "#F3C16B", "#75543A"
+        ],
+        ["Inter", "JetBrains Mono", 14, 1.2, 400, 650, 1.45],
+        [8, 8, 8, 1],
+        [false, 120, 180, 320, "spring.standard"],
+        [4.5, true, true, true]
+    ]
+    when not Vorke["valid_profile"](profile) {
+        yield ["AestheticError", "RPR-AE1002", "built-in Mora profile violates Vorke"]
+    }
+    yield profile
+}
+
+export craft get(profile_id) {
+    when profile_id == "dak_noir" {
+        yield dak_noir()
+    }
+    when profile_id == "mora_studio" {
+        yield mora_studio()
+    }
+    yield ["AestheticError", "RPR-AE1003", "unknown aesthetic profile: " ++ text(profile_id)]
+}
+
+export craft catalogue() {
+    yield [
+        ["dak_noir", "DAK", "black / white / yellow; native desktop"],
+        ["mora_studio", "Reaper Studio", "warm amber surfaces; native desktop"]
+    ]
+}

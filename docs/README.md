@@ -11,6 +11,8 @@ Start with the [project README](../README.md) for installation, first commands a
 - [System Runtime ABI v1](SYSTEM_RUNTIME_ABI_V1.md)
 - [DABI64 Desktop Host v1](DABI64_DESKTOP_HOST_V1.md)
 - [Implementation roadmap](IMPLEMENTATION_ROADMAP.md)
+- [Framework catalogue](../frameworks/catalog.v1.json) — central index of known Reaper framework families, source entry points, PR states and dependencies.
+- [Aesthetic & Architecture Evolution](AESTHETIC_EVOLUTION.md) — typed aesthetic profiles, domain HIR/MIR/LIR and controlled evolution.
 - [PLAGUE — Repository Evolution Framework](PLAGUE.md)
 - [PLAGUE v1 bounded evolution policy](PLAGUE_FOUNDATION_V1.md)
 - [Studio and IDE](REAPER_IDE.md)

@@ -1,0 +1,81 @@
+# LejjyFish — high-level aesthetic IR (HIR) construction.
+import "vorke.rpr" as Vorke
+
+export craft valid_hir(hir) {
+    when kind(hir) != "list" or size(hir) != 4 {
+        yield false
+    }
+    when hir[0] != "AestheticHIR" or hir[1] != Vorke["VERSION"] {
+        yield false
+    }
+    when not Vorke["valid_text"](hir[2], 96) or kind(hir[3]) != "list" {
+        yield false
+    }
+    each node in hir[3] {
+        when kind(node) != "list" or size(node) != 4 {
+            yield false
+        }
+        when not Vorke["valid_text"](node[0], 32)
+            or not Vorke["valid_text"](node[1], 96)
+            or not Vorke["valid_text"](node[2], 32) {
+            yield false
+        }
+    }
+    yield true
+}
+
+export craft build(profile) {
+    when not Vorke["valid_profile"](profile) {
+        yield ["AestheticError", "RPR-AE1101", "HIR input is not a valid AestheticProfile"]
+    }
+
+    make palette := profile[4]
+    make type := profile[5]
+    make layout := profile[6]
+    make motion := profile[7]
+    make access := profile[8]
+    vary nodes := []
+
+    change nodes := push(nodes, ["color", "canvas.background", "Color", palette[0]])
+    change nodes := push(nodes, ["color", "surface.default", "Color", palette[1]])
+    change nodes := push(nodes, ["color", "surface.elevated", "Color", palette[2]])
+    change nodes := push(nodes, ["color", "text.primary", "Color", palette[3]])
+    change nodes := push(nodes, ["color", "text.muted", "Color", palette[4]])
+    change nodes := push(nodes, ["color", "brand.primary", "Color", palette[5]])
+    change nodes := push(nodes, ["color", "brand.secondary", "Color", palette[6]])
+    change nodes := push(nodes, ["color", "status.success", "Color", palette[7]])
+    change nodes := push(nodes, ["color", "status.warning", "Color", palette[8]])
+    change nodes := push(nodes, ["color", "status.error", "Color", palette[9]])
+    change nodes := push(nodes, ["color", "focus.ring", "Color", palette[10]])
+    change nodes := push(nodes, ["color", "border.default", "Color", palette[11]])
+
+    change nodes := push(nodes, ["font", "type.family", "FontFamily", type[0]])
+    change nodes := push(nodes, ["font", "type.monospace", "FontFamily", type[1]])
+    change nodes := push(nodes, ["metric", "type.base_size", "Length", type[2]])
+    change nodes := push(nodes, ["metric", "type.scale_ratio", "Ratio", type[3]])
+    change nodes := push(nodes, ["metric", "type.body_weight", "Weight", type[4]])
+    change nodes := push(nodes, ["metric", "type.heading_weight", "Weight", type[5]])
+    change nodes := push(nodes, ["metric", "type.line_height", "Ratio", type[6]])
+
+    change nodes := push(nodes, ["metric", "layout.grid", "Length", layout[0]])
+    change nodes := push(nodes, ["metric", "layout.spacing", "Length", layout[1]])
+    change nodes := push(nodes, ["metric", "shape.radius", "Length", layout[2]])
+    change nodes := push(nodes, ["metric", "layout.density", "Ratio", layout[3]])
+
+    change nodes := push(nodes, ["motion", "motion.reduce", "Boolean", motion[0]])
+    change nodes := push(nodes, ["motion", "motion.fast", "Duration", motion[1]])
+    change nodes := push(nodes, ["motion", "motion.standard", "Duration", motion[2]])
+    change nodes := push(nodes, ["motion", "motion.slow", "Duration", motion[3]])
+    change nodes := push(nodes, ["motion", "motion.easing", "Easing", motion[4]])
+
+    change nodes := push(nodes, ["metric", "a11y.min_contrast", "Ratio", access[0]])
+    change nodes := push(nodes, ["flag", "a11y.focus_visible", "Boolean", access[1]])
+    change nodes := push(nodes, ["flag", "a11y.keyboard_navigation", "Boolean", access[2]])
+    change nodes := push(nodes, ["flag", "a11y.reduced_motion", "Boolean", access[3]])
+
+    make result := ["AestheticHIR", Vorke["VERSION"], profile[2], nodes]
+    when not valid_hir(result) {
+        yield ["AestheticError", "RPR-AE1102", "LejjyFish emitted invalid HIR"]
+    }
+    yield result
+}

@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ivan-vhs.github.io/reaper/schemas/aesthetic-profile.v1.schema.json",
+  "title": "Reaper Aesthetic Profile",
+  "description": "Versioned tagged tuple consumed by Vorke and the Reaper aesthetic compiler passes.",
+  "type": "array",
+  "prefixItems": [
+    { "const": "AestheticProfile" },
+    { "const": "1.0.0" },
+    { "type": "string", "minLength": 1, "maxLength": 96 },
+    {
+      "type": "array", "minItems": 3, "maxItems": 3,
+      "prefixItems": [
+        { "type": "string", "minLength": 1, "maxLength": 32 },
+        { "type": "string", "minLength": 1, "maxLength": 32 },
+        { "type": "number", "minimum": 0.5, "maximum": 4 }
+      ],
+      "items": false
+    },
+    {
+      "type": "array", "minItems": 12, "maxItems": 12,
+      "items": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" }
+    },
+    {
+      "type": "array", "minItems": 7, "maxItems": 7,
+      "prefixItems": [
+        { "type": "string", "minLength": 1, "maxLength": 96 },
+        { "type": "string", "minLength": 1, "maxLength": 96 },
+        { "type": "number", "minimum": 10, "maximum": 24 },
+        { "type": "number", "minimum": 1.05, "maximum": 1.8 },
+        { "type": "integer", "minimum": 100, "maximum": 900 },
+        { "type": "integer", "minimum": 100, "maximum": 900 },
+        { "type": "number", "minimum": 1, "maximum": 2 }
+      ],
+      "items": false
+    },
+    {
+      "type": "array", "minItems": 4, "maxItems": 4,
+      "prefixItems": [
+        { "type": "number", "minimum": 4, "maximum": 16 },
+        { "type": "number", "minimum": 2, "maximum": 24 },
+        { "type": "number", "minimum": 0, "maximum": 32 },
+        { "type": "number", "minimum": 0.5, "maximum": 2 }
+      ],
+      "items": false
+    },
+    {
+      "type": "array", "minItems": 5, "maxItems": 5,
+      "prefixItems": [
+        { "type": "boolean" },
+        { "type": "number", "minimum": 0, "maximum": 500 },
+        { "type": "number", "minimum": 0, "maximum": 800 },
+        { "type": "number", "minimum": 0, "maximum": 1200 },
+        { "type": "string", "minLength": 1, "maxLength": 64 }
+      ],
+      "items": false
+    },
+    {
+      "type": "array", "minItems": 4, "maxItems": 4,
+      "prefixItems": [
+        { "type": "number", "minimum": 4.5, "maximum": 7 },
+        { "type": "boolean" },
+        { "type": "boolean" },
+        { "type": "boolean" }
+      ],
+      "items": false
+    }
+  ],
+  "items": false
+}

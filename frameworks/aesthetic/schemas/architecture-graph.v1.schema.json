@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ivan-vhs.github.io/reaper/schemas/aesthetic-architecture-graph.v1.schema.json",
+  "title": "Reaper Architecture Graph",
+  "type": "array",
+  "minItems": 5,
+  "maxItems": 5,
+  "prefixItems": [
+    { "const": "ArchitectureGraph" },
+    { "const": "1.0.0" },
+    { "type": "string", "minLength": 1, "maxLength": 96 },
+    {
+      "type": "array",
+      "items": {
+        "type": "array", "minItems": 3, "maxItems": 3,
+        "prefixItems": [
+          { "type": "string", "minLength": 1, "maxLength": 96 },
+          { "type": "string", "minLength": 1, "maxLength": 48 },
+          { "type": "array", "items": { "type": "string", "minLength": 1 } }
+        ],
+        "items": false
+      }
+    },
+    {
+      "type": "array",
+      "items": {
+        "type": "array", "minItems": 3, "maxItems": 3,
+        "prefixItems": [
+          { "type": "string", "minLength": 1, "maxLength": 96 },
+          { "type": "string", "minLength": 1, "maxLength": 96 },
+          { "type": "string", "minLength": 1, "maxLength": 48 }
+        ],
+        "items": false
+      }
+    }
+  ],
+  "items": false
+}

@@ -17,9 +17,10 @@ Reaper is a systems-programming language and local development workbench for com
 - Experimental native C17 implementation; it is not yet feature-equivalent to the reference runtime.
 - NOO TAH delegates JavaScript execution to the official Node.js runtime.
 - Jora application scaffolding and capability composition; catalog packs remain specifications, not installable editors.
-- PLAGUE 1.0.0 foundation: Reaper-native ten-component registry, default-deny action policy, bounded proposal assessment, deterministic risk/benefit selection, versioned contracts and CI smoke tests. It does not yet modify repositories autonomously.
+- PLAGUE 1.0.0 repository-evolution foundation is proposed in a separate open PR; repository discovery, patch application and autonomous writes are not yet implemented.
+- RAAEF adds a proposed Reaper-native typed aesthetic-profile pipeline (HIR/MIR/LIR) and architecture/design/source evolution planner; runtime execution and general native compiler integration are pending.
 
-See [Features](docs/FEATURES.md), [Architecture](docs/ARCHITECTURE.md), [Hardware Language](docs/HARDWARE_LANGUAGE.md), [Jora factory](docs/JORA_APPLICATION_FACTORY.md), [PLAGUE](docs/PLAGUE.md), [Studio and IDE](docs/REAPER_IDE.md) and [NOO TAH](docs/NOO_TAH.md).
+See [Framework catalogue](frameworks/README.md), [Aesthetic & Architecture Evolution](docs/AESTHETIC_EVOLUTION.md), [Features](docs/FEATURES.md), [Architecture](docs/ARCHITECTURE.md), [Hardware Language](docs/HARDWARE_LANGUAGE.md), [Jora factory](docs/JORA_APPLICATION_FACTORY.md), [PLAGUE](docs/PLAGUE.md), [Studio and IDE](docs/REAPER_IDE.md) and [NOO TAH](docs/NOO_TAH.md).
 
 ## Quick start
 
@@ -46,6 +47,6 @@ The .rpr reference runtime, partial native C17 work, developer tools and externa
 - [Implementation roadmap](docs/IMPLEMENTATION_ROADMAP.md)
 - [Kora standard-library helpers](docs/KORA.md)
 - [Documentation index](docs/README.md)
-- [Shared ecosystem standards](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/SHARED_STANDARDS.md)
+- [Shared ecosystem standards](https://github.com/Ivan-VHS/DAK/blob/main/docs/SHARED_STANDARDS.md)
 
 [Contributing](CONTRIBUTING.md) · [Security policy](SECURITY.md) · [Apache-2.0](LICENSE)

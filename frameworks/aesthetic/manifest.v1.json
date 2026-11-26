@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema": "ivan-vhs.reaper.aesthetic-evolution.manifest.v1",
+  "name": "Reaper Aesthetic & Architecture Evolution Framework",
+  "short_name": "RAAEF",
+  "version": "1.0.0",
+  "language": "Reaper",
+  "entrypoint": "frameworks/aesthetic/all.rpr",
+  "maturity_stage": "Genesis",
+  "status": "source_present_runtime_validation_pending",
+  "ir_pipeline": [
+    "AestheticProfile",
+    "AestheticHIR",
+    "AestheticMIR",
+    "AestheticLIR"
+  ],
+  "typed_model": {
+    "kind": "nominal_tagged_tuple_contracts",
+    "kernel": "Vorke",
+    "schema_version": "1.0.0",
+    "note": "Runtime-enforced tagged records; this does not add first-class struct/type declaration syntax to the Reaper language."
+  },
+  "frameworks": [
+    {
+      "id": "vorke",
+      "name": "Vorke",
+      "module": "engine/vorke.rpr",
+      "responsibility": "Nominal runtime type kernel, constructors, validators and invariants",
+      "status": "source_present"
+    },
+    {
+      "id": "jellymeat",
+      "name": "Jellymeat",
+      "module": "engine/jellymeat.rpr",
+      "responsibility": "Versioned aesthetic profile catalogue",
+      "status": "source_present"
+    },
+    {
+      "id": "lejjyfish",
+      "name": "LejjyFish",
+      "module": "engine/lejjyfish.rpr",
+      "responsibility": "High-level design IR construction",
+      "status": "source_present"
+    },
+    {
+      "id": "lejjy",
+      "name": "Lejjy",
+      "module": "engine/lejjy.rpr",
+      "responsibility": "Deterministic HIR normalization and MIR passes",
+      "status": "source_present"
+    },
+    {
+      "id": "oplos",
+      "name": "Oplos",
+      "module": "engine/oplos.rpr",
+      "responsibility": "Target-oriented MIR to LIR lowering",
+      "status": "source_present"
+    },
+    {
+      "id": "holmosaptimu",
+      "name": "Holmosaptimu",
+      "module": "engine/holmosaptimu.rpr",
+      "responsibility": "Reaper profile compiler adapter",
+      "status": "source_present"
+    },
+    {
+      "id": "sentan",
+      "name": "Sentan",
+      "module": "engine/sentan.rpr",
+      "responsibility": "Architecture graph validation and dependency-cycle analysis",
+      "status": "source_present"
+    },
+    {
+      "id": "cellene",
+      "name": "Cellene",
+      "module": "engine/cellene.rpr",
+      "responsibility": "Design quality scoring and aesthetic profile proposals",
+      "status": "source_present"
+    },
+    {
+      "id": "kolir",
+      "name": "Kolir",
+      "module": "engine/kolir.rpr",
+      "responsibility": "Bounded architecture, design and source change planning",
+      "status": "source_present"
+    },
+    {
+      "id": "somo",
+      "name": "SOMO",
+      "module": "engine/somo.rpr",
+      "responsibility": "Deterministic evolution orchestration and evidence envelope",
+      "status": "source_present"
+    }
+  ],
+  "contracts": [
+    "schemas/profile.v1.schema.json",
+    "schemas/design-ir.v1.schema.json",
+    "schemas/architecture-graph.v1.schema.json",
+    "schemas/source-evolution-request.v1.schema.json"
+  ],
+  "built_in_profiles": [
+    "dak_noir",
+    "mora_studio"
+  ],
+  "implemented_capabilities": [
+    "nominal_tagged_profile_validation",
+    "aesthetic_profile_catalogue",
+    "aesthetic_hir_construction",
+    "hir_to_mir_normalization",
+    "reduced_motion_lowering",
+    "mir_to_target_lir_lowering",
+    "reaper_reference_runtime_compiler_adapter",
+    "architecture_graph_validation",
+    "dependency_cycle_detection",
+    "design_quality_assessment",
+    "design_evolution_proposal_generation",
+    "bounded_source_evolution_plan_generation",
+    "observe_and_propose_orchestration",
+    "PLAGUE_default_deny_action_policy_integration",
+    "current_proposed_architecture_graph_comparison",
+    "dependency_edge_consistency_validation",
+    "observe_without_mutation_or_plan_generation",
+    "risk_benefit_gate_for_evolution_proposals"
+  ],
+  "not_implemented": [
+    "first_class_reaper_struct_and_enum_syntax",
+    "general_ast_hir_mir_lir_compiler_pipeline",
+    "native_c17_backend_support_for_profile_modules_and_collections",
+    "live_native_widget_renderer",
+    "automated_visual_regression_capture",
+    "repository_grant_authentication",
+    "path_allowlist_enforcement",
+    "source_patch_application",
+    "sandboxed_command_execution",
+    "automatic_branch_writes",
+    "automatic_merge_or_release",
+    "rollback_executor",
+    "cryptographic_evidence_attestation",
+    "authenticated_repository_grant_enforcement",
+    "per_path_scope_enforcement",
+    "baseline_digest_verification_against_git_object",
+    "computed_color_pair_contrast_measurement"
+  ],
+  "safety": {
+    "default_mode": "observe",
+    "propose_writes": false,
+    "apply_mode": "blocked_until_adapters_and_grants_exist",
+    "default_branch_writes": false,
+    "automatic_merge": false,
+    "automatic_release": false
+  },
+  "validation": {
+    "source_files_added": true,
+    "reaper_runtime_execution": "pending",
+    "schema_validation": "pending",
+    "ci": "not_yet_wired"
+  },
+  "dependencies": [
+    "PLAGUE 1.0.0 action-policy foundation (stacked base PR #358)"
+  ]
+}

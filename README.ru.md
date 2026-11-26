@@ -17,32 +17,28 @@ Reaper — язык системного программирования и л�
 - Экспериментальная реализация на C17; она пока не равна по возможностям эталонной среде.
 - NOO TAH передаёт выполнение JavaScript официальному Node.js.
 - Генерация каркасов Jora и композиция возможностей; пакеты каталога пока являются спецификациями, а не устанавливаемыми редакторами.
+- RAAEF — отдельная ветка разработки типизированных эстетических профилей, HIR/MIR/LIR и планирования эволюции архитектуры, дизайна и кода; выполнение и интеграция с общим native backend ещё требуют проверки.
+- Единый [каталог фреймворков](frameworks/README.md) показывает известные семейства и статус их PR; открытые PR не считаются частью main.
 
-Документы: [Возможности](docs/FEATURES.md) · [Архитектура](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Фабрика Jora](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md).
+Документы: [Эстетика и эволюция архитектуры](docs/AESTHETIC_EVOLUTION.md) · [Каталог фреймворков](frameworks/README.md) · [Возможности](docs/FEATURES.md) · [Архитектура](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Фабрика Jora](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md).
 
 ## Быстрый старт
 
 Требования: Python 3.10–3.12 для эталонной среды; Node.js 22/24 для необязательных compatibility-тестов; Tkinter для Windows Studio; CMake 3.16+ и компилятор C17 для нативной ветки.
 
-```sh
-python -m venv .venv
-python -m pip install -e .
-python -m reaper --check examples/flow.rpr
-python -m reaper examples/flow.rpr
-```
+    python -m venv .venv
+    python -m pip install -e .
+    python -m reaper --check examples/flow.rpr
+    python -m reaper examples/flow.rpr
 
 Studio и REPL:
 
-```sh
-python reaper_desktop.py
-python -m reaper --repl
-```
+    python reaper_desktop.py
+    python -m reaper --repl
 
 Тесты эталонной среды:
 
-```sh
-python -m unittest discover -s tests -v
-```
+    python -m unittest discover -s tests -v
 
 ## Архитектура и статус
 
@@ -51,6 +47,6 @@ python -m unittest discover -s tests -v
 - [План реализации](docs/IMPLEMENTATION_ROADMAP.md)
 - [Библиотека Kora](docs/KORA.md)
 - [Индекс документации](docs/README.md)
-- [Общие стандарты экосистемы](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/SHARED_STANDARDS.md)
+- [Общие стандарты экосистемы](https://github.com/Ivan-VHS/DAK/blob/main/docs/SHARED_STANDARDS.md)
 
 [Вклад в проект](CONTRIBUTING.md) · [Безопасность](SECURITY.md) · [Apache-2.0](LICENSE)

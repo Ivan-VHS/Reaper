@@ -1,0 +1,81 @@
+# Kolir — bounded source and architecture change-plan generator.
+# Plans describe work; they do not write files, invoke commands, or mutate branches.
+import "vorke.rpr" as Vorke
+
+export craft valid_request(request) {
+    when kind(request) != "list" or size(request) != 9 {
+        yield false
+    }
+    when request[0] != "SourceEvolutionRequest" {
+        yield false
+    }
+    when not Vorke["valid_text"](request[1], 96)
+        or not Vorke["valid_fingerprint"](request[2])
+        or kind(request[3]) != "list" {
+        yield false
+    }
+    when size(request[3]) == 0 or size(request[3]) > 8 {
+        yield false
+    }
+    when not Vorke["valid_number"](request[4], 1, 100)
+        or request[4] // 1 != request[4] {
+        yield false
+    }
+    when not Vorke["valid_number"](request[5], 1, 1048576)
+        or request[5] // 1 != request[5] {
+        yield false
+    }
+    when not Vorke["valid_number"](request[6], 0, 100)
+        or not Vorke["valid_number"](request[7], 0, 100)
+        or not Vorke["valid_flag"](request[8]) {
+        yield false
+    }
+
+    each domain in request[3] {
+        when domain != "architecture" and domain != "design" and domain != "source"
+            and domain != "compiler" and domain != "tests" and domain != "documentation" {
+            yield false
+        }
+    }
+    when size(unique(request[3])) != size(request[3]) {
+        yield false
+    }
+    when request[6] >= 40 and request[8] != true {
+        yield false
+    }
+    yield true
+}
+
+export craft plan(request) {
+    when not valid_request(request) {
+        yield ["AestheticError", "RPR-AE1601", "source evolution request violates Kolir bounds"]
+    }
+
+    vary steps := []
+    each domain in request[3] {
+        when domain == "architecture" {
+            change steps := push(steps, ["architecture", "analyze_and_propose", "review_required"])
+        }
+        when domain == "design" {
+            change steps := push(steps, ["design", "compile_and_compare_profiles", "review_required"])
+        }
+        when domain == "source" {
+            change steps := push(steps, ["source", "prepare_ast_or_ir_patch", "review_required"])
+        }
+        when domain == "compiler" {
+            change steps := push(steps, ["compiler", "validate_pass_contracts", "review_required"])
+        }
+        when domain == "tests" {
+            change steps := push(steps, ["tests", "derive_conformance_cases", "required"])
+        }
+        when domain == "documentation" {
+            change steps := push(steps, ["documentation", "update_contract_and_status", "required"])
+        }
+    }
+
+    yield [
+        "SourceEvolutionPlan", Vorke["VERSION"], request[1], request[2],
+        request[3], steps, request[4], request[5], request[6], request[7],
+        request[8], "propose_only"
+    ]
+}
