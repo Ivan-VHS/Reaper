@@ -299,9 +299,41 @@ export craft parse_program(tokens) {
         yield ast("each", token, name_token[1], [iterable, body])
     }
 
-    craft parse_struct(token) {
-        make name_token := consume("IDENT", "expected a structure name after 'struct'")
-        make ignored_open := consume("{", "expected '{' after structure name")
+    craft parse_aggregate(token, aggregate_kind) {
+        make name_token := consume("IDENT", "expected an aggregate name")
+        vary representation := "native"
+        vary requested_align := 0
+        vary representation_seen := false
+        vary alignment_seen := false
+
+        loop while not failed and check("IDENT") and (peek()[1] == "repr" or peek()[1] == "align") {
+            make attribute := advance()
+            make ignored_open_attribute := consume("(", "expected '(' after aggregate attribute")
+            when attribute[1] == "repr" {
+                when representation_seen {
+                    make ignored := fail("duplicate repr attribute", attribute)
+                }
+                change representation_seen := true
+                make representation_token := consume("IDENT", "expected native, C or packed representation")
+                when representation_token[1] != "native" and representation_token[1] != "C" and representation_token[1] != "packed" {
+                    make ignored := fail("unknown aggregate representation", representation_token)
+                }
+                change representation := representation_token[1]
+            } otherwise {
+                when alignment_seen {
+                    make ignored := fail("duplicate align attribute", attribute)
+                }
+                change alignment_seen := true
+                make alignment_token := consume("NUMBER", "expected a positive numeric alignment")
+                change requested_align := number(alignment_token[1])
+                when requested_align < 1 or requested_align % 1 != 0 {
+                    make ignored := fail("aggregate alignment must be a positive integer", alignment_token)
+                }
+            }
+            make ignored_close_attribute := consume(")", "expected ')' after aggregate attribute")
+        }
+
+        make ignored_open := consume("{", "expected '{' after aggregate declaration")
         vary fields := []
         skip_newlines()
 
@@ -321,13 +353,56 @@ export craft parse_program(tokens) {
         }
 
         when not failed and not check("}") {
-            make ignored := fail("expected '}' after structure fields", peek())
+            make ignored := fail("expected '}' after aggregate fields", peek())
         }
         when failed {
-            yield ast("struct", token, name_token[1], fields)
+            yield ast(aggregate_kind, token, [name_token[1], representation, requested_align], fields)
         }
         make ignored_close := advance()
-        yield ast("struct", token, name_token[1], fields)
+        yield ast(aggregate_kind, token, [name_token[1], representation, requested_align], fields)
+    }
+
+    craft parse_struct(token) {
+        yield parse_aggregate(token, "struct")
+    }
+
+    craft parse_union(token) {
+        yield parse_aggregate(token, "union")
+    }
+
+    craft parse_enum(token) {
+        make name_token := consume("IDENT", "expected an enum name after 'enum'")
+        vary underlying_type := "i32"
+        when match_kind(":") {
+            make underlying_token := consume("IDENT", "expected an integer underlying type")
+            change underlying_type := underlying_token[1]
+        }
+        make ignored_open := consume("{", "expected '{' after enum declaration")
+        vary variants := []
+        skip_newlines()
+
+        loop while not failed and not check("}") and not check("EOF") {
+            make variant_name := consume("IDENT", "expected an enum variant name")
+            make ignored_assign := consume(":=", "expected ':=' and an explicit integer discriminant")
+            make value := parse_bp(1)
+            when not failed {
+                change variants := push(variants, ast("enum_variant", variant_name, variant_name[1], [value]))
+                when match_kind(",") {
+                    skip_newlines()
+                } otherwise {
+                    make ended := statement_end()
+                }
+            }
+        }
+
+        when not failed and not check("}") {
+            make ignored := fail("expected '}' after enum variants", peek())
+        }
+        when failed {
+            yield ast("enum", token, [name_token[1], underlying_type], variants)
+        }
+        make ignored_close := advance()
+        yield ast("enum", token, [name_token[1], underlying_type], variants)
     }
 
     craft parse_platform(token) {
@@ -374,10 +449,10 @@ export craft parse_program(tokens) {
 
         when check("EXPORT") {
             make token := advance()
-            when check("MAKE") or check("VARY") or check("CRAFT") or check("STRUCT") or check("PLATFORM") {
+            when check("MAKE") or check("VARY") or check("CRAFT") or check("STRUCT") or check("UNION") or check("ENUM") or check("PLATFORM") {
                 make declaration := parse_statement()
-                when not failed and declaration[0] != "declare" and declaration[0] != "function" and declaration[0] != "struct" and declaration[0] != "platform" {
-                    make ignored := fail("inline export must declare a name, craft, struct, or platform", token)
+                when not failed and declaration[0] != "declare" and declaration[0] != "function" and declaration[0] != "struct" and declaration[0] != "union" and declaration[0] != "enum" and declaration[0] != "platform" {
+                    make ignored := fail("inline export must declare a name, craft, struct, union, enum or platform", token)
                 }
                 yield ast("export", token, nothing, [declaration])
             }
@@ -388,6 +463,16 @@ export craft parse_program(tokens) {
         when check("STRUCT") {
             make token := advance()
             yield parse_struct(token)
+        }
+
+        when check("UNION") {
+            make token := advance()
+            yield parse_union(token)
+        }
+
+        when check("ENUM") {
+            make token := advance()
+            yield parse_enum(token)
         }
 
         when check("PLATFORM") {
@@ -562,5 +647,72 @@ make malformed := parse_program([
 ])
 assert(malformed[0] == "ERROR", "missing statement separator was accepted")
 assert(malformed[2] == 8 and malformed[3] == 17, "statement error source position mismatch")
+
+# Typed aggregate declaration with explicit representation and alignment.
+make struct_result := parse_program([
+    ["STRUCT", "struct", 1, 1], ["IDENT", "Vec3", 1, 8],
+    ["IDENT", "repr", 1, 13], ["(", "(", 1, 17],
+    ["IDENT", "native", 1, 18], [")", ")", 1, 24],
+    ["IDENT", "align", 1, 26], ["(", "(", 1, 31],
+    ["NUMBER", "4", 1, 32], [")", ")", 1, 33],
+    ["{", "{", 1, 35], ["NEWLINE", "\n", 1, 36],
+    ["IDENT", "x", 2, 5], [":", ":", 2, 6], ["IDENT", "f32", 2, 8], ["NEWLINE", "\n", 2, 11],
+    ["IDENT", "y", 3, 5], [":", ":", 3, 6], ["IDENT", "f32", 3, 8], ["NEWLINE", "\n", 3, 11],
+    ["}", "}", 4, 1], ["EOF", "", 4, 2]
+])
+assert(struct_result[0] == "OK", "typed struct declaration parsing failed")
+make struct_node := struct_result[1][3][0]
+assert(struct_node[0] == "struct", "struct declaration node missing")
+assert(struct_node[2] == ["Vec3", "native", 4], "struct representation and alignment attributes mismatch")
+assert(size(struct_node[3]) == 2 and struct_node[3][0][2] == ["x", "f32"], "typed struct fields mismatch")
+
+# Union declaration shares aggregate attributes and field grammar.
+make union_result := parse_program([
+    ["UNION", "union", 1, 1], ["IDENT", "RegisterValue", 1, 7],
+    ["{", "{", 1, 21], ["NEWLINE", "\n", 1, 22],
+    ["IDENT", "wide", 2, 5], [":", ":", 2, 9], ["IDENT", "u64", 2, 11], ["NEWLINE", "\n", 2, 14],
+    ["IDENT", "low", 3, 5], [":", ":", 3, 8], ["IDENT", "u32", 3, 10], ["NEWLINE", "\n", 3, 13],
+    ["}", "}", 4, 1], ["EOF", "", 4, 2]
+])
+assert(union_result[0] == "OK", "union declaration parsing failed")
+assert(union_result[1][3][0][0] == "union", "union declaration node missing")
+assert(union_result[1][3][0][2] == ["RegisterValue", "native", 0], "union defaults mismatch")
+
+# Enum declarations require explicit discriminants and preserve the base type.
+make enum_result := parse_program([
+    ["ENUM", "enum", 1, 1], ["IDENT", "DeviceState", 1, 6],
+    [":", ":", 1, 17], ["IDENT", "u8", 1, 19],
+    ["{", "{", 1, 22], ["NEWLINE", "\n", 1, 23],
+    ["IDENT", "Ready", 2, 5], [":=", ":=", 2, 11], ["NUMBER", "0", 2, 14], ["NEWLINE", "\n", 2, 15],
+    ["IDENT", "Running", 3, 5], [":=", ":=", 3, 13], ["NUMBER", "1", 3, 16], ["NEWLINE", "\n", 3, 17],
+    ["}", "}", 4, 1], ["EOF", "", 4, 2]
+])
+assert(enum_result[0] == "OK", "enum declaration parsing failed")
+make enum_node := enum_result[1][3][0]
+assert(enum_node[0] == "enum" and enum_node[2] == ["DeviceState", "u8"], "enum type header mismatch")
+assert(size(enum_node[3]) == 2 and enum_node[3][1][2] == "Running", "enum variants were not preserved")
+
+# Platform declarations use explicit named properties and ordinary constant expressions.
+make platform_result := parse_program([
+    ["PLATFORM", "platform", 1, 1], ["IDENT", "LinuxX86_64", 1, 10],
+    ["{", "{", 1, 22], ["NEWLINE", "\n", 1, 23],
+    ["IDENT", "architecture", 2, 5], [":=", ":=", 2, 18], ["STRING", "x86_64", 2, 21], ["NEWLINE", "\n", 2, 29],
+    ["IDENT", "pointer_size", 3, 5], [":=", ":=", 3, 18], ["NUMBER", "8", 3, 21], ["NEWLINE", "\n", 3, 22],
+    ["}", "}", 4, 1], ["EOF", "", 4, 2]
+])
+assert(platform_result[0] == "OK", "platform declaration parsing failed")
+make platform_node := platform_result[1][3][0]
+assert(platform_node[0] == "platform" and platform_node[2] == "LinuxX86_64", "platform identity mismatch")
+assert(platform_node[3][0][2] == "architecture" and platform_node[3][1][2] == "pointer_size", "platform property names mismatch")
+
+# Invalid typed declarations fail with source-aware diagnostics.
+make malformed_struct := parse_program([
+    ["STRUCT", "struct", 9, 1], ["IDENT", "Broken", 9, 8],
+    ["{", "{", 9, 15], ["NEWLINE", "\n", 9, 16],
+    ["IDENT", "field", 10, 3], ["IDENT", "u32", 10, 9],
+    ["}", "}", 11, 1], ["EOF", "", 11, 2]
+])
+assert(malformed_struct[0] == "ERROR", "struct field without ':' was accepted")
+assert(malformed_struct[2] == 10 and malformed_struct[3] == 9, "struct diagnostic source position mismatch")
 
 emit "SELFHOST_PROGRAM_PARSER_OK"

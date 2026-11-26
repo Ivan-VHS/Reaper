@@ -1,0 +1,27 @@
+# Typed low-level data model using the Reaper-native layout constructors.
+# This example computes declared layouts; it does not emit target machine code.
+import "../selfhost/type_platform.rpr"
+
+make linux := platform_linux_x86_64()
+
+make PhysicalAddress := type_distinct("PhysicalAddress", type_primitive("u64"))
+make VirtualAddress := type_distinct("VirtualAddress", type_primitive("u64"))
+
+make MemoryPermissions := type_enum("MemoryPermissions", type_primitive("u8"), [
+    type_variant("ReadOnly", 1),
+    type_variant("ReadWrite", 3),
+    type_variant("Execute", 5)
+])
+
+make MemoryRegion := type_struct("MemoryRegion", "C", 0, [
+    type_field("base", type_named("PhysicalAddress")),
+    type_field("length", type_primitive("usize")),
+    type_field("permissions", type_named("MemoryPermissions")),
+    type_field("reserved", type_primitive("u8"))
+])
+
+make definitions := [PhysicalAddress, VirtualAddress, MemoryPermissions, MemoryRegion]
+make layout := type_layout_with_metadata(type_named("MemoryRegion"), linux, definitions)
+
+assert(layout[0], "MemoryRegion must have a valid Linux x86_64 layout")
+emit layout[1]

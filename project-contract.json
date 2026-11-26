@@ -123,6 +123,22 @@
         "tests/test_octa_pyramid.py",
         "docs/OCTA_PYRAMID_FEDERATION.md"
       ]
+    },
+    {
+      "id": "types.platform-layout-v1",
+      "status": "partial",
+      "summary": "The unified Reaper-written declaration module parses struct, union, enum and platform declarations, bridges AST nodes to versioned typed descriptors, and computes checked layouts for explicit targets. Main compatibility parser/typechecker integration, canonical typed IR and native aggregate ABI lowering remain incomplete.",
+      "evidence": [
+        "selfhost/type_declarations.rpr",
+        "selfhost/lexer.rpr",
+        "selfhost/program_parser.rpr",
+        "selfhost/typed_declarations.rpr",
+        "selfhost/type_platform.rpr",
+        "selfhost/type_platform_tests.rpr",
+        "selfhost/typed_declarations_tests.rpr",
+        "examples/typed_platforms.rpr",
+        "docs/TYPED_STRUCTURES_AND_PLATFORMS_V1.md"
+      ]
     }
   ],
   "interfaces": [
@@ -203,13 +219,16 @@
     "Execution quotas are resource guardrails, not a security sandbox for untrusted programs.",
     "Filesystem, process, network, clock, shell and native-library effects remain explicit or opt-in rather than ambient expression behavior.",
     "Native FFI executes in-process native code and must only load trusted ABI-compatible libraries.",
-    "The native C17 implementation and self-hosting frontend remain partial; Python is the compatibility reference."
+    "The native C17 implementation and self-hosting frontend remain partial; Python is the compatibility reference.",
+    "Target platform profiles are compile-time descriptors, not runtime CPU probes, capability grants, driver installation or proof of backend support.",
+    "DABI64 Desktop Host is a pointer-free service wire ABI and is not interchangeable with a process calling convention."
   ],
   "extension_points": [
     "Canonical IR and selectable execution engines.",
     "Versioned .rpr module interfaces and explicit import/export boundaries.",
     "Opt-in C ABI adapters and validated versioned JSON interchange.",
     "Native C17 frontend stages with Python reference behavior as the compatibility oracle.",
-    "Bounded vertical self-composition for deterministic compiler and data-flow transformation pipelines."
+    "Bounded vertical self-composition for deterministic compiler and data-flow transformation pipelines.",
+    "Versioned Reaper-native typed declarations, target platform profiles and deterministic aggregate data-layout calculation."
   ]
 }

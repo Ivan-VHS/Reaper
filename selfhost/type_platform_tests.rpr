@@ -1,0 +1,213 @@
+# Executable conformance suite for the Reaper-native type and platform core.
+import "type_platform.rpr"
+
+make windows := platform_windows_x86_64()
+make linux := platform_linux_x86_64()
+make arm64 := platform_linux_aarch64()
+make dak := platform_dak_x86_64()
+
+assert(platform_validate(windows)[0], "Windows x86_64 profile must validate")
+assert(platform_validate(linux)[0], "Linux x86_64 profile must validate")
+assert(platform_validate(arm64)[0], "Linux AArch64 profile must validate")
+assert(platform_validate(dak)[0], "DAK profile-only descriptor must validate")
+
+make bad_data_model := platform_profile(
+    "BAD_DATA_MODEL", "x86_64", "linux", "ILP32",
+    8, 8, "little", "ELF", "SYSV_X86_64", "none", 16,
+    8, 8, [8, 16, 32, 64], ["sse2"], "declared"
+)
+make bad_data_model_result := platform_validate(bad_data_model)
+assert(not bad_data_model_result[0] and bad_data_model_result[1] == "RPR-PLATFORM-0018", "inconsistent ILP32 profile must fail")
+
+make partial_c_long_profile := platform_profile(
+    "PARTIAL_C_LONG", "x86_64", "DAK", "unfinalized",
+    8, 8, "little", "unfinalized", "unfinalized", "DABI64_DESKTOP_HOST_V1", 16,
+    0, 4, [8, 16, 32, 64], ["sse2"], "profile_only"
+)
+make partial_c_long_result := platform_validate(partial_c_long_profile)
+assert(not partial_c_long_result[0] and partial_c_long_result[1] == "RPR-PLATFORM-0009", "unknown C long layout must have zero size and alignment")
+
+make oversized_c_long_profile := platform_profile(
+    "OVERSIZED_C_LONG", "x86_64", "linux", "LP64",
+    8, 8, "little", "ELF", "SYSV_X86_64", "none", 16,
+    16, 8, [8, 16, 32, 64], ["sse2"], "declared"
+)
+make oversized_c_long_result := platform_validate(oversized_c_long_profile)
+assert(not oversized_c_long_result[0] and oversized_c_long_result[1] == "RPR-PLATFORM-0008", "unsupported C long size must be rejected")
+
+make duplicate_atomics := platform_profile(
+    "DUPLICATE_ATOMICS", "x86_64", "linux", "LP64",
+    8, 8, "little", "ELF", "SYSV_X86_64", "none", 16,
+    8, 8, [8, 8], ["sse2"], "declared"
+)
+make duplicate_atomics_result := platform_validate(duplicate_atomics)
+assert(not duplicate_atomics_result[0] and duplicate_atomics_result[1] == "RPR-PLATFORM-0023", "duplicate atomic widths must fail")
+
+make duplicate_features := platform_profile(
+    "DUPLICATE_FEATURES", "x86_64", "linux", "LP64",
+    8, 8, "little", "ELF", "SYSV_X86_64", "none", 16,
+    8, 8, [8, 16], ["sse2", "sse2"], "declared"
+)
+make duplicate_features_result := platform_validate(duplicate_features)
+assert(not duplicate_features_result[0] and duplicate_features_result[1] == "RPR-PLATFORM-0024", "duplicate CPU features must fail")
+
+make registry := platform_registry_validate([windows, linux, arm64, dak])
+assert(registry[0], "platform registry must accept unique identifiers")
+
+assert(platform_has_feature(linux, "sse2"), "Linux x86_64 must declare its baseline feature")
+assert(not platform_has_feature(linux, "avx2"), "undeclared AVX2 must not be inferred")
+assert(platform_has_atomic_width(linux, 64), "Linux x86_64 profile must declare 64-bit atomics")
+
+make feature_match := platform_satisfies(linux, "x86_64", 8, "little", ["sse2"])
+assert(feature_match[0], "matching platform requirement must pass")
+make feature_miss := platform_satisfies(linux, "x86_64", 8, "little", ["avx2"])
+assert(not feature_miss[0] and feature_miss[1] == "RPR-PLATFORM-0015", "missing CPU feature must fail")
+make arch_miss := platform_satisfies(linux, "aarch64", 8, "little", [])
+assert(not arch_miss[0] and arch_miss[1] == "RPR-PLATFORM-0012", "wrong architecture must fail")
+
+assert(platform_process_abi_declared(windows), "Windows profile declares a process ABI")
+assert(platform_process_abi_declared(linux), "Linux profile declares a process ABI")
+assert(not platform_process_abi_declared(dak), "DABI64 desktop wire protocol must not be mistaken for process ABI")
+assert(dak[10] == "DABI64_DESKTOP_HOST_V1", "DAK profile must retain its service wire ABI identity")
+make dak_wire_layout := type_layout_with_metadata(type_primitive("u8"), dak, [])
+assert(dak_wire_layout[0] and dak_wire_layout[1][8] == "DABI64_DESKTOP_HOST_V1", "layout metadata must retain the service wire ABI separately")
+assert(dak_wire_layout[1][9] == "profile_only", "layout metadata must retain profile maturity")
+make dak_c_long := primitive_layout("c_long", dak)
+assert(not dak_c_long[0], "unknown DAK C long layout must remain unavailable")
+
+make windows_long := primitive_layout("c_long", windows)
+make linux_long := primitive_layout("c_long", linux)
+assert(windows_long[0] and windows_long[1][0] == 4, "LLP64 C long must be four bytes")
+assert(linux_long[0] and linux_long[1][0] == 8, "LP64 C long must be eight bytes")
+
+make invalid_profile_layout := type_layout(type_primitive("u32"), bad_data_model, [], [])
+assert(not invalid_profile_layout[0] and invalid_profile_layout[1] == "RPR-PLATFORM-0018", "direct layout calls must reject invalid target profiles")
+
+make vec3 := type_struct("Vec3", "native", 0, [
+    type_field("x", type_primitive("f32")),
+    type_field("y", type_primitive("f32")),
+    type_field("z", type_primitive("f32"))
+])
+make vec3_layout := type_layout_with_metadata(type_named("Vec3"), linux, [vec3])
+assert(vec3_layout[0], "Vec3 must have a valid target layout")
+assert(vec3_layout[1][2] == 12, "Vec3 size must be 12 bytes")
+assert(vec3_layout[1][3] == 4, "Vec3 alignment must be 4 bytes")
+assert(vec3_layout[1][4] == [0, 4, 8], "Vec3 field offsets must be deterministic")
+
+make c_header := type_struct("CHeader", "C", 0, [
+    type_field("kind", type_primitive("u32")),
+    type_field("sequence", type_primitive("u64"))
+])
+make c_header_layout := type_layout(c_header, linux, [], [])
+assert(c_header_layout[0], "C representation must produce a layout")
+assert(c_header_layout[1][0] == 16, "CHeader size must include inter-field and tail padding")
+assert(c_header_layout[1][1] == 8, "CHeader alignment must reflect its widest field")
+assert(c_header_layout[1][2] == [0, 8], "CHeader offsets must preserve natural alignment")
+
+make packed_header := type_struct("PackedHeader", "packed", 0, [
+    type_field("kind", type_primitive("u8")),
+    type_field("sequence", type_primitive("u32"))
+])
+make packed_layout := type_layout(packed_header, linux, [], [])
+assert(packed_layout[0], "packed aggregate must have a valid layout")
+assert(packed_layout[1][0] == 5 and packed_layout[1][1] == 1, "packed aggregate must have byte alignment")
+assert(packed_layout[1][2] == [0, 1], "packed fields must not receive implicit padding")
+
+make register_union := type_union("RegisterValue", "C", 0, [
+    type_field("wide", type_primitive("u64")),
+    type_field("low", type_primitive("u32"))
+])
+make union_layout := type_layout(register_union, linux, [], [])
+assert(union_layout[0], "union must have a valid layout")
+assert(union_layout[1][0] == 8 and union_layout[1][1] == 8, "union size and alignment must use the largest member")
+assert(union_layout[1][2] == [0, 0], "union members must share offset zero")
+
+make words := type_array(type_primitive("u32"), 4)
+make words_layout := type_layout(words, linux, [], [])
+assert(words_layout[0] and words_layout[1][0] == 16, "fixed array size must be element size multiplied by length")
+assert(words_layout[1][1] == 4, "fixed array alignment must equal element alignment")
+
+make node := type_struct("Node", "native", 0, [
+    type_field("id", type_primitive("u32")),
+    type_field("next", type_pointer(type_named("Node"), false))
+])
+make node_layout := type_layout(type_named("Node"), linux, [node], [])
+assert(node_layout[0], "pointer recursion must not be treated as by-value recursion")
+assert(node_layout[1][0] == 16 and node_layout[1][2] == [0, 8], "Node layout must include a naturally aligned pointer")
+
+make recursive_value := type_struct("RecursiveValue", "native", 0, [
+    type_field("child", type_named("RecursiveValue"))
+])
+make recursive_layout := type_layout(type_named("RecursiveValue"), linux, [recursive_value], [])
+assert(not recursive_layout[0] and recursive_layout[1] == "RPR-LAYOUT-0004", "by-value recursive types must be rejected")
+
+make duplicate_fields := type_struct("DuplicateFields", "native", 0, [
+    type_field("value", type_primitive("u8")),
+    type_field("value", type_primitive("u32"))
+])
+make duplicate_layout := type_layout(duplicate_fields, linux, [], [])
+assert(not duplicate_layout[0] and duplicate_layout[1] == "RPR-LAYOUT-0021", "duplicate fields must be rejected")
+
+make bad_alignment := type_struct("BadAlignment", "native", 3, [
+    type_field("value", type_primitive("u32"))
+])
+make bad_alignment_layout := type_layout(bad_alignment, linux, [], [])
+assert(not bad_alignment_layout[0] and bad_alignment_layout[1] == "RPR-LAYOUT-0018", "non power-of-two explicit alignment must be rejected")
+
+make enum_type := type_enum("DeviceState", type_primitive("u8"), [
+    type_variant("Ready", 0),
+    type_variant("Running", 1),
+    type_variant("Stopped", 2)
+])
+make enum_layout := type_layout(enum_type, linux, [], [])
+assert(enum_layout[0] and enum_layout[1][0] == 1, "enum storage must follow its declared underlying type")
+
+make enum_out_of_range := type_layout(type_enum("InvalidState", type_primitive("u8"), [
+    type_variant("Ready", 0),
+    type_variant("Overflow", 256)
+]), linux, [], [])
+assert(not enum_out_of_range[0] and enum_out_of_range[1] == "RPR-LAYOUT-0033", "enum discriminant must fit the underlying integer type")
+
+make enum_fraction := type_layout(type_enum("FractionalState", type_primitive("u8"), [
+    type_variant("Ready", 0),
+    type_variant("Half", 1.5)
+]), linux, [], [])
+assert(not enum_fraction[0] and enum_fraction[1] == "RPR-LAYOUT-0032", "enum discriminant must be an integer")
+
+make enum_float_base := type_layout(type_enum("FloatState", type_primitive("f32"), [
+    type_variant("Ready", 0)
+]), linux, [], [])
+assert(not enum_float_base[0] and enum_float_base[1] == "RPR-LAYOUT-0025", "enum underlying type must be integral")
+
+make distinct_address := type_distinct("PhysicalAddress", type_primitive("u64"))
+make address_layout := type_layout(distinct_address, linux, [], [])
+assert(address_layout[0] and address_layout[1][0] == 8, "distinct type must retain its underlying physical layout")
+
+make opaque_token := type_opaque("HostToken", 16, 8)
+make opaque_layout := type_layout(opaque_token, linux, [], [])
+assert(opaque_layout[0] and opaque_layout[1][0] == 16 and opaque_layout[1][1] == 8, "opaque layout must use its explicit size and alignment")
+
+make fractional_array := type_layout(type_array(type_primitive("u32"), 1.5), linux, [], [])
+assert(not fractional_array[0] and fractional_array[1] == "RPR-LAYOUT-0006", "array length must be an integer")
+
+make invalid_pointer := type_layout(type_pointer(type_primitive("u8"), "mutable"), linux, [], [])
+assert(not invalid_pointer[0] and invalid_pointer[1] == "RPR-LAYOUT-0028", "pointer mutability must be a boolean")
+
+make bad_array := type_layout(type_array(type_primitive("u64"), 9223372036854775807), linux, [], [])
+assert(not bad_array[0] and bad_array[1] == "RPR-LAYOUT-0007", "array size overflow must be rejected")
+
+make duplicate_types := type_definitions_validate([vec3, vec3])
+assert(not duplicate_types[0] and duplicate_types[1] == "RPR-TYPE-0002", "duplicate nominal definitions must be rejected")
+make duplicate_type_layout := type_layout_with_metadata(type_named("Vec3"), linux, [vec3, vec3])
+assert(not duplicate_type_layout[0] and duplicate_type_layout[1] == "RPR-TYPE-0002", "layout entrypoint must reject ambiguous nominal type registries")
+
+make invalid_definition := type_definitions_validate([type_primitive("u8")])
+assert(not invalid_definition[0] and invalid_definition[1] == "RPR-TYPE-0004", "type registry must reject non-nominal descriptors")
+
+make malformed_descriptor := type_layout(["TYPE_V1"], linux, [], [])
+assert(not malformed_descriptor[0] and malformed_descriptor[1] == "RPR-LAYOUT-0038", "truncated type descriptor must return a diagnostic")
+
+make fractional_opaque := type_layout(type_opaque("FractionalOpaque", 16, 4.5), linux, [], [])
+assert(not fractional_opaque[0] and fractional_opaque[1] == "RPR-LAYOUT-0012", "opaque size and alignment must be integral")
+
+emit "REAPER_TYPED_PLATFORM_CONFORMANCE_OK"

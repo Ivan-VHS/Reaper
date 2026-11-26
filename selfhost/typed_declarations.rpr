@@ -1,0 +1,218 @@
+# Reaper-native bridge from source-aware declaration AST to canonical descriptors.
+import "type_platform.rpr"
+
+export craft declaration_is_primitive(name) {
+    when name == "bool" or name == "i8" or name == "u8" or name == "i16" or name == "u16" or name == "i32" or name == "u32" or name == "i64" or name == "u64" or name == "f32" or name == "f64" or name == "usize" or name == "isize" or name == "c_char" or name == "c_short" or name == "c_int" or name == "c_long" or name == "c_longlong" {
+        yield true
+    }
+    yield false
+}
+
+export craft declaration_type_from_name(name) {
+    when declaration_is_primitive(name) {
+        yield type_primitive(name)
+    }
+    yield type_named(name)
+}
+
+export craft declaration_error(code, message) {
+    yield [false, code, message]
+}
+
+export craft typed_aggregate_to_descriptor(node) {
+    when size(node) != 4 or (node[0] != "struct" and node[0] != "union") {
+        yield declaration_error("RPR-DECL-0001", "expected a struct or union declaration AST")
+    }
+    when size(node[2]) != 3 {
+        yield declaration_error("RPR-DECL-0002", "aggregate declaration metadata is malformed")
+    }
+
+    make name := node[2][0]
+    make representation := node[2][1]
+    make requested_align := node[2][2]
+    vary fields := []
+
+    each field in node[3] {
+        when size(field) != 4 or field[0] != "field" or size(field[2]) != 2 {
+            yield declaration_error("RPR-DECL-0003", "aggregate contains a malformed field declaration")
+        }
+        make field_name := field[2][0]
+        make field_type_name := field[2][1]
+        when field_name == "" or field_type_name == "" {
+            yield declaration_error("RPR-DECL-0004", "aggregate field name and type must be non-empty")
+        }
+        change fields := push(fields, type_field(field_name, declaration_type_from_name(field_type_name)))
+    }
+
+    when node[0] == "struct" {
+        yield [true, type_struct(name, representation, requested_align, fields), ""]
+    }
+    yield [true, type_union(name, representation, requested_align, fields), ""]
+}
+
+export craft declaration_integer_discriminant(expression) {
+    when size(expression) != 4 {
+        yield declaration_error("RPR-DECL-0019", "enum discriminant expression is malformed")
+    }
+    when expression[0] == "literal" and expression[1][0] == "NUMBER" {
+        when expression[2] % 1 != 0 {
+            yield declaration_error("RPR-DECL-0020", "enum discriminant must be an integer")
+        }
+        yield [true, expression[2], ""]
+    }
+    when expression[0] == "unary" and expression[2] == "-" and size(expression[3]) == 1 {
+        make operand := expression[3][0]
+        when operand[0] != "literal" or operand[1][0] != "NUMBER" {
+            yield declaration_error("RPR-DECL-0021", "negative enum discriminant must be a numeric literal")
+        }
+        when operand[2] % 1 != 0 {
+            yield declaration_error("RPR-DECL-0020", "enum discriminant must be an integer")
+        }
+        yield [true, 0 - operand[2], ""]
+    }
+    yield declaration_error("RPR-DECL-0022", "enum discriminant must be an integer literal")
+}
+
+export craft typed_enum_to_descriptor(node) {
+    when size(node) != 4 or node[0] != "enum" or size(node[2]) != 2 {
+        yield declaration_error("RPR-DECL-0005", "expected an enum declaration AST")
+    }
+    make name := node[2][0]
+    make underlying_name := node[2][1]
+    when not declaration_is_primitive(underlying_name) {
+        yield declaration_error("RPR-DECL-0006", "enum underlying type must be a supported integer primitive")
+    }
+
+    vary variants := []
+    each variant in node[3] {
+        when size(variant) != 4 or variant[0] != "enum_variant" or size(variant[3]) != 1 {
+            yield declaration_error("RPR-DECL-0007", "enum contains a malformed variant declaration")
+        }
+        make discriminant := declaration_integer_discriminant(variant[3][0])
+        when not discriminant[0] {
+            yield discriminant
+        }
+        change variants := push(variants, type_variant(variant[2], discriminant[1]))
+    }
+
+    yield [true, type_enum(name, type_primitive(underlying_name), variants), ""]
+}
+
+export craft typed_declaration_to_descriptor(node) {
+    when size(node) == 0 {
+        yield declaration_error("RPR-DECL-0009", "declaration AST is empty")
+    }
+    when node[0] == "struct" or node[0] == "union" {
+        yield typed_aggregate_to_descriptor(node)
+    }
+    when node[0] == "enum" {
+        yield typed_enum_to_descriptor(node)
+    }
+    yield declaration_error("RPR-DECL-0010", "unsupported typed declaration kind: " ++ node[0])
+}
+
+export craft declaration_literal_value(expression) {
+    when size(expression) != 4 {
+        yield declaration_error("RPR-DECL-0011", "platform property expression is malformed")
+    }
+    when expression[0] == "literal" {
+        yield [true, expression[2], ""]
+    }
+    when expression[0] == "name" {
+        yield [true, expression[2], ""]
+    }
+    when expression[0] == "list" {
+        vary values := []
+        each item in expression[3] {
+            make resolved := declaration_literal_value(item)
+            when not resolved[0] {
+                yield resolved
+            }
+            change values := push(values, resolved[1])
+        }
+        yield [true, values, ""]
+    }
+    yield declaration_error("RPR-DECL-0012", "platform properties accept only literals, names and literal lists")
+}
+
+export craft declaration_known_platform_property(name) {
+    when name == "architecture" or name == "os" or name == "data_model" or name == "pointer_size" or name == "pointer_align" or name == "endian" or name == "object_format" or name == "call_abi" or name == "service_wire_abi" or name == "max_align" or name == "c_long_size" or name == "c_long_align" or name == "atomic_widths" or name == "features" or name == "status" {
+        yield true
+    }
+    yield false
+}
+
+export craft declaration_platform_property(fields, name) {
+    vary found := false
+    vary result := [false, "RPR-DECL-0013", "missing required platform property: " ++ name]
+
+    each field in fields {
+        when size(field) != 4 or field[0] != "platform_field" {
+            yield declaration_error("RPR-DECL-0014", "platform contains a malformed property declaration")
+        }
+        when not declaration_known_platform_property(field[2]) {
+            yield declaration_error("RPR-DECL-0015", "unknown platform property: " ++ field[2])
+        }
+        when field[2] == name {
+            when found {
+                yield declaration_error("RPR-DECL-0016", "duplicate platform property: " ++ name)
+            }
+            when size(field[3]) != 1 {
+                yield declaration_error("RPR-DECL-0017", "platform property requires exactly one value")
+            }
+            change found := true
+            change result := declaration_literal_value(field[3][0])
+        }
+    }
+    yield result
+}
+
+export craft typed_platform_to_profile(node) {
+    when size(node) != 4 or node[0] != "platform" or node[2] == "" {
+        yield declaration_error("RPR-DECL-0018", "expected a named platform declaration AST")
+    }
+
+    make architecture := declaration_platform_property(node[3], "architecture")
+    when not architecture[0] { yield architecture }
+    make operating_system := declaration_platform_property(node[3], "os")
+    when not operating_system[0] { yield operating_system }
+    make data_model := declaration_platform_property(node[3], "data_model")
+    when not data_model[0] { yield data_model }
+    make pointer_size := declaration_platform_property(node[3], "pointer_size")
+    when not pointer_size[0] { yield pointer_size }
+    make pointer_align := declaration_platform_property(node[3], "pointer_align")
+    when not pointer_align[0] { yield pointer_align }
+    make endian := declaration_platform_property(node[3], "endian")
+    when not endian[0] { yield endian }
+    make object_format := declaration_platform_property(node[3], "object_format")
+    when not object_format[0] { yield object_format }
+    make call_abi := declaration_platform_property(node[3], "call_abi")
+    when not call_abi[0] { yield call_abi }
+    make service_wire_abi := declaration_platform_property(node[3], "service_wire_abi")
+    when not service_wire_abi[0] { yield service_wire_abi }
+    make max_align := declaration_platform_property(node[3], "max_align")
+    when not max_align[0] { yield max_align }
+    make c_long_size := declaration_platform_property(node[3], "c_long_size")
+    when not c_long_size[0] { yield c_long_size }
+    make c_long_align := declaration_platform_property(node[3], "c_long_align")
+    when not c_long_align[0] { yield c_long_align }
+    make atomic_widths := declaration_platform_property(node[3], "atomic_widths")
+    when not atomic_widths[0] { yield atomic_widths }
+    make features := declaration_platform_property(node[3], "features")
+    when not features[0] { yield features }
+    make status := declaration_platform_property(node[3], "status")
+    when not status[0] { yield status }
+
+    make profile := platform_profile(
+        node[2], architecture[1], operating_system[1], data_model[1],
+        pointer_size[1], pointer_align[1], endian[1], object_format[1],
+        call_abi[1], service_wire_abi[1], max_align[1],
+        c_long_size[1], c_long_align[1], atomic_widths[1], features[1],
+        status[1]
+    )
+    make checked := platform_validate(profile)
+    when not checked[0] {
+        yield checked
+    }
+    yield [true, profile, ""]
+}

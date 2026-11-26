@@ -1,0 +1,109 @@
+# End-to-end declaration -> typed descriptor -> target layout conformance.
+import "lexer.rpr"
+import "program_parser.rpr"
+import "type_declarations.rpr"
+import "type_platform.rpr"
+
+make source := "struct Vec3 repr(native) align(4) {\nx: f32\ny: f32\nz: f32\n}\nstruct Bounds {\nminimum: Vec3\nmaximum: Vec3\n}\nunion RegisterValue {\nwide: u64\nlow: u32\n}\nenum DeviceState: u8 {\nReady := 0\nRunning := 1\nStopped := 2\n}\nplatform LinuxX86_64 {\narchitecture := \"x86_64\"\nos := \"linux\"\ndata_model := \"LP64\"\npointer_size := 8\npointer_align := 8\nendian := \"little\"\nobject_format := \"ELF\"\ncall_abi := \"SYSV_X86_64\"\nservice_wire_abi := \"none\"\nmax_align := 16\nc_long_size := 8\nc_long_align := 8\natomic_widths := [8, 16, 32, 64]\nfeatures := [\"sse2\"]\nstatus := \"declared\"\n}\n"
+
+make tokens := tokenize(source)
+make parsed := parse_program(tokens)
+assert(parsed[0] == "OK", "typed declaration source must parse")
+make declarations := parsed[1][3]
+assert(size(declarations) == 5, "the source must produce five declarations")
+
+make vec3_result := typed_declaration_to_descriptor(declarations[0])
+make bounds_result := typed_declaration_to_descriptor(declarations[1])
+make union_result := typed_declaration_to_descriptor(declarations[2])
+make enum_result := typed_declaration_to_descriptor(declarations[3])
+make platform_result := typed_platform_to_profile(declarations[4])
+
+assert(vec3_result[0], "struct AST must lower into a typed descriptor")
+assert(bounds_result[0], "nested struct AST must lower into a typed descriptor")
+assert(union_result[0], "union AST must lower into a typed descriptor")
+assert(enum_result[0], "enum AST must lower into a typed descriptor")
+assert(platform_result[0], "platform AST must validate as a target profile")
+
+make definitions := [vec3_result[1], bounds_result[1], union_result[1], enum_result[1]]
+make registry := type_definitions_validate(definitions)
+assert(registry[0], "declaration set must form a valid nominal type registry")
+
+make vec3_layout := type_layout_with_metadata(type_named("Vec3"), platform_result[1], definitions)
+assert(vec3_layout[0], "Vec3 must have a valid target layout")
+assert(vec3_layout[1][2] == 12, "Vec3 must occupy twelve bytes")
+assert(vec3_layout[1][3] == 4, "Vec3 must have four-byte alignment")
+assert(vec3_layout[1][4] == [0, 4, 8], "Vec3 fields must retain their declared offsets")
+assert(vec3_layout[1][8] == "none", "process ABI must be separate from the service wire ABI")
+assert(vec3_layout[1][9] == "declared", "layout metadata must preserve profile status")
+
+make bounds_layout := type_layout(type_named("Bounds"), platform_result[1], definitions, [])
+assert(bounds_layout[0], "nested Bounds must resolve its nominal Vec3 fields")
+assert(bounds_layout[1][0] == 24 and bounds_layout[1][1] == 4, "nested Bounds size and alignment must be computed recursively")
+assert(bounds_layout[1][2] == [0, 12], "nested field offsets must be retained")
+
+make signed_enum_parsed := parse_program(tokenize("enum SignedState: i8 {\nUnknown := -1\nReady := 0\n}\n"))
+assert(signed_enum_parsed[0] == "OK", "negative enum discriminant must parse")
+make signed_enum := typed_declaration_to_descriptor(signed_enum_parsed[1][3][0])
+assert(signed_enum[0], "signed enum AST must convert to a typed descriptor")
+make signed_enum_layout := type_layout(signed_enum[1], platform_result[1], [], [])
+assert(signed_enum_layout[0] and signed_enum_layout[1][0] == 1, "negative discriminant in signed base type must pass")
+
+make invalid_unsigned_enum_parsed := parse_program(tokenize("enum InvalidUnsigned: u8 {\nNegative := -1\n}\n"))
+make invalid_unsigned_enum := typed_declaration_to_descriptor(invalid_unsigned_enum_parsed[1][3][0])
+make invalid_unsigned_layout := type_layout(invalid_unsigned_enum[1], platform_result[1], [], [])
+assert(not invalid_unsigned_layout[0] and invalid_unsigned_layout[1] == "RPR-LAYOUT-0033", "negative discriminant must not fit an unsigned base type")
+
+make union_layout := type_layout(type_named("RegisterValue"), platform_result[1], definitions, [])
+assert(union_layout[0], "RegisterValue must have a valid target layout")
+assert(union_layout[1][0] == 8 and union_layout[1][1] == 8, "union layout must use largest member size and alignment")
+assert(union_layout[1][2] == [0, 0], "union fields must share offset zero")
+
+make enum_layout := type_layout(type_named("DeviceState"), platform_result[1], definitions, [])
+assert(enum_layout[0], "DeviceState must have a valid target layout")
+assert(enum_layout[1][0] == 1 and enum_layout[1][1] == 1, "u8 enum representation must occupy one byte")
+
+# Representation attributes feed the actual target layout engine.
+make c_header_parsed := parse_program(tokenize("struct CHeader repr(C) {\nkind: u8\nsequence: u32\n}\n"))
+make c_header_descriptor := typed_declaration_to_descriptor(c_header_parsed[1][3][0])
+make c_header_layout := type_layout(c_header_descriptor[1], platform_result[1], [], [])
+assert(c_header_layout[0], "repr(C) structure must lower to a target layout")
+assert(c_header_layout[1][0] == 8 and c_header_layout[1][1] == 4, "repr(C) structure must preserve target C padding")
+assert(c_header_layout[1][2] == [0, 4], "repr(C) field offsets must respect natural alignment")
+
+make packed_header_parsed := parse_program(tokenize("struct PackedHeader repr(packed) {\nkind: u8\nsequence: u32\n}\n"))
+make packed_header_descriptor := typed_declaration_to_descriptor(packed_header_parsed[1][3][0])
+make packed_header_layout := type_layout(packed_header_descriptor[1], platform_result[1], [], [])
+assert(packed_header_layout[0], "repr(packed) structure must lower to a target layout")
+assert(packed_header_layout[1][0] == 5 and packed_header_layout[1][1] == 1, "repr(packed) must remove implicit field padding")
+assert(packed_header_layout[1][2] == [0, 1], "repr(packed) fields must have byte offsets")
+
+make aligned_header_parsed := parse_program(tokenize("struct AlignedHeader align(16) {\nvalue: u32\n}\n"))
+make aligned_header_descriptor := typed_declaration_to_descriptor(aligned_header_parsed[1][3][0])
+make aligned_header_layout := type_layout(aligned_header_descriptor[1], platform_result[1], [], [])
+assert(aligned_header_layout[0], "explicitly aligned structure must lower to a target layout")
+assert(aligned_header_layout[1][0] == 16 and aligned_header_layout[1][1] == 16, "align(16) must raise aggregate size and alignment")
+
+# Aggregate attributes are explicit and cannot silently overwrite one another.
+make duplicate_repr := parse_program(tokenize("struct Duplicate repr(native) repr(packed) {\nvalue: u8\n}\n"))
+assert(duplicate_repr[0] == "ERROR", "duplicate repr attributes must be rejected")
+
+make duplicate_align := parse_program(tokenize("struct Duplicate align(4) align(8) {\nvalue: u8\n}\n"))
+assert(duplicate_align[0] == "ERROR", "duplicate align attributes must be rejected")
+
+make zero_align := parse_program(tokenize("struct ZeroAlignment align(0) {\nvalue: u8\n}\n"))
+assert(zero_align[0] == "ERROR", "align(0) must be rejected at parse time")
+
+# Duplicate platform keys fail before a profile is accepted.
+make duplicate_platform_source := "platform Broken {\narchitecture := \"x86_64\"\narchitecture := \"aarch64\"\nos := \"linux\"\ndata_model := \"LP64\"\npointer_size := 8\npointer_align := 8\nendian := \"little\"\nobject_format := \"ELF\"\ncall_abi := \"SYSV_X86_64\"\nservice_wire_abi := \"none\"\nmax_align := 16\nc_long_size := 8\nc_long_align := 8\natomic_widths := [8, 16, 32, 64]\nfeatures := [\"sse2\"]\nstatus := \"declared\"\n}\n"
+make duplicate_parsed := parse_program(tokenize(duplicate_platform_source))
+assert(duplicate_parsed[0] == "OK", "duplicate property fixture must remain syntactically valid")
+make duplicate_profile := typed_platform_to_profile(duplicate_parsed[1][3][0])
+assert(not duplicate_profile[0] and duplicate_profile[1] == "RPR-DECL-0016", "duplicate platform properties must fail closed")
+
+# Unknown properties and incomplete platform profiles are rejected.
+make unknown_platform_source := "platform Unknown {\narchitecture := \"x86_64\"\nmagic := 42\n}\n"
+make unknown_parsed := parse_program(tokenize(unknown_platform_source))
+make unknown_profile := typed_platform_to_profile(unknown_parsed[1][3][0])
+assert(not unknown_profile[0] and unknown_profile[1] == "RPR-DECL-0015", "unknown platform properties must be rejected")
+
+emit "REAPER_TYPED_DECLARATIONS_CONFORMANCE_OK"

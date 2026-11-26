@@ -1,5 +1,87 @@
 import "lexer.rpr" as lexer
 import "program_parser.rpr" as frontend
+import "typed_declarations.rpr" as typed
+import "type_platform.rpr" as types
+
+# Unified public surface. The implementation lives in the shared typed descriptor
+# and target layout modules; these adapters keep the established module path stable.
+export craft typed_declaration_to_descriptor(node) {
+    yield typed["typed_declaration_to_descriptor"](node)
+}
+
+export craft typed_platform_to_profile(node) {
+    yield typed["typed_platform_to_profile"](node)
+}
+
+export craft target_type_layout(type_descriptor, platform, definitions) {
+    yield types["type_layout_with_metadata"](type_descriptor, platform, definitions)
+}
+
+export craft target_platform_validate(platform) {
+    yield types["platform_validate"](platform)
+}
+
+export craft target_platform_satisfies(platform, architecture, minimum_pointer_size, endian, required_features) {
+    yield types["platform_satisfies"](platform, architecture, minimum_pointer_size, endian, required_features)
+}
+
+export craft legacy_platform_profile(profile) {
+    when size(profile) != 9 {
+        yield ["ERROR", "legacy platform profile has an invalid shape"]
+    }
+    make pointer_bits := profile[5]
+    make pointer_size := pointer_bits // 8
+    vary data_model := "ILP32"
+    vary c_long_size := 4
+    when pointer_bits == 64 {
+        when profile[2] == "windows" {
+            change data_model := "LLP64"
+            change c_long_size := 4
+        } otherwise {
+            change data_model := "LP64"
+            change c_long_size := 8
+        }
+    }
+
+    vary object_format := profile[6]
+    when object_format == "elf" { change object_format := "ELF" } otherwise {
+        when object_format == "pe" { change object_format := "PE_COFF" } otherwise {
+            when object_format == "macho" { change object_format := "MACH_O" } otherwise {
+                when object_format == "wasm" { change object_format := "WASM" }
+            }
+        }
+    }
+
+    vary call_abi := profile[7]
+    when call_abi == "sysv" { change call_abi := "SYSV_X86_64" } otherwise {
+        when call_abi == "win64" { change call_abi := "MS_X64" } otherwise {
+            when call_abi == "aapcs64" {
+                when profile[2] == "macos" {
+                    change call_abi := "APPLE_AARCH64"
+                } otherwise {
+                    change call_abi := "AAPCS64"
+                }
+            }
+        }
+    }
+
+    vary atomic_widths := [8, 16, 32]
+    when pointer_bits == 64 {
+        change atomic_widths := [8, 16, 32, 64]
+    }
+
+    make target := types["platform_profile"](
+        profile[0], profile[1], profile[2], data_model,
+        pointer_size, pointer_size, profile[4], object_format,
+        call_abi, "none", profile[8], c_long_size, c_long_size,
+        atomic_widths, ["generic"], "declared"
+    )
+    make checked := types["platform_validate"](target)
+    when not checked[0] {
+        yield ["ERROR", checked[2]]
+    }
+    yield ["OK", target]
+}
 
 make supported_platforms := [
     ["x86_64-unknown-linux-gnu", "x86_64", "linux", "gnu", "little", 64, "elf", "sysv", 16],
@@ -17,8 +99,14 @@ craft validate_struct(declaration) {
     when size(declaration) != 4 or declaration[0] != "struct" {
         yield ["ERROR", "expected a structure declaration"]
     }
-    when declaration[2] == "" {
-        yield ["ERROR", "structure name cannot be empty"]
+    when size(declaration[2]) != 3 or declaration[2][0] == "" {
+        yield ["ERROR", "structure declaration metadata requires a non-empty name, representation and alignment"]
+    }
+    when declaration[2][1] != "native" and declaration[2][1] != "C" and declaration[2][1] != "packed" {
+        yield ["ERROR", "unsupported structure representation"]
+    }
+    when declaration[2][2] % 1 != 0 or declaration[2][2] < 0 {
+        yield ["ERROR", "structure alignment must be a non-negative integer"]
     }
     when size(declaration[3]) == 0 {
         yield ["ERROR", "empty structures are not part of the Reaper record ABI subset"]
@@ -149,26 +237,32 @@ craft validate_platform(declaration) {
 }
 
 craft scalar_layout(type_name, pointer_bits) {
-    when type_name == "i8" or type_name == "u8" or type_name == "bool" {
-        yield ["OK", 1, 1]
+    make pointer_size := pointer_bits // 8
+    vary model := "ILP32"
+    when pointer_bits == 64 {
+        change model := "LP64"
     }
-    when type_name == "i16" or type_name == "u16" {
-        yield ["OK", 2, 2]
+    make profile := types["platform_profile"](
+        "LEGACY_SCALAR_LAYOUT", "generic", "generic", model,
+        pointer_size, pointer_size, "little", "ELF", "GENERIC",
+        "none", 16, pointer_size, pointer_size,
+        [8, 16, 32, 64], ["generic"], "declared"
+    )
+    vary resolved_type := type_name
+    when type_name == "ptr" {
+        change resolved_type := "pointer"
     }
-    when type_name == "i32" or type_name == "u32" or type_name == "f32" {
-        yield ["OK", 4, 4]
+    make result := types["type_layout"](
+        types["type_primitive"](resolved_type), profile, [], []
+    )
+    when not result[0] {
+        yield ["ERROR", result[2]]
     }
-    when type_name == "i64" or type_name == "u64" or type_name == "f64" {
-        yield ["OK", 8, 8]
-    }
-    when type_name == "ptr" or type_name == "usize" or type_name == "isize" {
-        yield ["OK", pointer_bits // 8, pointer_bits // 8]
-    }
-    yield ["ERROR", "unsupported structure field type: " ++ type_name]
+    yield ["OK", result[1][0], result[1][1]]
 }
 
 craft align_up(value, alignment) {
-    yield ((value + alignment - 1) // alignment) * alignment
+    yield types["layout_align_up"](value, alignment)
 }
 
 craft layout_struct(declaration, platform) {
@@ -178,36 +272,43 @@ craft layout_struct(declaration, platform) {
     make checked_platform := validate_platform(platform)
     when checked_platform[0] == "ERROR" { yield checked_platform }
 
+    make legacy_profile := legacy_platform_profile(checked_platform[1])
+    when legacy_profile[0] == "ERROR" { yield legacy_profile }
     make pointer_bits := checked_platform[1][5]
-    make max_align := checked_platform[1][8]
-    vary offset := 0
-    vary record_align := 1
+
+    vary descriptor_fields := []
+    each field in declaration[3] {
+        vary type_name := field[2][1]
+        when type_name == "ptr" {
+            change type_name := "pointer"
+        }
+        change descriptor_fields := push(descriptor_fields,
+            types["type_field"](field[2][0], types["type_primitive"](type_name))
+        )
+    }
+
+    make aggregate := types["type_struct"](
+        declaration[2][0], declaration[2][1], declaration[2][2], descriptor_fields
+    )
+    make layout := types["type_layout"](aggregate, legacy_profile[1], [], [])
+    when not layout[0] {
+        yield ["ERROR", layout[2]]
+    }
+
     vary fields := []
     vary index := 0
-
     loop while index < size(declaration[3]) {
         make field := declaration[3][index]
-        make field_name := field[2][0]
-        make type_name := field[2][1]
-        make field_layout := scalar_layout(type_name, pointer_bits)
+        make field_layout := scalar_layout(field[2][1], pointer_bits)
         when field_layout[0] == "ERROR" { yield field_layout }
-
-        make field_size := field_layout[1]
-        make field_align := field_layout[2]
-        when field_align > max_align {
-            yield ["ERROR", "field alignment exceeds the selected platform maximum"]
-        }
-
-        make field_offset := align_up(offset, field_align)
-        change fields := push(fields, [field_name, type_name, field_offset, field_size, field_align])
-        change offset := field_offset + field_size
-        when field_align > record_align {
-            change record_align := field_align
-        }
+        change fields := push(fields, [
+            field[2][0], field[2][1], layout[1][2][index],
+            field_layout[1], field_layout[2]
+        ])
         change index := index + 1
     }
 
-    yield ["OK", align_up(offset, record_align), record_align, fields]
+    yield ["OK", layout[1][0], layout[1][1], fields]
 }
 
 make source := "struct Packet {\n    kind: u16\n    sequence: u32\n    payload: ptr\n    ready: bool\n}\nplatform linux_x64 {\n    triple := \"x86_64-unknown-linux-gnu\"\n    arch := \"x86_64\"\n    os := \"linux\"\n    abi := \"gnu\"\n    endian := \"little\"\n    pointer_bits := 64\n    object_format := \"elf\"\n    call_abi := \"sysv\"\n    max_align := 16\n}\n"
@@ -218,7 +319,8 @@ make program := parsed[1]
 assert(size(program[3]) == 2, "declaration count mismatch")
 make packet := program[3][0]
 make linux_x64 := program[3][1]
-assert(packet[0] == "struct" and packet[2] == "Packet", "structure declaration AST mismatch")
+assert(packet[0] == "struct" and packet[2][0] == "Packet", "structure declaration AST mismatch")
+assert(packet[2][1] == "native" and packet[2][2] == 0, "structure representation defaults mismatch")
 assert(linux_x64[0] == "platform" and linux_x64[2] == "linux_x64", "platform declaration AST mismatch")
 
 make valid_packet := validate_struct(packet)
