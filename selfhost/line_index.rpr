@@ -125,8 +125,8 @@ assert(source_line_for_offset(lf_source, lf_index, 17)[0] == "ERR", "offset past
 assert(source_line_text(lf_source, lf_index, 2) == ["OK", "beta"], "line extraction mismatch")
 assert(source_line_text(lf_source, lf_index, 4)[0] == "ERR", "missing line accepted")
 assert(source_offset_at_line_column(lf_source, lf_index, 3, 3) == ["OK", 13], "line/column to offset mismatch")
-assert(source_offset_at_line_column(lf_source, lf_index, 3, 7) == ["OK", 17], "EOF column must be accepted")
-assert(source_offset_at_line_column(lf_source, lf_index, 3, 8)[0] == "ERR", "column past line accepted")
+assert(source_offset_at_line_column(lf_source, lf_index, 3, 6) == ["OK", 16], "EOF column must be accepted")
+assert(source_offset_at_line_column(lf_source, lf_index, 3, 7)[0] == "ERR", "column past line accepted")
 
 make crlf_source := "one\r\ntwo\r\n"
 make crlf_index := build_source_line_index(crlf_source)
