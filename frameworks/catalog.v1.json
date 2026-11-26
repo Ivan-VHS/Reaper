@@ -13,9 +13,9 @@
       "entrypoint": "frameworks/aesthetic/all.rpr",
       "branch": "feat/aesthetic-architecture-evolution",
       "base_branch": "feat/plague-foundation-v1",
-      "status": "open_pr",
+      "status": "open_draft_pr",
       "maturity": "Genesis",
-      "pull_request": null,
+      "pull_request": 364,
       "dependencies": [
         "plague"
       ],
@@ -36,7 +36,8 @@
         "no_live_renderer",
         "no_source_patch_application",
         "apply_mode_blocked"
-      ]
+      ],
+      "url": "https://github.com/Ivan-VHS/Reaper/pull/364"
     },
     {
       "id": "aesthetica",
