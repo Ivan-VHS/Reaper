@@ -69,7 +69,7 @@
         "required": ["id", "uri", "trust"],
         "properties": {
           "id": {"type": "string", "minLength": 1, "maxLength": 64},
-          "uri": {"type": "string", "minLength": 1, "maxLength": 512},
+          "uri": {"type": "string", "pattern": "^file://", "minLength": 1, "maxLength": 512},
           "trust": {"enum": ["local", "pinned-key", "signed-index"]}
         }
       },
