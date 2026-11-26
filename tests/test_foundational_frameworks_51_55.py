@@ -107,6 +107,27 @@ class FoundationalFrameworksFiftyOneToFiftyFiveTests(unittest.TestCase):
             ["true"],
         )
         self.assertEqual(
+            self.run_expression('governance["schema_validate_payload"](["numeric.v1", 1, 0, [["pin", "u8", true]], false], [255])'),
+            ["true"],
+        )
+        self.assertEqual(
+            self.run_expression('governance["schema_validate_payload"](["numeric.v1", 1, 0, [["pin", "u8", true]], false], [256])'),
+            ["false"],
+        )
+        self.assertEqual(
+            self.run_expression('governance["schema_validate_payload"](["numeric.v1", 1, 0, [["pin", "u8", true]], false], [true])'),
+            ["false"],
+        )
+        self.assertEqual(
+            self.run_expression('governance["schema_validate_payload"](["bytes.v1", 1, 0, [["raw", "bytes", true]], false], [[0, 127, 255]])'),
+            ["true"],
+        )
+        self.assertEqual(
+            self.run_expression('governance["schema_validate_payload"](["bytes.v1", 1, 0, [["raw", "bytes", true]], false], [[0, 256]])'),
+            ["false"],
+        )
+
+        self.assertEqual(
             self.run_expression(f'governance["schema_validate_payload"]({schema}, [])'),
             ["false"],
         )
@@ -115,6 +136,13 @@ class FoundationalFrameworksFiftyOneToFiftyFiveTests(unittest.TestCase):
             self.run_expression(f'governance["schema_validate_compatibility"]({schema}, {consumer})'),
             ["true"],
         )
+        self.assertEqual(
+            self.run_expression(
+                'governance["schema_validate_compatibility"](["sample.v1", 1, 0, [["name", "text", true], ["trace", "text", false]], true], ["sample.v1", 1, 0, [["name", "text", true]], false])'
+            ),
+            ["false"],
+        )
+
         incompatible = '["sample.v1", 1, 0, [["name", "number", true]], false]'
         self.assertEqual(
             self.run_expression(f'governance["schema_validate_compatibility"]({schema}, {incompatible})'),
