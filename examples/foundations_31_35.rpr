@@ -1,0 +1,7 @@
+import "../frameworks/foundation_31_35.rpr" as host
+
+emit "All thirty-five frameworks valid = " ++ text(host["foundation_validate_catalog_35"]())
+emit "Middleware valid = " ++ text(host["middleware_validate_pipeline"]([["audit", "before-execute", 10, "abort"], ["report", "after-execute", 20, "skip"]]))
+emit "Snapshot envelope valid = " ++ text(host["integration_validate_envelope"](["oplage.device-snapshot.v1", 1, 0, "consumes", 4096]))
+emit "Reference container valid = " ++ text(host["container_validate_selection"]("reference-bounded"))
+emit "Host contract valid = " ++ text(host["host_validate_descriptor"](["reaper-host", 1, "canonical-vm", ["FS_READ"], 65536]))
