@@ -55,6 +55,18 @@ class SelfHostingBootstrapTests(unittest.TestCase):
     def test_reaper_written_bytecode_engine_runs_on_the_reference_runtime(self) -> None:
         self._run_selfhost_program("selfhost/bytecode.rpr", "SELFHOST_BYTECODE_OK")
 
+    def test_reaper_written_memory_model_runs_on_the_reference_runtime(self) -> None:
+        self._run_selfhost_program("selfhost/memory_model.rpr", "SELFHOST_MEMORY_MODEL_OK")
+
+    def test_reaper_written_ownership_model_runs_on_the_reference_runtime(self) -> None:
+        self._run_selfhost_program("selfhost/ownership.rpr", "SELFHOST_OWNERSHIP_OK")
+
+    def test_reaper_written_collections_run_on_the_reference_runtime(self) -> None:
+        self._run_selfhost_program("selfhost/collections.rpr", "SELFHOST_COLLECTIONS_OK")
+
+    def test_reaper_written_module_graph_runs_on_the_reference_runtime(self) -> None:
+        self._run_selfhost_program("selfhost/module_graph.rpr", "SELFHOST_MODULE_GRAPH_OK")
+
 
 if __name__ == "__main__":
     unittest.main()
