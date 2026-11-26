@@ -106,6 +106,7 @@ typedef struct {
     int (*verify_repository_grant)(
         void *context, const void *grant, size_t grant_size,
         const char *repository_id, const char *target_branch,
+        const char *request_digest,
         uint64_t now_unix_seconds
     );
     /* Checks per-path source.write scope against the same signed grant. */
