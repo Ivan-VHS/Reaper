@@ -1,152 +1,56 @@
-# Reaper — 流式组合编程语言
+# Reaper
+
+Reaper 是一款面向编译器工具、嵌入式软件和硬件相关程序的系统编程语言与本地开发工作台。
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
-[CI](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml) · [Windows Studio 构建](https://github.com/Ivan-VHS/Reaper/actions/workflows/desktop-build.yml) · Python 3.10+ 参考运行时 · C17 原生开发线 · Windows Studio · Apache-2.0
-**开发者：** [Ivan-VHS](https://github.com/Ivan-VHS)
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/dashboard.svg"><img src="assets/readme/dashboard-light.svg" alt="Reaper 语言与开发工具" width="100%"></picture>
 
-Reaper 是表达式导向的数据流语言；操作符 `::` 将值传递给下一项操作。Python runtime 是当前可执行的兼容性参考实现。C17 原生实现仍在开发中，尚不能完全替代 Python runtime。
+[![CI](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml) [![Apache-2.0](https://img.shields.io/github/license/Ivan-VHS/Reaper?style=flat-square)](LICENSE)
 
-## Reaper Studio 实际运行截图
+**状态：**已提供 Python 参考运行时、CLI/REPL、Windows Studio 基础、stdio LSP/DAP 服务及部分原生 C17 路线。原生编译器功能对等和特权硬件服务尚未完成。
 
-<p align="center"><img src="assets/screenshots/reaper-studio.png" alt="Windows 11 中运行的 Reaper Studio" width="100%"></p>
+## 组件
 
-## 功能数据流
+- Reaper 源语言、词法/语法分析器、参考运行时和诊断。
+- CLI、REPL、Windows Studio 基础、LSP 与 DAP 服务。
+- 实验性 C17 原生实现；当前尚未与参考运行时功能对等。
+- NOO TAH 将 JavaScript 执行交给官方 Node.js 运行时。
+- Jora 项目脚手架和能力组合；目录中的应用包仍是规范，不是可安装的编辑器。
 
-该图概述项目输入来源、处理阶段和生成结果之间已经实现的数据流转。
+文档：[功能](docs/FEATURES.md) · [架构](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Jora 工厂](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md)。
 
-```mermaid
-flowchart TD
-    A[Reaper 源代码] --> B[词法分析与解析]
-    B --> C[Python 参考运行时]
-    C --> D[CLI 和 REPL]
-    B --> E[LSP 语言服务]
-    C --> F[DAP 调试服务]
-    G[JavaScript 项目] --> H[官方 Node.js 发行版]
-    H --> I[V8、Node API、npm 和 Inspector]
-    J[C17 原生分支] --> K[部分解析与 lowering]
-```
+## 快速开始
 
-## 执行路径与输出
-
-第二张图将当前可执行路径和受支持输出与仅登记在目录中或尚不可用的行为区分开。
-
-```mermaid
-flowchart LR
-    A[Reaper 程序] --> B[Python 运行时]
-    B --> C[执行结果]
-    D[已打开的源文件] --> E[LSP 请求]
-    E --> F[诊断、补全和符号]
-    G[调试请求] --> H[DAP]
-    H --> I[断点、调用栈和局部变量]
-```
-
-<sub>应用实际截屏 · 原始图像为 1920×1080 · 保留原始像素，不进行人为放大。</sub>
-
-## 当前能力矩阵
-
-| 模块 | 已实现范围与边界 |
-|---|---|
-| Python runtime | lexer、parser、解释器、CLI、REPL、模块、closures、quotas 和 audit |
-| Reaper Studio | Windows IDE 基础：项目树、编辑器、语法高亮、行号、搜索、check/run 和调试器 |
-| LSP | stdio 服务：增量 UTF-16 文档、parser/structure 诊断、completion、hover、symbols 和词法导航；按打开的文档工作，不提供跨文件类型推断 |
-| DAP | stdio 调试适配器：启动、行断点、语句级单步、调用栈和局部变量 |
-| 除法与分配 | 经检查的欧几里得除法、均衡工作分区和按比例分配 |
-| Atomic-Quantum 133 | 133 个操作 ID；8 个经过审查的经典模拟内核；其余条目仅列入目录 | 最多 10 个量子比特的有界状态向量模型；不访问量子硬件 |
-| NOO TAH | 官方 Node.js 集成：V8/libuv、ESM/CommonJS、核心 API、streams、workers、npm/npx、N-API 和 Inspector；Studio 支持 JS Run/Check/Debug/Stop 与 npm 命令 |
-| 内置插件宿主 | 18 个内置服务，具有生命周期状态和有界 dispatch；Python 参考运行时 |
-| Kora | 七个带 manifest 模块中的 66 个标准工具函数；三个用于 Cockos REAPER 的 Lua ReaScript |
-| Native C17 | lexer、表达式 parser、owned AST、checked IR 和有限 lowering；尚未与 Python runtime 完全对等 |
-| МОСТ | 54 个精确别名：当前参考子集中 21 个可执行，33 个仅作词法保留 |
-| QCS 1.0 | 独立硬件领域 parser 和 JSON AST；不执行硬件操作 |
-| THESIS | 类型化证据图；不会自动验证其中的声明 |
-| 注册表 | 813 项功能提案、666 个 API 合同和 666 个保留词素；注册表条目不代表功能已完成 |
-| 联邦集成 | OPlague snapshots、VentuSample manifests 和可选 Pytyliki C ABI |
-
-## CODEX-66 IDE 工作台
-
-Reaper Studio 新增原生 **CODEX-66** 功能目录，包含六组、每组十一项，可按 ID、名称、类别和成熟度搜索。按 **Ctrl+Space** 打开本地 REAPER 补全，按 **F12** 跳转到当前文档中的定义，使用 **Find references** 查找词法引用，按 **Ctrl+Shift+R** 在当前文档中重命名。**Ctrl+K** 打开命令面板。
-
-目录会明确区分已实现、部分实现、计划中和不支持的项目。本地补全复用语言服务，并非云端 AI；引用查找和重命名仅作用于当前文档；解释器也不是操作系统级沙箱。详见 [CODEX-66 实现与能力边界](docs/CODEX_66_SHOWCASE.md)。
-
-## REAPER 语言与调试服务
-
-编辑器工具层提供 stdio 协议服务：
+要求：参考运行时使用 Python 3.10–3.12；可选兼容性测试使用 Node.js 22/24；Windows Studio 需要 Tkinter；原生路线需要 CMake 3.16+ 和 C17 编译器。
 
 ```sh
-python -m reaper lsp
-python -m reaper dap
-```
-
-安装入口为 `reaper-lsp` 和 `reaper-dap`。LSP 提供按文档增量更新的语言功能；DAP 用于调试 Reaper 程序。这些服务复用规范的 Python parser/runtime，并不意味着完整的 C17 对等、跨文件语义分析或已打包的 VS Code 客户端。
-
-详细能力边界见 [REAPER IDE 架构](docs/REAPER_IDE.md)。
-
-## NOO TAH — Node.js 运行时
-
-NOO TAH 管理官方跨平台 Node.js 发行版，而不是重新实现其引擎。V8、libuv、核心模块、ESM/CommonJS、streams、workers、child processes、npm/npx、N-API 和 Inspector 均由所选 Node 发行版提供。
-
-Reaper Studio 可识别 `.js`、`.mjs` 和 `.cjs` 项目，并提供 JS Run、JS Check、通过 Node Inspector 进行的 JS Debug、JS Stop、npm 命令和运行时诊断。Node Inspector 尚未映射到原生 DAP 调试器面板。
-
-```sh
-reaper-noo-tah version
-reaper-noo-tah doctor
-reaper-noo-tah run app.mjs
-reaper-noo-tah check app.js
-reaper-noo-tah npm run build
-node --test tests/noo_tah/conformance.test.mjs
-```
-
-当前兼容性测试覆盖运行时元数据、ESM/CommonJS、文件 I/O、crypto、streams/backpressure、loopback HTTP/TCP、workers、child processes、DNS 和 event loop 顺序。CI 矩阵使用 Node 22 与 24，目标平台为 Windows、Linux 和 macOS。详见 [NOO TAH 架构](docs/NOO_TAH.md)。
-
-## Kora 与 Cockos REAPER 应用
-
-Kora 在 ZDORO、DILLY、BAPLAP、KALI、PYEMONT、LIUR 和 SRETUO 七个模块中提供 66 个标准工具函数。仓库还包含三个 Lua ReaScript：
-
-- **Track Health Dashboard** — 只读项目和轨道诊断。
-- **Prefix Selected Tracks** — 在一个可撤销操作中重命名所选轨道。
-- **Marker and Region Report** — 在 ReaScript 控制台输出标记和区域列表。
-
-在 Cockos REAPER 中打开 **Actions → Show action list → ReaScript → Load**，选择 `reaper_scripts/kora/` 中的脚本。这些脚本由 REAPER 自身托管，不是编译后的 VST/AU/CLAP 效果器，也不需要启动 Node.js 进程。详见 [Kora for REAPER](docs/KORA_REAPER.md)。
-
-## Atomic-Quantum 133
-
-Python 参考运行时提供 133 个稳定操作 ID，分为六类：状态、纠缠、测量、噪声/ECC、原子动力学以及算法/遥测。目前只有 8 个经过审查的内核提供有界、确定性的经典模拟；其余条目明确标记为 **catalogued-only**，不宣称已实现。状态向量模型最多支持 10 个量子比特，并验证振幅有限性与归一化，支持带 seed 的确定性测量。系统不会发现、校准或控制量子硬件；C17 路线也不代表量子硬件执行。详见 [Atomic-Quantum 133 合约](docs/ATOMIC_QUANTUM_133.md)。
-
-## 运行、测试与构建
-
-```sh
-python -m reaper examples/flow.rpr
+python -m venv .venv
+python -m pip install -e .
 python -m reaper --check examples/flow.rpr
-python -m reaper --engine vm examples/flow.rpr
+python -m reaper examples/flow.rpr
+```
+
+启动 Studio 或 REPL：
+
+```sh
+python reaper_desktop.py
 python -m reaper --repl
+```
+
+参考运行时测试：
+
+```sh
 python -m unittest discover -s tests -v
 ```
 
-Windows Studio：`python reaper_desktop.py`。
+## 架构与状态
 
-C17 原生开发线：
+.rpr 参考运行时、部分 C17 原生实现、开发工具和外部运行时适配器是不同的工作路线。目录条目或计划不代表功能已经实现。
 
-```sh
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build --parallel
-ctest --test-dir build --output-on-failure
-```
+- [实现路线图](docs/IMPLEMENTATION_ROADMAP.md)
+- [Kora 标准库助手](docs/KORA.md)
+- [文档索引](docs/README.md)
+- [生态共享标准](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/SHARED_STANDARDS.md)
 
-示例：
-
-```reaper
-craft double(value) { yield value * 2 }
-make result := [1, 2, 3] :: map(double) :: sum()
-emit "result = " ++ text(result)
-```
-
-[IDE 666 合同](docs/IDE_666_IMPLEMENTATION.md) · [LSP/DAP](docs/REAPER_IDE.md) · [Node.js 集成](docs/NOO_TAH.md) · [Kora for REAPER](docs/KORA_REAPER.md) · [插件宿主](docs/PLUGINS.md) · [内部产品](docs/INTERNAL_PRODUCTS.md) · [功能](docs/FEATURES.md) · [语言](LANGUAGE.md) · [架构](docs/ARCHITECTURE.md) · [813 注册表](docs/REAPER_813_FEATURE_ARCHITECTURE.md) · [联邦](docs/PROJECT_FEDERATION_MATRIX.md) · [文档索引](docs/README.md)
-
-[English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [Releases](https://github.com/Ivan-VHS/Reaper/releases) · [Apache-2.0](LICENSE)
-
-
-## 预算分配参考
-这是一个 500 UAH 预算模型示例，包含 JSON 契约和离线模拟器。它属于文档示例，并非宿主应用运行时功能。
-
-[多语言指南](docs/RESOURCE_ALLOCATION_500_UAH.md) · [交互式模拟器](docs/resource-allocation-500-uah.html) · [JSON 示例](examples/resource-allocation-500-uah.json) · [JSON Schema](schemas/resource-allocation.v1.schema.json)
+[贡献指南](CONTRIBUTING.md) · [安全策略](SECURITY.md) · [Apache-2.0 许可证](LICENSE)

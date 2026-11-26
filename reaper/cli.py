@@ -11,6 +11,7 @@ from pathlib import Path
 
 from .audit import AuditLog, AuditLogError, verify_audit_log
 from .errors import ReaperError
+from .diagnostic_catalog import diagnose_exception, explain_diagnostic
 from .evolution import EvolutionEngine
 from .runtime import Interpreter
 from .modules import ModuleLoader
@@ -32,12 +33,19 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--version", action="version", version="Reaper 0.1.0")
     parser.add_argument("--audit-log", metavar="PATH", help="append a hash-chained local execution journal")
     parser.add_argument("--verify-audit-log", metavar="PATH", help="verify a journal and exit")
-    parser.add_argument("--check", "--lint", dest="check", action="store_true", help="tokenize and parse without running the program")
+    parser.add_argument("--check", "--lint", dest="check", action="store_true", help="parse and run static type analysis without executing the program")
+    parser.add_argument("--syntax-only", action="store_true", help="limit --check to lexer/parser validation and skip static type analysis")
     parser.add_argument("--repl", action="store_true", help="start the interactive Reaper prompt")
     parser.add_argument("--json", action="store_true", help="emit the run result and diagnostics as JSON")
     parser.add_argument("--profile", action="store_true", help="report elapsed time and interpreter step count")
     parser.add_argument("--engine", choices=("treewalk", "vm"), default="treewalk", help="execution engine (default: treewalk)")
     parser.add_argument("--allow-native-ffi", action="store_true", help="allow loading native C ABI libraries")
+    native_group = parser.add_mutually_exclusive_group()
+    native_group.add_argument("--emit-c", metavar="PATH", help="emit the checked native C17 subset to PATH; use '-' for stdout")
+    native_group.add_argument("--native", metavar="PATH", help="compile the checked native C17 subset to a host executable")
+    parser.add_argument("--cc", metavar="COMPILER", help="GCC/Clang-compatible compiler for --native; otherwise CC or PATH is used")
+    parser.add_argument("--optimization", choices=("0", "1", "2", "3", "s"), default="2", help="native build optimization level (default: 2)")
+
     parser.add_argument("--module-graph", action="store_true", help="print the transitive .rpr dependency graph as JSON without executing code")
     parser.add_argument("--heap-bytes", type=int, default=64 * 1024 * 1024, help="managed heap ceiling in bytes")
     parser.add_argument("--open-resources", type=int, default=64, help="maximum simultaneously open managed files")
@@ -66,12 +74,32 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     arguments = sys.argv[1:] if argv is None else argv
+    if arguments and arguments[0] == "--explain":
+        if len(arguments) != 2:
+            print("Usage: python -m reaper --explain RPR-E0013", file=sys.stderr)
+            return 2
+        definition = explain_diagnostic(arguments[1])
+        if definition is None:
+            print(f"reaper: unknown diagnostic code: {arguments[1]}", file=sys.stderr)
+            return 2
+        print(f"{definition['code']}  {definition['title']}")
+        print(f"Severity: {definition['severity']}\n")
+        print(f"What happened\n  {definition['summary']}\n")
+        print(f"Typical causes\n  {definition['causes']}\n")
+        print(f"How to fix it\n  {definition['help']}")
+        return 0
+    if arguments and arguments[0] == "jora":
+        from .jora import main as jora_main
+        return jora_main(arguments[1:])
     if arguments and arguments[0] == "lsp":
         from .lsp import serve as lsp_serve
         return lsp_serve()
     if arguments and arguments[0] == "dap":
         from .dap import serve as dap_serve
         return dap_serve()
+    if arguments and arguments[0] == "typecheck":
+        from .typecheck import main as typecheck_main
+        return typecheck_main(arguments[1:])
     if arguments and arguments[0] == "embedded":
         from .embedded import main as embedded_main
         return embedded_main(arguments[1:])
@@ -86,6 +114,79 @@ def main(argv: list[str] | None = None) -> int:
         return polyglot_code_main(arguments[1:])
     parser = build_parser()
     args = parser.parse_args(arguments)
+    if args.syntax_only and not args.check:
+        parser.error("--syntax-only requires --check")
+    native_requested = args.emit_c is not None or args.native is not None
+    if args.cc is not None and args.native is None:
+        parser.error("--cc requires --native")
+    if args.optimization != "2" and args.native is None:
+        parser.error("--optimization requires --native")
+    if native_requested:
+        conflicting_mode = any((
+            args.check, args.repl, args.evolve, args.audit_log, args.verify_audit_log,
+            args.module_graph, args.catalog, args.catalog_group is not None,
+            args.catalog_token is not None, args.products, args.product_info is not None,
+            args.plugins, args.plugin_info is not None, args.run_plugin is not None,
+            args.systems, args.systems_languages, args.language_profile is not None,
+            args.available_languages, args.systems_json, args.systems_architectures,
+            args.architecture_profile is not None, args.available_architectures,
+            args.architectures_json, args.profile, args.engine != "treewalk",
+            args.allow_native_ffi,
+        ))
+        if conflicting_mode:
+            parser.error("native compilation cannot be combined with other execution, inspection, audit, or FFI modes")
+        if not args.source:
+            parser.error("--emit-c and --native require a .rpr source file")
+        if args.json and args.emit_c == "-":
+            parser.error("--json cannot be combined with --emit-c -")
+        try:
+            from .native_compiler import build_executable, compile_source
+
+            source_path = Path(args.source)
+            source_text = source_path.read_text(encoding="utf-8")
+            if args.emit_c is not None:
+                generated = compile_source(source_text, str(source_path))
+                if args.emit_c == "-":
+                    sys.stdout.write(generated)
+                else:
+                    destination = Path(args.emit_c).expanduser().resolve()
+                    if destination == source_path.resolve():
+                        raise ValueError("C output must not overwrite its Reaper source file")
+                    destination.parent.mkdir(parents=True, exist_ok=True)
+                    destination.write_text(generated, encoding="utf-8", newline="\n")
+                    if args.json:
+                        print(json.dumps({
+                            "ok": True, "mode": "emit-c",
+                            "file": str(source_path), "output": str(destination),
+                        }, ensure_ascii=False))
+                    else:
+                        print(f"Reaper: native C17 source written to {destination}")
+            else:
+                executable = build_executable(
+                    source_text,
+                    args.native,
+                    filename=str(source_path),
+                    compiler=args.cc,
+                    optimization=args.optimization,
+                )
+                if args.json:
+                    print(json.dumps({
+                        "ok": True, "mode": "native",
+                        "file": str(source_path), "executable": str(executable),
+                    }, ensure_ascii=False))
+                else:
+                    print(f"Reaper: native executable created at {executable}")
+            return 0
+        except (ReaperError, OSError, UnicodeError, ValueError, RuntimeError) as error:
+            if args.json:
+                print(json.dumps({
+                    "ok": False,
+                    "file": args.source,
+                    "error": {"type": type(error).__name__, "message": str(error)},
+                }, ensure_ascii=False))
+            else:
+                print(f"reaper: native compilation failed: {error}", file=sys.stderr)
+            return 1
     if args.plugins or args.plugin_info or args.run_plugin:
         if args.source or args.audit_log or args.verify_audit_log:
             parser.error("plugin host commands cannot be combined with a source or audit-log option")
@@ -226,18 +327,53 @@ def main(argv: list[str] | None = None) -> int:
             audit.record("source_loaded", source_name=path.name, source_sha256=source_sha256)
         if args.check:
             try:
-                parse(source, str(path))
+                tree = parse(source, str(path))
             except ReaperError as error:
                 if audit:
                     audit.record("syntax_check_failed", error_type=type(error).__name__)
                 raise
+
+            diagnostics = []
+            if not args.syntax_only:
+                from .typecheck import TypeChecker
+
+                checked = TypeChecker(str(path)).check(tree)
+                diagnostics = [item.as_dict() for item in checked.diagnostics]
+
+            errors = [item for item in diagnostics if item["severity"] == "error"]
             if audit:
-                audit.record("syntax_check_passed")
+                audit.record(
+                    "static_check_completed",
+                    syntax_only=args.syntax_only,
+                    type_errors=len(errors),
+                    type_diagnostics=len(diagnostics),
+                )
+
+            result = {
+                "ok": not errors,
+                "mode": "syntax-check" if args.syntax_only else "static-check",
+                "file": str(path),
+                "diagnostics": diagnostics,
+                "summary": {
+                    "errors": len(errors),
+                    "warnings": sum(item["severity"] == "warning" for item in diagnostics),
+                },
+            }
             if args.json:
-                print(json.dumps({"ok": True, "mode": "check", "file": str(path)}, ensure_ascii=False))
+                print(json.dumps(result, ensure_ascii=False))
             else:
-                print(f"Reaper: {path} is valid")
-            return 0
+                for item in diagnostics:
+                    print(
+                        f"{path}:{item['line']}:{item['column']}: "
+                        f"{item['severity']} {item['code']}: {item['message']}"
+                    )
+                if errors:
+                    print(f"Reaper: {path} failed static checks ({len(errors)} error(s))")
+                elif args.syntax_only:
+                    print(f"Reaper: {path} syntax is valid")
+                else:
+                    print(f"Reaper: {path} syntax and supported types are valid")
+            return 0 if not errors else 1
 
         def emit(line: str) -> None:
             output_lines.append(str(line))
@@ -303,6 +439,7 @@ def main(argv: list[str] | None = None) -> int:
                 "file": str(path),
                 "output": output_lines,
                 "error": {"type": type(error).__name__, "message": str(error)},
+                "diagnostic": diagnose_exception(error, str(path)).to_dict(),
             }, ensure_ascii=False))
         else:
             print(f"reaper: {error}", file=sys.stderr)

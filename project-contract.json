@@ -4,7 +4,7 @@
     "id": "reaper",
     "name": "Reaper",
     "repository": "Ivan-VHS/Reaper",
-    "summary": "Flow-first programming language with a Python reference runtime, developing native C17 core and explicit integrations in a four-project desktop/tooling federation. It also audits versioned VentuSample audio-pack manifests.",
+    "summary": "Flow-first programming language with a Python reference runtime, developing native C17 core and explicit tooling integrations in a four-project desktop federation.",
     "documentation": "docs/UNIFIED_PROJECT_CONTRACT.md"
   },
   "implementation": {
@@ -123,13 +123,14 @@
       ]
     },
     {
-      "id": "interop.ventusample-pack-audit",
+      "id": "architecture.foundation-registry.v1",
       "status": "implemented",
-      "summary": "Validates bounded VentuSample pack v1 manifests, derives reproducible parameter/audio-measurement metrics and produces read-only comparisons; optional Pytyliki ABI v1 supplies the distance cross-check.",
+      "summary": "Native C17 catalog of 66 stable architecture concepts across nine layers, with exact lookup, bounded graph validation and deterministic dependency-first ordering.",
       "evidence": [
-        "reaper/ventusample.py",
-        "tests/test_ventusample_federation.py",
-        "examples/ventusample_pack_audit.rpr"
+        "include/reaper/architecture.h",
+        "src/architecture.c",
+        "tests/test_architecture.c",
+        "docs/REAPER_ARCHITECTURE_FOUNDATION_66.md"
       ]
     }
   ],
@@ -162,27 +163,6 @@
       "evidence": [
         "federation/octa-pyramid.v1.json",
         "docs/OCTA_PYRAMID_FEDERATION.md"
-      ]
-    },
-    {
-      "id": "ventusample.pack.v1",
-      "format": "Versioned JSON audio-pack manifest plus local WAV assets",
-      "direction": "consumes",
-      "status": "implemented",
-      "evidence": [
-        "schemas/ventusample.pack.v1.schema.json",
-        "reaper/ventusample.py",
-        "tests/test_ventusample_federation.py"
-      ]
-    },
-    {
-      "id": "reaper.ventusample-comparison.v1",
-      "format": "Read-only normalized pack comparison JSON report",
-      "direction": "provides",
-      "status": "implemented",
-      "evidence": [
-        "reaper/ventusample.py",
-        "tests/test_ventusample_federation.py"
       ]
     }
   ],
@@ -221,14 +201,6 @@
     },
     {
       "project": "ventusample",
-      "interface": "ventusample.pack.v1",
-      "mode": "json-file",
-      "status": "implemented",
-      "opt_in": true,
-      "summary": "Reaper validates caller-selected VentuSample pack manifests and compares normalized metadata/measurements; WAV files are not opened or changed."
-    },
-    {
-      "project": "ventusample",
       "interface": "octa.pyramid.peer-mesh.v1",
       "mode": "shared-contract",
       "status": "implemented",
@@ -241,7 +213,7 @@
     "Filesystem, process, network, clock, shell and native-library effects remain explicit or opt-in rather than ambient expression behavior.",
     "Native FFI executes in-process native code and must only load trusted ABI-compatible libraries.",
     "The native C17 implementation and self-hosting frontend remain partial; Python is the compatibility reference.",
-    "VentuSample federation reads only bounded manifest JSON; it does not open, alter, execute or upload WAV assets."
+    "The architecture foundation registry validates metadata and declared dependency graphs only; it does not load code, start runtimes, isolate containers or grant hardware privileges."
   ],
   "extension_points": [
     "Canonical IR and selectable execution engines.",
@@ -249,6 +221,6 @@
     "Opt-in C ABI adapters and validated versioned JSON interchange.",
     "Native C17 frontend stages with Python reference behavior as the compatibility oracle.",
     "Bounded vertical self-composition for deterministic compiler and data-flow transformation pipelines.",
-    "Versioned adapters for additional offline audio-pack manifests and comparison report consumers."
+    "Stable architecture concept IDs, layer metadata and bounded dependency graph validation."
   ]
 }

@@ -28,7 +28,7 @@ Red stays reserved for warnings and destructive / safety signals (#B51A10 in lig
 - Search is scoped to the collection being searched. Preserve the query while filtering, show a specific no-results state, and provide a one-action reset.
 - Dialogs have a clear title, concise explanation, explicit primary and cancel actions, Escape dismissal where safe, and focus returned to the invoking control.
 - Toast / status feedback is non-blocking and announces completion only after the operation actually completes.
-- Progress communicates indeterminate work honestly; never fabricate percentage, health, hardware or audio telemetry.
+- Progress communicates indeterminate work honestly; never fabricate percentage, health, hardware or application telemetry.
 - Tabs preserve their content state. Selection feedback is immediate; animations never delay a command or data operation.
 - Use hover only as a supplement: keyboard focus and selected state must remain equally visible.
 
@@ -37,7 +37,7 @@ Red stays reserved for warnings and destructive / safety signals (#B51A10 in lig
 - Reuse the shared Motion System: bounded spring response, short transitions, persisted preferences and system reduced-motion support where the platform exposes it.
 - Reduce Motion removes spatial movement. Eco suppresses nonessential refresh and effects. Both override expressive presentation.
 - Do not copy the demo's endless pointer / gyro parallax, floating particles, constant shimmer, blur-heavy glass, click confetti or infinite animation loops into precision desktop workflows.
-- Motion belongs to the UI thread only. It must not run in audio callbacks, DSP buffers, workers, benchmarks, device inventory, hashing or build execution.
+- Motion belongs to the UI thread only. It must not run in real-time callbacks, high-frequency data buffers, workers, benchmarks, device inventory, hashing or build execution.
 - Prefer subtle surface elevation, borders, restrained reveal / fade and selected-tab feedback over ambient animation.
 
 ## Accessibility and quality gate
