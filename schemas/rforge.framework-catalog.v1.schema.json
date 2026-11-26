@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:reaper:schema:rforge.framework-catalog.v1",
+  "title": "RForge Reaper framework source catalogue",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "status",
+    "target_language",
+    "target_runtime",
+    "native_aot_status",
+    "frameworks"
+  ],
+  "properties": {
+    "schema": {
+      "const": "reaper.rforge.framework-catalog.v1"
+    },
+    "status": {
+      "const": "source_implemented_unverified"
+    },
+    "target_language": {
+      "const": "reaper"
+    },
+    "target_runtime": {
+      "const": "reference_runtime"
+    },
+    "native_aot_status": {
+      "const": "blocked_by_current_module_import_export_and_collection_limits"
+    },
+    "frameworks": {
+      "type": "array",
+      "minItems": 20,
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "pair_id",
+          "variant",
+          "profile_tokens",
+          "profile_expression",
+          "product_kind",
+          "responsibility",
+          "module_path",
+          "public_api",
+          "invariants",
+          "maturity",
+          "runtime_validation",
+          "native_aot",
+          "executable_capabilities"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 96
+          },
+          "pair_id": {
+            "type": "string",
+            "pattern": "^pair-[0-9]{2}$"
+          },
+          "variant": {
+            "enum": [
+              "forward",
+              "reverse"
+            ]
+          },
+          "profile_tokens": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          },
+          "profile_expression": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 140
+          },
+          "product_kind": {
+            "const": "framework"
+          },
+          "responsibility": {
+            "type": "string",
+            "minLength": 20,
+            "maxLength": 500
+          },
+          "module_path": {
+            "type": "string",
+            "pattern": "^frameworks/rforge/[a-z0-9_]+\\.rpr$"
+          },
+          "public_api": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 16,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            }
+          },
+          "invariants": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 8,
+            "items": {
+              "type": "string",
+              "minLength": 10,
+              "maxLength": 240
+            }
+          },
+          "maturity": {
+            "const": "source_present"
+          },
+          "runtime_validation": {
+            "const": "pending"
+          },
+          "native_aot": {
+            "const": "not_supported_by_current_backend"
+          },
+          "executable_capabilities": {
+            "type": "array",
+            "maxItems": 0
+          }
+        }
+      }
+    }
+  }
+}
