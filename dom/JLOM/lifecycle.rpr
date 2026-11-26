@@ -40,6 +40,9 @@ export craft create_instance(instance_id, owner) {
 
 export craft move(instance, target_state) {
     when kind(instance) != "list" or size(instance) != 4 { yield [false, instance, "invalid-instance-record"] }
+    when kind(instance[2]) != "number" or instance[2] < 0 {
+        yield [false, instance, "invalid-generation"]
+    }
     when not valid_state(instance[1]) or not valid_state(target_state) {
         yield [false, instance, "unknown-lifecycle-state"]
     }
