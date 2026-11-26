@@ -1,0 +1,110 @@
+# Bounded, semantics-preserving constant folding for Reaper expression trees.
+# Expression shape: ["const", value, []], ["unary", operator, [child]],
+# or ["binary", operator, [left, right]].
+
+craft optimizer_constant(value) {
+    yield ["const", value, []]
+}
+
+craft optimizer_expression_valid(expression) {
+    when size(expression) != 3 { yield false }
+    when expression[0] == "const" { yield size(expression[2]) == 0 }
+    when expression[0] == "unary" { yield size(expression[2]) == 1 }
+    when expression[0] == "binary" { yield size(expression[2]) == 2 }
+    yield false
+}
+
+craft optimizer_eval_unary(operator, value) {
+    when operator == "-" { yield ["OK", -value] }
+    when operator == "NOT" { yield ["OK", not value] }
+    yield ["ERR", "unsupported constant unary operator", operator]
+}
+
+craft optimizer_eval_binary(operator, left, right) {
+    when operator == "+" { yield ["OK", left + right] }
+    when operator == "-" { yield ["OK", left - right] }
+    when operator == "*" { yield ["OK", left * right] }
+    when operator == "//" {
+        when right == 0 { yield ["ERR", "division by zero"] }
+        yield ["OK", left // right]
+    }
+    when operator == "%" {
+        when right == 0 { yield ["ERR", "modulo by zero"] }
+        yield ["OK", left % right]
+    }
+    when operator == "==" { yield ["OK", left == right] }
+    when operator == "!=" { yield ["OK", left != right] }
+    when operator == "<" { yield ["OK", left < right] }
+    when operator == "<=" { yield ["OK", left <= right] }
+    when operator == ">" { yield ["OK", left > right] }
+    when operator == ">=" { yield ["OK", left >= right] }
+    when operator == "AND" { yield ["OK", left and right] }
+    when operator == "OR" { yield ["OK", left or right] }
+    when operator == "++" { yield ["OK", left ++ right] }
+    yield ["ERR", "unsupported constant binary operator", operator]
+}
+
+craft optimizer_fold(expression, budget) {
+    when budget < 1 { yield ["ERR", "optimizer budget exhausted"] }
+    when not optimizer_expression_valid(expression) {
+        yield ["ERR", "malformed optimizer expression"]
+    }
+
+    when expression[0] == "const" {
+        yield ["OK", expression, false, 1]
+    }
+
+    when expression[0] == "unary" {
+        make child := optimizer_fold(expression[2][0], budget - 1)
+        when child[0] != "OK" { yield child }
+        when child[1][0] == "const" {
+            make folded := optimizer_eval_unary(expression[1], child[1][1])
+            when folded[0] == "OK" {
+                yield ["OK", optimizer_constant(folded[1]), true, child[3] + 1]
+            }
+        }
+        yield ["OK", ["unary", expression[1], [child[1]]], child[2], child[3] + 1]
+    }
+
+    make left := optimizer_fold(expression[2][0], budget - 1)
+    when left[0] != "OK" { yield left }
+    make right := optimizer_fold(expression[2][1], budget - left[3] - 1)
+    when right[0] != "OK" { yield right }
+    make cost := left[3] + right[3] + 1
+    when cost > budget { yield ["ERR", "optimizer budget exhausted", cost, budget] }
+
+    when left[1][0] == "const" and right[1][0] == "const" {
+        make folded := optimizer_eval_binary(expression[1], left[1][1], right[1][1])
+        when folded[0] == "OK" {
+            yield ["OK", optimizer_constant(folded[1]), true, cost]
+        }
+    }
+    yield ["OK", ["binary", expression[1], [left[1], right[1]]], left[2] or right[2], cost]
+}
+
+make two := optimizer_constant(2)
+make three := optimizer_constant(3)
+make four := optimizer_constant(4)
+make product := ["binary", "*", [three, four]]
+make expression := ["binary", "+", [two, product]]
+make folded := optimizer_fold(expression, 100)
+assert(folded[0] == "OK", "valid constant expression failed to optimize")
+assert(folded[1] == ["const", 14, []], "constant folding result mismatch")
+assert(folded[2], "constant folding did not report a change")
+assert(folded[3] == 5, "optimizer node budget accounting mismatch")
+
+make unary_expression := ["unary", "-", [optimizer_constant(8)]]
+assert(optimizer_fold(unary_expression, 10)[1] == ["const", -8, []], "unary constant folding mismatch")
+make boolean_expression := ["binary", "AND", [optimizer_constant(true), optimizer_constant(false)]]
+assert(optimizer_fold(boolean_expression, 10)[1] == ["const", false, []], "logical constant folding mismatch")
+make comparison := ["binary", ">=", [optimizer_constant(9), optimizer_constant(9)]]
+assert(optimizer_fold(comparison, 10)[1] == ["const", true, []], "comparison constant folding mismatch")
+make text_join := ["binary", "++", [optimizer_constant("Rea"), optimizer_constant("per")]]
+assert(optimizer_fold(text_join, 10)[1] == ["const", "Reaper", []], "text concatenation constant folding mismatch")
+make division_zero := ["binary", "//", [optimizer_constant(5), optimizer_constant(0)]]
+assert(optimizer_fold(division_zero, 10)[1] == division_zero, "failed fold must preserve the original expression")
+assert(optimizer_fold(expression, 1)[0] == "ERR", "optimizer budget limit was ignored")
+assert(optimizer_fold(["binary", "+", [two]], 10)[0] == "ERR", "malformed expression accepted")
+assert(optimizer_fold(["unary", "!", [two]], 10)[1][0] == "unary", "unsupported unary operator must remain unfurled")
+
+emit "SELFHOST_OPTIMIZER_OK"
