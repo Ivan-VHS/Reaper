@@ -49,7 +49,7 @@ Public functions: `construction_plan_fields()`, `construction_validate_plan(plan
 
 ## 13. Ecosystem — peer federation
 
-The peer inventory reflects the existing Reaper federation roles for Reaper, Pytyliki, OPlague and VentuSample. Link descriptors name only existing relationships: the optional Pytyliki C ABI, OPlague's read-only device snapshot and the shared OCTA-8 peer contract. No network client or cross-repository runtime dependency is introduced.
+The peer inventory reflects the existing Reaper federation roles for Reaper, Pytyliki, OPlague and VentuSample. It preserves all twelve directed OCTA-8 links, including the two OPlague/Reaper artifact flows, the four implemented Pytyliki C ABI directions, the planned VentuSample/Pytyliki directions and the not-applicable Reaper/VentuSample and OPlague/VentuSample directions. The Pytyliki ABI remains opt-in even where the federation relationship is implemented. No network client or cross-repository runtime dependency is introduced.
 
 Public functions: `ecosystem_peers()`, `ecosystem_links()`, `ecosystem_validate_peers(peers)`, `ecosystem_find_peer(id)`, `ecosystem_validate_link(link)`.
 
@@ -59,7 +59,7 @@ An extension manifest uses:
 
 `[extension_id, major_version, host_contract, requested_capabilities, entry_point]`
 
-The host contract must pass the previous group's version validator and identify `reaper.host-service.v1`. Capability names are checked against a closed vocabulary. These are requests, not grants: only a trusted host can authorize or dispatch them.
+The host contract must pass the previous group's version validator and identify `reaper.host-service.v1`. Capability names are checked against the symbolic constants in `include/reaper/system.h` (including `FS_READ`, `NETWORK`, `PROCESS_CONTROL` and desktop capability families). These are requests, not grants: only a trusted host can authorize or dispatch them.
 
 The lifecycle allows declared → validated → enabled, enabled → disabled, disabled → enabled, and enabled/disabled → revoked. No code is loaded or enabled by this module.
 
