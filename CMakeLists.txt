@@ -57,15 +57,26 @@ if(REAPER_BUILD_TESTS)
  target_link_libraries(reaper-compiler-ir-tests PRIVATE reaper_core)
  add_test(NAME native-typed-compiler-ir COMMAND reaper-compiler-ir-tests)
  set(REAPER_GENERATED_IR_SOURCE ${CMAKE_CURRENT_BINARY_DIR}/reaper-generated-ir-smoke.c)
- set(REAPER_GENERATED_IR_OBJECT ${CMAKE_CURRENT_BINARY_DIR}/reaper-generated-ir-smoke.o)
- add_custom_command(
-  OUTPUT ${REAPER_GENERATED_IR_OBJECT}
-  COMMAND $<TARGET_FILE:reaper-compiler-ir-tests> --emit-c17 ${REAPER_GENERATED_IR_SOURCE}
-  COMMAND ${CMAKE_C_COMPILER} -std=c17 -Wall -Wextra -Wpedantic -Wconversion -Wshadow
-          -c ${REAPER_GENERATED_IR_SOURCE} -o ${REAPER_GENERATED_IR_OBJECT}
-  DEPENDS reaper-compiler-ir-tests
-  VERBATIM
- )
+ set(REAPER_GENERATED_IR_OBJECT ${CMAKE_CURRENT_BINARY_DIR}/reaper-generated-ir-smoke${CMAKE_C_OUTPUT_EXTENSION})
+ if(MSVC)
+  add_custom_command(
+   OUTPUT ${REAPER_GENERATED_IR_OBJECT}
+   COMMAND $<TARGET_FILE:reaper-compiler-ir-tests> --emit-c17 ${REAPER_GENERATED_IR_SOURCE}
+   COMMAND ${CMAKE_C_COMPILER} /nologo /std:c17 /W4 /c
+           ${REAPER_GENERATED_IR_SOURCE} /Fo${REAPER_GENERATED_IR_OBJECT}
+   DEPENDS reaper-compiler-ir-tests
+   VERBATIM
+  )
+ else()
+  add_custom_command(
+   OUTPUT ${REAPER_GENERATED_IR_OBJECT}
+   COMMAND $<TARGET_FILE:reaper-compiler-ir-tests> --emit-c17 ${REAPER_GENERATED_IR_SOURCE}
+   COMMAND ${CMAKE_C_COMPILER} -std=c17 -Wall -Wextra -Wpedantic -Wconversion -Wshadow
+           -c ${REAPER_GENERATED_IR_SOURCE} -o ${REAPER_GENERATED_IR_OBJECT}
+   DEPENDS reaper-compiler-ir-tests
+   VERBATIM
+  )
+ endif()
  add_custom_target(reaper-generated-c17-smoke ALL DEPENDS ${REAPER_GENERATED_IR_OBJECT})
  add_executable(reaper-sha256-tests tests/test_sha256.c)
  target_link_libraries(reaper-sha256-tests PRIVATE reaper_core)
