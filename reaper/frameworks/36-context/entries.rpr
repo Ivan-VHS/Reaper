@@ -1,0 +1,38 @@
+# ContextEntries — validate unique typed context keys and values.
+
+export craft valid_context_entries(entries) {
+    when kind(entries) != "list" {
+        yield false
+    }
+    craft valid_entry(entry) {
+        when kind(entry) != "list" or size(entry) != 3 {
+            yield false
+        }
+        when kind(entry[0]) != "text" or kind(entry[1]) != "text" {
+            yield false
+        }
+        when size(trim(entry[0])) == 0 {
+            yield false
+        }
+        when entry[1] == "text" {
+            yield kind(entry[2]) == "text"
+        }
+        when entry[1] == "number" {
+            yield kind(entry[2]) == "number"
+        }
+        when entry[1] == "boolean" {
+            yield kind(entry[2]) == "boolean"
+        }
+        yield false
+    }
+    craft invalid_entry(entry) {
+        yield not valid_entry(entry)
+    }
+    craft entry_key(entry) {
+        yield entry[0]
+    }
+    when size(keep(entries, invalid_entry)) != 0 {
+        yield false
+    }
+    yield size(unique(map(entries, entry_key))) == size(entries)
+}

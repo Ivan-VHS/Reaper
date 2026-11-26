@@ -1,0 +1,55 @@
+# ContextScopeTree — validate a rooted context scope tree with full reachability.
+
+export craft valid_context_scope_tree(scope_count, root, edges) {
+    when kind(scope_count) != "number" or scope_count % 1 != 0 or scope_count < 1 {
+        yield false
+    }
+    when kind(root) != "number" or root % 1 != 0 or root < 0 or root >= scope_count or kind(edges) != "list" or size(edges) != scope_count - 1 {
+        yield false
+    }
+    craft valid_edge(edge) {
+        when kind(edge) != "list" or size(edge) != 2 {
+            yield false
+        }
+        when kind(edge[0]) != "number" or kind(edge[1]) != "number" {
+            yield false
+        }
+        when edge[0] % 1 != 0 or edge[1] % 1 != 0 {
+            yield false
+        }
+        yield edge[0] >= 0 and edge[0] < scope_count and edge[1] >= 0 and edge[1] < scope_count and edge[0] != edge[1]
+    }
+    craft invalid_edge(edge) {
+        yield not valid_edge(edge)
+    }
+    when size(keep(edges, invalid_edge)) != 0 or size(unique(edges)) != size(edges) {
+        yield false
+    }
+    vary incoming := []
+    vary reachable := [root]
+    each node in range(0, scope_count) {
+        change incoming := push(incoming, 0)
+    }
+    each edge in edges {
+        change incoming[edge[1]] := incoming[edge[1]] + 1
+    }
+    each node in range(0, scope_count) {
+        when node == root and incoming[node] != 0 {
+            yield false
+        }
+        when node != root and incoming[node] != 1 {
+            yield false
+        }
+    }
+    vary changed := true
+    while changed {
+        change changed := false
+        each edge in edges {
+            when contains(reachable, edge[0]) and not contains(reachable, edge[1]) {
+                change reachable := push(reachable, edge[1])
+                change changed := true
+            }
+        }
+    }
+    yield size(reachable) == scope_count
+}

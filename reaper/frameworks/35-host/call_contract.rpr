@@ -1,0 +1,17 @@
+# HostCallContract — validate a named host function signature and explicit effects.
+
+export craft valid_host_call_contract(contract) {
+    when kind(contract) != "list" or size(contract) != 3 {
+        yield false
+    }
+    when kind(contract[0]) != "text" or kind(contract[1]) != "text" or kind(contract[2]) != "list" {
+        yield false
+    }
+    when size(trim(contract[0])) == 0 or size(trim(contract[1])) == 0 {
+        yield false
+    }
+    craft invalid_effect(effect) {
+        yield kind(effect) != "text" or size(trim(effect)) == 0
+    }
+    yield size(keep(contract[2], invalid_effect)) == 0 and size(unique(contract[2])) == size(contract[2])
+}

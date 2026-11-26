@@ -54,11 +54,11 @@ Each numbered row is one independent implementation batch with five framework sl
 | 29 | Бойлерплейт | 5 | Source added — CI pending |
 | 30 | Базовый слой | 5 | Source added — CI pending |
 | 31 | Прослойка | 5 | Source added — CI pending |
-| 32 | Мидлвар | 5 | Queued |
-| 33 | Связующее ПО | 5 | Queued |
-| 34 | Контейнер | 5 | Queued |
-| 35 | Хост | 5 | Queued |
-| 36 | Контекст | 5 | Queued |
+| 32 | Мидлвар | 5 | Tests first — implementation next |
+| 33 | Связующее ПО | 5 | Tests first — implementation next |
+| 34 | Контейнер | 5 | Tests first — implementation next |
+| 35 | Хост | 5 | Tests first — implementation next |
+| 36 | Контекст | 5 | Tests first — implementation next |
 | 37 | Модель | 5 | Queued |
 | 38 | Паттерн | 5 | Queued |
 | 39 | Парадигма | 5 | Queued |

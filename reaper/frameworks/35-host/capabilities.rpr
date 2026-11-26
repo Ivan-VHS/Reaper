@@ -1,0 +1,11 @@
+# HostCapabilities — validate a unique explicit set of host capabilities.
+
+export craft valid_host_capabilities(capabilities) {
+    when kind(capabilities) != "list" {
+        yield false
+    }
+    craft invalid_capability(capability) {
+        yield kind(capability) != "text" or size(trim(capability)) == 0
+    }
+    yield size(keep(capabilities, invalid_capability)) == 0 and size(unique(capabilities)) == size(capabilities)
+}

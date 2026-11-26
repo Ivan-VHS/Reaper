@@ -1,0 +1,16 @@
+# ContainerNamespaces — require all four declared namespace isolation dimensions.
+
+export craft valid_container_namespaces(namespaces) {
+    when kind(namespaces) != "list" or size(namespaces) != 4 {
+        yield false
+    }
+    each isolated in namespaces {
+        when kind(isolated) != "boolean" {
+            yield false
+        }
+        when not isolated {
+            yield false
+        }
+    }
+    yield true
+}

@@ -1,0 +1,30 @@
+# ContainerMounts — validate unique safe absolute mount targets and mount modes.
+# Mount: [source_id, target_path, read_only].
+
+export craft valid_container_mounts(mounts) {
+    when kind(mounts) != "list" or size(mounts) == 0 {
+        yield false
+    }
+    craft valid_mount(mount) {
+        when kind(mount) != "list" or size(mount) != 3 {
+            yield false
+        }
+        when kind(mount[0]) != "text" or kind(mount[1]) != "text" or kind(mount[2]) != "boolean" {
+            yield false
+        }
+        when size(trim(mount[0])) == 0 or not starts_with(mount[1], "/") or contains(mount[1], "..") or contains(mount[1], ":") {
+            yield false
+        }
+        yield mount[1] != "/"
+    }
+    craft invalid_mount(mount) {
+        yield not valid_mount(mount)
+    }
+    craft target_path(mount) {
+        yield mount[1]
+    }
+    when size(keep(mounts, invalid_mount)) != 0 {
+        yield false
+    }
+    yield size(unique(map(mounts, target_path))) == size(mounts)
+}

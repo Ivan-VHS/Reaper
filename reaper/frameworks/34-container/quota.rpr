@@ -1,0 +1,13 @@
+# ContainerQuota — validate CPU, memory and process ceilings.
+
+export craft valid_container_quotas(quotas) {
+    when kind(quotas) != "list" or size(quotas) != 3 {
+        yield false
+    }
+    each quota in quotas {
+        when kind(quota) != "number" or quota % 1 != 0 or quota < 1 {
+            yield false
+        }
+    }
+    yield quotas[0] <= 4096 and quotas[1] <= 68719476736 and quotas[2] <= 1048576
+}

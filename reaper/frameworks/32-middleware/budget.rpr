@@ -1,0 +1,15 @@
+# MiddlewareBudget — sum positive stage costs against a latency budget.
+
+export craft middleware_within_budget(costs, budget) {
+    when kind(costs) != "list" or kind(budget) != "number" or budget % 1 != 0 or budget < 0 {
+        yield false
+    }
+    vary total := 0
+    each cost in costs {
+        when kind(cost) != "number" or cost % 1 != 0 or cost < 0 {
+            yield false
+        }
+        change total := total + cost
+    }
+    yield total <= budget
+}

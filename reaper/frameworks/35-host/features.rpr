@@ -1,0 +1,20 @@
+# HostFeatures — report target features missing from the host capability set.
+
+export craft host_missing_features(required, host_features) {
+    when kind(required) != "list" or kind(host_features) != "list" {
+        yield []
+    }
+    craft invalid_feature(feature) {
+        yield kind(feature) != "text" or size(trim(feature)) == 0
+    }
+    when size(keep(required, invalid_feature)) != 0 or size(keep(host_features, invalid_feature)) != 0 {
+        yield []
+    }
+    when size(unique(required)) != size(required) or size(unique(host_features)) != size(host_features) {
+        yield []
+    }
+    craft missing(feature) {
+        yield not contains(host_features, feature)
+    }
+    yield keep(required, missing)
+}

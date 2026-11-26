@@ -1,0 +1,14 @@
+# ContextSnapshot — validate immutable snapshot ID, revision and SHA-256 digest marker.
+
+export craft valid_context_snapshot(snapshot) {
+    when kind(snapshot) != "list" or size(snapshot) != 3 {
+        yield false
+    }
+    when kind(snapshot[0]) != "text" or kind(snapshot[1]) != "number" or kind(snapshot[2]) != "text" {
+        yield false
+    }
+    when size(trim(snapshot[0])) == 0 or snapshot[1] % 1 != 0 or snapshot[1] < 1 {
+        yield false
+    }
+    yield starts_with(snapshot[2], "sha256:") and size(snapshot[2]) >= 19
+}

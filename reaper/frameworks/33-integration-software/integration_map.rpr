@@ -1,0 +1,30 @@
+# IntegrationMap — validate unique project/interface/endpoint mappings.
+# Entry: [source_project, interface_id, target_project, format, version].
+
+export craft valid_integration_map(mappings) {
+    when kind(mappings) != "list" or size(mappings) == 0 {
+        yield false
+    }
+    craft valid_mapping(item) {
+        when kind(item) != "list" or size(item) != 5 {
+            yield false
+        }
+        when kind(item[0]) != "text" or kind(item[1]) != "text" or kind(item[2]) != "text" or kind(item[3]) != "text" or kind(item[4]) != "number" {
+            yield false
+        }
+        when size(trim(item[0])) == 0 or size(trim(item[1])) == 0 or size(trim(item[2])) == 0 or size(trim(item[3])) == 0 or item[4] % 1 != 0 or item[4] < 1 {
+            yield false
+        }
+        yield item[0] != item[2]
+    }
+    craft invalid_mapping(item) {
+        yield not valid_mapping(item)
+    }
+    craft identity(item) {
+        yield item[0] ++ "::" ++ item[1]
+    }
+    when size(keep(mappings, invalid_mapping)) != 0 {
+        yield false
+    }
+    yield size(unique(map(mappings, identity))) == size(mappings)
+}

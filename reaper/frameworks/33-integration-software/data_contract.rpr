@@ -1,0 +1,32 @@
+# IntegrationDataContract — validate versioned typed field contract and unique names.
+
+export craft valid_integration_data_contract(contract) {
+    when kind(contract) != "list" or size(contract) != 3 {
+        yield false
+    }
+    when kind(contract[0]) != "text" or kind(contract[1]) != "number" or kind(contract[2]) != "list" {
+        yield false
+    }
+    when size(trim(contract[0])) == 0 or contract[1] % 1 != 0 or contract[1] < 1 {
+        yield false
+    }
+    craft valid_field(field) {
+        when kind(field) != "list" or size(field) != 2 {
+            yield false
+        }
+        when kind(field[0]) != "text" or kind(field[1]) != "text" {
+            yield false
+        }
+        yield size(trim(field[0])) > 0 and contains(["text", "bytes", "bool", "u32", "u64", "i64", "f64"], field[1])
+    }
+    craft invalid_field(field) {
+        yield not valid_field(field)
+    }
+    craft field_name(field) {
+        yield field[0]
+    }
+    when size(keep(contract[2], invalid_field)) != 0 {
+        yield false
+    }
+    yield size(unique(map(contract[2], field_name))) == size(contract[2])
+}

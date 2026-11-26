@@ -1,0 +1,29 @@
+# MiddlewareEffectPolicy — requested effects must be granted/allowed and not denied.
+
+export craft valid_middleware_effect_policy(requested, granted, allowed, denied) {
+    when kind(requested) != "list" or kind(granted) != "list" or kind(allowed) != "list" or kind(denied) != "list" {
+        yield false
+    }
+    craft valid_effect(effect) {
+        yield kind(effect) == "text" and size(trim(effect)) > 0
+    }
+    craft invalid_effect(effect) {
+        yield not valid_effect(effect)
+    }
+    when size(keep(requested, invalid_effect)) != 0 or size(keep(granted, invalid_effect)) != 0 or size(keep(allowed, invalid_effect)) != 0 or size(keep(denied, invalid_effect)) != 0 {
+        yield false
+    }
+    when size(unique(requested)) != size(requested) or size(unique(granted)) != size(granted) or size(unique(allowed)) != size(allowed) or size(unique(denied)) != size(denied) {
+        yield false
+    }
+    craft missing_grant(effect) {
+        yield not contains(granted, effect)
+    }
+    craft not_allowed(effect) {
+        yield not contains(allowed, effect)
+    }
+    craft explicitly_denied(effect) {
+        yield contains(denied, effect)
+    }
+    yield size(keep(requested, missing_grant)) == 0 and size(keep(requested, not_allowed)) == 0 and size(keep(requested, explicitly_denied)) == 0
+}
