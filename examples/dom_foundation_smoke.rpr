@@ -156,4 +156,44 @@ make state_adapter := dom_frameworks["apply_state_events"](
 )
 assert(state_adapter[0] and state_adapter[1] == "idle", "ДОМ reuses Shashio state transitions")
 
+
+# Negative and boundary cases protect the contracts against partial success.
+make cyclic_manifest := [
+    "reaper.dom.manifest.v1",
+    "cycle.app",
+    "1.0.0",
+    "core",
+    [
+        ["cycle.a", "1.0.0", ["cycle.b"]],
+        ["cycle.b", "1.0.0", ["cycle.a"]]
+    ],
+    [],
+    budget
+]
+assert(not establish["validate_manifest"](cyclic_manifest)[0], "Establish rejects dependency cycles")
+
+make ambiguous_recipient := carriere["resolve_recipient"](
+    envelope,
+    [["app.core", "service", "active"], ["app.core", "second", "active"]]
+)
+assert(not ambiguous_recipient[0], "System Carriere rejects ambiguous endpoint identity")
+
+make failed_batch := jenny_flash["apply_batch"](
+    [changed[1]],
+    [["theme", 1, "white"], ["theme", 1, "red"]]
+)
+assert(not failed_batch[0] and failed_batch[1] == [changed[1]], "JennyFlash batch rolls back on duplicate writes")
+
+make malformed_reload := flashing_boy["authorize_commit"]([[], new_module, true, true, true])
+assert(not malformed_reload[0], "Jenny Flashing Boy rejects malformed module metadata")
+
+make split_result := budgets["split"](100, [1, 3])
+assert(split_result[0] and split_result[1] == [25, 75], "poooVERTY weighted split")
+
+make cancelled_scope := lifecycle["create_scope"]("scope-smoke", "sample.app")
+make scoped_task := lifecycle["add_task"](cancelled_scope[1], "task-1")
+assert(scoped_task[0], "JLOM registers scoped task")
+assert(not lifecycle["add_task"](scoped_task[1], "task-1")[0], "JLOM rejects duplicate task")
+assert(lifecycle["cancel_scope"](scoped_task[1])[0], "JLOM cancels scope")
+
 emit "dom foundation smoke checks passed"
