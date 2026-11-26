@@ -58,6 +58,7 @@ schemas/
 examples/rivet/
   framework_plan.rpr
   multitool_plan.rpr
+  planner_checks.rpr
   framework.request.json
   multitool.request.json
 ```
@@ -113,7 +114,7 @@ The complete target pipeline is intentionally split into inspectable stages:
 10. **Packaging.** Produce a lockfile, SBOM, license inventory, artifact hashes and provenance record.
 11. **Promotion.** Sign and publish only after required evidence exists and a human approves the release.
 
-Only stages 1–8 of the *planning model* have a partial representation in the initial Reaper planner. The current source does not yet parse external JSON requests, emit project files, compile generated products, run module test suites, create packages or sign artifacts. Those are explicit follow-on increments, not implied by the planner.
+The initial implementation covers the in-memory part of stages 1–6: a caller supplies the product identity, profile and root module IDs directly to the Reaper API; the planner expands dependencies, validates the graph and contracts, orders modules, aggregates requested permissions and renders a plan. It does not yet read the JSON request fixtures. The current source also does not emit project files, compile generated products, run module conformance suites, create packages or sign artifacts. Those are explicit follow-on increments, not implied by the planner.
 
 ## 5. Module contracts and catalogue policy
 
@@ -179,7 +180,7 @@ reaper rivet verify ./Workbench
 reaper rivet package ./Workbench --output ./dist
 ```
 
-These commands describe the target CLI surface; they are not all available in the current increment. The runnable Reaper planning examples are `examples/rivet/framework_plan.rpr` and `examples/rivet/multitool_plan.rpr`.
+These commands describe the target CLI surface; they are not all available in the current increment. Run the Reaper examples with the installed Reaper CLI: `reaper examples/rivet/framework_plan.rpr`, `reaper examples/rivet/multitool_plan.rpr` and `reaper examples/rivet/planner_checks.rpr`.
 
 ## 10. Implementation milestones
 
