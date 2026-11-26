@@ -294,13 +294,25 @@ export craft verify_track_markers(markers, total_tracks, total_duration) {
 }
 
 export craft validate_archive(metadata, budget, acl_rules, snapshot_deltas, segments, markers, local_only) {
+    vary total_tracks := 0
+    vary total_duration := 0
+    vary marker_count := 0
+
+    when row_shape(metadata, 13) {
+        change total_tracks := metadata[7]
+        change total_duration := metadata[8]
+    }
+    when kind(markers) == "list" {
+        change marker_count := size(markers)
+    }
+
     make checks := [
         check_archive_metadata(metadata),
         check_performance_budget(budget),
         check_permission_policy(acl_rules, local_only),
         verify_snapshot_safety(snapshot_deltas),
-        verify_segments(segments, metadata[8]),
-        verify_track_markers(markers, metadata[7], metadata[8])
+        verify_segments(segments, total_duration),
+        verify_track_markers(markers, total_tracks, total_duration)
     ]
 
     vary passed := true
@@ -310,5 +322,5 @@ export craft validate_archive(metadata, budget, acl_rules, snapshot_deltas, segm
         }
     }
 
-    yield [passed, checks, size(markers), metadata[7]]
+    yield [passed, checks, marker_count, total_tracks]
 }
