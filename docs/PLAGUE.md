@@ -7,12 +7,16 @@ PLAGUE is a local, Reaper-native framework family for evidence-driven modernizat
 The initial implementation lives in the top-level plague/ directory and contains:
 
 - the ten-component framework registry;
+- bounded repository-profile and evolution-proposal validation;
+- deterministic compatibility, scope, resource-budget, assurance-gate and rollback-evidence assessment;
+- risk/benefit candidate ranking for up to 128 proposals;
 - the executable Reaper action policy;
 - observe / propose / apply capability levels;
 - default-deny behavior for unknown actions and modes;
 - fixed denials for default-branch writes, merges, releases, secret access, untrusted-script execution and scope expansion;
 - repository-target, change-plan and evidence-bundle JSON schemas;
-- a Reaper smoke program connected to CI.
+- five JSON contracts covering repository targets, change plans, evidence, repository profiles and evolution proposals;
+- two Reaper smoke programs and a host-side test adapter connected to CI.
 
 The current maturity is **Genesis**. The foundation does not yet discover repositories, read repository trees, modify files, invoke tools or create pull requests. Its policy function is not a substitute for grant validation or a sandbox.
 
@@ -32,6 +36,12 @@ The current maturity is **Genesis**. The foundation does not yet discover reposi
 | Necrovex | Recovery and compatibility migrations |
 
 Plaguecore is Partial only for its action-policy slice. The other nine components are Planned. No framework component is feature-complete.
+
+## Advisory evolution evaluator
+
+The Reaper core validates bounded repository profiles and change proposals. The evolution evaluator rejects target mismatches, ungranted scopes, exceeded path/byte budgets, missing assurance gates, absent required rollback evidence and risk above the profile ceiling. It returns blocked, defer, review_required or eligible_for_review and ranks up to 128 candidates by expected benefit minus risk. This is advisory only: proposal eligibility never grants write authority, and evidence references are not cryptographically verified in this slice.
+
+See PLAGUE_FOUNDATION_V1.md for tuple layouts and acceptance fixtures.
 
 ## Access model
 
