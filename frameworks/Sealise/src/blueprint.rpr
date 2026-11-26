@@ -115,3 +115,108 @@ export craft migration_plan(from_version, to_version, changes) {
     }
     yield [true, plan]
 }
+
+
+# Project profile resolution, contract-set audits and migration reversibility.
+export craft contract_set_validate(contracts) {
+    vary index := 0
+    loop while index < size(contracts) {
+        make valid := contract_validate(contracts[index])
+        when not valid[0] { yield [false, valid[1]] }
+        vary other := index + 1
+        loop while other < size(contracts) {
+            when contracts[index][0] == contracts[other][0] {
+                yield [false, "duplicate_contract_id"]
+            }
+            change other := other + 1
+        }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+
+export craft contract_diff(required, provided) {
+    when not contract_validate(required)[0] or not contract_validate(provided)[0] {
+        yield [false, "invalid_contract"]
+    }
+    yield [
+        true,
+        required[0] == provided[0],
+        required[1] == provided[1],
+        required[2] == provided[2],
+        required[3] == provided[3],
+        required[4] == provided[4],
+        required[5] == provided[5]
+    ]
+}
+
+export craft contract_set_find(contracts, identifier) {
+    vary index := 0
+    loop while index < size(contracts) {
+        when contracts[index][0] == identifier { yield [true, index, contracts[index]] }
+        change index := index + 1
+    }
+    yield [false, -1, []]
+}
+
+export craft contract_set_compatible(required_set, provided_set) {
+    make valid_required := contract_set_validate(required_set)
+    make valid_provided := contract_set_validate(provided_set)
+    when not valid_required[0] or not valid_provided[0] {
+        yield [false, "invalid_contract_set"]
+    }
+    vary failures := []
+    vary index := 0
+    loop while index < size(required_set) {
+        make found := contract_set_find(provided_set, required_set[index][0])
+        when not found[0] {
+            change failures := push(failures, [required_set[index][0], "missing"])
+        } otherwise {
+            make compatible := contract_compatible(required_set[index], found[2])
+            when not compatible[0] {
+                change failures := push(failures, [required_set[index][0], compatible[1]])
+            }
+        }
+        change index := index + 1
+    }
+    yield [size(failures) == 0, failures]
+}
+
+export craft blueprint_profile(name, required_layers, required_files, version, platform) {
+    yield [name, required_layers, required_files, version, platform]
+}
+
+export craft blueprint_profile_select(profiles, requested_name, requested_platform) {
+    vary index := 0
+    loop while index < size(profiles) {
+        when profiles[index][0] == requested_name and
+             (profiles[index][4] == "any" or profiles[index][4] == requested_platform) {
+            yield [true, profiles[index]]
+        }
+        change index := index + 1
+    }
+    yield [false, "blueprint_profile_not_found"]
+}
+
+export craft migration_reversible(steps) {
+    vary index := 0
+    loop while index < size(steps) {
+        when size(steps[index]) != 5 { yield [false, "migration_step_missing_inverse"] }
+        when steps[index][4] == nothing { yield [false, "migration_step_missing_inverse"] }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+
+export craft project_baseline_record(name, revision, source_count, contract_count, test_count) {
+    yield [name, revision, source_count, contract_count, test_count]
+}
+
+export craft project_baseline_validate(baseline) {
+    when size(baseline) != 5 { yield [false, "invalid_baseline"] }
+    when size(baseline[0]) == 0 or size(baseline[1]) == 0 { yield [false, "baseline_identity_missing"] }
+    when baseline[2] < 0 or baseline[3] < 0 or baseline[4] < 0 {
+        yield [false, "negative_baseline_count"]
+    }
+    yield [true, []]
+}
