@@ -121,3 +121,22 @@ The standalone modules are domain components, not replacement runtimes. ДОМ i
 | Showel Fleppery CODE | Jenny Flashing Boy in-memory development pipeline |
 
 No standalone module may create a competing scheduler, message bus, resource ledger, module registry or application lifecycle. See [Framework Portfolio](FRAMEWORK_PORTFOLIO_EXPANSION.md) for all framework groups and their ownership map.
+
+## Expanded v1.1 contracts
+
+The current expansion branch adds the following Reaper operations without changing the original module identity or grammar:
+
+| Framework | Additional public operations |
+|---|---|
+| GalHero | dependency layers, reverse topological order, dependents, unique-edge validation and dependency closure |
+| Call-and-Back | registry validation, event filtering, unsubscribe, event removal, atomic multi-subscribe and bounded dispatch |
+| Stacked Options | option-shape validation, removal, selection, unknown-key detection and value provenance by configuration layer |
+| PerenosiMOST | alias lookup/classification, alias-table validation, unsupported-word partitioning and unique canonicalization |
+| MOST | multi-word classification, runtime/reserved counts and full exact-alias profile validation |
+| Blau | snapshot validation, delete, keys, read-all and all-or-nothing operation batches |
+| Shashio | reachable-state analysis, terminal-state discovery and bounded event execution |
+| Showel Fleppery CODE | pipeline validation/inspection/composition, bounded execution and validated template replacement |
+
+The ДОМ adapter module at dom/adapters/framework_modules.rpr exposes these operations through one controlled integration surface. The implementation remains in each owning framework module; the adapter does not duplicate algorithms or introduce a second runtime.
+
+The integration smoke program covers positive and negative calls for these expanded contracts. The repository CI result on the exact PR head remains the acceptance authority.
