@@ -1,0 +1,7 @@
+# Reaper scalar AOT smoke: compiled and executed on the current CI host.
+# This validates host-native scalar execution, not aggregate ABI lowering.
+craft add(left, right) {
+    yield left + right
+}
+make answer := add(20, 22)
+emit answer

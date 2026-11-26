@@ -1,0 +1,160 @@
+# Canonical typed IR v1. Span and SourceMap travel with every node.
+# Byte offsets are not fabricated: v1 preserves exact lexer line/column coordinates
+# until the bootstrap token contract carries source offsets.
+
+export craft source_span(source_name, start_line, start_column, end_line, end_column) {
+    yield ["SPAN_V1", source_name, start_line, start_column, end_line, end_column]
+}
+
+export craft source_span_from_token(token, source_name) {
+    when size(token) != 4 or source_name == "" {
+        yield [false, "RPR-SPAN-0001", "token or source name is malformed"]
+    }
+    when token[2] < 1 or token[3] < 1 {
+        yield [false, "RPR-SPAN-0002", "token line and column must be one-based positive coordinates"]
+    }
+    make width := size(token[1])
+    when token[0] == "STRING" { change width := width + 2 }
+    when width < 1 { change width := 1 }
+    yield [true, source_span(source_name, token[2], token[3], token[2], token[3] + width), ""]
+}
+
+export craft source_span_validate(span) {
+    when size(span) != 6 or span[0] != "SPAN_V1" or span[1] == "" {
+        yield [false, "RPR-SPAN-0003", "Span must be SPAN_V1 with a source identity"]
+    }
+    when span[2] < 1 or span[3] < 1 or span[4] < span[2] or span[5] < 1 {
+        yield [false, "RPR-SPAN-0004", "Span coordinates are outside the source coordinate domain"]
+    }
+    when span[4] == span[2] and span[5] < span[3] {
+        yield [false, "RPR-SPAN-0005", "Span end precedes its start"]
+    }
+    yield [true, span, ""]
+}
+
+export craft typed_ir_node(node_id, operation, type_id, effects, span, operands, payload) {
+    yield ["TIR_NODE_V1", node_id, operation, type_id, effects, span, operands, payload]
+}
+
+export craft source_map_entry(node_id, span) {
+    yield ["SOURCE_MAP_ENTRY_V1", node_id, span]
+}
+
+export craft source_map_create(source_name, entries) {
+    yield ["SOURCE_MAP_V1", source_name, entries]
+}
+
+export craft typed_ir_build_source_map(source_name, nodes) {
+    vary entries := []
+    each node in nodes {
+        when size(node) != 8 or node[0] != "TIR_NODE_V1" {
+            yield [false, "RPR-TIR-0001", "SourceMap input contains a malformed typed IR node"]
+        }
+        change entries := push(entries, source_map_entry(node[1], node[5]))
+    }
+    yield [true, source_map_create(source_name, entries), ""]
+}
+
+export craft typed_ir_module(module_id, source_name, types, nodes, source_map) {
+    yield ["TIR_MODULE_V1", module_id, source_name, types, nodes, source_map]
+}
+
+export craft source_map_find(source_map, node_id) {
+    when size(source_map) != 3 or source_map[0] != "SOURCE_MAP_V1" {
+        yield [false, "RPR-SPAN-0006", "SourceMap has an invalid schema"]
+    }
+    vary found := false
+    vary span := []
+    each entry in source_map[2] {
+        when size(entry) != 3 or entry[0] != "SOURCE_MAP_ENTRY_V1" {
+            yield [false, "RPR-SPAN-0007", "SourceMap contains a malformed entry"]
+        }
+        when entry[1] == node_id {
+            when found { yield [false, "RPR-SPAN-0008", "SourceMap contains duplicate node provenance"] }
+            change found := true
+            change span := entry[2]
+        }
+    }
+    when not found { yield [false, "RPR-SPAN-0009", "SourceMap has no provenance for typed IR node"] }
+    yield [true, span, ""]
+}
+
+export craft typed_ir_contains(values, expected) {
+    each value in values {
+        when value == expected { yield true }
+    }
+    yield false
+}
+
+export craft typed_ir_has_node(nodes, node_id) {
+    each node in nodes {
+        when size(node) == 8 and node[0] == "TIR_NODE_V1" and node[1] == node_id { yield true }
+    }
+    yield false
+}
+
+export craft typed_ir_validate(module) {
+    when size(module) != 6 or module[0] != "TIR_MODULE_V1" {
+        yield [false, "RPR-TIR-0002", "expected TIR_MODULE_V1"]
+    }
+    when module[1] == "" or module[2] == "" {
+        yield [false, "RPR-TIR-0003", "typed IR module identity and source name are required"]
+    }
+    make source_map := module[5]
+    when size(source_map) != 3 or source_map[0] != "SOURCE_MAP_V1" or source_map[1] != module[2] {
+        yield [false, "RPR-TIR-0004", "SourceMap source identity must match the module"]
+    }
+    when size(source_map[2]) != size(module[4]) {
+        yield [false, "RPR-TIR-0005", "every typed IR node must have exactly one SourceMap entry"]
+    }
+
+    vary seen_ids := []
+    each node in module[4] {
+        when size(node) != 8 or node[0] != "TIR_NODE_V1" {
+            yield [false, "RPR-TIR-0006", "typed IR contains a malformed node"]
+        }
+        when node[1] < 0 or node[1] % 1 != 0 or node[2] == "" or node[3] == "" {
+            yield [false, "RPR-TIR-0007", "typed IR node id, operation and type identity are required"]
+        }
+        when typed_ir_contains(seen_ids, node[1]) {
+            yield [false, "RPR-TIR-0008", "typed IR node ids must be unique"]
+        }
+        change seen_ids := push(seen_ids, node[1])
+        make checked_span := source_span_validate(node[5])
+        when not checked_span[0] { yield checked_span }
+        when node[5][1] != module[2] {
+            yield [false, "RPR-TIR-0009", "node Span belongs to a different source file"]
+        }
+        make mapped_span := source_map_find(source_map, node[1])
+        when not mapped_span[0] { yield mapped_span }
+        when mapped_span[1] != node[5] {
+            yield [false, "RPR-TIR-0012", "SourceMap Span differs from the node Span"]
+        }
+    }
+
+    each entry in source_map[2] {
+        when size(entry) != 3 or entry[0] != "SOURCE_MAP_ENTRY_V1" {
+            yield [false, "RPR-TIR-0013", "SourceMap contains an invalid entry"]
+        }
+        when not typed_ir_has_node(module[4], entry[1]) {
+            yield [false, "RPR-TIR-0014", "SourceMap refers to a node outside the module"]
+        }
+    }
+    each node in module[4] {
+        each operand in node[6] {
+            when not typed_ir_has_node(module[4], operand) {
+                yield [false, "RPR-TIR-0015", "typed IR operand refers to an unknown node"]
+            }
+        }
+    }
+    yield [true, module, ""]
+}
+
+export craft typed_ir_lookup_node(module, node_id) {
+    make checked := typed_ir_validate(module)
+    when not checked[0] { yield checked }
+    each node in module[4] {
+        when node[1] == node_id { yield [true, node, ""] }
+    }
+    yield [false, "RPR-TIR-0016", "typed IR node was not found"]
+}

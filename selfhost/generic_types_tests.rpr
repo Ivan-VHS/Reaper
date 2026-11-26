@@ -1,0 +1,37 @@
+import "generic_types.rpr"
+import "type_platform.rpr"
+
+make copy_interface := interface_descriptor("Copy", [], [], [
+    interface_method("copy", [type_primitive("u64")], type_primitive("u64"), [])
+], [])
+make interface_check := interface_validate(copy_interface)
+assert(interface_check[0], "interface descriptor must validate")
+make u64_impl := interface_implementation("u64", "Copy", [
+    interface_method("copy", [type_primitive("u64")], type_primitive("u64"), [])
+], [])
+make implementation_check := interface_validate_implementation(copy_interface, u64_impl)
+assert(implementation_check[0], "matching method signatures must satisfy an interface")
+make bad_impl := interface_implementation("u64", "Copy", [], [])
+make bad_implementation := interface_validate_implementation(copy_interface, bad_impl)
+assert(not bad_implementation[0] and bad_implementation[1] == "RPR-IFACE-0012", "missing methods must fail interface conformance")
+
+make generic_box := generic_definition("Box", [
+    generic_parameter("T", ["Copy"], nothing)
+], ["TYPE_V1", "array", generic_type_variable("T"), 1])
+make generic_check := generic_definition_validate(generic_box)
+assert(generic_check[0], "generic definition must validate")
+make implementations := [u64_impl]
+make instance := generic_instantiate(generic_box, [type_primitive("u64")], implementations)
+assert(instance[0] and instance[1][3][0] == "TYPE_V1" and instance[1][3][1] == "array", "generic substitution must create a concrete array type")
+assert(instance[1][3][2][2] == "u64", "nested generic type variable must be substituted")
+make missing_bound := generic_instantiate(generic_box, [type_primitive("i32")], implementations)
+assert(not missing_bound[0] and missing_bound[1] == "RPR-GEN-0009", "unsatisfied interface bound must fail")
+make wrong_arity := generic_bind_arguments(generic_box, [], implementations)
+assert(not wrong_arity[0] and wrong_arity[1] == "RPR-GEN-0007", "missing required type argument must fail")
+make malformed_interface := interface_descriptor("Broken", [], [], [
+    interface_method("same", [], type_primitive("u8"), []),
+    interface_method("same", [], type_primitive("u8"), [])
+], [])
+make duplicate_method := interface_validate(malformed_interface)
+assert(not duplicate_method[0] and duplicate_method[1] == "RPR-IFACE-0005", "duplicate interface methods must fail")
+emit "REAPER_GENERIC_INTERFACE_CONFORMANCE_OK"

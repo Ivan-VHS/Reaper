@@ -1,0 +1,34 @@
+import "typed_ir.rpr"
+import "typed_lowering.rpr"
+import "type_platform.rpr"
+
+make source_name := "pipeline.rpr"
+make span_one := source_span(source_name, 1, 1, 1, 8)
+make span_two := source_span(source_name, 2, 1, 2, 12)
+make span_three := source_span(source_name, 3, 1, 3, 7)
+make value := typed_ir_node(1, "const", "i64", [], span_one, [], 20)
+make add := typed_ir_node(2, "add", "i64", [], span_two, [1], ["addend", 22])
+make result := typed_ir_node(3, "return", "i64", [], span_three, [2], nothing)
+make nodes := [value, add, result]
+make source_map_result := typed_ir_build_source_map(source_name, nodes)
+make module := typed_ir_module("pipeline", source_name, [], nodes, source_map_result[1])
+make linux := platform_linux_x86_64()
+make pipeline := lower_typed_pipeline(module, linux)
+assert(pipeline[0], "typed IR must lower through HIR, MIR and target LIR")
+assert(pipeline[1][1][0] == "HIR_MODULE_V1", "first stage must be explicit HIR")
+assert(pipeline[1][2][0] == "MIR_MODULE_V1", "second stage must be explicit MIR")
+assert(pipeline[1][3][0] == "LIR_MODULE_V1", "third stage must be target LIR")
+assert(pipeline[1][3][3] == "LINUX_X86_64", "LIR must bind to an explicit target profile")
+assert(pipeline[1][1][4][1][5] == add[5], "HIR must preserve original Span")
+assert(pipeline[1][1][5][2][1] == 3, "SourceMap must survive HIR lowering")
+make dak := platform_dak_x86_64()
+make blocked := mir_to_lir(pipeline[1][2], dak)
+assert(not blocked[0] and blocked[1] == "RPR-LIR-0001", "profile-only DAK must not emit ABI-dependent LIR")
+make unsupported_node := typed_ir_node(1, "async_await", "i64", [], span_one, [], nothing)
+make unsupported_nodes := [unsupported_node]
+make unsupported_map := typed_ir_build_source_map(source_name, unsupported_nodes)
+make unsupported_module := typed_ir_module("unsupported", source_name, [], unsupported_nodes, unsupported_map[1])
+make unsupported_hir := hir_from_typed_ir(unsupported_module)
+make unsupported_mir := hir_to_mir(unsupported_hir[1])
+assert(not unsupported_mir[0] and unsupported_mir[1] == "RPR-HIR-0003", "unsupported HIR operation must stop before MIR")
+emit "REAPER_TYPED_LOWERING_CONFORMANCE_OK"

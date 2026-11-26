@@ -1,0 +1,166 @@
+# Typed HIR -> MIR -> target LIR pipeline v1.
+# LIR remains virtual-register based; this is not machine encoding or an object file.
+import "typed_ir.rpr"
+import "type_platform.rpr"
+
+export craft lowering_error(code, message) {
+    yield [false, code, message]
+}
+
+export craft hir_node(id, operation, type_id, effects, span, operands, payload) {
+    yield ["HIR_NODE_V1", id, operation, type_id, effects, span, operands, payload]
+}
+
+export craft mir_node(id, operation, type_id, effects, span, operands, payload) {
+    yield ["MIR_NODE_V1", id, operation, type_id, effects, span, operands, payload]
+}
+
+export craft lowering_find_register(registers, node_id) {
+    each register in registers {
+        when register[1] == node_id { yield [true, register[2], ""] }
+    }
+    yield [false, -1, "value has no preceding virtual-register definition"]
+}
+
+export craft hir_from_typed_ir(module) {
+    make checked := typed_ir_validate(module)
+    when not checked[0] { yield checked }
+    vary nodes := []
+    each node in module[4] {
+        change nodes := push(nodes, hir_node(node[1], node[2], node[3], node[4], node[5], node[6], node[7]))
+    }
+    yield [true, ["HIR_MODULE_V1", module[1], module[2], module[3], nodes, module[5]], ""]
+}
+
+export craft hir_validate(module) {
+    when size(module) != 6 or module[0] != "HIR_MODULE_V1" or module[1] == "" or module[2] == "" {
+        yield lowering_error("RPR-HIR-0001", "expected HIR_MODULE_V1 with module and source identity")
+    }
+    vary typed_nodes := []
+    each node in module[4] {
+        when size(node) != 8 or node[0] != "HIR_NODE_V1" {
+            yield lowering_error("RPR-HIR-0002", "HIR contains a malformed node")
+        }
+        change typed_nodes := push(typed_nodes, typed_ir_node(node[1], node[2], node[3], node[4], node[5], node[6], node[7]))
+    }
+    make typed_module := typed_ir_module(module[1], module[2], module[3], typed_nodes, module[5])
+    make checked := typed_ir_validate(typed_module)
+    when not checked[0] { yield checked }
+    yield [true, module, ""]
+}
+
+export craft hir_operation_to_mir(operation) {
+    when operation == "const" { yield "CONST" }
+    when operation == "copy" { yield "COPY" }
+    when operation == "add" { yield "ADD" }
+    when operation == "sub" { yield "SUB" }
+    when operation == "mul" { yield "MUL" }
+    when operation == "compare" { yield "COMPARE" }
+    when operation == "call" { yield "CALL" }
+    when operation == "field_load" { yield "FIELD_LOAD" }
+    when operation == "field_store" { yield "FIELD_STORE" }
+    when operation == "aggregate_build" { yield "AGGREGATE_BUILD" }
+    when operation == "phi" { yield "PHI" }
+    when operation == "return" { yield "RETURN" }
+    yield ""
+}
+
+export craft hir_to_mir(module) {
+    make checked := hir_validate(module)
+    when not checked[0] { yield checked }
+    vary nodes := []
+    each node in module[4] {
+        make operation := hir_operation_to_mir(node[2])
+        when operation == "" {
+            yield lowering_error("RPR-HIR-0003", "HIR operation has no MIR lowering: " ++ node[2])
+        }
+        change nodes := push(nodes, mir_node(node[1], operation, node[3], node[4], node[5], node[6], node[7]))
+    }
+    yield [true, ["MIR_MODULE_V1", module[1], module[2], module[3], nodes, module[5]], ""]
+}
+
+export craft mir_operation_to_lir(operation) {
+    when operation == "CONST" { yield "MOV_IMMEDIATE" }
+    when operation == "COPY" { yield "MOV" }
+    when operation == "ADD" { yield "ADD" }
+    when operation == "SUB" { yield "SUB" }
+    when operation == "MUL" { yield "MUL" }
+    when operation == "COMPARE" { yield "COMPARE" }
+    when operation == "CALL" { yield "CALL_ABI" }
+    when operation == "FIELD_LOAD" { yield "LOAD_FIELD" }
+    when operation == "FIELD_STORE" { yield "STORE_FIELD" }
+    when operation == "AGGREGATE_BUILD" { yield "BUILD_AGGREGATE" }
+    when operation == "PHI" { yield "SELECT_PHI" }
+    when operation == "RETURN" { yield "RETURN_ABI" }
+    yield ""
+}
+
+export craft mir_operation_has_result(operation) {
+    when operation == "CONST" or operation == "COPY" or operation == "ADD" or operation == "SUB" or operation == "MUL" or operation == "COMPARE" or operation == "CALL" or operation == "FIELD_LOAD" or operation == "AGGREGATE_BUILD" or operation == "PHI" {
+        yield true
+    }
+    yield false
+}
+
+export craft mir_validate(module) {
+    when size(module) != 6 or module[0] != "MIR_MODULE_V1" {
+        yield lowering_error("RPR-MIR-0001", "expected MIR_MODULE_V1")
+    }
+    vary typed_nodes := []
+    each node in module[4] {
+        when size(node) != 8 or node[0] != "MIR_NODE_V1" {
+            yield lowering_error("RPR-MIR-0002", "MIR contains a malformed node")
+        }
+        change typed_nodes := push(typed_nodes, typed_ir_node(node[1], "mir_" ++ node[2], node[3], node[4], node[5], node[6], node[7]))
+    }
+    make typed_module := typed_ir_module(module[1], module[2], module[3], typed_nodes, module[5])
+    make checked := typed_ir_validate(typed_module)
+    when not checked[0] { yield checked }
+    yield [true, module, ""]
+}
+
+export craft mir_to_lir(module, platform) {
+    make checked := mir_validate(module)
+    when not checked[0] { yield checked }
+    make platform_check := platform_validate(platform)
+    when not platform_check[0] { yield platform_check }
+    when not platform_process_abi_declared(platform) {
+        yield lowering_error("RPR-LIR-0001", "target process ABI is not declared; LIR lowering is blocked")
+    }
+
+    vary nodes := []
+    vary registers := []
+    vary next_register := 0
+    each node in module[4] {
+        make operation := mir_operation_to_lir(node[2])
+        when operation == "" {
+            yield lowering_error("RPR-LIR-0002", "MIR operation has no target-independent LIR selection: " ++ node[2])
+        }
+        vary input_registers := []
+        each operand in node[6] {
+            make source_register := lowering_find_register(registers, operand)
+            when not source_register[0] {
+                yield lowering_error("RPR-LIR-0003", "LIR operand is used before it is defined")
+            }
+            change input_registers := push(input_registers, source_register[1])
+        }
+        vary output_register := -1
+        when mir_operation_has_result(node[2]) {
+            change output_register := next_register
+            change registers := push(registers, ["VREG_MAP_V1", node[1], next_register])
+            change next_register := next_register + 1
+        }
+        change nodes := push(nodes, ["LIR_NODE_V1", node[1], operation, output_register, input_registers, node[3], node[5], node[7]])
+    }
+    yield [true, ["LIR_MODULE_V1", module[1], module[2], platform[1], module[3], nodes, module[5]], ""]
+}
+
+export craft lower_typed_pipeline(module, platform) {
+    make hir := hir_from_typed_ir(module)
+    when not hir[0] { yield hir }
+    make mir := hir_to_mir(hir[1])
+    when not mir[0] { yield mir }
+    make lir := mir_to_lir(mir[1], platform)
+    when not lir[0] { yield lir }
+    yield [true, ["LOWERING_RESULT_V1", hir[1], mir[1], lir[1]], ""]
+}
