@@ -1,17 +1,81 @@
-# Reaper framework metadata and source-level helper functions.
-# Operation contracts: language/frameworks.v1.json
+# Zabor: least-authority capability grants and policy scopes.
+import "../federation_common.rpr" as fc
 
 export make framework_id := "zabor"
 export make display_name := "Zabor"
 export make feature_key := "RPR-FWK-009"
 export make operation_keys := ["RPR-FWK-009-F01", "RPR-FWK-009-F02", "RPR-FWK-009-F03", "RPR-FWK-009-F04", "RPR-FWK-009-F05", "RPR-FWK-009-F06"]
-export make maturity := "contract-only"
+export make maturity := "reference-handler-v1-partial"
 export make native_registry := "reaper.framework-cabi.v1"
 
-export craft operation_key(index) {
-    yield operation_keys[index]
+export craft operation_key(index) { yield operation_keys[index] }
+export craft framework_manifest() { yield [framework_id, display_name, feature_key, operation_keys, maturity] }
+
+export craft grant_create(principal, resource, capability) {
+    when not fc["fc_nonempty_text"](principal) or not fc["fc_nonempty_text"](resource) or not fc["fc_nonempty_text"](capability) {
+        yield [false, nothing, "grant-fields-required"]
+    }
+    yield [true, [principal, resource, capability, "active"], "grant-described"]
 }
 
-export craft framework_manifest() {
-    yield [framework_id, display_name, feature_key, operation_keys, maturity]
+# Principal record: [principal_id, grants]; grant row: [resource, capability, state].
+export craft grant_check(principal, resource, capability) {
+    when not fc["fc_record"](principal, 2) or kind(principal[1]) != "list" {
+        yield [false, false, "principal-record-shape"]
+    }
+    vary allowed := false
+    each grant in principal[1] {
+        when fc["fc_record"](grant, 3) and grant[0] == resource and grant[1] == capability and grant[2] == "active" {
+            change allowed := true
+        }
+    }
+    yield [true, allowed, "explicit-grant-check"]
+}
+
+export craft grant_revoke(grant, authority) {
+    when not fc["fc_record"](grant, 4) { yield [false, nothing, "grant-shape"] }
+    when authority != grant[0] { yield [false, grant, "grant-owner-mismatch"] }
+    when grant[3] != "active" { yield [false, grant, "grant-not-active"] }
+    yield [true, [grant[0], grant[1], grant[2], "revoked"], "revoked"]
+}
+
+# Scope: [resource_set, capability_set, expiry].
+export craft scope_intersect(left, right) {
+    when not fc["fc_record"](left, 3) or not fc["fc_record"](right, 3) {
+        yield [false, nothing, "scope-shape"]
+    }
+    make resources := fc["fc_intersect"](left[0], right[0])
+    make capabilities := fc["fc_intersect"](left[1], right[1])
+    when not resources[0] or not capabilities[0] { yield [false, nothing, "scope-intersection-failed"] }
+    vary expiry := left[2]
+    when right[2] < expiry { change expiry := right[2] }
+    yield [true, [resources[1], capabilities[1], expiry], "least-authority-intersection"]
+}
+
+# Policy: [policy_id, required fact pairs]. Facts are explicit key/value pairs.
+export craft policy_match(policy, facts) {
+    when not fc["fc_record"](policy, 2) { yield [false, false, "policy-shape"] }
+    make checked := fc["fc_valid_pairs"](facts)
+    when not checked[0] { yield [false, false, checked[1]] }
+    vary matches := true
+    vary errors := []
+    each clause in policy[1] {
+        when not fc["fc_record"](clause, 2) {
+            change errors := push(errors, ["clause-shape", clause])
+        } otherwise {
+            make actual := fc["fc_lookup"](facts, clause[0])
+            when not actual[0] or actual[1] != clause[1] {
+                change matches := false
+                change errors := push(errors, ["policy-clause-failed", clause[0]])
+            }
+        }
+    }
+    yield [true, matches, errors]
+}
+
+export craft audit_decision(request, decision) {
+    when not fc["fc_record"](request, 4) or not fc["fc_record"](decision, 3) {
+        yield [false, nothing, "audit-record-shape"]
+    }
+    yield [true, [request[0], request[1], request[2], decision[0], decision[1], "details-redacted"], "audit-record"]
 }
