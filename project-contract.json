@@ -121,6 +121,17 @@
         "tests/test_octa_pyramid.py",
         "docs/OCTA_PYRAMID_FEDERATION.md"
       ]
+    },
+    {
+      "id": "abi.dabi64-process-syscall-frame.v1",
+      "status": "partial",
+      "summary": "Defines the fixed-width x86-64 syscall register frame, operation catalogue binding, user return-state validation and overflow-safe lower-canonical user range checks. Kernel entry, SYSRET and process isolation remain DuckOS implementation work.",
+      "evidence": [
+        "include/reaper/dabi64_process.h",
+        "src/dabi64_process.c",
+        "tests/test_dabi64_process.c",
+        "docs/DABI64_PROCESS_ABI_V1.md"
+      ]
     }
   ],
   "interfaces": [
@@ -152,6 +163,18 @@
       "evidence": [
         "federation/octa-pyramid.v1.json",
         "docs/OCTA_PYRAMID_FEDERATION.md"
+      ]
+    },
+    {
+      "id": "dabi64.process-syscall-frame.v1",
+      "format": "Fixed-width x86-64 syscall register frame v1",
+      "direction": "provides",
+      "status": "partial",
+      "evidence": [
+        "include/reaper/dabi64_process.h",
+        "src/dabi64_process.c",
+        "tests/test_dabi64_process.c",
+        "docs/DABI64_PROCESS_ABI_V1.md"
       ]
     }
   ],

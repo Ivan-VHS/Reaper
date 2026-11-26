@@ -6,6 +6,8 @@
 
 DABI64 Desktop Host v1 is the message boundary between a Reaper native client and a trusted desktop host. The System Runtime catalogue declares operations and required capabilities; DABI64 defines pointer-free request and response frames for a future DAK transport.
 
+The separate [DABI64 Process ABI v1](DABI64_PROCESS_ABI_V1.md) specifies the x86-64 SYSCALL register convention and kernel-owned user-return frame. The desktop request/response wire messages are not the syscall trap frame.
+
 The wire header contains no native pointer, sender PID or caller-supplied capability mask. The receiver must derive sender identity from the current kernel execution context and resolve object handles against the sender's own handle table. A client cannot claim system identity or mint its own grant.
 
 ## Wire encoding
