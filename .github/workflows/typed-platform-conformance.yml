@@ -9,6 +9,8 @@ on:
       - "selfhost/type_declarations.rpr"
       - "selfhost/typed_declarations.rpr"
       - "selfhost/typed_declarations_tests.rpr"
+      - "selfhost/typed_signature_tests.rpr"
+      - "selfhost/typed_signatures.rpr"
       - "selfhost/type_platform.rpr"
       - "selfhost/type_platform_tests.rpr"
       - "examples/typed_platforms.rpr"
@@ -50,5 +52,7 @@ jobs:
         run: python -m reaper selfhost/typed_declarations_tests.rpr
       - name: Run target layout conformance
         run: python -m reaper selfhost/type_platform_tests.rpr
+      - name: Run typed craft signature and Result/Option conformance
+        run: python -m reaper selfhost/typed_signature_tests.rpr
       - name: Type-check the system-data example
         run: python -m reaper --check examples/typed_platforms.rpr
