@@ -44,8 +44,12 @@ jobs:
         run: python -m reaper --check examples/device_audit.rpr
       - name: Validate AESTHETICA example
         run: python -m reaper --check examples/aesthetica.rpr
+      - name: Validate AESTHETICA example
+        run: python -m reaper --check examples/aesthetica.rpr
       - name: Run example
         run: python -m reaper examples/flow.rpr
+      - name: Run AESTHETICA acceptance example
+        run: python -m reaper examples/aesthetica.rpr
       - name: Run AESTHETICA acceptance example
         run: python -m reaper examples/aesthetica.rpr
       - name: Run end-to-end read-only device audit example
