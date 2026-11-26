@@ -122,7 +122,7 @@ class FoundationalFrameworksSixToTenTests(unittest.TestCase):
             ["false"],
         )
         self.assertEqual(
-            self.run_expression('core["root_validate_relative_path"]("modules\\\\math.rpr")'),
+            self.run_expression(r'core["root_validate_relative_path"]("modules\\math.rpr")'),
             ["false"],
         )
         self.assertEqual(
