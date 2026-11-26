@@ -8,6 +8,7 @@ Start with the [project README](../README.md) for installation, first commands a
 - [Psychoporter 666 function categories](FUNCTION_CATEGORIES_666.md)
 - [Architecture](ARCHITECTURE.md)
 - [Architecture foundation: 66 concepts](REAPER_ARCHITECTURE_FOUNDATION_66.md) — native C17 registry, nine architectural layers, dependency graph validation and deterministic ordering.
+- [Foundational frameworks 1–5](FOUNDATIONAL_FRAMEWORKS_V1.md) — executable Reaper contracts for Framework frame, Platform, Environment, Infrastructure and Architecture.
 - [Hardware language track](HARDWARE_LANGUAGE.md)
 - [Typed Registry v1](TYPED_REGISTRY.md) — Reaper-native type, layout, platform, ABI, effect and capability contracts.
 - [System Runtime ABI v1](SYSTEM_RUNTIME_ABI_V1.md)
