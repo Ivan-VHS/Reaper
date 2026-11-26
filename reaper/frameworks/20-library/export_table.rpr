@@ -1,0 +1,26 @@
+# LibraryExportTable — validate unique exported symbol names and signatures.
+
+export craft valid_library_export_table(exports) {
+    when kind(exports) != "list" {
+        yield false
+    }
+    craft valid_export(item) {
+        when kind(item) != "list" or size(item) != 2 {
+            yield false
+        }
+        when kind(item[0]) != "text" or kind(item[1]) != "text" {
+            yield false
+        }
+        yield size(trim(item[0])) > 0 and size(trim(item[1])) > 0
+    }
+    craft invalid_export(item) {
+        yield not valid_export(item)
+    }
+    craft export_name(item) {
+        yield item[0]
+    }
+    when size(keep(exports, invalid_export)) != 0 {
+        yield false
+    }
+    yield size(unique(map(exports, export_name))) == size(exports)
+}

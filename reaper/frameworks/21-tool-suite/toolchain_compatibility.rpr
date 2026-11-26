@@ -1,0 +1,15 @@
+# ToolSuiteTargetCompatibility — check a tool's declared target support.
+
+export craft tool_suite_target_supported(tool_name, target, tools) {
+    when kind(tool_name) != "text" or kind(target) != "text" or kind(tools) != "list" {
+        yield false
+    }
+    each tool in tools {
+        when kind(tool) == "list" and size(tool) == 2 {
+            when tool[0] == tool_name and kind(tool[1]) == "list" {
+                yield contains(tool[1], target)
+            }
+        }
+    }
+    yield false
+}

@@ -1,0 +1,17 @@
+# EngineCacheKey — stable cache identity from ordered non-empty text parts.
+
+export craft engine_cache_key(parts) {
+    when kind(parts) != "list" or size(parts) == 0 {
+        yield []
+    }
+    craft invalid_part(part) {
+        when kind(part) != "text" {
+            yield true
+        }
+        yield size(trim(part)) == 0 or contains(part, "|")
+    }
+    when size(keep(parts, invalid_part)) != 0 {
+        yield []
+    }
+    yield join(parts, "|")
+}

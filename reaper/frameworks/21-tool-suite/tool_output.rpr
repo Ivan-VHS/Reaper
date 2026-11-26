@@ -1,0 +1,15 @@
+# ToolSuiteOutput — validate a tool output status and byte count.
+# [tool_id, exit_status, output_bytes].
+
+export craft valid_tool_suite_output_record(record) {
+    when kind(record) != "list" or size(record) != 3 {
+        yield false
+    }
+    when kind(record[0]) != "text" or kind(record[1]) != "number" or kind(record[2]) != "number" {
+        yield false
+    }
+    when size(trim(record[0])) == 0 or record[1] % 1 != 0 or record[2] % 1 != 0 {
+        yield false
+    }
+    yield record[1] >= 0 and record[1] <= 255 and record[2] >= 0 and record[2] <= 1073741824
+}

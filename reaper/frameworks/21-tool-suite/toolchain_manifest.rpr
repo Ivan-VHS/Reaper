@@ -1,0 +1,28 @@
+# ToolSuiteToolchainManifest — validate unique tools with explicit version and target metadata.
+
+export craft valid_tool_suite_manifest(tools) {
+    when kind(tools) != "list" or size(tools) == 0 {
+        yield false
+    }
+    craft valid_tool(tool) {
+        when kind(tool) != "list" or size(tool) != 3 {
+            yield false
+        }
+        each field in tool {
+            when kind(field) != "text" or size(trim(field)) == 0 {
+                yield false
+            }
+        }
+        yield true
+    }
+    craft invalid_tool(tool) {
+        yield not valid_tool(tool)
+    }
+    craft tool_name(tool) {
+        yield tool[0]
+    }
+    when size(keep(tools, invalid_tool)) != 0 {
+        yield false
+    }
+    yield size(unique(map(tools, tool_name))) == size(tools)
+}

@@ -1,0 +1,30 @@
+# ExecutionResourceLifetime — validate acquisition/release intervals.
+# [resource_id, acquire_step, release_step].
+
+export craft valid_execution_resource_lifetimes(resources) {
+    when kind(resources) != "list" or size(resources) == 0 {
+        yield false
+    }
+    craft valid_resource(resource) {
+        when kind(resource) != "list" or size(resource) != 3 {
+            yield false
+        }
+        when kind(resource[0]) != "text" or kind(resource[1]) != "number" or kind(resource[2]) != "number" {
+            yield false
+        }
+        when size(trim(resource[0])) == 0 or resource[1] % 1 != 0 or resource[2] % 1 != 0 {
+            yield false
+        }
+        yield resource[1] >= 0 and resource[2] >= resource[1]
+    }
+    craft invalid_resource(resource) {
+        yield not valid_resource(resource)
+    }
+    craft resource_id(resource) {
+        yield resource[0]
+    }
+    when size(keep(resources, invalid_resource)) != 0 {
+        yield false
+    }
+    yield size(unique(map(resources, resource_id))) == size(resources)
+}

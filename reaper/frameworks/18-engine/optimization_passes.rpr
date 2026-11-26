@@ -1,0 +1,36 @@
+# EngineOptimizationPasses — validate unique passes in non-decreasing compiler phase order.
+# Pass: [name, phase].
+
+export craft valid_engine_optimization_passes(passes) {
+    when kind(passes) != "list" {
+        yield false
+    }
+    craft valid_pass(item) {
+        when kind(item) != "list" or size(item) != 2 {
+            yield false
+        }
+        when kind(item[0]) != "text" or kind(item[1]) != "number" {
+            yield false
+        }
+        when size(trim(item[0])) == 0 or item[1] % 1 != 0 {
+            yield false
+        }
+        yield item[1] >= 0 and item[1] <= 3
+    }
+    craft invalid_pass(item) {
+        yield not valid_pass(item)
+    }
+    craft pass_name(item) {
+        yield item[0]
+    }
+    when size(keep(passes, invalid_pass)) != 0 or size(unique(map(passes, pass_name))) != size(passes) {
+        yield false
+    }
+    vary valid := true
+    each index in range(0, size(passes) - 1) {
+        when passes[index][1] > passes[index + 1][1] {
+            change valid := false
+        }
+    }
+    yield valid
+}

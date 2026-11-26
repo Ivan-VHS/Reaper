@@ -1,0 +1,21 @@
+# KernelPrivilegeTransition — only explicit user/kernel transition reasons are accepted.
+# [current_level, next_level, reason].
+
+export craft valid_kernel_privilege_transition(transition) {
+    when kind(transition) != "list" or size(transition) != 3 {
+        yield false
+    }
+    when kind(transition[0]) != "text" or kind(transition[1]) != "text" or kind(transition[2]) != "text" {
+        yield false
+    }
+    when not contains(["user", "kernel"], transition[0]) or not contains(["user", "kernel"], transition[1]) {
+        yield false
+    }
+    when transition[0] == "user" and transition[1] == "kernel" {
+        yield transition[2] == "syscall" or transition[2] == "interrupt"
+    }
+    when transition[0] == "kernel" and transition[1] == "user" {
+        yield transition[2] == "return"
+    }
+    yield transition[0] == "kernel" and transition[1] == "kernel" and transition[2] == "internal"
+}

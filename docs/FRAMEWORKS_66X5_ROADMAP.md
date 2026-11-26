@@ -39,11 +39,11 @@ Each numbered row is one independent implementation batch with five framework sl
 | 14 | Надстройка | 5 | Tests first — implementation next |
 | 15 | Оболочка | 5 | Tests first — implementation next |
 | 16 | Рантайм | 5 | Tests first — implementation next |
-| 17 | Среда выполнения | 5 | Queued |
-| 18 | Движок | 5 | Queued |
-| 19 | Ядро | 5 | Queued |
-| 20 | Библиотека | 5 | Queued |
-| 21 | Набор инструментов | 5 | Queued |
+| 17 | Среда выполнения | 5 | Tests first — implementation next |
+| 18 | Движок | 5 | Tests first — implementation next |
+| 19 | Ядро | 5 | Tests first — implementation next |
+| 20 | Библиотека | 5 | Tests first — implementation next |
+| 21 | Набор инструментов | 5 | Tests first — implementation next |
 | 22 | Инструментарий | 5 | Queued |
 | 23 | Тулкит | 5 | Queued |
 | 24 | Пакет | 5 | Queued |

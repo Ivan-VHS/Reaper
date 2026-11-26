@@ -1,0 +1,33 @@
+# KernelSyscallContract — validate unique syscall numbers and names with bounded arity.
+# Entry: [number, name, argument_count].
+
+export craft valid_kernel_syscall_contracts(calls) {
+    when kind(calls) != "list" or size(calls) == 0 {
+        yield false
+    }
+    craft valid_call(item) {
+        when kind(item) != "list" or size(item) != 3 {
+            yield false
+        }
+        when kind(item[0]) != "number" or kind(item[1]) != "text" or kind(item[2]) != "number" {
+            yield false
+        }
+        when item[0] % 1 != 0 or item[2] % 1 != 0 or size(trim(item[1])) == 0 {
+            yield false
+        }
+        yield item[0] >= 0 and item[0] <= 65535 and item[2] >= 0 and item[2] <= 16
+    }
+    craft invalid_call(item) {
+        yield not valid_call(item)
+    }
+    craft call_number(item) {
+        yield item[0]
+    }
+    craft call_name(item) {
+        yield item[1]
+    }
+    when size(keep(calls, invalid_call)) != 0 {
+        yield false
+    }
+    yield size(unique(map(calls, call_number))) == size(calls) and size(unique(map(calls, call_name))) == size(calls)
+}

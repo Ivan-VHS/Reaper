@@ -1,0 +1,8 @@
+# ExecutionPhase — enforce canonical entry-to-exit phase ordering.
+
+export craft valid_execution_phase_order(phases) {
+    when kind(phases) != "list" {
+        yield false
+    }
+    yield size(phases) == 4 and phases[0] == "load" and phases[1] == "initialize" and phases[2] == "run" and phases[3] == "shutdown"
+}

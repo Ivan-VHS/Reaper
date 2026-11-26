@@ -16,6 +16,7 @@ Start with the [project README](../README.md) for installation, first commands a
 - [Basis and Foundation Frameworks: batches 06–07](BASIS_FOUNDATION_FRAMEWORKS.md)
 - [Fundamental, Spine, Backbone and Structure: batches 08–11](FUNDAMENTAL_SPINE_BACKBONE_STRUCTURE.md)
 - [Construction, Ecosystem, Overlay, Shell and Runtime: batches 12–16](CONSTRUCTION_ECOSYSTEM_OVERLAY_SHELL_RUNTIME.md)
+- [Execution, Engine, Kernel, Library and Tool Suite: batches 17–21](EXECUTION_ENGINE_KERNEL_LIBRARY_TOOLSUITE.md)
 - [Skeleton Frameworks: batch 01](SKELETON_FRAMEWORKS.md)
 - [Studio and IDE](REAPER_IDE.md)
 - [Mora archive contracts](MORA_ARCHIVE_CONTRACTS.md) — executable `.rpr` validators, record layouts, provenance rules and offline regression fixture.
