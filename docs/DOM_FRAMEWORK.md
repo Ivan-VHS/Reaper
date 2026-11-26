@@ -1,6 +1,6 @@
 # ДОМ — Reaper Fundamental Framework
 
-**Document ID:** \`reaper.dom.framework\`  
+**Document ID:** `reaper.dom.framework`  
 **Architecture version:** 0.1  
 **Status:** Architecture baseline; implementation not yet claimed  
 **Maturity:** Genesis  
@@ -290,15 +290,15 @@ The initial public contract family is:
 
 | Contract ID | Purpose |
 |---|---|
-| \`reaper.dom.runtime.v1\` | Runtime instance creation, identity, lifecycle and public API |
-| \`reaper.dom.module.v1\` | Module metadata, dependencies, exports and lifecycle hooks |
-| \`reaper.dom.manifest.v1\` | Application and runtime composition description |
-| \`reaper.dom.capability.v1\` | Requested capability, host grant and scope |
-| \`reaper.dom.resource-budget.v1\` | Resource ceilings, accounting units and admission rules |
-| \`reaper.dom.message.v1\` | Typed message, correlation, deadline and delivery metadata |
-| \`reaper.dom.reactive.v1\` | Signal, dependency and transactional update semantics |
-| \`reaper.dom.diagnostics.v1\` | Stable diagnostic codes, source spans and runtime context |
-| \`reaper.dom.dev-control.v1\` | Development-only inspection and reload boundary |
+| `reaper.dom.runtime.v1` | Runtime instance creation, identity, lifecycle and public API |
+| `reaper.dom.module.v1` | Module metadata, dependencies, exports and lifecycle hooks |
+| `reaper.dom.manifest.v1` | Application and runtime composition description |
+| `reaper.dom.capability.v1` | Requested capability, host grant and scope |
+| `reaper.dom.resource-budget.v1` | Resource ceilings, accounting units and admission rules |
+| `reaper.dom.message.v1` | Typed message, correlation, deadline and delivery metadata |
+| `reaper.dom.reactive.v1` | Signal, dependency and transactional update semantics |
+| `reaper.dom.diagnostics.v1` | Stable diagnostic codes, source spans and runtime context |
+| `reaper.dom.dev-control.v1` | Development-only inspection and reload boundary |
 
 The identifiers are proposed initial contract names, not claims that these APIs already exist.
 
@@ -356,11 +356,11 @@ Profiles are configurations of the same ДОМ implementation, not forks.
 
 | Profile | Intended use | Included surface |
 |---|---|---|
-| \`core\` | Minimal deterministic programs | Uu, Nonconcrete, Establish and the minimum execution contracts |
-| \`standard\` | Ordinary applications and editors | Core plus JLOM, poooVERTY, System Carriere and JennyFlash |
-| \`system\` | DAK/system services | Standard plus explicitly granted host-service adapters and stricter resource policy |
-| \`development\` | Reaper Studio and debugging | Standard plus Jenny Flashing Boy and debug-only capabilities |
-| \`embedded\` | Constrained targets | Bounded subset chosen at build time; no dynamic loading unless target support is proven |
+| `core` | Minimal deterministic programs | Uu, Nonconcrete, Establish and the minimum execution contracts |
+| `standard` | Ordinary applications and editors | Core plus JLOM, poooVERTY, System Carriere and JennyFlash |
+| `system` | DAK/system services | Standard plus explicitly granted host-service adapters and stricter resource policy |
+| `development` | Reaper Studio and debugging | Standard plus Jenny Flashing Boy and debug-only capabilities |
+| `embedded` | Constrained targets | Bounded subset chosen at build time; no dynamic loading unless target support is proven |
 
 A profile cannot silently add privileges. Feature absence is explicit and validated during Establish. Production builds must not include Jenny Flashing Boy unless the operator explicitly builds a development image.
 
@@ -385,7 +385,7 @@ Every failure has a structured diagnostic with:
 
 - stable code and owning subsystem;
 - severity and failure category;
-- source \`Span\` and SourceMap reference where source-originated;
+- source `Span` and SourceMap reference where source-originated;
 - runtime instance, application, module and task identifiers;
 - correlation/trace identifier where applicable;
 - bounded contextual fields that do not expose secrets;
@@ -395,15 +395,15 @@ Initial code families:
 
 | Prefix | Owner |
 |---|---|
-| \`DOM-E0xxx\` | Core and composition |
-| \`DOM-E1xxx\` | JLOM |
-| \`DOM-E2xxx\` | poooVERTY |
-| \`DOM-E3xxx\` | Uu |
-| \`DOM-E4xxx\` | JennyFlash |
-| \`DOM-E5xxx\` | Jenny Flashing Boy |
-| \`DOM-E6xxx\` | System Carriere |
-| \`DOM-E7xxx\` | Nonconcrete |
-| \`DOM-E8xxx\` | Establish |
+| `DOM-E0xxx` | Core and composition |
+| `DOM-E1xxx` | JLOM |
+| `DOM-E2xxx` | poooVERTY |
+| `DOM-E3xxx` | Uu |
+| `DOM-E4xxx` | JennyFlash |
+| `DOM-E5xxx` | Jenny Flashing Boy |
+| `DOM-E6xxx` | System Carriere |
+| `DOM-E7xxx` | Nonconcrete |
+| `DOM-E8xxx` | Establish |
 
 Subsystems emit structured events and bounded metrics through the core observability contract. Logs must not contain credentials, secret material or unrestricted payload dumps. Health, readiness and liveness are distinct signals. A component that has failed a critical invariant is not reported Ready.
 
@@ -411,9 +411,9 @@ Subsystems emit structured events and bounded metrics through the core observabi
 
 The framework is implemented in Reaper and compiled through the canonical Reaper pipeline:
 
-- source modules use \`.rpr\` and explicit import/export boundaries;
+- source modules use `.rpr` and explicit import/export boundaries;
 - compiler checks validate module contracts, effects, capabilities and resource declarations;
-- diagnostics preserve \`Span\` and SourceMap provenance;
+- diagnostics preserve `Span` and SourceMap provenance;
 - HIR/MIR/LIR and canonical IR define the lowering boundary;
 - runtime entry points use versioned ДОМ API/ABI contracts;
 - host operations are lowered only through declared capability-gated bindings;
