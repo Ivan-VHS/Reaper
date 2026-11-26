@@ -1,0 +1,44 @@
+# Miasma — native Framework
+# Native host compatibility, module lifecycle and bounded extension admission.
+
+export make FRAMEWORK_ID := "miasma.native_framework"
+export make FRAMEWORK_VERSION := "1.0.0"
+export make FRAMEWORK_PROFILE := "native Framework"
+
+export craft miasma_host_compatible(host_abi, module_abi) {
+    yield host_abi == module_abi and (host_abi == "DABI64-v1" or host_abi == "C17")
+}
+
+export craft miasma_lifecycle_transition(current, next) {
+    when current == next {
+        yield current == "cold" or current == "loaded" or current == "ready" or current == "halted" or current == "failed"
+    }
+    when current == "cold" {
+        yield next == "loaded"
+    }
+    when current == "loaded" {
+        yield next == "ready" or next == "failed"
+    }
+    when current == "ready" {
+        yield next == "halted" or next == "failed"
+    }
+    when current == "halted" {
+        yield next == "loaded"
+    }
+    when current == "failed" {
+        yield next == "cold"
+    }
+    yield false
+}
+
+export craft miasma_memory_admit(requested, used, limit) {
+    yield requested > 0 and used >= 0 and limit > 0 and used + requested <= limit
+}
+
+export craft miasma_extension_admit(host_abi, module_abi, required_grants, granted_grants) {
+    yield miasma_host_compatible(host_abi, module_abi) and required_grants >= 0 and granted_grants >= required_grants
+}
+
+export craft miasma_publish_ready(state, abi_match, memory_safe) {
+    yield state == "ready" and abi_match and memory_safe
+}
