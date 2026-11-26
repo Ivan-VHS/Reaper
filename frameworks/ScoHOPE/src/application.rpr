@@ -178,3 +178,101 @@ export craft application_services_ready(services) {
     when size(pending) > 0 { yield [false, pending] }
     yield [true, []]
 }
+
+
+# Application configuration scopes, lifecycle policy and extension contracts.
+export craft application_environment_record(name, profile, capabilities, limits, state) {
+    yield [name, profile, capabilities, limits, state]
+}
+
+export craft application_environment_valid(environment) {
+    when size(environment) != 5 { yield false }
+    when size(environment[0]) == 0 or not application_profile_valid(environment[1]) {
+        yield false
+    }
+    when environment[4] != "available" and environment[4] != "degraded" and environment[4] != "unavailable" {
+        yield false
+    }
+    yield true
+}
+
+export craft application_environment_compatible(application, environment) {
+    make app_check := application_valid(application)
+    when not app_check[0] { yield app_check }
+    when not application_environment_valid(environment) {
+        yield [false, "invalid_application_environment"]
+    }
+    when application[1] != environment[1] { yield [false, "application_profile_mismatch"] }
+    when environment[4] == "unavailable" { yield [false, "environment_unavailable"] }
+    yield application_environment_check(application, environment[2])
+}
+
+export craft application_config_scope(name, parent, values, schema) {
+    yield [name, parent, values, schema]
+}
+
+export craft application_config_scope_validate(scope) {
+    when size(scope) != 4 or size(scope[0]) == 0 { yield [false, "invalid_config_scope"] }
+    yield config_validate(scope[3], scope[2])
+}
+
+export craft application_config_effective(scopes) {
+    vary result := []
+    vary index := 0
+    loop while index < size(scopes) {
+        make valid := application_config_scope_validate(scopes[index])
+        when not valid[0] { yield [false, valid[1]] }
+        make merged := config_merge(result, scopes[index][2])
+        when not merged[0] { yield merged }
+        change result := merged[1]
+        change index := index + 1
+    }
+    yield [true, result]
+}
+
+export craft application_extension_record(name, version, contract_id, capabilities, enabled) {
+    yield [name, version, contract_id, capabilities, enabled]
+}
+
+export craft application_extension_validate(extension) {
+    when size(extension) != 5 { yield [false, "invalid_extension"] }
+    when size(extension[0]) == 0 or size(extension[2]) == 0 { yield [false, "extension_identity_missing"] }
+    when size(extension[1]) != 3 { yield [false, "invalid_extension_version"] }
+    when extension[4] != true and extension[4] != false { yield [false, "invalid_extension_state"] }
+    yield [true, []]
+}
+
+export craft application_extensions_validate(extensions) {
+    vary index := 0
+    loop while index < size(extensions) {
+        make valid := application_extension_validate(extensions[index])
+        when not valid[0] { yield valid }
+        vary other := index + 1
+        loop while other < size(extensions) {
+            when extensions[index][0] == extensions[other][0] { yield [false, "duplicate_extension"] }
+            change other := other + 1
+        }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+
+export craft application_extension_capabilities(extensions) {
+    make valid := application_extensions_validate(extensions)
+    when not valid[0] { yield valid }
+    vary capabilities := []
+    vary index := 0
+    loop while index < size(extensions) {
+        when extensions[index][4] {
+            vary capability_index := 0
+            loop while capability_index < size(extensions[index][3]) {
+                when not contains(capabilities, extensions[index][3][capability_index]) {
+                    change capabilities := push(capabilities, extensions[index][3][capability_index])
+                }
+                change capability_index := capability_index + 1
+            }
+        }
+        change index := index + 1
+    }
+    yield [true, capabilities]
+}
