@@ -20,13 +20,14 @@ export craft grant_create(principal, resource, capability) {
 
 # Principal record: [principal_id, grants]; grant row: [resource, capability, state].
 export craft grant_check(principal, resource, capability) {
-    when not fc["fc_record"](principal, 2) or kind(principal[1]) != "list" {
-        yield [false, false, "principal-record-shape"]
-    }
+    when not fc["fc_record"](principal, 2) { yield [false, false, "principal-record-shape"] }
+    when kind(principal[1]) != "list" { yield [false, false, "principal-record-shape"] }
     vary allowed := false
     each grant in principal[1] {
-        when fc["fc_record"](grant, 3) and grant[0] == resource and grant[1] == capability and grant[2] == "active" {
-            change allowed := true
+        when fc["fc_record"](grant, 3) {
+            when grant[0] == resource and grant[1] == capability and grant[2] == "active" {
+                change allowed := true
+            }
         }
     }
     yield [true, allowed, "explicit-grant-check"]
@@ -43,6 +44,9 @@ export craft grant_revoke(grant, authority) {
 export craft scope_intersect(left, right) {
     when not fc["fc_record"](left, 3) or not fc["fc_record"](right, 3) {
         yield [false, nothing, "scope-shape"]
+    }
+    when not fc["fc_nonnegative"](left[2]) or not fc["fc_nonnegative"](right[2]) {
+        yield [false, nothing, "scope-expiry-invalid"]
     }
     make resources := fc["fc_intersect"](left[0], right[0])
     make capabilities := fc["fc_intersect"](left[1], right[1])
