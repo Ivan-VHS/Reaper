@@ -131,7 +131,7 @@ class FoundationalFrameworksFiftyOneToFiftyFiveTests(unittest.TestCase):
             self.run_expression(f'governance["schema_validate_payload"]({schema}, [])'),
             ["false"],
         )
-        consumer = '["sample.v1", 1, 0, [["name", "text", true]], false]'
+        consumer = '["sample.v1", 1, 0, [["name", "text", true]], true]'
         self.assertEqual(
             self.run_expression(f'governance["schema_validate_compatibility"]({schema}, {consumer})'),
             ["true"],
