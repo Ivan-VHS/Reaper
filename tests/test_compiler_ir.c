@@ -176,6 +176,8 @@ int main(int argc, char **argv) {
     assert(strstr(generated, "surface.background") != NULL);
     assert(strstr(generated, "native.desktop") != NULL);
     assert(strstr(generated, "lir.native_arithmetic") != NULL);
+    assert(strstr(generated, "number_bits") != NULL);
+    assert(strstr(generated, "UINT64_C(0x") != NULL);
 
     {
         ReaperCompilerIrNode invalid_nodes[1] = {
