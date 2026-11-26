@@ -31,7 +31,7 @@ The current maturity is **Genesis**. The foundation does not yet discover reposi
 | Maladrix | Performance and resilience |
 | Necrovex | Recovery and compatibility migrations |
 
-The registry is not a completion claim. Each component remains Planned until its source, tests, integration and acceptance evidence are present.
+Plaguecore is Partial only for its action-policy slice. The other nine components are Planned. No framework component is feature-complete.
 
 ## Access model
 
