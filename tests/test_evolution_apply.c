@@ -19,6 +19,9 @@ typedef struct {
     int branch_rollback_fail;
     int audit_fail_commit;
     int recovery_saved;
+    int deny_grant;
+    int deny_revision;
+    int deny_path;
     int workspace_count;
     int workspace_end_count;
 } FakeHost;
@@ -43,22 +46,23 @@ static const char *CHECK_IDS[] = {"reaper.unit"};
 
 static int verify_grant(void *context, const void *grant, size_t size,
                         const char *repo, const char *branch, uint64_t now) {
-    (void)context;
-    return grant != NULL && size == 6u && memcmp(grant, "signed", 6u) == 0 &&
+    FakeHost *fake = (FakeHost *)context;
+    return !fake->deny_grant && grant != NULL && size == 6u && memcmp(grant, "signed", 6u) == 0 &&
            strcmp(repo, "Ivan-VHS/Reaper") == 0 &&
            strcmp(branch, "feat/test-apply") == 0 && now > 0u;
 }
 
 static int verify_path(void *context, const void *grant, size_t size,
                        const char *repo, const char *path, uint64_t now) {
-    (void)context; (void)grant; (void)size; (void)repo; (void)now;
-    return strcmp(path, "src/main.rpr") == 0;
+    FakeHost *fake = (FakeHost *)context;
+    (void)grant; (void)size; (void)repo; (void)now;
+    return !fake->deny_path && strcmp(path, "src/main.rpr") == 0;
 }
 
 static int verify_revision(void *context, const char *repo, const char *branch,
                            const char *algorithm, const char *revision) {
-    (void)context;
-    return strcmp(repo, "Ivan-VHS/Reaper") == 0 &&
+    FakeHost *fake = (FakeHost *)context;
+    return !fake->deny_revision && strcmp(repo, "Ivan-VHS/Reaper") == 0 &&
            strcmp(branch, "main") == 0 && strcmp(algorithm, "sha1") == 0 &&
            strlen(revision) == 40u;
 }
@@ -395,6 +399,11 @@ static void test_default_branch_and_path_escape_are_rejected(void) {
     assert(result.status == REAPER_APPLY_INVALID_ARGUMENT);
 
     setup(&fake, &host, &request, &patch);
+    request.target_branch = request.base_branch;
+    result = reaper_evolution_apply(&host, &request);
+    assert(result.status == REAPER_APPLY_INVALID_ARGUMENT);
+
+    setup(&fake, &host, &request, &patch);
     invalid_patch = patch;
     invalid_patch.relative_path = "../outside.rpr";
     request.patches = &invalid_patch;
@@ -424,6 +433,33 @@ static void test_untrusted_host_and_stale_source_are_rejected(void) {
     assert(fake.branch_exists == 0);
 }
 
+static void test_host_authorization_and_revision_denials(void) {
+    FakeHost fake;
+    ReaperEvolutionApplyHost host;
+    ReaperEvolutionApplyRequest request;
+    ReaperEvolutionApplyResult result;
+    ReaperSourcePatch patch;
+
+    setup(&fake, &host, &request, &patch);
+    fake.deny_grant = 1;
+    result = reaper_evolution_apply(&host, &request);
+    assert(result.status == REAPER_APPLY_GRANT_DENIED);
+    assert(fake.workspace_count == 0);
+
+    setup(&fake, &host, &request, &patch);
+    fake.deny_revision = 1;
+    result = reaper_evolution_apply(&host, &request);
+    assert(result.status == REAPER_APPLY_REVISION_DENIED);
+    assert(fake.workspace_count == 0);
+
+    setup(&fake, &host, &request, &patch);
+    fake.deny_path = 1;
+    result = reaper_evolution_apply(&host, &request);
+    assert(result.status == REAPER_APPLY_PATH_DENIED);
+    assert(fake.branch_exists == 0);
+    assert(fake.workspace_end_count == 1);
+}
+
 int main(void) {
     test_success_creates_topic_branch();
     test_checks_failure_discards_workspace();
@@ -432,6 +468,7 @@ int main(void) {
     test_failed_ref_rollback_is_preserved_for_recovery();
     test_default_branch_and_path_escape_are_rejected();
     test_untrusted_host_and_stale_source_are_rejected();
-    puts("native evolution apply tests: 7 groups passed");
+    test_host_authorization_and_revision_denials();
+    puts("native evolution apply tests: 8 groups passed");
     return 0;
 }
