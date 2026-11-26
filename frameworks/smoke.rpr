@@ -91,7 +91,7 @@ assert(quality[0] and quality[1][0] == 1, "SWO must aggregate quality gates")
 make application := scohope["application_record"]("editor", "desktop", [1, 0, 0], "en", ["window", "storage"], "configured")
 assert(scohope["application_valid"](application)[0], "ScoHOPE must validate an application profile")
 assert(scohope["application_environment_check"](application, ["window", "storage", "audio"])[0], "ScoHOPE must check environment capabilities")
-make config_schema := [["theme", "text", true, true], ["retry_count", "integer", false, true]]
+make config_schema := [["theme", "", "text", true], ["retry_count", 0, "integer", true]]
 make config_values := [["theme", "night"], ["retry_count", 3]]
 assert(scohope["config_validate"](config_schema, config_values)[0], "ScoHOPE must validate typed configuration")
 
