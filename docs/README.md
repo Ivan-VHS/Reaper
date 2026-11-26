@@ -11,6 +11,7 @@ Start with the [project README](../README.md) for installation, first commands a
 - [Foundational frameworks 6–10](FOUNDATIONAL_FRAMEWORKS_6_10.md) — Basis, Foundation, Root, Skeleton and Backbone contracts with Reaper execution tests.
 - [Foundational frameworks 11–15](FOUNDATIONAL_FRAMEWORKS_11_15.md) — typed aggregates, construction plans, peer federation, extensions and shell-boundary contracts.
 - [Foundational frameworks 16–20](FOUNDATIONAL_FRAMEWORKS_16_20.md) — runtime lifecycle, execution context, engine routes, kernel ABI and library compatibility.
+- [Foundational frameworks 21–25](FOUNDATIONAL_FRAMEWORKS_21_25.md) — toolset, tooling probes, toolkit bundles, package graphs and stack profiles.
 - [Hardware language track](HARDWARE_LANGUAGE.md)
 - [System Runtime ABI v1](SYSTEM_RUNTIME_ABI_V1.md)
 - [DABI64 Desktop Host v1](DABI64_DESKTOP_HOST_V1.md)
