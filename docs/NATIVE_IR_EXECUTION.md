@@ -24,13 +24,15 @@ Reaper lexer/parser AST (expression subset)
 `reaper_compiler_ir_lower_ast_to_hir` consumes the existing native C17 expression AST and produces typed HIR directly from source-located nodes. The current accepted subset is:
 
 - signed i64 integer literals;
-- finite decimal literals using the Reaper lexer's decimal grammar;
-- decoded string literals, including escaped quote/newline/tab/return bytes within the fixed HIR text bound;
+- finite decimal literals using the Reaper lexer's decimal grammar, parsed independently of host numeric locale;
+- decoded string literals (including empty strings and escaped quote/newline/tab/return bytes) within the fixed HIR text bound;
 - boolean literals;
-- unary i64 `+` and `-`;
-- binary i64 `+`, `-`, `*` and `/`.
+- unary `+` and `-` over i64 or f64;
+- binary `+`, `-`, `*` and `/` over two matching i64 operands or two matching f64 operands.
 
-Every emitted node carries the original source name, line and column. The frontend validates the AST's topological references and rejects unreachable nodes, unknown identifiers, `nothing`/null, unsupported operators and non-i64 arithmetic rather than assigning guessed types. Decimal and text literal values are represented in HIR, but arithmetic, name resolution, function calls and module semantics for those types are not yet implemented.
+Mixed i64/f64 arithmetic is rejected. The current subset does not add implicit numeric promotion or decimal remainder/exponent operators.
+
+Every emitted node carries the original source name, line and column. The frontend validates the AST's topological references and rejects unreachable nodes, unknown identifiers, `nothing`/null, unsupported operators and non-i64 arithmetic rather than assigning guessed types. Decimal/text literal values are represented in HIR and same-type f64 arithmetic is lowered through MIR/LIR. Name resolution, function calls, mixed numeric promotion and module semantics remain outside this frontend.
 
 ## Current v1 node coverage
 
