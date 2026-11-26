@@ -66,3 +66,115 @@ export craft application_summary(application) {
     when not valid[0] { yield [false, valid[1]] }
     yield [true, [application[0], application[1], application[2], application[5]]]
 }
+
+
+# Configuration schemas, application profiles and service readiness.
+export craft config_record(name, value, expected_kind, required) {
+    yield [name, value, expected_kind, required]
+}
+export craft config_find(values, name) {
+    vary index := 0
+    loop while index < size(values) {
+        when values[index][0] == name { yield [true, values[index][1]] }
+        change index := index + 1
+    }
+    yield [false, nothing]
+}
+export craft config_type_matches(value, expected) {
+    when expected == "any" { yield true }
+    when expected == "integer" {
+        when kind(value) != "number" { yield false }
+        yield value % 1 == 0
+    }
+    when expected == "number" { yield kind(value) == "number" }
+    when expected == "text" { yield kind(value) == "text" }
+    when expected == "boolean" { yield kind(value) == "boolean" }
+    when expected == "list" { yield kind(value) == "list" }
+    when expected == "map" { yield kind(value) == "map" }
+    yield false
+}
+export craft config_validate(schema, values) {
+    vary index := 0
+    loop while index < size(schema) {
+        when size(schema[index]) != 4 { yield [false, "invalid_schema_entry"] }
+        make value := config_find(values, schema[index][0])
+        when not value[0] {
+            when schema[index][3] { yield [false, "required_config_missing"] }
+        } otherwise {
+            when not config_type_matches(value[1], schema[index][2]) { yield [false, "config_type_mismatch"] }
+        }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+export craft config_merge(defaults, overrides) {
+    vary result := defaults
+    vary index := 0
+    loop while index < size(overrides) {
+        when size(overrides[index]) != 2 { yield [false, "invalid_override"] }
+        vary next := []
+        vary replaced := false
+        vary item := 0
+        loop while item < size(result) {
+            when result[item][0] == overrides[index][0] {
+                change next := push(next, overrides[index])
+                change replaced := true
+            } otherwise { change next := push(next, result[item]) }
+            change item := item + 1
+        }
+        when not replaced { change next := push(next, overrides[index]) }
+        change result := next
+        change index := index + 1
+    }
+    yield [true, result]
+}
+export craft service_record(name, dependencies, contract, capabilities, state) {
+    yield [name, dependencies, contract, capabilities, state]
+}
+export craft service_set_valid(services) {
+    vary index := 0
+    loop while index < size(services) {
+        when size(services[index]) != 5 or size(services[index][0]) == 0 { yield [false, "invalid_service"] }
+        vary other := index + 1
+        loop while other < size(services) {
+            when services[index][0] == services[other][0] { yield [false, "duplicate_service"] }
+            change other := other + 1
+        }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+export craft application_profile_capabilities(profile) {
+    when profile == "desktop" { yield ["window", "input", "storage", "locale", "accessibility"] }
+    when profile == "system" { yield ["service", "resource", "diagnostics", "policy"] }
+    when profile == "service" { yield ["service", "resource", "diagnostics"] }
+    when profile == "cli" { yield ["console", "arguments", "filesystem"] }
+    when profile == "plugin" { yield ["plugin_host", "lifecycle", "contract"] }
+    when profile == "embedded" { yield ["target", "memory", "io", "diagnostics"] }
+    yield []
+}
+export craft application_profile_validate(application, granted) {
+    make valid := application_valid(application)
+    when not valid[0] { yield valid }
+    make required := application_profile_capabilities(application[1])
+    vary index := 0
+    loop while index < size(required) {
+        when not contains(granted, required[index]) { yield [false, "profile_capability_missing:" ++ required[index]] }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+export craft application_services_ready(services) {
+    make valid := service_set_valid(services)
+    when not valid[0] { yield valid }
+    vary pending := []
+    vary index := 0
+    loop while index < size(services) {
+        when services[index][4] != "ready" and services[index][4] != "running" {
+            change pending := push(pending, services[index][0])
+        }
+        change index := index + 1
+    }
+    when size(pending) > 0 { yield [false, pending] }
+    yield [true, []]
+}
