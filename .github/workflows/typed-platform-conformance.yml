@@ -15,6 +15,7 @@ on:
       - "selfhost/type_platform_tests.rpr"
       - "examples/typed_platforms.rpr"
       - "docs/TYPED_STRUCTURES_AND_PLATFORMS_V1.md"
+      - "docs/TYPED_CRAFT_SIGNATURES_RESULT_OPTION_V1.md"
       - ".github/workflows/typed-platform-conformance.yml"
   pull_request:
     paths:
@@ -29,6 +30,7 @@ on:
       - "selfhost/type_platform_tests.rpr"
       - "examples/typed_platforms.rpr"
       - "docs/TYPED_STRUCTURES_AND_PLATFORMS_V1.md"
+      - "docs/TYPED_CRAFT_SIGNATURES_RESULT_OPTION_V1.md"
       - ".github/workflows/typed-platform-conformance.yml"
   workflow_dispatch:
 
