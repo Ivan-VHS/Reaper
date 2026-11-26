@@ -1,0 +1,14 @@
+# StackBudget — admit a frame push within a fixed stack-byte budget.
+
+export craft stack_budget_admission(current_bytes, frame_bytes, maximum_bytes) {
+    when kind(current_bytes) != "number" or kind(frame_bytes) != "number" or kind(maximum_bytes) != "number" {
+        yield false
+    }
+    when current_bytes % 1 != 0 or frame_bytes % 1 != 0 or maximum_bytes % 1 != 0 {
+        yield false
+    }
+    when current_bytes < 0 or frame_bytes < 1 or maximum_bytes < 1 or current_bytes > maximum_bytes {
+        yield false
+    }
+    yield current_bytes + frame_bytes <= maximum_bytes
+}

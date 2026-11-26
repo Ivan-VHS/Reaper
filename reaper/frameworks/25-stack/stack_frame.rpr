@@ -1,0 +1,14 @@
+# StackFrame — validate a named frame with bounded local slots and byte size.
+
+export craft valid_stack_frame(frame) {
+    when kind(frame) != "list" or size(frame) != 3 {
+        yield false
+    }
+    when kind(frame[0]) != "text" or kind(frame[1]) != "number" or kind(frame[2]) != "number" {
+        yield false
+    }
+    when size(trim(frame[0])) == 0 or frame[1] % 1 != 0 or frame[2] % 1 != 0 {
+        yield false
+    }
+    yield frame[1] >= 0 and frame[1] <= 65536 and frame[2] >= 1 and frame[2] <= 16777216
+}

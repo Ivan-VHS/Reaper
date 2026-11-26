@@ -44,11 +44,11 @@ Each numbered row is one independent implementation batch with five framework sl
 | 19 | Ядро | 5 | Tests first — implementation next |
 | 20 | Библиотека | 5 | Tests first — implementation next |
 | 21 | Набор инструментов | 5 | Tests first — implementation next |
-| 22 | Инструментарий | 5 | Queued |
-| 23 | Тулкит | 5 | Queued |
-| 24 | Пакет | 5 | Queued |
-| 25 | Стек | 5 | Queued |
-| 26 | Технологический стек | 5 | Queued |
+| 22 | Инструментарий | 5 | Tests first — implementation next |
+| 23 | Тулкит | 5 | Tests first — implementation next |
+| 24 | Пакет | 5 | Tests first — implementation next |
+| 25 | Стек | 5 | Tests first — implementation next |
+| 26 | Технологический стек | 5 | Tests first — implementation next |
 | 27 | Шаблон | 5 | Queued |
 | 28 | Скелет | 5 | Queued |
 | 29 | Бойлерплейт | 5 | Queued |

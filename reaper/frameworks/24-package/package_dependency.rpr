@@ -1,0 +1,14 @@
+# PackageDependencySet — validate unique dependencies that do not refer to the package itself.
+
+export craft valid_package_dependency_set(package_name, dependencies) {
+    when kind(package_name) != "text" or size(trim(package_name)) == 0 or kind(dependencies) != "list" {
+        yield false
+    }
+    craft invalid_dependency(dependency) {
+        yield kind(dependency) != "text" or size(trim(dependency)) == 0 or dependency == package_name
+    }
+    when size(keep(dependencies, invalid_dependency)) != 0 {
+        yield false
+    }
+    yield size(unique(dependencies)) == size(dependencies)
+}

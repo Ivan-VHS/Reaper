@@ -1,0 +1,23 @@
+# ToolingResult — validate status, bounded duration and unique output artifacts.
+
+export craft valid_tooling_result(result) {
+    when kind(result) != "list" or size(result) != 3 {
+        yield false
+    }
+    when kind(result[0]) != "text" or kind(result[1]) != "number" or kind(result[2]) != "list" {
+        yield false
+    }
+    when not contains(["success", "failure", "timeout", "cancelled"], result[0]) {
+        yield false
+    }
+    when result[1] % 1 != 0 or result[1] < 0 or result[1] > 600000 {
+        yield false
+    }
+    craft invalid_artifact(item) {
+        yield kind(item) != "text" or size(trim(item)) == 0
+    }
+    when size(keep(result[2], invalid_artifact)) != 0 {
+        yield false
+    }
+    yield size(unique(result[2])) == size(result[2])
+}

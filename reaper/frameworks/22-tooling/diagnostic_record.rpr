@@ -1,0 +1,26 @@
+# ToolingDiagnosticRecord — validate source-aware diagnostics and stable severity.
+
+export craft valid_tooling_diagnostic_record(diagnostic) {
+    when kind(diagnostic) != "list" or size(diagnostic) != 6 {
+        yield false
+    }
+    when kind(diagnostic[0]) != "text" or kind(diagnostic[1]) != "text" or kind(diagnostic[2]) != "text" or kind(diagnostic[3]) != "number" or kind(diagnostic[4]) != "number" or kind(diagnostic[5]) != "text" {
+        yield false
+    }
+    when size(trim(diagnostic[2])) == 0 or size(trim(diagnostic[5])) == 0 {
+        yield false
+    }
+    when diagnostic[3] % 1 != 0 or diagnostic[4] % 1 != 0 or diagnostic[3] < 1 or diagnostic[4] < 1 {
+        yield false
+    }
+    when starts_with(diagnostic[0], "RPR-E") {
+        yield diagnostic[1] == "error"
+    }
+    when starts_with(diagnostic[0], "RPR-W") {
+        yield diagnostic[1] == "warning"
+    }
+    when starts_with(diagnostic[0], "RPR-I") {
+        yield diagnostic[1] == "info"
+    }
+    yield false
+}

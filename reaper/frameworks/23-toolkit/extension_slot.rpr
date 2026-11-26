@@ -1,0 +1,26 @@
+# ToolkitExtensionSlot — validate unique extension slot names and binding identifiers.
+
+export craft valid_toolkit_extension_slots(slots) {
+    when kind(slots) != "list" or size(slots) == 0 {
+        yield false
+    }
+    craft valid_slot(slot) {
+        when kind(slot) != "list" or size(slot) != 2 {
+            yield false
+        }
+        when kind(slot[0]) != "text" or kind(slot[1]) != "text" {
+            yield false
+        }
+        yield size(trim(slot[0])) > 0 and size(trim(slot[1])) > 0
+    }
+    craft invalid_slot(slot) {
+        yield not valid_slot(slot)
+    }
+    craft slot_name(slot) {
+        yield slot[0]
+    }
+    when size(keep(slots, invalid_slot)) != 0 {
+        yield false
+    }
+    yield size(unique(map(slots, slot_name))) == size(slots)
+}

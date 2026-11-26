@@ -1,0 +1,26 @@
+# ToolingInputContract — validate unique named and typed tool inputs.
+
+export craft valid_tooling_input_contract(inputs) {
+    when kind(inputs) != "list" or size(inputs) == 0 {
+        yield false
+    }
+    craft valid_input(item) {
+        when kind(item) != "list" or size(item) != 3 {
+            yield false
+        }
+        when kind(item[0]) != "text" or kind(item[1]) != "text" or kind(item[2]) != "boolean" {
+            yield false
+        }
+        yield size(trim(item[0])) > 0 and size(trim(item[1])) > 0
+    }
+    craft invalid_input(item) {
+        yield not valid_input(item)
+    }
+    craft input_name(item) {
+        yield item[0]
+    }
+    when size(keep(inputs, invalid_input)) != 0 {
+        yield false
+    }
+    yield size(unique(map(inputs, input_name))) == size(inputs)
+}

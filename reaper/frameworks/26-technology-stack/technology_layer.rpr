@@ -1,0 +1,26 @@
+# TechnologyLayer — unique ordered role/name assignments in a technology stack.
+
+export craft valid_technology_stack_layers(layers) {
+    when kind(layers) != "list" or size(layers) == 0 {
+        yield false
+    }
+    craft valid_layer(layer) {
+        when kind(layer) != "list" or size(layer) != 2 {
+            yield false
+        }
+        when kind(layer[0]) != "text" or kind(layer[1]) != "text" {
+            yield false
+        }
+        yield size(trim(layer[0])) > 0 and size(trim(layer[1])) > 0
+    }
+    craft invalid_layer(layer) {
+        yield not valid_layer(layer)
+    }
+    craft layer_role(layer) {
+        yield layer[0]
+    }
+    when size(keep(layers, invalid_layer)) != 0 {
+        yield false
+    }
+    yield size(unique(map(layers, layer_role))) == size(layers)
+}
