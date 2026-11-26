@@ -52,3 +52,27 @@ This is still **not** a complete parser replacement. Unicode identifier parity, 
 - Define a versioned canonical AST representation and compare parser output with the Python AST over a shared golden corpus.
 - Add differential tests for calls, indexes, list literals, operator precedence, nested blocks and malformed statements.
 - Move the CLI, diagnostics, semantic analysis and compiler pipeline into Reaper in dependency order.
+
+
+## Typed records and explicit platform declarations — partial bootstrap
+
+The Reaper-written statement frontend now parses:
+
+- struct declarations of the form: struct Name { field: Type }, with source-aware field nodes;
+- platform declarations of the form: platform Name { property := literal };
+- inline exports of structure and platform declarations.
+
+selfhost/type_declarations.rpr validates unique record fields and supported scalar field types, validates a platform descriptor against a deliberately small target profile set, and calculates deterministic scalar C-ABI field offsets, record alignment, and final size. The initial layout subset covers fixed-width integers, f32/f64, bool, ptr, usize, and isize.
+
+The initial target descriptor profiles are:
+
+| Target triple | Object format | Calling convention |
+|---|---|---|
+| x86_64-unknown-linux-gnu | ELF | System V |
+| x86_64-pc-windows-msvc | PE/COFF | Win64 |
+| aarch64-apple-darwin | Mach-O | AAPCS64 |
+| wasm32-unknown-wasi | WebAssembly | wasm32 |
+| x86_64-unknown-none-elf | ELF | System V |
+
+This is declaration and scalar-layout validation only. It does not provide cross-compilation, nested-record or array layout, ownership/borrowing, a production type checker, target object emission, or a freestanding runtime. The production reference parser and native AOT backend remain separate compatibility gates.
+
