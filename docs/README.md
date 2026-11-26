@@ -1,43 +1,38 @@
 # Reaper documentation
 
-The root [README](../README.md) is the product entry point: it summarizes the executable reference runtime, partial native track, local developer tools, requirements and first commands. Detailed contracts live in the topic documents below.
+Start with the [project README](../README.md) for installation, first commands and current implementation status. The [documentation map](INFORMATION_ARCHITECTURE.md) links every topic area.
 
-## Topic hubs
+## Key pages
 
-| Hub | Scope |
-|---|---|
-| [Language and toolchain](clusters/language-toolchain.md) | Syntax, type checking, interpreter, native compiler and embedded language |
-| [Architecture and systems](clusters/architecture-systems.md) | Runtime layers, data flow, memory, hardware and system contracts |
-| [Studio and IDE](clusters/studio-ide-ui.md) | Windows Studio, editor behavior, LSP/DAP and interaction |
-| [Quality and evidence](clusters/quality-evidence.md) | Tests, validation, reproducibility, security and evidence |
-| [Federation and integration](clusters/federation-integration.md) | NOO TAH, Kora, plugin and external project boundaries |
-| [Planning and governance](clusters/planning-governance.md) | Maturity, decisions, roadmap and project standards |
+- [Features and maturity](FEATURES.md)
+- [Psychoporter 666 function categories](FUNCTION_CATEGORIES_666.md)
+- [Architecture](ARCHITECTURE.md)
+- [Architecture foundation: 66 concepts](REAPER_ARCHITECTURE_FOUNDATION_66.md) — native C17 registry, nine architectural layers, dependency graph validation and deterministic ordering.
+- [Hardware language track](HARDWARE_LANGUAGE.md)
+- [System Runtime ABI v1](SYSTEM_RUNTIME_ABI_V1.md)
+- [DABI64 Desktop Host v1](DABI64_DESKTOP_HOST_V1.md)
+- [Implementation roadmap](IMPLEMENTATION_ROADMAP.md)
+- [Studio and IDE](REAPER_IDE.md)
+- [Mora archive contracts](MORA_ARCHIVE_CONTRACTS.md) — executable `.rpr` validators, record layouts, provenance rules and offline regression fixture.
+- [NEXUS federation profile](NEXUS_FEDERATION_PROFILE_V1.md) — Reaper ownership, peer contracts and compatibility boundaries.
 
-## Start with the owning contract
+## Browse by topic
 
-- [Features](FEATURES.md) — current feature inventory and maturity.
-- [Architecture](ARCHITECTURE.md) — implemented runtime structure and data flow.
-- [Hardware Language](HARDWARE_LANGUAGE.md) — staged systems-language and hardware track.
-- [Reaper IDE](REAPER_IDE.md) — Studio and language-tool boundaries.
-- [NOO TAH](NOO_TAH.md) — Node.js process integration.
-- [Kora](KORA.md) — optional standard-library helpers.
-- [Contributing](../CONTRIBUTING.md) — local validation and review expectations.
+- [Language and toolchain](clusters/language-toolchain.md)
+- [Psychoporter 666 function categories](FUNCTION_CATEGORIES_666.md)
+- [Architecture and systems](clusters/architecture-systems.md)
+- [Studio and IDE](clusters/studio-ide-ui.md)
+- [Quality and evidence](clusters/quality-evidence.md)
+- [Federation and integration](clusters/federation-integration.md)
+- [Planning and governance](clusters/planning-governance.md)
 
-## Repository map
+## Shared rules
 
-~~~text
-reaper/       Python reference runtime and developer tools
-src/          partial native C17 implementation
-include/      native public headers
-tests/        runtime, protocol and native regression tests
-examples/     reproducible .rpr programs
-editors/      editor syntax support
-docs/         architecture and capability contracts
-~~~
+- [Psychoporter 666 coding and human-layer standard](PSYCHOPORTER_666.md)
+- [Documentation standard](UNIFIED_DOCUMENTATION_STANDARD.md)
+- [Engineering evolution framework](ENGINEERING_EVOLUTION_FRAMEWORK.md)
+- [Repository evolution directives](REPOSITORY_EVOLUTION_DIRECTIVES.md)
 
-Keep the reference runtime, partial native work and host-specific services separate in documentation. A registry/catalog entry is not proof of runtime implementation; source, tests and explicit maturity statements are authoritative.
+Treat the Python reference runtime, native compiler track, System Runtime host ABI and privileged hardware work as separate maturity levels. Source, tests and CI are the evidence for implemented behavior.
 
-## Implementation planning
-
-- [Implementation roadmap](IMPLEMENTATION_ROADMAP.md) — evidence-based status and acceptance gates for the reference runtime, native C17 track, Studio, Jora and federation.
-- [Feature matrix](FEATURES.md) — current capability surface and explicit limits.
+- [OPlague GPU telemetry v1 ingestion](OPLAGE_GPU_TELEMETRY.md)
