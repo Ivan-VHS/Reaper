@@ -11,8 +11,12 @@ export craft compile(profile_value, target) {
     yield Holmosaptimu["compile"](profile_value, target)
 }
 
-export craft evolve(current_profile, target_profile, architecture, request, mode) {
-    yield SOMO["evolve"](current_profile, target_profile, architecture, request, mode)
+export craft evolve(current_profile, target_profile, current_architecture, proposed_architecture, request, mode) {
+    yield SOMO["evolve"](
+        current_profile, target_profile,
+        current_architecture, proposed_architecture,
+        request, mode
+    )
 }
 
 export craft frameworks() {
