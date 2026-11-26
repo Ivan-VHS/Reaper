@@ -24,6 +24,30 @@
   },
   "capabilities": [
     {
+      "id": "foundations.tenth-five-frameworks",
+      "status": "partial",
+      "summary": "Adds executable contracts for reusable components, instruction blocks, typed graph nodes and topological edge order, versioned interface compatibility, and transport/protocol maturity with explicit FFI opt-in; full typed CFG/IR verification and live interface/protocol dispatch remain partial.",
+      "evidence": [
+        "frameworks/foundation_46_50.rpr",
+        "frameworks/foundation_41_45.rpr",
+        "frameworks/foundation_36_40.rpr",
+        "frameworks/foundation_31_35.rpr",
+        "frameworks/foundation_26_30.rpr",
+        "frameworks/foundation_21_25.rpr",
+        "frameworks/foundation_16_20.rpr",
+        "frameworks/foundation_11_15.rpr",
+        "frameworks/foundation_6_10.rpr",
+        "frameworks/foundation.rpr",
+        "docs/FOUNDATIONAL_FRAMEWORKS_46_50.md",
+        "examples/foundations_46_50.rpr",
+        "tests/test_foundational_frameworks_46_50.py",
+        "include/reaper/ir.h",
+        "include/reaper/system.h",
+        "docs/SYSTEM_RUNTIME_ABI_V1.md",
+        "federation/octa-pyramid.v1.json"
+      ]
+    },
+    {
       "id": "foundations.ninth-five-frameworks",
       "status": "partial",
       "summary": "Adds executable contracts for an evidence-led engineering methodology, compatible approach profiles, system manifests and canonical component order, owned subsystem flows, and versioned .rpr module exports/imports/effects; compiler-enforced module ownership and effect checking remain partial.",
