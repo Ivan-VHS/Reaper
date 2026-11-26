@@ -51,7 +51,7 @@ export craft component_validate_descriptor(component) {
             yield false
         }
     }
-    yield component[3] != component[4]
+    yield true
 }
 
 export craft component_validate_catalog() {
@@ -119,10 +119,12 @@ export craft block_validate_descriptor(block) {
     when kind(block[3]) != "list" or kind(block[4]) != "list" or kind(block[5]) != "list" or size(block[3]) == 0 {
         yield false
     }
+    vary instruction_ids := []
     each instruction in block[3] {
-        when not block_validate_instruction(instruction) {
+        when not block_validate_instruction(instruction) or contains(instruction_ids, instruction[0]) {
             yield false
         }
+        change instruction_ids := push(instruction_ids, instruction[0])
     }
     each value in block[4] {
         when kind(value) != "text" or value == "" {
@@ -174,25 +176,36 @@ export craft node_kinds() {
 
 export craft node_catalog() {
     yield [
-        ["node.source", "source", "input", "source-text.v1", "implemented"],
-        ["node.lex", "operation", "source-text.v1", "token-stream.v1", "implemented"],
-        ["node.parse", "operation", "token-stream.v1", "syntax-tree.v1", "implemented"],
-        ["node.analyze", "operation", "syntax-tree.v1", "typed-tree.v1", "partial"],
-        ["node.lower", "operation", "typed-tree.v1", "canonical-ir.v1", "partial"],
-        ["node.execute", "operation", "canonical-ir.v1", "runtime-value.v1", "implemented"],
-        ["node.host", "host-call", "capability-request.v1", "host-response.v1", "partial"],
-        ["node.end", "terminal", "runtime-value.v1", "output.v1", "implemented"]
+        ["node.source", "source", "source input", [], ["source-text.v1"], "implemented"],
+        ["node.lex", "operation", "lexer", ["source-text.v1"], ["token-stream.v1"], "implemented"],
+        ["node.parse", "operation", "parser", ["token-stream.v1"], ["syntax-tree.v1"], "implemented"],
+        ["node.analyze", "operation", "semantic analysis", ["syntax-tree.v1"], ["typed-tree.v1"], "partial"],
+        ["node.lower", "operation", "IR lowering", ["typed-tree.v1"], ["canonical-ir.v1"], "partial"],
+        ["node.execute", "operation", "execution engine", ["canonical-ir.v1"], ["runtime-value.v1"], "implemented"],
+        ["node.host", "host-call", "host adapter", ["capability-request.v1"], ["host-response.v1"], "partial"],
+        ["node.end", "terminal", "program output", ["runtime-value.v1"], ["output.v1"], "implemented"]
     ]
 }
 
-craft node_find(identifier) {
+craft node_find(nodes, identifier) {
     vary found := nothing
-    each node in node_catalog() {
+    each node in nodes {
         when node[0] == identifier {
             change found := node
         }
     }
     yield found
+}
+
+craft node_index(nodes, identifier) {
+    vary position := 0
+    each node in nodes {
+        when node[0] == identifier {
+            yield position
+        }
+        change position := position + 1
+    }
+    yield nothing
 }
 
 export craft node_validate_descriptor(node) {
@@ -202,11 +215,21 @@ export craft node_validate_descriptor(node) {
     when kind(node[0]) != "text" or node[0] == "" or not contains(node_kinds(), node[1]) {
         yield false
     }
-    when kind(node[2]) != "text" or node[2] == "" or kind(node[3]) != "list" or kind(node[4]) != "list" or kind(node[5]) != "text" {
+    when kind(node[2]) != "text" or node[2] == "" or kind(node[3]) != "list" or kind(node[4]) != "list" or not contains(["implemented", "partial", "planned"], node[5]) {
         yield false
     }
     when size(unique(node[3])) != size(node[3]) or size(unique(node[4])) != size(node[4]) {
         yield false
+    }
+    each interface_id in node[3] {
+        when kind(interface_id) != "text" or interface_id == "" {
+            yield false
+        }
+    }
+    each interface_id in node[4] {
+        when kind(interface_id) != "text" or interface_id == "" {
+            yield false
+        }
     }
     yield true
 }
@@ -224,13 +247,15 @@ export craft node_validate_graph(nodes, edges) {
     }
     vary seen_edges := []
     each edge in edges {
-        when kind(edge) != "list" or size(edge) != 3 or edge[0] == edge[1] or not contains(identifiers, edge[0]) or not contains(identifiers, edge[1]) {
+        when kind(edge) != "list" or size(edge) != 3 or kind(edge[0]) != "text" or kind(edge[1]) != "text" or kind(edge[2]) != "text" or edge[0] == edge[1] or not contains(identifiers, edge[0]) or not contains(identifiers, edge[1]) {
             yield false
         }
-        when not contains(node_find(edge[0])[4], edge[2]) or not contains(node_find(edge[1])[3], edge[2]) {
+        make source := node_find(nodes, edge[0])
+        make target := node_find(nodes, edge[1])
+        when not contains(source[4], edge[2]) or not contains(target[3], edge[2]) {
             yield false
         }
-        when contains(seen_edges, edge) {
+        when node_index(nodes, edge[0]) >= node_index(nodes, edge[1]) or contains(seen_edges, edge) {
             yield false
         }
         change seen_edges := push(seen_edges, edge)
@@ -244,9 +269,7 @@ export craft node_topological_order(nodes, edges) {
     }
     vary order := []
     each node in nodes {
-        when not contains(order, node[0]) {
-            change order := push(order, node[0])
-        }
+        change order := push(order, node[0])
     }
     yield order
 }
