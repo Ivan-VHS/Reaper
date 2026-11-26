@@ -137,7 +137,9 @@
     "rollback_executor",
     "cryptographic_evidence_attestation",
     "authenticated_repository_grant_enforcement",
-    "per_path_scope_enforcement"
+    "per_path_scope_enforcement",
+    "baseline_digest_verification_against_git_object",
+    "computed_color_pair_contrast_measurement"
   ],
   "safety": {
     "default_mode": "observe",
