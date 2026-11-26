@@ -175,4 +175,13 @@ assert(not bad_array[0] and bad_array[1] == "RPR-LAYOUT-0007", "array size overf
 make duplicate_types := type_definitions_validate([vec3, vec3])
 assert(not duplicate_types[0] and duplicate_types[1] == "RPR-TYPE-0002", "duplicate nominal definitions must be rejected")
 
+make invalid_definition := type_definitions_validate([type_primitive("u8")])
+assert(not invalid_definition[0] and invalid_definition[1] == "RPR-TYPE-0004", "type registry must reject non-nominal descriptors")
+
+make malformed_descriptor := type_layout(["TYPE_V1"], linux, [], [])
+assert(not malformed_descriptor[0] and malformed_descriptor[1] == "RPR-LAYOUT-0038", "truncated type descriptor must return a diagnostic")
+
+make fractional_opaque := type_layout(type_opaque("FractionalOpaque", 16, 4.5), linux, [], [])
+assert(not fractional_opaque[0] and fractional_opaque[1] == "RPR-LAYOUT-0012", "opaque size and alignment must be integral")
+
 emit "REAPER_TYPED_PLATFORM_CONFORMANCE_OK"
