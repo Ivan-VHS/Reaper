@@ -22,6 +22,15 @@ class SelfHostingBootstrapTests(unittest.TestCase):
     def test_reaper_written_source_map_runs_on_the_reference_runtime(self) -> None:
         self._run_selfhost_program("selfhost/source_map.rpr", "SELFHOST_SOURCE_MAP_OK")
 
+    def test_reaper_written_span_contract_runs_on_the_reference_runtime(self) -> None:
+        self._run_selfhost_program("selfhost/span.rpr", "SELFHOST_SPAN_OK")
+
+    def test_reaper_written_token_stream_runs_on_the_reference_runtime(self) -> None:
+        self._run_selfhost_program("selfhost/token_stream.rpr", "SELFHOST_TOKEN_STREAM_OK")
+
+    def test_reaper_written_diagnostics_run_on_the_reference_runtime(self) -> None:
+        self._run_selfhost_program("selfhost/diagnostics.rpr", "SELFHOST_DIAGNOSTICS_OK")
+
 
 if __name__ == "__main__":
     unittest.main()
