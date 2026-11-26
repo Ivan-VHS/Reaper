@@ -64,9 +64,10 @@ SOMO coordinates a deterministic pipeline and consults the PLAGUE v1 action poli
 2. Validate the current and target aesthetic profiles.
 2. Compile the baseline profile through HIR, MIR and LIR.
 3. Assess the target design against the declared accessibility contract.
-4. Validate the architecture graph and dependency acyclicity.
-5. Generate a bounded Kolir plan for architecture, design, compiler, source, tests and documentation work.
-6. Return a proposal with evidence-bearing outputs for review.
+4. Validate both current and proposed architecture graphs, check that node dependency declarations match graph edges, reject cycles, and compute an explicit architecture delta.
+5. In `observe`, return evidence and graph comparisons without generating source-change plans.
+6. In `propose`, generate bounded Cellene/Kolir proposals only after the PLAGUE plan capability is allowed; defer changes whose declared risk is not lower than their expected benefit.
+7. Return the profile compile products, architecture delta and source plan as a reviewable proposal.
 
 Observe performs assessment only. Propose emits a bounded change plan. Apply is intentionally blocked until repository grants, path allowlists, revision pinning, patch application, isolated checks, immutable audit and tested rollback are implemented. The system never treats an account's repository visibility as write authorization. PLAGUE currently provides an action-policy matrix, not authenticated repository grants or path-level authorization.
 
