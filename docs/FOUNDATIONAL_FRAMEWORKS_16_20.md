@@ -55,7 +55,7 @@ The public descriptor is:
 
 `[module_id, major, minor, access]`
 
-Access is `import`, `export` or `inspect`. Major versions must match and requested minor versions may not exceed the published minor version. Dependencies must be unique. This catalogue does not turn Python modules into importable `.rpr` modules and does not claim a complete source-level standard library.
+Access is `import`, `export` or `inspect`. Major versions must match and requested minor versions may not exceed the published minor version. Dependencies must be unique. The opt-in `reaper.ffi` module may be inspected in the registry but cannot be imported through this generic contract without a separate explicit FFI enablement. This catalogue does not turn Python modules into importable `.rpr` modules and does not claim a complete source-level standard library.
 
 Public functions: `library_modules()`, `library_validate_descriptor(descriptor)`, `library_validate_dependencies(dependencies)`.
 
