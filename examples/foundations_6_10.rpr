@@ -1,0 +1,9 @@
+import "../frameworks/foundation_6_10.rpr" as core
+
+emit "All ten frameworks valid = " ++ text(core["foundation_validate_all_catalog"]())
+emit "Filesystem effect valid = " ++ text(core["basis_validate_effects"](["filesystem"]))
+emit "Pure plus network rejected = " ++ text(core["basis_validate_effects"](["pure", "network"]))
+emit "Base primitive selection valid = " ++ text(core["base_validate_selection"](["module-loader", "canonical-ir", "resource-ledger", "memory-manager", "diagnostic-catalog"]))
+emit "Host service contract valid = " ++ text(core["foundation_validate_contract"](["reaper.host-service.v1", 1, 0, "both"]))
+emit "Application skeleton valid = " ++ text(core["skeleton_validate_components"](["manifest", "entry", "modules", "tests"]))
+emit "Backbone valid = " ++ text(core["backbone_validate_edges"](core["backbone_edges"]()))

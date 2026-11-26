@@ -24,6 +24,23 @@
   },
   "capabilities": [
     {
+      "id": "foundations.second-five-frameworks",
+      "status": "partial",
+      "summary": "Executable Reaper contracts aligned with native architecture concepts 6–10: Basis semantics, Base shared primitives, Foundation invariants/contracts, Skeleton application composition and Backbone compiler/runtime flow; complete effect/ownership enforcement and native end-to-end integration remain partial.",
+      "evidence": [
+        "frameworks/foundation_6_10.rpr",
+        "frameworks/foundation.rpr",
+        "include/reaper/architecture.h",
+        "src/architecture.c",
+        "docs/REAPER_ARCHITECTURE_FOUNDATION_66.md",
+        "docs/FOUNDATIONAL_FRAMEWORKS_6_10.md",
+        "examples/foundations_6_10.rpr",
+        "tests/test_foundational_frameworks_6_10.py",
+        "reaper/modules.py",
+        "docs/HARDWARE_LANGUAGE.md"
+      ]
+    },
+    {
       "id": "foundations.first-five-frameworks",
       "status": "partial",
       "summary": "Executable Reaper contracts aligned with native architecture concepts 1–5: Framework frame, Platform, Environment, Infrastructure and Architecture; target integration and complete native compiler support remain partial.",

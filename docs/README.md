@@ -9,6 +9,7 @@ Start with the [project README](../README.md) for installation, first commands a
 - [Architecture](ARCHITECTURE.md)
 - [Architecture foundation: 66 concepts](REAPER_ARCHITECTURE_FOUNDATION_66.md) — native C17 registry, nine architectural layers, dependency graph validation and deterministic ordering.
 - [Foundational frameworks 1–5](FOUNDATIONAL_FRAMEWORKS_V1.md) — executable Reaper contracts for Framework frame, Platform, Environment, Infrastructure and Architecture.
+- [Foundational frameworks 6–10](FOUNDATIONAL_FRAMEWORKS_6_10.md) — Basis, Base, Foundation, Skeleton and Backbone contracts.
 - [Hardware language track](HARDWARE_LANGUAGE.md)
 - [System Runtime ABI v1](SYSTEM_RUNTIME_ABI_V1.md)
 - [DABI64 Desktop Host v1](DABI64_DESKTOP_HOST_V1.md)
