@@ -1,0 +1,33 @@
+# PatternPipeline — validate unique pattern stages with non-decreasing phases.
+# Stage: [name, phase].
+
+export craft valid_pattern_pipeline(stages) {
+    when kind(stages) != "list" or size(stages) == 0 {
+        yield false
+    }
+    craft valid_stage(stage) {
+        when kind(stage) != "list" or size(stage) != 2 {
+            yield false
+        }
+        when kind(stage[0]) != "text" or kind(stage[1]) != "number" {
+            yield false
+        }
+        yield size(trim(stage[0])) > 0 and stage[1] % 1 == 0 and stage[1] >= 0
+    }
+    craft invalid_stage(stage) {
+        yield not valid_stage(stage)
+    }
+    craft stage_name(stage) {
+        yield stage[0]
+    }
+    when size(keep(stages, invalid_stage)) != 0 or size(unique(map(stages, stage_name))) != size(stages) {
+        yield false
+    }
+    vary valid := true
+    each index in range(0, size(stages) - 1) {
+        when stages[index][1] > stages[index + 1][1] {
+            change valid := false
+        }
+    }
+    yield valid
+}

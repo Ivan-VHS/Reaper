@@ -1,0 +1,26 @@
+# MethodologyEvidence — every criterion must have one unique non-empty evidence reference.
+
+export craft valid_methodology_evidence_coverage(evidence) {
+    when kind(evidence) != "list" or size(evidence) == 0 {
+        yield false
+    }
+    craft valid_item(item) {
+        when kind(item) != "list" or size(item) != 2 {
+            yield false
+        }
+        when kind(item[0]) != "text" or kind(item[1]) != "text" {
+            yield false
+        }
+        yield size(trim(item[0])) > 0 and size(trim(item[1])) > 0
+    }
+    craft invalid_item(item) {
+        yield not valid_item(item)
+    }
+    craft criterion(item) {
+        yield item[0]
+    }
+    when size(keep(evidence, invalid_item)) != 0 {
+        yield false
+    }
+    yield size(unique(map(evidence, criterion))) == size(evidence)
+}

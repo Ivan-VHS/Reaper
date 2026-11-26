@@ -1,0 +1,14 @@
+# MethodologyMaturityGate — require minimum evidence count for a maturity stage.
+
+export craft valid_methodology_maturity_gate(stage, evidence_count, required_count) {
+    when kind(stage) != "number" or kind(evidence_count) != "number" or kind(required_count) != "number" {
+        yield false
+    }
+    when stage % 1 != 0 or evidence_count % 1 != 0 or required_count % 1 != 0 {
+        yield false
+    }
+    when stage < 1 or stage > 10 or evidence_count < 0 or required_count < 1 {
+        yield false
+    }
+    yield evidence_count >= required_count
+}

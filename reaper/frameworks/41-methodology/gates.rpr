@@ -1,0 +1,20 @@
+# MethodologyGates — report exit criteria not yet satisfied.
+
+export craft methodology_missing_gates(required, satisfied) {
+    when kind(required) != "list" or kind(satisfied) != "list" {
+        yield []
+    }
+    craft invalid_gate(gate) {
+        yield kind(gate) != "text" or size(trim(gate)) == 0
+    }
+    when size(keep(required, invalid_gate)) != 0 or size(keep(satisfied, invalid_gate)) != 0 {
+        yield []
+    }
+    when size(unique(required)) != size(required) or size(unique(satisfied)) != size(satisfied) {
+        yield []
+    }
+    craft missing(gate) {
+        yield not contains(satisfied, gate)
+    }
+    yield keep(required, missing)
+}

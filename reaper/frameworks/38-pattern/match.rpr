@@ -1,0 +1,17 @@
+# PatternMatch — return all declared text prefixes that match, in source order.
+
+export craft pattern_match_prefixes(value, prefixes) {
+    when kind(value) != "text" or kind(prefixes) != "list" {
+        yield []
+    }
+    craft invalid_prefix(prefix) {
+        yield kind(prefix) != "text" or size(trim(prefix)) == 0
+    }
+    when size(keep(prefixes, invalid_prefix)) != 0 or size(unique(prefixes)) != size(prefixes) {
+        yield []
+    }
+    craft matched(prefix) {
+        yield starts_with(value, prefix)
+    }
+    yield keep(prefixes, matched)
+}

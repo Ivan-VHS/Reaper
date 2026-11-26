@@ -59,11 +59,11 @@ Each numbered row is one independent implementation batch with five framework sl
 | 34 | Контейнер | 5 | Tests first — implementation next |
 | 35 | Хост | 5 | Tests first — implementation next |
 | 36 | Контекст | 5 | Tests first — implementation next |
-| 37 | Модель | 5 | Queued |
-| 38 | Паттерн | 5 | Queued |
-| 39 | Парадигма | 5 | Queued |
-| 40 | Концепция | 5 | Queued |
-| 41 | Методология | 5 | Queued |
+| 37 | Модель | 5 | Tests first — implementation next |
+| 38 | Паттерн | 5 | Tests first — implementation next |
+| 39 | Парадигма | 5 | Tests first — implementation next |
+| 40 | Концепция | 5 | Tests first — implementation next |
+| 41 | Методология | 5 | Tests first — implementation next |
 | 42 | Подход | 5 | Queued |
 | 43 | Система | 5 | Queued |
 | 44 | Подсистема | 5 | Queued |

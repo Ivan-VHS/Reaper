@@ -1,0 +1,26 @@
+# PatternSet — validate unique match prefixes and actions.
+
+export craft valid_pattern_set(rules) {
+    when kind(rules) != "list" or size(rules) == 0 {
+        yield false
+    }
+    craft valid_rule(rule) {
+        when kind(rule) != "list" or size(rule) != 2 {
+            yield false
+        }
+        when kind(rule[0]) != "text" or kind(rule[1]) != "text" {
+            yield false
+        }
+        yield size(trim(rule[0])) > 0 and size(trim(rule[1])) > 0
+    }
+    craft invalid_rule(rule) {
+        yield not valid_rule(rule)
+    }
+    craft prefix(rule) {
+        yield rule[0]
+    }
+    when size(keep(rules, invalid_rule)) != 0 {
+        yield false
+    }
+    yield size(unique(map(rules, prefix))) == size(rules)
+}

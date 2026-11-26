@@ -1,0 +1,26 @@
+# ModelInvariants — validate unique named numeric intervals.
+
+export craft valid_model_invariants(invariants) {
+    when kind(invariants) != "list" {
+        yield false
+    }
+    craft valid_invariant(item) {
+        when kind(item) != "list" or size(item) != 3 {
+            yield false
+        }
+        when kind(item[0]) != "text" or kind(item[1]) != "number" or kind(item[2]) != "number" {
+            yield false
+        }
+        yield size(trim(item[0])) > 0 and item[1] <= item[2]
+    }
+    craft invalid_invariant(item) {
+        yield not valid_invariant(item)
+    }
+    craft invariant_name(item) {
+        yield item[0]
+    }
+    when size(keep(invariants, invalid_invariant)) != 0 {
+        yield false
+    }
+    yield size(unique(map(invariants, invariant_name))) == size(invariants)
+}

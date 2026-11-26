@@ -1,0 +1,20 @@
+# ConceptFacets — report required descriptive facets missing from a concept.
+
+export craft concept_missing_facets(required, present) {
+    when kind(required) != "list" or kind(present) != "list" {
+        yield []
+    }
+    craft invalid_facet(facet) {
+        yield kind(facet) != "text" or size(trim(facet)) == 0
+    }
+    when size(keep(required, invalid_facet)) != 0 or size(keep(present, invalid_facet)) != 0 {
+        yield []
+    }
+    when size(unique(required)) != size(required) or size(unique(present)) != size(present) {
+        yield []
+    }
+    craft missing(facet) {
+        yield not contains(present, facet)
+    }
+    yield keep(required, missing)
+}

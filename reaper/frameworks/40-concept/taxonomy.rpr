@@ -1,0 +1,31 @@
+# ConceptTaxonomy — validate unique concept names, categories and stable IDs.
+
+export craft valid_concept_taxonomy(concepts) {
+    when kind(concepts) != "list" or size(concepts) == 0 {
+        yield false
+    }
+    craft valid_concept(item) {
+        when kind(item) != "list" or size(item) != 3 {
+            yield false
+        }
+        each field in item {
+            when kind(field) != "text" or size(trim(field)) == 0 {
+                yield false
+            }
+        }
+        yield true
+    }
+    craft invalid_concept(item) {
+        yield not valid_concept(item)
+    }
+    craft concept_name(item) {
+        yield item[0]
+    }
+    craft concept_id(item) {
+        yield item[2]
+    }
+    when size(keep(concepts, invalid_concept)) != 0 {
+        yield false
+    }
+    yield size(unique(map(concepts, concept_name))) == size(concepts) and size(unique(map(concepts, concept_id))) == size(concepts)
+}

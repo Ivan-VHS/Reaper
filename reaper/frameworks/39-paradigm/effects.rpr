@@ -1,0 +1,23 @@
+# ParadigmEffects — pure profiles have no effects; effectful profiles declare a valid set.
+
+export craft valid_paradigm_effect_profile(profile) {
+    when kind(profile) != "list" or size(profile) != 2 {
+        yield false
+    }
+    when kind(profile[0]) != "text" or kind(profile[1]) != "list" {
+        yield false
+    }
+    when not contains(["pure", "effectful"], profile[0]) {
+        yield false
+    }
+    craft invalid_effect(effect) {
+        yield kind(effect) != "text" or size(trim(effect)) == 0
+    }
+    when size(keep(profile[1], invalid_effect)) != 0 or size(unique(profile[1])) != size(profile[1]) {
+        yield false
+    }
+    when profile[0] == "pure" {
+        yield size(profile[1]) == 0
+    }
+    yield size(profile[1]) > 0
+}
