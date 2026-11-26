@@ -465,7 +465,7 @@ int reaper_compiler_ir_emit_c17(const ReaperCompilerIrModule *lir,
         if (!append_c_string(output, output_capacity, &length, error,
                               is_text_type(node->type) ? node->text : "") ||
             !appendf(output, output_capacity, &length, error,
-                      ", %u, %u, %lld, UINT64_C(0x%016llx) },\\n",
+                      ", %u, %u, %lld, UINT64_C(0x%016llx) },\n",
                       node->lhs, node->rhs, (long long)node->integer,
                       (unsigned long long)number_bits)) return 0;    }
     if (!appendf(output, output_capacity, &length, error,
