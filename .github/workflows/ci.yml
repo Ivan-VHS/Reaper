@@ -54,7 +54,10 @@ jobs:
           python -m reaper --check plague/engine/evolution.rpr
           python -m reaper --check plague/engine/policy.rpr
           python -m reaper --check plague/engine/registry.rpr
+          python -m reaper --check plague/engine/core.rpr
+          python -m reaper --check plague/engine/evolution.rpr
           python -m reaper --check plague/examples/policy_smoke.rpr
+          python -m reaper --check plague/examples/evolution_smoke.rpr
           python -m reaper --check examples/plague/evolution_smoke.rpr
           python -m reaper --check plague/examples/evolution_smoke.rpr
       - name: Validate PLAGUE JSON contracts
@@ -64,6 +67,8 @@ jobs:
           python -m json.tool plague/schemas/repository-target.v1.schema.json > /dev/null
           python -m json.tool plague/schemas/change-plan.v1.schema.json > /dev/null
           python -m json.tool plague/schemas/evidence-bundle.v1.schema.json > /dev/null
+          python -m json.tool plague/schemas/repository-profile.v1.schema.json > /dev/null
+          python -m json.tool plague/schemas/evolution-proposal.v1.schema.json > /dev/null
           python -m json.tool plague/schemas/repository-profile.v1.schema.json > /dev/null
           python -m json.tool plague/schemas/evolution-proposal.v1.schema.json > /dev/null
           python -m json.tool schemas/plague.repository-profile.v1.schema.json > /dev/null
@@ -91,3 +96,8 @@ jobs:
           grep -F "PASS unknown mode is denied" plague-smoke.log
           grep -F "PASS registry contains ten components" plague-smoke.log
           grep -F "PASS registry recognizes blightforge" plague-smoke.log
+
+      - name: Run PLAGUE proposal assessment smoke
+        run: |
+          python -m reaper plague/examples/evolution_smoke.rpr | tee plague-evolution-smoke.log
+          grep -Fx "PLAGUE_V1_OK" plague-evolution-smoke.log
