@@ -153,22 +153,15 @@ static void audit_event(const ReaperEvolutionApplyHost *host,
         path != NULL ? path : "", "", details != NULL ? details : "");
 }
 
-static void cleanup_entries(const ReaperEvolutionApplyHost *host,
-                            ApplyEntry *entries, size_t count,
-                            int preserve_committed) {
+static void cleanup_committed_backups(const ReaperEvolutionApplyHost *host,
+                                      ApplyEntry *entries, size_t count) {
     size_t index;
-    for (index = count; index > 0u; --index) {
-        ApplyEntry *entry = &entries[index - 1u];
-        if (entry->committed) {
-            if (!preserve_committed && entry->rollback != NULL)
-                (void)host->rollback_committed(host->context, entry->rollback);
-            else if (preserve_committed && entry->rollback != NULL)
-                host->release_rollback(host->context, entry->rollback);
-        } else if (entry->staged != NULL) {
-            (void)host->discard_staged(host->context, entry->staged);
+    for (index = 0u; index < count; ++index) {
+        if (entries[index].committed && entries[index].rollback != NULL) {
+            host->release_rollback(host->context, entries[index].rollback);
+            entries[index].rollback = NULL;
         }
-        entry->staged = NULL;
-        entry->rollback = NULL;
+        entries[index].staged = NULL;
     }
 }
 
@@ -182,11 +175,15 @@ static int rollback_entries(const ReaperEvolutionApplyHost *host,
         if (entry->committed && entry->rollback != NULL) {
             if (host->rollback_committed(host->context, entry->rollback)) {
                 ++result->rolled_back_files;
+                host->release_rollback(host->context, entry->rollback);
+                entry->rollback = NULL;
+                entry->staged = NULL;
             } else {
                 ok = 0;
             }
         } else if (!entry->committed && entry->staged != NULL) {
             if (!host->discard_staged(host->context, entry->staged)) ok = 0;
+            entry->staged = NULL;
         }
     }
     return ok;
@@ -225,7 +222,8 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
 ) {
     ReaperEvolutionApplyResult result = result_init();
     ApplyEntry entries[REAPER_EVOLUTION_APPLY_MAX_FILES];
-    size_t index, total_replacement_bytes = 0u, staged_count = 0u;
+    size_t index, total_replacement_bytes = 0u;
+    void *staged_handles[REAPER_EVOLUTION_APPLY_MAX_FILES] = {0};
     char canonical_path[REAPER_EVOLUTION_APPLY_MAX_PATH];
     char actual_digest[65];
     uint8_t *current_bytes = NULL;
@@ -360,7 +358,7 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
             goto fail;
         }
         (void)snprintf(entries[index].path, sizeof entries[index].path, "%s", patch->relative_path);
-        ++staged_count;
+        staged_handles[index] = entries[index].staged;
         if (!host->audit_append(host->context, "patch.staged", request->request_id,
                 request->repository_id, request->target_branch, request->base_revision,
                 patch->relative_path, patch->expected_original_sha256, "source pinned and staged")) {
@@ -370,13 +368,9 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
     }
 
     if (!host->run_declared_checks(host->context,
-            (void *const *)&entries[0].staged, 0u,
+            staged_handles, request->patch_count,
             request->check_ids, request->check_count, &request->limits,
             result.report, sizeof result.report)) {
-        /*
-         * ApplyEntry is not a packed array of staged pointers. Build an explicit
-         * pointer vector so the sandbox receives only staged transaction handles.
-         */
         result.status = REAPER_APPLY_CHECKS_FAILED;
         goto fail;
     }
@@ -406,7 +400,7 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
         goto fail;
     }
 
-    cleanup_entries(host, entries, request->patch_count, 1);
+    cleanup_committed_backups(host, entries, request->patch_count);
     result.status = REAPER_APPLY_OK;
     return result;
 
@@ -423,7 +417,6 @@ fail:
         }
         if (!rollback_ok) result.status = REAPER_APPLY_ROLLBACK_FAILED;
     }
-    (void)staged_count;
     return result;
 }
 
