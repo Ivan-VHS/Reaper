@@ -6,7 +6,7 @@ RAAEF provides nominal tagged profile contracts, aesthetic HIR/MIR/LIR passes, a
 
 The Reaper C17 core now has a shared typed HIR/MIR/LIR API for a bounded scalar expression set and aesthetic property nodes, plus a deterministic C17 instruction-table emitter. This is a compiler-core bridge, not full grammar coverage: the parser-to-HIR frontend for all imported .rpr modules, collections, control flow, effects and native runtime calls is not complete. RAAEF's Reaper modules are therefore not yet natively compiled as a complete package and the declarative LIR does not call a native renderer.
 
-See [Native typed compiler IR](NATIVE_IR_EXECUTION.md) for the exact v1 node coverage.
+See [Native typed compiler IR](NATIVE_IR_EXECUTION.md) for exact v1 node coverage and [Native evolution apply engine](REAPER_AUTONOMOUS_EVOLUTION.md) for the guarded workspace/branch transaction contract.
 
 SOMO consults the PLAGUE v1 action-policy module before planning: observation requires read/analysis/report actions, and proposal mode additionally requires the declared plan capability. This is policy integration, not an authenticated repository grant or path-level authorization system.
 
