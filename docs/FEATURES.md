@@ -8,6 +8,7 @@
 | Division | Euclidean divmod, quotient/remainder, divisibility | implemented |
 | Allocation | partition/split, distribute, weighted allocation | implemented |
 | Audit/governance | explicit grants, HMAC scope, TTL/revocation | reference runtime |
+| AESTHETICA | dual-axis beauty/ugliness evaluation, context weights, evidence provenance, stage contracts and revision comparison | Partial — executable .rpr reference module and acceptance example; no C17 parity or Studio integration |
 | Studio | Windows editor/debugger, command palette, MCU profile and hardware-boundary overview | desktop app; no live device inspector |
 | CODEX-66 | searchable 66-item native feature catalogue with JSON export and maturity labels | implemented metadata/UI; feature statuses remain evidence-based |
 | Native C17 | lexer, expression Pratt parser, owned AST, checked i64 IR, constant folding and limited lowering | partial |
