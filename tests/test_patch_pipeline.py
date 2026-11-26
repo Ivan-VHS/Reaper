@@ -85,14 +85,11 @@ class PatchPipelineTests(unittest.TestCase):
         self.assertEqual(path.read_bytes(), bytes([0, 9, 2, 254]))
 
     def test_new_and_deleted_files_have_explicit_base_presence(self):
-        added = self.root / "new.txt"
-        added.write_bytes(b"new\n")
-        self.git("add", "new.txt")
-        self.git("commit", "-qm", "add file")
-        base = self.git("rev-parse", "HEAD").strip()
+        base = self.base
         (self.root / "sample.txt").unlink()
-        self.git("add", "-u")
-        self.git("commit", "-qm", "delete file")
+        (self.root / "new.txt").write_bytes(b"new\n")
+        self.git("add", "-A")
+        self.git("commit", "-qm", "create and delete files")
         head = self.git("rev-parse", "HEAD").strip()
         proposal = self.root / "create-delete-proposal"
         patcher.create_proposal(self.root, base, head, proposal)
@@ -100,6 +97,11 @@ class PatchPipelineTests(unittest.TestCase):
         by_path = {item["path"]: item for item in manifest["files"]}
         self.assertTrue(by_path["sample.txt"]["base_exists"])
         self.assertFalse(by_path["new.txt"]["base_exists"])
+        self.git("checkout", "-q", base)
+        patcher.verify(self.root, proposal)
+        patcher.apply(self.root, proposal)
+        self.assertFalse((self.root / "sample.txt").exists())
+        self.assertEqual((self.root / "new.txt").read_bytes(), b"new\n")
 
     def test_tampered_patch_is_rejected(self):
         path = self.proposal / "proposal.patch"
