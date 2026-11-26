@@ -5567,7 +5567,13 @@
       "negative": {
         "args": "([[\"id\", \"integer\", true], [\"id\", \"text\", false]])",
         "output": "false"
-      }
+      },
+      "additional_negative": [
+        [
+          "([[\"field\", \"unknown-type\", true]])",
+          "false"
+        ]
+      ]
     },
     {
       "id": "54.record",
@@ -5586,7 +5592,13 @@
       "negative": {
         "args": "([[\"unknown\", 7]], [[\"id\", \"integer\", true]])",
         "output": "false"
-      }
+      },
+      "additional_negative": [
+        [
+          "([[\"id\", \"seven\"]], [[\"id\", \"integer\", true]])",
+          "false"
+        ]
+      ]
     },
     {
       "id": "54.references",
@@ -6238,7 +6250,13 @@
       "negative": {
         "args": "([[\"compiler.bin\", \"short\"]])",
         "output": "false"
-      }
+      },
+      "additional_negative": [
+        [
+          "([[\"compiler.bin\", \"zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\"]])",
+          "false"
+        ]
+      ]
     },
     {
       "id": "61.promotion",
@@ -6289,13 +6307,19 @@
       "api": "valid_staging_provenance",
       "purpose": "Require artifact, source commit, author and branch provenance identifiers.",
       "positive": {
-        "args": "([\"app.bin\", \"abcdef012345\", \"builder\", \"release/1\"])",
+        "args": "([\"app.bin\", \"abcdef0123456789abcdef0123456789abcdef01\", \"builder\", \"release/1\"])",
         "output": "true"
       },
       "negative": {
         "args": "([\"app.bin\", \"\", \"builder\", \"release/1\"])",
         "output": "false"
-      }
+      },
+      "additional_negative": [
+        [
+          "([\"app.bin\", \"zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\", \"builder\", \"release/1\"])",
+          "false"
+        ]
+      ]
     },
     {
       "id": "61.gate",
@@ -6662,7 +6686,13 @@
       "negative": {
         "args": "(\"dabi64-v1\", \"legacy-v0\", 64)",
         "output": "false"
-      }
+      },
+      "additional_negative": [
+        [
+          "(\"legacy-v0\", \"legacy-v0\", 64)",
+          "false"
+        ]
+      ]
     },
     {
       "id": "65.dma",
