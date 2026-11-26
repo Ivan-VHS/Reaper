@@ -70,10 +70,5 @@ export craft valid_platform_target_profile(profile) {
             yield false
         }
     }
-    when profile[1] == "baremetal" {
-        when profile[2] != "none" {
-            yield false
-        }
-    }
     yield true
 }
