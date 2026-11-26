@@ -165,6 +165,10 @@ class FoundationalFrameworksSixToTenTests(unittest.TestCase):
             self.run_expression('core["foundation_validate_invariants"](["basis.immutability.v1", "basis.bounds.v1", "basis.effects.v1", "basis.ownership.v1", "basis.ownership.v1"])'),
             ["false"],
         )
+        self.assertEqual(
+            self.run_expression('core["foundation_validate_invariants"]("not-a-list")'),
+            ["false"],
+        )
 
     def test_skeleton_requires_core_components_and_rejects_unknowns(self) -> None:
         self.assertEqual(
