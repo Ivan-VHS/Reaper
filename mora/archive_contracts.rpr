@@ -1,0 +1,314 @@
+# Mora archive contracts for Reaper.
+#
+# This module uses the executable .rpr grammar. Records are bounded positional
+# lists because named record declarations are not part of the current parser.
+# The field order is documented in docs/MORA_ARCHIVE_CONTRACTS.md.
+#
+# The module is pure: it does not open files, access the clock, use the network,
+# mutate user data, launch a shell, or register host markers.
+
+export craft diagnostic(component, passed, error_code, message) {
+    yield [component, passed, error_code, message]
+}
+
+export craft nonempty_text(value) {
+    when kind(value) != "text" {
+        yield false
+    }
+    yield size(trim(value)) > 0
+}
+
+export craft uint32(value) {
+    when kind(value) != "number" {
+        yield false
+    }
+    when value < 0 or value > 4294967295 {
+        yield false
+    }
+    yield value % 1 == 0
+}
+
+export craft bounded_real(value, minimum, maximum) {
+    when kind(value) != "number" {
+        yield false
+    }
+    when value != value {
+        yield false
+    }
+    yield value >= minimum and value <= maximum
+}
+
+export craft row_shape(value, expected_size) {
+    when kind(value) != "list" {
+        yield false
+    }
+    yield size(value) == expected_size
+}
+
+export craft check_performance_budget(budget) {
+    when not row_shape(budget, 8) {
+        yield diagnostic("mora.perf.budget", false, "ERR_PERF_SHAPE", "Performance budget must contain exactly eight fields.")
+    }
+
+    when not bounded_real(budget[0], 0.001, 1000) {
+        yield diagnostic("mora.perf.budget", false, "ERR_FRAME_TARGET", "Frame target must be finite and between 0.001 and 1000 ms.")
+    }
+    when not bounded_real(budget[1], 0, 1000) or budget[1] > budget[0] {
+        yield diagnostic("mora.perf.budget", false, "ERR_FRAME_MEASUREMENT", "Measured frame p95 must be finite, non-negative and within the target.")
+    }
+    when not bounded_real(budget[2], 0.001, 60000) {
+        yield diagnostic("mora.perf.budget", false, "ERR_INPUT_TARGET", "Input target must be finite and between 0.001 and 60000 ms.")
+    }
+    when not bounded_real(budget[3], 0, 60000) or budget[3] > budget[2] {
+        yield diagnostic("mora.perf.budget", false, "ERR_INPUT_MEASUREMENT", "Measured input p95 must be finite, non-negative and within the target.")
+    }
+    when not uint32(budget[4]) or budget[4] == 0 {
+        yield diagnostic("mora.perf.budget", false, "ERR_RAM_LIMIT", "RAM limit must be a positive u32 value in MiB.")
+    }
+    when not uint32(budget[5]) or budget[5] > budget[4] {
+        yield diagnostic("mora.perf.budget", false, "ERR_RAM_MEASUREMENT", "Measured RAM must be a u32 value within the configured limit.")
+    }
+    when not bounded_real(budget[6], 0, 100) {
+        yield diagnostic("mora.perf.budget", false, "ERR_CPU_LIMIT", "Idle CPU limit must be a percentage between 0 and 100.")
+    }
+    when not bounded_real(budget[7], 0, 100) or budget[7] > budget[6] {
+        yield diagnostic("mora.perf.budget", false, "ERR_CPU_MEASUREMENT", "Measured idle CPU must be a percentage within the configured limit.")
+    }
+
+    yield diagnostic("mora.perf.budget", true, "OK_PERF_000", "All supplied performance values are internally consistent with the configured budgets.")
+}
+
+export craft check_permission_policy(rules, local_only) {
+    when kind(rules) != "list" {
+        yield diagnostic("mora.security.acl", false, "ERR_ACL_SHAPE", "Permission rules must be a list.")
+    }
+    when kind(local_only) != "boolean" {
+        yield diagnostic("mora.security.acl", false, "ERR_LOCAL_MODE", "Local-only mode must be an explicit boolean.")
+    }
+
+    vary seen := []
+    each rule in rules {
+        when not row_shape(rule, 6) {
+            yield diagnostic("mora.security.acl", false, "ERR_ACL_RULE_SHAPE", "Each permission rule must contain exactly six fields.")
+        }
+        when not nonempty_text(rule[0]) or not nonempty_text(rule[1]) or not nonempty_text(rule[2]) or not nonempty_text(rule[3]) {
+            yield diagnostic("mora.security.acl", false, "ERR_ACL_REQUIRED_FIELD", "Permission subject, resource, scope and lifetime must be non-empty text.")
+        }
+        when kind(rule[4]) != "boolean" or kind(rule[5]) != "boolean" {
+            yield diagnostic("mora.security.acl", false, "ERR_ACL_BOOLEAN", "Permission grant and silent-grant flags must be booleans.")
+        }
+
+        make identity := rule[0] ++ "::" ++ rule[1]
+        when contains(seen, identity) {
+            yield diagnostic("mora.security.acl", false, "ERR_ACL_DUPLICATE", "Duplicate subject/resource rule: " ++ identity)
+        }
+        change seen := push(seen, identity)
+
+        when rule[5] {
+            yield diagnostic("mora.security.acl", false, "ERR_SILENT_GRANT", "Silent permission grants are forbidden: " ++ rule[0])
+        }
+        when local_only and rule[1] == "network.outbound" and rule[4] {
+            yield diagnostic("mora.security.acl", false, "ERR_LOCAL_NETWORK", "Outbound network access is forbidden by the local-only policy: " ++ rule[0])
+        }
+
+        when rule[4] {
+            when rule[2] == "none" or rule[3] == "permanent_deny" {
+                yield diagnostic("mora.security.acl", false, "ERR_GRANTED_DENY_STATE", "A granted permission cannot use the denied scope or permanent-deny lifetime: " ++ rule[1])
+            }
+            when rule[3] != "single_session" and rule[3] != "until_stop" and rule[3] != "on_demand" {
+                yield diagnostic("mora.security.acl", false, "ERR_UNBOUNDED_LIFETIME", "Granted permission has an unsupported lifetime: " ++ rule[3])
+            }
+        }
+        otherwise {
+            when rule[2] != "none" or rule[3] != "permanent_deny" {
+                yield diagnostic("mora.security.acl", false, "ERR_DENY_STATE", "A denied permission must use scope 'none' and lifetime 'permanent_deny': " ++ rule[1])
+            }
+        }
+    }
+
+    yield diagnostic("mora.security.acl", true, "OK_ACL_001", "Permission rules are explicit, bounded, non-duplicated and compatible with the selected network policy.")
+}
+
+export craft verify_snapshot_safety(deltas) {
+    when kind(deltas) != "list" {
+        yield diagnostic("mora.snapshots.rollback", false, "ERR_SNAPSHOT_SHAPE", "Snapshot deltas must be a list.")
+    }
+
+    vary seen := []
+    each delta in deltas {
+        when not row_shape(delta, 6) {
+            yield diagnostic("mora.snapshots.rollback", false, "ERR_SNAPSHOT_DELTA_SHAPE", "Each snapshot delta must contain exactly six fields.")
+        }
+        when not nonempty_text(delta[0]) or not nonempty_text(delta[1]) or not nonempty_text(delta[2]) {
+            yield diagnostic("mora.snapshots.rollback", false, "ERR_SNAPSHOT_IDENTITY", "Snapshot id, timestamp and parameter must be non-empty text.")
+        }
+        when kind(delta[3]) != "text" or kind(delta[4]) != "text" {
+            yield diagnostic("mora.snapshots.rollback", false, "ERR_SNAPSHOT_VALUE_TYPE", "Snapshot before/after values must be text.")
+        }
+        when delta[3] == delta[4] {
+            yield diagnostic("mora.snapshots.rollback", false, "ERR_SNAPSHOT_NO_CHANGE", "Snapshot delta does not change its parameter: " ++ delta[2])
+        }
+        when kind(delta[5]) != "boolean" {
+            yield diagnostic("mora.snapshots.rollback", false, "ERR_SNAPSHOT_PRESERVATION_TYPE", "User-file preservation must be an explicit boolean.")
+        }
+        when not delta[5] {
+            yield diagnostic("mora.snapshots.rollback", false, "ERR_UNSAFE_ROLLBACK", "Snapshot rollback is not isolated from user files: " ++ delta[0])
+        }
+
+        make identity := delta[0] ++ "::" ++ delta[2]
+        when contains(seen, identity) {
+            yield diagnostic("mora.snapshots.rollback", false, "ERR_SNAPSHOT_DUPLICATE_PARAMETER", "Snapshot contains a duplicate parameter delta: " ++ identity)
+        }
+        change seen := push(seen, identity)
+    }
+
+    yield diagnostic("mora.snapshots.rollback", true, "OK_SNAPSHOT_002", "Snapshot deltas are distinct and explicitly preserve user files.")
+}
+
+export craft check_archive_metadata(metadata) {
+    when not row_shape(metadata, 13) {
+        yield diagnostic("mora.archive.metadata", false, "ERR_ARCHIVE_SHAPE", "Archive metadata must contain exactly thirteen fields.")
+    }
+
+    each field in [metadata[0], metadata[1], metadata[2], metadata[3], metadata[4], metadata[5], metadata[6], metadata[9], metadata[11], metadata[12]] {
+        when not nonempty_text(field) {
+            yield diagnostic("mora.archive.metadata", false, "ERR_ARCHIVE_REQUIRED_FIELD", "Required archive metadata contains an empty or incorrectly typed field.")
+        }
+    }
+
+    when not uint32(metadata[7]) or metadata[7] == 0 {
+        yield diagnostic("mora.archive.metadata", false, "ERR_ARCHIVE_TRACK_COUNT", "Archive track count must be a positive u32 value.")
+    }
+    when not uint32(metadata[8]) or metadata[8] == 0 {
+        yield diagnostic("mora.archive.metadata", false, "ERR_ARCHIVE_DURATION", "Archive duration must be a positive u32 value in seconds.")
+    }
+    when kind(metadata[10]) != "boolean" {
+        yield diagnostic("mora.archive.metadata", false, "ERR_ARCHIVE_VERIFICATION_TYPE", "offline_verified must be an explicit boolean.")
+    }
+    when metadata[11] != "verified" and metadata[11] != "unverified" {
+        yield diagnostic("mora.archive.metadata", false, "ERR_ARCHIVE_PROVENANCE_STATE", "Archive provenance state must be 'verified' or 'unverified'.")
+    }
+    when metadata[10] and (metadata[11] != "verified" or metadata[12] == "not-provided") {
+        yield diagnostic("mora.archive.metadata", false, "ERR_ARCHIVE_EVIDENCE_REQUIRED", "An archive cannot be marked offline-verified without a verification state and evidence reference.")
+    }
+    when not metadata[10] and metadata[11] == "verified" {
+        yield diagnostic("mora.archive.metadata", false, "ERR_ARCHIVE_VERIFICATION_MISMATCH", "Verified provenance and offline_verified flag disagree.")
+    }
+
+    yield diagnostic("mora.archive.metadata", true, "OK_ARCHIVE_003", "Archive metadata is structurally valid; provenance remains explicitly classified.")
+}
+
+export craft verify_segments(segments, total_duration) {
+    when kind(segments) != "list" or size(segments) == 0 {
+        yield diagnostic("mora.timeline.segments", false, "ERR_SEGMENT_LIST", "Timeline must contain at least one segment.")
+    }
+    when not uint32(total_duration) or total_duration == 0 {
+        yield diagnostic("mora.timeline.segments", false, "ERR_TOTAL_DURATION", "Timeline duration must be a positive u32 value.")
+    }
+
+    vary previous_end := 0
+    vary seen := []
+    each segment in segments {
+        when not row_shape(segment, 7) {
+            yield diagnostic("mora.timeline.segments", false, "ERR_SEGMENT_SHAPE", "Each timeline segment must contain exactly seven fields.")
+        }
+        when not nonempty_text(segment[0]) or not nonempty_text(segment[1]) or not nonempty_text(segment[4]) or not nonempty_text(segment[5]) or not nonempty_text(segment[6]) {
+            yield diagnostic("mora.timeline.segments", false, "ERR_SEGMENT_REQUIRED_FIELD", "Segment id, title, workspace, color token and notes must be non-empty text.")
+        }
+        when not uint32(segment[2]) or not uint32(segment[3]) {
+            yield diagnostic("mora.timeline.segments", false, "ERR_SEGMENT_BOUNDARY_TYPE", "Segment boundaries must be u32 whole seconds.")
+        }
+        when contains(seen, segment[0]) {
+            yield diagnostic("mora.timeline.segments", false, "ERR_SEGMENT_DUPLICATE", "Duplicate timeline segment id: " ++ segment[0])
+        }
+        change seen := push(seen, segment[0])
+
+        when segment[3] <= segment[2] {
+            yield diagnostic("mora.timeline.segments", false, "ERR_EMPTY_SEGMENT", "Segment end must be greater than its start: " ++ segment[0])
+        }
+        when segment[2] < previous_end {
+            yield diagnostic("mora.timeline.segments", false, "ERR_OVERLAP_SEGMENT", "Timeline segments overlap: " ++ segment[0])
+        }
+        when segment[2] > previous_end {
+            yield diagnostic("mora.timeline.segments", false, "ERR_SEGMENT_GAP", "Timeline has an uncovered interval before: " ++ segment[0])
+        }
+        when segment[3] > total_duration {
+            yield diagnostic("mora.timeline.segments", false, "ERR_SEGMENT_OUT_OF_RANGE", "Timeline segment exceeds the archive duration: " ++ segment[0])
+        }
+        change previous_end := segment[3]
+    }
+
+    when previous_end != total_duration {
+        yield diagnostic("mora.timeline.segments", false, "ERR_DURATION_MISMATCH", "Final segment end does not equal the declared archive duration.")
+    }
+
+    yield diagnostic("mora.timeline.segments", true, "OK_SEGMENT_004", "Timeline is ordered, gap-free, non-overlapping and bounded by the archive duration.")
+}
+
+export craft verify_track_markers(markers, total_tracks, total_duration) {
+    when kind(markers) != "list" {
+        yield diagnostic("mora.timeline.markers", false, "ERR_MARKER_LIST", "Track markers must be a list.")
+    }
+    when not uint32(total_tracks) or total_tracks == 0 {
+        yield diagnostic("mora.timeline.markers", false, "ERR_MARKER_TRACK_COUNT", "Track count must be a positive u32 value.")
+    }
+    when not uint32(total_duration) or total_duration == 0 {
+        yield diagnostic("mora.timeline.markers", false, "ERR_MARKER_DURATION", "Archive duration must be a positive u32 value.")
+    }
+    when size(markers) > total_tracks {
+        yield diagnostic("mora.timeline.markers", false, "ERR_MARKER_COUNT", "Marker count cannot exceed the archive track count.")
+    }
+
+    vary previous_index := 0
+    vary previous_position := -1
+    each marker in markers {
+        when not row_shape(marker, 7) {
+            yield diagnostic("mora.timeline.markers", false, "ERR_MARKER_SHAPE", "Each track marker must contain seven fields, including its evidence reference.")
+        }
+        when not uint32(marker[0]) or marker[0] == 0 or marker[0] > total_tracks {
+            yield diagnostic("mora.timeline.markers", false, "ERR_MARKER_INDEX", "Track marker index is outside the declared track range.")
+        }
+        when not uint32(marker[1]) or marker[1] >= total_duration {
+            yield diagnostic("mora.timeline.markers", false, "ERR_MARKER_POSITION", "Track marker position is outside the archive duration.")
+        }
+        when not nonempty_text(marker[2]) or not nonempty_text(marker[3]) or not nonempty_text(marker[4]) {
+            yield diagnostic("mora.timeline.markers", false, "ERR_MARKER_REQUIRED_FIELD", "Marker code, category and theme must be non-empty text.")
+        }
+        when kind(marker[5]) != "boolean" or not nonempty_text(marker[6]) {
+            yield diagnostic("mora.timeline.markers", false, "ERR_MARKER_PROVENANCE", "Marker verification flag and evidence reference must be explicit.")
+        }
+        when marker[5] and marker[6] == "not-provided" {
+            yield diagnostic("mora.timeline.markers", false, "ERR_MARKER_WITHOUT_EVIDENCE", "A verified marker must carry an evidence reference: " ++ marker[2])
+        }
+        when marker[0] <= previous_index {
+            yield diagnostic("mora.timeline.markers", false, "ERR_MARKER_ORDER", "Marker indexes must be unique and strictly increasing.")
+        }
+        when marker[1] <= previous_position {
+            yield diagnostic("mora.timeline.markers", false, "ERR_MARKER_POSITION_ORDER", "Marker positions must be strictly increasing.")
+        }
+        change previous_index := marker[0]
+        change previous_position := marker[1]
+    }
+
+    yield diagnostic("mora.timeline.markers", true, "OK_MARKER_005", "Provided markers are in range and ordered; omitted tracks are not fabricated.")
+}
+
+export craft validate_archive(metadata, budget, acl_rules, snapshot_deltas, segments, markers, local_only) {
+    make checks := [
+        check_archive_metadata(metadata),
+        check_performance_budget(budget),
+        check_permission_policy(acl_rules, local_only),
+        verify_snapshot_safety(snapshot_deltas),
+        verify_segments(segments, metadata[8]),
+        verify_track_markers(markers, metadata[7], metadata[8])
+    ]
+
+    vary passed := true
+    each report in checks {
+        when not report[1] {
+            change passed := false
+        }
+    }
+
+    yield [passed, checks, size(markers), metadata[7]]
+}
