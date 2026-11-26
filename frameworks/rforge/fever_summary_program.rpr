@@ -1,0 +1,40 @@
+# Fever — Summary Program
+# Summary-first report severity, validated report lines and aggregation.
+
+export make FRAMEWORK_ID := "fever.summary_program"
+export make FRAMEWORK_VERSION := "1.0.0"
+export make FRAMEWORK_PROFILE := "Summary Program"
+
+export craft fever_severity(error_count, warning_count) {
+    when error_count > 0 {
+        yield "critical"
+    }
+    when warning_count > 0 {
+        yield "warning"
+    }
+    yield "clear"
+}
+
+export craft fever_summary_valid(reported, error_count, warning_count) {
+    yield reported >= 0 and error_count >= 0 and warning_count >= 0 and error_count + warning_count <= reported
+}
+
+export craft fever_program_line(label, count) {
+    when size(trim(label)) > 0 and count >= 0 {
+        yield [label, count]
+    }
+    yield []
+}
+
+export craft fever_aggregate(errors_a, warnings_a, errors_b, warnings_b) {
+    when errors_a >= 0 and warnings_a >= 0 and errors_b >= 0 and warnings_b >= 0 {
+        make errors := errors_a + errors_b
+        make warnings := warnings_a + warnings_b
+        yield [errors, warnings, fever_severity(errors, warnings)]
+    }
+    yield []
+}
+
+export craft fever_release_allowed(error_count, warning_count, warnings_block_release) {
+    yield error_count == 0 and (warning_count == 0 or not warnings_block_release)
+}
