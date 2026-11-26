@@ -1,0 +1,74 @@
+# Run from the Reaper repository root.
+import "../engine/evolution.rpr" as plague
+
+make profile := [
+    "Ivan-VHS/Reaper",
+    "linux-x86_64",
+    "reaper-native",
+    12,
+    24000,
+    ["source.read", "proposal.write"],
+    ["syntax", "unit", "resource", "security"],
+    true,
+    "risk_based",
+    35,
+    70
+]
+
+make safe_change := [
+    "change-001",
+    "linux-x86_64",
+    "reaper-native",
+    3,
+    4096,
+    ["source.read", "proposal.write"],
+    ["syntax", "unit", "resource", "security"],
+    true,
+    12,
+    88,
+    ["ci://run/1001", "artifact://diff/001"],
+    "sha256:baseline-001"
+]
+
+make missing_gate := [
+    "change-002",
+    "linux-x86_64",
+    "reaper-native",
+    2,
+    2048,
+    ["source.read"],
+    ["syntax", "unit"],
+    true,
+    8,
+    90,
+    ["ci://run/1002"],
+    "sha256:baseline-001"
+]
+
+make over_limit := [
+    "change-003",
+    "linux-x86_64",
+    "reaper-native",
+    13,
+    4096,
+    ["source.read"],
+    ["syntax", "unit", "resource", "security"],
+    true,
+    5,
+    95,
+    ["ci://run/1003"],
+    "sha256:baseline-001"
+]
+
+make eligible := plague["assess"](profile, safe_change)
+make gate_blocked := plague["assess"](profile, missing_gate)
+make size_blocked := plague["assess"](profile, over_limit)
+make selected := plague["select_candidate"](profile, [missing_gate, safe_change, over_limit])
+
+assert(eligible[0] == "eligible_for_review", "low-risk change should be reviewable")
+assert(eligible[2] == 76, "proposal score must be benefit minus risk")
+assert(gate_blocked[0] == "blocked", "missing assurance gate must block")
+assert(size_blocked[0] == "blocked", "path budget must be enforced")
+assert(selected[0] == "change-001", "selector must choose the strongest admissible candidate")
+
+emit "PLAGUE_V1_OK"
