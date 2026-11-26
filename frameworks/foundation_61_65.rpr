@@ -170,14 +170,24 @@ export craft baseline_validate_snapshot(snapshot) {
         }
         change metric_names := push(metric_names, metric[0])
     }
-    yield size(metric_names) > 0 and previous["specification_validate_evidence"](snapshot[5])
+    when size(metric_names) == 0 or kind(snapshot[5]) != "list" or size(snapshot[5]) == 0 {
+        yield false
+    }
+    vary evidence_refs := []
+    each evidence in snapshot[5] {
+        when kind(evidence) != "text" or evidence == "" or contains(evidence_refs, evidence) {
+            yield false
+        }
+        change evidence_refs := push(evidence_refs, evidence)
+    }
+    yield true
 }
 
 export craft baseline_compare(left, right) {
     when not baseline_validate_snapshot(left) or not baseline_validate_snapshot(right) {
         yield nothing
     }
-    when left[2] != right[2] or left[1] != right[1] {
+    when left[2] != right[2] or left[1] != right[1] or size(left[4]) != size(right[4]) {
         yield nothing
     }
     vary comparison := []
@@ -302,6 +312,12 @@ export craft hardware_validate_memory_region(region) {
     }
     when kind(region[0]) != "text" or region[0] == "" or not contains(hardware_memory_kinds(), region[1]) or kind(region[2]) != "number" or kind(region[3]) != "number" or region[2] < 0 or region[3] <= 0 or region[2] % 1 != 0 or region[3] % 1 != 0 or not contains(hardware_memory_permissions(), region[4]) {
         yield false
+    }
+    when region[1] == "mmio" and region[4] != "device" {
+        yield false
+    }
+    when region[1] == "rom" or region[1] == "flash" {
+        yield region[4] == "read-only" and region[2] + region[3] <= 18446744073709551615
     }
     yield region[2] + region[3] <= 18446744073709551615
 }
