@@ -43,6 +43,15 @@ craft remove_value(values, unwanted) {
     yield kept
 }
 
+craft maturity_rank(value) {
+    when value == "specification_only" { yield 0 }
+    when value == "source_only" { yield 1 }
+    when value == "implemented" { yield 2 }
+    when value == "verified" { yield 3 }
+    when value == "installable" { yield 4 }
+    yield 0
+}
+
 craft dependency_closure(modules, roots) {
     when size(roots) == 0 {
         yield ["error", "RIV-E0001 at least one root module is required", []]
@@ -172,7 +181,7 @@ export craft compose(product_name, product_kind, selected_module_ids) {
 
     vary graph_edges := []
     vary requested_permissions := []
-    vary module_maturity := "verified"
+    vary module_maturity := "installable"
 
     each module_id in ordered_ids {
         make module := find_module(MODULES, module_id)
@@ -185,8 +194,8 @@ export craft compose(product_name, product_kind, selected_module_ids) {
             change requested_permissions := append_unique(requested_permissions, permission)
         }
 
-        when module[8] != "verified" {
-            change module_maturity := "not_verified"
+        when maturity_rank(module[8]) < maturity_rank(module_maturity) {
+            change module_maturity := module[8]
         }
     }
 
