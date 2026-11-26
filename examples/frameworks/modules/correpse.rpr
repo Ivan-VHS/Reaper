@@ -1,17 +1,109 @@
-# Reaper framework metadata and source-level helper functions.
-# Operation contracts: language/frameworks.v1.json
+# Correpse: explicit invariants, schema checking and deterministic reconciliation.
+import "../federation_common.rpr" as fc
 
 export make framework_id := "correpse"
 export make display_name := "Correpse"
 export make feature_key := "RPR-FWK-003"
 export make operation_keys := ["RPR-FWK-003-F01", "RPR-FWK-003-F02", "RPR-FWK-003-F03", "RPR-FWK-003-F04", "RPR-FWK-003-F05", "RPR-FWK-003-F06"]
-export make maturity := "contract-only"
+export make maturity := "reference-handler-v1-partial"
 export make native_registry := "reaper.framework-cabi.v1"
 
-export craft operation_key(index) {
-    yield operation_keys[index]
+export craft operation_key(index) { yield operation_keys[index] }
+export craft framework_manifest() { yield [framework_id, display_name, feature_key, operation_keys, maturity] }
+
+export craft check_invariant(invariant, evidence) {
+    when not fc["fc_record"](invariant, 2) { yield [false, false, "invariant-shape"] }
+    when invariant[0] == "equals" { yield [true, evidence == invariant[1], "equals"] }
+    when invariant[0] == "nonempty" { yield [true, fc["fc_nonempty_text"](evidence), "nonempty"] }
+    when invariant[0] == "contains" { yield [true, fc["fc_has"](evidence, invariant[1]), "contains"] }
+    when invariant[0] == "at-least" {
+        when not fc["fc_nonnegative"](invariant[1]) or not fc["fc_nonnegative"](evidence) {
+            yield [false, false, "numeric-evidence-required"]
+        }
+        yield [true, evidence >= invariant[1], "at-least"]
+    }
+    yield [false, false, ["unknown-invariant", invariant[0]]]
 }
 
-export craft framework_manifest() {
-    yield [framework_id, display_name, feature_key, operation_keys, maturity]
+# Reconciliation returns merged pairs and explicit conflicts; right-hand values win only in the plan.
+export craft reconcile_state(left, right) {
+    make left_check := fc["fc_valid_pairs"](left)
+    make right_check := fc["fc_valid_pairs"](right)
+    when not left_check[0] or not right_check[0] {
+        yield [false, [], [], ["invalid-state-pairs", left_check[1], right_check[1]]]
+    }
+    vary merged := left
+    vary conflicts := []
+    each item in right {
+        make previous := fc["fc_lookup"](left, item[0])
+        when previous[0] and previous[1] != item[1] {
+            change conflicts := push(conflicts, [item[0], previous[1], item[1]])
+        }
+        make written := fc["fc_put"](merged, item[0], item[1])
+        when not written[0] { yield [false, [], conflicts, written[2]] }
+        change merged := written[1]
+    }
+    yield [true, merged, conflicts, "right-precedence-plan"]
+}
+
+export craft compare_contracts(actual, required) {
+    when not fc["fc_record"](actual, 4) or not fc["fc_record"](required, 4) {
+        yield [false, nothing, "contract-shape"]
+    }
+    when actual[0] != required[0] { yield [false, nothing, "contract-id-mismatch"] }
+    make version_check := fc["fc_version_compare"](actual[1], required[1])
+    when not version_check[0] { yield [false, nothing, version_check[2]] }
+    when actual[1][0] != required[1][0] { yield [false, nothing, "major-version-mismatch"] }
+    make fields := fc["fc_intersect"](actual[2], required[2])
+    when not fields[0] { yield [false, nothing, fields[2]] }
+    make missing := []
+    each field in required[2] {
+        when not fc["fc_has"](actual[2], field) {
+            change missing := push(missing, field)
+        }
+    }
+    yield [size(missing) == 0, [fields[1], missing, version_check[1]], "compared"]
+}
+
+# Schema row: [field_name, expected_kind, required].
+export craft validate_schema(payload, schema) {
+    make payload_check := fc["fc_valid_pairs"](payload)
+    when not payload_check[0] { yield [false, payload_check[1]] }
+    when kind(schema) != "list" { yield [false, ["schema-must-be-list"]] }
+    vary errors := []
+    each rule in schema {
+        when not fc["fc_record"](rule, 3) {
+            change errors := push(errors, ["schema-rule-shape", rule])
+        } otherwise {
+            make value := fc["fc_lookup"](payload, rule[0])
+            when not value[0] {
+                when rule[2] { change errors := push(errors, ["required-field-missing", rule[0]]) }
+            } otherwise {
+                when rule[1] != "any" and kind(value[1]) != rule[1] {
+                    change errors := push(errors, ["field-kind", rule[0], rule[1], kind(value[1])])
+                }
+            }
+        }
+    }
+    yield [size(errors) == 0, errors]
+}
+
+export craft detect_conflict(left, right) {
+    make checked_left := fc["fc_valid_pairs"](left)
+    make checked_right := fc["fc_valid_pairs"](right)
+    when not checked_left[0] or not checked_right[0] {
+        yield [false, [], "invalid-state-pairs"]
+    }
+    vary conflicts := []
+    each item in left {
+        make other := fc["fc_lookup"](right, item[0])
+        when other[0] and other[1] != item[1] {
+            change conflicts := push(conflicts, [item[0], item[1], other[1]])
+        }
+    }
+    yield [true, conflicts, "conflicts-detected"]
+}
+
+export craft prove_precondition(precondition, evidence) {
+    yield check_invariant(precondition, evidence)
 }
