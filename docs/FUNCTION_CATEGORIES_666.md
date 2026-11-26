@@ -767,10 +767,13 @@ A reference-runtime helper or an external project's implementation does not auto
 
 ## Ownership
 
-- `kernel-runtime`: DuckOS kernel/runtime contracts, with Reaper as the systems-language and policy owner.
+- `kernel-runtime`: DAK kernel/runtime contracts, with Reaper as the systems-language and policy owner.
 - `language-compiler`: Reaper language, frontend, type system, compiler and toolchain.
-- `desktop-ui`: Mora and the DuckOS native desktop track.
-- `network-distributed`: DuckOS network services and Reaper protocol adapters.
-- `storage-data`: DuckOS storage interfaces and Reaper data/serialization libraries.
-- `security-resilience`: DuckOS security and BAV policy; enforcement must remain evidence-backed.
+- `desktop-ui`: Mora and the DAK native desktop track.
+- `network-distributed`: DAK network services and Reaper protocol adapters.
+- `storage-data`: DAK storage interfaces and Reaper data/serialization libraries.
+- `security-resilience`: DAK security and BAV policy; enforcement must remain evidence-backed.
 - `ecosystem-tooling`: Reaper tooling and versioned Ivan-VHS federation adapters.
+
+
+> Compatibility note: `duckos-reaper-architecture/v1` is a legacy v1 machine-readable category identifier retained for compatibility. New user-facing documentation and product naming use DAK; changing this schema identifier requires a separately versioned migration.
