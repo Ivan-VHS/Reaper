@@ -1,0 +1,422 @@
+# Tenth group of Reaper foundations.
+import "foundation_41_45.rpr" as previous
+
+export make FOUNDATION_TENTH_SCHEMA := "reaper.foundation.tenth.v1"
+export make FOUNDATION_TENTH_VERSION := 1
+
+export craft component_kinds() {
+    yield ["frontend", "analysis", "transform", "runtime", "host-adapter", "tooling", "test"]
+}
+
+export craft component_catalog() {
+    yield [
+        ["component.lexer", "frontend", 1, "source-text.v1", "token-stream.v1", [], "implemented"],
+        ["component.parser", "frontend", 1, "token-stream.v1", "syntax-tree.v1", ["component.lexer"], "implemented"],
+        ["component.semantic", "analysis", 1, "syntax-tree.v1", "typed-tree.v1", ["component.parser"], "partial"],
+        ["component.lower", "transform", 1, "typed-tree.v1", "canonical-ir.v1", ["component.semantic"], "partial"],
+        ["component.vm", "runtime", 1, "canonical-ir.v1", "runtime-value.v1", ["component.lower"], "implemented"],
+        ["component.host", "host-adapter", 1, "capability-request.v1", "host-response.v1", [], "partial"],
+        ["component.tests", "test", 1, "source-or-ir.v1", "verification-report.v1", [], "implemented"]
+    ]
+}
+
+craft component_find(identifier) {
+    vary found := nothing
+    each component in component_catalog() {
+        when component[0] == identifier {
+            change found := component
+        }
+    }
+    yield found
+}
+
+export craft component_validate_descriptor(component) {
+    when kind(component) != "list" or size(component) != 7 {
+        yield false
+    }
+    when kind(component[0]) != "text" or component[0] == "" or not contains(component_kinds(), component[1]) {
+        yield false
+    }
+    when kind(component[2]) != "number" or component[2] < 1 or component[2] % 1 != 0 {
+        yield false
+    }
+    when kind(component[3]) != "text" or kind(component[4]) != "text" or kind(component[5]) != "list" {
+        yield false
+    }
+    when not contains(["implemented", "partial", "planned"], component[6]) or size(unique(component[5])) != size(component[5]) {
+        yield false
+    }
+    each dependency in component[5] {
+        when kind(dependency) != "text" or dependency == component[0] {
+            yield false
+        }
+    }
+    yield true
+}
+
+export craft component_validate_catalog() {
+    vary identifiers := []
+    each component in component_catalog() {
+        when not component_validate_descriptor(component) {
+            yield false
+        }
+        change identifiers := push(identifiers, component[0])
+    }
+    yield size(unique(identifiers)) == size(identifiers)
+}
+
+export craft component_validate_graph(components) {
+    when kind(components) != "list" or size(components) == 0 {
+        yield false
+    }
+    vary completed := []
+    each component in components {
+        when not component_validate_descriptor(component) or contains(completed, component[0]) {
+            yield false
+        }
+        each dependency in component[5] {
+            when not contains(completed, dependency) {
+                yield false
+            }
+        }
+        change completed := push(completed, component[0])
+    }
+    yield true
+}
+
+export craft component_graph_order(components) {
+    when not component_validate_graph(components) {
+        yield nothing
+    }
+    vary order := []
+    each component in components {
+        change order := push(order, component[0])
+    }
+    yield order
+}
+
+export craft block_operation_kinds() {
+    yield ["load", "store", "call", "branch", "return", "emit", "effect"]
+}
+
+export craft block_validate_instruction(instruction) {
+    when kind(instruction) != "list" or size(instruction) != 3 {
+        yield false
+    }
+    when kind(instruction[0]) != "text" or instruction[0] == "" or not contains(block_operation_kinds(), instruction[1]) or kind(instruction[2]) != "text" {
+        yield false
+    }
+    yield true
+}
+
+export craft block_validate_descriptor(block) {
+    when kind(block) != "list" or size(block) != 6 {
+        yield false
+    }
+    when kind(block[0]) != "text" or block[0] == "" or kind(block[1]) != "text" or block[1] == "" or kind(block[2]) != "text" or block[2] == "" {
+        yield false
+    }
+    when kind(block[3]) != "list" or kind(block[4]) != "list" or kind(block[5]) != "list" or size(block[3]) == 0 {
+        yield false
+    }
+    vary instruction_ids := []
+    each instruction in block[3] {
+        when not block_validate_instruction(instruction) or contains(instruction_ids, instruction[0]) {
+            yield false
+        }
+        change instruction_ids := push(instruction_ids, instruction[0])
+    }
+    each value in block[4] {
+        when kind(value) != "text" or value == "" {
+            yield false
+        }
+    }
+    each effect in block[5] {
+        when not contains(previous["module_effect_kinds"](), effect) {
+            yield false
+        }
+    }
+    yield size(unique(block[4])) == size(block[4]) and size(unique(block[5])) == size(block[5])
+}
+
+export craft block_validate_control_flow(blocks) {
+    when kind(blocks) != "list" or size(blocks) == 0 {
+        yield false
+    }
+    vary identifiers := []
+    each block in blocks {
+        when not block_validate_descriptor(block) or contains(identifiers, block[0]) {
+            yield false
+        }
+        change identifiers := push(identifiers, block[0])
+    }
+    yield true
+}
+
+export craft block_find(blocks, identifier) {
+    vary found := nothing
+    each block in blocks {
+        when block[0] == identifier {
+            change found := block
+        }
+    }
+    yield found
+}
+
+export craft block_validate_branch(blocks, branch) {
+    when kind(branch) != "list" or size(branch) != 2 or kind(branch[0]) != "text" or kind(branch[1]) != "text" {
+        yield false
+    }
+    yield block_find(blocks, branch[0]) != nothing and block_find(blocks, branch[1]) != nothing and branch[0] != branch[1]
+}
+
+export craft node_kinds() {
+    yield ["source", "operation", "decision", "merge", "terminal", "host-call", "resource"]
+}
+
+export craft node_catalog() {
+    yield [
+        ["node.source", "source", "source input", [], ["source-text.v1"], "implemented"],
+        ["node.lex", "operation", "lexer", ["source-text.v1"], ["token-stream.v1"], "implemented"],
+        ["node.parse", "operation", "parser", ["token-stream.v1"], ["syntax-tree.v1"], "implemented"],
+        ["node.analyze", "operation", "semantic analysis", ["syntax-tree.v1"], ["typed-tree.v1"], "partial"],
+        ["node.lower", "operation", "IR lowering", ["typed-tree.v1"], ["canonical-ir.v1"], "partial"],
+        ["node.execute", "operation", "execution engine", ["canonical-ir.v1"], ["runtime-value.v1"], "implemented"],
+        ["node.host", "host-call", "host adapter", ["capability-request.v1"], ["host-response.v1"], "partial"],
+        ["node.end", "terminal", "program output", ["runtime-value.v1"], ["output.v1"], "implemented"]
+    ]
+}
+
+craft node_find(nodes, identifier) {
+    vary found := nothing
+    each node in nodes {
+        when node[0] == identifier {
+            change found := node
+        }
+    }
+    yield found
+}
+
+craft node_index(nodes, identifier) {
+    vary position := 0
+    each node in nodes {
+        when node[0] == identifier {
+            yield position
+        }
+        change position := position + 1
+    }
+    yield nothing
+}
+
+export craft node_validate_descriptor(node) {
+    when kind(node) != "list" or size(node) != 6 {
+        yield false
+    }
+    when kind(node[0]) != "text" or node[0] == "" or not contains(node_kinds(), node[1]) {
+        yield false
+    }
+    when kind(node[2]) != "text" or node[2] == "" or kind(node[3]) != "list" or kind(node[4]) != "list" or not contains(["implemented", "partial", "planned"], node[5]) {
+        yield false
+    }
+    when size(unique(node[3])) != size(node[3]) or size(unique(node[4])) != size(node[4]) {
+        yield false
+    }
+    each interface_id in node[3] {
+        when kind(interface_id) != "text" or interface_id == "" {
+            yield false
+        }
+    }
+    each interface_id in node[4] {
+        when kind(interface_id) != "text" or interface_id == "" {
+            yield false
+        }
+    }
+    yield true
+}
+
+export craft node_validate_graph(nodes, edges) {
+    when kind(nodes) != "list" or kind(edges) != "list" or size(nodes) == 0 {
+        yield false
+    }
+    vary identifiers := []
+    each node in nodes {
+        when not node_validate_descriptor(node) or contains(identifiers, node[0]) {
+            yield false
+        }
+        change identifiers := push(identifiers, node[0])
+    }
+    vary seen_edges := []
+    each edge in edges {
+        when kind(edge) != "list" or size(edge) != 3 or kind(edge[0]) != "text" or kind(edge[1]) != "text" or kind(edge[2]) != "text" or edge[0] == edge[1] or not contains(identifiers, edge[0]) or not contains(identifiers, edge[1]) {
+            yield false
+        }
+        make source := node_find(nodes, edge[0])
+        make target := node_find(nodes, edge[1])
+        when not contains(source[4], edge[2]) or not contains(target[3], edge[2]) {
+            yield false
+        }
+        when node_index(nodes, edge[0]) >= node_index(nodes, edge[1]) or contains(seen_edges, edge) {
+            yield false
+        }
+        change seen_edges := push(seen_edges, edge)
+    }
+    yield true
+}
+
+export craft node_topological_order(nodes, edges) {
+    when not node_validate_graph(nodes, edges) {
+        yield nothing
+    }
+    vary order := []
+    each node in nodes {
+        change order := push(order, node[0])
+    }
+    yield order
+}
+
+export craft interface_directions() {
+    yield ["provides", "consumes", "both"]
+}
+
+export craft interface_catalog() {
+    yield [
+        ["source-text.v1", 1, 0, "both", "text/utf-8", 4194304],
+        ["token-stream.v1", 1, 0, "both", "token-array", 1048576],
+        ["syntax-tree.v1", 1, 0, "both", "ast-json", 1048576],
+        ["typed-tree.v1", 1, 0, "both", "typed-ast", 1048576],
+        ["canonical-ir.v1", 1, 0, "both", "reaper-ir", 1048576],
+        ["capability-request.v1", 1, 0, "both", "system-runtime-request", 1048576],
+        ["host-response.v1", 1, 0, "both", "system-runtime-response", 1048576],
+        ["runtime-value.v1", 1, 0, "both", "runtime-value", 1048576]
+    ]
+}
+
+craft interface_find(identifier) {
+    vary found := nothing
+    each item in interface_catalog() {
+        when item[0] == identifier {
+            change found := item
+        }
+    }
+    yield found
+}
+
+export craft interface_validate_descriptor(descriptor) {
+    when kind(descriptor) != "list" or size(descriptor) != 6 {
+        yield false
+    }
+    when kind(descriptor[0]) != "text" or kind(descriptor[1]) != "number" or kind(descriptor[2]) != "number" or not contains(interface_directions(), descriptor[3]) or kind(descriptor[4]) != "text" or descriptor[4] == "" {
+        yield false
+    }
+    when descriptor[1] < 1 or descriptor[2] < 0 or descriptor[1] % 1 != 0 or descriptor[2] % 1 != 0 or kind(descriptor[5]) != "number" or descriptor[5] < 1 or descriptor[5] > 4194304 or descriptor[5] % 1 != 0 {
+        yield false
+    }
+    make known := interface_find(descriptor[0])
+    when known == nothing {
+        yield false
+    }
+    yield descriptor[1] == known[1] and descriptor[2] <= known[2] and descriptor[4] == known[4] and descriptor[5] <= known[5]
+}
+
+export craft interface_validate_compatibility(producer, consumer) {
+    when not interface_validate_descriptor(producer) or not interface_validate_descriptor(consumer) {
+        yield false
+    }
+    when producer[0] != consumer[0] or producer[1] != consumer[1] {
+        yield false
+    }
+    yield (producer[3] == "provides" or producer[3] == "both") and (consumer[3] == "consumes" or consumer[3] == "both") and producer[4] == consumer[4]
+}
+
+export craft protocol_transports() {
+    yield ["in-process", "json-file", "native-ffi", "dabi64-ipc", "none"]
+}
+
+export craft protocol_catalog() {
+    yield [
+        ["reaper.module-import.v1", 1, "in-process", "synchronous", "canonical-path", 2000000, "implemented"],
+        ["reaper.device-snapshot.v1", 1, "json-file", "file-atomic", "sha256-digest", 1048576, "implemented"],
+        ["reaper.pytyliki-ffi.v1", 1, "native-ffi", "synchronous", "trusted-library-path", 1048576, "opt-in"],
+        ["reaper.system-runtime.v1", 1, "dabi64-ipc", "request-response", "host-derived-identity", 1048576, "partial"],
+        ["reaper.remote-network.v1", 1, "none", "disabled", "not-applicable", 0, "planned"]
+    ]
+}
+
+craft protocol_find(identifier) {
+    vary found := nothing
+    each protocol in protocol_catalog() {
+        when protocol[0] == identifier {
+            change found := protocol
+        }
+    }
+    yield found
+}
+
+export craft protocol_validate_descriptor(protocol) {
+    when kind(protocol) != "list" or size(protocol) != 7 {
+        yield false
+    }
+    when kind(protocol[0]) != "text" or protocol[0] == "" or kind(protocol[1]) != "number" or protocol[1] < 1 or protocol[1] % 1 != 0 or not contains(protocol_transports(), protocol[2]) {
+        yield false
+    }
+    when kind(protocol[3]) != "text" or protocol[3] == "" or kind(protocol[4]) != "text" or protocol[4] == "" or kind(protocol[5]) != "number" or protocol[5] < 0 or protocol[5] > 4194304 or protocol[5] % 1 != 0 {
+        yield false
+    }
+    make known := protocol_find(protocol[0])
+    when known == nothing {
+        yield false
+    }
+    yield protocol == known
+}
+
+export craft protocol_validate_selection(identifier, enabled) {
+    make protocol := protocol_find(identifier)
+    when protocol == nothing {
+        yield false
+    }
+    when protocol[6] == "planned" {
+        yield false
+    }
+    when protocol[6] == "opt-in" {
+        yield enabled == true
+    }
+    yield enabled == false or enabled == true
+}
+
+export craft protocol_validate_payload(identifier, payload_bytes) {
+    make protocol := protocol_find(identifier)
+    when protocol == nothing or protocol[6] == "planned" {
+        yield false
+    }
+    yield kind(payload_bytes) == "number" and payload_bytes >= 0 and payload_bytes <= protocol[5] and payload_bytes % 1 == 0
+}
+
+export craft foundation_tenth_five() {
+    yield [
+        ["foundation.component.v1", "Component", "typed reusable component contracts and dependency graph", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_46_50.md"],
+        ["foundation.block.v1", "Block", "bounded instruction blocks, effects and control-flow references", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_46_50.md"],
+        ["foundation.node.v1", "Node", "typed graph nodes and interface-compatible edges", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_46_50.md"],
+        ["foundation.interface.v1", "Interface", "versioned data interface and compatibility negotiation", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_46_50.md"],
+        ["foundation.protocol.v1", "Protocol", "transport, framing, provenance and explicit opt-in profiles", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_46_50.md"]
+    ]
+}
+
+export craft foundation_all_frameworks_50() {
+    vary rows := previous["foundation_all_frameworks_45"]()
+    each row in foundation_tenth_five() {
+        change rows := push(rows, row)
+    }
+    yield rows
+}
+
+export craft foundation_validate_catalog_50() {
+    make rows := foundation_all_frameworks_50()
+    vary identifiers := []
+    each row in rows {
+        when size(row) != 5 {
+            yield false
+        }
+        change identifiers := push(identifiers, row[0])
+    }
+    yield previous["foundation_validate_catalog_45"]() and size(rows) == 50 and size(unique(identifiers)) == 50
+}

@@ -1,0 +1,8 @@
+import "../frameworks/foundation_46_50.rpr" as graph
+
+emit "All fifty frameworks valid = " ++ text(graph["foundation_validate_catalog_50"]())
+emit "Component catalog valid = " ++ text(graph["component_validate_catalog"]())
+emit "Block valid = " ++ text(graph["block_validate_descriptor"](["entry", "typed-input.v1", "typed-output.v1", [["load-x", "load", "u32"]], ["x"], ["pure"]]))
+emit "Interface compatible = " ++ text(graph["interface_validate_compatibility"](["token-stream.v1", 1, 0, "provides", "token-array", 1024], ["token-stream.v1", 1, 0, "consumes", "token-array", 1024]))
+emit "FFI protocol enabled = " ++ text(graph["protocol_validate_selection"]("reaper.pytyliki-ffi.v1", true))
+emit "System payload valid = " ++ text(graph["protocol_validate_payload"]("reaper.system-runtime.v1", 4096))
