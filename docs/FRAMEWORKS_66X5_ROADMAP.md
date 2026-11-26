@@ -44,16 +44,16 @@ Each numbered row is one independent implementation batch with five framework sl
 | 19 | Ядро | 5 | Tests first — implementation next |
 | 20 | Библиотека | 5 | Tests first — implementation next |
 | 21 | Набор инструментов | 5 | Tests first — implementation next |
-| 22 | Инструментарий | 5 | Tests first — implementation next |
-| 23 | Тулкит | 5 | Tests first — implementation next |
-| 24 | Пакет | 5 | Tests first — implementation next |
-| 25 | Стек | 5 | Tests first — implementation next |
-| 26 | Технологический стек | 5 | Tests first — implementation next |
-| 27 | Шаблон | 5 | Tests first — implementation next |
-| 28 | Скелет | 5 | Tests first — implementation next |
-| 29 | Бойлерплейт | 5 | Tests first — implementation next |
-| 30 | Базовый слой | 5 | Tests first — implementation next |
-| 31 | Прослойка | 5 | Tests first — implementation next |
+| 22 | Инструментарий | 5 | Source added — CI pending |
+| 23 | Тулкит | 5 | Source added — CI pending |
+| 24 | Пакет | 5 | Source added — CI pending |
+| 25 | Стек | 5 | Source added — CI pending |
+| 26 | Технологический стек | 5 | Source added — CI pending |
+| 27 | Шаблон | 5 | Source added — CI pending |
+| 28 | Скелет | 5 | Source added — CI pending |
+| 29 | Бойлерплейт | 5 | Source added — CI pending |
+| 30 | Базовый слой | 5 | Source added — CI pending |
+| 31 | Прослойка | 5 | Source added — CI pending |
 | 32 | Мидлвар | 5 | Queued |
 | 33 | Связующее ПО | 5 | Queued |
 | 34 | Контейнер | 5 | Queued |

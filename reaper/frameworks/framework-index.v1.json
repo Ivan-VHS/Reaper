@@ -99,160 +99,160 @@
       "slug": "12-construction",
       "name": "Конструкция",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 13,
       "slug": "13-ecosystem",
       "name": "Экосистема",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 14,
       "slug": "14-overlay",
       "name": "Надстройка",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 15,
       "slug": "15-shell",
       "name": "Оболочка",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 16,
       "slug": "16-runtime",
       "name": "Рантайм",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 17,
       "slug": "17-execution-environment",
       "name": "Среда выполнения",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 18,
       "slug": "18-engine",
       "name": "Движок",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 19,
       "slug": "19-kernel",
       "name": "Ядро",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 20,
       "slug": "20-library",
       "name": "Библиотека",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 21,
       "slug": "21-tool-suite",
       "name": "Набор инструментов",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 22,
       "slug": "22-tooling",
       "name": "Инструментарий",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 23,
       "slug": "23-toolkit",
       "name": "Тулкит",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 24,
       "slug": "24-package",
       "name": "Пакет",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 25,
       "slug": "25-stack",
       "name": "Стек",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 26,
       "slug": "26-technology-stack",
       "name": "Технологический стек",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 27,
       "slug": "27-template",
       "name": "Шаблон",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 28,
       "slug": "28-skeleton",
       "name": "Скелет",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 29,
       "slug": "29-boilerplate",
       "name": "Бойлерплейт",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 30,
       "slug": "30-base-layer",
       "name": "Базовый слой",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 31,
       "slug": "31-interlayer",
       "name": "Прослойка",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "tests-first"
+      "source_frameworks": 5,
+      "state": "source-added-ci-pending"
     },
     {
       "number": 32,
