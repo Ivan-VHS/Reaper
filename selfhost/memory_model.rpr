@@ -1,0 +1,160 @@
+# Explicit region allocation ledger for the Reaper runtime.
+# This is a deterministic ownership/accounting model, not a physical allocator.
+# Region: ["region", name, capacity, used, next_id, records].
+# Record: [allocation_id, byte_count, "live" | "released"].
+# Handle: ["handle", allocation_id, byte_count].
+
+craft memory_region_make(name, capacity) {
+    when size(name) == 0 { yield ["ERR", "memory region name is empty"] }
+    when capacity < 0 { yield ["ERR", "memory region capacity cannot be negative"] }
+    yield ["OK", ["region", name, capacity, 0, 1, []]]
+}
+
+craft memory_record_find(records, requested_id) {
+    vary index := 0
+    loop while index < size(records) {
+        when records[index][0] == requested_id { yield ["OK", index] }
+        change index := index + 1
+    }
+    yield ["ERR", "allocation handle does not exist", requested_id]
+}
+
+craft memory_region_valid(region) {
+    when size(region) != 6 { yield false }
+    when region[0] != "region" or size(region[1]) == 0 { yield false }
+    when region[2] < 0 or region[3] < 0 or region[3] > region[2] { yield false }
+    when region[4] < 1 { yield false }
+
+    vary live_bytes := 0
+    vary index := 0
+    loop while index < size(region[5]) {
+        make record := region[5][index]
+        when size(record) != 3 or record[0] < 1 or record[1] < 1 { yield false }
+        when record[2] != "live" and record[2] != "released" { yield false }
+        vary previous := 0
+        loop while previous < index {
+            when region[5][previous][0] == record[0] { yield false }
+            change previous := previous + 1
+        }
+        when record[2] == "live" { change live_bytes := live_bytes + record[1] }
+        change index := index + 1
+    }
+    yield live_bytes == region[3]
+}
+
+craft memory_region_allocate(region, byte_count) {
+    when not memory_region_valid(region) { yield ["ERR", "memory region ledger is invalid"] }
+    when byte_count < 1 { yield ["ERR", "allocation size must be positive"] }
+    when region[3] + byte_count > region[2] {
+        yield ["ERR", "memory region capacity exceeded", region[2], region[3], byte_count]
+    }
+
+    make allocation_id := region[4]
+    make record := [allocation_id, byte_count, "live"]
+    make records := push(region[5], record)
+    make updated := ["region", region[1], region[2], region[3] + byte_count, allocation_id + 1, records]
+    yield ["OK", updated, ["handle", allocation_id, byte_count]]
+}
+
+craft memory_region_release(region, handle) {
+    when not memory_region_valid(region) { yield ["ERR", "memory region ledger is invalid"] }
+    when size(handle) != 3 or handle[0] != "handle" { yield ["ERR", "allocation handle is malformed"] }
+    make found := memory_record_find(region[5], handle[1])
+    when found[0] != "OK" { yield found }
+
+    make record := region[5][found[1]]
+    when record[2] != "live" { yield ["ERR", "allocation was already released", handle[1]] }
+    when record[1] != handle[2] { yield ["ERR", "stale allocation handle size", handle[1]] }
+
+    vary records := []
+    vary index := 0
+    loop while index < size(region[5]) {
+        when index == found[1] {
+            change records := push(records, [record[0], record[1], "released"])
+        } otherwise {
+            change records := push(records, region[5][index])
+        }
+        change index := index + 1
+    }
+    make updated := ["region", region[1], region[2], region[3] - record[1], region[4], records]
+    yield ["OK", updated]
+}
+
+craft memory_region_resize(region, handle, new_size) {
+    when not memory_region_valid(region) { yield ["ERR", "memory region ledger is invalid"] }
+    when size(handle) != 3 or handle[0] != "handle" { yield ["ERR", "allocation handle is malformed"] }
+    when new_size < 1 { yield ["ERR", "resized allocation must remain positive"] }
+    make found := memory_record_find(region[5], handle[1])
+    when found[0] != "OK" { yield found }
+    make record := region[5][found[1]]
+    when record[2] != "live" or record[1] != handle[2] {
+        yield ["ERR", "allocation handle is stale", handle[1]]
+    }
+
+    make next_used := region[3] - record[1] + new_size
+    when next_used > region[2] {
+        yield ["ERR", "memory region capacity exceeded", region[2], next_used]
+    }
+
+    vary records := []
+    vary index := 0
+    loop while index < size(region[5]) {
+        when index == found[1] {
+            change records := push(records, [record[0], new_size, "live"])
+        } otherwise {
+            change records := push(records, region[5][index])
+        }
+        change index := index + 1
+    }
+    make updated := ["region", region[1], region[2], next_used, region[4], records]
+    yield ["OK", updated, ["handle", handle[1], new_size]]
+}
+
+craft memory_region_stats(region) {
+    when not memory_region_valid(region) { yield ["ERR", "memory region ledger is invalid"] }
+    vary live_allocations := 0
+    vary released_allocations := 0
+    vary index := 0
+    loop while index < size(region[5]) {
+        when region[5][index][2] == "live" {
+            change live_allocations := live_allocations + 1
+        } otherwise {
+            change released_allocations := released_allocations + 1
+        }
+        change index := index + 1
+    }
+    yield ["OK", [region[1], region[2], region[3], region[2] - region[3], live_allocations, released_allocations]]
+}
+
+craft memory_region_destroy(region) {
+    when not memory_region_valid(region) { yield ["ERR", "memory region ledger is invalid"] }
+    when region[3] != 0 { yield ["ERR", "cannot destroy a region with live allocations", region[3]] }
+    yield ["OK", ["destroyed", region[1]]]
+}
+
+make created := memory_region_make("compiler-arena", 128)
+assert(created[0] == "OK", "memory region creation failed")
+make allocated := memory_region_allocate(created[1], 32)
+assert(allocated[0] == "OK", "valid allocation failed")
+assert(memory_region_valid(allocated[1]), "allocation broke region accounting")
+make second := memory_region_allocate(allocated[1], 64)
+assert(second[0] == "OK", "second allocation failed")
+assert(memory_region_allocate(second[1], 40)[0] == "ERR", "capacity overrun accepted")
+make resized := memory_region_resize(second[1], allocated[2], 48)
+assert(resized[0] == "OK", "allocation resize failed")
+assert(resized[1][3] == 112, "resize accounting mismatch")
+assert(memory_region_release(resized[1], allocated[2])[0] == "ERR", "stale handle accepted after resize")
+make released := memory_region_release(resized[1], resized[2])
+assert(released[0] == "OK", "valid release failed")
+assert(memory_region_release(released[1], resized[2])[0] == "ERR", "double release accepted")
+assert(memory_region_valid(released[1]), "release broke region accounting")
+make stats := memory_region_stats(released[1])
+assert(stats == ["OK", ["compiler-arena", 128, 64, 64, 1, 1]], "memory region statistics mismatch")
+assert(memory_region_destroy(released[1])[0] == "ERR", "live allocation region destroyed")
+make final_release := memory_region_release(released[1], second[2])
+assert(final_release[0] == "OK", "second handle release failed")
+assert(memory_region_destroy(final_release[1]) == ["OK", ["destroyed", "compiler-arena"]], "empty region destruction failed")
+assert(memory_region_make("", 10)[0] == "ERR", "empty region name accepted")
+assert(memory_region_make("bad", -1)[0] == "ERR", "negative region size accepted")
+
+emit "SELFHOST_MEMORY_MODEL_OK"

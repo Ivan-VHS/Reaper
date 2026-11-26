@@ -1,0 +1,142 @@
+# Reaper-native ownership state transitions and borrow-conflict checking.
+# Binding: ["owned", name, scope_id, state].
+# Loan: [loan_id, owner_name, start, end, mode, state].
+# Modes are "shared" and "mutable"; source ranges are half-open.
+
+craft ownership_binding_make(name, scope_id) {
+    when size(name) == 0 { yield ["ERR", "binding name is empty"] }
+    when scope_id < 0 { yield ["ERR", "scope id must be non-negative"] }
+    yield ["OK", ["owned", name, scope_id, "live"]]
+}
+
+craft ownership_binding_usable(binding) {
+    when size(binding) != 4 { yield false }
+    yield binding[0] == "owned" and binding[3] == "live"
+}
+
+craft ownership_move(binding) {
+    when not ownership_binding_usable(binding) {
+        yield ["ERR", "cannot move a non-live binding"]
+    }
+    yield ["OK", ["owned", binding[1], binding[2], "moved"]]
+}
+
+craft ownership_drop(binding, loans) {
+    when not ownership_binding_usable(binding) {
+        yield ["ERR", "cannot drop a non-live binding"]
+    }
+    vary index := 0
+    loop while index < size(loans) {
+        when loans[index][1] == binding[1] and loans[index][5] == "active" {
+            yield ["ERR", "cannot drop a binding with active loans", loans[index][0]]
+        }
+        change index := index + 1
+    }
+    yield ["OK", ["owned", binding[1], binding[2], "dropped"]]
+}
+
+craft ownership_binding_use(binding) {
+    when not ownership_binding_usable(binding) {
+        yield ["ERR", "use after move or drop", binding[1]]
+    }
+    yield ["OK", binding[1]]
+}
+
+craft ownership_loan_conflicts(loans, owner, start, finish, mode) {
+    vary index := 0
+    loop while index < size(loans) {
+        make loan := loans[index]
+        when loan[1] == owner and loan[5] == "active" and start < loan[3] and loan[2] < finish {
+            when mode == "mutable" or loan[4] == "mutable" {
+                yield ["ERR", "borrow conflicts with an active loan", loan[0]]
+            }
+        }
+        change index := index + 1
+    }
+    yield ["OK", false]
+}
+
+craft ownership_loan_acquire(loans, next_id, owner, start, finish, mode) {
+    when next_id < 1 { yield ["ERR", "loan id must be positive"] }
+    when size(owner) == 0 { yield ["ERR", "loan owner is empty"] }
+    when start < 0 or finish < start { yield ["ERR", "loan span is invalid"] }
+    when mode != "shared" and mode != "mutable" { yield ["ERR", "unknown loan mode", mode] }
+    make conflict := ownership_loan_conflicts(loans, owner, start, finish, mode)
+    when conflict[0] != "OK" { yield conflict }
+    make loan := [next_id, owner, start, finish, mode, "active"]
+    yield ["OK", push(loans, loan), loan, next_id + 1]
+}
+
+craft ownership_loan_release(loans, requested_id) {
+    vary index := 0
+    vary found := -1
+    loop while index < size(loans) {
+        when loans[index][0] == requested_id { change found := index }
+        change index := index + 1
+    }
+    when found < 0 { yield ["ERR", "loan does not exist", requested_id] }
+    when loans[found][5] != "active" { yield ["ERR", "loan was already released", requested_id] }
+
+    vary updated := []
+    change index := 0
+    loop while index < size(loans) {
+        when index == found {
+            change updated := push(updated, [loans[index][0], loans[index][1], loans[index][2], loans[index][3], loans[index][4], "released"])
+        } otherwise {
+            change updated := push(updated, loans[index])
+        }
+        change index := index + 1
+    }
+    yield ["OK", updated]
+}
+
+craft ownership_loans_valid(loans) {
+    vary index := 0
+    loop while index < size(loans) {
+        when size(loans[index]) != 6 { yield false }
+        when loans[index][0] < 1 or size(loans[index][1]) == 0 { yield false }
+        when loans[index][2] < 0 or loans[index][3] < loans[index][2] { yield false }
+        when loans[index][4] != "shared" and loans[index][4] != "mutable" { yield false }
+        when loans[index][5] != "active" and loans[index][5] != "released" { yield false }
+        vary previous := 0
+        loop while previous < index {
+            when loans[previous][0] == loans[index][0] { yield false }
+            when loans[previous][1] == loans[index][1] and loans[previous][5] == "active" and loans[index][5] == "active" and loans[index][2] < loans[previous][3] and loans[previous][2] < loans[index][3] {
+                when loans[previous][4] == "mutable" or loans[index][4] == "mutable" {
+                    yield false
+                }
+            }
+            change previous := previous + 1
+        }
+        change index := index + 1
+    }
+    yield true
+}
+
+make binding := ownership_binding_make("buffer", 3)
+assert(binding[0] == "OK", "valid owned binding rejected")
+assert(ownership_binding_use(binding[1]) == ["OK", "buffer"], "live binding is not usable")
+make moved := ownership_move(binding[1])
+assert(moved[0] == "OK", "valid move failed")
+assert(ownership_binding_use(moved[1])[0] == "ERR", "moved binding remained usable")
+assert(ownership_drop(moved[1], [])[0] == "ERR", "moved binding was dropped")
+
+make first_loan := ownership_loan_acquire([], 1, "buffer", 0, 16, "shared")
+assert(first_loan[0] == "OK", "first shared loan failed")
+make second_loan := ownership_loan_acquire(first_loan[1], 2, "buffer", 8, 24, "shared")
+assert(second_loan[0] == "OK", "overlapping shared loans must coexist")
+assert(ownership_loan_acquire(second_loan[1], 3, "buffer", 12, 18, "mutable")[0] == "ERR", "mutable overlap with shared loans accepted")
+assert(ownership_loan_acquire(second_loan[1], 3, "buffer", 24, 32, "mutable")[0] == "OK", "disjoint mutable loan rejected")
+assert(ownership_drop(binding[1], second_loan[1])[0] == "ERR", "binding dropped while loans were active")
+
+make released := ownership_loan_release(second_loan[1], 1)
+assert(released[0] == "OK", "loan release failed")
+assert(ownership_loan_release(released[1], 1)[0] == "ERR", "double loan release accepted")
+assert(ownership_loan_acquire(released[1], 4, "buffer", 0, 16, "mutable")[0] == "ERR", "active second shared loan conflict was missed")
+assert(ownership_loans_valid(second_loan[1]), "valid shared loan set rejected")
+assert(not ownership_loans_valid([first_loan[2], [2, "buffer", 4, 8, "mutable", "active"]]), "conflicting loan set accepted")
+make released_second := ownership_loan_release(released[1], 2)
+make released_disjoint := ownership_loan_release(released_second[1], 3)
+assert(ownership_drop(binding[1], released_disjoint[1])[0] == "OK", "binding drop after loan release failed")
+
+emit "SELFHOST_OWNERSHIP_OK"
