@@ -28,10 +28,16 @@ export craft validate_contract(contract) {
         }
         when not uu["all_unique"](field_names) { change errors := push(errors, ["duplicate-field"]) }
     }
-    when kind(contract[4]) != "list" { change errors := push(errors, ["contract-effects"]) }
-    when kind(contract[5]) != "list" { change errors := push(errors, ["contract-capabilities"]) }
-    when not uu["all_unique"](contract[4]) { change errors := push(errors, ["duplicate-effect"]) }
-    when not uu["all_unique"](contract[5]) { change errors := push(errors, ["duplicate-capability"]) }
+    when kind(contract[4]) != "list" {
+        change errors := push(errors, ["contract-effects"])
+    } otherwise {
+        when not uu["all_unique"](contract[4]) { change errors := push(errors, ["duplicate-effect"]) }
+    }
+    when kind(contract[5]) != "list" {
+        change errors := push(errors, ["contract-capabilities"])
+    } otherwise {
+        when not uu["all_unique"](contract[5]) { change errors := push(errors, ["duplicate-capability"]) }
+    }
     yield [size(errors) == 0, errors]
 }
 
