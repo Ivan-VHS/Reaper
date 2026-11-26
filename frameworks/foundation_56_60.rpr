@@ -1,0 +1,285 @@
+# Twelfth group of Reaper foundations.
+import "foundation_51_55.rpr" as previous
+
+export make FOUNDATION_TWELFTH_SCHEMA := "reaper.foundation.twelfth.v1"
+export make FOUNDATION_TWELFTH_VERSION := 1
+
+export craft grid_axis_kinds() {
+    yield ["row", "column", "layer", "time", "target"]
+}
+
+export craft grid_validate_axis(axis) {
+    when kind(axis) != "list" or size(axis) != 3 {
+        yield false
+    }
+    when not contains(grid_axis_kinds(), axis[0]) or kind(axis[1]) != "text" or axis[1] == "" or kind(axis[2]) != "number" or axis[2] < 1 or axis[2] % 1 != 0 {
+        yield false
+    }
+    yield true
+}
+
+export craft grid_validate_descriptor(grid) {
+    when kind(grid) != "list" or size(grid) != 4 or kind(grid[0]) != "text" or grid[0] == "" or kind(grid[1]) != "list" or size(grid[1]) < 2 or kind(grid[2]) != "list" or kind(grid[3]) != "list" {
+        yield false
+    }
+    vary kinds := []
+    vary names := []
+    each axis in grid[1] {
+        when not grid_validate_axis(axis) or contains(kinds, axis[0]) or contains(names, axis[1]) {
+            yield false
+        }
+        change kinds := push(kinds, axis[0])
+        change names := push(names, axis[1])
+    }
+    yield size(grid[2]) > 0 and size(grid[3]) > 0 and size(unique(grid[2])) == size(grid[2]) and size(unique(grid[3])) == size(grid[3])
+}
+
+export craft grid_validate_cells(grid, cells) {
+    when not grid_validate_descriptor(grid) or kind(cells) != "list" {
+        yield false
+    }
+    when size(cells) != size(grid[2]) * size(grid[3]) {
+        yield false
+    }
+    vary coordinates := []
+    each cell in cells {
+        when kind(cell) != "list" or size(cell) != 3 or not contains(grid[2], cell[0]) or not contains(grid[3], cell[1]) or kind(cell[2]) != "text" {
+            yield false
+        }
+        when contains(coordinates, [cell[0], cell[1]]) {
+            yield false
+        }
+        change coordinates := push(coordinates, [cell[0], cell[1]])
+    }
+    yield true
+}
+
+export craft grid_validate_coordinate(grid, coordinate) {
+    when not grid_validate_descriptor(grid) or kind(coordinate) != "list" or size(coordinate) != 2 {
+        yield false
+    }
+    yield contains(grid[2], coordinate[0]) and contains(grid[3], coordinate[1])
+}
+
+export craft contour_boundary_kinds() {
+    yield ["input", "output", "control", "resource", "trust"]
+}
+
+export craft contour_validate_port(port) {
+    when kind(port) != "list" or size(port) != 4 {
+        yield false
+    }
+    when kind(port[0]) != "text" or port[0] == "" or not contains(contour_boundary_kinds(), port[1]) or kind(port[2]) != "text" or port[2] == "" or kind(port[3]) != "text" or port[3] == "" {
+        yield false
+    }
+    yield true
+}
+
+export craft contour_validate_descriptor(contour) {
+    when kind(contour) != "list" or size(contour) != 4 or kind(contour[0]) != "text" or contour[0] == "" or kind(contour[1]) != "text" or contour[1] == "" or kind(contour[2]) != "list" or kind(contour[3]) != "list" {
+        yield false
+    }
+    vary identifiers := []
+    each port in contour[2] {
+        when not contour_validate_port(port) or contains(identifiers, port[0]) {
+            yield false
+        }
+        change identifiers := push(identifiers, port[0])
+    }
+    each invariant in contour[3] {
+        when kind(invariant) != "text" or invariant == "" {
+            yield false
+        }
+    }
+    yield size(unique(contour[3])) == size(contour[3])
+}
+
+export craft contour_validate_connection(left, right) {
+    when not contour_validate_port(left) or not contour_validate_port(right) {
+        yield false
+    }
+    yield left[2] == right[2] and left[3] == right[3] and ((left[1] == "output" and right[1] == "input") or (left[1] == "input" and right[1] == "output"))
+}
+
+export craft perimeter_trust_zones() {
+    yield ["untrusted-input", "application", "runtime", "trusted-host", "privileged-adapter"]
+}
+
+export craft perimeter_directions() {
+    yield ["ingress", "egress", "internal"]
+}
+
+export craft perimeter_validate_rule(rule) {
+    when kind(rule) != "list" or size(rule) != 5 {
+        yield false
+    }
+    when not contains(perimeter_trust_zones(), rule[0]) or not contains(perimeter_trust_zones(), rule[1]) or not contains(perimeter_directions(), rule[2]) or kind(rule[3]) != "text" or rule[3] == "" {
+        yield false
+    }
+    yield contains(["allow", "deny", "audit"], rule[4])
+}
+
+export craft perimeter_default_policy() {
+    yield [
+        ["untrusted-input", "application", "ingress", "validated-data-only", "allow"],
+        ["application", "runtime", "internal", "declared-module-api", "allow"],
+        ["application", "trusted-host", "egress", "capability-grant", "deny"],
+        ["runtime", "trusted-host", "egress", "explicit-host-dispatch", "allow"],
+        ["trusted-host", "privileged-adapter", "egress", "reviewed-adapter-only", "deny"]
+    ]
+}
+
+export craft perimeter_validate_policy(policy) {
+    when kind(policy) != "list" or size(policy) == 0 {
+        yield false
+    }
+    vary keys := []
+    each rule in policy {
+        when not perimeter_validate_rule(rule) or contains(keys, [rule[0], rule[1], rule[2], rule[3]]) {
+            yield false
+        }
+        change keys := push(keys, [rule[0], rule[1], rule[2], rule[3]])
+    }
+    yield true
+}
+
+export craft perimeter_decision(policy, source, target, direction, operation) {
+    when not perimeter_validate_policy(policy) {
+        yield "deny"
+    }
+    vary decision := "deny"
+    each rule in policy {
+        when rule[0] == source and rule[1] == target and rule[2] == direction and rule[3] == operation {
+            change decision := rule[4]
+        }
+    }
+    yield decision
+}
+
+export craft working_environment_profiles() {
+    yield [
+        ["developer-host", "hosted-reference", "local", "network-disabled-by-default", "implemented"],
+        ["native-build", "native-c17-host", "local-toolchain", "explicit-tool-invocation", "partial"],
+        ["test-simulator", "simulator-adapter", "isolated-tests", "fake-host-only", "partial"],
+        ["embedded-cross", "freestanding", "cross-toolchain", "hardware-access-disabled", "planned"]
+    ]
+}
+
+craft working_environment_find(identifier) {
+    vary found := nothing
+    each profile in working_environment_profiles() {
+        when profile[0] == identifier {
+            change found := profile
+        }
+    }
+    yield found
+}
+
+export craft working_environment_validate_profile(profile) {
+    when kind(profile) != "list" or size(profile) != 5 {
+        yield false
+    }
+    make known := working_environment_find(profile[0])
+    when known == nothing or known[4] == "planned" {
+        yield false
+    }
+    yield profile == known
+}
+
+export craft working_environment_validate_variables(variables) {
+    when kind(variables) != "list" {
+        yield false
+    }
+    vary names := []
+    each variable in variables {
+        when kind(variable) != "list" or size(variable) != 2 or kind(variable[0]) != "text" or variable[0] == "" or kind(variable[1]) != "text" {
+            yield false
+        }
+        make upper_name := upper(variable[0])
+        when contains(names, variable[0]) or contains(upper_name, "PASSWORD") or contains(upper_name, "TOKEN") or contains(upper_name, "SECRET") or contains(upper_name, "PRIVATE_KEY") {
+            yield false
+        }
+        change names := push(names, variable[0])
+    }
+    yield true
+}
+
+export craft working_environment_requirements() {
+    yield ["profile_id", "toolchain_fingerprint", "locale", "declared_variables", "resource_limits", "network_policy"]
+}
+
+export craft workspace_states() {
+    yield ["clean", "modified", "read-only", "locked", "invalid"]
+}
+
+export craft workspace_validate_root(root) {
+    when kind(root) != "text" or root == "" or starts_with(root, "/") or starts_with(root, "\\") or contains(root, ":") or contains(root, "../") or contains(root, "/..") or contains(root, "\\") {
+        yield false
+    }
+    yield true
+}
+
+export craft workspace_validate_descriptor(workspace) {
+    when kind(workspace) != "list" or size(workspace) != 6 {
+        yield false
+    }
+    when kind(workspace[0]) != "text" or workspace[0] == "" or not workspace_validate_root(workspace[1]) or not workspace_validate_root(workspace[2]) or not workspace_validate_root(workspace[3]) {
+        yield false
+    }
+    when not contains(workspace_states(), workspace[4]) or kind(workspace[5]) != "list" {
+        yield false
+    }
+    when not workspace_validate_membership(workspace, workspace[2]) or not workspace_validate_membership(workspace, workspace[3]) {
+        yield false
+    }
+    each module in workspace[5] {
+        when not previous["module_validate_relative_path"](module) {
+            yield false
+        }
+    }
+    yield size(unique(workspace[5])) == size(workspace[5])
+}
+
+export craft workspace_validate_membership(workspace, path) {
+    when kind(workspace) != "list" or size(workspace) != 6 or not workspace_validate_root(path) {
+        yield false
+    }
+    yield starts_with(path, workspace[1] ++ "/") or path == workspace[1]
+}
+
+export craft workspace_mutation_allowed(workspace) {
+    when kind(workspace) != "list" or size(workspace) != 6 or not contains(workspace_states(), workspace[4]) {
+        yield false
+    }
+    yield workspace[4] == "clean" or workspace[4] == "modified"
+}
+
+export craft foundation_twelfth_five() {
+    yield [
+        ["foundation.grid.v1", "Grid", "coordinate axes, cells and dimension coverage", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_56_60.md"],
+        ["foundation.contour.v1", "Contour", "subsystem ports and boundary invariants", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_56_60.md"],
+        ["foundation.perimeter.v1", "Perimeter", "trust zones, directional rules and deny-by-default decisions", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_56_60.md"],
+        ["foundation.working-environment.v1", "Working Environment", "reproducible developer/test/build environment profiles", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_56_60.md"],
+        ["foundation.workspace.v1", "Workspace", "project roots, module membership and read/write state", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_56_60.md"]
+    ]
+}
+
+export craft foundation_all_frameworks_60() {
+    vary rows := previous["foundation_all_frameworks_55"]()
+    each row in foundation_twelfth_five() {
+        change rows := push(rows, row)
+    }
+    yield rows
+}
+
+export craft foundation_validate_catalog_60() {
+    make rows := foundation_all_frameworks_60()
+    vary identifiers := []
+    each row in rows {
+        when size(row) != 5 {
+            yield false
+        }
+        change identifiers := push(identifiers, row[0])
+    }
+    yield previous["foundation_validate_catalog_55"]() and size(rows) == 60 and size(unique(identifiers)) == 60
+}
