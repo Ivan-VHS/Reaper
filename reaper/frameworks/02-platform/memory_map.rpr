@@ -21,7 +21,7 @@ export craft valid_platform_memory_map(regions) {
         when region[0] < 0 or region[1] < 1 {
             yield false
         }
-        when region[0] + region[1] <= region[0] {
+        when region[0] + region[1] <= region[0] or region[0] + region[1] > 18446744073709551615 {
             yield false
         }
         yield contains(["flash", "ram", "rom", "mmio", "reserved"], region[2])
