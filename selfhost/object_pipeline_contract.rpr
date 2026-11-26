@@ -13,6 +13,13 @@ export craft object_pipeline_status() {
     ]
 }
 
+export craft object_expected_machine(platform, format) {
+    when format == "ELF" and platform[2] == "x86_64" { yield 62 }
+    when format == "ELF" and platform[2] == "aarch64" { yield 183 }
+    when format == "PE_COFF" and platform[2] == "x86_64" { yield 34404 }
+    yield -1
+}
+
 export craft object_request(platform, format, machine, sections, symbols, relocations) {
     yield ["OBJECT_REQUEST_V1", platform[1], format, machine, sections, symbols, relocations]
 }
@@ -34,6 +41,9 @@ export craft object_request_validate(request, platform) {
     }
     when request[2] != "ELF" and request[2] != "PE_COFF" {
         yield [false, "RPR-OBJ-0005", "object format is not supported by the v1 contract"]
+    }
+    when request[3] != object_expected_machine(platform, request[2]) {
+        yield [false, "RPR-OBJ-0011", "machine identifier does not match the target architecture and object format"]
     }
     when size(request[4]) == 0 or size(request[5]) == 0 {
         yield [false, "RPR-OBJ-0006", "object request requires sections and a symbol table"]

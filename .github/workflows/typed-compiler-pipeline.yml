@@ -74,3 +74,33 @@ jobs:
         run: |
           ./build/native-target-smoke > build/native-target-smoke.out
           test "$(cat build/native-target-smoke.out)" = "42"
+
+  native-windows-host-runtime:
+    name: Native host runtime (windows-latest)
+    runs-on: windows-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: mingw-w64-x86_64-gcc
+      - name: Install Reaper reference toolchain
+        run: python -m pip install -e .
+      - name: Compile Reaper source with MinGW GCC
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force build | Out-Null
+          python -m reaper examples/native_target_runtime_smoke.rpr --native build/native-target-smoke.exe --cc C:\msys64\mingw64\bin\gcc.exe
+      - name: Execute the produced Windows binary
+        shell: pwsh
+        run: |
+          $output = & .\build\native-target-smoke.exe
+          if ($LASTEXITCODE -ne 0 -or (($output -join "`n").Trim() -ne "42")) {
+            Write-Error "Unexpected native output: $output"
+            exit 1
+          }

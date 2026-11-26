@@ -3,10 +3,16 @@ import "type_platform.rpr"
 
 make linux := platform_linux_x86_64()
 make elf_request := object_request(linux, "ELF", 62, ["text", "data"], ["main"], [])
+make wrong_elf_request := object_request(linux, "ELF", 183, ["text", "data"], ["main"], [])
+make wrong_elf := object_request_validate(wrong_elf_request, linux)
+assert(not wrong_elf[0] and wrong_elf[1] == "RPR-OBJ-0011", "ELF machine ID must match x86_64")
 make rejected_elf := object_write_elf64(elf_request, linux)
 assert(not rejected_elf[0] and rejected_elf[1] == "RPR-OBJ-0008", "ELF writer must fail closed until serialization exists")
 make windows := platform_windows_x86_64()
 make pe_request := object_request(windows, "PE_COFF", 34404, [".text", ".data"], ["main"], [])
+make wrong_pe_request := object_request(windows, "PE_COFF", 62, [".text"], ["main"], [])
+make wrong_pe := object_request_validate(wrong_pe_request, windows)
+assert(not wrong_pe[0] and wrong_pe[1] == "RPR-OBJ-0011", "PE machine ID must match AMD64")
 make rejected_pe := object_write_pe32_plus(pe_request, windows)
 assert(not rejected_pe[0] and rejected_pe[1] == "RPR-OBJ-0010", "PE writer must fail closed until serialization exists")
 make mixed_objects := link_request_validate([

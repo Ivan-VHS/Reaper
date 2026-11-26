@@ -47,7 +47,7 @@ The v1 classifier returns versioned plans, not executable call sequences:
 - Microsoft x64 classifies 1/2/4/8-byte aggregates as direct GPR values and other sizes as indirect caller storage.
 - AAPCS64 recognizes declared homogeneous `f32`/`f64` aggregates of one to four elements, otherwise uses direct GP passing up to 16 bytes and indirect passing above that.
 
-The signature plan includes argument and result policies and explicitly remains `register_allocation_pending`.
+The `native_abi_lower_aggregate` pass expands the selected policy into explicit byte-offset pieces (SysV eightbytes, AAPCS64 HFA/GP chunks, or an indirect pointer). The result still explicitly remains `register_assignment_and_stack_frame_pending`.
 
 **Boundary:** SysV field merging and class derivation are not yet computed from actual aggregate field trees; SSEUP, x87, vectors, variadic rules, platform-specific coercions, hidden parameters, register exhaustion/spills, stack alignment and final call/return sequences are not implemented. These are ABI planning primitives, not full ABI conformance.
 
@@ -55,7 +55,7 @@ The signature plan includes argument and result policies and explicitly remains 
 
 Source: `selfhost/object_pipeline_contract.rpr`.
 
-The object request requires explicit target identity, matching format, declared process ABI, section and symbol metadata. Link requests reject mixed targets and unverified object inputs. Loader requests require a linked artifact for the exact target and an independent integrity-verification result.
+The object request requires explicit target identity, matching format, architecture-specific machine identifier (ELF x86_64=62, ELF AArch64=183, PE/COFF AMD64=34404), declared process ABI, section and symbol metadata. Link requests reject mixed targets and unverified object inputs. Loader requests require a linked artifact for the exact target and an independent integrity-verification result.
 
 **Status: planned.** The `object_write_elf64`, `object_write_pe32_plus`, `link_executable` and `load_executable` entrypoints intentionally return stable diagnostics instead of placeholder bytes or unsafe execution. ELF headers/sections/symbols/relocations, PE/COFF sections and relocations, symbol resolution, relocation application, executable serialization, import resolution, memory mapping and entrypoint transfer do not yet exist.
 
@@ -63,9 +63,9 @@ The object request requires explicit target identity, matching format, declared 
 
 Workflow: `.github/workflows/typed-compiler-pipeline.yml`.
 
-The workflow runs the Reaper-source conformance modules, then compiles `examples/native_target_runtime_smoke.rpr` through the existing scalar C17 AOT backend and executes the resulting host binary on Linux and macOS runners. The native source is Reaper; Python is only the repository's existing CLI/reference runner and process harness.
+The workflow runs the Reaper-source conformance modules, then compiles `examples/native_target_runtime_smoke.rpr` through the existing scalar C17 AOT backend and executes the resulting host binary on Linux, macOS and Windows runners. The native source is Reaper; Python is only the repository's existing CLI/reference runner and process harness.
 
-**Boundary:** this is real host-native scalar execution. It does not prove the new typed aggregate ABI classifier, generated ELF/PE artifacts, Windows runner execution, DAK runtime compatibility, or cross-compilation to a different target. Those require the corresponding writer/linker/runtime implementation and target-native test fixtures.
+**Boundary:** this is real host-native scalar execution. It does not prove the new typed aggregate ABI classifier, generated ELF/PE artifacts, cross-target execution, DAK runtime compatibility, or cross-compilation to a different target. Those require the corresponding writer/linker/runtime implementation and target-native test fixtures.
 
 ## Acceptance commands
 

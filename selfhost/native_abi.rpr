@@ -113,3 +113,72 @@ export craft native_abi_classify_signature(platform, arguments, result_layout, r
     when not result_plan[0] { yield result_plan }
     yield [true, ["ABI_SIGNATURE_V1", platform[1], platform[9], argument_plans, result_plan[1], "register_allocation_pending"], ""]
 }
+
+export craft native_abi_lower_aggregate(platform, plan, layout) {
+    make checked := platform_validate(platform)
+    when not checked[0] { yield checked }
+    when size(plan) != 9 or plan[0] != "ABI_PLAN_V1" or size(layout) != 3 or layout[0] < 1 or layout[1] < 1 {
+        yield abi_error("RPR-ABI-0012", "aggregate lowering requires a valid ABI plan and positive layout")
+    }
+    when not platform_process_abi_declared(platform) {
+        yield abi_error("RPR-ABI-0008", "platform process ABI is not finalized")
+    }
+    when plan[4] != "direct" and plan[4] != "indirect" {
+        yield abi_error("RPR-ABI-0018", "aggregate ABI plan has an unknown transport mode")
+    }
+    when plan[1] != platform[1] or plan[2] != platform[9] {
+        yield abi_error("RPR-ABI-0013", "ABI plan target does not match the selected platform")
+    }
+    when plan[8] != "classified_not_lowered" {
+        yield abi_error("RPR-ABI-0014", "ABI plan state is not eligible for aggregate piece lowering")
+    }
+
+    vary pieces := []
+    when plan[4] == "indirect" {
+        change pieces := push(pieces, ["ABI_PIECE_V1", "INDIRECT_POINTER", 0, platform[5]])
+    } otherwise {
+        make classes := plan[5]
+        when size(classes) == 0 {
+            yield abi_error("RPR-ABI-0015", "direct aggregate plan has no ABI classes")
+        }
+        when classes[0] == "HFA" {
+            vary index := 0
+            vary element_size := 0
+            when classes[1] == "f32" { change element_size := 4 }
+            when classes[1] == "f64" { change element_size := 8 }
+            when element_size == 0 or classes[2] < 1 or classes[2] > 4 {
+                yield abi_error("RPR-ABI-0016", "HFA lowering requires one to four f32/f64 members")
+            }
+            loop while index < classes[2] {
+                change pieces := push(pieces, ["ABI_PIECE_V1", "HFA_" ++ classes[1], index * element_size, element_size])
+                change index := index + 1
+            }
+        } otherwise {
+            when classes[0] == "INTEGER" and size(classes) == 2 and (classes[1] == 1 or classes[1] == 2) and platform[9] == "AAPCS64" {
+                vary index := 0
+                loop while index < classes[1] {
+                    vary piece_size := layout[0] - (index * 8)
+                    when piece_size > 8 { change piece_size := 8 }
+                    change pieces := push(pieces, ["ABI_PIECE_V1", "INTEGER", index * 8, piece_size])
+                    change index := index + 1
+                }
+            } otherwise {
+                vary index := 0
+                each class_name in classes {
+                    vary piece_size := layout[0] - (index * 8)
+                    when piece_size > 8 { change piece_size := 8 }
+                    when piece_size < 1 {
+                        yield abi_error("RPR-ABI-0017", "ABI class list extends beyond the aggregate layout")
+                    }
+                    change pieces := push(pieces, ["ABI_PIECE_V1", class_name, index * 8, piece_size])
+                    change index := index + 1
+                }
+            }
+        }
+    }
+    yield [true, [
+        "ABI_AGGREGATE_LOWERING_V1", platform[1], platform[9],
+        plan[3], plan[4], pieces, plan[7],
+        "register_assignment_and_stack_frame_pending"
+    ], ""]
+}

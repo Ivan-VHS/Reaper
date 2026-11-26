@@ -15,9 +15,9 @@
 | Canonical typed IR | Versioned typed nodes, checked source spans and one-to-one SourceMap provenance validation | partial; source parser integration and byte-offset spans remain incomplete |
 | Generics and interfaces | Generic parameter binding, bounded constraints, recursive pointer/array/distinct substitution and method-signature conformance | partial; inference, associated-type resolution and native monomorphization remain incomplete |
 | Typed HIR/MIR/LIR | Reaper-native HIR/MIR/LIR containers and checked linear lowering with preserved source provenance and virtual registers | partial; CFG/SSA, optimization, physical registers and machine encoding remain incomplete |
-| Native aggregate ABI | Bounded SysV x86_64, Microsoft x64 and AAPCS64 classification contracts | partial; field-driven class computation, full register assignment and call-frame lowering remain incomplete |
+| Native aggregate ABI | Bounded SysV x86_64, Microsoft x64 and AAPCS64 classification plus byte-offset aggregate piece plans | partial; field-driven class computation, full register assignment and call-frame lowering remain incomplete |
 | ELF/PE object pipeline | Explicit object, linker and loader contracts with fail-closed diagnostics | planned; byte writers, relocation/linking and executable loading are not implemented |
-| Target runtime conformance | Host-native scalar AOT smoke execution on Linux and macOS CI runners | partial; typed aggregate ABI and Windows/DAK target execution are not covered |
+| Target runtime conformance | Host-native scalar AOT smoke execution on Linux, macOS and Windows CI runners | partial; typed aggregate ABI, cross-target execution and DAK runtime are not covered |
 | Native MMIO contract | checked region/register descriptors, widths, bounds, alignment, access policies, capability checks and adapter callbacks | implemented C API; no physical mapping or device driver |
 | LSP semantic tokens and diagnostics | lexical highlighting plus local inferred-type diagnostics from the reference AST checker | stdio LSP; UTF-16 positions; no cross-file type inference |
 | МОСТ | 54 aliases: 21 executable, 33 reserved | mixed |

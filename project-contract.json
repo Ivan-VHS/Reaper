@@ -170,7 +170,7 @@
     {
       "id": "compiler.native-aggregate-abi-classification",
       "status": "partial",
-      "summary": "Bounded aggregate classification plans for SysV x86_64, Microsoft x64 and AAPCS64; field-driven class computation, full register assignment and call frame lowering remain incomplete.",
+      "summary": "Bounded aggregate classification and byte-offset piece lowering plans for SysV x86_64, Microsoft x64 and AAPCS64; field-driven class computation, full register assignment and call-frame lowering remain incomplete.",
       "evidence": [
         "selfhost/native_abi.rpr",
         "selfhost/native_abi_tests.rpr"
@@ -188,7 +188,7 @@
     {
       "id": "compiler.host-native-runtime-smoke",
       "status": "partial",
-      "summary": "The existing scalar C17 AOT path is compiled and executed on Linux and macOS CI hosts; typed aggregate and Windows/DAK target-runtime execution are not covered.",
+      "summary": "The existing scalar C17 AOT path is compiled and executed on Linux, macOS and Windows CI hosts; typed aggregate ABI, cross-target execution and DAK runtime are not covered.",
       "evidence": [
         "examples/native_target_runtime_smoke.rpr",
         ".github/workflows/typed-compiler-pipeline.yml",
