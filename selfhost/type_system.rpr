@@ -1,0 +1,224 @@
+# Reaper-native generic, Result/Option, trait-bound, and effect contracts.
+# This module validates versioned semantic descriptors; it does not claim a
+# complete declaration parser or monomorphizing native generic backend.
+
+export craft type_primitive(name) {
+    yield ["TYPE_V1", "primitive", name]
+}
+
+export craft type_parameter(name, bounds) {
+    yield ["TYPE_V1", "parameter", name, bounds]
+}
+
+export craft type_generic(name, arguments) {
+    yield ["TYPE_V1", "generic", name, arguments]
+}
+
+export craft type_option(value_type) {
+    yield type_generic("Option", [value_type])
+}
+
+export craft type_result(ok_type, error_type) {
+    yield type_generic("Result", [ok_type, error_type])
+}
+
+export craft type_valid(type_value, parameters) {
+    when size(type_value) < 3 or type_value[0] != "TYPE_V1" {
+        yield false
+    }
+    when type_value[1] == "primitive" {
+        yield type_value[2] == "Int" or type_value[2] == "i8" or type_value[2] == "u8" or type_value[2] == "i16" or type_value[2] == "u16" or type_value[2] == "i32" or type_value[2] == "u32" or type_value[2] == "i64" or type_value[2] == "u64" or type_value[2] == "Float" or type_value[2] == "Bool" or type_value[2] == "Text" or type_value[2] == "Unit"
+    }
+    when type_value[1] == "parameter" {
+        when size(type_value) != 4 { yield false }
+        when not contains(parameters, type_value[2]) { yield false }
+        when kind(type_value[3]) != "list" { yield false }
+        yield true
+    }
+    when type_value[1] == "generic" {
+        when size(type_value) != 4 { yield false }
+        make name := type_value[2]
+        make arguments := type_value[3]
+        when name == "Option" and size(arguments) != 1 { yield false }
+        when name == "Result" and size(arguments) != 2 { yield false }
+        when name == "List" and size(arguments) != 1 { yield false }
+        when name == "Map" and size(arguments) != 2 { yield false }
+        when name == "Stream" and size(arguments) != 1 { yield false }
+        when name == "Region" and size(arguments) != 1 { yield false }
+        when size(arguments) > 16 { yield false }
+        each argument in arguments {
+            when not type_valid(argument, parameters) { yield false }
+        }
+        yield true
+    }
+    yield false
+}
+
+export craft generic_substitute(type_value, bindings) {
+    when size(type_value) < 3 or type_value[0] != "TYPE_V1" {
+        yield ["ERROR", "invalid type descriptor"]
+    }
+    when type_value[1] == "parameter" {
+        each binding in bindings {
+            when size(binding) == 2 and binding[0] == type_value[2] {
+                yield ["OK", binding[1]]
+            }
+        }
+        yield ["OK", type_value]
+    }
+    when type_value[1] == "generic" {
+        vary substituted := []
+        each argument in type_value[3] {
+            make result := generic_substitute(argument, bindings)
+            when result[0] == "ERROR" { yield result }
+            change substituted := push(substituted, result[1])
+        }
+        yield ["OK", type_generic(type_value[2], substituted)]
+    }
+    yield ["OK", type_value]
+}
+
+export craft generic_bind(parameter_name, actual_type, bindings) {
+    when parameter_name == "" {
+        yield ["ERROR", "generic parameter name cannot be empty"]
+    }
+    each binding in bindings {
+        when binding[0] == parameter_name {
+            when binding[1] == actual_type { yield ["OK", bindings] }
+            yield ["ERROR", "generic parameter inferred conflicting concrete types"]
+        }
+    }
+    yield ["OK", push(bindings, [parameter_name, actual_type])]
+}
+
+export craft trait_supported(type_value, trait_name) {
+    when size(type_value) < 3 or type_value[0] != "TYPE_V1" { yield false }
+    when type_value[1] != "primitive" { yield false }
+    make name := type_value[2]
+    when trait_name == "Numeric" {
+        yield name == "Int" or name == "Float" or name == "i8" or name == "u8" or name == "i16" or name == "u16" or name == "i32" or name == "u32" or name == "i64" or name == "u64"
+    }
+    when trait_name == "Copy" {
+        yield name == "Int" or name == "Float" or name == "Bool" or name == "i8" or name == "u8" or name == "i16" or name == "u16" or name == "i32" or name == "u32" or name == "i64" or name == "u64"
+    }
+    when trait_name == "Eq" or trait_name == "Ord" or trait_name == "Display" or trait_name == "Clone" {
+        yield true
+    }
+    yield false
+}
+
+export craft generic_bounds_validate(type_value, bounds) {
+    when size(bounds) > 16 { yield ["ERROR", "generic trait bound count exceeds the v1 limit"] }
+    each bound in bounds {
+        when not trait_supported(type_value, bound) {
+            yield ["ERROR", "type does not satisfy the requested trait: " ++ bound]
+        }
+    }
+    yield ["OK", type_value]
+}
+
+export craft effect_known(effect_name) {
+    yield effect_name == "console" or effect_name == "filesystem" or effect_name == "network" or effect_name == "clock" or effect_name == "native" or effect_name == "process" or effect_name == "device" or effect_name == "unsafe" or effect_name == "allocate" or effect_name == "synchronize"
+}
+
+export craft effect_set_validate(effects) {
+    when kind(effects) != "list" or size(effects) > 32 {
+        yield ["ERROR", "effect set must be a bounded list"]
+    }
+    vary index := 0
+    loop while index < size(effects) {
+        when not effect_known(effects[index]) {
+            yield ["ERROR", "unknown effect: " ++ effects[index]]
+        }
+        vary prior := 0
+        loop while prior < index {
+            when effects[prior] == effects[index] {
+                yield ["ERROR", "duplicate effect: " ++ effects[index]]
+            }
+            change prior := prior + 1
+        }
+        change index := index + 1
+    }
+    yield ["OK", effects]
+}
+
+export craft effect_subset(required, granted) {
+    make checked_required := effect_set_validate(required)
+    make checked_granted := effect_set_validate(granted)
+    when checked_required[0] == "ERROR" { yield checked_required }
+    when checked_granted[0] == "ERROR" { yield checked_granted }
+    each effect in required {
+        when not contains(granted, effect) {
+            yield ["ERROR", "missing effect capability: " ++ effect]
+        }
+    }
+    yield ["OK", true]
+}
+
+export craft function_signature(name, parameters, return_type, type_parameters, effects) {
+    yield ["FUNCTION_V1", name, parameters, return_type, type_parameters, effects]
+}
+
+export craft function_signature_validate(signature) {
+    when size(signature) != 6 or signature[0] != "FUNCTION_V1" {
+        yield ["ERROR", "invalid function signature envelope"]
+    }
+    when signature[1] == "" or size(signature[2]) > 128 or size(signature[4]) > 32 {
+        yield ["ERROR", "function name or signature cardinality is invalid"]
+    }
+    make effects_result := effect_set_validate(signature[5])
+    when effects_result[0] == "ERROR" { yield effects_result }
+
+    vary names := []
+    each parameter in signature[2] {
+        when size(parameter) != 2 or parameter[0] == "" {
+            yield ["ERROR", "invalid function parameter descriptor"]
+        }
+        when contains(names, parameter[0]) {
+            yield ["ERROR", "duplicate function parameter: " ++ parameter[0]]
+        }
+        change names := push(names, parameter[0])
+    }
+
+    vary parameter_names := []
+    each parameter in signature[4] {
+        when size(parameter) < 1 or parameter[0] == "" {
+            yield ["ERROR", "invalid generic parameter descriptor"]
+        }
+        when contains(parameter_names, parameter[0]) {
+            yield ["ERROR", "duplicate generic parameter: " ++ parameter[0]]
+        }
+        change parameter_names := push(parameter_names, parameter[0])
+    }
+
+    each parameter in signature[2] {
+        when not type_valid(parameter[1], parameter_names) {
+            yield ["ERROR", "invalid type for parameter: " ++ parameter[0]]
+        }
+    }
+    when not type_valid(signature[3], parameter_names) {
+        yield ["ERROR", "invalid function return type"]
+    }
+    yield ["OK", signature]
+}
+
+# Result and Option are explicit tagged values in the reference runtime.
+make result_success := type_result(type_primitive("Int"), type_primitive("Text"))
+make option_text := type_option(type_primitive("Text"))
+assert(type_valid(result_success, []), "Result<T, E> requires two concrete type arguments")
+assert(type_valid(option_text, []), "Option<T> requires one concrete type argument")
+assert(not type_valid(type_generic("Result", [type_primitive("Int")]), []), "malformed Result type must fail")
+
+# Generic substitution and trait bounds.
+make parameter_t := type_parameter("T", ["Numeric"])
+make substituted := generic_substitute(type_generic("Option", [parameter_t]), [["T", type_primitive("i32")]])
+assert(substituted[0] == "OK" and substituted[1][3][0][2] == "i32", "nested generic substitution mismatch")
+assert(generic_bounds_validate(type_primitive("i32"), ["Numeric", "Copy"])[0] == "OK", "integer trait bounds should pass")
+assert(generic_bounds_validate(type_primitive("Text"), ["Numeric"])[0] == "ERROR", "Text must not satisfy Numeric")
+
+# Effects are validated and checked as a capability subset.
+assert(effect_subset(["filesystem", "console"], ["filesystem", "console", "clock"])[0] == "OK", "granted effect superset should pass")
+assert(effect_subset(["filesystem", "native"], ["filesystem"])[0] == "ERROR", "missing effect must fail")
+assert(effect_set_validate(["console", "console"])[0] == "ERROR", "duplicate effect must fail")
+
+emit "SELFHOST_TYPE_SYSTEM_OK"
