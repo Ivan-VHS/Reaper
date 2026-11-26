@@ -1,0 +1,217 @@
+# Reaper-native handler conformance smoke for all 20 Framework Federation namespaces.
+# Each call is an executable .rpr function. Host execution and native ABI binding
+# remain separate; these tests exercise the Reaper reference runtime.
+
+import "modules/codex_no.rpr" as codex
+import "modules/joint_baby.rpr" as joint
+import "modules/correpse.rpr" as correpse
+import "modules/allocate_purpose.rpr" as allocate
+import "modules/collillioi.rpr" as collillioi
+import "modules/aspdoi.rpr" as aspdoi
+import "modules/asjiop.rpr" as asjiop
+import "modules/alllll.rpr" as alllll
+import "modules/zabor.rpr" as zabor
+import "modules/vjinz.rpr" as vjinz
+import "modules/supreme_boy.rpr" as supreme
+import "modules/chee_now.rpr" as chee
+import "modules/humble_bumble.rpr" as humble
+import "modules/hub2.rpr" as hub2
+import "modules/kloz.rpr" as kloz
+import "modules/co.rpr" as co
+import "modules/cripplebo.rpr" as cripplebo
+import "modules/ripplecripple.rpr" as ripple
+import "modules/secator.rpr" as secator
+import "modules/pollatia.rpr" as pollatia
+
+craft increment(value) { yield value + 1 }
+craft greater_than_one(value) { yield value > 1 }
+craft add_values(total, value) { yield total + value }
+craft numeric_key(value) { yield value }
+craft recover_value(code, details) { yield "recovered:" ++ code }
+craft map_error(code) { yield "mapped:" ++ code }
+
+# 001 CodexNo — catalogue lookups and semver comparison.
+assert(codex["lookup_symbol"]([["sym.main", "main"]], "sym.main")[0], "CodexNo lookup_symbol")
+assert(codex["inspect_feature"]([["feature.a", "A", "implemented", ["desktop"]]], "feature.a")[0], "CodexNo inspect_feature")
+assert(codex["list_contracts"]([["contract.a", "v1", 2]])[0], "CodexNo list_contracts")
+assert(codex["describe_framework"]([[["codex-no", "CodexNo"]], "codex-no"])[0], "CodexNo describe_framework")
+assert(codex["compare_versions"]([1, 0, 0], [1, 0, 1])[0], "CodexNo compare_versions")
+assert(codex["export_catalog"]([["codex-no", "v1"]])[0], "CodexNo export_catalog")
+
+# 002 Joint Baby — explicit ABI and value descriptors; no foreign code execution.
+assert(joint["bind_language"]("Reaper", "C17", ["cabi"])[0], "Joint Baby bind_language")
+assert(joint["validate_abi"](["dabi64", [1, 0, 0], ["call"]], ["dabi64", [1, 0, 0], ["call", "return"]])[0], "Joint Baby validate_abi")
+assert(joint["invoke_foreign"](["host", "symbol", 1, "dabi64"], ["argument"], [8, 4096])[0], "Joint Baby invoke_foreign")
+assert(joint["marshal_value"](42, ["number", 8])[0], "Joint Baby marshal_value")
+assert(joint["unmarshal_value"](["number", 42, 2], ["number", 8])[0], "Joint Baby unmarshal_value")
+assert(joint["release_foreign"](["handle-1", "sample.app", "active"])[0], "Joint Baby release_foreign")
+
+# 003 Correpse — invariants, reconciliation and schema conformance.
+assert(correpse["check_invariant"](["equals", 7], 7)[1], "Correpse check_invariant")
+assert(correpse["reconcile_state"]([["mode", "safe"]], [["mode", "strict"], ["locale", "en"]])[0], "Correpse reconcile_state")
+assert(correpse["compare_contracts"](["contract.a", [1, 1, 0], ["id", "value"], []], ["contract.a", [1, 0, 0], ["id"], []])[0], "Correpse compare_contracts")
+assert(correpse["validate_schema"]([["name", "sample"], ["count", 3]], [["name", "text", true], ["count", "number", true]])[0], "Correpse validate_schema")
+assert(correpse["detect_conflict"]([["mode", "safe"]], [["mode", "fast"]])[0], "Correpse detect_conflict")
+assert(correpse["prove_precondition"](["at-least", 2], 5)[1], "Correpse prove_precondition")
+
+# 004 Allocate Purpose — bounded arena accounting, quota and allocation traces.
+make arena := allocate["arena_create"](128, "sample.app")
+assert(arena[0], "Allocate Purpose arena_create")
+make reservation := allocate["arena_reserve"](arena[1], 32)
+assert(reservation[0], "Allocate Purpose arena_reserve")
+assert(allocate["arena_release"](reservation[1])[0], "Allocate Purpose arena_release")
+assert(allocate["budget_split"](100, [1, 3])[0], "Allocate Purpose budget_split")
+assert(allocate["quota_check"]([4, 8], [8, 8])[0], "Allocate Purpose quota_check")
+assert(allocate["allocation_trace"]([["sample.app", 8, "allocate"], ["sample.app", -3, "release"]])[0], "Allocate Purpose allocation_trace")
+
+# 005 Collillioi — higher-order deterministic sequence operations.
+assert(collillioi["map_sequence"]([1, 2], increment)[0], "Collillioi map_sequence")
+assert(collillioi["filter_sequence"]([1, 2, 3], greater_than_one)[0], "Collillioi filter_sequence")
+assert(collillioi["fold_sequence"]([1, 2, 3], 0, add_values)[1] == 6, "Collillioi fold_sequence")
+assert(collillioi["zip_sequences"]([1, 2], ["a", "b"])[0], "Collillioi zip_sequences")
+assert(collillioi["stable_sort"]([3, 1, 2], numeric_key)[0], "Collillioi stable_sort")
+assert(collillioi["partition_sequence"]([1, 2, 3, 4], 2)[0], "Collillioi partition_sequence")
+
+# 006 Aspdoi — scoped task descriptions and deadline policies.
+make scope := ["scope-1", "sample.app", "active", []]
+make task := ["task-1", "pending", nothing, 100]
+make spawned := aspdoi["task_spawn"](scope, task)
+assert(spawned[0], "Aspdoi task_spawn")
+assert(aspdoi["task_cancel"](spawned[1], "task-1")[0], "Aspdoi task_cancel")
+assert(aspdoi["await_result"](["task-1", "completed", "done", 90], [5, 100])[0], "Aspdoi await_result")
+assert(aspdoi["deadline_after"](100, 20)[1] == 120, "Aspdoi deadline_after")
+assert(aspdoi["schedule_task"](task, "deadline", 2)[0], "Aspdoi schedule_task")
+assert(aspdoi["join_scope"](["scope-1", "sample.app", "active", [["task-1", "completed", "done", 90]]])[0], "Aspdoi join_scope")
+
+# 007 ASJIOP — ABI negotiation, bounded frame and layout checks.
+assert(asjiop["abi_negotiate"](["dabi64", [1, 1, 0], ["call"]], ["dabi64", [1, 0, 0], ["call", "return"]])[0], "ASJIOP abi_negotiate")
+make layout := ["dabi64", 16, "layout.v1"]
+make encoded := asjiop["encode_frame"](layout, ["field"])
+assert(encoded[0], "ASJIOP encode_frame")
+assert(asjiop["decode_frame"](encoded[1], layout)[0], "ASJIOP decode_frame")
+assert(asjiop["type_fingerprint"]("craft(value:number)->number")[0], "ASJIOP type_fingerprint")
+assert(asjiop["call_descriptor"]("increment", [["number"], "number", "dabi64"])[0], "ASJIOP call_descriptor")
+assert(asjiop["validate_layout"]([8, 4, [["first", 0, 4, 4], ["second", 4, 4, 4]]], [8, "little"])[0], "ASJIOP validate_layout")
+
+# 008 ALLLLL — feature availability and dependency closure.
+make features := [
+    ["feature.core", "compiler", "implemented", ["desktop"], []],
+    ["feature.ui", "ui", "experimental", ["desktop"], ["feature.core"]]
+]
+assert(alllll["feature_lookup"](features, "feature.core")[0], "ALLLLL feature_lookup")
+assert(alllll["feature_enablement"](features[0], ["desktop", ["feature.core"]])[1], "ALLLLL feature_enablement")
+assert(alllll["enumerate_features"](features, "compiler")[0], "ALLLLL enumerate_features")
+assert(alllll["dependency_order"](features)[0], "ALLLLL dependency_order")
+assert(alllll["compatibility_check"](["desktop", ["a", "b"]], ["desktop", ["b", "c"]])[0], "ALLLLL compatibility_check")
+assert(alllll["capability_diff"](["a", "b"], ["b", "c"])[0], "ALLLLL capability_diff")
+
+# 009 Zabor — scoped grants and fail-closed policy.
+make grant := zabor["grant_create"]("alice", "file:config", "storage.read")
+assert(grant[0], "Zabor grant_create")
+assert(zabor["grant_check"](["alice", [["file:config", "storage.read", "active"]]], "file:config", "storage.read")[1], "Zabor grant_check")
+assert(zabor["grant_revoke"](grant[1], "alice")[0], "Zabor grant_revoke")
+assert(zabor["scope_intersect"]([["file:a", "file:b"], ["read", "write"], 100], [["file:b"], ["read"], 90])[0], "Zabor scope_intersect")
+assert(zabor["policy_match"](["region-policy", [["region", "eu"]]], [["region", "eu"]])[1], "Zabor policy_match")
+assert(zabor["audit_decision"](["alice", "read", "file:a", "request-1"], ["allow", "policy-1", "matched"])[0], "Zabor audit_decision")
+
+# 010 Vjinz — source spans, diagnostics and origin records.
+assert(vjinz["source_map_lookup"]([[0, 10, "main.rpr", 100, 110]], 3)[0], "Vjinz source_map_lookup")
+assert(vjinz["span_translate"](["main.rpr", 1, 3], ["generated.rpr", 10])[0], "Vjinz span_translate")
+assert(vjinz["diagnostic_emit"](["RPR-E001", "error", "invalid type"], ["main.rpr", 4, 8])[0], "Vjinz diagnostic_emit")
+assert(vjinz["trace_register"]("compile", [["target", "x64"]])[0], "Vjinz trace_register")
+assert(vjinz["symbol_resolve"](["module.core", [["main", "symbol.main"]]], "main")[0], "Vjinz symbol_resolve")
+assert(vjinz["origin_chain"](["artifact.c", [["artifact.c", "artifact.rpr"], ["artifact.rpr", "source.rpr"]]])[0], "Vjinz origin_chain")
+
+# 011 SupremeBoy — release evidence and regression direction.
+assert(supreme["quality_gate"](["release", ["tests"]], [["tests", "passed", "green"]])[0], "SupremeBoy quality_gate")
+assert(supreme["build_matrix"](["x64", "arm64"], ["debug", "release"])[0], "SupremeBoy build_matrix")
+assert(supreme["test_evidence"](["unit", "passed", 10, 10, 0], 8)[0], "SupremeBoy test_evidence")
+assert(not supreme["regression_compare"]([["latency", 5, "lower"]], [["latency", 6, "lower"]])[0], "SupremeBoy regression_compare")
+assert(supreme["artifact_attest"](["reaper.bin", "sha256:record", "binary"], [["source", "commit-1"]])[0], "SupremeBoy artifact_attest")
+assert(supreme["release_check"](["1.0.0", "reaper.bin", [["build", true, true]]])[0], "SupremeBoy release_check")
+
+# 012 CheeNow — bounded channel state and fanout plans.
+make channel := chee["channel_open"]("channel-1", 2)
+assert(channel[0], "CheeNow channel_open")
+make queued := chee["channel_send"](channel[1], ["message", 1])
+assert(queued[0], "CheeNow channel_send")
+assert(chee["channel_receive"](queued[1], [1, 100])[0], "CheeNow channel_receive")
+assert(chee["channel_close"](queued[1])[0], "CheeNow channel_close")
+assert(chee["backpressure_check"]([1, 2], [4, 2])[0], "CheeNow backpressure_check")
+assert(chee["fanout_dispatch"](["event", 1], ["svc.a", "svc.b"])[0], "CheeNow fanout_dispatch")
+
+# 013 HumbleBumble — Result mapping and explicit recovery callbacks.
+make good_result := humble["result_ok"](4)
+make error_result := humble["result_err"]("E-IO", "closed")
+assert(humble["map_ok"](good_result, increment)[1] == 5, "HumbleBumble map_ok")
+assert(humble["map_err"](error_result, map_error)[1] == "mapped:E-IO", "HumbleBumble map_err")
+assert(humble["recover_error"](error_result, recover_value)[1] == "recovered:E-IO", "HumbleBumble recover_error")
+assert(humble["classify_failure"]("DOM-E100")[1] == "lifecycle", "HumbleBumble classify_failure")
+
+# 014 Hub2 — service discovery and event envelopes.
+make service := ["service.echo", [1, 0, 0], "active", "local://echo", ["echo"]]
+make registered := hub2["service_register"]([], service)
+assert(registered[0], "Hub2 service_register")
+assert(hub2["service_resolve"](registered[1], ["service.echo", [1, 0, 0]])[0], "Hub2 service_resolve")
+assert(hub2["endpoint_health"](["service.echo", 100], ["healthy", 10])[0], "Hub2 endpoint_health")
+assert(hub2["event_publish"]("events.echo", ["event-1", ["payload"], "correlation-1"])[0], "Hub2 event_publish")
+assert(hub2["event_subscribe"]("events.echo", "ui-panel")[0], "Hub2 event_subscribe")
+assert(hub2["event_ack"](["events.echo", "event-1", "pending"], true)[0], "Hub2 event_ack")
+
+# 015 Kloz — dependency and explicit module export contracts.
+make module_desc := ["app.main", [1, 0, 0], ["lib.core"], [["run", "symbol.run"]], 0, "declared"]
+assert(kloz["module_load"](module_desc, ["lib.core"])[0], "Kloz module_load")
+assert(kloz["module_export"](module_desc, "run")[0], "Kloz module_export")
+assert(kloz["module_import"](module_desc, ["app.ui", "run"])[0], "Kloz module_import")
+assert(kloz["dependency_resolve"]([["lib.core", [1, 0, 0], [], [], 0, "declared"], module_desc])[0], "Kloz dependency_resolve")
+assert(kloz["module_version"](module_desc)[0], "Kloz module_version")
+assert(kloz["module_unload"](module_desc, "app.main")[0], "Kloz module_unload")
+
+# 016 CO — stable non-cryptographic fingerprints and strict version tuples.
+assert(co["core_hash"]([1, 2, 3])[0], "CO core_hash")
+assert(co["checksum"]([1, 2, 3])[0], "CO checksum")
+assert(co["stable_id"]("asset", [1, 2, 3])[0], "CO stable_id")
+assert(co["text_normalize"](" Reaper ", "trim-lower")[1] == "reaper", "CO text_normalize")
+assert(co["compare_bytes"]([1, 2], [1, 3])[1] == -1, "CO compare_bytes")
+assert(co["version_parse"]("1.2.3")[1] == [1, 2, 3], "CO version_parse")
+
+# 017 CrippleBO — fault, retry, circuit and recovery policy descriptors.
+assert(cripplebo["fault_record"](["service.echo", "task-1"], ["E-IO", "closed", "error", true])[0], "CrippleBO fault_record")
+assert(cripplebo["retry_plan"](3, 10, 40)[1] == [10, 20, 40], "CrippleBO retry_plan")
+assert(cripplebo["circuit_check"](["closed", 0, 2, 100], "failure")[0], "CrippleBO circuit_check")
+assert(cripplebo["fallback_select"]([["worker", "worker.safe", "healthy"]], "worker")[0], "CrippleBO fallback_select")
+assert(cripplebo["isolate_component"]("worker", ["process-scope", ["no-network"]])[0], "CrippleBO isolate_component")
+assert(cripplebo["recovery_report"]([[1, "recovered", "ok"], [2, "failed", "timeout"]])[0], "CrippleBO recovery_report")
+
+# 018 RippleCripple — bounded stream and checkpoint operations.
+make stream_a := ripple["stream_open"]("stream-a", 4)
+make stream_b := ripple["stream_open"]("stream-b", 4)
+assert(stream_a[0] and stream_b[0], "RippleCripple stream_open")
+make stream_a_item := ripple["stream_push"](stream_a[1], "a")
+assert(stream_a_item[0], "RippleCripple stream_push")
+make merged_stream := ripple["stream_merge"](stream_a_item[1], stream_b[1])
+assert(merged_stream[0], "RippleCripple stream_merge")
+assert(ripple["stream_throttle"](merged_stream[1], 1)[0], "RippleCripple stream_throttle")
+assert(ripple["stream_checkpoint"](merged_stream[1])[0], "RippleCripple stream_checkpoint")
+assert(ripple["stream_close"](merged_stream[1])[0], "RippleCripple stream_close")
+
+# 019 Secator — default-deny access policy and secret-reference handling.
+assert(secator["access_decide"]([["alice", "file:config", "allow"]], "alice", "file:config")[1] == "allow", "Secator access_decide")
+assert(secator["principal_resolve"](["host.issuer", "alice", true, ["user"]])[0], "Secator principal_resolve")
+assert(secator["secret_ref"]("database/password", [1, 0, 0])[0], "Secator secret_ref")
+assert(secator["token_validate"](["host.issuer", ["storage.read"], 100, false], ["host.issuer", "storage.read", 50])[1], "Secator token_validate")
+assert(secator["policy_compile"]("default-deny", [["alice", "file:config", "allow"]])[0], "Secator policy_compile")
+assert(secator["security_audit"](["E-ACCESS", "allow", "secret"], ["alice", "file:config", "granted"])[0], "Secator security_audit")
+
+# 020 PollATIA — aggregate counters, gauges, histograms and privacy policy.
+make metrics := pollatia["stats_snapshot"]([["requests", 2], ["errors", 0]])
+assert(metrics[0], "PollATIA stats_snapshot")
+make counter := pollatia["counter_add"](metrics[1], ["requests", 3])
+assert(counter[0], "PollATIA counter_add")
+make gauge := pollatia["gauge_set"](counter[1], ["cpu", 0.5])
+assert(gauge[0], "PollATIA gauge_set")
+assert(pollatia["histogram_observe"]([[5, 10], [0, 0, 0]], 7)[0], "PollATIA histogram_observe")
+assert(pollatia["metrics_export"](gauge[1], [["requests", "cpu"], 10])[0], "PollATIA metrics_export")
+assert(pollatia["privacy_filter"]([["requests", 5], ["cpu", 0.5]], [["requests"], ["cpu"]])[0], "PollATIA privacy_filter")
+
+emit "all 120 Reaper framework federation handler checks passed"
