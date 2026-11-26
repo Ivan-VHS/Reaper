@@ -9,6 +9,10 @@ export craft valid_text(value) {
     yield kind(value) == "text" and size(trim(value)) > 0
 }
 
+export craft bounded_text(value, maximum) {
+    yield valid_text(value) and size(value) <= maximum
+}
+
 export craft whole_number(value) {
     yield kind(value) == "number" and value >= 0 and value // 1 == value
 }
@@ -17,7 +21,7 @@ export craft bounded_score(value) {
     yield kind(value) == "number" and value >= 0 and value <= 100
 }
 
-export craft valid_text_list(values, maximum, allow_empty) {
+export craft valid_text_list(values, maximum, allow_empty, max_text_length) {
     when kind(values) != "list" {
         yield false
     }
@@ -30,7 +34,7 @@ export craft valid_text_list(values, maximum, allow_empty) {
 
     vary seen := []
     each item in values {
-        when not valid_text(item) {
+        when not bounded_text(item, max_text_length) {
             yield false
         }
         when contains(seen, item) {
@@ -48,7 +52,7 @@ export craft valid_profile(profile) {
     when size(profile) != PROFILE_WIDTH {
         yield false
     }
-    when not valid_text(profile[0]) or not valid_text(profile[1]) or not valid_text(profile[2]) {
+    when not bounded_text(profile[0], 256) or not bounded_text(profile[1], 128) or not bounded_text(profile[2], 128) {
         yield false
     }
     when not whole_number(profile[3]) or profile[3] < 1 or profile[3] > 100 {
@@ -57,10 +61,10 @@ export craft valid_profile(profile) {
     when not whole_number(profile[4]) or profile[4] < 1 or profile[4] > 1048576 {
         yield false
     }
-    when not valid_text_list(profile[5], 32, true) {
+    when not valid_text_list(profile[5], 32, true, 128) {
         yield false
     }
-    when not valid_text_list(profile[6], 32, false) {
+    when not valid_text_list(profile[6], 32, false, 128) {
         yield false
     }
     when kind(profile[7]) != "boolean" {
@@ -82,7 +86,7 @@ export craft valid_proposal(proposal) {
     when size(proposal) != PROPOSAL_WIDTH {
         yield false
     }
-    when not valid_text(proposal[0]) or not valid_text(proposal[1]) or not valid_text(proposal[2]) {
+    when not bounded_text(proposal[0], 256) or not bounded_text(proposal[1], 128) or not bounded_text(proposal[2], 128) {
         yield false
     }
     when not whole_number(proposal[3]) or proposal[3] < 1 or proposal[3] > 100 {
@@ -91,10 +95,10 @@ export craft valid_proposal(proposal) {
     when not whole_number(proposal[4]) or proposal[4] < 1 or proposal[4] > 1048576 {
         yield false
     }
-    when not valid_text_list(proposal[5], 32, true) {
+    when not valid_text_list(proposal[5], 32, true, 128) {
         yield false
     }
-    when not valid_text_list(proposal[6], 32, true) {
+    when not valid_text_list(proposal[6], 32, true, 128) {
         yield false
     }
     when kind(proposal[7]) != "boolean" {
@@ -103,10 +107,10 @@ export craft valid_proposal(proposal) {
     when not bounded_score(proposal[8]) or not bounded_score(proposal[9]) {
         yield false
     }
-    when not valid_text_list(proposal[10], 32, false) {
+    when not valid_text_list(proposal[10], 32, false, 2048) {
         yield false
     }
-    when not valid_text(proposal[11]) {
+    when not bounded_text(proposal[11], 256) {
         yield false
     }
     yield true
