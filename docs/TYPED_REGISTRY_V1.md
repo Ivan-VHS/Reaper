@@ -39,6 +39,8 @@ Lookup uses a deterministic 64-bit FNV-1a key hash followed by linear probing an
 
 There is no hidden heap allocation, global singleton, dynamic library loading or network access. The registry does not own handler code or handler contexts; they must remain alive for as long as the registry can invoke them. Registration copies key strings and argument schemas, so the caller may release or change the source buffers after successful registration.
 
+Each operation accepts at most `REAPER_TYPED_MAX_ARGUMENTS` (32) parameters. UTF-8 and byte payloads are borrowed views: the input buffers must remain valid and unchanged for the duration of the synchronous handler call, and handlers must not retain those pointers unless they copy or otherwise take ownership through a separate contract. Returned UTF-8/byte views are also borrowed; their backing storage must remain valid for as long as the caller uses the returned value. The registry copies the tagged value structure, not the payload bytes.
+
 ## Invocation boundary
 
 Invocation is deliberately ordered:
