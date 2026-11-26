@@ -1,0 +1,11 @@
+# Compose a local-first multitool suite from reusable Reaper capabilities.
+import "../../rivet/engine.rpr" as rivet
+
+make plan := rivet["compose"](
+    "Workbench Multitool",
+    "multitool",
+    ["suite.orchestrator", "tool.search", "tool.archive", "tool.database", "tool.automation", "tool.network"]
+)
+
+assert(plan[0] == "ok", "multitool composition should pass contract validation")
+emit rivet["describe"](plan)
