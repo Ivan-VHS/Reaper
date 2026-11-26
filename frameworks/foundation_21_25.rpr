@@ -1,0 +1,313 @@
+# Fifth group of Reaper foundations.
+import "foundation_16_20.rpr" as previous
+
+export make FOUNDATION_FIFTH_SCHEMA := "reaper.foundation.fifth.v1"
+export make FOUNDATION_FIFTH_VERSION := 1
+
+export craft toolset_catalog() {
+    yield [
+        ["reaper.cli", "command-line", "run, check and inspect Reaper programs", "implemented", "reaper --check"],
+        ["reaper.formatter", "language", "canonical source formatting", "implemented", "reaper format"],
+        ["reaper.typecheck", "analysis", "conservative static type inference", "partial", "reaper typecheck"],
+        ["reaper.native_compiler", "compiler", "scalar C17 ahead-of-time compiler", "partial", "reaper --emit-c"],
+        ["reaper.lsp", "editor", "language server protocol services", "partial", "reaper --lsp"],
+        ["reaper.dap", "debugging", "debug adapter protocol services", "partial", "reaper --dap"],
+        ["reaper.embedded", "systems", "MCU profiles and cross-build workbench", "partial", "reaper --embedded"],
+        ["reaper.systems_architectures", "systems", "architecture and toolchain candidate matrix", "implemented", "reaper --systems-architectures"]
+    ]
+}
+
+craft toolset_find(identifier) {
+    vary found := nothing
+    each tool in toolset_catalog() {
+        when tool[0] == identifier {
+            change found := tool
+        }
+    }
+    yield found
+}
+
+export craft toolset_validate_catalog() {
+    vary identifiers := []
+    each tool in toolset_catalog() {
+        when size(tool) != 5 {
+            yield false
+        }
+        change identifiers := push(identifiers, tool[0])
+    }
+    yield size(unique(identifiers)) == 8
+}
+
+export craft toolset_find_tool(identifier) {
+    yield toolset_find(identifier)
+}
+
+export craft toolset_validate_selection(selection) {
+    when kind(selection) != "list" {
+        yield false
+    }
+    each identifier in selection {
+        when toolset_find(identifier) == nothing {
+            yield false
+        }
+    }
+    yield size(unique(selection)) == size(selection)
+}
+
+export craft tooling_commands() {
+    yield [
+        ["c-compiler", "gcc", "Windows/Linux/macOS", "optional"],
+        ["c-compiler", "clang", "Windows/Linux/macOS", "optional"],
+        ["build-system", "cmake", "Windows/Linux/macOS", "required-for-native-build"],
+        ["build-system", "ninja", "Windows/Linux/macOS", "optional"],
+        ["arm-embedded", "arm-none-eabi-gcc", "host-dependent", "optional"],
+        ["riscv-embedded", "riscv64-unknown-elf-gcc", "host-dependent", "optional"],
+        ["rust", "rustc", "Windows/Linux/macOS", "optional"],
+        ["rust-package", "cargo", "Windows/Linux/macOS", "optional"],
+        ["javascript", "node", "Windows/Linux/macOS", "optional"],
+        ["javascript-package", "npm", "Windows/Linux/macOS", "optional"]
+    ]
+}
+
+export craft tooling_find_command(command) {
+    vary found := nothing
+    each item in tooling_commands() {
+        when item[1] == command {
+            change found := item
+        }
+    }
+    yield found
+}
+
+export craft tooling_validate_probe(probe) {
+    when kind(probe) != "list" or size(probe) != 3 {
+        yield false
+    }
+    when kind(probe[0]) != "text" or kind(probe[1]) != "text" or not contains(["available", "missing", "not-probed"], probe[2]) {
+        yield false
+    }
+    when tooling_find_command(probe[0]) == nothing {
+        yield false
+    }
+    yield true
+}
+
+export craft tooling_probe_policy() {
+    yield [
+        ["discovery", "PATH-only lookup or caller-provided path", "allowed"],
+        ["execution", "compiler and build commands are not run by discovery", "forbidden"],
+        ["installation", "no package or toolchain installation", "forbidden"],
+        ["mutation", "no PATH, registry, shell profile or system changes", "forbidden"],
+        ["evidence", "availability does not prove target ABI support", "required"]
+    ]
+}
+
+export craft toolkit_bundles() {
+    yield [
+        ["language", ["reaper.cli", "reaper.formatter", "reaper.typecheck"]],
+        ["native-build", ["reaper.native_compiler", "reaper.systems_architectures"]],
+        ["editor", ["reaper.lsp", "reaper.dap"]],
+        ["embedded", ["reaper.embedded", "reaper.systems_architectures"]],
+        ["quality", ["reaper.formatter", "reaper.typecheck", "reaper.cli"]]
+    ]
+}
+
+craft toolkit_find_bundle(identifier) {
+    vary found := nothing
+    each bundle in toolkit_bundles() {
+        when bundle[0] == identifier {
+            change found := bundle
+        }
+    }
+    yield found
+}
+
+export craft toolkit_validate_bundle(identifier) {
+    make bundle := toolkit_find_bundle(identifier)
+    when bundle == nothing {
+        yield false
+    }
+    yield toolset_validate_selection(bundle[1])
+}
+
+export craft toolkit_validate_selection(selection) {
+    when kind(selection) != "list" or size(selection) == 0 {
+        yield false
+    }
+    each identifier in selection {
+        when not toolkit_validate_bundle(identifier) {
+            yield false
+        }
+    }
+    yield size(unique(selection)) == size(selection)
+}
+
+export craft toolkit_resolve_tools(selection) {
+    when not toolkit_validate_selection(selection) {
+        yield nothing
+    }
+    vary resolved := []
+    each identifier in selection {
+        make bundle := toolkit_find_bundle(identifier)
+        each tool in bundle[1] {
+            when not contains(resolved, tool) {
+                change resolved := push(resolved, tool)
+            }
+        }
+    }
+    yield resolved
+}
+
+export craft package_manifest_fields() {
+    yield ["package_id", "major", "minor", "entry_module", "dependencies"]
+}
+
+export craft package_validate_manifest(manifest) {
+    when kind(manifest) != "list" or size(manifest) != 5 {
+        yield false
+    }
+    when kind(manifest[0]) != "text" or manifest[0] == "" or kind(manifest[1]) != "number" or kind(manifest[2]) != "number" {
+        yield false
+    }
+    when manifest[1] < 0 or manifest[2] < 0 or manifest[1] % 1 != 0 or manifest[2] % 1 != 0 {
+        yield false
+    }
+    when kind(manifest[3]) != "text" or not ends_with(manifest[3], ".rpr") or kind(manifest[4]) != "list" {
+        yield false
+    }
+    when contains(manifest[4], manifest[0]) or size(unique(manifest[4])) != size(manifest[4]) {
+        yield false
+    }
+    each dependency in manifest[4] {
+        when kind(dependency) != "text" or dependency == "" {
+            yield false
+        }
+    }
+    yield true
+}
+
+export craft package_validate_registry(packages) {
+    when kind(packages) != "list" or size(packages) == 0 {
+        yield false
+    }
+    vary completed := []
+    each manifest in packages {
+        when not package_validate_manifest(manifest) or contains(completed, manifest[0]) {
+            yield false
+        }
+        each dependency in manifest[4] {
+            when not contains(completed, dependency) {
+                yield false
+            }
+        }
+        change completed := push(completed, manifest[0])
+    }
+    yield true
+}
+
+export craft package_resolve_order(packages) {
+    when not package_validate_registry(packages) {
+        yield nothing
+    }
+    vary order := []
+    each manifest in packages {
+        change order := push(order, manifest[0])
+    }
+    yield order
+}
+
+export craft package_policy() {
+    yield [
+        ["manifest", "versioned package descriptor", "required"],
+        ["dependencies", "explicit unique dependency IDs", "required"],
+        ["resolution", "dependency-first order; reject cycles and missing nodes", "required"],
+        ["lockfile", "deterministic lock format and content digests", "planned"],
+        ["installation", "transactional verified install and rollback", "planned"],
+        ["registry", "offline-first local cache with explicit remote source", "planned"]
+    ]
+}
+
+export craft stack_profiles() {
+    yield [
+        ["hosted-reference", ["source", "lexer", "parser", "semantic-analysis", "reference-runtime", "host-os"], "implemented"],
+        ["canonical-vm", ["source", "lexer", "parser", "semantic-analysis", "canonical-ir", "canonical-vm", "host-os"], "implemented"],
+        ["native-c17-host", ["source", "lexer", "parser", "semantic-analysis", "scalar-aot", "c17-toolchain", "host-os"], "partial"],
+        ["simulator-adapter", ["source", "lexer", "parser", "semantic-analysis", "canonical-ir", "simulator-host"], "partial"],
+        ["freestanding", ["source", "lexer", "parser", "typed-ir", "target-backend", "platform-abi", "bare-metal-runtime"], "planned"]
+    ]
+}
+
+craft stack_find_profile(identifier) {
+    vary found := nothing
+    each profile in stack_profiles() {
+        when profile[0] == identifier {
+            change found := profile
+        }
+    }
+    yield found
+}
+
+export craft stack_validate_profile(profile) {
+    when kind(profile) != "list" or size(profile) != 3 {
+        yield false
+    }
+    make known := stack_find_profile(profile[0])
+    when known == nothing or known[2] == "planned" {
+        yield false
+    }
+    yield profile == known and size(unique(profile[1])) == size(profile[1])
+}
+
+export craft stack_validate_selection(identifier) {
+    make profile := stack_find_profile(identifier)
+    when profile == nothing {
+        yield false
+    }
+    yield profile[2] != "planned" and stack_validate_profile(profile)
+}
+
+export craft stack_layer_catalog() {
+    yield ["source", "lexer", "parser", "semantic-analysis", "canonical-ir", "canonical-vm", "reference-runtime", "scalar-aot", "c17-toolchain", "simulator-host", "target-backend", "typed-ir", "platform-abi", "bare-metal-runtime", "host-os"]
+}
+
+export craft stack_validate_layers(layers) {
+    when kind(layers) != "list" or size(layers) < 4 {
+        yield false
+    }
+    each layer in layers {
+        when not contains(stack_layer_catalog(), layer) {
+            yield false
+        }
+    }
+    yield size(unique(layers)) == size(layers)
+}
+
+export craft foundation_fifth_five() {
+    yield [
+        ["foundation.toolset.v1", "Toolset", "registered Reaper developer tools and their responsibilities", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_21_25.md"],
+        ["foundation.tooling.v1", "Tooling", "PATH-only toolchain discovery and evidence policy", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_21_25.md"],
+        ["foundation.toolkit.v1", "Toolkit", "composable bundles of validated Reaper tools", "implemented", "docs/FOUNDATIONAL_FRAMEWORKS_21_25.md"],
+        ["foundation.package.v1", "Package", "versioned package manifests and dependency-first resolution", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_21_25.md"],
+        ["foundation.stack.v1", "Stack", "compatible language/runtime/platform layer profiles", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_21_25.md"]
+    ]
+}
+
+export craft foundation_all_frameworks_25() {
+    vary rows := previous["foundation_all_frameworks_20"]()
+    each row in foundation_fifth_five() {
+        change rows := push(rows, row)
+    }
+    yield rows
+}
+
+export craft foundation_validate_catalog_25() {
+    make rows := foundation_all_frameworks_25()
+    vary identifiers := []
+    each row in rows {
+        when size(row) != 5 {
+            yield false
+        }
+        change identifiers := push(identifiers, row[0])
+    }
+    yield previous["foundation_validate_catalog_20"]() and size(rows) == 25 and size(unique(identifiers)) == 25
+}
