@@ -1,0 +1,322 @@
+# Ninth group of Reaper foundations.
+import "foundation_36_40.rpr" as previous
+
+export make FOUNDATION_NINTH_SCHEMA := "reaper.foundation.ninth.v1"
+export make FOUNDATION_NINTH_VERSION := 1
+
+export craft methodology_stages() {
+    yield ["inventory", "specify", "design", "implement", "verify", "integrate", "maintain"]
+}
+
+craft methodology_stage_index(stage) {
+    vary position := 0
+    each item in methodology_stages() {
+        when item == stage {
+            yield position
+        }
+        change position := position + 1
+    }
+    yield nothing
+}
+
+export craft methodology_validate_plan(stages) {
+    when kind(stages) != "list" or size(stages) < 2 or stages[0] != "inventory" {
+        yield false
+    }
+    vary previous_index := -1
+    each stage in stages {
+        make current_index := methodology_stage_index(stage)
+        when current_index == nothing or current_index <= previous_index {
+            yield false
+        }
+        change previous_index := current_index
+    }
+    yield previous_index >= 4
+}
+
+export craft methodology_validate_gate(gate) {
+    when kind(gate) != "list" or size(gate) != 2 or methodology_stage_index(gate[0]) == nothing or kind(gate[1]) != "list" or size(gate[1]) == 0 {
+        yield false
+    }
+    each evidence in gate[1] {
+        when kind(evidence) != "text" or evidence == "" {
+            yield false
+        }
+    }
+    yield size(unique(gate[1])) == size(gate[1])
+}
+
+export craft methodology_rules() {
+    yield [
+        ["evidence-first", "inventory and baseline precede implementation"],
+        ["versioned-design", "specify compatibility before breaking change"],
+        ["isolated-change", "one reviewable concern per implementation batch"],
+        ["verification", "tests and CI evidence precede promotion"],
+        ["rollback", "integration has a documented recovery path"]
+    ]
+}
+
+export craft approach_profiles() {
+    yield [
+        ["compatibility-first", ["preserve-current-behavior", "version-contracts", "differential-tests"], "implemented"],
+        ["local-first", ["offline-default", "explicit-sync", "local-data-ownership"], "partial"],
+        ["capability-security", ["least-authority", "explicit-effects", "fail-closed"], "partial"],
+        ["evidence-driven", ["source-of-truth", "negative-tests", "auditable-status"], "implemented"],
+        ["native-conformance", ["canonical-ir", "cross-target-tests", "abi-validation"], "partial"]
+    ]
+}
+
+craft approach_find(identifier) {
+    vary found := nothing
+    each profile in approach_profiles() {
+        when profile[0] == identifier {
+            change found := profile
+        }
+    }
+    yield found
+}
+
+export craft approach_validate_profile(profile) {
+    when kind(profile) != "list" or size(profile) != 3 {
+        yield false
+    }
+    make known := approach_find(profile[0])
+    yield known != nothing and profile == known
+}
+
+export craft approach_validate_selection(selection) {
+    when kind(selection) != "list" or size(selection) == 0 {
+        yield false
+    }
+    each identifier in selection {
+        when approach_find(identifier) == nothing {
+            yield false
+        }
+    }
+    yield size(unique(selection)) == size(selection)
+}
+
+export craft approach_principles(identifier) {
+    make profile := approach_find(identifier)
+    when profile == nothing {
+        yield nothing
+    }
+    yield profile[1]
+}
+
+export craft system_component_catalog() {
+    yield ["language", "compiler", "runtime", "host", "toolchain", "tests", "documentation", "integrations"]
+}
+
+export craft system_validate_manifest(manifest) {
+    when kind(manifest) != "list" or size(manifest) != 4 {
+        yield false
+    }
+    when kind(manifest[0]) != "text" or manifest[0] == "" or kind(manifest[1]) != "number" or manifest[1] != 1 or manifest[1] % 1 != 0 {
+        yield false
+    }
+    when kind(manifest[2]) != "list" or kind(manifest[3]) != "list" or size(manifest[2]) == 0 {
+        yield false
+    }
+    when size(unique(manifest[2])) != size(manifest[2]) or size(unique(manifest[3])) != size(manifest[3]) {
+        yield false
+    }
+    each component in manifest[2] {
+        when not contains(system_component_catalog(), component) {
+            yield false
+        }
+    }
+    each contract in manifest[3] {
+        when kind(contract) != "text" or contract == "" {
+            yield false
+        }
+    }
+    yield true
+}
+
+export craft system_validate_dependency_order(components) {
+    when kind(components) != "list" or size(components) == 0 {
+        yield false
+    }
+    each component in components {
+        when not contains(system_component_catalog(), component) {
+            yield false
+        }
+    }
+    yield size(unique(components)) == size(components)
+}
+
+export craft subsystem_contracts() {
+    yield [
+        ["lexer", "language", "source", "token-stream", "implemented"],
+        ["parser", "language", "token-stream", "syntax-tree", "implemented"],
+        ["semantic-analysis", "compiler", "syntax-tree", "typed-tree", "partial"],
+        ["canonical-ir", "compiler", "typed-tree", "canonical-ir", "partial"],
+        ["runtime", "runtime", "program-or-ir", "runtime-value", "implemented"],
+        ["module-loader", "runtime", "module-specifier", "module-exports", "implemented"],
+        ["resource-manager", "runtime", "resource-request", "managed-handle", "implemented"],
+        ["host-adapter", "host", "capability-request", "host-response", "partial"]
+    ]
+}
+
+export craft subsystem_validate_contract(contract) {
+    when kind(contract) != "list" or size(contract) != 5 {
+        yield false
+    }
+    when kind(contract[0]) != "text" or contract[0] == "" or kind(contract[1]) != "text" or not contains(system_component_catalog(), contract[1]) or kind(contract[2]) != "text" or kind(contract[3]) != "text" {
+        yield false
+    }
+    yield contains(["implemented", "partial", "planned"], contract[4])
+}
+
+export craft subsystem_validate_catalog() {
+    vary identifiers := []
+    each contract in subsystem_contracts() {
+        when not subsystem_validate_contract(contract) {
+            yield false
+        }
+        change identifiers := push(identifiers, contract[0])
+    }
+    yield size(unique(identifiers)) == size(identifiers)
+}
+
+export craft subsystem_find(identifier) {
+    vary found := nothing
+    each contract in subsystem_contracts() {
+        when contract[0] == identifier {
+            change found := contract
+        }
+    }
+    yield found
+}
+
+export craft subsystem_validate_flow(flow) {
+    when kind(flow) != "list" or size(flow) < 2 {
+        yield false
+    }
+    vary previous_output := nothing
+    vary position := 0
+    each identifier in flow {
+        make contract := subsystem_find(identifier)
+        when contract == nothing or contract[4] == "planned" {
+            yield false
+        }
+        when position > 0 and contract[2] != previous_output {
+            yield false
+        }
+        change previous_output := contract[3]
+        change position := position + 1
+    }
+    yield true
+}
+
+export craft module_effect_kinds() {
+    yield ["pure", "console", "filesystem", "process", "network", "clock", "ffi", "mmio", "irq", "dma", "unsafe"]
+}
+
+export craft module_validate_relative_path(path) {
+    when kind(path) != "text" or path == "" {
+        yield false
+    }
+    when starts_with(path, "/") or starts_with(path, "\\") or contains(path, ":") or contains(path, "../") or contains(path, "/..") or contains(path, "\\") {
+        yield false
+    }
+    yield ends_with(path, ".rpr")
+}
+
+export craft module_validate_contract(module) {
+    when kind(module) != "list" or size(module) != 7 {
+        yield false
+    }
+    when kind(module[0]) != "text" or module[0] == "" or not module_validate_relative_path(module[1]) {
+        yield false
+    }
+    when kind(module[2]) != "number" or kind(module[3]) != "number" or module[2] < 1 or module[3] < 0 or module[2] % 1 != 0 or module[3] % 1 != 0 {
+        yield false
+    }
+    when kind(module[4]) != "list" or kind(module[5]) != "list" or kind(module[6]) != "list" {
+        yield false
+    }
+    when size(unique(module[4])) != size(module[4]) or size(unique(module[5])) != size(module[5]) {
+        yield false
+    }
+    each name in module[4] {
+        when kind(name) != "text" or name == "" {
+            yield false
+        }
+    }
+    each dependency in module[5] {
+        when kind(dependency) != "text" or dependency == "" or dependency == module[0] {
+            yield false
+        }
+    }
+    each effect in module[6] {
+        when not contains(module_effect_kinds(), effect) {
+            yield false
+        }
+    }
+    when contains(module[6], "pure") and size(module[6]) != 1 {
+        yield false
+    }
+    yield true
+}
+
+export craft module_validate_graph(modules) {
+    when kind(modules) != "list" or size(modules) == 0 {
+        yield false
+    }
+    vary completed := []
+    each module in modules {
+        when not module_validate_contract(module) or contains(completed, module[0]) {
+            yield false
+        }
+        each dependency in module[5] {
+            when not contains(completed, dependency) {
+                yield false
+            }
+        }
+        change completed := push(completed, module[0])
+    }
+    yield true
+}
+
+export craft module_graph_order(modules) {
+    when not module_validate_graph(modules) {
+        yield nothing
+    }
+    vary order := []
+    each module in modules {
+        change order := push(order, module[0])
+    }
+    yield order
+}
+
+export craft foundation_ninth_five() {
+    yield [
+        ["foundation.methodology.v1", "Methodology", "evidence-led engineering lifecycle and gates", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_41_45.md"],
+        ["foundation.approach.v1", "Approach", "compatible engineering strategies and principles", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_41_45.md"],
+        ["foundation.system.v1", "System", "project-level component and interface manifest", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_41_45.md"],
+        ["foundation.subsystem.v1", "Subsystem", "owned subsystem inputs, outputs and maturity contracts", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_41_45.md"],
+        ["foundation.module.v1", "Module", "versioned .rpr exports, imports, effects and graph validation", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_41_45.md"]
+    ]
+}
+
+export craft foundation_all_frameworks_45() {
+    vary rows := previous["foundation_all_frameworks_40"]()
+    each row in foundation_ninth_five() {
+        change rows := push(rows, row)
+    }
+    yield rows
+}
+
+export craft foundation_validate_catalog_45() {
+    make rows := foundation_all_frameworks_45()
+    vary identifiers := []
+    each row in rows {
+        when size(row) != 5 {
+            yield false
+        }
+        change identifiers := push(identifiers, row[0])
+    }
+    yield previous["foundation_validate_catalog_40"]() and size(rows) == 45 and size(unique(identifiers)) == 45
+}
