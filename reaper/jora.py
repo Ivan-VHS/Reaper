@@ -312,7 +312,13 @@ _DEPENDENCIES: dict[str, dict[str, Any]] = {
 
 # HARVEST is a bundled, source-only Reaper capability pack. The archive is
 # decoded and inspected without extracting files or executing source.
-_HARVEST_BUNDLE_DIR = Path(__file__).resolve().parents[1] / "harvest" / "bundle"
+_SOURCE_TREE_HARVEST_BUNDLE_DIR = Path(__file__).resolve().parents[1] / "harvest" / "bundle"
+_PACKAGED_HARVEST_BUNDLE_DIR = Path(__file__).resolve().parent / "harvest_bundle"
+_HARVEST_BUNDLE_DIR = (
+    _SOURCE_TREE_HARVEST_BUNDLE_DIR
+    if _SOURCE_TREE_HARVEST_BUNDLE_DIR.is_dir()
+    else _PACKAGED_HARVEST_BUNDLE_DIR
+)
 _HARVEST_ARCHIVE_LIMIT = 4 * 1024 * 1024
 _HARVEST_FILES_LIMIT = 128
 _HARVEST_ARCHIVE_EXPECTED_SHA256 = "64d8b6738f27a4d03ba9e10537effc28d781c1c9efb9390004451bba40ae520a"
