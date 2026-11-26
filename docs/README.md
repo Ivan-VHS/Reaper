@@ -6,6 +6,8 @@ Start with the [project README](../README.md) for installation, first commands a
 
 - [Features and maturity](FEATURES.md)
 - [Reaper framework modules v1](FRAMEWORKS_V1.md)
+- [ДОМ Foundation implementation](DOM_FOUNDATION_IMPLEMENTATION.md)
+- [Framework portfolio and 50,000-LOC expansion](FRAMEWORK_PORTFOLIO_EXPANSION.md)
 - [Psychoporter 666 function categories](FUNCTION_CATEGORIES_666.md)
 - [Architecture](ARCHITECTURE.md)
 - [Hardware language track](HARDWARE_LANGUAGE.md)
