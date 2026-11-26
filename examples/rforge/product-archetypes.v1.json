@@ -1,7 +1,7 @@
 {
   "schema": "reaper.rforge.archetype-catalog.v1",
-  "title": "RForge proposed product archetypes",
-  "status": "proposal_catalog",
+  "title": "RForge implemented Reaper framework archetypes",
+  "status": "source_implemented_unverified",
   "composition_policy": {
     "preserve_profile_token_order": true,
     "reversed_profiles_are_distinct_candidates": true,
@@ -84,11 +84,21 @@
       "profile_expression": "Soft Frame",
       "mirror_of": null,
       "mirrored_by": "outbreak",
-      "family_assignment": "pending",
-      "semantic_contract": "pending",
-      "maturity": "proposal",
-      "generator_status": "not_generated",
-      "executable_capabilities": []
+      "family_assignment": "framework",
+      "semantic_contract": "reaper.rforge.framework-catalog.v1",
+      "maturity": "source_present",
+      "generator_status": "source_present",
+      "executable_capabilities": [],
+      "module_path": "frameworks/rforge/plague_soft_frame.rpr",
+      "public_api": [
+        "soft_frame_opacity_valid",
+        "soft_frame_phase_valid",
+        "soft_frame_transition_allowed",
+        "soft_frame_create",
+        "soft_frame_hit_test"
+      ],
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend"
     },
     {
       "id": "outbreak",
@@ -102,11 +112,21 @@
       "profile_expression": "Frame Soft",
       "mirror_of": "plague",
       "mirrored_by": null,
-      "family_assignment": "pending",
-      "semantic_contract": "pending",
-      "maturity": "proposal",
-      "generator_status": "not_generated",
-      "executable_capabilities": []
+      "family_assignment": "framework",
+      "semantic_contract": "reaper.rforge.framework-catalog.v1",
+      "maturity": "source_present",
+      "generator_status": "source_present",
+      "executable_capabilities": [],
+      "module_path": "frameworks/rforge/outbreak_frame_soft.rpr",
+      "public_api": [
+        "outbreak_slot_valid",
+        "outbreak_softness_valid",
+        "outbreak_shell_create",
+        "outbreak_attach_allowed",
+        "outbreak_surface_ready"
+      ],
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend"
     },
     {
       "id": "pestilence",
@@ -120,11 +140,21 @@
       "profile_expression": "Frame SaaS",
       "mirror_of": null,
       "mirrored_by": "malady",
-      "family_assignment": "pending",
-      "semantic_contract": "pending",
-      "maturity": "proposal",
-      "generator_status": "not_generated",
-      "executable_capabilities": []
+      "family_assignment": "framework",
+      "semantic_contract": "reaper.rforge.framework-catalog.v1",
+      "maturity": "source_present",
+      "generator_status": "source_present",
+      "executable_capabilities": [],
+      "module_path": "frameworks/rforge/pestilence_frame_saas.rpr",
+      "public_api": [
+        "pestilence_tenant_id_valid",
+        "pestilence_frame_bind",
+        "pestilence_tenant_access",
+        "pestilence_quota_valid",
+        "pestilence_session_transition"
+      ],
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend"
     },
     {
       "id": "malady",
@@ -138,11 +168,21 @@
       "profile_expression": "SaaS Frame",
       "mirror_of": "pestilence",
       "mirrored_by": null,
-      "family_assignment": "pending",
-      "semantic_contract": "pending",
-      "maturity": "proposal",
-      "generator_status": "not_generated",
-      "executable_capabilities": []
+      "family_assignment": "framework",
+      "semantic_contract": "reaper.rforge.framework-catalog.v1",
+      "maturity": "source_present",
+      "generator_status": "source_present",
+      "executable_capabilities": [],
+      "module_path": "frameworks/rforge/malady_saas_frame.rpr",
+      "public_api": [
+        "malady_plan_frame_limit",
+        "malady_feature_allowed",
+        "malady_route_valid",
+        "malady_frame_quota_allowed",
+        "malady_route_admit"
+      ],
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend"
     },
     {
       "id": "epidemic",
@@ -156,11 +196,21 @@
       "profile_expression": "Framework native",
       "mirror_of": null,
       "mirrored_by": "miasma",
-      "family_assignment": "pending",
-      "semantic_contract": "pending",
-      "maturity": "proposal",
-      "generator_status": "not_generated",
-      "executable_capabilities": []
+      "family_assignment": "framework",
+      "semantic_contract": "reaper.rforge.framework-catalog.v1",
+      "maturity": "source_present",
+      "generator_status": "source_present",
+      "executable_capabilities": [],
+      "module_path": "frameworks/rforge/epidemic_framework_native.rpr",
+      "public_api": [
+        "epidemic_scalar_width_valid",
+        "epidemic_abi_valid",
+        "epidemic_alignment_valid",
+        "epidemic_region_valid",
+        "epidemic_native_contract"
+      ],
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend"
     },
     {
       "id": "miasma",
@@ -174,11 +224,21 @@
       "profile_expression": "native Framework",
       "mirror_of": "epidemic",
       "mirrored_by": null,
-      "family_assignment": "pending",
-      "semantic_contract": "pending",
-      "maturity": "proposal",
-      "generator_status": "not_generated",
-      "executable_capabilities": []
+      "family_assignment": "framework",
+      "semantic_contract": "reaper.rforge.framework-catalog.v1",
+      "maturity": "source_present",
+      "generator_status": "source_present",
+      "executable_capabilities": [],
+      "module_path": "frameworks/rforge/miasma_native_framework.rpr",
+      "public_api": [
+        "miasma_host_compatible",
+        "miasma_lifecycle_transition",
+        "miasma_memory_admit",
+        "miasma_extension_admit",
+        "miasma_publish_ready"
+      ],
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend"
     },
     {
       "id": "pandemic",
@@ -192,11 +252,21 @@
       "profile_expression": "Program Summary",
       "mirror_of": null,
       "mirrored_by": "fever",
-      "family_assignment": "pending",
-      "semantic_contract": "pending",
-      "maturity": "proposal",
-      "generator_status": "not_generated",
-      "executable_capabilities": []
+      "family_assignment": "framework",
+      "semantic_contract": "reaper.rforge.framework-catalog.v1",
+      "maturity": "source_present",
+      "generator_status": "source_present",
+      "executable_capabilities": [],
+      "module_path": "frameworks/rforge/pandemic_program_summary.rpr",
+      "public_api": [
+        "pandemic_counts_valid",
+        "pandemic_success_rate",
+        "pandemic_outcome",
+        "pandemic_summary",
+        "pandemic_remaining"
+      ],
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend"
     },
     {
       "id": "fever",
@@ -210,11 +280,21 @@
       "profile_expression": "Summary Program",
       "mirror_of": "pandemic",
       "mirrored_by": null,
-      "family_assignment": "pending",
-      "semantic_contract": "pending",
-      "maturity": "proposal",
-      "generator_status": "not_generated",
-      "executable_capabilities": []
+      "family_assignment": "framework",
+      "semantic_contract": "reaper.rforge.framework-catalog.v1",
+      "maturity": "source_present",
+      "generator_status": "source_present",
+      "executable_capabilities": [],
+      "module_path": "frameworks/rforge/fever_summary_program.rpr",
+      "public_api": [
+        "fever_severity",
+        "fever_summary_valid",
+        "fever_program_line",
+        "fever_aggregate",
+        "fever_release_allowed"
+      ],
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend"
     },
     {
       "id": "scourge",
@@ -228,11 +308,20 @@
       "profile_expression": "System Control",
       "mirror_of": null,
       "mirrored_by": "bane",
-      "family_assignment": "pending",
-      "semantic_contract": "pending",
-      "maturity": "proposal",
-      "generator_status": "not_generated",
-      "executable_capabilities": []
+      "family_assignment": "framework",
+      "semantic_contract": "reaper.rforge.framework-catalog.v1",
+      "maturity": "source_present",
+      "generator_status": "source_present",
+      "executable_capabilities": [],
+      "module_path": "frameworks/rforge/scourge_system_control.rpr",
+      "public_api": [
+        "scourge_state_valid",
+        "scourge_transition_allowed",
+        "scourge_command_admit",
+        "scourge_system_limits"
+      ],
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend"
     },
     {
       "id": "bane",
@@ -246,11 +335,21 @@
       "profile_expression": "Control System",
       "mirror_of": "scourge",
       "mirrored_by": null,
-      "family_assignment": "pending",
-      "semantic_contract": "pending",
-      "maturity": "proposal",
-      "generator_status": "not_generated",
-      "executable_capabilities": []
+      "family_assignment": "framework",
+      "semantic_contract": "reaper.rforge.framework-catalog.v1",
+      "maturity": "source_present",
+      "generator_status": "source_present",
+      "executable_capabilities": [],
+      "module_path": "frameworks/rforge/bane_control_system.rpr",
+      "public_api": [
+        "bane_rule_matches",
+        "bane_action_safe",
+        "bane_control_plan",
+        "bane_enforcement_level",
+        "bane_transition_verified"
+      ],
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend"
     },
     {
       "id": "blight",
@@ -264,11 +363,21 @@
       "profile_expression": "Tunnel Justice",
       "mirror_of": null,
       "mirrored_by": "curse",
-      "family_assignment": "pending",
-      "semantic_contract": "pending",
-      "maturity": "proposal",
-      "generator_status": "not_generated",
-      "executable_capabilities": []
+      "family_assignment": "framework",
+      "semantic_contract": "reaper.rforge.framework-catalog.v1",
+      "maturity": "source_present",
+      "generator_status": "source_present",
+      "executable_capabilities": [],
+      "module_path": "frameworks/rforge/blight_tunnel_justice.rpr",
+      "public_api": [
+        "blight_endpoint_valid",
+        "blight_clearance_sufficient",
+        "blight_justice_decision",
+        "blight_route_admit",
+        "blight_tunnel_lease_valid"
+      ],
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend"
     },
     {
       "id": "curse",
@@ -282,11 +391,21 @@
       "profile_expression": "Justice Tunnel",
       "mirror_of": "blight",
       "mirrored_by": null,
-      "family_assignment": "pending",
-      "semantic_contract": "pending",
-      "maturity": "proposal",
-      "generator_status": "not_generated",
-      "executable_capabilities": []
+      "family_assignment": "framework",
+      "semantic_contract": "reaper.rforge.framework-catalog.v1",
+      "maturity": "source_present",
+      "generator_status": "source_present",
+      "executable_capabilities": [],
+      "module_path": "frameworks/rforge/curse_justice_tunnel.rpr",
+      "public_api": [
+        "curse_case_valid",
+        "curse_disposition",
+        "curse_tunnel_release_allowed",
+        "curse_audit_record",
+        "curse_appeal_allowed"
+      ],
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend"
     },
     {
       "id": "calamity",
@@ -300,11 +419,21 @@
       "profile_expression": "native Realisation",
       "mirror_of": null,
       "mirrored_by": "menace",
-      "family_assignment": "pending",
-      "semantic_contract": "pending",
-      "maturity": "proposal",
-      "generator_status": "not_generated",
-      "executable_capabilities": []
+      "family_assignment": "framework",
+      "semantic_contract": "reaper.rforge.framework-catalog.v1",
+      "maturity": "source_present",
+      "generator_status": "source_present",
+      "executable_capabilities": [],
+      "module_path": "frameworks/rforge/calamity_native_realisation.rpr",
+      "public_api": [
+        "calamity_stage_index",
+        "calamity_stage_transition",
+        "calamity_realisation_ready",
+        "calamity_native_emit_allowed",
+        "calamity_stage_complete"
+      ],
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend"
     },
     {
       "id": "menace",
@@ -318,11 +447,21 @@
       "profile_expression": "Realisation native",
       "mirror_of": "calamity",
       "mirrored_by": null,
-      "family_assignment": "pending",
-      "semantic_contract": "pending",
-      "maturity": "proposal",
-      "generator_status": "not_generated",
-      "executable_capabilities": []
+      "family_assignment": "framework",
+      "semantic_contract": "reaper.rforge.framework-catalog.v1",
+      "maturity": "source_present",
+      "generator_status": "source_present",
+      "executable_capabilities": [],
+      "module_path": "frameworks/rforge/menace_realisation_native.rpr",
+      "public_api": [
+        "menace_realisation_plan",
+        "menace_native_commit_allowed",
+        "menace_retry_allowed",
+        "menace_stage_index",
+        "menace_stage_order_valid"
+      ],
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend"
     },
     {
       "id": "affliction",
@@ -336,11 +475,21 @@
       "profile_expression": "UI Unreal",
       "mirror_of": null,
       "mirrored_by": "cataclysm",
-      "family_assignment": "pending",
-      "semantic_contract": "pending",
-      "maturity": "proposal",
-      "generator_status": "not_generated",
-      "executable_capabilities": []
+      "family_assignment": "framework",
+      "semantic_contract": "reaper.rforge.framework-catalog.v1",
+      "maturity": "source_present",
+      "generator_status": "source_present",
+      "executable_capabilities": [],
+      "module_path": "frameworks/rforge/affliction_ui_unreal.rpr",
+      "public_api": [
+        "affliction_widget_valid",
+        "affliction_event_allowed",
+        "affliction_layout_valid",
+        "affliction_unreal_bridge_compatible",
+        "affliction_widget_route"
+      ],
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend"
     },
     {
       "id": "cataclysm",
@@ -354,11 +503,21 @@
       "profile_expression": "Unreal UI",
       "mirror_of": "affliction",
       "mirrored_by": null,
-      "family_assignment": "pending",
-      "semantic_contract": "pending",
-      "maturity": "proposal",
-      "generator_status": "not_generated",
-      "executable_capabilities": []
+      "family_assignment": "framework",
+      "semantic_contract": "reaper.rforge.framework-catalog.v1",
+      "maturity": "source_present",
+      "generator_status": "source_present",
+      "executable_capabilities": [],
+      "module_path": "frameworks/rforge/cataclysm_unreal_ui.rpr",
+      "public_api": [
+        "cataclysm_engine_supported",
+        "cataclysm_widget_transition",
+        "cataclysm_batch_valid",
+        "cataclysm_ui_commit_allowed",
+        "cataclysm_adapter_version"
+      ],
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend"
     },
     {
       "id": "infestation",
@@ -372,11 +531,21 @@
       "profile_expression": "Concrete Cosmos",
       "mirror_of": null,
       "mirrored_by": "devastation",
-      "family_assignment": "pending",
-      "semantic_contract": "pending",
-      "maturity": "proposal",
-      "generator_status": "not_generated",
-      "executable_capabilities": []
+      "family_assignment": "framework",
+      "semantic_contract": "reaper.rforge.framework-catalog.v1",
+      "maturity": "source_present",
+      "generator_status": "source_present",
+      "executable_capabilities": [],
+      "module_path": "frameworks/rforge/infestation_concrete_cosmos.rpr",
+      "public_api": [
+        "infestation_entity_valid",
+        "infestation_link_valid",
+        "infestation_depth_valid",
+        "infestation_attach_allowed",
+        "infestation_entity_record"
+      ],
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend"
     },
     {
       "id": "devastation",
@@ -390,11 +559,21 @@
       "profile_expression": "Cosmos Concrete",
       "mirror_of": "infestation",
       "mirrored_by": null,
-      "family_assignment": "pending",
-      "semantic_contract": "pending",
-      "maturity": "proposal",
-      "generator_status": "not_generated",
-      "executable_capabilities": []
+      "family_assignment": "framework",
+      "semantic_contract": "reaper.rforge.framework-catalog.v1",
+      "maturity": "source_present",
+      "generator_status": "source_present",
+      "executable_capabilities": [],
+      "module_path": "frameworks/rforge/devastation_cosmos_concrete.rpr",
+      "public_api": [
+        "devastation_cell_valid",
+        "devastation_cell_index",
+        "devastation_bounds_valid",
+        "devastation_materialise_allowed",
+        "devastation_region_capacity"
+      ],
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend"
     },
     {
       "id": "contagion",
@@ -408,11 +587,21 @@
       "profile_expression": "base Space",
       "mirror_of": null,
       "mirrored_by": "desolation",
-      "family_assignment": "pending",
-      "semantic_contract": "pending",
-      "maturity": "proposal",
-      "generator_status": "not_generated",
-      "executable_capabilities": []
+      "family_assignment": "framework",
+      "semantic_contract": "reaper.rforge.framework-catalog.v1",
+      "maturity": "source_present",
+      "generator_status": "source_present",
+      "executable_capabilities": [],
+      "module_path": "frameworks/rforge/contagion_base_space.rpr",
+      "public_api": [
+        "contagion_point_valid",
+        "contagion_distance_squared",
+        "contagion_inside_box",
+        "contagion_translate",
+        "contagion_space_valid"
+      ],
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend"
     },
     {
       "id": "desolation",
@@ -426,11 +615,21 @@
       "profile_expression": "Space base",
       "mirror_of": "contagion",
       "mirrored_by": null,
-      "family_assignment": "pending",
-      "semantic_contract": "pending",
-      "maturity": "proposal",
-      "generator_status": "not_generated",
-      "executable_capabilities": []
+      "family_assignment": "framework",
+      "semantic_contract": "reaper.rforge.framework-catalog.v1",
+      "maturity": "source_present",
+      "generator_status": "source_present",
+      "executable_capabilities": [],
+      "module_path": "frameworks/rforge/desolation_space_base.rpr",
+      "public_api": [
+        "desolation_basis_valid",
+        "desolation_local_to_world",
+        "desolation_world_to_local",
+        "desolation_base_compatible",
+        "desolation_cell_valid"
+      ],
+      "runtime_validation": "pending",
+      "native_aot": "not_supported_by_current_backend"
     }
   ]
 }
