@@ -20,7 +20,6 @@ craft ast_node_valid_shape(node, source_length) {
     when size(node) != 5 { yield false }
     when not ast_kind_supported(node[0]) { yield false }
     when node[1] < 0 or node[2] < node[1] or node[2] > source_length { yield false }
-    when size(node[4]) < 0 { yield false }
     yield true
 }
 
