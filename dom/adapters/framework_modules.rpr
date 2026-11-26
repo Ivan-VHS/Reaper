@@ -32,6 +32,10 @@ export craft normalize_most_word(word) {
     ]
 }
 
+export craft empty_snapshot() {
+    yield blau["empty"]()
+}
+
 export craft update_snapshot(snapshot, expected_version, key, value) {
     yield blau["compare_and_set"](snapshot, expected_version, key, value)
 }
