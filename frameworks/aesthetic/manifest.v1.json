@@ -131,7 +131,10 @@
     "isolated_workspace_and_atomic_topic_branch_publication_contract",
     "durable_audit_and_conditional_rollback_recovery_callbacks",
     "native_expression_ast_to_typed_hir_frontend",
-    "source_named_line_column_span_preservation_in_native_hir"
+    "source_named_line_column_span_preservation_in_native_hir",
+    "native_f64_unary_and_same_type_binary_arithmetic",
+    "locale_independent_decimal_literal_parsing",
+    "empty_and_escaped_text_literal_lowering"
   ],
   "not_implemented": [
     "first_class_reaper_struct_and_enum_syntax",
