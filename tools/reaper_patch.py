@@ -11,7 +11,7 @@ import subprocess
 import sys
 from pathlib import Path, PurePosixPath
 
-SCHEMA = "reaper.patch-proposal/v1"
+SCHEMA = "reaper.patch-proposal/v2"
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
 
