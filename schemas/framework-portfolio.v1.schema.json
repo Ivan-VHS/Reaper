@@ -1,0 +1,203 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Ivan-VHS/Reaper/blob/main/schemas/framework-portfolio.v1.schema.json",
+  "title": "Reaper Framework Portfolio v1",
+  "description": "Evidence-oriented index of Reaper-owned framework modules and adjacent integration surfaces.",
+  "type": "object",
+  "required": [
+    "schema",
+    "version",
+    "language",
+    "canonical_runtime",
+    "scale_policy",
+    "groups",
+    "integration_surfaces"
+  ],
+  "properties": {
+    "schema": {
+      "const": "reaper.framework-portfolio.v1"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "language": {
+      "const": "Reaper"
+    },
+    "canonical_runtime": {
+      "const": "ДОМ"
+    },
+    "scale_policy": {
+      "type": "object",
+      "required": [
+        "target_qualified_production_reaper_loc_per_independent_module",
+        "counted_modules",
+        "total_qualified_production_reaper_loc_target",
+        "baseline_qualified_loc",
+        "rule",
+        "exclusions",
+        "warning"
+      ],
+      "properties": {
+        "target_qualified_production_reaper_loc_per_independent_module": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "counted_modules": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "total_qualified_production_reaper_loc_target": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "baseline_qualified_loc": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "rule": {
+          "type": "string",
+          "minLength": 1
+        },
+        "exclusions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "warning": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": true
+    },
+    "groups": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "status",
+          "items"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "type": "string",
+            "minLength": 1
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "name",
+                "status"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "source": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "status": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "implementation_language": {
+                  "const": "Reaper"
+                },
+                "target_qualified_loc": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "baseline_qualified_loc": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "integration_surfaces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "status",
+          "role"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "type": "string",
+            "minLength": 1
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "type": "string"
+          },
+          "prs": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "branch": {
+            "type": "string"
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}
