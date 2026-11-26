@@ -79,9 +79,11 @@ export craft validate_tree(nodes) {
         change errors := push(errors, "tree-must-have-one-root")
     }
     each node in nodes {
-        when node_valid(node) and node[2] != "" {
-            when not contains_value(ids, node[2]) {
-                change errors := push(errors, "missing-parent:" ++ node[0])
+        when node_valid(node) {
+            when node[2] != "" {
+                when not contains_value(ids, node[2]) {
+                    change errors := push(errors, "missing-parent:" ++ node[0])
+                }
             }
         }
     }
