@@ -57,6 +57,12 @@ class FoundationalFrameworksFortyOneToFortyFiveTests(unittest.TestCase):
         )
         self.assertEqual(
             self.run_expression(
+                'engineering["methodology_validate_plan"](["inventory", "specify", "implement", "verify"])'
+            ),
+            ["false"],
+        )
+        self.assertEqual(
+            self.run_expression(
                 'engineering["methodology_validate_gate"](["verify", ["tests/test_language.py", "CI:python"]])'
             ),
             ["true"],
@@ -138,6 +144,12 @@ class FoundationalFrameworksFortyOneToFortyFiveTests(unittest.TestCase):
         self.assertEqual(
             self.run_expression(
                 'engineering["module_validate_contract"](["app.main", "main.rpr", 1, 0, ["run"], [], ["pure", "console"]])'
+            ),
+            ["false"],
+        )
+        self.assertEqual(
+            self.run_expression(
+                'engineering["module_validate_contract"](["app.main", "main.rpr", 1, 0, ["run"], [], ["console", "console"]])'
             ),
             ["false"],
         )
