@@ -101,10 +101,10 @@ static void test_native_ast_to_typed_hir(void) {
         &lir, generated, sizeof generated, &generated_length, &error));
     assert(strstr(generated, "f64") != NULL);
 
-    assert(lower_source_to_hir("\\"empty\\"", "literal.rpr",
+    assert(lower_source_to_hir("\"empty\"", "literal.rpr",
         nodes, 32u, &hir, &error));
     assert(hir.length == 1u && hir.nodes[0].type == REAPER_COMPILER_IR_TYPE_TEXT);
-    assert(hir.nodes[0].text[0] == '\\0');
+    assert(hir.nodes[0].text[0] == '\0');
     assert(reaper_compiler_ir_verify(&hir, REAPER_COMPILER_IR_HIR, &error));
 
     {
