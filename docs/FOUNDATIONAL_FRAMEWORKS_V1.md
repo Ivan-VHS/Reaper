@@ -10,7 +10,7 @@ This first group implements five cooperating foundations rather than five compet
 
 | ID | Framework | Responsibility | Maturity |
 |---|---|---|---|
-| `foundation.scaffold.v1` | Scaffold | Repository layout, required project areas and extension points | Implemented |
+| `architecture.framework-frame.v1` | Framework frame | Structural frame, permitted relationships and project extension points | Implemented |
 | `foundation.platform.v1` | Platform | OS family, target mode, ABI and platform-profile selection | Partial |
 | `foundation.environment.v1` | Environment | Hosted, VM, simulated and freestanding execution profiles | Partial |
 | `foundation.infrastructure.v1` | Infrastructure | Resource budgets, module graph, memory/resource ledgers and host services | Partial |
@@ -20,9 +20,9 @@ Maturity describes the end-to-end capability, not just the existence of a regist
 
 ## Boundaries and responsibilities
 
-### Scaffold
+### Framework frame
 
-The scaffold describes the repository's existing separation of concerns:
+The framework frame describes the repository's structural separation of concerns. Its first executable slice validates the existing project scaffold:
 
 - `reaper/` — reference runtime and language services;
 - `src/` — native C17 frontend and runtime boundaries;
