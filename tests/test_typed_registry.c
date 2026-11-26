@@ -296,6 +296,6 @@ int main(void) {
     test_storage_exhaustion();
     test_versions_and_numeric_values();
     test_status_names();
-    puts("native typed registry tests: 12 groups passed");
+    puts("native typed registry tests: 13 groups passed");
     return 0;
 }
