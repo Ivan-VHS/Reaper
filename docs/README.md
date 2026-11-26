@@ -12,6 +12,7 @@ Start with the [project README](../README.md) for installation, first commands a
 - [DABI64 Desktop Host v1](DABI64_DESKTOP_HOST_V1.md)
 - [Implementation roadmap](IMPLEMENTATION_ROADMAP.md)
 - [PLAGUE — Repository Evolution Framework](PLAGUE.md)
+- [PLAGUE v1 bounded evolution policy](PLAGUE_FOUNDATION_V1.md)
 - [Studio and IDE](REAPER_IDE.md)
 - [NEXUS federation profile](NEXUS_FEDERATION_PROFILE_V1.md) — Reaper ownership, peer contracts and compatibility boundaries.
 
