@@ -74,12 +74,9 @@ export craft tir_ok(value) {
     yield [true, value, ""]
 }
 
-export craft tir_has_id(entries, id, id_index, tag) {
-    each entry in entries {
-        when size(entry) <= id_index or entry[0] != tag {
-            yield false
-        }
-        when entry[id_index] == id {
+export craft tir_list_contains(values, expected) {
+    each value in values {
+        when value == expected {
             yield true
         }
     }
@@ -122,7 +119,7 @@ export craft tir_source_map_validate(source_map) {
         when source[1] < 0 or source[2] == "" or source[4] < 0 or source[5] < 1 {
             yield tir_error("RPR-TIR-0004", "source entry requires a stable id, path and valid size")
         }
-        when list_has(source_ids, source[1]) {
+        when tir_list_contains(source_ids, source[1]) {
             yield tir_error("RPR-TIR-0005", "source identifiers must be unique")
         }
         change source_ids := push(source_ids, source[1])
@@ -146,7 +143,7 @@ export craft tir_source_map_validate(source_map) {
         when span[5] == span[7] and span[6] > span[8] {
             yield tir_error("RPR-TIR-0010", "span end precedes its start")
         }
-        when list_has(span_ids, span[1]) {
+        when tir_list_contains(span_ids, span[1]) {
             yield tir_error("RPR-TIR-0011", "span identifiers must be unique")
         }
         change span_ids := push(span_ids, span[1])
@@ -263,7 +260,6 @@ export craft tir_module_validate(module) {
         change field_index := field_index + 1
     }
 
-    vary parameter_ids := []
     each parameter in parameters {
         when size(parameter) != 5 or parameter[0] != "TIR_PARAMETER_V1" {
             yield tir_error("RPR-TIR-0024", "malformed function parameter")
@@ -274,7 +270,6 @@ export craft tir_module_validate(module) {
         when size(tir_span_by_id(module[5][2], parameter[4])) == 0 or parameter[2] == "" {
             yield tir_error("RPR-TIR-0026", "parameter requires a name and source span")
         }
-        change parameter_ids := push(parameter_ids, parameter[1] ++ ":" ++ parameter[2])
     }
 
     vary value_ids := []
@@ -326,22 +321,22 @@ export craft tir_module_validate(module) {
     }
 
     each block in blocks {
-        when block[6] == "return" {
-            when block[7] != -1 and size(tir_value_by_id(values, block[7])) == 0 {
+        when block[5] == "return" {
+            when block[6] != -1 and size(tir_value_by_id(values, block[6])) == 0 {
                 yield tir_error("RPR-TIR-0038", "return terminator references an unknown value")
             }
         } otherwise {
-            when block[6] == "jump" {
-                when size(tir_block_by_id(blocks, block[8])) == 0 {
+            when block[5] == "jump" {
+                when size(tir_block_by_id(blocks, block[7])) == 0 {
                     yield tir_error("RPR-TIR-0039", "jump terminator references an unknown target")
                 }
             } otherwise {
-                when block[6] == "cond_jump" {
-                    when size(tir_value_by_id(values, block[7])) == 0 or size(tir_block_by_id(blocks, block[8])) == 0 or size(tir_block_by_id(blocks, block[9])) == 0 {
+                when block[5] == "cond_jump" {
+                    when size(tir_value_by_id(values, block[6])) == 0 or size(tir_block_by_id(blocks, block[7])) == 0 or size(tir_block_by_id(blocks, block[8])) == 0 {
                         yield tir_error("RPR-TIR-0040", "conditional jump requires a value and two known targets")
                     }
                 } otherwise {
-                    when block[6] != "unreachable" {
+                    when block[5] != "unreachable" {
                         yield tir_error("RPR-TIR-0041", "unknown basic block terminator")
                     }
                 }
