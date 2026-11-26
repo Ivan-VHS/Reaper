@@ -193,6 +193,51 @@
             "items": {
               "type": "string"
             }
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "name",
+                "source",
+                "status"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "source": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "status": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "implementation_language": {
+                  "const": "Reaper"
+                },
+                "source_branch": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "responsibility": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "counted_in_core_60": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": true
+            }
           }
         },
         "additionalProperties": true
