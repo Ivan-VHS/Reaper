@@ -363,20 +363,20 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
         }
     }
 
+    if (!request_digest(request, result.request_digest)) {
+        result.status = REAPER_APPLY_INVALID_ARGUMENT;
+        return result;
+    }
     if (!host->verify_repository_grant(host->context, request->signed_grant,
             request->signed_grant_size, request->repository_id,
-            request->target_branch, request->now_unix_seconds)) {
+            request->target_branch, result.request_digest,
+            request->now_unix_seconds)) {
         result.status = REAPER_APPLY_GRANT_DENIED;
         return result;
     }
     if (!host->verify_git_revision(host->context, request->repository_id,
             request->base_branch, request->revision_algorithm, request->base_revision)) {
         result.status = REAPER_APPLY_REVISION_DENIED;
-        return result;
-    }
-
-    if (!request_digest(request, result.request_digest)) {
-        result.status = REAPER_APPLY_INVALID_ARGUMENT;
         return result;
     }
     if (!host->audit_append(host->context, "apply.started", request->request_id,
