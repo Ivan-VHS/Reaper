@@ -8,6 +8,7 @@ Start with the [project README](../README.md) for installation, first commands a
 - [Psychoporter 666 function categories](FUNCTION_CATEGORIES_666.md)
 - [Architecture](ARCHITECTURE.md)
 - [AESTHETICA — dual-axis aesthetic analysis](AESTHETICA.md)
+- [AESTHETICA — dual-axis aesthetic analysis](AESTHETICA.md)
 - [Hardware language track](HARDWARE_LANGUAGE.md)
 - [System Runtime ABI v1](SYSTEM_RUNTIME_ABI_V1.md)
 - [DABI64 Desktop Host v1](DABI64_DESKTOP_HOST_V1.md)
