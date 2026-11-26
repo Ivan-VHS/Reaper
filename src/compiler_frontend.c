@@ -231,13 +231,14 @@ int reaper_compiler_ir_lower_ast_to_hir(
                     source_node->line, source_node->column,
                     "native HIR supports unary + and - over one earlier operand");
             }
-            if (output[left].type != REAPER_COMPILER_IR_TYPE_I64) {
+            if (output[left].type != REAPER_COMPILER_IR_TYPE_I64 &&
+                output[left].type != REAPER_COMPILER_IR_TYPE_F64) {
                 return frontend_fail(error, index, source_name,
                     source_node->line, source_node->column,
-                    "native unary arithmetic currently requires an i64 operand");
+                    "native unary arithmetic requires an i64 or f64 operand");
             }
             node.opcode = REAPER_COMPILER_IR_HIR_UNARY;
-            node.type = REAPER_COMPILER_IR_TYPE_I64;
+            node.type = output[left].type;
             (void)snprintf(node.key, sizeof node.key, "%s", source_node->text);
             node.lhs = left;
             break;
@@ -249,14 +250,15 @@ int reaper_compiler_ir_lower_ast_to_hir(
                     source_node->line, source_node->column,
                     "native HIR supports binary +, -, * and / with earlier operands");
             }
-            if (output[left].type != REAPER_COMPILER_IR_TYPE_I64 ||
-                output[right].type != REAPER_COMPILER_IR_TYPE_I64) {
+            if ((output[left].type != REAPER_COMPILER_IR_TYPE_I64 &&
+                 output[left].type != REAPER_COMPILER_IR_TYPE_F64) ||
+                output[right].type != output[left].type) {
                 return frontend_fail(error, index, source_name,
                     source_node->line, source_node->column,
-                    "native binary arithmetic currently requires two i64 operands");
+                    "native binary arithmetic requires matching i64 or matching f64 operands");
             }
             node.opcode = REAPER_COMPILER_IR_HIR_BINARY;
-            node.type = REAPER_COMPILER_IR_TYPE_I64;
+            node.type = output[left].type;
             (void)snprintf(node.key, sizeof node.key, "%s", source_node->text);
             node.lhs = left;
             node.rhs = right;
