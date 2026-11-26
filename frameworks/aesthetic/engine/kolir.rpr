@@ -10,7 +10,7 @@ export craft valid_request(request) {
         yield false
     }
     when not Vorke["valid_text"](request[1], 96)
-        or not Vorke["valid_text"](request[2], 128)
+        or not Vorke["valid_fingerprint"](request[2])
         or kind(request[3]) != "list" {
         yield false
     }
