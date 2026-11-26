@@ -1,0 +1,208 @@
+# Final umbrella framework for the sixty-six-item Reaper foundation catalogue.
+import "foundation_61_65.rpr" as previous
+
+export make SOFTWARE_FRAMEWORK_SCHEMA := "reaper.software-framework.v1"
+export make SOFTWARE_FRAMEWORK_VERSION := 1
+export make SOFTWARE_FRAMEWORK_MINOR := 0
+
+export craft software_framework_id() {
+    yield "foundation.software-framework.v1"
+}
+
+export craft software_framework_name() {
+    yield "Software Framework"
+}
+
+export craft software_framework_ids_65() {
+    vary identifiers := []
+    each row in previous["foundation_all_frameworks_65"]() {
+        change identifiers := push(identifiers, row[0])
+    }
+    yield identifiers
+}
+
+export craft software_framework_entry() {
+    yield ["foundation.software-framework.v1", "Software Framework", "umbrella-integration", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_66.md"]
+}
+
+export craft foundation_all_frameworks_66() {
+    vary rows := previous["foundation_all_frameworks_65"]()
+    change rows := push(rows, software_framework_entry())
+    yield rows
+}
+
+export craft foundation_validate_catalog_66() {
+    make rows := foundation_all_frameworks_66()
+    vary identifiers := []
+    each row in rows {
+        when kind(row) != "list" or size(row) != 5 {
+            yield false
+        }
+        when contains(identifiers, row[0]) {
+            yield false
+        }
+        change identifiers := push(identifiers, row[0])
+    }
+    yield previous["foundation_validate_catalog_65"]() and size(rows) == 66 and size(unique(identifiers)) == 66
+}
+
+export craft software_framework_profiles() {
+    yield [
+        ["reference-treewalk", "treewalk", "hosted-reference", "implemented"],
+        ["canonical-vm", "canonical-vm", "hosted-reference", "implemented"],
+        ["native-c17-host", "scalar-c17-aot", "native-c17-host", "partial"],
+        ["simulator", "canonical-vm", "simulator-adapter", "partial"],
+        ["freestanding", "native-object", "freestanding", "planned"]
+    ]
+}
+
+craft software_framework_find_profile(identifier) {
+    vary found := nothing
+    each profile in software_framework_profiles() {
+        when profile[0] == identifier {
+            change found := profile
+        }
+    }
+    yield found
+}
+
+export craft software_framework_validate_profile(profile) {
+    when kind(profile) != "list" or size(profile) != 4 {
+        yield false
+    }
+    make known := software_framework_find_profile(profile[0])
+    when known == nothing or known[3] == "planned" {
+        yield false
+    }
+    yield profile == known
+}
+
+export craft software_framework_select_profile(identifier) {
+    make profile := software_framework_find_profile(identifier)
+    when profile == nothing or profile[3] == "planned" {
+        yield nothing
+    }
+    yield profile
+}
+
+export craft software_framework_extension_points() {
+    yield [
+        ["language-module", "versioned .rpr module import/export contracts", "module"],
+        ["compiler-pass", "canonical IR transformation with verification evidence", "compiler"],
+        ["execution-engine", "tree-walk, canonical VM or qualified native path", "runtime"],
+        ["host-adapter", "System Runtime ABI with minimum capabilities", "host"],
+        ["target-profile", "CPU, ABI, memory map and linker/toolchain metadata", "platform"],
+        ["interface-contract", "versioned schema and producer/consumer direction", "integration"],
+        ["quality-gate", "tests, CI and acceptance evidence", "verification"]
+    ]
+}
+
+export craft software_framework_capabilities() {
+    yield ["language", "compiler", "runtime", "modules", "resources", "platform", "host-abi", "tooling", "integration", "verification", "documentation"]
+}
+
+export craft software_framework_validate_extension(extension) {
+    when kind(extension) != "list" or size(extension) != 3 {
+        yield false
+    }
+    when kind(extension[0]) != "text" or extension[0] == "" or kind(extension[1]) != "text" or kind(extension[2]) != "text" {
+        yield false
+    }
+    vary known_point := false
+    each point in software_framework_extension_points() {
+        when point[0] == extension[1] {
+            change known_point := true
+        }
+    }
+    yield known_point and contains(software_framework_capabilities(), extension[2])
+}
+
+export craft software_framework_validate_extensions(extensions) {
+    when kind(extensions) != "list" {
+        yield false
+    }
+    vary identifiers := []
+    each extension in extensions {
+        when not software_framework_validate_extension(extension) or contains(identifiers, extension[0]) {
+            yield false
+        }
+        change identifiers := push(identifiers, extension[0])
+    }
+    yield true
+}
+
+export craft software_framework_validate_load_order(identifiers) {
+    yield identifiers == software_framework_ids_65()
+}
+
+export craft software_framework_manifest() {
+    yield [
+        SOFTWARE_FRAMEWORK_SCHEMA,
+        SOFTWARE_FRAMEWORK_VERSION,
+        SOFTWARE_FRAMEWORK_MINOR,
+        software_framework_id(),
+        software_framework_ids_65(),
+        software_framework_capabilities(),
+        "partial"
+    ]
+}
+
+export craft software_framework_validate_manifest(manifest) {
+    when kind(manifest) != "list" or size(manifest) != 7 {
+        yield false
+    }
+    when manifest[0] != SOFTWARE_FRAMEWORK_SCHEMA or manifest[1] != SOFTWARE_FRAMEWORK_VERSION or manifest[2] > SOFTWARE_FRAMEWORK_MINOR or manifest[2] < 0 {
+        yield false
+    }
+    when manifest[3] != software_framework_id() or not software_framework_validate_load_order(manifest[4]) {
+        yield false
+    }
+    when kind(manifest[5]) != "list" or kind(manifest[6]) != "text" or manifest[6] != "partial" {
+        yield false
+    }
+    yield manifest[5] == software_framework_capabilities()
+}
+
+export craft software_framework_validate_compatibility(requested_major, requested_minor) {
+    when kind(requested_major) != "number" or kind(requested_minor) != "number" or requested_major % 1 != 0 or requested_minor % 1 != 0 {
+        yield false
+    }
+    yield requested_major == SOFTWARE_FRAMEWORK_VERSION and requested_minor >= 0 and requested_minor <= SOFTWARE_FRAMEWORK_MINOR
+}
+
+export craft software_framework_integration_layers() {
+    yield [
+        ["source", "reaper/lexer.py", "implemented"],
+        ["syntax", "reaper/parser.py", "implemented"],
+        ["runtime", "reaper/runtime.py", "implemented"],
+        ["modules", "reaper/modules.py", "implemented"],
+        ["canonical-ir", "reaper/ir.py", "partial"],
+        ["native-core", "src and include/reaper", "partial"],
+        ["system-host", "include/reaper/system.h", "partial"],
+        ["hardware-adapter", "include/reaper/hardware.h", "partial"],
+        ["target-backend", "reaper/native_compiler.py", "partial"],
+        ["verification", "tests and GitHub Actions", "implemented"]
+    ]
+}
+
+export craft software_framework_validate_integration_layers() {
+    vary identifiers := []
+    each layer in software_framework_integration_layers() {
+        when kind(layer) != "list" or size(layer) != 3 or kind(layer[0]) != "text" or kind(layer[1]) != "text" or not contains(["implemented", "partial", "planned"], layer[2]) or contains(identifiers, layer[0]) {
+            yield false
+        }
+        change identifiers := push(identifiers, layer[0])
+    }
+    yield size(identifiers) == 10
+}
+
+export craft software_framework_safety_contract() {
+    yield [
+        ["network", "explicit opt-in; no ambient network effects"],
+        ["native-ffi", "trusted library path and explicit enablement"],
+        ["hardware", "trusted host/driver adapter only"],
+        ["privilege", "no implicit privilege escalation or raw syscall"],
+        ["workspace", "local path bounds and explicit mutation policy"],
+        ["verification", "no promotion without tests and CI evidence"]
+    ]
+}
