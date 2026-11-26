@@ -23,8 +23,8 @@ export craft inspect_feature(features, feature_id) {
     when kind(features) != "list" { yield [false, nothing, "features-must-be-list"] }
     vary found := nothing
     each feature in features {
-        when kind(feature) == "list" and size(feature) == 4 and feature[0] == feature_id {
-            change found := feature
+        when fc["fc_record"](feature, 4) {
+            when feature[0] == feature_id { change found := feature }
         }
     }
     when found == nothing { yield [false, nothing, "feature-not-found"] }
@@ -36,8 +36,8 @@ export craft list_contracts(registry) {
     when kind(registry) != "list" { yield [false, [], "registry-must-be-list"] }
     vary contracts := []
     each row in registry {
-        when kind(row) == "list" and size(row) >= 3 {
-            change contracts := push(contracts, row)
+        when kind(row) == "list" {
+            when size(row) >= 3 { change contracts := push(contracts, row) }
         }
     }
     yield [true, contracts, size(contracts)]
@@ -49,8 +49,10 @@ export craft describe_framework(request) {
     when kind(request[0]) != "list" { yield [false, nothing, "descriptors-must-be-list"] }
     vary found := nothing
     each descriptor in request[0] {
-        when kind(descriptor) == "list" and size(descriptor) >= 2 and descriptor[0] == request[1] {
-            change found := descriptor
+        when kind(descriptor) == "list" {
+            when size(descriptor) >= 2 {
+                when descriptor[0] == request[1] { change found := descriptor }
+            }
         }
     }
     when found == nothing { yield [false, nothing, "framework-not-found"] }
@@ -65,8 +67,12 @@ export craft export_catalog(catalog) {
     when kind(catalog) != "list" { yield [false, [], "catalog-must-be-list"] }
     vary errors := []
     each descriptor in catalog {
-        when kind(descriptor) != "list" or size(descriptor) < 2 {
+        when kind(descriptor) != "list" {
             change errors := push(errors, ["invalid-catalog-descriptor", descriptor])
+        } otherwise {
+            when size(descriptor) < 2 {
+                change errors := push(errors, ["invalid-catalog-descriptor", descriptor])
+            }
         }
     }
     when size(errors) > 0 { yield [false, [], errors] }
