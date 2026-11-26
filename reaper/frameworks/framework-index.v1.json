@@ -3,8 +3,8 @@
   "total_target_framework_count": 330,
   "remaining_target_framework_count": 325,
   "existing_batch_01_source_count": 5,
-  "new_source_count": 100,
-  "remaining_source_count": 225,
+  "new_source_count": 125,
+  "remaining_source_count": 200,
   "domains": [
     {
       "number": 1,
@@ -180,7 +180,7 @@
       "name": "Инструментарий",
       "framework_slots": 5,
       "source_frameworks": 0,
-      "state": "queued"
+      "state": "tests-first"
     },
     {
       "number": 23,
@@ -188,7 +188,7 @@
       "name": "Тулкит",
       "framework_slots": 5,
       "source_frameworks": 0,
-      "state": "queued"
+      "state": "tests-first"
     },
     {
       "number": 24,
@@ -196,7 +196,7 @@
       "name": "Пакет",
       "framework_slots": 5,
       "source_frameworks": 0,
-      "state": "queued"
+      "state": "tests-first"
     },
     {
       "number": 25,
@@ -204,7 +204,7 @@
       "name": "Стек",
       "framework_slots": 5,
       "source_frameworks": 0,
-      "state": "queued"
+      "state": "tests-first"
     },
     {
       "number": 26,
@@ -212,7 +212,7 @@
       "name": "Технологический стек",
       "framework_slots": 5,
       "source_frameworks": 0,
-      "state": "queued"
+      "state": "tests-first"
     },
     {
       "number": 27,
@@ -2483,6 +2483,481 @@
       },
       "negative": {
         "args": "(\"clang\", \"armv7-none\", [[\"clang\", [\"x86_64-linux\"]]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "22.diagnostic-record",
+      "domain_number": 22,
+      "domain": "Инструментарий",
+      "slug": "22-tooling",
+      "name": "Diagnostic Record Framework",
+      "role": "diagnostic-record",
+      "path": "reaper/frameworks/22-tooling/diagnostic_record.rpr",
+      "api": "valid_tooling_diagnostic_record",
+      "purpose": "Validate source-aware Reaper diagnostic records and stable code/severity fields.",
+      "positive": {
+        "args": "([\"RPR-E1042\", \"error\", \"main.rpr\", 3, 8, \"unknown name\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"RPR-X1042\", \"urgent\", \"main.rpr\", 3, 8, \"bad\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "22.invocation-graph",
+      "domain_number": 22,
+      "domain": "Инструментарий",
+      "slug": "22-tooling",
+      "name": "Tool Invocation Graph Framework",
+      "role": "invocation-graph",
+      "path": "reaper/frameworks/22-tooling/invocation_graph.rpr",
+      "api": "valid_tooling_invocation_graph",
+      "purpose": "Validate an acyclic tool invocation dependency graph.",
+      "positive": {
+        "args": "(4, [[0, 1], [1, 3]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(3, [[0, 1], [1, 0]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "22.input-contract",
+      "domain_number": 22,
+      "domain": "Инструментарий",
+      "slug": "22-tooling",
+      "name": "Tool Input Contract Framework",
+      "role": "input-contract",
+      "path": "reaper/frameworks/22-tooling/input_contract.rpr",
+      "api": "valid_tooling_input_contract",
+      "purpose": "Validate required named inputs and reject duplicate or untyped input declarations.",
+      "positive": {
+        "args": "([[\"source\", \"path\", true], [\"target\", \"triple\", false]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"source\", \"path\", true], [\"source\", \"text\", false]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "22.tool-result",
+      "domain_number": 22,
+      "domain": "Инструментарий",
+      "slug": "22-tooling",
+      "name": "Tool Result Framework",
+      "role": "tool-result",
+      "path": "reaper/frameworks/22-tooling/tool_result.rpr",
+      "api": "valid_tooling_result",
+      "purpose": "Validate a structured tool result with status, bounded duration, and output artifact list.",
+      "positive": {
+        "args": "([\"success\", 120, [\"app.o\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"maybe\", -1, []])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "22.tool-profile",
+      "domain_number": 22,
+      "domain": "Инструментарий",
+      "slug": "22-tooling",
+      "name": "Tool Capability Profile Framework",
+      "role": "tool-profile",
+      "path": "reaper/frameworks/22-tooling/tool_profile.rpr",
+      "api": "tooling_capability_profile",
+      "purpose": "Return the missing required capabilities for a selected tool profile.",
+      "positive": {
+        "args": "([\"parse\", \"format\"], [\"parse\"])",
+        "output": "[format]"
+      },
+      "negative": {
+        "args": "([\"parse\"], [\"parse\"])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "23.capability-composition",
+      "domain_number": 23,
+      "domain": "Тулкит",
+      "slug": "23-toolkit",
+      "name": "Capability Composition Framework",
+      "role": "capability-composition",
+      "path": "reaper/frameworks/23-toolkit/capability_composition.rpr",
+      "api": "valid_toolkit_capability_composition",
+      "purpose": "Validate toolkit composition where every component requirement is provided by the composition.",
+      "positive": {
+        "args": "([[\"parser\", [\"tokens\"]], [\"checker\", [\"ast\"]]], [\"tokens\", \"ast\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"parser\", [\"tokens\"]], [\"checker\", [\"ir\"]]], [\"tokens\", \"ast\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "23.toolkit-profile",
+      "domain_number": 23,
+      "domain": "Тулкит",
+      "slug": "23-toolkit",
+      "name": "Toolkit Profile Framework",
+      "role": "toolkit-profile",
+      "path": "reaper/frameworks/23-toolkit/toolkit_profile.rpr",
+      "api": "valid_toolkit_profile",
+      "purpose": "Validate one toolkit profile with unique modules and a bounded resource budget.",
+      "positive": {
+        "args": "([\"embedded\", [\"lexer\", \"ir\", \"linker\"], 64])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"embedded\", [\"lexer\", \"lexer\"], 64])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "23.extension-slot",
+      "domain_number": 23,
+      "domain": "Тулкит",
+      "slug": "23-toolkit",
+      "name": "Extension Slot Framework",
+      "role": "extension-slot",
+      "path": "reaper/frameworks/23-toolkit/extension_slot.rpr",
+      "api": "valid_toolkit_extension_slots",
+      "purpose": "Validate unique extension slots and typed binding names.",
+      "positive": {
+        "args": "([[\"backend\", \"codegen\"], [\"diagnostics\", \"report\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"backend\", \"codegen\"], [\"backend\", \"other\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "23.toolkit-compatibility",
+      "domain_number": 23,
+      "domain": "Тулкит",
+      "slug": "23-toolkit",
+      "name": "Toolkit Compatibility Framework",
+      "role": "toolkit-compatibility",
+      "path": "reaper/frameworks/23-toolkit/toolkit_compatibility.rpr",
+      "api": "valid_toolkit_compatibility",
+      "purpose": "Require all selected components to support one common ABI version.",
+      "positive": {
+        "args": "([[\"parser\", [1, 2]], [\"backend\", [1, 3]]], 1)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"parser\", [1, 2]], [\"backend\", [2, 3]]], 1)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "23.resource-plan",
+      "domain_number": 23,
+      "domain": "Тулкит",
+      "slug": "23-toolkit",
+      "name": "Toolkit Resource Plan Framework",
+      "role": "resource-plan",
+      "path": "reaper/frameworks/23-toolkit/resource_plan.rpr",
+      "api": "toolkit_resource_plan",
+      "purpose": "Compute residual toolkit resource capacity after validating component allocations.",
+      "positive": {
+        "args": "([[\"parser\", 10], [\"indexer\", 20]], 64)",
+        "output": "34"
+      },
+      "negative": {
+        "args": "([[\"parser\", 80]], 64)",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "24.package-manifest",
+      "domain_number": 24,
+      "domain": "Пакет",
+      "slug": "24-package",
+      "name": "Package Manifest Framework",
+      "role": "package-manifest",
+      "path": "reaper/frameworks/24-package/package_manifest.rpr",
+      "api": "valid_package_manifest",
+      "purpose": "Validate package identity, semantic version, checksum metadata and package format.",
+      "positive": {
+        "args": "([\"reaper-kora\", [1, 2, 0], \"sha256:abc123\", \"rpk\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"\", [1, 2, 0], \"sha256:abc123\", \"rpk\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "24.version-range",
+      "domain_number": 24,
+      "domain": "Пакет",
+      "slug": "24-package",
+      "name": "Package Version Range Framework",
+      "role": "version-range",
+      "path": "reaper/frameworks/24-package/version_range.rpr",
+      "api": "package_version_in_range",
+      "purpose": "Check a semantic version against an inclusive major/minor range.",
+      "positive": {
+        "args": "([1, 3, 2], [1, 2, 0], [1, 4, 0])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([2, 0, 0], [1, 2, 0], [1, 4, 0])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "24.package-path",
+      "domain_number": 24,
+      "domain": "Пакет",
+      "slug": "24-package",
+      "name": "Package Path Framework",
+      "role": "package-path",
+      "path": "reaper/frameworks/24-package/package_path.rpr",
+      "api": "safe_package_archive_path",
+      "purpose": "Reject absolute, traversal, drive-prefixed and empty package archive paths.",
+      "positive": {
+        "args": "(\"lib/reaper/core.rpr\")",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(\"../etc/passwd\")",
+        "output": "false"
+      }
+    },
+    {
+      "id": "24.package-lock",
+      "domain_number": 24,
+      "domain": "Пакет",
+      "slug": "24-package",
+      "name": "Package Lock Framework",
+      "role": "package-lock",
+      "path": "reaper/frameworks/24-package/package_lock.rpr",
+      "api": "valid_package_lock",
+      "purpose": "Validate duplicate-free locked package identities and exact semantic versions.",
+      "positive": {
+        "args": "([[\"kora\", [1, 2, 0]], [\"most\", [2, 0, 1]]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"kora\", [1, 2, 0]], [\"kora\", [1, 3, 0]]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "24.package-dependency",
+      "domain_number": 24,
+      "domain": "Пакет",
+      "slug": "24-package",
+      "name": "Package Dependency Framework",
+      "role": "package-dependency",
+      "path": "reaper/frameworks/24-package/package_dependency.rpr",
+      "api": "valid_package_dependency_set",
+      "purpose": "Validate direct package dependencies and reject self-dependency or duplicate dependency names.",
+      "positive": {
+        "args": "(\"reaper\", [\"kora\", \"most\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(\"reaper\", [\"kora\", \"kora\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "25.stack-frame",
+      "domain_number": 25,
+      "domain": "Стек",
+      "slug": "25-stack",
+      "name": "Stack Frame Framework",
+      "role": "stack-frame",
+      "path": "reaper/frameworks/25-stack/stack_frame.rpr",
+      "api": "valid_stack_frame",
+      "purpose": "Validate frame metadata and bounded local-slot counts.",
+      "positive": {
+        "args": "([\"main\", 4, 16])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"\", 4, 16])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "25.stack-budget",
+      "domain_number": 25,
+      "domain": "Стек",
+      "slug": "25-stack",
+      "name": "Stack Budget Framework",
+      "role": "stack-budget",
+      "path": "reaper/frameworks/25-stack/stack_budget.rpr",
+      "api": "stack_budget_admission",
+      "purpose": "Admit a frame push only when frame bytes remain within the stack budget.",
+      "positive": {
+        "args": "(4096, 1024, 8192)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(8192, 1024, 8192)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "25.call-chain",
+      "domain_number": 25,
+      "domain": "Стек",
+      "slug": "25-stack",
+      "name": "Call Chain Framework",
+      "role": "call-chain",
+      "path": "reaper/frameworks/25-stack/call_chain.rpr",
+      "api": "valid_stack_call_chain",
+      "purpose": "Validate a non-empty call chain within a maximum depth and without empty names.",
+      "positive": {
+        "args": "([\"main\", \"compile\", \"parse\"], 8)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"main\", \"compile\", \"parse\"], 2)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "25.stack-alignment",
+      "domain_number": 25,
+      "domain": "Стек",
+      "slug": "25-stack",
+      "name": "Stack Alignment Framework",
+      "role": "stack-alignment",
+      "path": "reaper/frameworks/25-stack/stack_alignment.rpr",
+      "api": "valid_stack_pointer_alignment",
+      "purpose": "Check stack-pointer alignment against a power-of-two ABI requirement.",
+      "positive": {
+        "args": "(4096, 16)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(4098, 16)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "25.unwind-plan",
+      "domain_number": 25,
+      "domain": "Стек",
+      "slug": "25-stack",
+      "name": "Unwind Plan Framework",
+      "role": "unwind-plan",
+      "path": "reaper/frameworks/25-stack/unwind_plan.rpr",
+      "api": "valid_stack_unwind_plan",
+      "purpose": "Validate reverse-order unwind actions for a unique resource acquisition sequence.",
+      "positive": {
+        "args": "([\"file\", \"buffer\", \"lock\"], [\"lock\", \"buffer\", \"file\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"file\", \"buffer\"], [\"file\", \"buffer\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "26.technology-layer",
+      "domain_number": 26,
+      "domain": "Технологический стек",
+      "slug": "26-technology-stack",
+      "name": "Technology Layer Framework",
+      "role": "technology-layer",
+      "path": "reaper/frameworks/26-technology-stack/technology_layer.rpr",
+      "api": "valid_technology_stack_layers",
+      "purpose": "Validate unique ordered technology layers with explicit role assignments.",
+      "positive": {
+        "args": "([[\"language\", \"reaper\"], [\"runtime\", \"reaper-vm\"], [\"host\", \"dak\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"language\", \"reaper\"], [\"language\", \"other\"]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "26.technology-compatibility",
+      "domain_number": 26,
+      "domain": "Технологический стек",
+      "slug": "26-technology-stack",
+      "name": "Technology Compatibility Framework",
+      "role": "technology-compatibility",
+      "path": "reaper/frameworks/26-technology-stack/technology_compatibility.rpr",
+      "api": "valid_technology_stack_compatibility",
+      "purpose": "Require adjacent technology layers to declare matching interface versions.",
+      "positive": {
+        "args": "([[\"language\", 1], [\"runtime\", 1], [\"host\", 1]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"language\", 1], [\"runtime\", 2]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "26.target-matrix",
+      "domain_number": 26,
+      "domain": "Технологический стек",
+      "slug": "26-technology-stack",
+      "name": "Technology Target Matrix Framework",
+      "role": "target-matrix",
+      "path": "reaper/frameworks/26-technology-stack/target_matrix.rpr",
+      "api": "valid_technology_target_matrix",
+      "purpose": "Validate a rectangular target-support matrix with unique target and layer IDs.",
+      "positive": {
+        "args": "([\"x86_64\", \"aarch64\"], [[\"reaper\", true, false], [\"runtime\", true, true]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"x86_64\", \"aarch64\"], [[\"reaper\", true]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "26.integration",
+      "domain_number": 26,
+      "domain": "Технологический стек",
+      "slug": "26-technology-stack",
+      "name": "Technology Integration Framework",
+      "role": "integration",
+      "path": "reaper/frameworks/26-technology-stack/integration.rpr",
+      "api": "valid_technology_integration_edges",
+      "purpose": "Validate declared directed integrations between distinct technology layers.",
+      "positive": {
+        "args": "(4, [[0, 1], [1, 3]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(3, [[2, 0]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "26.migration",
+      "domain_number": 26,
+      "domain": "Технологический стек",
+      "slug": "26-technology-stack",
+      "name": "Technology Migration Framework",
+      "role": "migration",
+      "path": "reaper/frameworks/26-technology-stack/migration.rpr",
+      "api": "valid_technology_migration_steps",
+      "purpose": "Validate an ordered migration plan with contiguous step numbers and non-empty actions.",
+      "positive": {
+        "args": "([[1, \"add adapter\"], [2, \"switch backend\"], [3, \"remove legacy\"]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[1, \"add adapter\"], [3, \"remove legacy\"]])",
         "output": "false"
       }
     }
