@@ -64,7 +64,7 @@ const char *reaper_evolution_state_name(ReaperEvolutionState state) {
 
 void reaper_evolution_print_status(void) {
     const ReaperEvolutionPolicy policy = reaper_evolution_default_policy();
-    (void)printf("registered repository frameworks: %zu\\n", reaper_framework_catalog_count());
+    (void)printf("registered repository frameworks: %zu\n", reaper_framework_catalog_count());
     (void)printf("REAPER Autonomous Evolution / C17\n");
     (void)printf("mode: evidence-gated; source mutation: disabled\n");
     (void)printf("minimum evidence: positive=%u negative=%u fuzz=%u differential=%u\n",
