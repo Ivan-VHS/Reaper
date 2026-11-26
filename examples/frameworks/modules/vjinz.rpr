@@ -1,17 +1,97 @@
-# Reaper framework metadata and source-level helper functions.
-# Operation contracts: language/frameworks.v1.json
+# Vjinz: source provenance, spans, diagnostics and trace metadata.
+import "../federation_common.rpr" as fc
 
 export make framework_id := "vjinz"
 export make display_name := "Vjinz"
 export make feature_key := "RPR-FWK-010"
 export make operation_keys := ["RPR-FWK-010-F01", "RPR-FWK-010-F02", "RPR-FWK-010-F03", "RPR-FWK-010-F04", "RPR-FWK-010-F05", "RPR-FWK-010-F06"]
-export make maturity := "contract-only"
+export make maturity := "reference-handler-v1-partial"
 export make native_registry := "reaper.framework-cabi.v1"
 
-export craft operation_key(index) {
-    yield operation_keys[index]
+export craft operation_key(index) { yield operation_keys[index] }
+export craft framework_manifest() { yield [framework_id, display_name, feature_key, operation_keys, maturity] }
+
+# Mapping row: [ir_start, ir_end, file, source_start, source_end].
+export craft source_map_lookup(source_map, ir_offset) {
+    when kind(source_map) != "list" or not fc["fc_nonnegative"](ir_offset) {
+        yield [false, nothing, "source-map-query-invalid"]
+    }
+    vary matches := []
+    each mapping in source_map {
+        when fc["fc_record"](mapping, 5) and ir_offset >= mapping[0] and ir_offset < mapping[1] {
+            change matches := push(matches, mapping)
+        }
+    }
+    when size(matches) == 0 { yield [false, nothing, "source-location-not-mapped"] }
+    when size(matches) > 1 { yield [false, matches, "ambiguous-source-map"] }
+    make found := first(matches)
+    make relative := ir_offset - found[0]
+    make source_offset := found[3] + relative
+    when source_offset > found[4] { change source_offset := found[4] }
+    yield [true, [found[2], source_offset, source_offset], "mapped"]
 }
 
-export craft framework_manifest() {
-    yield [framework_id, display_name, feature_key, operation_keys, maturity]
+export craft span_translate(span, projection) {
+    when not fc["fc_record"](span, 3) or not fc["fc_record"](projection, 2) {
+        yield [false, nothing, "span-or-projection-shape"]
+    }
+    when not fc["fc_nonnegative"](span[1]) or not fc["fc_nonnegative"](span[2]) or span[2] < span[1] {
+        yield [false, nothing, "span-range-invalid"]
+    }
+    when not fc["fc_is_number"](projection[1]) { yield [false, nothing, "projection-offset-invalid"] }
+    yield [true, [projection[0], span[1] + projection[1], span[2] + projection[1]], "translated"]
+}
+
+export craft diagnostic_emit(code, span) {
+    when not fc["fc_record"](code, 3) or not fc["fc_record"](span, 3) {
+        yield [false, nothing, "diagnostic-input-shape"]
+    }
+    when not fc["fc_nonempty_text"](code[0]) or not fc["fc_nonempty_text"](code[1]) or not fc["fc_nonempty_text"](span[0]) {
+        yield [false, nothing, "diagnostic-identifiers-required"]
+    }
+    when not fc["fc_nonnegative"](span[1]) or not fc["fc_nonnegative"](span[2]) or span[2] < span[1] {
+        yield [false, nothing, "diagnostic-span-invalid"]
+    }
+    yield [true, [code[0], code[1], code[2], span[0], span[1], span[2]], "diagnostic-record"]
+}
+
+export craft trace_register(scope, metadata) {
+    when not fc["fc_nonempty_text"](scope) or not fc["fc_valid_pairs"](metadata)[0] {
+        yield [false, nothing, "trace-scope-or-metadata-invalid"]
+    }
+    yield [true, [scope, metadata, "registered"], "trace-descriptor"]
+}
+
+export craft symbol_resolve(namespace, symbol) {
+    when not fc["fc_record"](namespace, 2) or not fc["fc_nonempty_text"](symbol) {
+        yield [false, nothing, "namespace-or-symbol-invalid"]
+    }
+    make result := fc["fc_lookup"](namespace[1], symbol)
+    when not result[0] { yield [false, nothing, "symbol-not-found"] }
+    yield [true, result[1], "resolved"]
+}
+
+export craft origin_chain(artifact) {
+    when not fc["fc_record"](artifact, 2) or kind(artifact[1]) != "list" {
+        yield [false, [], "artifact-provenance-shape"]
+    }
+    vary result := [artifact[0]]
+    vary seen := [artifact[0]]
+    vary links := artifact[1]
+    vary current := artifact[0]
+    loop while size(current) > 0 {
+        vary next := nothing
+        each link in links {
+            when fc["fc_record"](link, 2) and link[0] == current {
+                change next := link[1]
+            }
+        }
+        when next == nothing { yield [true, result, "origin-root"] }
+        when fc["fc_has"](seen, next) { yield [false, result, "origin-cycle"] }
+        change result := push(result, next)
+        change seen := push(seen, next)
+        when kind(next) != "text" { yield [false, result, "origin-id-must-be-text"] }
+        change current := next
+    }
+    yield [true, result, "origin-chain"]
 }
