@@ -1,0 +1,111 @@
+# Establish: validates application manifests and resolves module order.
+# Manifest: [schema, app_id, app_version, profile, modules, requested_capabilities, budget].
+# Module: [module_id, version, dependencies].
+
+import "../Uu/core.rpr" as uu
+import "../poooVERTY/budgets.rpr" as budgets
+import "../Nonconcrete/contracts.rpr" as contracts
+
+export craft valid_profile(profile) {
+    yield profile == "core"
+        or profile == "standard"
+        or profile == "system"
+        or profile == "development"
+        or profile == "embedded"
+}
+
+export craft validate_modules(modules) {
+    when kind(modules) != "list" or size(modules) == 0 {
+        yield [false, [], ["modules-must-not-be-empty"]]
+    }
+    vary ids := []
+    vary errors := []
+    each module in modules {
+        when kind(module) != "list" or size(module) != 3 {
+            change errors := push(errors, ["module-shape", module])
+        } otherwise {
+            when not uu["nonempty_text"](module[0]) { change errors := push(errors, ["module-id", module]) }
+            when not uu["nonempty_text"](module[1]) { change errors := push(errors, ["module-version", module]) }
+            when kind(module[2]) != "list" { change errors := push(errors, ["module-dependencies", module[0]]) }
+            change ids := push(ids, module[0])
+        }
+    }
+    when not uu["all_unique"](ids) { change errors := push(errors, ["duplicate-module-id"]) }
+    each module in modules {
+        when kind(module) == "list" and size(module) == 3 and kind(module[2]) == "list" {
+            make dependency_check := contracts["validate_dependencies"](module[2], ids)
+            when not dependency_check[0] {
+                change errors := push(errors, [module[0], dependency_check[1]])
+            }
+        }
+    }
+    yield [size(errors) == 0, ids, errors]
+}
+
+export craft module_order(modules) {
+    make checked := validate_modules(modules)
+    when not checked[0] { yield [false, [], checked[2]] }
+    vary edges := []
+    each module in modules {
+        each dependency in module[2] {
+            change edges := push(edges, [module[0], dependency])
+        }
+    }
+    vary pending := checked[1]
+    vary ordered := []
+    loop while size(pending) > 0 {
+        vary next_pending := []
+        vary progressed := false
+        each candidate in pending {
+            vary blocked := false
+            each edge in edges {
+                when edge[0] == candidate and uu["contains"](pending, edge[1]) {
+                    change blocked := true
+                }
+            }
+            when blocked {
+                change next_pending := push(next_pending, candidate)
+            } otherwise {
+                change ordered := push(ordered, candidate)
+                change progressed := true
+            }
+        }
+        when not progressed {
+            yield [false, ordered, [["dependency-cycle", pending]]]
+        }
+        change pending := next_pending
+    }
+    yield [true, ordered, []]
+}
+
+export craft validate_manifest(manifest) {
+    when kind(manifest) != "list" or size(manifest) != 7 { yield [false, [], ["manifest-shape"]] }
+    vary errors := []
+    when manifest[0] != "reaper.dom.manifest.v1" { change errors := push(errors, ["manifest-schema", manifest[0]]) }
+    when not uu["nonempty_text"](manifest[1]) { change errors := push(errors, ["application-id"]) }
+    when not uu["nonempty_text"](manifest[2]) { change errors := push(errors, ["application-version"]) }
+    when not valid_profile(manifest[3]) { change errors := push(errors, ["runtime-profile", manifest[3]]) }
+    make modules_check := validate_modules(manifest[4])
+    when not modules_check[0] { change errors := push(errors, modules_check[2]) }
+    when kind(manifest[5]) != "list" {
+        change errors := push(errors, ["capability-list"])
+    } otherwise {
+        when not uu["all_unique"](manifest[5]) { change errors := push(errors, ["duplicate-capability"]) }
+    }
+    make budget_check := budgets["validate_vector"](manifest[6])
+    when not budget_check[0] { change errors := push(errors, ["resource-budget", budget_check[1]]) }
+    when size(errors) > 0 { yield [false, [], errors] }
+    make order := module_order(manifest[4])
+    when not order[0] { yield [false, [], order[2]] }
+    yield [true, order[1], "valid"]
+}
+
+export craft validate_with_host(manifest, host_grants) {
+    make manifest_check := validate_manifest(manifest)
+    when not manifest_check[0] { yield [false, [], manifest_check[2]] }
+    make capability_check := contracts["missing_capabilities"](manifest[5], host_grants)
+    when not capability_check[0] {
+        yield [false, manifest_check[1], ["capability-denied", capability_check[1]]]
+    }
+    yield [true, manifest_check[1], "validated-and-authorized"]
+}
