@@ -55,9 +55,9 @@ A schema descriptor is:
 
 `[schema_id, major, minor, fields, allow_trailing_optional_fields]`
 
-Each field is `[field_name, field_type, required]`. The supported kinds include current Reaper runtime values and fixed-width integer labels. Validation checks field names, presence and basic value kinds. Fixed-width integer range checking is not fully lowered by this descriptor-only implementation; the Structure group has the existing u8/i8 range validator.
+Each field is `[field_name, field_type, required]`. The supported kinds include current Reaper runtime values and fixed-width integer labels. Validation checks field names, presence, boolean/number/text/list/map kinds, unsigned/signed integer bounds and byte-list elements. This remains a descriptor validator; it does not emit binary layouts or native serialization.
 
-Compatibility requires the same schema ID and major version. Every required consumer field must exist in the producer schema with the same field type. Unknown/additional fields remain subject to the descriptor's trailing-field policy; this is not a complete binary wire-schema evolution algorithm.
+Compatibility requires the same schema ID and major version. Every required consumer field must exist in the producer schema with the same field type. Extra producer fields are accepted only when they are optional and the consumer schema explicitly allows trailing optional fields. This is not a complete binary wire-schema evolution algorithm.
 
 Public functions: `schema_field_types()`, `schema_validate_field(field)`, `schema_validate_descriptor(schema)`, `schema_validate_payload(schema, payload)`, `schema_validate_compatibility(producer, consumer)`.
 
