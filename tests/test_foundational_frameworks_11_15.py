@@ -106,7 +106,7 @@ class FoundationalFrameworksElevenToFifteenTests(unittest.TestCase):
             ["oplague"],
         )
         self.assertEqual(
-            self.run_expression('systems["ecosystem_validate_link"](["oplague", "reaper", "oplage.device-snapshot.v1", "read-only-snapshot"])'),
+            self.run_expression('systems["ecosystem_validate_link"](["oplague", "reaper", "oplage.device-snapshot.v1", "json-file", "implemented"])'),
             ["true"],
         )
         self.assertEqual(
@@ -115,7 +115,7 @@ class FoundationalFrameworksElevenToFifteenTests(unittest.TestCase):
         )
 
     def test_extension_manifest_and_lifecycle_are_fail_closed(self) -> None:
-        manifest = '["sample.extension", 1, ["reaper.host-service.v1", 1, 0, "both"], ["filesystem.read"], "sample.start"]'
+        manifest = '["sample.extension", 1, ["reaper.host-service.v1", 1, 0, "both"], ["FS_READ"], "sample.start"]'
         self.assertEqual(
             self.run_expression(f'systems["extension_validate_manifest"]({manifest})'),
             ["true"],
@@ -125,7 +125,7 @@ class FoundationalFrameworksElevenToFifteenTests(unittest.TestCase):
             self.run_expression(f'systems["extension_validate_manifest"]({denied})'),
             ["false"],
         )
-        unknown_capability = '["sample.extension", 1, ["reaper.host-service.v1", 1, 0, "both"], ["root.access"], "sample.start"]'
+        unknown_capability = '["sample.extension", 1, ["reaper.host-service.v1", 1, 0, "both"], ["ROOT_ACCESS"], "sample.start"]'
         self.assertEqual(
             self.run_expression(f'systems["extension_validate_manifest"]({unknown_capability})'),
             ["false"],
@@ -142,7 +142,7 @@ class FoundationalFrameworksElevenToFifteenTests(unittest.TestCase):
     def test_shell_context_requests_and_lifecycle(self) -> None:
         self.assertEqual(
             self.run_expression(
-                'systems["shell_validate_context"](["reaper-host", "session-1", "main.rpr", ["console.write"]])'
+                'systems["shell_validate_context"](["reaper-host", "session-1", "main.rpr", ["FS_READ"]])'
             ),
             ["true"],
         )
