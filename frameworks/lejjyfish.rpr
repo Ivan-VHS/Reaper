@@ -1,0 +1,111 @@
+# LejjyFish: bounded, deterministic stream processing primitives.
+# Event format: [sequence_number, topic, payload].
+# The module models stream policy; it is not a shared message bus.
+
+craft event_valid(event) {
+    when kind(event) != "list" or size(event) != 3 { yield false }
+    yield kind(event[0]) == "number" and event[0] > 0 and
+        kind(event[1]) == "text" and size(event[1]) > 0
+}
+
+export craft stream_valid(events) {
+    when kind(events) != "list" { yield [false, ["stream-must-be-list"]] }
+    vary previous := 0
+    vary errors := []
+    each event in events {
+        when not event_valid(event) {
+            change errors := push(errors, "invalid-event")
+        } otherwise {
+            when event[0] <= previous {
+                change errors := push(errors, "sequence-not-increasing")
+            } otherwise {
+                change previous := event[0]
+            }
+        }
+    }
+    yield [size(errors) == 0, errors]
+}
+
+export craft append(buffer, event, capacity) {
+    make checked := stream_valid(buffer)
+    when not checked[0] { yield [false, buffer, "invalid-buffer"] }
+    when not event_valid(event) { yield [false, buffer, "invalid-event"] }
+    when kind(capacity) != "number" or capacity < 1 {
+        yield [false, buffer, "invalid-capacity"]
+    }
+    when size(buffer) >= capacity { yield [false, buffer, "backpressure"] }
+    make candidate := push(buffer, event)
+    make candidate_check := stream_valid(candidate)
+    when not candidate_check[0] { yield [false, buffer, "out-of-order-event"] }
+    yield [true, candidate, "accepted"]
+}
+
+export craft take_batch(events, limit) {
+    make checked := stream_valid(events)
+    when not checked[0] { yield [false, [], events, checked[1]] }
+    when kind(limit) != "number" or limit < 1 {
+        yield [false, [], events, "invalid-limit"]
+    }
+    vary batch := []
+    vary remaining := []
+    vary index := 0
+    each event in events {
+        when index < limit {
+            change batch := push(batch, event)
+        } otherwise {
+            change remaining := push(remaining, event)
+        }
+        change index := index + 1
+    }
+    yield [true, batch, remaining, "split"]
+}
+
+export craft advance_watermark(events, current_watermark) {
+    make checked := stream_valid(events)
+    when not checked[0] { yield [false, current_watermark, checked[1]] }
+    when kind(current_watermark) != "number" or current_watermark < 0 {
+        yield [false, current_watermark, "invalid-watermark"]
+    }
+    vary next_watermark := current_watermark
+    each event in events {
+        when event[0] > next_watermark { change next_watermark := event[0] }
+    }
+    yield [true, next_watermark, "advanced"]
+}
+
+export craft fanout(event, subscriptions) {
+    when not event_valid(event) or kind(subscriptions) != "list" {
+        yield [false, [], "invalid-input"]
+    }
+    vary deliveries := []
+    vary errors := []
+    each subscription in subscriptions {
+        when kind(subscription) != "list" or size(subscription) != 2 {
+            change errors := push(errors, "subscription-shape")
+        } otherwise {
+            when kind(subscription[0]) != "text" or size(subscription[0]) == 0 {
+                change errors := push(errors, "subscriber-id")
+            } otherwise {
+                when subscription[1] == event[1] {
+                    change deliveries := push(deliveries, [subscription[0], event])
+                }
+            }
+        }
+    }
+    yield [size(errors) == 0, deliveries, errors]
+}
+
+export craft partition_by_topic(events, topic) {
+    make checked := stream_valid(events)
+    when not checked[0] { yield [false, [], [], checked[1]] }
+    vary matching := []
+    vary other := []
+    each event in events {
+        when event[1] == topic {
+            change matching := push(matching, event)
+        } otherwise {
+            change other := push(other, event)
+        }
+    }
+    yield [true, matching, other, "partitioned"]
+}
