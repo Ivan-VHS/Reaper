@@ -280,6 +280,9 @@ craft layout_struct(types, target, spec, stack) {
         when kind(item) != "list" or size(item) != 5 {
             yield [false, 0, 1, "RPR-REG-FIELD-0001", "field descriptor must be a 5-slot list"]
         }
+        when kind(item[0]) != "text" or size(item[0]) == 0 {
+            yield [false, 0, 1, "RPR-REG-FIELD-0008", "field name must be non-empty Text"]
+        }
         when contains(names, item[0]) {
             yield [false, 0, 1, "RPR-REG-FIELD-0002", "duplicate field " ++ text(item[0])]
         }
@@ -289,6 +292,9 @@ craft layout_struct(types, target, spec, stack) {
         }
         when kind(item[4]) != "list" {
             yield [false, 0, 1, "RPR-REG-FIELD-0004", "field capabilities must be a list"]
+        }
+        when duplicate_value(item[4]) != "" {
+            yield [false, 0, 1, "RPR-REG-FIELD-0009", "field capabilities must be unique"]
         }
         each capability in item[4] {
             when not contains(CAPABILITIES, capability) {
@@ -344,6 +350,9 @@ craft validate_enum(types, spec) {
     when not contains([8, 16, 32, 64, 128], underlying[2]) {
         yield "RPR-REG-ENUM-0007: enum underlying scalar width is invalid"
     }
+    when kind(underlying[3]) != "boolean" {
+        yield "RPR-REG-ENUM-0009: enum underlying signedness must be Bool"
+    }
     make bits := underlying[2]
     make signed := underlying[3]
     vary minimum := 0
@@ -389,6 +398,9 @@ craft validate_binding(item, platforms, types) {
     }
     when kind(item[5]) != "list" or size(item[5]) == 0 {
         yield "RPR-REG-BIND-0006: binding must declare at least one effect"
+    }
+    when kind(item[6]) != "list" {
+        yield "RPR-REG-BIND-0014: requested capabilities must be a list"
     }
     when duplicate_value(item[5]) != "" or duplicate_value(item[6]) != "" {
         yield "RPR-REG-BIND-0007: binding effects and capabilities must be unique"
