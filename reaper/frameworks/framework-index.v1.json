@@ -3,8 +3,8 @@
   "total_target_framework_count": 330,
   "remaining_target_framework_count": 325,
   "existing_batch_01_source_count": 5,
-  "new_source_count": 50,
-  "remaining_source_count": 275,
+  "new_source_count": 75,
+  "remaining_source_count": 250,
   "domains": [
     {
       "number": 1,
@@ -100,7 +100,7 @@
       "name": "Конструкция",
       "framework_slots": 5,
       "source_frameworks": 0,
-      "state": "queued"
+      "state": "tests-first"
     },
     {
       "number": 13,
@@ -108,7 +108,7 @@
       "name": "Экосистема",
       "framework_slots": 5,
       "source_frameworks": 0,
-      "state": "queued"
+      "state": "tests-first"
     },
     {
       "number": 14,
@@ -116,7 +116,7 @@
       "name": "Надстройка",
       "framework_slots": 5,
       "source_frameworks": 0,
-      "state": "queued"
+      "state": "tests-first"
     },
     {
       "number": 15,
@@ -124,7 +124,7 @@
       "name": "Оболочка",
       "framework_slots": 5,
       "source_frameworks": 0,
-      "state": "queued"
+      "state": "tests-first"
     },
     {
       "number": 16,
@@ -132,7 +132,7 @@
       "name": "Рантайм",
       "framework_slots": 5,
       "source_frameworks": 0,
-      "state": "queued"
+      "state": "tests-first"
     },
     {
       "number": 17,
@@ -1533,6 +1533,481 @@
       },
       "negative": {
         "args": "([], [\"header\"])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "12.artifact-manifest",
+      "domain_number": 12,
+      "domain": "Конструкция",
+      "slug": "12-construction",
+      "name": "Artifact Manifest Framework",
+      "role": "artifact-manifest",
+      "path": "reaper/frameworks/12-construction/artifact_manifest.rpr",
+      "api": "valid_construction_manifest",
+      "purpose": "Validate unique build artifact names, supported artifact kinds and bounded sizes.",
+      "positive": {
+        "args": "([[\"app.o\", \"object\", 4096], [\"app.bin\", \"binary\", 8192]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"app.o\", \"object\", 4096], [\"app.o\", \"object\", 8192]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "12.variant-selection",
+      "domain_number": 12,
+      "domain": "Конструкция",
+      "slug": "12-construction",
+      "name": "Variant Selection Framework",
+      "role": "variant-selection",
+      "path": "reaper/frameworks/12-construction/variant_selection.rpr",
+      "api": "construction_select_variant",
+      "purpose": "Select the first build variant whose required feature set is available.",
+      "positive": {
+        "args": "([[\"debug\", [\"symbols\"]], [\"release\", [\"opt\", \"lto\"]]], [\"opt\", \"lto\"])",
+        "output": "release"
+      },
+      "negative": {
+        "args": "([[\"debug\", [\"symbols\"]]], [\"opt\"])",
+        "output": ""
+      }
+    },
+    {
+      "id": "12.flag-merge",
+      "domain_number": 12,
+      "domain": "Конструкция",
+      "slug": "12-construction",
+      "name": "Build Flag Merge Framework",
+      "role": "flag-merge",
+      "path": "reaper/frameworks/12-construction/flag_merge.rpr",
+      "api": "construction_merge_flags",
+      "purpose": "Merge key/value build flags with local values overriding inherited flags.",
+      "positive": {
+        "args": "([[\"opt\", \"0\"], [\"warnings\", \"on\"]], [[\"opt\", \"2\"]])",
+        "output": "[[opt, 2], [warnings, on]]"
+      },
+      "negative": {
+        "args": "([[\"opt\", \"0\"], [\"opt\", \"1\"]], [])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "12.build-cost",
+      "domain_number": 12,
+      "domain": "Конструкция",
+      "slug": "12-construction",
+      "name": "Build Cost Framework",
+      "role": "build-cost",
+      "path": "reaper/frameworks/12-construction/build_cost.rpr",
+      "api": "construction_build_cost",
+      "purpose": "Sum non-negative bounded build-step costs with a deterministic ceiling.",
+      "positive": {
+        "args": "([10, 20, 30], 100)",
+        "output": "60"
+      },
+      "negative": {
+        "args": "([10, -1, 20], 100)",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "12.artifact-graph",
+      "domain_number": 12,
+      "domain": "Конструкция",
+      "slug": "12-construction",
+      "name": "Artifact Graph Framework",
+      "role": "artifact-graph",
+      "path": "reaper/frameworks/12-construction/artifact_graph.rpr",
+      "api": "valid_construction_artifact_graph",
+      "purpose": "Validate a directed acyclic graph of build artifacts and transformations.",
+      "positive": {
+        "args": "(4, [[0, 1], [1, 3]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(3, [[0, 1], [1, 0]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "13.peer-mesh",
+      "domain_number": 13,
+      "domain": "Экосистема",
+      "slug": "13-ecosystem",
+      "name": "Peer Mesh Framework",
+      "role": "peer-mesh",
+      "path": "reaper/frameworks/13-ecosystem/peer_mesh.rpr",
+      "api": "valid_ecosystem_peer_mesh",
+      "purpose": "Validate duplicate-free directed peer links and self-link restrictions.",
+      "positive": {
+        "args": "(3, [[0, 1], [1, 2], [2, 0]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(2, [[0, 0]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "13.peer-availability",
+      "domain_number": 13,
+      "domain": "Экосистема",
+      "slug": "13-ecosystem",
+      "name": "Peer Availability Framework",
+      "role": "peer-availability",
+      "path": "reaper/frameworks/13-ecosystem/peer_availability.rpr",
+      "api": "ecosystem_missing_peers",
+      "purpose": "Return required ecosystem peers that are not currently available.",
+      "positive": {
+        "args": "([\"reaper\", \"oplague\"], [\"reaper\"])",
+        "output": "[oplague]"
+      },
+      "negative": {
+        "args": "([\"reaper\"], [\"reaper\"])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "13.version-matrix",
+      "domain_number": 13,
+      "domain": "Экосистема",
+      "slug": "13-ecosystem",
+      "name": "Version Matrix Framework",
+      "role": "version-matrix",
+      "path": "reaper/frameworks/13-ecosystem/version_matrix.rpr",
+      "api": "valid_ecosystem_version_matrix",
+      "purpose": "Validate unique peer semantic versions and require one compatible major line.",
+      "positive": {
+        "args": "([[\"reaper\", 1, 2], [\"oplague\", 1, 4]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"reaper\", 1, 2], [\"oplague\", 2, 0]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "13.peer-quorum",
+      "domain_number": 13,
+      "domain": "Экосистема",
+      "slug": "13-ecosystem",
+      "name": "Peer Quorum Framework",
+      "role": "peer-quorum",
+      "path": "reaper/frameworks/13-ecosystem/peer_quorum.rpr",
+      "api": "ecosystem_peer_quorum",
+      "purpose": "Require a minimum healthy peer quorum across known peer states.",
+      "positive": {
+        "args": "([\"healthy\", \"healthy\", \"offline\"], 2)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"healthy\", \"offline\"], 2)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "13.capability-owner",
+      "domain_number": 13,
+      "domain": "Экосистема",
+      "slug": "13-ecosystem",
+      "name": "Capability Owner Framework",
+      "role": "capability-owner",
+      "path": "reaper/frameworks/13-ecosystem/capability_owner.rpr",
+      "api": "ecosystem_capability_owner",
+      "purpose": "Select the first declared peer that provides a requested capability.",
+      "positive": {
+        "args": "(\"device.snapshot\", [[\"reaper\", [\"compile\"]], [\"oplague\", [\"device.snapshot\"]]])",
+        "output": "oplague"
+      },
+      "negative": {
+        "args": "(\"device.write\", [[\"reaper\", [\"compile\"]]])",
+        "output": ""
+      }
+    },
+    {
+      "id": "14.overlay-merge",
+      "domain_number": 14,
+      "domain": "Надстройка",
+      "slug": "14-overlay",
+      "name": "Overlay Merge Framework",
+      "role": "overlay-merge",
+      "path": "reaper/frameworks/14-overlay/overlay_merge.rpr",
+      "api": "overlay_merge_layers",
+      "purpose": "Merge ordered key/value layers with the last layer taking precedence.",
+      "positive": {
+        "args": "([[[\"mode\", \"safe\"], [\"theme\", \"dark\"]], [[\"mode\", \"fast\"]]])",
+        "output": "[[mode, fast], [theme, dark]]"
+      },
+      "negative": {
+        "args": "([])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "14.overlay-conflict",
+      "domain_number": 14,
+      "domain": "Надстройка",
+      "slug": "14-overlay",
+      "name": "Overlay Conflict Framework",
+      "role": "overlay-conflict",
+      "path": "reaper/frameworks/14-overlay/overlay_conflict.rpr",
+      "api": "overlay_conflicting_keys",
+      "purpose": "Report keys assigned different values by multiple overlay layers.",
+      "positive": {
+        "args": "([[[\"mode\", \"safe\"]], [[\"mode\", \"fast\"], [\"theme\", \"dark\"]]])",
+        "output": "[mode]"
+      },
+      "negative": {
+        "args": "([[[\"mode\", \"safe\"]], [[\"mode\", \"safe\"]]])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "14.overlay-patch",
+      "domain_number": 14,
+      "domain": "Надстройка",
+      "slug": "14-overlay",
+      "name": "Overlay Patch Framework",
+      "role": "overlay-patch",
+      "path": "reaper/frameworks/14-overlay/overlay_patch.rpr",
+      "api": "overlay_apply_patch",
+      "purpose": "Apply a key/value patch to a base map while preserving stable key order.",
+      "positive": {
+        "args": "([[\"a\", \"1\"], [\"b\", \"2\"]], [[\"b\", \"3\"], [\"c\", \"4\"]])",
+        "output": "[[a, 1], [b, 3], [c, 4]]"
+      },
+      "negative": {
+        "args": "([[\"a\", \"1\"], [\"a\", \"2\"]], [])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "14.overlay-tombstone",
+      "domain_number": 14,
+      "domain": "Надстройка",
+      "slug": "14-overlay",
+      "name": "Overlay Tombstone Framework",
+      "role": "overlay-tombstone",
+      "path": "reaper/frameworks/14-overlay/overlay_tombstone.rpr",
+      "api": "overlay_remove_tombstones",
+      "purpose": "Remove tombstoned overlay entries from a list of [key, value, deleted] records.",
+      "positive": {
+        "args": "([[\"a\", \"1\", false], [\"b\", \"2\", true]])",
+        "output": "[[a, 1, false]]"
+      },
+      "negative": {
+        "args": "([[\"a\", \"1\", \"yes\"]])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "14.overlay-priority",
+      "domain_number": 14,
+      "domain": "Надстройка",
+      "slug": "14-overlay",
+      "name": "Overlay Priority Framework",
+      "role": "overlay-priority",
+      "path": "reaper/frameworks/14-overlay/overlay_priority.rpr",
+      "api": "overlay_highest_priority",
+      "purpose": "Choose the value with the highest declared priority.",
+      "positive": {
+        "args": "([[1, \"base\"], [5, \"local\"], [3, \"team\"]])",
+        "output": "local"
+      },
+      "negative": {
+        "args": "([])",
+        "output": ""
+      }
+    },
+    {
+      "id": "15.command-request",
+      "domain_number": 15,
+      "domain": "Оболочка",
+      "slug": "15-shell",
+      "name": "Shell Command Request Framework",
+      "role": "command-request",
+      "path": "reaper/frameworks/15-shell/command_request.rpr",
+      "api": "valid_shell_command_request",
+      "purpose": "Validate a structured command request without launching the command.",
+      "positive": {
+        "args": "([\"reaper\", [\"--check\", \"main.rpr\"], \"project\", 30])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"\", [], \"project\", 30])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "15.allowlist",
+      "domain_number": 15,
+      "domain": "Оболочка",
+      "slug": "15-shell",
+      "name": "Shell Allowlist Framework",
+      "role": "allowlist",
+      "path": "reaper/frameworks/15-shell/allowlist.rpr",
+      "api": "shell_command_allowed",
+      "purpose": "Check that a requested command is present in an explicit allowlist.",
+      "positive": {
+        "args": "(\"reaper\", [\"reaper\", \"cmake\", \"ctest\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(\"powershell\", [\"reaper\", \"cmake\"])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "15.pipeline",
+      "domain_number": 15,
+      "domain": "Оболочка",
+      "slug": "15-shell",
+      "name": "Shell Pipeline Framework",
+      "role": "pipeline",
+      "path": "reaper/frameworks/15-shell/pipeline.rpr",
+      "api": "valid_shell_pipeline",
+      "purpose": "Validate a sequence of command stages with explicit pipe compatibility.",
+      "positive": {
+        "args": "([[\"compile\", true, true], [\"link\", true, false]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"compile\", false, true], [\"link\", false, false]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "15.argument-vector",
+      "domain_number": 15,
+      "domain": "Оболочка",
+      "slug": "15-shell",
+      "name": "Shell Argument Vector Framework",
+      "role": "argument-vector",
+      "path": "reaper/frameworks/15-shell/argument_vector.rpr",
+      "api": "valid_shell_argument_vector",
+      "purpose": "Validate an explicit argument vector and reject embedded line breaks or invalid value types.",
+      "positive": {
+        "args": "([\"--check\", \"main.rpr\"])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([\"--check\", 42])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "15.exit-status",
+      "domain_number": 15,
+      "domain": "Оболочка",
+      "slug": "15-shell",
+      "name": "Shell Exit Status Framework",
+      "role": "exit-status",
+      "path": "reaper/frameworks/15-shell/exit_status.rpr",
+      "api": "shell_exit_status_class",
+      "purpose": "Classify a process exit status without launching a process.",
+      "positive": {
+        "args": "(0)",
+        "output": "success"
+      },
+      "negative": {
+        "args": "(127)",
+        "output": "command-not-found"
+      }
+    },
+    {
+      "id": "16.quota",
+      "domain_number": 16,
+      "domain": "Рантайм",
+      "slug": "16-runtime",
+      "name": "Runtime Quota Framework",
+      "role": "quota",
+      "path": "reaper/frameworks/16-runtime/quota.rpr",
+      "api": "valid_runtime_quotas",
+      "purpose": "Validate positive step, call-depth, heap-byte and collection quotas.",
+      "positive": {
+        "args": "([100000, 128, 1048576, 10000])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([0, 128, 1048576, 10000])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "16.step-admission",
+      "domain_number": 16,
+      "domain": "Рантайм",
+      "slug": "16-runtime",
+      "name": "Runtime Step Admission Framework",
+      "role": "step-admission",
+      "path": "reaper/frameworks/16-runtime/step_admission.rpr",
+      "api": "runtime_step_admission",
+      "purpose": "Admit a requested step reservation only when current plus requested stays within the limit.",
+      "positive": {
+        "args": "(900, 50, 1000)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(990, 20, 1000)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "16.resource-ledger",
+      "domain_number": 16,
+      "domain": "Рантайм",
+      "slug": "16-runtime",
+      "name": "Runtime Resource Ledger Framework",
+      "role": "resource-ledger",
+      "path": "reaper/frameworks/16-runtime/resource_ledger.rpr",
+      "api": "runtime_resource_total",
+      "purpose": "Validate named resource entries and compute their total units.",
+      "positive": {
+        "args": "([[\"file\", 2], [\"buffer\", 4]])",
+        "output": "6"
+      },
+      "negative": {
+        "args": "([[\"file\", -1]])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "16.cancellation",
+      "domain_number": 16,
+      "domain": "Рантайм",
+      "slug": "16-runtime",
+      "name": "Runtime Cancellation Framework",
+      "role": "cancellation",
+      "path": "reaper/frameworks/16-runtime/cancellation.rpr",
+      "api": "valid_runtime_cancellation_transition",
+      "purpose": "Validate state transitions for a cooperative execution cancellation token.",
+      "positive": {
+        "args": "(\"running\", \"cancel-requested\")",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(\"completed\", \"cancel-requested\")",
+        "output": "false"
+      }
+    },
+    {
+      "id": "16.budget",
+      "domain_number": 16,
+      "domain": "Рантайм",
+      "slug": "16-runtime",
+      "name": "Runtime Budget Framework",
+      "role": "budget",
+      "path": "reaper/frameworks/16-runtime/budget.rpr",
+      "api": "runtime_budget_remaining",
+      "purpose": "Return remaining budget after validating a non-negative reservation.",
+      "positive": {
+        "args": "(1000, 250)",
+        "output": "750"
+      },
+      "negative": {
+        "args": "(1000, 1200)",
         "output": "[]"
       }
     }
