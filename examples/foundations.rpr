@@ -1,0 +1,9 @@
+import "../frameworks/foundation.rpr" as foundation
+
+emit "Reaper foundational frameworks = " ++ text(size(foundation["foundation_frameworks"]()))
+emit "Catalog valid = " ++ text(foundation["foundation_validate_catalog"]())
+emit "Architecture valid = " ++ text(
+    foundation["foundation_validate_architecture"](
+        foundation["foundation_architecture_order"]()
+    )
+)
