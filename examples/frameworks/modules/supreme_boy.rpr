@@ -114,6 +114,7 @@ export craft artifact_attest(artifact, provenance) {
 
 export craft release_check(candidate) {
     when not fc["fc_record"](candidate, 3) { yield [false, nothing, "release-candidate-shape"] }
+    when kind(candidate[2]) != "list" { yield [false, nothing, "release-gates-must-be-list"] }
     vary missing := []
     vary failed := []
     each gate in candidate[2] {
