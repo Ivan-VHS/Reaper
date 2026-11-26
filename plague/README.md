@@ -2,16 +2,16 @@
 
 PLAGUE is a Reaper-native framework family for evidence-driven evolution of explicitly delegated repositories. Its goal is to discover incomplete behavior, map cross-project dependencies, plan changes, prepare isolated patches, verify them and present reviewable pull requests.
 
-**Release:** 0.1.0-foundation  
+**Release:** 1.0.0-foundation  
 **Maturity:** Genesis  
-**Current status:** policy and component registry foundation; repository discovery and mutation adapters are not implemented.
+**Current status:** Reaper-native policy, registry and advisory proposal-evaluation slice; repository discovery and mutation adapters are not implemented.
 
 ## Framework family
 
 | Framework | Responsibility | Foundation status |
 |---|---|---|
 | Plagueborn | Repository onboarding, inventory and capability discovery | Planned |
-| Plaguecore | Policy, orchestration and task coordination | Partial — action policy foundation |
+| Plaguecore | Policy, orchestration and task coordination | Partial — action policy and bounded proposal assessment |
 | Plagionyx | Architecture and dependency evolution | Planned |
 | Plagorium | Requirements and functional-gap analysis | Planned |
 | Blightforge | Patch production and code modernization | Planned |
@@ -21,7 +21,7 @@ PLAGUE is a Reaper-native framework family for evidence-driven evolution of expl
 | Maladrix | Performance and resilience engineering | Planned |
 | Necrovex | Recovery, migrations and compatibility repair | Planned |
 
-The executable registry is in the engine/registry.rpr file. Action permissions are defined in engine/policy.rpr. These are small, executable Reaper modules, not descriptions of future behavior.
+The executable registry is in engine/registry.rpr. Action permissions are in engine/policy.rpr. Bounded profile/proposal validation and deterministic proposal assessment are in core.rpr and evolution.rpr. All four are Reaper modules.
 
 ## Operating modes
 
@@ -40,7 +40,11 @@ Delivered in this foundation:
 - a ten-component registry;
 - a default-deny action matrix for observe / propose / apply;
 - fixed denials for merge, release, secret access, untrusted execution and scope expansion;
-- a Reaper smoke program that exercises the policy and registry;
+- bounded validation of repository profiles and change proposals;
+- compatibility, granted-scope, path/byte budget, assurance-gate and rollback-evidence checks;
+- deterministic selection of up to 128 proposals by expected benefit minus risk;
+- review-oriented outcomes: blocked, defer, review_required and eligible_for_review;
+- Reaper smoke programs for policy and evolution evaluation;
 - versioned JSON contracts for repository targets, change plans and evidence;
 - a conservative scope profile with no repositories pre-authorized.
 
@@ -61,12 +65,17 @@ Do not report any of those as implemented until source, tests and CI evidence ex
 
 From the Reaper repository root:
 
+    python -m reaper --check plague/core.rpr
+    python -m reaper --check plague/evolution.rpr
+    python -m reaper --check examples/plague/evolution_smoke.rpr
+    python -m reaper examples/plague/evolution_smoke.rpr
+    python -m unittest discover -s tests -p "test_plague_framework.py" -v
     python -m reaper --check plague/engine/policy.rpr
     python -m reaper --check plague/engine/registry.rpr
     python -m reaper --check plague/examples/policy_smoke.rpr
     python -m reaper plague/examples/policy_smoke.rpr
 
-The smoke program prints explicit PASS/FAIL lines. CI checks the expected PASS lines.
+The evolution smoke program emits PLAGUE_V1_OK only after eligible, blocked, budget and candidate-selection assertions pass. CI checks the Reaper modules and test adapter.
 
 ## Safety invariants
 
