@@ -1,0 +1,53 @@
+# FrameCapabilities — least-privilege validation for a component boundary.
+# Required capabilities must be granted; grants must be permitted by policy.
+
+export craft missing_capabilities(required, granted) {
+    craft missing(capability) {
+        yield not contains(granted, capability)
+    }
+    yield keep(required, missing)
+}
+
+export craft unexpected_capabilities(granted, policy) {
+    craft unsupported(capability) {
+        yield not contains(policy, capability)
+    }
+    yield keep(granted, unsupported)
+}
+
+export craft valid_capability_boundary(required, granted, policy) {
+    when kind(required) != "list" {
+        yield false
+    }
+    when kind(granted) != "list" {
+        yield false
+    }
+    when kind(policy) != "list" {
+        yield false
+    }
+    craft invalid_name(value) {
+        when kind(value) != "text" {
+            yield true
+        }
+        yield size(trim(value)) == 0
+    }
+    when size(keep(required, invalid_name)) != 0 {
+        yield false
+    }
+    when size(keep(granted, invalid_name)) != 0 {
+        yield false
+    }
+    when size(keep(policy, invalid_name)) != 0 {
+        yield false
+    }
+    when size(unique(required)) != size(required) {
+        yield false
+    }
+    when size(unique(granted)) != size(granted) {
+        yield false
+    }
+    when size(unique(policy)) != size(policy) {
+        yield false
+    }
+    yield size(missing_capabilities(required, granted)) == 0 and size(unexpected_capabilities(granted, policy)) == 0
+}
