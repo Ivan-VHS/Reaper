@@ -1,0 +1,170 @@
+{
+  "schema": "reaper.framework-catalog.v1",
+  "host_abi": {
+    "major": 1,
+    "minor": 0
+  },
+  "maturity": "declarative-contracts",
+  "frameworks": [
+    {
+      "schema": "reaper.framework-manifest.v1",
+      "id": "codexno",
+      "name": "CodexNo",
+      "description": "Framework scaffolding, compiler extension contracts and source metadata.",
+      "version": {
+        "major": 1,
+        "minor": 0,
+        "patch": 0
+      },
+      "host_abi": {
+        "major": 1,
+        "minor": 0
+      },
+      "dependencies": [],
+      "conflicts": [],
+      "provides": [
+        "framework.scaffold.v1",
+        "framework.codegen.extension.v1",
+        "framework.source-metadata.v1"
+      ],
+      "extension_points": [
+        "compiler.backend",
+        "source.generator",
+        "workspace.scaffold"
+      ],
+      "required_capabilities": [],
+      "activation": "declarative-only",
+      "entrypoints": null
+    },
+    {
+      "schema": "reaper.framework-manifest.v1",
+      "id": "joint-baby",
+      "name": "Joint Baby",
+      "description": "Explicit cross-language adapters and versioned host ABI contracts.",
+      "version": {
+        "major": 1,
+        "minor": 0,
+        "patch": 0
+      },
+      "host_abi": {
+        "major": 1,
+        "minor": 0
+      },
+      "dependencies": [],
+      "conflicts": [],
+      "provides": [
+        "interop.c-abi.v1",
+        "interop.dabi64.v1",
+        "interop.wit.wasi-0.3"
+      ],
+      "extension_points": [
+        "interop.language-adapter",
+        "interop.host-abi",
+        "interop.serialization"
+      ],
+      "required_capabilities": [],
+      "activation": "declarative-only",
+      "entrypoints": null
+    },
+    {
+      "schema": "reaper.framework-manifest.v1",
+      "id": "correpse",
+      "name": "Correpse",
+      "description": "Composable framework graphs, dependency resolution and lifecycle policies.",
+      "version": {
+        "major": 1,
+        "minor": 0,
+        "patch": 0
+      },
+      "host_abi": {
+        "major": 1,
+        "minor": 0
+      },
+      "dependencies": [
+        {
+          "id": "allocate-purpose",
+          "minimum": {
+            "major": 1,
+            "minor": 0,
+            "patch": 0
+          }
+        }
+      ],
+      "conflicts": [],
+      "provides": [
+        "composition.graph.v1",
+        "composition.dependency-resolution.v1",
+        "composition.lifecycle.v1"
+      ],
+      "extension_points": [
+        "composition.node",
+        "composition.policy",
+        "framework.lifecycle"
+      ],
+      "required_capabilities": [],
+      "activation": "declarative-only",
+      "entrypoints": null
+    },
+    {
+      "schema": "reaper.framework-manifest.v1",
+      "id": "allocate-purpose",
+      "name": "Allocate Purpose",
+      "description": "Resource budgets, allocation strategies and bounded memory-pool contracts.",
+      "version": {
+        "major": 1,
+        "minor": 0,
+        "patch": 0
+      },
+      "host_abi": {
+        "major": 1,
+        "minor": 0
+      },
+      "dependencies": [],
+      "conflicts": [],
+      "provides": [
+        "resource.budget.v1",
+        "resource.pool.v1",
+        "resource.allocation-policy.v1"
+      ],
+      "extension_points": [
+        "resource.allocator",
+        "resource.budget",
+        "resource.pool"
+      ],
+      "required_capabilities": [],
+      "activation": "declarative-only",
+      "entrypoints": null
+    },
+    {
+      "schema": "reaper.framework-manifest.v1",
+      "id": "collillio",
+      "name": "Collillio",
+      "description": "Public framework statistics and OpenTelemetry-aligned observability contracts.",
+      "version": {
+        "major": 1,
+        "minor": 0,
+        "patch": 0
+      },
+      "host_abi": {
+        "major": 1,
+        "minor": 0
+      },
+      "dependencies": [],
+      "conflicts": [],
+      "provides": [
+        "telemetry.metrics.v1",
+        "telemetry.traces.v1",
+        "registry.public-stats.v1",
+        "telemetry.otel-semantics.v1"
+      ],
+      "extension_points": [
+        "telemetry.exporter",
+        "telemetry.processor",
+        "registry.stats"
+      ],
+      "required_capabilities": [],
+      "activation": "declarative-only",
+      "entrypoints": null
+    }
+  ]
+}
