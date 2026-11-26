@@ -126,6 +126,7 @@ static int host_complete(const ReaperEvolutionApplyHost *host) {
         host->abi_version == REAPER_EVOLUTION_APPLY_ABI_VERSION &&
         (host->capabilities & REAPER_APPLY_HOST_REQUIRED_CAPABILITIES) ==
             REAPER_APPLY_HOST_REQUIRED_CAPABILITIES &&
+        host->trusted_time_unix_seconds != NULL &&
         host->verify_repository_grant != NULL &&
         host->verify_path_scope != NULL &&
         host->verify_git_revision != NULL &&
@@ -171,8 +172,8 @@ static int request_digest(const ReaperEvolutionApplyRequest *request, char outpu
         !hash_field(&context, request->target_branch, strlen(request->target_branch)) ||
         !hash_field(&context, request->revision_algorithm, strlen(request->revision_algorithm)) ||
         !hash_field(&context, request->base_revision, strlen(request->base_revision)) ||
-        !hash_u64(&context, request->now_unix_seconds) ||
-        /* The grant signs this digest, so its signature bytes are excluded. */
+        /* The grant signs this digest, so its signature bytes are excluded.
+         * Trusted host time is deliberately not guest-controlled request data. */
         !hash_u64(&context, (uint64_t)request->patch_count)) return 0;
     for (index = 0u; index < request->patch_count; ++index) {
         const ReaperSourcePatch *patch = &request->patches[index];
@@ -310,6 +311,7 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
     size_t current_size = 0u;
     int checks_passed = 0;
     int branch_published = 0;
+    uint64_t trusted_now = 0u;
 
     memset(entries, 0, sizeof entries);
     if (!host_complete(host)) {
@@ -376,10 +378,13 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
         result.status = REAPER_APPLY_INVALID_ARGUMENT;
         return result;
     }
+    if (!host->trusted_time_unix_seconds(host->context, &trusted_now)) {
+        result.status = REAPER_APPLY_HOST_UNTRUSTED;
+        return result;
+    }
     if (!host->verify_repository_grant(host->context, request->signed_grant,
             request->signed_grant_size, request->repository_id,
-            request->target_branch, result.request_digest,
-            request->now_unix_seconds)) {
+            request->target_branch, result.request_digest, trusted_now)) {
         result.status = REAPER_APPLY_GRANT_DENIED;
         return result;
     }
@@ -407,7 +412,7 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
         const ReaperSourcePatch *patch = &request->patches[index];
         if (!host->verify_path_scope(host->context, request->signed_grant,
                 request->signed_grant_size, request->repository_id,
-                patch->relative_path, request->now_unix_seconds)) {
+                patch->relative_path, trusted_now)) {
             result.status = REAPER_APPLY_PATH_DENIED;
             (void)snprintf(result.failed_path, sizeof result.failed_path, "%s", patch->relative_path);
             goto fail;
