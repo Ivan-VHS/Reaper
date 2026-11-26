@@ -19,6 +19,7 @@ Start with the [project README](../README.md) for installation, first commands a
 - [Foundational frameworks 46–50](FOUNDATIONAL_FRAMEWORKS_46_50.md) — components, blocks, graph nodes, interfaces and transport protocols.
 - [Foundational frameworks 51–55](FOUNDATIONAL_FRAMEWORKS_51_55.md) — standards, policy controls, specifications, schemas and coverage matrices.
 - [Foundational frameworks 56–60](FOUNDATIONAL_FRAMEWORKS_56_60.md) — coordinate grids, subsystem contours, trust perimeters, working environments and workspaces.
+- [Foundational frameworks 61–65](FOUNDATIONAL_FRAMEWORKS_61_65.md) — bridgeheads, stable anchors, baselines, resilience structure and hardware/software targets.
 - [Hardware language track](HARDWARE_LANGUAGE.md)
 - [System Runtime ABI v1](SYSTEM_RUNTIME_ABI_V1.md)
 - [DABI64 Desktop Host v1](DABI64_DESKTOP_HOST_V1.md)
