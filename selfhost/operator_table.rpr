@@ -1,0 +1,93 @@
+# Shared operator metadata for Reaper lexer, parser and semantic analysis.
+# Binding powers are stable language-contract values, not parser implementation details.
+
+craft operator_precedence(kind) {
+    when kind == "::" { yield 1 }
+    when kind == "OR" { yield 2 }
+    when kind == "AND" { yield 3 }
+    when kind == "==" or kind == "!=" or kind == "<" or kind == "<=" or kind == ">" or kind == ">=" { yield 4 }
+    when kind == "++" { yield 5 }
+    when kind == "+" or kind == "-" { yield 6 }
+    when kind == "*" or kind == "/" or kind == "//" or kind == "%" { yield 7 }
+    when kind == "**" { yield 8 }
+    yield 0
+}
+
+craft operator_associativity(kind) {
+    when operator_precedence(kind) == 0 { yield ["ERR", "unknown binary operator", kind] }
+    when kind == "**" { yield ["OK", "right"] }
+    yield ["OK", "left"]
+}
+
+craft operator_is_binary(kind) {
+    yield operator_precedence(kind) > 0
+}
+
+craft operator_is_prefix(kind) {
+    yield kind == "-" or kind == "NOT"
+}
+
+craft operator_right_binding_power(kind) {
+    make precedence := operator_precedence(kind)
+    when precedence == 0 {
+        yield ["ERR", "unknown binary operator", kind]
+    }
+    when kind == "**" { yield ["OK", precedence] }
+    yield ["OK", precedence + 1]
+}
+
+craft operator_left_binding_power(kind) {
+    make precedence := operator_precedence(kind)
+    when precedence == 0 {
+        yield ["ERR", "unknown binary operator", kind]
+    }
+    yield ["OK", precedence]
+}
+
+craft operator_category(kind) {
+    when kind == "::" { yield ["OK", "flow"] }
+    when kind == "OR" or kind == "AND" { yield ["OK", "logical"] }
+    when kind == "==" or kind == "!=" or kind == "<" or kind == "<=" or kind == ">" or kind == ">=" {
+        yield ["OK", "comparison"]
+    }
+    when kind == "++" { yield ["OK", "concatenation"] }
+    when kind == "+" or kind == "-" { yield ["OK", "additive"] }
+    when kind == "*" or kind == "/" or kind == "//" or kind == "%" or kind == "**" {
+        yield ["OK", "multiplicative"]
+    }
+    yield ["ERR", "unknown binary operator", kind]
+}
+
+craft operator_info(kind) {
+    when not operator_is_binary(kind) {
+        yield ["ERR", "unknown binary operator", kind]
+    }
+    make association := operator_associativity(kind)
+    make category := operator_category(kind)
+    make right_power := operator_right_binding_power(kind)
+    yield ["OK", [kind, operator_precedence(kind), association[1], category[1], right_power[1]]]
+}
+
+make operators := ["::", "OR", "AND", "==", "!=", "<", "<=", ">", ">=", "++", "+", "-", "*", "/", "//", "%", "**"]
+make expected_precedence := [1, 2, 3, 4, 4, 4, 4, 4, 4, 5, 6, 6, 7, 7, 7, 7, 8]
+vary index := 0
+loop while index < size(operators) {
+    assert(operator_precedence(operators[index]) == expected_precedence[index], "operator precedence contract mismatch")
+    assert(operator_is_binary(operators[index]), "known binary operator not recognized")
+    assert(operator_info(operators[index])[0] == "OK", "operator metadata missing")
+    change index := index + 1
+}
+assert(operator_associativity("**") == ["OK", "right"], "exponentiation must be right-associative")
+assert(operator_associativity("+") == ["OK", "left"], "addition must be left-associative")
+assert(operator_right_binding_power("**") == ["OK", 8], "right-associative binding power mismatch")
+assert(operator_right_binding_power("+") == ["OK", 7], "left-associative binding power mismatch")
+assert(operator_category("::") == ["OK", "flow"], "flow operator category mismatch")
+assert(operator_category("AND") == ["OK", "logical"], "logical operator category mismatch")
+assert(operator_category("==") == ["OK", "comparison"], "comparison operator category mismatch")
+assert(operator_category("++") == ["OK", "concatenation"], "concatenation category mismatch")
+assert(operator_is_prefix("-") and operator_is_prefix("NOT"), "prefix operators missing")
+assert(not operator_is_prefix("+"), "binary addition incorrectly marked prefix")
+assert(not operator_is_binary("="), "assignment is not an expression binary operator")
+assert(operator_info("=>")[0] == "ERR", "unknown operator accepted")
+
+emit "SELFHOST_OPERATOR_TABLE_OK"
