@@ -1,12 +1,12 @@
 {
   "schema": "reaper.framework-portfolio.v1",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "language": "Reaper",
   "canonical_runtime": "ДОМ",
   "scale_policy": {
     "target_qualified_production_reaper_loc_per_independent_module": 50000,
-    "counted_modules": 50,
-    "total_qualified_production_reaper_loc_target": 2500000,
+    "counted_modules": 60,
+    "total_qualified_production_reaper_loc_target": 3000000,
     "baseline_qualified_loc": null,
     "rule": "Count only reachable, non-duplicated, first-party executable Reaper source owned by the module and covered by positive, negative, boundary and regression tests.",
     "exclusions": [
@@ -25,7 +25,7 @@
       "unreachable code",
       "placeholders"
     ],
-    "warning": "A line-count target is not a completion criterion. Contract, diagnostics, resource limits, security, CI, target-runtime evidence and integration are separately required."
+    "warning": "The 60-module count is a portfolio accounting boundary, not a completion claim. The ten modules added in this change are initial Reaper reference-runtime slices; native parity, production host services and the 50,000-qualified-LOC goals remain separate evidence gates."
   },
   "groups": [
     {
@@ -104,7 +104,7 @@
       "id": "standalone",
       "name": "Standalone Reaper framework modules",
       "pr": 336,
-      "status": "open; stacked_pr_353_adds_dom_adapters",
+      "status": "open; eight base modules plus ten additional Reaper source modules in the current stacked change",
       "items": [
         {
           "id": "framework.galhero",
@@ -175,6 +175,198 @@
           "source": "frameworks/showel_fleppery_code.rpr",
           "status": "reference_runtime_module_PR336",
           "source_pr": 336,
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "framework.vorke",
+          "name": "Vorke",
+          "source": "frameworks/vorke.rpr",
+          "status": "initial_reference_runtime_slice",
+          "implementation_language": "Reaper",
+          "source_branch": "feat/reaper-ten-frameworks-v1",
+          "primary_consumer": "Establish / ДОМ Core",
+          "responsibility": "Application manifest validation and declarative startup/shutdown phase planning.",
+          "public_api": [
+            "validate_manifest",
+            "phase_plan",
+            "phase_transition",
+            "shutdown_plan"
+          ],
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "framework.jellymeat",
+          "name": "Jellymeat",
+          "source": "frameworks/jellymeat.rpr",
+          "status": "initial_reference_runtime_slice",
+          "implementation_language": "Reaper",
+          "source_branch": "feat/reaper-ten-frameworks-v1",
+          "primary_consumer": "Uu / Nonconcrete",
+          "responsibility": "Schema-first record validation, projection, typed field checks and adjacent-version migration rules.",
+          "public_api": [
+            "validate_schema",
+            "validate_record",
+            "project",
+            "migration_step_allowed",
+            "select_matching"
+          ],
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "framework.lejjyfish",
+          "name": "LejjyFish",
+          "source": "frameworks/lejjyfish.rpr",
+          "status": "initial_reference_runtime_slice",
+          "implementation_language": "Reaper",
+          "source_branch": "feat/reaper-ten-frameworks-v1",
+          "primary_consumer": "System Carriere / JLOM",
+          "responsibility": "Ordered bounded stream operations, batch slicing, watermark updates and topic fanout without a shared transport.",
+          "public_api": [
+            "stream_valid",
+            "append",
+            "take_batch",
+            "advance_watermark",
+            "fanout",
+            "partition_by_topic"
+          ],
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "framework.lejjy",
+          "name": "Lejjy",
+          "source": "frameworks/lejjy.rpr",
+          "status": "initial_reference_runtime_slice",
+          "implementation_language": "Reaper",
+          "source_branch": "feat/reaper-ten-frameworks-v1",
+          "primary_consumer": "Establish / Nonconcrete",
+          "responsibility": "Explicit service-provider bindings, dependency resolution and lifetime-scope validation.",
+          "public_api": [
+            "validate",
+            "bind",
+            "resolve",
+            "resolve_many",
+            "scope_allows",
+            "validate_dependencies"
+          ],
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "framework.oplos",
+          "name": "Oplos",
+          "source": "frameworks/oplos.rpr",
+          "status": "initial_reference_runtime_slice",
+          "implementation_language": "Reaper",
+          "source_branch": "feat/reaper-ten-frameworks-v1",
+          "primary_consumer": "Nonconcrete / System Carriere",
+          "responsibility": "Transport-neutral route, request/response envelope and status-contract validation.",
+          "public_api": [
+            "endpoint_valid",
+            "validate_routes",
+            "resolve_route",
+            "request_valid",
+            "response_valid",
+            "validate_envelope_pair"
+          ],
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "framework.holmosaptimu",
+          "name": "Holmosaptimu",
+          "source": "frameworks/holmosaptimu.rpr",
+          "status": "initial_reference_runtime_slice",
+          "implementation_language": "Reaper",
+          "source_branch": "feat/reaper-ten-frameworks-v1",
+          "primary_consumer": "ДОМ observability boundary",
+          "responsibility": "Local metric catalogues, bounded sample validation, summaries and threshold-based health grades.",
+          "public_api": [
+            "validate_catalog",
+            "sample_valid",
+            "validate_samples",
+            "summarize",
+            "health_grade",
+            "compare_threshold"
+          ],
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "framework.sentan",
+          "name": "Sentan",
+          "source": "frameworks/sentan.rpr",
+          "status": "initial_reference_runtime_slice",
+          "implementation_language": "Reaper",
+          "source_branch": "feat/reaper-ten-frameworks-v1",
+          "primary_consumer": "Nonconcrete / host policy adapter",
+          "responsibility": "Deny-by-default policy evaluation, explicit capability matching, deny precedence and least-privilege projection.",
+          "public_api": [
+            "validate_rules",
+            "request_valid",
+            "evaluate",
+            "explain",
+            "least_privilege"
+          ],
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "framework.cellene",
+          "name": "Cellene",
+          "source": "frameworks/cellene.rpr",
+          "status": "initial_reference_runtime_slice",
+          "implementation_language": "Reaper",
+          "source_branch": "feat/reaper-ten-frameworks-v1",
+          "primary_consumer": "Nonconcrete / Native Framework Core",
+          "responsibility": "Versioned component manifest validation, host ABI compatibility and import/export composition checks.",
+          "public_api": [
+            "validate_manifests",
+            "host_compatible",
+            "validate_composition",
+            "exports_of"
+          ],
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "framework.kolir",
+          "name": "Kolir",
+          "source": "frameworks/kolir.rpr",
+          "status": "initial_reference_runtime_slice",
+          "implementation_language": "Reaper",
+          "source_branch": "feat/reaper-ten-frameworks-v1",
+          "primary_consumer": "Reaper Studio / DAK UI host adapter",
+          "responsibility": "Declarative UI-tree integrity, parent reachability, focus order, viewport constraints and accessibility reporting.",
+          "public_api": [
+            "validate_tree",
+            "focus_order",
+            "viewport_admit",
+            "accessibility_report"
+          ],
+          "target_qualified_loc": 50000,
+          "baseline_qualified_loc": null
+        },
+        {
+          "id": "framework.somo",
+          "name": "SOMO",
+          "source": "frameworks/somo.rpr",
+          "status": "initial_reference_runtime_slice",
+          "implementation_language": "Reaper",
+          "source_branch": "feat/reaper-ten-frameworks-v1",
+          "primary_consumer": "Sretuo / Vprossee",
+          "responsibility": "Deterministic scenario evaluation, replay comparison, coverage summaries, fault plans and release gates.",
+          "public_api": [
+            "validate_scenario",
+            "evaluate",
+            "replay_equal",
+            "coverage_summary",
+            "fault_plan",
+            "release_gate"
+          ],
           "target_qualified_loc": 50000,
           "baseline_qualified_loc": null
         }
@@ -606,7 +798,17 @@
       "MOST": "Reaper language tooling",
       "Blau": "JennyFlash",
       "Shashio": "JLOM",
-      "Showel Fleppery CODE": "Jenny Flashing Boy"
+      "Showel Fleppery CODE": "Jenny Flashing Boy",
+      "Vorke": "Establish / ДОМ Core",
+      "Jellymeat": "Uu / Nonconcrete",
+      "LejjyFish": "System Carriere / JLOM",
+      "Lejjy": "Establish / Nonconcrete",
+      "Oplos": "Nonconcrete / System Carriere",
+      "Holmosaptimu": "ДОМ observability boundary",
+      "Sentan": "Nonconcrete / trusted host policy adapter",
+      "Cellene": "Nonconcrete / Native Framework Core",
+      "Kolir": "Reaper Studio / DAK UI host adapter",
+      "SOMO": "Sretuo / Vprossee"
     },
     "federation_to_dom": {
       "Joint Baby": "Nonconcrete",
@@ -627,5 +829,263 @@
       "Secator": "Nonconcrete / host security",
       "PollATIA": "DOM observability"
     }
-  }
+  },
+  "integration_surfaces": [
+    {
+      "id": "framework-federation-registry",
+      "name": "Framework Federation registry",
+      "status": "open_non_draft_pr",
+      "prs": [
+        333
+      ],
+      "branch": "feat/framework-federation-20",
+      "role": "20 versioned namespace contracts, a 120-operation metadata catalogue and a native C ABI registry; the registry itself is not 120 executable handlers.",
+      "evidence": [
+        "docs/REAPER_FRAMEWORK_FEDERATION_V1.md",
+        "language/frameworks.v1.json",
+        "include/reaper/framework_suite.h"
+      ]
+    },
+    {
+      "id": "framework-federation-handlers",
+      "name": "Framework Federation Reaper handlers",
+      "status": "open_draft_stacked_pr",
+      "prs": [
+        356
+      ],
+      "branch": "feat/federation-reaper-handlers-20261126",
+      "role": "120 Reaper reference-runtime operations across the 20 federation namespaces; native source bindings and host provider execution remain separate gates.",
+      "evidence": [
+        "docs/FRAMEWORK_FEDERATION_HANDLERS_V1.md",
+        "examples/frameworks/federation_handlers_smoke.rpr"
+      ]
+    },
+    {
+      "id": "native-framework-core",
+      "name": "Native Framework Core",
+      "status": "open_non_draft_pr",
+      "prs": [
+        335
+      ],
+      "branch": "feat/framework-core-v1",
+      "role": "Trusted in-process C17 manifest registry, dependency resolution and lifecycle contract; not a sandbox or dynamic untrusted-code loader.",
+      "evidence": [
+        "docs/FRAMEWORK_CORE_V1.md",
+        "include/reaper/framework.h",
+        "src/framework.c"
+      ]
+    },
+    {
+      "id": "rforge",
+      "name": "RForge framework archetypes",
+      "status": "open_draft_stacked_prs",
+      "prs": [
+        354,
+        357
+      ],
+      "branch": "feat/rforge-framework-archetypes",
+      "role": "20 separately named Reaper-source product archetypes; current catalogue says runtime validation is pending and native AOT is unsupported for this source slice.",
+      "evidence": [
+        "docs/RFORGE_ARCHETYPE_CATALOG.md",
+        "examples/rforge/frameworks.v1.json",
+        "frameworks/rforge/all.rpr"
+      ]
+    },
+    {
+      "id": "rivet",
+      "name": "Rivet composition planner",
+      "status": "open_draft_pr",
+      "prs": [
+        355
+      ],
+      "branch": "feat/rivet-framework-multitool-factory",
+      "role": "Reaper-first framework and multitool dependency planner; it plans in-memory compositions but does not yet generate, compile, package or sign products.",
+      "evidence": [
+        "docs/RIVET_ASSEMBLY_FACTORY.md",
+        "rivet/engine.rpr",
+        "rivet/catalog.rpr"
+      ]
+    },
+    {
+      "id": "plague",
+      "name": "PLAGUE repository evolution framework",
+      "status": "open_draft_pr",
+      "prs": [
+        358
+      ],
+      "branch": "feat/plague-foundation-v1",
+      "role": "Reaper-native repository assessment and bounded observe/propose/apply foundation; not feature-complete and default-deny for changes.",
+      "evidence": [
+        "docs/PLAGUE_FOUNDATION_V1.md",
+        "plague/engine/core.rpr",
+        "plague/engine/policy.rpr"
+      ]
+    },
+    {
+      "id": "aesthetica",
+      "name": "Aesthetica evaluation framework",
+      "status": "open_non_draft_pr",
+      "prs": [
+        360
+      ],
+      "branch": "feat/aesthetica-duality-framework-v1",
+      "role": "Independent aesthetic evaluation model with evidence, confidence, context weights and provenance; kept as an adjacent framework rather than folded into the ten named modules.",
+      "evidence": [
+        "frameworks/aesthetica/core.rpr"
+      ]
+    },
+    {
+      "id": "kora",
+      "name": "Kora utility/plugin surface",
+      "status": "merged_on_main",
+      "prs": [
+        141
+      ],
+      "role": "Separate Python/Lua utility surface with seven plugin families and 66 standard-library helper functions; not the Reaper-native ДОМ runtime.",
+      "evidence": [
+        "docs/KORA.md",
+        "reaper/kora/manifest.json"
+      ]
+    },
+    {
+      "id": "internal-products",
+      "name": "Internal product/plugin host",
+      "status": "implemented_on_main_python_reference",
+      "prs": [
+        133
+      ],
+      "role": "18 registered in-process Python reference services with explicit bounded handlers; C17 parity is not implied.",
+      "evidence": [
+        "docs/INTERNAL_PRODUCTS.md",
+        "docs/PLUGINS.md",
+        "reaper/products.py"
+      ]
+    },
+    {
+      "id": "native-capability-suite",
+      "name": "Native Capability Suite",
+      "status": "implemented_on_main_with_partial_handlers",
+      "prs": [
+        173
+      ],
+      "role": "18 C17 modules and 108 operation contracts; only the separately listed allocation-free primitives are native executable handlers.",
+      "evidence": [
+        "docs/NATIVE_CAPABILITY_SUITE.md",
+        "include/reaper/capability_suite.h",
+        "src/capability_suite.c"
+      ]
+    },
+    {
+      "id": "system-runtime-abi",
+      "name": "System Runtime ABI v1",
+      "status": "multi_pr_host_boundary_partial",
+      "prs": [
+        308,
+        315,
+        316,
+        322,
+        328
+      ],
+      "role": "Capability-gated native host-dispatch contract; platform syscall adapters, privileged kernel dispatch and complete source bindings remain separate maturity gates.",
+      "evidence": [
+        "docs/SYSTEM_RUNTIME_ABI_V1.md"
+      ]
+    },
+    {
+      "id": "dabi64",
+      "name": "DABI64 Desktop Host v1",
+      "status": "implemented_contract_and_local_validators",
+      "prs": [
+        331
+      ],
+      "role": "Fixed-width pointer-free desktop request/response frames and local validators; this is not the DAK syscall transport or process authentication implementation.",
+      "evidence": [
+        "docs/DABI64_DESKTOP_HOST_V1.md",
+        "include/reaper/dabi64_desktop.h",
+        "src/dabi64_desktop.c"
+      ]
+    },
+    {
+      "id": "jora",
+      "name": "Jora application factory",
+      "status": "merged_scaffolding_surface",
+      "prs": [
+        276
+      ],
+      "role": "Reaper-first application composition and scaffolding; distinct from framework runtime and Rivet multitool composition.",
+      "evidence": [
+        "docs/JORA_APPLICATION_FACTORY.md"
+      ]
+    },
+    {
+      "id": "self-hosting",
+      "name": "Reaper self-hosting/compiler bootstrap",
+      "status": "open_draft_incremental_prs",
+      "prs": [
+        339,
+        343,
+        345,
+        351
+      ],
+      "branch": "feat/native-reaper-50k-expansion-20261126",
+      "role": "Reaper-written lexer/parser/compiler slices and incremental subsystem expansion; complete self-hosting and native compiler parity are not claimed.",
+      "evidence": [
+        "docs/SELF_HOSTING_BOOTSTRAP.md",
+        "selfhost/lexer.rpr",
+        "selfhost/parser.rpr"
+      ]
+    },
+    {
+      "id": "most-qcs",
+      "name": "MOST and QCS language profiles",
+      "status": "partial_on_main",
+      "role": "MOST exact alias/profile layer and QCS hardware-domain validation; neither is a second Reaper grammar or a complete hardware execution backend.",
+      "evidence": [
+        "docs/MOST_IMPLEMENTATION_STATUS.md",
+        "docs/HARDWARE_LANGUAGE.md"
+      ]
+    },
+    {
+      "id": "transactional-runtime",
+      "name": "Transactional Runtime",
+      "status": "implemented_on_main_python_reference",
+      "role": "Bounded in-memory snapshots, optimistic generation checks, rollback and migration contracts; not physical firmware flashing or privileged mutation.",
+      "evidence": [
+        "docs/TRANSACTIONAL_RUNTIME.md"
+      ]
+    },
+    {
+      "id": "toolchain-atlas",
+      "name": "Reaper Toolchain Atlas",
+      "status": "implemented_on_main_read_only_inventory",
+      "role": "Bounded read-only local toolchain probes and deterministic reporting; does not execute project code or install toolchains.",
+      "evidence": [
+        "docs/REPLACEMENT_TOOLS.md"
+      ]
+    },
+    {
+      "id": "nexus-federation",
+      "name": "NEXUS and OCTA project federation",
+      "status": "contract_and_adapter_surfaces",
+      "role": "Versioned opt-in integration contracts for Reaper and peer projects; no implicit service discovery, plugin loading or privileged access.",
+      "evidence": [
+        "docs/NEXUS_FEDERATION_PROFILE_V1.md",
+        "docs/FEDERATED_INTEGRATION.md",
+        "docs/OCTA_PYRAMID_FEDERATION.md"
+      ]
+    },
+    {
+      "id": "engineering-evolution",
+      "name": "Engineering Evolution Framework",
+      "status": "merged_governance_framework",
+      "prs": [
+        165
+      ],
+      "role": "Versioned engineering-adoption and evidence rules; it complements project contracts and does not prove product implementation.",
+      "evidence": [
+        "docs/ENGINEERING_EVOLUTION_FRAMEWORK.md",
+        "engineering-evolution.v1.json"
+      ]
+    }
+  ]
 }
