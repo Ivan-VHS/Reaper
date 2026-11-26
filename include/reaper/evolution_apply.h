@@ -129,7 +129,9 @@ typedef struct {
         void **workspace
     );
     /* Resolves a repository-relative path inside this exact workspace.
-     * Rejects traversal, symlink/reparse-point escapes and non-regular files. */
+     * Rejects traversal, symlink/reparse-point escapes and non-regular files.
+     * The returned canonical form must be stable for the underlying file
+     * identity (including case-folding on case-insensitive filesystems). */
     int (*resolve_confined_path)(
         void *context, void *workspace, const char *relative_path,
         char *canonical_path, size_t canonical_path_capacity
@@ -140,24 +142,29 @@ typedef struct {
     );
     void (*release_buffer)(void *context, uint8_t *bytes);
     /* Stages a replacement in the isolated workspace and re-checks the
-     * original digest under the same file-identity lock used for replacement. */
+     * original digest under the same file-identity lock used for replacement.
+     * On successful commit, the stage handle is consumed. On failed commit,
+     * it remains valid for discard_staged. */
     int (*stage_replace)(
         void *context, void *workspace, const char *canonical_path,
         const char *expected_original_sha256,
         const uint8_t *replacement, size_t replacement_size,
         void **staged_handle
     );
-    /* Runs only registered checks in the isolated workspace. The callback must
-     * enforce no-network and the declared CPU/memory/output/process/file limits. */
+    /* Runs only registered checks against the fully materialized isolated
+     * workspace. The callback must enforce no-network and the declared
+     * CPU/memory/output/process/file limits. */
     int (*run_declared_checks)(
         void *context, void *workspace,
-        void *const *staged_handles, size_t staged_count,
         const char *const *check_ids, size_t check_count,
         const ReaperApplyLimits *limits,
         char *report, size_t report_capacity
     );
     /* Commits a staged replacement only within the isolated workspace and
-     * returns a rollback snapshot. This must not update Git refs. */
+     * returns a rollback snapshot independent from the stage handle. A
+     * successful commit consumes staged_handle. A failed commit leaves
+     * staged_handle valid for discard_staged and may return a snapshot if
+     * partial materialization occurred. This must not update Git refs. */
     int (*commit_staged)(
         void *context, void *workspace,
         void *staged_handle, void **rollback_handle
