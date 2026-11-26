@@ -73,7 +73,8 @@ export craft compare_bytes(left, right) {
 }
 
 craft digits_only(value) {
-    when kind(value) != "text" or size(value) == 0 { yield false }
+    when kind(value) != "text" { yield false }
+    when size(value) == 0 { yield false }
     vary index := 0
     loop while index < size(value) {
         when not fc["fc_has"](["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"], value[index]) {
