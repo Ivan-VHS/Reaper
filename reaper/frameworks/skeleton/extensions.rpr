@@ -1,0 +1,63 @@
+# FrameExtensions — validated extension IDs and host API compatibility ranges.
+# A record is [extension_id, minimum_api_level, maximum_api_level].
+
+export craft valid_extension_record(extension) {
+    when kind(extension) != "list" {
+        yield false
+    }
+    when size(extension) != 3 {
+        yield false
+    }
+    when kind(extension[0]) != "text" {
+        yield false
+    }
+    when size(trim(extension[0])) == 0 {
+        yield false
+    }
+    when kind(extension[1]) != "number" {
+        yield false
+    }
+    when kind(extension[2]) != "number" {
+        yield false
+    }
+    yield extension[1] >= 0 and extension[1] <= extension[2]
+}
+
+export craft compatible_extension(extension, host_api_level) {
+    when not valid_extension_record(extension) {
+        yield false
+    }
+    when kind(host_api_level) != "number" {
+        yield false
+    }
+    yield extension[1] <= host_api_level and host_api_level <= extension[2]
+}
+
+export craft valid_extension_registry(extensions) {
+    when kind(extensions) != "list" {
+        yield false
+    }
+    craft invalid_record(extension) {
+        yield not valid_extension_record(extension)
+    }
+    when size(keep(extensions, invalid_record)) != 0 {
+        yield false
+    }
+    craft extension_id(extension) {
+        yield extension[0]
+    }
+    yield size(unique(map(extensions, extension_id))) == size(extensions)
+}
+
+export craft compatible_extensions(extensions, host_api_level) {
+    when not valid_extension_registry(extensions) {
+        yield []
+    }
+    when kind(host_api_level) != "number" {
+        yield []
+    }
+    craft supports_host(extension) {
+        yield compatible_extension(extension, host_api_level)
+    }
+    yield keep(extensions, supports_host)
+}
