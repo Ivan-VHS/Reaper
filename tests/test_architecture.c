@@ -37,6 +37,8 @@ static void test_catalog_is_complete_and_stable(void) {
     assert(reaper_architecture_concept_find("missing") == NULL);
     assert(reaper_architecture_concept_find(NULL) == NULL);
     assert(reaper_architecture_concept_find_ru("Каркас ") == NULL);
+    assert(reaper_architecture_concept_find_ru("Рабочая среда")->layer == REAPER_ARCH_LAYER_WORKSPACE);
+    assert(reaper_architecture_concept_find_ru("Рабочая область")->layer == REAPER_ARCH_LAYER_WORKSPACE);
     assert(reaper_architecture_layer_at(9U) == NULL);
 }
 
