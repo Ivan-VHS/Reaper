@@ -90,3 +90,104 @@ export craft diff(before_snapshot, after_snapshot) {
 
     yield changes
 }
+
+craft remove_entry(entries, key) {
+    vary result := []
+    vary removed := false
+    each entry in entries {
+        when entry[0] == key {
+            change removed := true
+        } otherwise {
+            change result := push(result, entry)
+        }
+    }
+    yield [result, removed]
+}
+
+export craft validate_snapshot(snapshot) {
+    when kind(snapshot) != "list" or size(snapshot) != 2 {
+        yield [false, ["snapshot-shape"]]
+    }
+    when kind(snapshot[0]) != "number" or snapshot[0] < 0 {
+        yield [false, ["snapshot-version"]]
+    }
+    when kind(snapshot[1]) != "list" {
+        yield [false, ["snapshot-entries"]]
+    }
+    vary keys := []
+    vary errors := []
+    each entry in snapshot[1] {
+        when kind(entry) != "list" or size(entry) != 2 {
+            change errors := push(errors, ["entry-shape", entry])
+        } otherwise {
+            when has_key(keys, entry[0]) {
+                change errors := push(errors, ["duplicate-key", entry[0]])
+            } otherwise {
+                change keys := push(keys, entry[0])
+            }
+        }
+    }
+    yield [size(errors) == 0, errors]
+}
+
+craft has_key(keys, target) {
+    vary found := false
+    each key in keys {
+        when key == target { change found := true }
+    }
+    yield found
+}
+
+export craft delete(snapshot, key) {
+    make checked := validate_snapshot(snapshot)
+    when not checked[0] { yield [false, snapshot, checked[1]] }
+    make changed := remove_entry(snapshot[1], key)
+    when not changed[1] { yield [false, snapshot, "key-not-found"] }
+    yield [true, [snapshot[0] + 1, changed[0]], "deleted"]
+}
+
+export craft keys(snapshot) {
+    make checked := validate_snapshot(snapshot)
+    when not checked[0] { yield [false, [], checked[1]] }
+    vary result := []
+    each entry in snapshot[1] {
+        change result := push(result, entry[0])
+    }
+    yield [true, result, "keys"]
+}
+
+export craft read_all(snapshot) {
+    make checked := validate_snapshot(snapshot)
+    when not checked[0] { yield [false, [], checked[1]] }
+    yield [true, snapshot[1], snapshot[0]]
+}
+
+export craft apply_atomic(snapshot, operations) {
+    make checked := validate_snapshot(snapshot)
+    when not checked[0] { yield [false, snapshot, checked[1]] }
+    when kind(operations) != "list" { yield [false, snapshot, "operations-must-be-list"] }
+    vary next_entries := snapshot[1]
+    vary errors := []
+    each operation in operations {
+        when kind(operation) != "list" or size(operation) != 3 {
+            change errors := push(errors, ["operation-shape", operation])
+        } otherwise {
+            when operation[0] == "put" {
+                change next_entries := put_entry(next_entries, operation[1], operation[2])
+            } otherwise {
+                when operation[0] == "delete" {
+                    make removed := remove_entry(next_entries, operation[1])
+                    when not removed[1] {
+                        change errors := push(errors, ["key-not-found", operation[1]])
+                    } otherwise {
+                        change next_entries := removed[0]
+                    }
+                } otherwise {
+                    change errors := push(errors, ["unknown-operation", operation[0]])
+                }
+            }
+        }
+    }
+    when size(errors) > 0 { yield [false, snapshot, errors] }
+    yield [true, [snapshot[0] + 1, next_entries], "committed"]
+}
