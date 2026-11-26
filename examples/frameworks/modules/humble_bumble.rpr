@@ -26,6 +26,7 @@ export craft map_ok(result, mapper) {
     when not fc["fc_record"](result, 3) or kind(mapper) != "craft" {
         yield [false, nothing, "map-ok-input-shape"]
     }
+    when kind(result[0]) != "boolean" { yield [false, nothing, "result-discriminant-invalid"] }
     when not result[0] { yield result }
     yield [true, mapper(result[1]), result[2]]
 }
@@ -34,6 +35,7 @@ export craft map_err(result, mapper) {
     when not fc["fc_record"](result, 3) or kind(mapper) != "craft" {
         yield [false, nothing, "map-err-input-shape"]
     }
+    when kind(result[0]) != "boolean" { yield [false, nothing, "result-discriminant-invalid"] }
     when result[0] { yield result }
     yield [false, mapper(result[1]), result[2]]
 }
@@ -42,6 +44,7 @@ export craft recover_error(result, recovery_policy) {
     when not fc["fc_record"](result, 3) or kind(recovery_policy) != "craft" {
         yield [false, nothing, "recovery-input-shape"]
     }
+    when kind(result[0]) != "boolean" { yield [false, nothing, "result-discriminant-invalid"] }
     when result[0] { yield result }
     make recovered := recovery_policy(result[1], result[2])
     yield [true, recovered, ["recovered-from", result[1]]]
