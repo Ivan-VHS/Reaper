@@ -21,9 +21,11 @@ export craft quality_gate(gate, evidence) {
     each required in gate[1] {
         vary found := false
         each item in evidence {
-            when fc["fc_record"](item, 3) and item[0] == required {
-                change found := true
-                when item[1] != "passed" { change failed := push(failed, [required, item[1]]) }
+            when fc["fc_record"](item, 3) {
+                when item[0] == required {
+                    change found := true
+                    when item[1] != "passed" { change failed := push(failed, [required, item[1]]) }
+                }
             }
         }
         when not found { change missing := push(missing, required) }
@@ -71,8 +73,8 @@ export craft regression_compare(before_snapshot, after_snapshot) {
         }
         vary after := nothing
         each candidate in after_snapshot {
-            when fc["fc_record"](candidate, 3) and candidate[0] == before[0] {
-                change after := candidate
+            when fc["fc_record"](candidate, 3) {
+                when candidate[0] == before[0] { change after := candidate }
             }
         }
         when after == nothing {
@@ -117,7 +119,11 @@ export craft release_check(candidate) {
         when not fc["fc_record"](gate, 3) {
             change missing := push(missing, ["invalid-gate", gate])
         } otherwise {
-            when gate[2] and not gate[1] { change failed := push(failed, gate[0]) }
+            when kind(gate[1]) != "boolean" or kind(gate[2]) != "boolean" {
+                change missing := push(missing, ["invalid-gate-flags", gate[0]])
+            } otherwise {
+                when gate[2] and not gate[1] { change failed := push(failed, gate[0]) }
+            }
         }
     }
     yield [size(missing) == 0 and size(failed) == 0, [candidate[0], candidate[1], missing, failed], "release-readiness"]
