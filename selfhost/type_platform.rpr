@@ -72,7 +72,7 @@ export craft platform_linux_x86_64() {
     yield platform_profile(
         "LINUX_X86_64", "x86_64", "linux", "LP64",
         8, 8, "little", "ELF", "SYSV_X86_64", "none", 16,
-        8, 8, [8, 16, 32, 64], ["sse2", "sse4_2"], "declared"
+        8, 8, [8, 16, 32, 64], ["sse2"], "declared"
     )
 }
 
@@ -164,8 +164,23 @@ export craft platform_validate(platform) {
     when platform[1] == "" or platform[2] == "" or platform[3] == "" {
         yield layout_error("RPR-PLATFORM-0002", "platform identity, architecture and operating system are required")
     }
+    when platform[4] != "ILP32" and platform[4] != "LP64" and platform[4] != "LLP64" and platform[4] != "unfinalized" {
+        yield layout_error("RPR-PLATFORM-0017", "data model must be ILP32, LP64, LLP64 or unfinalized")
+    }
     when platform[5] != 4 and platform[5] != 8 {
         yield layout_error("RPR-PLATFORM-0003", "v1 supports 32-bit or 64-bit pointers only")
+    }
+    when platform[4] == "ILP32" and (platform[5] != 4 or platform[12] != 4) {
+        yield layout_error("RPR-PLATFORM-0018", "ILP32 requires four-byte pointers and C long")
+    }
+    when platform[4] == "LP64" and (platform[5] != 8 or platform[12] != 8) {
+        yield layout_error("RPR-PLATFORM-0019", "LP64 requires eight-byte pointers and C long")
+    }
+    when platform[4] == "LLP64" and (platform[5] != 8 or platform[12] != 4) {
+        yield layout_error("RPR-PLATFORM-0020", "LLP64 requires eight-byte pointers and four-byte C long")
+    }
+    when platform[4] == "unfinalized" and platform[16] != "profile_only" {
+        yield layout_error("RPR-PLATFORM-0021", "an unfinalized data model must remain profile-only")
     }
     when not layout_is_power_of_two(platform[6]) or platform[6] > platform[11] {
         yield layout_error("RPR-PLATFORM-0004", "pointer alignment must be a supported power of two")
@@ -179,7 +194,7 @@ export craft platform_validate(platform) {
     when not layout_is_power_of_two(platform[11]) {
         yield layout_error("RPR-PLATFORM-0007", "maximum alignment must be a power of two")
     }
-    when platform[12] != 0 and (platform[12] < 1 or not layout_is_power_of_two(platform[13])) {
+    when platform[12] != 0 and (not layout_is_power_of_two(platform[12]) or not layout_is_power_of_two(platform[13]) or platform[13] > platform[12]) {
         yield layout_error("RPR-PLATFORM-0008", "C long size and alignment are inconsistent")
     }
     when platform[12] == 0 and platform[16] != "profile_only" {
@@ -188,8 +203,25 @@ export craft platform_validate(platform) {
     when size(platform[14]) == 0 {
         yield layout_error("RPR-PLATFORM-0010", "atomic width catalogue cannot be empty")
     }
+    vary seen_widths := []
+    each width in platform[14] {
+        when width != 8 and width != 16 and width != 32 and width != 64 and width != 128 {
+            yield layout_error("RPR-PLATFORM-0022", "atomic width must be 8, 16, 32, 64 or 128 bits")
+        }
+        when list_has(seen_widths, width) {
+            yield layout_error("RPR-PLATFORM-0023", "atomic width catalogue contains a duplicate")
+        }
+        change seen_widths := push(seen_widths, width)
+    }
     when size(platform[15]) == 0 {
         yield layout_error("RPR-PLATFORM-0011", "CPU feature catalogue cannot be empty")
+    }
+    vary seen_features := []
+    each feature in platform[15] {
+        when feature == "" or list_has(seen_features, feature) {
+            yield layout_error("RPR-PLATFORM-0024", "CPU feature names must be non-empty and unique")
+        }
+        change seen_features := push(seen_features, feature)
     }
     yield [true, platform, ""]
 }
@@ -249,6 +281,49 @@ export craft primitive_layout(type_name, platform) {
     yield layout_error("RPR-LAYOUT-0002", "unknown primitive type: " ++ type_name)
 }
 
+export craft integer_type_bounds(type_descriptor, platform) {
+    when size(type_descriptor) == 3 and type_descriptor[0] == "DISTINCT_V1" {
+        yield integer_type_bounds(type_descriptor[2], platform)
+    }
+    when size(type_descriptor) != 3 or type_descriptor[0] != "TYPE_V1" or type_descriptor[1] != "primitive" {
+        yield layout_error("RPR-LAYOUT-0025", "enum underlying type must be an integer primitive or distinct integer type")
+    }
+    make name := type_descriptor[2]
+    when name == "i8" {
+        yield [true, [-128, 127], ""]
+    }
+    when name == "u8" {
+        yield [true, [0, 255], ""]
+    }
+    when name == "i16" or name == "c_short" {
+        yield [true, [-32768, 32767], ""]
+    }
+    when name == "u16" {
+        yield [true, [0, 65535], ""]
+    }
+    when name == "i32" or name == "c_int" {
+        yield [true, [-2147483648, 2147483647], ""]
+    }
+    when name == "u32" {
+        yield [true, [0, 4294967295], ""]
+    }
+    when name == "i64" or name == "c_longlong" {
+        yield [true, [-9223372036854775808, 9223372036854775807], ""]
+    }
+    when name == "u64" {
+        yield [true, [0, 18446744073709551615], ""]
+    }
+    when name == "c_long" {
+        when platform[12] == 4 {
+            yield [true, [-2147483648, 2147483647], ""]
+        }
+        when platform[12] == 8 {
+            yield [true, [-9223372036854775808, 9223372036854775807], ""]
+        }
+    }
+    yield layout_error("RPR-LAYOUT-0025", "enum underlying type must be an integer primitive or distinct integer type")
+}
+
 export craft type_layout(type_descriptor, platform, definitions, stack) {
     when size(type_descriptor) == 0 {
         yield layout_error("RPR-LAYOUT-0003", "type descriptor is empty")
@@ -256,9 +331,15 @@ export craft type_layout(type_descriptor, platform, definitions, stack) {
 
     when type_descriptor[0] == "TYPE_V1" {
         when type_descriptor[1] == "primitive" {
+            when size(type_descriptor) != 3 or type_descriptor[2] == "" {
+                yield layout_error("RPR-LAYOUT-0026", "primitive descriptor has an invalid shape or empty name")
+            }
             yield primitive_layout(type_descriptor[2], platform)
         }
         when type_descriptor[1] == "named" {
+            when size(type_descriptor) != 3 or type_descriptor[2] == "" {
+                yield layout_error("RPR-LAYOUT-0027", "named type descriptor requires a non-empty name")
+            }
             make name := type_descriptor[2]
             when list_has(stack, name) {
                 yield layout_error("RPR-LAYOUT-0004", "recursive by-value type has no finite layout: " ++ name)
@@ -270,11 +351,17 @@ export craft type_layout(type_descriptor, platform, definitions, stack) {
             yield type_layout(definition, platform, definitions, push(stack, name))
         }
         when type_descriptor[1] == "pointer" {
+            when size(type_descriptor) != 4 or (type_descriptor[3] != true and type_descriptor[3] != false) {
+                yield layout_error("RPR-LAYOUT-0028", "pointer descriptor requires a pointee and boolean mutability")
+            }
             yield layout_value(platform[5], platform[6], [])
         }
         when type_descriptor[1] == "array" {
+            when size(type_descriptor) != 4 {
+                yield layout_error("RPR-LAYOUT-0029", "array descriptor must contain element type and length")
+            }
             make count := type_descriptor[3]
-            when count < 1 or count > 9223372036854775807 {
+            when count < 1 or count % 1 != 0 or count > 9223372036854775807 {
                 yield layout_error("RPR-LAYOUT-0006", "array length must be a positive representable integer")
             }
             make element := type_layout(type_descriptor[2], platform, definitions, stack)
@@ -296,6 +383,13 @@ export craft type_layout(type_descriptor, platform, definitions, stack) {
         yield layout_record(type_descriptor, true, platform, definitions, stack)
     }
     when type_descriptor[0] == "ENUM_V1" {
+        when size(type_descriptor) != 4 or type_descriptor[1] == "" {
+            yield layout_error("RPR-LAYOUT-0030", "enum descriptor has an invalid shape or empty name")
+        }
+        make bounds := integer_type_bounds(type_descriptor[2], platform)
+        when not bounds[0] {
+            yield bounds
+        }
         make underlying := type_layout(type_descriptor[2], platform, definitions, stack)
         when not underlying[0] {
             yield underlying
@@ -310,6 +404,15 @@ export craft type_layout(type_descriptor, platform, definitions, stack) {
             when size(variant) != 3 or variant[0] != "VARIANT_V1" {
                 yield layout_error("RPR-LAYOUT-0010", "invalid enum variant descriptor")
             }
+            when variant[1] == "" {
+                yield layout_error("RPR-LAYOUT-0031", "enum variant name cannot be empty")
+            }
+            when variant[2] % 1 != 0 {
+                yield layout_error("RPR-LAYOUT-0032", "enum discriminants must be integers")
+            }
+            when variant[2] < bounds[1][0] or variant[2] > bounds[1][1] {
+                yield layout_error("RPR-LAYOUT-0033", "enum discriminant is outside its underlying type range")
+            }
             when list_has(variant_names, variant[1]) or list_has(variant_values, variant[2]) {
                 yield layout_error("RPR-LAYOUT-0011", "enum variant names and values must be unique")
             }
@@ -319,10 +422,16 @@ export craft type_layout(type_descriptor, platform, definitions, stack) {
         yield underlying
     }
     when type_descriptor[0] == "DISTINCT_V1" {
+        when size(type_descriptor) != 3 or type_descriptor[1] == "" {
+            yield layout_error("RPR-LAYOUT-0034", "distinct type descriptor requires a name and underlying type")
+        }
         yield type_layout(type_descriptor[2], platform, definitions, stack)
     }
     when type_descriptor[0] == "OPAQUE_V1" {
-        when type_descriptor[2] < 1 or not layout_is_power_of_two(type_descriptor[3]) {
+        when size(type_descriptor) != 4 or type_descriptor[1] == "" {
+            yield layout_error("RPR-LAYOUT-0035", "opaque type descriptor has an invalid shape or empty name")
+        }
+        when type_descriptor[2] < 1 or type_descriptor[2] % 1 != 0 or not layout_is_power_of_two(type_descriptor[3]) {
             yield layout_error("RPR-LAYOUT-0012", "opaque type requires positive size and power-of-two alignment")
         }
         when type_descriptor[3] > platform[11] {
@@ -339,6 +448,9 @@ export craft layout_record(definition, is_union, platform, definitions, stack) {
     }
     make name := definition[1]
     make representation := definition[2]
+    when name == "" {
+        yield layout_error("RPR-LAYOUT-0036", "aggregate name cannot be empty")
+    }
     make requested_align := definition[3]
     make fields := definition[4]
     when representation != "native" and representation != "C" and representation != "packed" {
@@ -362,6 +474,9 @@ export craft layout_record(definition, is_union, platform, definitions, stack) {
     each field in fields {
         when size(field) != 3 or field[0] != "FIELD_V1" {
             yield layout_error("RPR-LAYOUT-0020", "invalid aggregate field descriptor")
+        }
+        when field[1] == "" {
+            yield layout_error("RPR-LAYOUT-0037", "aggregate field name cannot be empty")
         }
         when list_has(names, field[1]) {
             yield layout_error("RPR-LAYOUT-0021", "duplicate aggregate field: " ++ field[1])
@@ -425,7 +540,7 @@ export craft type_layout_with_metadata(type_descriptor, platform, definitions) {
         [
             "LAYOUT_V1", platform[1], result[1][0], result[1][1],
             result[1][2], platform[7], platform[8], platform[9],
-            platform[16]
+            platform[10], platform[16]
         ],
         ""
     ]
