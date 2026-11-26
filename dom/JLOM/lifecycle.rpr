@@ -3,15 +3,7 @@
 # Scope row: [scope_id, owner, state, task_ids].
 
 export craft valid_state(state) {
-    yield state == "Declared"
-        or state == "Resolved"
-        or state == "Prepared"
-        or state == "Running"
-        or state == "Ready"
-        or state == "Quiescing"
-        or state == "Stopped"
-        or state == "Failed"
-        or state == "Recovering"
+    yield state == "Declared" or state == "Resolved" or state == "Prepared" or state == "Running" or state == "Ready" or state == "Quiescing" or state == "Stopped" or state == "Failed" or state == "Recovering"
 }
 
 export craft can_transition(from_state, to_state) {
