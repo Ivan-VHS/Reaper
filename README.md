@@ -119,6 +119,7 @@ Start with [Documentation Index](docs/README.md) and [Information Architecture](
 
 - [Feature matrix](docs/FEATURES.md)
 - [Architecture](docs/ARCHITECTURE.md)
+- [Architecture foundation: 66 concepts](docs/REAPER_ARCHITECTURE_FOUNDATION_66.md)
 - [Runtime platform and quotas](docs/RUNTIME_PLATFORM.md)
 - [Native compiler](docs/NATIVE_COMPILER.md)
 - [Hardware language](docs/HARDWARE_LANGUAGE.md)
