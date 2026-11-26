@@ -64,6 +64,18 @@ class FoundationalFrameworksElevenToFifteenTests(unittest.TestCase):
             self.run_expression(f'systems["structure_validate_instance"]({schema}, [13.5, true])'),
             ["false"],
         )
+        self.assertEqual(
+            self.run_expression('systems["structure_value_matches"]("bytes", [0, 255])'),
+            ["true"],
+        )
+        self.assertEqual(
+            self.run_expression('systems["structure_value_matches"]("bytes", [0, 256])'),
+            ["false"],
+        )
+        self.assertEqual(
+            self.run_expression('size(systems["ecosystem_links"]())'),
+            ["12"],
+        )
         bad_schema = '["gpio.pin.v1", 1, [["pin", "u8", "immutable"], ["pin", "bool", "mutable"]]]'
         self.assertEqual(
             self.run_expression(f'systems["structure_validate_schema"]({bad_schema})'),
