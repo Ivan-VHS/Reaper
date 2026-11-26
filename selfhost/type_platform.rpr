@@ -328,6 +328,9 @@ export craft type_layout(type_descriptor, platform, definitions, stack) {
     when size(type_descriptor) == 0 {
         yield layout_error("RPR-LAYOUT-0003", "type descriptor is empty")
     }
+    when size(type_descriptor) == 1 and type_descriptor[0] == "TYPE_V1" {
+        yield layout_error("RPR-LAYOUT-0038", "type descriptor is missing its kind")
+    }
 
     when type_descriptor[0] == "TYPE_V1" {
         when type_descriptor[1] == "primitive" {
@@ -351,8 +354,14 @@ export craft type_layout(type_descriptor, platform, definitions, stack) {
             yield type_layout(definition, platform, definitions, push(stack, name))
         }
         when type_descriptor[1] == "pointer" {
-            when size(type_descriptor) != 4 or (type_descriptor[3] != true and type_descriptor[3] != false) {
+            when size(type_descriptor) != 4 {
                 yield layout_error("RPR-LAYOUT-0028", "pointer descriptor requires a pointee and boolean mutability")
+            }
+            when type_descriptor[3] != true and type_descriptor[3] != false {
+                yield layout_error("RPR-LAYOUT-0028", "pointer mutability must be boolean")
+            }
+            when size(type_descriptor[2]) == 0 {
+                yield layout_error("RPR-LAYOUT-0028", "pointer pointee type cannot be empty")
             }
             yield layout_value(platform[5], platform[6], [])
         }
@@ -431,7 +440,7 @@ export craft type_layout(type_descriptor, platform, definitions, stack) {
         when size(type_descriptor) != 4 or type_descriptor[1] == "" {
             yield layout_error("RPR-LAYOUT-0035", "opaque type descriptor has an invalid shape or empty name")
         }
-        when type_descriptor[2] < 1 or type_descriptor[2] % 1 != 0 or not layout_is_power_of_two(type_descriptor[3]) {
+        when type_descriptor[2] < 1 or type_descriptor[2] % 1 != 0 or type_descriptor[3] % 1 != 0 or not layout_is_power_of_two(type_descriptor[3]) {
             yield layout_error("RPR-LAYOUT-0012", "opaque type requires positive size and power-of-two alignment")
         }
         when type_descriptor[3] > platform[11] {
@@ -459,7 +468,7 @@ export craft layout_record(definition, is_union, platform, definitions, stack) {
     when size(fields) == 0 {
         yield layout_error("RPR-LAYOUT-0017", "empty aggregates are not part of typed layout v1")
     }
-    when requested_align != 0 and not layout_is_power_of_two(requested_align) {
+    when requested_align != 0 and (requested_align % 1 != 0 or not layout_is_power_of_two(requested_align)) {
         yield layout_error("RPR-LAYOUT-0018", "explicit alignment must be a power of two")
     }
     when requested_align > platform[11] {
@@ -551,6 +560,12 @@ export craft type_definitions_validate(definitions) {
     each definition in definitions {
         when size(definition) < 2 {
             yield layout_error("RPR-TYPE-0001", "type definition has an invalid shape")
+        }
+        when definition[1] == "" {
+            yield layout_error("RPR-TYPE-0003", "nominal type name cannot be empty")
+        }
+        when definition[0] != "STRUCT_V1" and definition[0] != "UNION_V1" and definition[0] != "ENUM_V1" and definition[0] != "DISTINCT_V1" and definition[0] != "OPAQUE_V1" {
+            yield layout_error("RPR-TYPE-0004", "unsupported nominal type definition kind")
         }
         when list_has(names, definition[1]) {
             yield layout_error("RPR-TYPE-0002", "duplicate nominal type: " ++ definition[1])
