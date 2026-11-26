@@ -98,4 +98,4 @@ Each numbered row is one independent implementation batch with five framework sl
 - Remaining source modules: 305 / 330; batches 06–66 remain queued.
 - No batch is declared delivered until its own positive/negative tests and exact-head CI are green.
 
-Domain-specific module details: [Batches 02–05](DOMAIN_FRAMEWORKS_02_05.md). Keep privileged runtime, native execution, real host integration and hardware access out of scope until separately specified and tested.
+Domain-specific module details: [Batches 02–05](DOMAIN_FRAMEWORKS_02_05.md) and [Batches 06–07](BASIS_FOUNDATION_FRAMEWORKS.md). Keep privileged runtime, native execution, real host integration and hardware access out of scope until separately specified and tested.
