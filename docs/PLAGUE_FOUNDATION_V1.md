@@ -42,8 +42,8 @@ Repository profile (11 fields):
 1. repository ID
 2. platform
 3. stack
-4. maximum changed paths
-5. maximum patch bytes
+4. maximum changed paths (1–100)
+5. maximum patch bytes (1–1,048,576)
 6. granted scopes
 7. required gates
 8. rollback required
@@ -56,8 +56,8 @@ Evolution proposal (12 fields):
 1. proposal ID
 2. target platform
 3. target stack
-4. changed path count
-5. patch byte count (at most 1,048,576)
+4. changed path count (1–100; this is a count cap, not per-path matching)
+5. patch byte count (1–1,048,576)
 6. requested scopes
 7. completed gates
 8. rollback available
@@ -73,7 +73,7 @@ Evolution proposal (12 fields):
 - `review_required`: proposal must receive an explicit human decision.
 - `eligible_for_review`: proposal passed the configured policy gates and may be submitted for human review.
 
-The selector returns a candidate recommendation only. Neither `eligible_for_review` nor `review_required` authorizes a write, merge, deployment or privileged operation.
+The selector accepts at most 128 proposals and resolves equal scores by ascending proposal ID. The supplied scope list is not an authenticated repository grant, and the changed-path count is not a per-path allowlist check. The selector returns a candidate recommendation only. Neither `eligible_for_review` nor `review_required` authorizes a write, merge, deployment or privileged operation.
 
 ## Safety and maturity boundary
 
