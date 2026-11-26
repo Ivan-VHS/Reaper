@@ -1,0 +1,71 @@
+# Blebby: package descriptors, semantic versions and dependency selection.
+export craft package_record(name, version, dependencies, integrity) {
+    yield [name, version, dependencies, integrity]
+}
+
+export craft package_version_valid(version) {
+    when size(version) != 3 { yield false }
+    when version[0] < 0 or version[1] < 0 or version[2] < 0 { yield false }
+    yield true
+}
+
+export craft package_valid(package_info) {
+    when size(package_info) != 4 { yield false }
+    when size(package_info[0]) == 0 { yield false }
+    when not package_version_valid(package_info[1]) { yield false }
+    when size(package_info[3]) == 0 { yield false }
+    yield true
+}
+
+export craft package_version_compare(left, right) {
+    when not package_version_valid(left) or not package_version_valid(right) {
+        yield [false, "invalid_version"]
+    }
+    when left[0] < right[0] { yield [true, -1] }
+    when left[0] > right[0] { yield [true, 1] }
+    when left[1] < right[1] { yield [true, -1] }
+    when left[1] > right[1] { yield [true, 1] }
+    when left[2] < right[2] { yield [true, -1] }
+    when left[2] > right[2] { yield [true, 1] }
+    yield [true, 0]
+}
+
+export craft package_find(packages, package_name) {
+    vary index := 0
+    loop while index < size(packages) {
+        make candidate := packages[index]
+        when candidate[0] == package_name { yield [true, candidate] }
+        change index := index + 1
+    }
+    yield [false, "package_not_found"]
+}
+
+export craft package_dependency_satisfied(requirement, packages) {
+    when size(requirement) != 2 { yield [false, "invalid_requirement"] }
+    make found := package_find(packages, requirement[0])
+    when not found[0] { yield [false, found[1]] }
+    make comparison := package_version_compare(found[1][1], requirement[1])
+    when not comparison[0] { yield comparison }
+    when comparison[1] < 0 { yield [false, "version_below_minimum"] }
+    yield [true, found[1]]
+}
+
+export craft package_check_dependencies(package_info, packages) {
+    when not package_valid(package_info) { yield [false, "invalid_package"] }
+    vary index := 0
+    loop while index < size(package_info[2]) {
+        make result := package_dependency_satisfied(package_info[2][index], packages)
+        when not result[0] { yield [false, result[1]] }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+
+export craft package_register(packages, package_info) {
+    when not package_valid(package_info) { yield [false, "invalid_package"] }
+    make existing := package_find(packages, package_info[0])
+    when existing[0] { yield [false, "package_already_registered"] }
+    make dependencies := package_check_dependencies(package_info, packages)
+    when not dependencies[0] { yield dependencies }
+    yield [true, push(packages, package_info)]
+}

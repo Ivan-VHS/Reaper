@@ -1,0 +1,135 @@
+{
+  "schema": "reaper.framework-family.v1",
+  "status": "bootstrap_slice",
+  "language": "Reaper",
+  "source_budget": {
+    "target_characters_per_framework": 666666,
+    "unit": "Unicode code points",
+    "newline": "LF",
+    "include": "Tracked .rpr files under each framework src/ directory",
+    "excludes": [
+      "documentation",
+      "tests",
+      "generated files",
+      "manifests"
+    ],
+    "includes_whitespace_and_comments": true
+  },
+  "frameworks": [
+    {
+      "name": "Lokaliza",
+      "source_directory": "Lokaliza/src",
+      "source_files": [
+        "frameworks/Lokaliza/src/locale.rpr"
+      ],
+      "current_source_characters": 2324,
+      "target_source_characters": 666666,
+      "remaining_source_characters": 664342,
+      "maturity": "Genesis"
+    },
+    {
+      "name": "Sealise",
+      "source_directory": "Sealise/src",
+      "source_files": [
+        "frameworks/Sealise/src/blueprint.rpr"
+      ],
+      "current_source_characters": 2436,
+      "target_source_characters": 666666,
+      "remaining_source_characters": 664230,
+      "maturity": "Genesis"
+    },
+    {
+      "name": "Blebby",
+      "source_directory": "Blebby/src",
+      "source_files": [
+        "frameworks/Blebby/src/package.rpr"
+      ],
+      "current_source_characters": 2792,
+      "target_source_characters": 666666,
+      "remaining_source_characters": 663874,
+      "maturity": "Genesis"
+    },
+    {
+      "name": "Centen",
+      "source_directory": "Centen/src",
+      "source_files": [
+        "frameworks/Centen/src/resource.rpr"
+      ],
+      "current_source_characters": 2669,
+      "target_source_characters": 666666,
+      "remaining_source_characters": 663997,
+      "maturity": "Genesis"
+    },
+    {
+      "name": "Kaso",
+      "source_directory": "Kaso/src",
+      "source_files": [
+        "frameworks/Kaso/src/template.rpr"
+      ],
+      "current_source_characters": 2854,
+      "target_source_characters": 666666,
+      "remaining_source_characters": 663812,
+      "maturity": "Genesis"
+    },
+    {
+      "name": "Shinnn",
+      "source_directory": "Shinnn/src",
+      "source_files": [
+        "frameworks/Shinnn/src/graph.rpr"
+      ],
+      "current_source_characters": 2840,
+      "target_source_characters": 666666,
+      "remaining_source_characters": 663826,
+      "maturity": "Genesis"
+    },
+    {
+      "name": "Porteo",
+      "source_directory": "Porteo/src",
+      "source_files": [
+        "frameworks/Porteo/src/lifecycle.rpr"
+      ],
+      "current_source_characters": 2789,
+      "target_source_characters": 666666,
+      "remaining_source_characters": 663877,
+      "maturity": "Genesis"
+    },
+    {
+      "name": "Portable Bortable",
+      "source_directory": "Portable-Bortable/src",
+      "source_files": [
+        "frameworks/Portable-Bortable/src/target.rpr"
+      ],
+      "current_source_characters": 2642,
+      "target_source_characters": 666666,
+      "remaining_source_characters": 664024,
+      "maturity": "Genesis"
+    },
+    {
+      "name": "SWO",
+      "source_directory": "SWO/src",
+      "source_files": [
+        "frameworks/SWO/src/pipeline.rpr"
+      ],
+      "current_source_characters": 2946,
+      "target_source_characters": 666666,
+      "remaining_source_characters": 663720,
+      "maturity": "Genesis"
+    },
+    {
+      "name": "ScoHOPE",
+      "source_directory": "ScoHOPE/src",
+      "source_files": [
+        "frameworks/ScoHOPE/src/application.rpr"
+      ],
+      "current_source_characters": 3358,
+      "target_source_characters": 666666,
+      "remaining_source_characters": 663308,
+      "maturity": "Genesis"
+    }
+  ],
+  "integration": {
+    "family_entry": "family.rpr",
+    "runtime_owner": "DOM",
+    "native_aot_status": "not_supported_for_collection_and_module_features_in_current_backend"
+  }
+}

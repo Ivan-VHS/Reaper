@@ -1,0 +1,72 @@
+# SWO: deterministic workflow stages and dependency readiness.
+import "../../Shinnn/src/graph.rpr" as graph
+
+export craft workflow_stage(name, dependencies, status, required) {
+    yield [name, dependencies, status, required]
+}
+
+export craft workflow_status_valid(status) {
+    when status == "planned" or status == "ready" or status == "running" or status == "passed" or status == "failed" or status == "skipped" {
+        yield true
+    }
+    yield false
+}
+
+export craft workflow_stage_find(stages, name) {
+    vary index := 0
+    loop while index < size(stages) {
+        when stages[index][0] == name { yield [true, index, stages[index]] }
+        change index := index + 1
+    }
+    yield [false, -1, []]
+}
+
+export craft workflow_dependencies_passed(stage, stages) {
+    vary index := 0
+    loop while index < size(stage[1]) {
+        make dependency := workflow_stage_find(stages, stage[1][index])
+        when not dependency[0] { yield [false, "dependency_not_found"] }
+        when dependency[2][2] != "passed" { yield [false, "dependency_not_passed"] }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+
+export craft workflow_can_start(stage, stages) {
+    when size(stage) != 4 { yield [false, "invalid_stage"] }
+    when not workflow_status_valid(stage[2]) { yield [false, "invalid_status"] }
+    when stage[2] != "planned" and stage[2] != "ready" { yield [false, "stage_not_startable"] }
+    make dependencies := workflow_dependencies_passed(stage, stages)
+    when not dependencies[0] { yield dependencies }
+    yield [true, []]
+}
+
+export craft workflow_validate(stages) {
+    vary names := []
+    vary edges := []
+    vary index := 0
+    loop while index < size(stages) {
+        when not workflow_status_valid(stages[index][2]) {
+            yield [false, "invalid_stage_status"]
+        }
+        change names := push(names, stages[index][0])
+        vary dependency_index := 0
+        loop while dependency_index < size(stages[index][1]) {
+            change edges := push(edges, [stages[index][0], stages[index][1][dependency_index]])
+            change dependency_index := dependency_index + 1
+        }
+        change index := index + 1
+    }
+    yield graph["graph_validate"](names, edges)
+}
+
+export craft workflow_transition(stage, next_status) {
+    when not workflow_status_valid(next_status) { yield [false, "invalid_next_status"] }
+    when stage[2] == "planned" and next_status == "ready" { yield [true, [stage[0], stage[1], next_status, stage[3]]] }
+    when stage[2] == "ready" and next_status == "running" { yield [true, [stage[0], stage[1], next_status, stage[3]]] }
+    when stage[2] == "running" and (next_status == "passed" or next_status == "failed") {
+        yield [true, [stage[0], stage[1], next_status, stage[3]]]
+    }
+    when stage[2] == "planned" and next_status == "skipped" { yield [true, [stage[0], stage[1], next_status, stage[3]]] }
+    yield [false, "invalid_workflow_transition"]
+}

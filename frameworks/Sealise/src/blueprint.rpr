@@ -1,0 +1,60 @@
+# Sealise: project blueprint validation and required-file coverage.
+export craft blueprint_record(name, required_files, layers, version) {
+    yield [name, required_files, layers, version]
+}
+
+export craft blueprint_contains(items, expected) {
+    vary index := 0
+    loop while index < size(items) {
+        when items[index] == expected { yield true }
+        change index := index + 1
+    }
+    yield false
+}
+
+export craft blueprint_missing(required_files, available_files) {
+    vary missing := []
+    vary index := 0
+    loop while index < size(required_files) {
+        make required := required_files[index]
+        when not blueprint_contains(available_files, required) {
+            change missing := push(missing, required)
+        }
+        change index := index + 1
+    }
+    yield missing
+}
+
+export craft blueprint_has_layer(blueprint, layer_name) {
+    when size(blueprint) != 4 { yield false }
+    yield blueprint_contains(blueprint[2], layer_name)
+}
+
+export craft blueprint_validate(blueprint, available_files) {
+    when size(blueprint) != 4 { yield [false, "invalid_blueprint_shape"] }
+    when size(blueprint[0]) == 0 { yield [false, "empty_blueprint_name"] }
+    when size(blueprint[3]) != 3 { yield [false, "invalid_blueprint_version"] }
+    make missing := blueprint_missing(blueprint[1], available_files)
+    when size(missing) > 0 { yield [false, missing] }
+    yield [true, []]
+}
+
+export craft blueprint_add_required(blueprint, file_name) {
+    when size(blueprint) != 4 { yield [false, "invalid_blueprint_shape"] }
+    when size(file_name) == 0 { yield [false, "empty_file_name"] }
+    when blueprint_contains(blueprint[1], file_name) { yield [false, "duplicate_required_file"] }
+    yield [true, [blueprint[0], push(blueprint[1], file_name), blueprint[2], blueprint[3]]]
+}
+
+export craft blueprint_add_layer(blueprint, layer_name) {
+    when size(blueprint) != 4 { yield [false, "invalid_blueprint_shape"] }
+    when size(layer_name) == 0 { yield [false, "empty_layer_name"] }
+    when blueprint_contains(blueprint[2], layer_name) { yield [false, "duplicate_layer"] }
+    yield [true, [blueprint[0], blueprint[1], push(blueprint[2], layer_name), blueprint[3]]]
+}
+
+export craft blueprint_coverage(blueprint, available_files) {
+    when size(blueprint) != 4 { yield [0, 0] }
+    make missing := blueprint_missing(blueprint[1], available_files)
+    yield [size(blueprint[1]) - size(missing), size(blueprint[1])]
+}

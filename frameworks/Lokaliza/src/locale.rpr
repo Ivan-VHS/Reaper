@@ -1,0 +1,67 @@
+# Lokaliza: deterministic locale registry and fallback resolution.
+export craft locale_record(tag, fallback, direction) {
+    yield [tag, fallback, direction]
+}
+
+export craft locale_is_valid(locale) {
+    when size(locale) != 3 { yield false }
+    when size(locale[0]) < 2 { yield false }
+    when locale[2] != "ltr" and locale[2] != "rtl" { yield false }
+    yield true
+}
+
+export craft locale_find(locales, tag) {
+    vary index := 0
+    loop while index < size(locales) {
+        make candidate := locales[index]
+        when candidate[0] == tag { yield [true, candidate] }
+        change index := index + 1
+    }
+    yield [false, []]
+}
+
+export craft locale_register(locales, locale) {
+    when not locale_is_valid(locale) { yield [false, "invalid_locale"] }
+    make existing := locale_find(locales, locale[0])
+    when existing[0] { yield [false, "duplicate_locale"] }
+    yield [true, push(locales, locale)]
+}
+
+export craft locale_resolve(locales, requested, default_tag) {
+    make direct := locale_find(locales, requested)
+    when direct[0] { yield [true, direct[1]] }
+    make fallback := locale_find(locales, default_tag)
+    when fallback[0] { yield [true, fallback[1]] }
+    yield [false, "locale_not_found"]
+}
+
+export craft locale_catalog_entry(locale_tag, message_key, message_value) {
+    when size(locale_tag) < 2 { yield [false, "invalid_locale_tag"] }
+    when size(message_key) == 0 { yield [false, "empty_message_key"] }
+    yield [true, [locale_tag, message_key, message_value]]
+}
+
+export craft locale_catalog_find(catalog, locale_tag, message_key) {
+    vary index := 0
+    loop while index < size(catalog) {
+        make entry := catalog[index]
+        when entry[0] == locale_tag and entry[1] == message_key {
+            yield [true, entry[2]]
+        }
+        change index := index + 1
+    }
+    yield [false, "translation_missing"]
+}
+
+export craft locale_direction(locale) {
+    when locale_is_valid(locale) { yield locale[2] }
+    yield "ltr"
+}
+
+export craft locale_fallback_chain(locales, requested, default_tag) {
+    make selected := locale_resolve(locales, requested, default_tag)
+    when not selected[0] { yield [] }
+    when selected[1][1] == "" { yield [selected[1][0]] }
+    when selected[1][0] == selected[1][1] { yield [selected[1][0]] }
+    yield [selected[1][0], selected[1][1]]
+}

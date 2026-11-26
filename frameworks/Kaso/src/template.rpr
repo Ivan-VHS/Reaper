@@ -1,0 +1,81 @@
+# Kaso: validated template segments and deterministic slot rendering.
+export craft template_record(name, segments, required_slots, version) {
+    yield [name, segments, required_slots, version]
+}
+
+export craft template_binding(name, value) {
+    yield [name, value]
+}
+
+export craft template_binding_find(bindings, name) {
+    vary index := 0
+    loop while index < size(bindings) {
+        when bindings[index][0] == name { yield [true, bindings[index][1]] }
+        change index := index + 1
+    }
+    yield [false, ""]
+}
+
+export craft template_validate_bindings(template, bindings) {
+    when size(template) != 4 { yield [false, "invalid_template_shape"] }
+    vary index := 0
+    loop while index < size(template[2]) {
+        make required := template[2][index]
+        make found := template_binding_find(bindings, required)
+        when not found[0] { yield [false, "missing_slot:" ++ required] }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+
+export craft template_validate_segments(segments) {
+    vary index := 0
+    loop while index < size(segments) {
+        when size(segments[index]) != 2 { yield [false, "invalid_segment_shape"] }
+        when segments[index][0] != "text" and segments[index][0] != "slot" {
+            yield [false, "unknown_segment_kind"]
+        }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+
+export craft template_render(template, bindings) {
+    when size(template) != 4 { yield [false, "invalid_template_shape"] }
+    make binding_check := template_validate_bindings(template, bindings)
+    when not binding_check[0] { yield binding_check }
+    make segment_check := template_validate_segments(template[1])
+    when not segment_check[0] { yield segment_check }
+    vary output := ""
+    vary index := 0
+    loop while index < size(template[1]) {
+        make segment := template[1][index]
+        when segment[0] == "text" {
+            change output := output ++ segment[1]
+        } otherwise {
+            make binding := template_binding_find(bindings, segment[1])
+            when not binding[0] { yield [false, "missing_slot:" ++ segment[1]] }
+            change output := output ++ text(binding[1])
+        }
+        change index := index + 1
+    }
+    yield [true, output]
+}
+
+export craft template_set_binding(bindings, name, value) {
+    when size(name) == 0 { yield [false, "empty_binding_name"] }
+    vary result := []
+    vary replaced := false
+    vary index := 0
+    loop while index < size(bindings) {
+        when bindings[index][0] == name {
+            change result := push(result, [name, value])
+            change replaced := true
+        } otherwise {
+            change result := push(result, bindings[index])
+        }
+        change index := index + 1
+    }
+    when not replaced { change result := push(result, [name, value]) }
+    yield [true, result]
+}

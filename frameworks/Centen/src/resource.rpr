@@ -1,0 +1,73 @@
+# Centen: bounded resource ledger with atomic reserve/release transformations.
+export craft resource_record(name, capacity, used, unit) {
+    yield [name, capacity, used, unit]
+}
+
+export craft resource_valid(resource) {
+    when size(resource) != 4 { yield false }
+    when size(resource[0]) == 0 { yield false }
+    when resource[1] < 0 or resource[2] < 0 { yield false }
+    when resource[2] > resource[1] { yield false }
+    yield true
+}
+
+export craft resource_remaining(resource) {
+    when not resource_valid(resource) { yield [false, "invalid_resource"] }
+    yield [true, resource[1] - resource[2]]
+}
+
+export craft resource_reserve(resource, amount) {
+    when not resource_valid(resource) { yield [false, "invalid_resource"] }
+    when amount <= 0 { yield [false, "invalid_reservation"] }
+    when resource[2] + amount > resource[1] { yield [false, "capacity_exceeded"] }
+    yield [true, [resource[0], resource[1], resource[2] + amount, resource[3]]]
+}
+
+export craft resource_release(resource, amount) {
+    when not resource_valid(resource) { yield [false, "invalid_resource"] }
+    when amount <= 0 { yield [false, "invalid_release"] }
+    when amount > resource[2] { yield [false, "release_exceeds_usage"] }
+    yield [true, [resource[0], resource[1], resource[2] - amount, resource[3]]]
+}
+
+export craft resource_find(resources, name) {
+    vary index := 0
+    loop while index < size(resources) {
+        when resources[index][0] == name { yield [true, index, resources[index]] }
+        change index := index + 1
+    }
+    yield [false, -1, []]
+}
+
+export craft resource_replace(resources, position, replacement) {
+    vary result := []
+    vary index := 0
+    loop while index < size(resources) {
+        when index == position {
+            change result := push(result, replacement)
+        } otherwise {
+            change result := push(result, resources[index])
+        }
+        change index := index + 1
+    }
+    yield result
+}
+
+export craft resource_reserve_named(resources, name, amount) {
+    make found := resource_find(resources, name)
+    when not found[0] { yield [false, "resource_not_found"] }
+    make reserved := resource_reserve(found[2], amount)
+    when not reserved[0] { yield reserved }
+    yield [true, resource_replace(resources, found[1], reserved[1])]
+}
+
+export craft resource_ledger_valid(resources) {
+    vary index := 0
+    loop while index < size(resources) {
+        when not resource_valid(resources[index]) { yield false }
+        make duplicate := resource_find(resources, resources[index][0])
+        when duplicate[0] and duplicate[1] != index { yield false }
+        change index := index + 1
+    }
+    yield true
+}

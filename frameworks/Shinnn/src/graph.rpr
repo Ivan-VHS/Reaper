@@ -1,0 +1,86 @@
+# Shinnn: bounded architecture graph validation and reachability.
+export craft graph_has_node(nodes, expected) {
+    vary index := 0
+    loop while index < size(nodes) {
+        when nodes[index] == expected { yield true }
+        change index := index + 1
+    }
+    yield false
+}
+
+export craft graph_reaches(edges, current, target, remaining) {
+    when current == target { yield true }
+    when remaining <= 0 { yield false }
+    vary index := 0
+    loop while index < size(edges) {
+        make edge := edges[index]
+        when edge[0] == current {
+            when graph_reaches(edges, edge[1], target, remaining - 1) {
+                yield true
+            }
+        }
+        change index := index + 1
+    }
+    yield false
+}
+
+export craft graph_validate(nodes, edges) {
+    when size(nodes) > 256 { yield [false, "node_limit_exceeded"] }
+    when size(edges) > 2048 { yield [false, "edge_limit_exceeded"] }
+    vary node_index := 0
+    loop while node_index < size(nodes) {
+        vary other_index := node_index + 1
+        loop while other_index < size(nodes) {
+            when nodes[node_index] == nodes[other_index] {
+                yield [false, "duplicate_node"]
+            }
+            change other_index := other_index + 1
+        }
+        change node_index := node_index + 1
+    }
+    vary edge_index := 0
+    loop while edge_index < size(edges) {
+        make edge := edges[edge_index]
+        when size(edge) != 2 { yield [false, "invalid_edge_shape"] }
+        when not graph_has_node(nodes, edge[0]) or not graph_has_node(nodes, edge[1]) {
+            yield [false, "edge_endpoint_missing"]
+        }
+        when edge[0] == edge[1] { yield [false, "self_dependency"] }
+        vary other_edge := edge_index + 1
+        loop while other_edge < size(edges) {
+            when edges[other_edge][0] == edge[0] and edges[other_edge][1] == edge[1] {
+                yield [false, "duplicate_edge"]
+            }
+            change other_edge := other_edge + 1
+        }
+        when graph_reaches(edges, edge[1], edge[0], size(nodes)) {
+            yield [false, "dependency_cycle"]
+        }
+        change edge_index := edge_index + 1
+    }
+    yield [true, []]
+}
+
+export craft graph_dependencies_of(edges, node_name) {
+    vary dependencies := []
+    vary index := 0
+    loop while index < size(edges) {
+        when edges[index][0] == node_name {
+            change dependencies := push(dependencies, edges[index][1])
+        }
+        change index := index + 1
+    }
+    yield dependencies
+}
+
+export craft graph_dependents_of(edges, node_name) {
+    vary dependents := []
+    vary index := 0
+    loop while index < size(edges) {
+        when edges[index][1] == node_name {
+            change dependents := push(dependents, edges[index][0])
+        }
+        change index := index + 1
+    }
+    yield dependents
+}

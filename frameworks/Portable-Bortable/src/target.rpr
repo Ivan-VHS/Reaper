@@ -1,0 +1,72 @@
+# Portable Bortable: explicit target profiles and compatibility checks.
+export craft target_record(name, architecture, pointer_bits, endian, abi, features) {
+    yield [name, architecture, pointer_bits, endian, abi, features]
+}
+
+export craft target_valid(target) {
+    when size(target) != 6 { yield false }
+    when size(target[0]) == 0 or size(target[1]) == 0 { yield false }
+    when target[2] != 16 and target[2] != 32 and target[2] != 64 and target[2] != 128 {
+        yield false
+    }
+    when target[3] != "little" and target[3] != "big" { yield false }
+    when size(target[4]) == 0 { yield false }
+    yield true
+}
+
+export craft target_has_feature(target, feature_name) {
+    when not target_valid(target) { yield false }
+    vary index := 0
+    loop while index < size(target[5]) {
+        when target[5][index] == feature_name { yield true }
+        change index := index + 1
+    }
+    yield false
+}
+
+export craft target_compatible(source_profile, target_profile) {
+    when not target_valid(source_profile) or not target_valid(target_profile) {
+        yield [false, "invalid_target_profile"]
+    }
+    when source_profile[1] != "any" and source_profile[1] != target_profile[1] {
+        yield [false, "architecture_mismatch"]
+    }
+    when source_profile[2] != target_profile[2] { yield [false, "pointer_width_mismatch"] }
+    when source_profile[3] != target_profile[3] { yield [false, "endianness_mismatch"] }
+    when source_profile[4] != target_profile[4] { yield [false, "abi_mismatch"] }
+    vary index := 0
+    loop while index < size(source_profile[5]) {
+        when not target_has_feature(target_profile, source_profile[5][index]) {
+            yield [false, "required_feature_missing"]
+        }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+
+export craft target_select(profiles, requested_name) {
+    vary index := 0
+    loop while index < size(profiles) {
+        when profiles[index][0] == requested_name and target_valid(profiles[index]) {
+            yield [true, profiles[index]]
+        }
+        change index := index + 1
+    }
+    yield [false, "target_profile_not_found"]
+}
+
+export craft target_matrix(profiles, requirement) {
+    vary compatible := []
+    vary rejected := []
+    vary index := 0
+    loop while index < size(profiles) {
+        make result := target_compatible(requirement, profiles[index])
+        when result[0] {
+            change compatible := push(compatible, profiles[index][0])
+        } otherwise {
+            change rejected := push(rejected, [profiles[index][0], result[1]])
+        }
+        change index := index + 1
+    }
+    yield [compatible, rejected]
+}

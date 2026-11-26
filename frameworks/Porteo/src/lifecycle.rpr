@@ -1,0 +1,71 @@
+# Porteo: component lifecycle state machine and dependency readiness.
+import "../../Shinnn/src/graph.rpr" as graph
+
+export craft component_record(name, dependencies, state, capabilities) {
+    yield [name, dependencies, state, capabilities]
+}
+
+export craft component_find(components, name) {
+    vary index := 0
+    loop while index < size(components) {
+        when components[index][0] == name {
+            yield [true, index, components[index]]
+        }
+        change index := index + 1
+    }
+    yield [false, -1, []]
+}
+
+export craft lifecycle_transition_allowed(current, next) {
+    when current == "declared" and next == "prepared" { yield true }
+    when current == "prepared" and next == "running" { yield true }
+    when current == "running" and next == "stopping" { yield true }
+    when current == "stopping" and next == "stopped" { yield true }
+    when current == "declared" and next == "failed" { yield true }
+    when current == "prepared" and next == "failed" { yield true }
+    when current == "running" and next == "failed" { yield true }
+    when current == "failed" and next == "prepared" { yield true }
+    yield false
+}
+
+export craft lifecycle_transition(component, next_state) {
+    when size(component) != 4 { yield [false, "invalid_component"] }
+    when not lifecycle_transition_allowed(component[2], next_state) {
+        yield [false, "invalid_lifecycle_transition"]
+    }
+    yield [true, [component[0], component[1], next_state, component[3]]]
+}
+
+export craft component_dependencies_ready(component, components) {
+    vary index := 0
+    loop while index < size(component[1]) {
+        make dependency := component_find(components, component[1][index])
+        when not dependency[0] { yield [false, "dependency_not_found"] }
+        when dependency[2][2] != "running" { yield [false, "dependency_not_running"] }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+
+export craft orchestration_validate(components) {
+    vary names := []
+    vary edges := []
+    vary index := 0
+    loop while index < size(components) {
+        change names := push(names, components[index][0])
+        vary dependency_index := 0
+        loop while dependency_index < size(components[index][1]) {
+            change edges := push(edges, [components[index][0], components[index][1][dependency_index]])
+            change dependency_index := dependency_index + 1
+        }
+        change index := index + 1
+    }
+    yield graph["graph_validate"](names, edges)
+}
+
+export craft component_prepare(component, components) {
+    when component[2] != "declared" { yield [false, "component_not_declared"] }
+    make ready := component_dependencies_ready(component, components)
+    when not ready[0] { yield ready }
+    yield lifecycle_transition(component, "prepared")
+}

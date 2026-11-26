@@ -1,0 +1,68 @@
+# ScoHOPE: application descriptors, environment validation and lifecycle.
+export craft application_record(name, profile, version, locale, capabilities, state) {
+    yield [name, profile, version, locale, capabilities, state]
+}
+
+export craft application_profile_valid(profile) {
+    when profile == "desktop" or profile == "system" or profile == "service" or profile == "cli" or profile == "plugin" or profile == "embedded" {
+        yield true
+    }
+    yield false
+}
+
+export craft application_valid(application) {
+    when size(application) != 6 { yield [false, "invalid_application_shape"] }
+    when size(application[0]) == 0 { yield [false, "empty_application_name"] }
+    when not application_profile_valid(application[1]) { yield [false, "unknown_application_profile"] }
+    when size(application[2]) != 3 { yield [false, "invalid_application_version"] }
+    when size(application[3]) < 2 { yield [false, "invalid_application_locale"] }
+    when application[5] != "defined" and application[5] != "configured" and application[5] != "ready" and application[5] != "running" and application[5] != "stopped" {
+        yield [false, "invalid_application_state"]
+    }
+    yield [true, []]
+}
+
+export craft application_capability_required(application, capability_name) {
+    vary index := 0
+    loop while index < size(application[4]) {
+        when application[4][index] == capability_name { yield true }
+        change index := index + 1
+    }
+    yield false
+}
+
+export craft application_transition(application, next_state) {
+    make valid := application_valid(application)
+    when not valid[0] { yield valid }
+    when application[5] == "defined" and next_state == "configured" { yield [true, [application[0], application[1], application[2], application[3], application[4], next_state]] }
+    when application[5] == "configured" and next_state == "ready" { yield [true, [application[0], application[1], application[2], application[3], application[4], next_state]] }
+    when application[5] == "ready" and next_state == "running" { yield [true, [application[0], application[1], application[2], application[3], application[4], next_state]] }
+    when application[5] == "running" and next_state == "stopped" { yield [true, [application[0], application[1], application[2], application[3], application[4], next_state]] }
+    yield [false, "invalid_application_transition"]
+}
+
+export craft application_environment_check(application, environment_capabilities) {
+    make valid := application_valid(application)
+    when not valid[0] { yield valid }
+    vary index := 0
+    loop while index < size(application[4]) {
+        make required := application[4][index]
+        vary found := false
+        vary candidate_index := 0
+        loop while candidate_index < size(environment_capabilities) {
+            when environment_capabilities[candidate_index] == required {
+                change found := true
+            }
+            change candidate_index := candidate_index + 1
+        }
+        when not found { yield [false, "capability_unavailable:" ++ required] }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+
+export craft application_summary(application) {
+    make valid := application_valid(application)
+    when not valid[0] { yield [false, valid[1]] }
+    yield [true, [application[0], application[1], application[2], application[5]]]
+}
