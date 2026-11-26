@@ -91,3 +91,31 @@ jobs:
         run: |
           python -m reaper plague/examples/evolution_smoke.rpr | tee plague-evolution-smoke.log
           grep -Fx "PLAGUE_V1_OK" plague-evolution-smoke.log
+
+      - name: Validate RAAEF Reaper modules
+        run: |
+          python -m reaper --check frameworks/aesthetic/engine/vorke.rpr
+          python -m reaper --check frameworks/aesthetic/engine/jellymeat.rpr
+          python -m reaper --check frameworks/aesthetic/engine/lejjyfish.rpr
+          python -m reaper --check frameworks/aesthetic/engine/lejjy.rpr
+          python -m reaper --check frameworks/aesthetic/engine/oplos.rpr
+          python -m reaper --check frameworks/aesthetic/engine/holmosaptimu.rpr
+          python -m reaper --check frameworks/aesthetic/engine/sentan.rpr
+          python -m reaper --check frameworks/aesthetic/engine/cellene.rpr
+          python -m reaper --check frameworks/aesthetic/engine/kolir.rpr
+          python -m reaper --check frameworks/aesthetic/engine/somo.rpr
+          python -m reaper --check frameworks/aesthetic/all.rpr
+          python -m reaper --check frameworks/aesthetic/examples/pipeline_smoke.rpr
+      - name: Validate framework catalogue and aesthetic schemas
+        run: |
+          python -m json.tool frameworks/catalog.v1.json > /dev/null
+          python -m json.tool frameworks/catalog.v1.schema.json > /dev/null
+          python -m json.tool frameworks/aesthetic/manifest.v1.json > /dev/null
+          python -m json.tool frameworks/aesthetic/schemas/profile.v1.schema.json > /dev/null
+          python -m json.tool frameworks/aesthetic/schemas/design-ir.v1.schema.json > /dev/null
+          python -m json.tool frameworks/aesthetic/schemas/architecture-graph.v1.schema.json > /dev/null
+          python -m json.tool frameworks/aesthetic/schemas/source-evolution-request.v1.schema.json > /dev/null
+      - name: Run RAAEF pipeline acceptance example
+        run: |
+          python -m reaper frameworks/aesthetic/examples/pipeline_smoke.rpr | tee raeef-smoke.log
+          grep -Fx "RAAEF_PIPELINE_OK" raeef-smoke.log
