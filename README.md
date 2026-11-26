@@ -31,6 +31,7 @@ python -m pip install -e .
 python -m reaper --check examples/flow.rpr
 python -m reaper examples/flow.rpr
 python -m reaper examples/frameworks_smoke.rpr
+python -m reaper examples/dom_foundation_smoke.rpr
 ```
 
 Open Studio or the REPL:
