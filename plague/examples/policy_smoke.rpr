@@ -38,10 +38,34 @@ when policy["action_allowed"]("apply", "open_pull_request") {
     emit "FAIL apply must open a pull request"
 }
 
+when policy["can_write_default_branch"]() == false {
+    emit "PASS default branch writes are denied"
+} otherwise {
+    emit "FAIL default branch writes must be denied"
+}
+
 when policy["action_allowed"]("apply", "merge_pull_request") == false {
     emit "PASS merge is denied"
 } otherwise {
     emit "FAIL merge must be denied"
+}
+
+when policy["can_merge_pull_request"]() == false {
+    emit "PASS merge capability is disabled"
+} otherwise {
+    emit "FAIL merge capability must stay disabled"
+}
+
+when policy["can_publish_release"]() == false {
+    emit "PASS release capability is disabled"
+} otherwise {
+    emit "FAIL release capability must stay disabled"
+}
+
+when policy["can_expand_scope"]() == false {
+    emit "PASS scope expansion is denied"
+} otherwise {
+    emit "FAIL scope expansion must be denied"
 }
 
 when policy["action_allowed"]("apply", "read_secret") == false {
