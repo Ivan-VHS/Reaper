@@ -24,6 +24,33 @@
   },
   "capabilities": [
     {
+      "id": "foundations.final-software-framework",
+      "status": "partial",
+      "summary": "Adds the umbrella Reaper Software Framework, importing and validating all sixty-five preceding foundation contracts, exact catalogue/load order, versioned manifest compatibility, runtime profile maturity, extension points, integrated implementation surfaces and explicit safety boundaries; the overall native/compiler/platform ecosystem remains partial.",
+      "evidence": [
+        "frameworks/foundation_66.rpr",
+        "frameworks/foundation_61_65.rpr",
+        "frameworks/foundation_56_60.rpr",
+        "frameworks/foundation_51_55.rpr",
+        "frameworks/foundation_46_50.rpr",
+        "frameworks/foundation_41_45.rpr",
+        "frameworks/foundation_36_40.rpr",
+        "frameworks/foundation_31_35.rpr",
+        "frameworks/foundation_26_30.rpr",
+        "frameworks/foundation_21_25.rpr",
+        "frameworks/foundation_16_20.rpr",
+        "frameworks/foundation_11_15.rpr",
+        "frameworks/foundation_6_10.rpr",
+        "frameworks/foundation.rpr",
+        "docs/FOUNDATIONAL_FRAMEWORKS_66.md",
+        "examples/foundations_66.rpr",
+        "tests/test_foundational_frameworks_66.py",
+        "docs/ARCHITECTURE.md",
+        "docs/REAPER_UNIFIED_ARCHITECTURE.md",
+        "docs/HARDWARE_LANGUAGE.md"
+      ]
+    },
+    {
       "id": "foundations.thirteenth-five-frameworks",
       "status": "partial",
       "summary": "Adds executable contracts for controlled runtime/target bridgeheads, stable and migratable anchors, evidence-backed baseline snapshots and metric deltas, primary/replica/fallback supporting structures, and hardware/ABI/memory-map profiles with non-overlap and permission checks; firmware staging and privileged device access remain planned or adapter-owned.",

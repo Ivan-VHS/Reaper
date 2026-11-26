@@ -1,0 +1,8 @@
+import "../frameworks/foundation_66.rpr" as framework
+
+emit "All sixty-six foundations valid = " ++ text(framework["foundation_validate_catalog_66"]())
+emit "Canonical software framework manifest valid = " ++ text(framework["software_framework_validate_manifest"](framework["software_framework_manifest"]()))
+emit "Canonical VM profile valid = " ++ text(framework["software_framework_validate_profile"](framework["software_framework_profiles"]()[1]))
+emit "Freestanding profile selected = " ++ text(framework["software_framework_select_profile"]("freestanding"))
+emit "Host adapter extension valid = " ++ text(framework["software_framework_validate_extension"](["my-host", "host-adapter", "host"]))
+emit "Integration layer inventory valid = " ++ text(framework["software_framework_validate_integration_layers"]())
