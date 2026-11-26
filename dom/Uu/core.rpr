@@ -109,6 +109,9 @@ export craft remove(pairs, key) {
 }
 
 export craft clamp(value, lower, upper) {
+    when kind(value) != "number" or kind(lower) != "number" or kind(upper) != "number" {
+        yield [false, value, "numeric-values-required"]
+    }
     when lower > upper { yield [false, value, "invalid-range"] }
     when value < lower { yield [true, lower, "clamped-low"] }
     when value > upper { yield [true, upper, "clamped-high"] }
