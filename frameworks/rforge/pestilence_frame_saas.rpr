@@ -1,0 +1,44 @@
+# Pestilence — Frame SaaS
+# Tenant-isolated frame identity, quotas and session lifecycle.
+
+export make FRAMEWORK_ID := "pestilence.frame_saas"
+export make FRAMEWORK_VERSION := "1.0.0"
+export make FRAMEWORK_PROFILE := "Frame Saas"
+
+export craft pestilence_tenant_id_valid(tenant_id) {
+    yield tenant_id > 0
+}
+
+export craft pestilence_frame_bind(tenant_id, frame_id) {
+    when pestilence_tenant_id_valid(tenant_id) and frame_id > 0 {
+        yield [tenant_id, frame_id]
+    }
+    yield []
+}
+
+export craft pestilence_tenant_access(owner_tenant, caller_tenant) {
+    yield owner_tenant > 0 and owner_tenant == caller_tenant
+}
+
+export craft pestilence_quota_valid(active_frames, frame_limit) {
+    yield active_frames >= 0 and frame_limit > 0 and active_frames <= frame_limit
+}
+
+export craft pestilence_session_transition(current, next) {
+    when current == next {
+        yield current == "anonymous" or current == "authenticated" or current == "suspended" or current == "expired"
+    }
+    when current == "anonymous" {
+        yield next == "authenticated"
+    }
+    when current == "authenticated" {
+        yield next == "suspended" or next == "expired"
+    }
+    when current == "suspended" {
+        yield next == "authenticated" or next == "expired"
+    }
+    when current == "expired" {
+        yield next == "anonymous"
+    }
+    yield false
+}
