@@ -36,6 +36,13 @@ jobs:
         run: python tools/validate_most_functions.py
       - name: Validate engineering evolution contract
         run: python tools/validate_engineering_evolution.py
+
+      - name: Test Jora and HARVEST source-pack integration
+        run: python -m unittest tests.test_jora -v
+      - name: Build wheel and verify bundled HARVEST pack
+        run: |
+          python -m pip wheel . --no-deps --wheel-dir dist
+          python -c "import glob, zipfile; wheel=glob.glob('dist/*.whl'); assert len(wheel)==1; z=zipfile.ZipFile(wheel[0]); names=set(z.namelist()); chunks=[f'reaper/harvest_bundle/chunk-{i:03d}.b64' for i in range(1,17)]; missing=[name for name in chunks if name not in names]; assert not missing, f'HARVEST wheel data missing: {missing}'"
       - name: Run unit tests
         run: python -m unittest discover -s tests -v
       - name: Validate example
