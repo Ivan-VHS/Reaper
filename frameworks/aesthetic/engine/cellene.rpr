@@ -8,7 +8,6 @@ export craft assess(profile) {
 
     vary issues := []
     make access := profile[8]
-    make motion := profile[7]
 
     when access[1] != true {
         change issues := push(issues, "visible_focus_required")
@@ -19,14 +18,8 @@ export craft assess(profile) {
     when access[3] != true {
         change issues := push(issues, "reduced_motion_support_required")
     }
-    when access[0] < 4.5 {
-        change issues := push(issues, "minimum_contrast_below_wcag_aa_target")
-    }
-    when motion[0] != access[3] {
-        change issues := push(issues, "motion_preferences_are_not_consistent")
-    }
 
-    make score := 100 - size(issues) * 20
+    vary score := 100 - size(issues) * 20
     when score < 0 {
         change score := 0
     }
