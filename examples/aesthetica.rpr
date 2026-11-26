@@ -1,0 +1,160 @@
+# AESTHETICA executable acceptance example.
+# Run with: python -m reaper examples/aesthetica.rpr
+# This file uses only the current Reaper reference grammar.
+
+import "../frameworks/aesthetica/core.rpr" as aesthetica
+
+make weights := [
+    ["harmony", 1.0],
+    ["proportion", 0.8],
+    ["contrast", 1.0],
+    ["coherence", 0.9],
+    ["complexity", 0.7],
+    ["originality", 1.0],
+    ["expression", 1.0],
+    ["functionality", 0.8],
+    ["context_fit", 0.9],
+    ["emotional_impact", 1.0],
+    ["imperfection", 0.8],
+    ["intentional_tension", 1.0]
+]
+
+make context := [
+    "studio-review",
+    "art-direction-and-product-design",
+    "modernist-critical"
+]
+
+make stages := [
+    ["01_INPUT", 0, 1, "input_validated", "Validate identity, context, evidence shape, and source positions."],
+    ["02_WEIGHT_PROFILE", 1, 2, "weights_validated", "Validate known dimensions, unique weights, and active criteria."],
+    ["03_EVIDENCE", 2, 3, "evidence_validated", "Validate both axes, confidence, salience, intent, and explanations."],
+    ["04_DUALITY", 3, 4, "duality_calculated", "Aggregate beauty and ugliness independently and retain their coexistence."],
+    ["05_REPORT", 4, 5, "report_ready", "Create findings with provenance and non-destructive recommendations."]
+]
+
+make stage_result := aesthetica["verify_stages"](stages)
+assert(stage_result[0] == "ok", "AES stage contract failed")
+emit "AESTHETICA stages verified = " ++ text(size(stage_result[1]))
+
+make span_a := ["examples/aesthetica.rpr", 30, 1, 30, 75]
+make span_b := ["examples/aesthetica.rpr", 31, 1, 31, 75]
+make span_c := ["examples/aesthetica.rpr", 32, 1, 32, 75]
+make span_d := ["examples/aesthetica.rpr", 33, 1, 33, 75]
+make span_e := ["examples/aesthetica.rpr", 34, 1, 34, 75]
+make span_f := ["examples/aesthetica.rpr", 35, 1, 35, 75]
+make span_g := ["examples/aesthetica.rpr", 36, 1, 36, 75]
+make span_h := ["examples/aesthetica.rpr", 37, 1, 37, 75]
+
+make evidence := [
+    ["beauty", "harmony", 0.95, 0.96, 1.0, "deliberate", "Strong compositional balance.", span_a],
+    ["beauty", "contrast", 0.82, 0.90, 0.95, "deliberate", "Clear contrast supports the visual hierarchy.", span_b],
+    ["beauty", "expression", 0.91, 0.88, 1.0, "deliberate", "The composition communicates a distinct point of view.", span_c],
+    ["beauty", "originality", 0.86, 0.84, 0.90, "deliberate", "The visual language avoids generic solutions.", span_d],
+    ["ugliness", "contrast", 0.94, 0.91, 1.0, "deliberate", "Harsh contrast creates controlled visual tension.", span_e],
+    ["ugliness", "imperfection", 0.90, 0.93, 0.92, "deliberate", "Visible irregularity is intentionally retained.", span_f],
+    ["ugliness", "coherence", 0.34, 0.82, 0.75, "accidental", "One transition breaks the established visual grammar.", span_g],
+    ["ugliness", "intentional_tension", 0.88, 0.86, 0.90, "deliberate", "The unresolved tension is part of the intended expression.", span_h]
+]
+
+make result := aesthetica["evaluate"](
+    "AESTHETICA-DEMO-001",
+    context,
+    evidence,
+    weights
+)
+
+assert(result[0] == "ok", "AESTHETICA evaluation failed")
+make report := result[1]
+
+assert(report[0] == aesthetica["REPORT_SCHEMA"], "report schema mismatch")
+assert(report[5][0] > 0.5, "beauty axis was not retained")
+assert(report[6][0] > 0.5, "ugliness axis was not retained")
+assert(report[9] > 0.5, "coexistence score was not retained")
+
+assert(aesthetica["recommended_action"](evidence[5]) == "preserve", "deliberate imperfection must be preserved")
+assert(aesthetica["recommended_action"](evidence[6]) == "refine", "accidental incoherence must be flagged for refinement")
+
+# A score outside [0, 1] must fail with a stable diagnostic code.
+make invalid_evidence := [
+    ["beauty", "harmony", 1.2, 0.9, 1.0, "deliberate", "Out-of-range sample.", span_a]
+]
+make invalid_result := aesthetica["evaluate"](
+    "AESTHETICA-INVALID-001",
+    context,
+    invalid_evidence,
+    weights
+)
+assert(invalid_result[0] == "err", "out-of-range evidence must be rejected")
+assert(invalid_result[1][1] == "AES-E006", "unexpected score diagnostic")
+
+# Duplicate dimensions are rejected rather than silently overwritten.
+make duplicate_weights := [
+    ["harmony", 1.0],
+    ["harmony", 0.5]
+]
+make duplicate_result := aesthetica["validate_weights"](duplicate_weights)
+assert(duplicate_result[0] == "err", "duplicate weight dimension must be rejected")
+assert(duplicate_result[1][1] == "AES-E026", "unexpected duplicate-weight diagnostic")
+
+# A later revision keeps the same object identity but changes its profile slightly.
+make next_context := [
+    "studio-review",
+    "post-refinement-review",
+    "modernist-critical"
+]
+make next_evidence := [
+    ["beauty", "harmony", 0.93, 0.96, 1.0, "deliberate", "Balance remains a defining quality.", span_a],
+    ["beauty", "contrast", 0.84, 0.90, 0.95, "deliberate", "The revised contrast is slightly clearer.", span_b],
+    ["beauty", "expression", 0.92, 0.88, 1.0, "deliberate", "The expression remains distinctive.", span_c],
+    ["beauty", "originality", 0.86, 0.84, 0.90, "deliberate", "The original visual identity is preserved.", span_d],
+    ["ugliness", "contrast", 0.92, 0.91, 1.0, "deliberate", "Controlled tension remains.", span_e],
+    ["ugliness", "imperfection", 0.89, 0.93, 0.92, "deliberate", "Intentional irregularity is preserved.", span_f],
+    ["ugliness", "coherence", 0.40, 0.82, 0.75, "accidental", "The transition is improved but still needs review.", span_g],
+    ["ugliness", "intentional_tension", 0.88, 0.86, 0.90, "deliberate", "The central tension remains intentional.", span_h]
+]
+
+make next_result := aesthetica["evaluate"](
+    "AESTHETICA-DEMO-001",
+    next_context,
+    next_evidence,
+    weights
+)
+assert(next_result[0] == "ok", "second revision evaluation failed")
+
+make evolution := aesthetica["compare_profiles"](
+    report,
+    next_result[1],
+    0.85
+)
+assert(evolution[0] == "ok", "same-object profile comparison failed")
+assert(evolution[1][0] == aesthetica["EVOLUTION_SCHEMA"], "evolution schema mismatch")
+assert(evolution[1][6] == "stable", "small revision unexpectedly broke profile stability")
+
+make other_result := aesthetica["evaluate"](
+    "AESTHETICA-OTHER-002",
+    context,
+    evidence,
+    weights
+)
+assert(other_result[0] == "ok", "other object evaluation failed")
+make wrong_identity := aesthetica["compare_profiles"](report, other_result[1], 0.85)
+assert(wrong_identity[0] == "err", "different object identities must not be compared as revisions")
+assert(wrong_identity[1][1] == "AES-E054", "unexpected object identity diagnostic")
+
+# Invalid timeline continuity is rejected.
+make broken_stages := [
+    ["01_INPUT", 0, 1, "input_validated", "The first stage is valid."],
+    ["02_GAP", 2, 3, "gap_detected", "A gap exists between stages."]
+]
+make broken_stage_result := aesthetica["verify_stages"](broken_stages)
+assert(broken_stage_result[0] == "err", "stage gap must be rejected")
+assert(broken_stage_result[1][1] == "AES-E073", "unexpected stage continuity diagnostic")
+
+emit "beauty = " ++ text(report[5][0])
+emit "ugliness = " ++ text(report[6][0])
+emit "duality tension = " ++ text(report[8])
+emit "dimension coverage = " ++ text(report[10])
+emit "expressive power = " ++ text(report[11])
+emit "profile stability = " ++ text(evolution[1][5])
+emit "AESTHETICA_OK"
