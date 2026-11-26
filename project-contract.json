@@ -26,10 +26,13 @@
     {
       "id": "foundations.second-five-frameworks",
       "status": "partial",
-      "summary": "Adds executable Reaper contracts for semantic invariants, versioned compatibility descriptors, project/module roots, application composition and compiler/runtime backbone flow; complete static effect/ownership checking and native integration remain partial.",
+      "summary": "Adds executable Reaper contracts aligned with native architecture concepts 6–10: Basis semantics, Base shared primitives, Foundation invariants/contracts, Skeleton application composition and Backbone compiler/runtime flow; complete effect/ownership enforcement and native end-to-end integration remain partial.",
       "evidence": [
         "frameworks/foundation_6_10.rpr",
         "frameworks/foundation.rpr",
+        "include/reaper/architecture.h",
+        "src/architecture.c",
+        "docs/REAPER_ARCHITECTURE_FOUNDATION_66.md",
         "docs/FOUNDATIONAL_FRAMEWORKS_6_10.md",
         "examples/foundations_6_10.rpr",
         "tests/test_foundational_frameworks_6_10.py",
