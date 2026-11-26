@@ -15,6 +15,7 @@ class Node:
     token: Token
     value: Any = None
     children: list["Node"] | None = None
+    metadata: dict[str, Any] | None = None
 
 
 _PRECEDENCE = {
@@ -96,19 +97,98 @@ class Parser:
 
     def _function_declaration(self, token: Token) -> Node:
         name = self._consume("IDENT", "expected a function name after 'craft'")
+
+        type_parameters: list[str] = []
+        trait_bounds: dict[str, tuple[str, ...]] = {}
+        if self._match("<"):
+            while True:
+                parameter = self._consume("IDENT", "expected a generic type parameter")
+                if parameter.value in type_parameters:
+                    raise self._error(parameter, f"duplicate generic type parameter '{parameter.value}'")
+                type_parameters.append(parameter.value)
+                bounds: list[str] = []
+                if self._match(":"):
+                    bounds.append(self._consume("IDENT", "expected a trait bound").value)
+                    while self._match("+"):
+                        bounds.append(self._consume("IDENT", "expected a trait bound after '+'").value)
+                trait_bounds[parameter.value] = tuple(bounds)
+                if not self._match(","):
+                    break
+            self._consume(">", "expected '>' after generic type parameters")
+
         self._consume("(", "expected '(' after function name")
         params: list[str] = []
+        parameter_types: list[str | None] = []
         self._skip_newlines()
         if not self._check(")"):
             while True:
-                params.append(self._consume("IDENT", "expected a parameter name").value)
+                parameter = self._consume("IDENT", "expected a parameter name")
+                if parameter.value in params:
+                    raise self._error(parameter, f"duplicate parameter '{parameter.value}'")
+                params.append(parameter.value)
+                parameter_types.append(self._type_expression() if self._match(":") else None)
                 self._skip_newlines()
                 if not self._match(","):
                     break
                 self._skip_newlines()
         self._consume(")", "expected ')' after parameters")
+
+        return_type = self._type_expression() if self._match("->") else None
+        effects: tuple[str, ...] | None = None
+        if self._check("IDENT") and self._peek().value == "effects":
+            self._advance()
+            self._consume("(", "expected '(' after effects")
+            declared_effects: list[str] = []
+            self._skip_newlines()
+            if not self._check(")"):
+                while True:
+                    effect = self._consume("IDENT", "expected an effect name")
+                    if effect.value in declared_effects:
+                        raise self._error(effect, f"duplicate effect '{effect.value}'")
+                    declared_effects.append(effect.value)
+                    self._skip_newlines()
+                    if not self._match(","):
+                        break
+                    self._skip_newlines()
+            self._consume(")", "expected ')' after effects")
+            effects = tuple(declared_effects)
+
         body = self._block()
-        return Node("function", token, value=(name.value, params), children=[body])
+        metadata = {
+            "type_parameters": tuple(type_parameters),
+            "trait_bounds": trait_bounds,
+            "parameter_types": tuple(parameter_types),
+            "return_type": return_type,
+            "effects": effects,
+        }
+        return Node("function", token, value=(name.value, params), children=[body], metadata=metadata)
+
+    def _type_expression(self) -> str:
+        borrowed = self._match("&")
+        mutable_borrow = False
+        if borrowed and self._check("IDENT") and self._peek().value == "mut":
+            self._advance()
+            mutable_borrow = True
+
+        name = self._consume("IDENT", "expected a type name")
+        type_name = name.value
+        arguments: list[str] = []
+        if self._match("<"):
+            self._skip_newlines()
+            if self._check(">"):
+                raise self._error(self._peek(), "generic type arguments cannot be empty")
+            while True:
+                arguments.append(self._type_expression())
+                self._skip_newlines()
+                if not self._match(","):
+                    break
+                self._skip_newlines()
+            self._consume(">", "expected '>' after generic type arguments")
+            type_name = f"{type_name}<{', '.join(arguments)}>"
+
+        if borrowed:
+            type_name = ("&mut " if mutable_borrow else "&") + type_name
+        return type_name
 
     def _when(self, token: Token) -> Node:
         condition = self._expression()
