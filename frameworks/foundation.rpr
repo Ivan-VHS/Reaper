@@ -1,0 +1,170 @@
+# Reaper foundational framework layer v1.
+# This module is executable with the currently supported .rpr grammar.
+# Rows use stable positional contracts until typed records are implemented.
+
+export make FOUNDATION_SCHEMA := "reaper.foundation.v1"
+export make FOUNDATION_VERSION := 1
+
+export craft foundation_frameworks() {
+    yield [
+        ["architecture.framework-frame.v1", "Framework frame", "structural frame, allowed relationships and project extension points", "implemented", "docs/FOUNDATIONAL_FRAMEWORKS_V1.md"],
+        ["architecture.platform.v1", "Platform", "target, operating system and ABI profile", "partial", "docs/HARDWARE_LANGUAGE.md"],
+        ["architecture.environment.v1", "Environment", "runtime and execution profile", "partial", "docs/RUNTIME_PLATFORM.md"],
+        ["architecture.infrastructure.v1", "Infrastructure", "bounded resources and host services", "partial", "docs/SYSTEM_RUNTIME_ABI_V1.md"],
+        ["architecture.architecture.v1", "Architecture", "ordered language, compiler and host layers", "partial", "docs/REAPER_UNIFIED_ARCHITECTURE.md"]
+    ]
+}
+
+export craft foundation_framework_ids() {
+    vary ids := []
+    each row in foundation_frameworks() {
+        change ids := push(ids, row[0])
+    }
+    yield ids
+}
+
+craft foundation_find_row(rows, identifier) {
+    vary found := nothing
+    each row in rows {
+        when row[0] == identifier {
+            change found := row
+        }
+    }
+    yield found
+}
+
+export craft foundation_find_framework(identifier) {
+    yield foundation_find_row(foundation_frameworks(), identifier)
+}
+
+export craft foundation_validate_catalog() {
+    make rows := foundation_frameworks()
+    vary ids := []
+    vary valid := size(rows) == 5
+
+    each row in rows {
+        when size(row) != 5 {
+            change valid := false
+        }
+        change ids := push(ids, row[0])
+    }
+
+    when size(unique(ids)) != size(ids) {
+        change valid := false
+    }
+
+    yield valid
+}
+
+export craft foundation_scaffold_requirements() {
+    yield ["reaper", "src", "include/reaper", "tests", "docs"]
+}
+
+export craft foundation_scaffold_layout() {
+    yield [
+        ["reaper", "reference runtime and language services", "implemented"],
+        ["src", "native C17 frontend and runtime boundaries", "partial"],
+        ["include/reaper", "public native contracts", "partial"],
+        ["tests", "language, native and integration verification", "implemented"],
+        ["docs", "architecture and implementation contracts", "implemented"]
+    ]
+}
+
+export craft foundation_validate_scaffold(paths) {
+    when kind(paths) != "list" {
+        yield false
+    }
+    each required in foundation_scaffold_requirements() {
+        when not contains(paths, required) {
+            yield false
+        }
+    }
+    yield true
+}
+
+export craft foundation_platform_profiles() {
+    yield [
+        ["hosted-reference", "Windows/Linux/macOS", "hosted", "python-reference", "implemented"],
+        ["native-c17-host", "host-selected", "native-host", "C17-host-ABI", "partial"],
+        ["simulator-adapter", "host", "simulated", "fake-adapter", "partial"],
+        ["freestanding", "target-defined", "bare-metal", "target-ABI", "planned"]
+    ]
+}
+
+export craft foundation_validate_platform(profile_id) {
+    make profile := foundation_find_row(foundation_platform_profiles(), profile_id)
+    yield profile != nothing and profile[4] != "planned"
+}
+
+export craft foundation_environment_profiles() {
+    yield [
+        ["reference-runtime", "hosted", "managed-host", "console+explicit-file", "capability-gated", "implemented"],
+        ["canonical-vm", "hosted", "shared-runtime", "host-runtime-services", "capability-gated", "implemented"],
+        ["device-simulation", "hosted-test", "test-owned", "fake-bus-only", "no-real-device-effects", "partial"],
+        ["freestanding", "no-host", "target-defined", "adapter-defined", "explicit-target-effects", "planned"]
+    ]
+}
+
+export craft foundation_validate_environment(profile_id) {
+    make profile := foundation_find_row(foundation_environment_profiles(), profile_id)
+    yield profile != nothing and profile[5] != "planned"
+}
+
+export craft foundation_infrastructure_limits() {
+    yield [
+        ["module_source_bytes", 2000000, "bytes", "hard-limit"],
+        ["module_import_depth", 64, "levels", "hard-limit"],
+        ["execution_steps", 1000000, "steps", "default"],
+        ["call_depth", 256, "frames", "default"],
+        ["collection_items", 100000, "items", "default"],
+        ["text_length", 1000000, "characters", "default"],
+        ["heap_bytes", 67108864, "bytes", "default-estimate"],
+        ["open_resources", 64, "handles", "default"]
+    ]
+}
+
+export craft foundation_infrastructure_services() {
+    yield [
+        ["module-graph", "reaper.modules", "implemented", "bounded imports and cycle detection"],
+        ["heap-ledger", "reaper.memory", "implemented", "tracked allocations and region lifecycle"],
+        ["resource-ledger", "reaper.resources", "implemented", "bounded handles and deterministic cleanup"],
+        ["host-dispatch", "include/reaper/system.h", "partial", "capability-gated host adapter boundary"],
+        ["native-ffi", "reaper.ffi", "opt-in", "trusted library path and explicit enablement"]
+    ]
+}
+
+export craft foundation_validate_budget(budget) {
+    when kind(budget) != "list" {
+        yield false
+    }
+    when size(budget) != 6 {
+        yield false
+    }
+    each value in budget {
+        when kind(value) != "number" or value <= 0 or value % 1 != 0 {
+            yield false
+        }
+    }
+    yield true
+}
+
+export craft foundation_architecture_order() {
+    yield ["source", "lexer", "parser", "semantic-analysis", "canonical-ir", "execution-engine", "host-adapters", "target-backend"]
+}
+
+export craft foundation_architecture_layers() {
+    yield [
+        ["source", ".rpr modules", "language input and explicit imports", "implemented"],
+        ["lexer", "reaper/lexer.py and src/lexer.c", "tokens and source spans", "implemented"],
+        ["parser", "reaper/parser.py and src/parser.c", "supported syntax to AST", "implemented"],
+        ["semantic-analysis", "typecheck and capability validation", "conservative static checks", "partial"],
+        ["canonical-ir", "reaper/ir.py and include/reaper/ir.h", "verified intermediate representation", "partial"],
+        ["execution-engine", "tree-walk runtime and canonical VM", "bounded reference execution", "implemented"],
+        ["host-adapters", "system ABI, FFI and hardware adapters", "explicit host and device boundary", "partial"],
+        ["target-backend", "scalar C17 AOT", "limited native code generation", "partial"]
+    ]
+}
+
+export craft foundation_validate_architecture(layers) {
+    yield layers == foundation_architecture_order()
+}
