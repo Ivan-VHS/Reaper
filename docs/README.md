@@ -8,6 +8,7 @@ Start with the [root README](../README.md) for the language/runtime boundary, bu
 
 - [Features and maturity](FEATURES.md)
 - [Architecture](ARCHITECTURE.md)
+- [Architecture foundation: 66 concepts](REAPER_ARCHITECTURE_FOUNDATION_66.md) — native registry, nine semantic layers and bounded dependency graph validation.
 - [Runtime platform and quotas](RUNTIME_PLATFORM.md)
 - [Native compiler](NATIVE_COMPILER.md)
 - [Hardware language track](HARDWARE_LANGUAGE.md)
