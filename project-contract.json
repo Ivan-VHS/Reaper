@@ -24,6 +24,22 @@
   },
   "capabilities": [
     {
+      "id": "foundations.third-five-frameworks",
+      "status": "partial",
+      "summary": "Adds executable Reaper contracts for typed aggregate schemas and fixed-width scalar validation, deterministic dependency-order construction plans, the canonical four-project OCTA-8 peer inventory, capability-declared extension manifests and host-shell lifecycle/request validation; compiler-native layout, extension loading and host dispatch remain partial.",
+      "evidence": [
+        "frameworks/foundation_11_15.rpr",
+        "frameworks/foundation_6_10.rpr",
+        "frameworks/foundation.rpr",
+        "docs/FOUNDATIONAL_FRAMEWORKS_11_15.md",
+        "examples/foundations_11_15.rpr",
+        "tests/test_foundational_frameworks_11_15.py",
+        "federation/octa-pyramid.v1.json",
+        "include/reaper/system.h",
+        "docs/SYSTEM_RUNTIME_ABI_V1.md"
+      ]
+    },
+    {
       "id": "foundations.second-five-frameworks",
       "status": "partial",
       "summary": "Adds executable Reaper contracts for semantic invariants, versioned compatibility descriptors, project/module roots, application composition and compiler/runtime backbone flow; complete static effect/ownership checking and native integration remain partial.",

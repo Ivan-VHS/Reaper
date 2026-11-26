@@ -1,0 +1,352 @@
+# Third group of Reaper foundations.
+# Contracts are executable with the currently supported .rpr grammar.
+import "foundation_6_10.rpr" as previous
+
+export make FOUNDATION_THIRD_SCHEMA := "reaper.foundation.third.v1"
+export make FOUNDATION_THIRD_VERSION := 1
+
+export craft structure_type_bounds() {
+    yield [
+        ["u8", 0, 255],
+        ["u16", 0, 65535],
+        ["u32", 0, 4294967295],
+        ["u64", 0, 18446744073709551615],
+        ["u128", 0, 340282366920938463463374607431768211455],
+        ["i8", -128, 127],
+        ["i16", -32768, 32767],
+        ["i32", -2147483648, 2147483647],
+        ["i64", -9223372036854775808, 9223372036854775807],
+        ["i128", -170141183460469231731687303715884105728, 170141183460469231731687303715884105727]
+    ]
+}
+
+export craft structure_supported_types() {
+    yield ["bool", "text", "bytes", "u8", "u16", "u32", "u64", "u128", "i8", "i16", "i32", "i64", "i128"]
+}
+
+export craft structure_mutability_modes() {
+    yield ["immutable", "mutable"]
+}
+
+craft structure_find_bounds(type_name) {
+    vary found := nothing
+    each bounds in structure_type_bounds() {
+        when bounds[0] == type_name {
+            change found := bounds
+        }
+    }
+    yield found
+}
+
+export craft structure_validate_field(field) {
+    when kind(field) != "list" or size(field) != 3 {
+        yield false
+    }
+    when kind(field[0]) != "text" or field[0] == "" or kind(field[1]) != "text" or kind(field[2]) != "text" {
+        yield false
+    }
+    yield contains(structure_supported_types(), field[1]) and contains(structure_mutability_modes(), field[2])
+}
+
+export craft structure_validate_schema(schema) {
+    when kind(schema) != "list" or size(schema) != 3 {
+        yield false
+    }
+    when kind(schema[0]) != "text" or schema[0] == "" or kind(schema[1]) != "number" or schema[1] < 1 or schema[1] % 1 != 0 or kind(schema[2]) != "list" or size(schema[2]) == 0 {
+        yield false
+    }
+    vary field_names := []
+    each field in schema[2] {
+        when not structure_validate_field(field) {
+            yield false
+        }
+        when contains(field_names, field[0]) {
+            yield false
+        }
+        change field_names := push(field_names, field[0])
+    }
+    yield true
+}
+
+export craft structure_value_matches(type_name, value) {
+    when type_name == "bool" {
+        yield kind(value) == "boolean"
+    }
+    when type_name == "text" {
+        yield kind(value) == "text"
+    }
+    when type_name == "bytes" {
+        when kind(value) == "text" {
+            yield true
+        }
+        when kind(value) != "list" {
+            yield false
+        }
+        each byte in value {
+            when not structure_value_matches("u8", byte) {
+                yield false
+            }
+        }
+        yield true
+    }
+    make bounds := structure_find_bounds(type_name)
+    when bounds == nothing {
+        yield false
+    }
+    yield kind(value) == "number" and value % 1 == 0 and value >= bounds[1] and value <= bounds[2]
+}
+
+export craft structure_validate_instance(schema, values) {
+    when not structure_validate_schema(schema) or kind(values) != "list" {
+        yield false
+    }
+    when size(schema[2]) != size(values) {
+        yield false
+    }
+    vary position := 0
+    each field in schema[2] {
+        when not structure_value_matches(field[1], values[position]) {
+            yield false
+        }
+        change position := position + 1
+    }
+    yield true
+}
+
+export craft structure_field_layout(schema) {
+    when not structure_validate_schema(schema) {
+        yield nothing
+    }
+    yield schema[2]
+}
+
+export craft construction_plan_fields() {
+    yield ["builder_id", "ordered_steps"]
+}
+
+export craft construction_validate_plan(plan) {
+    when kind(plan) != "list" or size(plan) != 2 {
+        yield false
+    }
+    when kind(plan[0]) != "text" or plan[0] == "" or kind(plan[1]) != "list" or size(plan[1]) == 0 {
+        yield false
+    }
+    vary completed := []
+    each step in plan[1] {
+        when kind(step) != "list" or size(step) != 2 or kind(step[0]) != "text" or step[0] == "" or kind(step[1]) != "list" {
+            yield false
+        }
+        when contains(completed, step[0]) or size(unique(step[1])) != size(step[1]) {
+            yield false
+        }
+        each dependency in step[1] {
+            when kind(dependency) != "text" or not contains(completed, dependency) {
+                yield false
+            }
+        }
+        change completed := push(completed, step[0])
+    }
+    yield true
+}
+
+export craft construction_build_order(plan) {
+    when not construction_validate_plan(plan) {
+        yield nothing
+    }
+    vary order := []
+    each step in plan[1] {
+        change order := push(order, step[0])
+    }
+    yield order
+}
+
+export craft construction_rules() {
+    yield [
+        ["deterministic", "same plan produces same order"],
+        ["dependency-first", "dependencies must occur before consumers"],
+        ["unique-steps", "step identifiers are unique"],
+        ["dry-run", "validation never executes commands"],
+        ["bounded", "plan size follows interpreter collection limits"]
+    ]
+}
+
+export craft ecosystem_peers() {
+    yield [
+        ["reaper", "language, compiler and contract owner", "octa.pyramid.peer-mesh.v1", "implemented"],
+        ["pytyliki", "processor-system workstation and C ABI peer", "pytyliki.c-abi.v1", "optional"],
+        ["oplague", "device inventory and driver evidence peer", "oplage.device-snapshot.v1", "implemented"],
+        ["ventusample", "audio and DSP workstation peer", "octa.pyramid.peer-mesh.v1", "implemented"]
+    ]
+}
+
+export craft ecosystem_links() {
+    yield [
+        ["reaper", "oplague", "reaper.oplage-comparison.v1", "json-file", "implemented"],
+        ["oplague", "reaper", "oplage.device-snapshot.v1", "json-file", "implemented"],
+        ["reaper", "pytyliki", "pytyliki.c-abi.v1", "native-ffi", "implemented"],
+        ["pytyliki", "reaper", "pytyliki.c-abi.v1", "native-ffi", "implemented"],
+        ["oplague", "pytyliki", "pytyliki.c-abi.v1", "native-ffi", "implemented"],
+        ["pytyliki", "oplague", "pytyliki.c-abi.v1", "native-ffi", "implemented"],
+        ["ventusample", "reaper", "not-applicable.v1", "none", "not_applicable"],
+        ["reaper", "ventusample", "not-applicable.v1", "none", "not_applicable"],
+        ["ventusample", "pytyliki", "pytyliki.c-abi.v1", "native-ffi", "planned"],
+        ["pytyliki", "ventusample", "pytyliki.c-abi.v1", "native-ffi", "planned"],
+        ["ventusample", "oplague", "not-applicable.v1", "none", "not_applicable"],
+        ["oplague", "ventusample", "not-applicable.v1", "none", "not_applicable"]
+    ]
+}
+
+export craft ecosystem_validate_peers(peers) {
+    yield peers == ecosystem_peers()
+}
+
+export craft ecosystem_find_peer(identifier) {
+    vary found := nothing
+    each peer in ecosystem_peers() {
+        when peer[0] == identifier {
+            change found := peer
+        }
+    }
+    yield found
+}
+
+export craft ecosystem_validate_link(link) {
+    yield contains(ecosystem_links(), link)
+}
+
+export craft extension_capabilities() {
+    yield ["PROCESS_INSPECT", "PROCESS_CONTROL", "THREAD_CONTROL", "SYNC", "FS_HANDLE", "FS_READ", "FS_WRITE", "CLOCK", "NETWORK", "CRYPTO", "DESKTOP_WINDOW", "DESKTOP_DISPLAY", "DESKTOP_INPUT", "DESKTOP_SESSION", "DESKTOP_COMPOSITOR", "DESKTOP_GPU", "DESKTOP_SHELL", "DESKTOP_DISPLAY_ADMIN", "DESKTOP_SESSION_ADMIN", "DESKTOP_GPU_ADMIN"]
+}
+
+export craft extension_lifecycle_states() {
+    yield ["declared", "validated", "enabled", "disabled", "revoked"]
+}
+
+export craft extension_valid_transitions() {
+    yield [
+        ["declared", "validated"],
+        ["validated", "enabled"],
+        ["enabled", "disabled"],
+        ["disabled", "enabled"],
+        ["enabled", "revoked"],
+        ["disabled", "revoked"]
+    ]
+}
+
+export craft extension_validate_capabilities(capabilities) {
+    when kind(capabilities) != "list" {
+        yield false
+    }
+    each capability in capabilities {
+        when not contains(extension_capabilities(), capability) {
+            yield false
+        }
+    }
+    yield size(unique(capabilities)) == size(capabilities)
+}
+
+export craft extension_validate_manifest(manifest) {
+    when kind(manifest) != "list" or size(manifest) != 5 {
+        yield false
+    }
+    when kind(manifest[0]) != "text" or manifest[0] == "" or kind(manifest[1]) != "number" or manifest[1] < 1 or manifest[1] % 1 != 0 {
+        yield false
+    }
+    when not previous["core_foundation_validate_contract"](manifest[2]) {
+        yield false
+    }
+    when manifest[2][0] != "reaper.host-service.v1" or kind(manifest[3]) != "list" or not extension_validate_capabilities(manifest[3]) {
+        yield false
+    }
+    yield kind(manifest[4]) == "text" and manifest[4] != ""
+}
+
+export craft extension_validate_transition(from_state, to_state) {
+    yield contains(extension_valid_transitions(), [from_state, to_state])
+}
+
+export craft extension_policy() {
+    yield [
+        ["registration", "declarative manifest only", "required"],
+        ["authority", "requested capabilities never imply granted capabilities", "required"],
+        ["loading", "trusted host loader and version checks", "host-owned"],
+        ["failure", "fail closed on unknown capability or contract", "required"],
+        ["unload", "host-defined cleanup before revocation", "partial"]
+    ]
+}
+
+export craft shell_context_fields() {
+    yield ["host_id", "session_id", "entry_module", "requested_capabilities"]
+}
+
+export craft shell_operations() {
+    yield ["start", "stop", "query", "notify"]
+}
+
+export craft shell_lifecycle() {
+    yield ["bootstrap", "validate", "start", "run", "drain", "shutdown", "cleanup"]
+}
+
+export craft shell_validate_context(context) {
+    when kind(context) != "list" or size(context) != 4 {
+        yield false
+    }
+    when kind(context[0]) != "text" or context[0] == "" or kind(context[1]) != "text" or context[1] == "" or kind(context[2]) != "text" or context[2] == "" {
+        yield false
+    }
+    yield extension_validate_capabilities(context[3])
+}
+
+export craft shell_validate_lifecycle(steps) {
+    yield steps == shell_lifecycle()
+}
+
+export craft shell_validate_request(request) {
+    when kind(request) != "list" or size(request) != 3 {
+        yield false
+    }
+    when not contains(shell_operations(), request[0]) or kind(request[1]) != "text" or not contains(extension_capabilities(), request[1]) {
+        yield false
+    }
+    yield kind(request[2]) == "number" and request[2] % 1 == 0 and request[2] >= 0 and request[2] <= 65536
+}
+
+export craft shell_boundary_rules() {
+    yield [
+        ["identity", "host derives process and session identity", "required"],
+        ["capabilities", "host grants the minimum requested authority", "required"],
+        ["payload", "bounded and versioned request data", "required"],
+        ["lifecycle", "ordered startup and deterministic shutdown", "required"],
+        ["transport", "no implicit syscall or IPC implementation", "host-owned"]
+    ]
+}
+
+export craft foundation_third_five() {
+    yield [
+        ["foundation.structure.v1", "Structure", "typed aggregate schema and value validation", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_11_15.md"],
+        ["foundation.construction.v1", "Construction", "deterministic dependency-ordered composition plans", "implemented", "docs/FOUNDATIONAL_FRAMEWORKS_11_15.md"],
+        ["foundation.ecosystem.v1", "Ecosystem", "known peer projects and versioned integration links", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_11_15.md"],
+        ["foundation.extension.v1", "Extension", "capability-declared extension manifests and lifecycle rules", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_11_15.md"],
+        ["foundation.shell.v1", "Shell", "host/session boundary, request envelope and lifecycle order", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_11_15.md"]
+    ]
+}
+
+export craft foundation_all_frameworks_15() {
+    vary rows := previous["foundation_all_frameworks"]()
+    each row in foundation_third_five() {
+        change rows := push(rows, row)
+    }
+    yield rows
+}
+
+export craft foundation_validate_catalog_15() {
+    make rows := foundation_all_frameworks_15()
+    vary identifiers := []
+    each row in rows {
+        when size(row) != 5 {
+            yield false
+        }
+        change identifiers := push(identifiers, row[0])
+    }
+    yield previous["foundation_validate_all_catalog"]() and size(rows) == 15 and size(unique(identifiers)) == 15
+}

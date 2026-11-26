@@ -1,0 +1,10 @@
+import "../frameworks/foundation_11_15.rpr" as systems
+
+make gpio_schema := ["gpio.pin.v1", 1, [["pin", "u8", "immutable"], ["enabled", "bool", "mutable"]]]
+emit "All fifteen frameworks valid = " ++ text(systems["foundation_validate_catalog_15"]())
+emit "GPIO schema valid = " ++ text(systems["structure_validate_schema"](gpio_schema))
+emit "GPIO instance valid = " ++ text(systems["structure_validate_instance"](gpio_schema, [13, true]))
+emit "Construction plan valid = " ++ text(systems["construction_validate_plan"](["application", [["compile", []], ["test", ["compile"]]]]))
+emit "Peer inventory valid = " ++ text(systems["ecosystem_validate_peers"](systems["ecosystem_peers"]()))
+emit "Host extension transition valid = " ++ text(systems["extension_validate_transition"]("enabled", "disabled"))
+emit "Shell lifecycle valid = " ++ text(systems["shell_validate_lifecycle"](systems["shell_lifecycle"]()))
