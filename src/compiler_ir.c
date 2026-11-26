@@ -104,7 +104,9 @@ static int valid_node(const ReaperCompilerIrNode *node,
                 node->lhs == REAPER_COMPILER_IR_NO_VALUE &&
                 node->rhs == REAPER_COMPILER_IR_NO_VALUE && valid_value(node);
         case REAPER_COMPILER_IR_HIR_NAME:
-            return valid_key(node->key) && node->type != REAPER_COMPILER_IR_TYPE_INVALID &&
+            return valid_key(node->key) &&
+                node->type > REAPER_COMPILER_IR_TYPE_INVALID &&
+                node->type <= REAPER_COMPILER_IR_TYPE_RATIO &&
                 node->lhs == REAPER_COMPILER_IR_NO_VALUE &&
                 node->rhs == REAPER_COMPILER_IR_NO_VALUE;
         case REAPER_COMPILER_IR_HIR_UNARY:
@@ -126,26 +128,36 @@ static int valid_node(const ReaperCompilerIrNode *node,
                 valid_value(node);
         case REAPER_COMPILER_IR_HIR_COLOR_ROLE:
             return valid_key(node->key) && node->type == REAPER_COMPILER_IR_TYPE_COLOR &&
-                valid_color(node->text);
+                valid_color(node->text) &&
+                node->lhs == REAPER_COMPILER_IR_NO_VALUE &&
+                node->rhs == REAPER_COMPILER_IR_NO_VALUE;
         case REAPER_COMPILER_IR_HIR_FONT_ROLE:
             return valid_key(node->key) &&
                 (node->type == REAPER_COMPILER_IR_TYPE_FONT ||
-                 node->type == REAPER_COMPILER_IR_TYPE_TEXT) && valid_value(node);
+                 node->type == REAPER_COMPILER_IR_TYPE_TEXT) && valid_value(node) &&
+                node->lhs == REAPER_COMPILER_IR_NO_VALUE &&
+                node->rhs == REAPER_COMPILER_IR_NO_VALUE;
         case REAPER_COMPILER_IR_HIR_METRIC_ROLE:
             return valid_key(node->key) &&
                 (node->type == REAPER_COMPILER_IR_TYPE_I64 ||
                  node->type == REAPER_COMPILER_IR_TYPE_F64 ||
                  node->type == REAPER_COMPILER_IR_TYPE_LENGTH ||
-                 node->type == REAPER_COMPILER_IR_TYPE_RATIO) && valid_value(node);
+                 node->type == REAPER_COMPILER_IR_TYPE_RATIO) && valid_value(node) &&
+                node->lhs == REAPER_COMPILER_IR_NO_VALUE &&
+                node->rhs == REAPER_COMPILER_IR_NO_VALUE;
         case REAPER_COMPILER_IR_HIR_MOTION_ROLE:
             return valid_key(node->key) &&
                 (node->type == REAPER_COMPILER_IR_TYPE_DURATION ||
                  node->type == REAPER_COMPILER_IR_TYPE_TEXT ||
-                 node->type == REAPER_COMPILER_IR_TYPE_BOOL) && valid_value(node);
+                 node->type == REAPER_COMPILER_IR_TYPE_BOOL) && valid_value(node) &&
+                node->lhs == REAPER_COMPILER_IR_NO_VALUE &&
+                node->rhs == REAPER_COMPILER_IR_NO_VALUE;
         case REAPER_COMPILER_IR_HIR_ACCESSIBILITY_ROLE:
             return valid_key(node->key) &&
                 (node->type == REAPER_COMPILER_IR_TYPE_BOOL ||
-                 node->type == REAPER_COMPILER_IR_TYPE_RATIO) && valid_value(node);
+                 node->type == REAPER_COMPILER_IR_TYPE_RATIO) && valid_value(node) &&
+                node->lhs == REAPER_COMPILER_IR_NO_VALUE &&
+                node->rhs == REAPER_COMPILER_IR_NO_VALUE;
         default:
             return 0;
         }
@@ -157,6 +169,8 @@ static int valid_node(const ReaperCompilerIrNode *node,
                 node->rhs == REAPER_COMPILER_IR_NO_VALUE;
         case REAPER_COMPILER_IR_MIR_NAME:
             return valid_key(node->key) &&
+                node->type > REAPER_COMPILER_IR_TYPE_INVALID &&
+                node->type <= REAPER_COMPILER_IR_TYPE_RATIO &&
                 node->lhs == REAPER_COMPILER_IR_NO_VALUE &&
                 node->rhs == REAPER_COMPILER_IR_NO_VALUE;
         case REAPER_COMPILER_IR_MIR_UNARY:
@@ -175,7 +189,9 @@ static int valid_node(const ReaperCompilerIrNode *node,
                 (node->lhs == REAPER_COMPILER_IR_NO_VALUE || earlier_ref(node->lhs, index)) &&
                 (node->rhs == REAPER_COMPILER_IR_NO_VALUE || earlier_ref(node->rhs, index));
         case REAPER_COMPILER_IR_MIR_SET_PROPERTY:
-            return valid_key(node->key) && valid_value(node);
+            return valid_key(node->key) && valid_value(node) &&
+                node->lhs == REAPER_COMPILER_IR_NO_VALUE &&
+                node->rhs == REAPER_COMPILER_IR_NO_VALUE;
         default:
             return 0;
         }
@@ -187,6 +203,8 @@ static int valid_node(const ReaperCompilerIrNode *node,
                 node->rhs == REAPER_COMPILER_IR_NO_VALUE;
         case REAPER_COMPILER_IR_LIR_NATIVE_NAME:
             return valid_key(node->key) &&
+                node->type > REAPER_COMPILER_IR_TYPE_INVALID &&
+                node->type <= REAPER_COMPILER_IR_TYPE_RATIO &&
                 node->lhs == REAPER_COMPILER_IR_NO_VALUE &&
                 node->rhs == REAPER_COMPILER_IR_NO_VALUE;
         case REAPER_COMPILER_IR_LIR_NATIVE_UNARY:
@@ -205,7 +223,9 @@ static int valid_node(const ReaperCompilerIrNode *node,
                 (node->lhs == REAPER_COMPILER_IR_NO_VALUE || earlier_ref(node->lhs, index)) &&
                 (node->rhs == REAPER_COMPILER_IR_NO_VALUE || earlier_ref(node->rhs, index));
         case REAPER_COMPILER_IR_LIR_NATIVE_PROPERTY:
-            return valid_key(node->key) && valid_value(node);
+            return valid_key(node->key) && valid_value(node) &&
+                node->lhs == REAPER_COMPILER_IR_NO_VALUE &&
+                node->rhs == REAPER_COMPILER_IR_NO_VALUE;
         default:
             return 0;
         }
