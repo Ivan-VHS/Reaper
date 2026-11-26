@@ -4,7 +4,7 @@
 
 ## Purpose
 
-DABI64 Desktop Host v1 is the message boundary between a Reaper native client and a trusted desktop host. The System Runtime catalogue declares operations and required capabilities; DABI64 defines pointer-free request and response frames for a future DuckOS transport.
+DABI64 Desktop Host v1 is the message boundary between a Reaper native client and a trusted desktop host. The System Runtime catalogue declares operations and required capabilities; DABI64 defines pointer-free request and response frames for a future DAK transport.
 
 The separate [DABI64 Process ABI v1](DABI64_PROCESS_ABI_V1.md) specifies the x86-64 SYSCALL register convention and kernel-owned user-return frame. The desktop request/response wire messages are not the syscall trap frame.
 
@@ -13,6 +13,8 @@ The wire header contains no native pointer, sender PID or caller-supplied capabi
 ## Wire encoding
 
 All multi-byte fields are little-endian. Version 1 targets the x86-64 DABI64 ABI. Reserved flags must be zero. Incompatible future layouts require a new ABI version.
+
+Both public v1 header types have an 8-byte alignment requirement in addition to their fixed sizes and offsets. The public header enforces size, alignment and field offsets at compile time for C11/C17 and C++ consumers. Packed-structure compiler options are unsupported for this ABI.
 
 ### Request frame v1
 
@@ -72,11 +74,11 @@ They do not authenticate callers, validate handle ownership, deliver IPC, dispat
 
 ## Ordered implementation gates
 
-1. DuckOS syscall entry saves the x86-64 user register frame, validates user ranges and copies the request into kernel-owned memory.
+1. DAK syscall entry saves the x86-64 user register frame, validates user ranges and copies the request into kernel-owned memory.
 2. IPC derives sender PID and capability grants from kernel-owned task state, then applies operation and per-object authorization.
 3. Native desktop service owns the window registry, process/window lifecycle, display leases, focused input subscriptions and session transactions.
 4. Software framebuffer compositor owns scanout and presentation; applications submit owned surfaces, never physical framebuffer addresses.
 5. GPU broker adds device buffers, submissions and fences only after software composition is stable.
 6. Shell service consumes launcher/catalogue and settings APIs without executing arbitrary manifest command strings.
 
-The current DuckOS stage-1 kernel still halts after firmware/memory handoff. None of these kernel gates should be marked complete until source, tests and QEMU or hardware evidence exist.
+The current DAK stage-1 kernel still halts after firmware/memory handoff. None of these kernel gates should be marked complete until source, tests and QEMU or hardware evidence exist.

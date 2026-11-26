@@ -39,6 +39,35 @@ typedef struct {
  uint64_t request_id;
  uint64_t object_handle;
 } ReaperDabi64DesktopResponseV1;
+
+#if defined(__cplusplus)
+# define REAPER_DABI64_STATIC_ASSERT(condition, message) static_assert((condition), message)
+# define REAPER_DABI64_ALIGNOF(type) alignof(type)
+#else
+# define REAPER_DABI64_STATIC_ASSERT(condition, message) _Static_assert((condition), message)
+# define REAPER_DABI64_ALIGNOF(type) _Alignof(type)
+#endif
+REAPER_DABI64_STATIC_ASSERT(sizeof(ReaperDabi64DesktopRequestV1) == 40U,
+                            "DABI64 request v1 size changed");
+REAPER_DABI64_STATIC_ASSERT(REAPER_DABI64_ALIGNOF(ReaperDabi64DesktopRequestV1) == 8U,
+                            "DABI64 request v1 alignment changed");
+REAPER_DABI64_STATIC_ASSERT(offsetof(ReaperDabi64DesktopRequestV1, request_id) == 16U,
+                            "DABI64 request v1 request_id offset changed");
+REAPER_DABI64_STATIC_ASSERT(offsetof(ReaperDabi64DesktopRequestV1, object_handle) == 24U,
+                            "DABI64 request v1 object_handle offset changed");
+REAPER_DABI64_STATIC_ASSERT(offsetof(ReaperDabi64DesktopRequestV1, sequence) == 32U,
+                            "DABI64 request v1 sequence offset changed");
+REAPER_DABI64_STATIC_ASSERT(sizeof(ReaperDabi64DesktopResponseV1) == 32U,
+                            "DABI64 response v1 size changed");
+REAPER_DABI64_STATIC_ASSERT(REAPER_DABI64_ALIGNOF(ReaperDabi64DesktopResponseV1) == 8U,
+                            "DABI64 response v1 alignment changed");
+REAPER_DABI64_STATIC_ASSERT(offsetof(ReaperDabi64DesktopResponseV1, request_id) == 16U,
+                            "DABI64 response v1 request_id offset changed");
+REAPER_DABI64_STATIC_ASSERT(offsetof(ReaperDabi64DesktopResponseV1, object_handle) == 24U,
+                            "DABI64 response v1 object_handle offset changed");
+#undef REAPER_DABI64_STATIC_ASSERT
+#undef REAPER_DABI64_ALIGNOF
+
 ReaperDabi64DesktopStatus reaper_dabi64_desktop_request_validate(
  const ReaperDabi64DesktopRequestV1 *request, size_t frame_size);
 ReaperDabi64DesktopStatus reaper_dabi64_desktop_response_validate(
