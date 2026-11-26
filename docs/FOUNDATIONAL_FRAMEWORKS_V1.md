@@ -11,10 +11,10 @@ This first group implements five cooperating foundations rather than five compet
 | ID | Framework | Responsibility | Maturity |
 |---|---|---|---|
 | `architecture.framework-frame.v1` | Framework frame | Structural frame, permitted relationships and project extension points | Implemented |
-| `foundation.platform.v1` | Platform | OS family, target mode, ABI and platform-profile selection | Partial |
-| `foundation.environment.v1` | Environment | Hosted, VM, simulated and freestanding execution profiles | Partial |
-| `foundation.infrastructure.v1` | Infrastructure | Resource budgets, module graph, memory/resource ledgers and host services | Partial |
-| `foundation.architecture.v1` | Architecture | Ordered language/compiler/host/backend layers and their maturity | Partial |
+| `architecture.platform.v1` | Platform | OS family, target mode, ABI and platform-profile selection | Partial |
+| `architecture.environment.v1` | Environment | Hosted, VM, simulated and freestanding execution profiles | Partial |
+| `architecture.infrastructure.v1` | Infrastructure | Resource budgets, module graph, memory/resource ledgers and host services | Partial |
+| `architecture.architecture.v1` | Architecture | Ordered language/compiler/host/backend layers and their maturity | Partial |
 
 Maturity describes the end-to-end capability, not just the existence of a registry row. A listed contract does not imply that a target backend, kernel adapter or hardware service is complete.
 
