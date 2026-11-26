@@ -39,9 +39,9 @@ Public functions: `middleware_phases()`, `middleware_failure_modes()`, `middlewa
 
 The envelope is:
 
-`[contract_id, major, minor, direction, payload_bytes]`
+`[contract_id, major, minor, direction, payload_bytes, opt_in_enabled]`
 
-The catalogue records the existing OPlague snapshot, Reaper comparison report, optional Pytyliki C ABI and OCTA-8 shared contract. Direction and version must match the contract; payload is bounded to one MiB. The `not-applicable.v1` entry is kept visible as topology metadata but cannot be used for a transfer.
+The catalogue records the existing OPlague snapshot, Reaper comparison report, optional Pytyliki C ABI and OCTA-8 shared contract. Direction and version must match the contract; payload is bounded to one MiB. An opt-in contract is rejected unless its final boolean flag is explicitly true; ordinary contracts require false. The `not-applicable.v1` entry is kept visible as topology metadata but cannot be used for a transfer.
 
 This is a schema gate, not a network client, authenticated transport or producer/consumer implementation. The native FFI remains opt-in.
 
@@ -76,7 +76,7 @@ import "../frameworks/foundation_31_35.rpr" as host
 
 emit host["foundation_validate_catalog_35"]()
 emit host["middleware_validate_pipeline"]([["audit", "before-execute", 10, "abort"], ["report", "after-execute", 20, "skip"]])
-emit host["integration_validate_envelope"](["oplage.device-snapshot.v1", 1, 0, "consumes", 4096])
+emit host["integration_validate_envelope"](["oplage.device-snapshot.v1", 1, 0, "consumes", 4096, false])
 emit host["container_validate_selection"]("reference-bounded")
 emit host["host_validate_descriptor"](["reaper-host", 1, "canonical-vm", ["FS_READ"], 65536])
 emit host["host_validate_grant_policy"](["FS_READ", "CLOCK"], ["FS_READ"])
