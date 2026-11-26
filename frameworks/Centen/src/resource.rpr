@@ -71,3 +71,81 @@ export craft resource_ledger_valid(resources) {
     }
     yield true
 }
+
+
+# Resource quotas, atomic reservation batches, snapshots and lexical regions.
+export craft resource_quota(name, hard_limit, soft_limit, unit) {
+    yield [name, hard_limit, soft_limit, unit]
+}
+export craft resource_quota_check(quota, requested) {
+    when size(quota) != 4 or quota[1] <= 0 or quota[2] < 0 or quota[2] > quota[1] {
+        yield [false, "invalid_quota"]
+    }
+    when requested < 0 { yield [false, "negative_request"] }
+    when requested > quota[1] { yield [false, "hard_limit_exceeded"] }
+    when requested > quota[2] { yield [true, "soft_limit_exceeded"] }
+    yield [true, "within_soft_limit"]
+}
+export craft resource_reserve_batch(resources, requests) {
+    when not resource_ledger_valid(resources) { yield [false, "invalid_ledger"] }
+    vary staged := resources
+    vary index := 0
+    loop while index < size(requests) {
+        when size(requests[index]) != 2 { yield [false, "invalid_request"] }
+        make result := resource_reserve_named(staged, requests[index][0], requests[index][1])
+        when not result[0] { yield [false, result[1], resources] }
+        change staged := result[1]
+        change index := index + 1
+    }
+    yield [true, staged]
+}
+export craft resource_pressure(resource) {
+    when not resource_valid(resource) or resource[1] == 0 { yield [false, "invalid_capacity"] }
+    yield [true, resource[2] / resource[1]]
+}
+export craft resource_quota_find(quotas, name) {
+    vary index := 0
+    loop while index < size(quotas) {
+        when quotas[index][0] == name { yield [true, quotas[index]] }
+        change index := index + 1
+    }
+    yield [false, []]
+}
+export craft resource_budget_evaluate(resources, quotas) {
+    when not resource_ledger_valid(resources) { yield [false, "invalid_ledger"] }
+    vary report := []
+    vary index := 0
+    loop while index < size(resources) {
+        make quota := resource_quota_find(quotas, resources[index][0])
+        when not quota[0] { yield [false, "quota_missing"] }
+        make result := resource_quota_check(quota[1], resources[index][2])
+        when not result[0] { yield result }
+        change report := push(report, [resources[index][0], result[1]])
+        change index := index + 1
+    }
+    yield [true, report]
+}
+export craft region_token(name, depth, generation) {
+    yield [name, depth, generation]
+}
+export craft region_stack_validate(stack) {
+    vary index := 0
+    loop while index < size(stack) {
+        when size(stack[index]) != 3 or stack[index][1] != index + 1 or stack[index][2] < 1 {
+            yield [false, "invalid_region_stack"]
+        }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+export craft region_push(stack, name, generation) {
+    make valid := region_stack_validate(stack)
+    when not valid[0] { yield valid }
+    when size(name) == 0 or generation < 1 { yield [false, "invalid_region"] }
+    yield [true, push(stack, region_token(name, size(stack) + 1, generation))]
+}
+export craft region_pop(stack, expected_name) {
+    when size(stack) == 0 { yield [false, "region_stack_empty"] }
+    when stack[size(stack) - 1][0] != expected_name { yield [false, "region_lifo_violation"] }
+    yield [true, take(stack, size(stack) - 1)]
+}
