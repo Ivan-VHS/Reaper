@@ -21,7 +21,7 @@
       "const": "REAPER"
     },
     "version": {
-      "const": "1.0.0"
+      "const": "1.1.0"
     },
     "registry": {
       "type": "object",
@@ -38,7 +38,8 @@
         "function_contract_count",
         "maturity",
         "dispatch_api",
-        "registry_api_functions"
+        "registry_api_functions",
+        "reference_runtime_handlers"
       ],
       "properties": {
         "abi": {
@@ -111,6 +112,9 @@
               "type": "string"
             }
           }
+        },
+        "reference_runtime_handlers": {
+          "const": 120
         }
       }
     },
@@ -146,7 +150,8 @@
         "registry_api_functions",
         "executable_domain_handlers",
         "reaper_source_bindings",
-        "privacy"
+        "privacy",
+        "reaper_reference_handlers"
       ],
       "properties": {
         "source": {
@@ -169,6 +174,9 @@
         },
         "privacy": {
           "type": "string"
+        },
+        "reaper_reference_handlers": {
+          "const": 120
         }
       }
     },
@@ -207,7 +215,7 @@
             "type": "string"
           },
           "maturity": {
-            "const": "contract-only"
+            "const": "reference-handler-v1-partial"
           },
           "functions": {
             "type": "array",
@@ -244,7 +252,7 @@
                   "type": "string"
                 },
                 "status": {
-                  "const": "contract-only"
+                  "const": "reference-source-handler-v1"
                 }
               }
             }

@@ -1,17 +1,62 @@
-# Reaper framework metadata and source-level helper functions.
-# Operation contracts: language/frameworks.v1.json
+# RippleCripple: bounded stream state and deterministic flow-control descriptors.
+import "../federation_common.rpr" as fc
 
 export make framework_id := "ripplecripple"
 export make display_name := "RippleCripple"
 export make feature_key := "RPR-FWK-018"
 export make operation_keys := ["RPR-FWK-018-F01", "RPR-FWK-018-F02", "RPR-FWK-018-F03", "RPR-FWK-018-F04", "RPR-FWK-018-F05", "RPR-FWK-018-F06"]
-export make maturity := "contract-only"
+export make maturity := "reference-handler-v1-partial"
+export make handler_status := "reference-source-handler-v1"
 export make native_registry := "reaper.framework-cabi.v1"
 
-export craft operation_key(index) {
-    yield operation_keys[index]
+export craft operation_key(index) { yield operation_keys[index] }
+export craft framework_manifest() { yield [framework_id, display_name, feature_key, operation_keys, maturity] }
+
+# Stream: [id, capacity, queue, state, version].
+export craft stream_open(stream_id, capacity) {
+    when not fc["fc_nonempty_text"](stream_id) or not fc["fc_nonnegative"](capacity) or capacity <= 0 {
+        yield [false, nothing, "stream-descriptor-invalid"]
+    }
+    yield [true, [stream_id, capacity, [], "open", 0], "stream-described"]
 }
 
-export craft framework_manifest() {
-    yield [framework_id, display_name, feature_key, operation_keys, maturity]
+export craft stream_push(stream, item) {
+    when not fc["fc_record"](stream, 5) { yield [false, stream, "stream-shape"] }
+    when stream[3] != "open" { yield [false, stream, "stream-not-open"] }
+    when size(stream[2]) >= stream[1] { yield [false, stream, "stream-backpressure"] }
+    yield [true, [stream[0], stream[1], push(stream[2], item), stream[3], stream[4] + 1], "queued"]
+}
+
+export craft stream_merge(left, right) {
+    when not fc["fc_record"](left, 5) or not fc["fc_record"](right, 5) {
+        yield [false, nothing, "stream-shape"]
+    }
+    when left[3] != "open" or right[3] != "open" { yield [false, nothing, "stream-not-open"] }
+    when left[1] + right[1] < size(left[2]) + size(right[2]) {
+        yield [false, nothing, "merged-stream-capacity-insufficient"]
+    }
+    vary merged := left[2]
+    each item in right[2] { change merged := push(merged, item) }
+    yield [true, [left[0] ++ "+" ++ right[0], left[1] + right[1], merged, "open", left[4] + right[4]], "merged"]
+}
+
+export craft stream_throttle(stream, demand) {
+    when not fc["fc_record"](stream, 5) or not fc["fc_nonnegative"](demand) {
+        yield [false, stream, "throttle-input-invalid"]
+    }
+    when stream[3] != "open" { yield [false, stream, "stream-not-open"] }
+    make delivered := take(stream[2], demand)
+    make remaining := drop(stream[2], demand)
+    yield [true, [stream[0], stream[1], remaining, stream[3], stream[4] + size(delivered)], delivered]
+}
+
+export craft stream_checkpoint(stream) {
+    when not fc["fc_record"](stream, 5) { yield [false, nothing, "stream-shape"] }
+    yield [true, [stream[0], stream[4], stream[2]], "replayable-state-description"]
+}
+
+export craft stream_close(stream) {
+    when not fc["fc_record"](stream, 5) { yield [false, stream, "stream-shape"] }
+    when stream[3] == "closed" { yield [true, stream, "already-closed"] }
+    yield [true, [stream[0], stream[1], stream[2], "closed", stream[4]], "closed"]
 }

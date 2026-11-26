@@ -1,17 +1,100 @@
-# Reaper framework metadata and source-level helper functions.
-# Operation contracts: language/frameworks.v1.json
+# CO: deterministic identity and bounded byte/value utilities.
+import "../federation_common.rpr" as fc
 
 export make framework_id := "co"
 export make display_name := "CO"
 export make feature_key := "RPR-FWK-016"
 export make operation_keys := ["RPR-FWK-016-F01", "RPR-FWK-016-F02", "RPR-FWK-016-F03", "RPR-FWK-016-F04", "RPR-FWK-016-F05", "RPR-FWK-016-F06"]
-export make maturity := "contract-only"
+export make maturity := "reference-handler-v1-partial"
+export make handler_status := "reference-source-handler-v1"
 export make native_registry := "reaper.framework-cabi.v1"
 
-export craft operation_key(index) {
-    yield operation_keys[index]
+export craft operation_key(index) { yield operation_keys[index] }
+export craft framework_manifest() { yield [framework_id, display_name, feature_key, operation_keys, maturity] }
+
+# Non-cryptographic deterministic 32-bit-style rolling fingerprint.
+export craft core_hash(bytes) {
+    when kind(bytes) != "list" { yield [false, nothing, "bytes-must-be-list"] }
+    vary hash := 2166136261
+    each byte in bytes {
+        when not fc["fc_nonnegative"](byte) or byte > 255 {
+            yield [false, nothing, ["invalid-byte", byte]]
+        }
+        change hash := remainder(hash * 16777619 + byte, 2147483647)
+    }
+    yield [true, hash, "non-cryptographic-fingerprint"]
 }
 
-export craft framework_manifest() {
-    yield [framework_id, display_name, feature_key, operation_keys, maturity]
+export craft checksum(bytes) {
+    when kind(bytes) != "list" { yield [false, nothing, "bytes-must-be-list"] }
+    vary total := 0
+    each byte in bytes {
+        when not fc["fc_nonnegative"](byte) or byte > 255 {
+            yield [false, nothing, ["invalid-byte", byte]]
+        }
+        change total := total + byte
+    }
+    yield [true, remainder(total, 65536), "additive-corruption-check"]
+}
+
+export craft stable_id(namespace, input_bytes) {
+    when not fc["fc_nonempty_text"](namespace) { yield [false, nothing, "namespace-required"] }
+    make fingerprint := core_hash(input_bytes)
+    when not fingerprint[0] { yield [false, nothing, fingerprint[2]] }
+    yield [true, namespace ++ ":" ++ text(fingerprint[1]), "stable-non-cryptographic-id"]
+}
+
+export craft text_normalize(value, policy) {
+    when kind(value) != "text" { yield [false, nothing, "text-required"] }
+    when policy == "trim" { yield [true, trim(value), "trimmed"] }
+    when policy == "lower" { yield [true, lower(value), "lowercase"] }
+    when policy == "upper" { yield [true, upper(value), "uppercase"] }
+    when policy == "trim-lower" { yield [true, lower(trim(value)), "trim-lower"] }
+    yield [false, nothing, "unsupported-normalization-policy"]
+}
+
+export craft compare_bytes(left, right) {
+    when kind(left) != "list" or kind(right) != "list" { yield [false, 0, "byte-vectors-required"] }
+    each byte in left {
+        when not fc["fc_nonnegative"](byte) or byte > 255 { yield [false, 0, "byte-value-invalid"] }
+    }
+    each byte in right {
+        when not fc["fc_nonnegative"](byte) or byte > 255 { yield [false, 0, "byte-value-invalid"] }
+    }
+    vary index := 0
+    make limit := size(left)
+    when size(right) < limit { change limit := size(right) }
+    loop while index < limit {
+        when left[index] != right[index] {
+            when left[index] < right[index] { yield [true, -1, "less"] }
+            yield [true, 1, "greater"]
+        }
+        change index := index + 1
+    }
+    when size(left) < size(right) { yield [true, -1, "prefix-less"] }
+    when size(left) > size(right) { yield [true, 1, "prefix-greater"] }
+    yield [true, 0, "equal"]
+}
+
+craft digits_only(value) {
+    when kind(value) != "text" { yield false }
+    when size(value) == 0 { yield false }
+    vary index := 0
+    loop while index < size(value) {
+        when not fc["fc_has"](["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"], value[index]) {
+            yield false
+        }
+        change index := index + 1
+    }
+    yield true
+}
+
+export craft version_parse(value) {
+    when kind(value) != "text" { yield [false, nothing, "version-must-be-text"] }
+    make parts := split(value, ".")
+    when size(parts) != 3 { yield [false, nothing, "semantic-version-requires-three-parts"] }
+    each part in parts {
+        when not digits_only(part) { yield [false, nothing, "semantic-version-part-invalid"] }
+    }
+    yield [true, [number(parts[0]), number(parts[1]), number(parts[2])], "parsed-version"]
 }

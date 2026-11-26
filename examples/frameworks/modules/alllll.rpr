@@ -1,17 +1,120 @@
-# Reaper framework metadata and source-level helper functions.
-# Operation contracts: language/frameworks.v1.json
+# ALLLLL: feature registry queries and deterministic dependency compatibility.
+import "../federation_common.rpr" as fc
 
 export make framework_id := "alllll"
 export make display_name := "ALLLLL"
 export make feature_key := "RPR-FWK-008"
 export make operation_keys := ["RPR-FWK-008-F01", "RPR-FWK-008-F02", "RPR-FWK-008-F03", "RPR-FWK-008-F04", "RPR-FWK-008-F05", "RPR-FWK-008-F06"]
-export make maturity := "contract-only"
+export make maturity := "reference-handler-v1-partial"
+export make handler_status := "reference-source-handler-v1"
 export make native_registry := "reaper.framework-cabi.v1"
 
-export craft operation_key(index) {
-    yield operation_keys[index]
+export craft operation_key(index) { yield operation_keys[index] }
+export craft framework_manifest() { yield [framework_id, display_name, feature_key, operation_keys, maturity] }
+
+# Feature row: [id, area, maturity, targets, dependencies].
+export craft feature_lookup(features, feature_id) {
+    when kind(features) != "list" { yield [false, nothing, "features-must-be-list"] }
+    vary found := nothing
+    each feature in features {
+        when fc["fc_record"](feature, 5) {
+            when feature[0] == feature_id { change found := feature }
+        }
+    }
+    when found == nothing { yield [false, nothing, "feature-not-found"] }
+    yield [true, found, "found"]
 }
 
-export craft framework_manifest() {
-    yield [framework_id, display_name, feature_key, operation_keys, maturity]
+export craft feature_enablement(feature, profile) {
+    when not fc["fc_record"](feature, 5) or not fc["fc_record"](profile, 2) {
+        yield [false, false, "feature-or-profile-shape"]
+    }
+    when feature[2] != "implemented" and feature[2] != "experimental" {
+        yield [true, false, "feature-not-enabled"]
+    }
+    yield [true, fc["fc_has"](feature[3], profile[0]), "target-profile-check"]
+}
+
+export craft enumerate_features(features, area) {
+    when kind(features) != "list" { yield [false, [], "features-must-be-list"] }
+    vary result := []
+    each feature in features {
+        when fc["fc_record"](feature, 5) {
+            when feature[1] == area { change result := push(result, feature) }
+        }
+    }
+    yield [true, result, size(result)]
+}
+
+craft alllll_order(features) {
+    when kind(features) != "list" { yield [false, [], "features-must-be-list"] }
+    vary ids := []
+    vary errors := []
+    each feature in features {
+        when not fc["fc_record"](feature, 5) {
+            change errors := push(errors, ["feature-shape", feature])
+        } otherwise {
+            when fc["fc_has"](ids, feature[0]) { change errors := push(errors, ["duplicate-feature", feature[0]]) }
+            change ids := push(ids, feature[0])
+        }
+    }
+    when size(errors) > 0 { yield [false, [], errors] }
+    each feature in features {
+        each dependency in feature[4] {
+            when not fc["fc_has"](ids, dependency) {
+                change errors := push(errors, ["missing-feature-dependency", feature[0], dependency])
+            }
+        }
+    }
+    when size(errors) > 0 { yield [false, [], errors] }
+    vary pending := ids
+    vary ordered := []
+    loop while size(pending) > 0 {
+        vary ready := []
+        vary blocked := []
+        each candidate in pending {
+            vary has_pending := false
+            each feature in features {
+                when feature[0] == candidate {
+                    each dependency in feature[4] {
+                        when fc["fc_has"](pending, dependency) { change has_pending := true }
+                    }
+                }
+            }
+            when has_pending { change blocked := push(blocked, candidate) }
+            when not has_pending { change ready := push(ready, candidate) }
+        }
+        when size(ready) == 0 { yield [false, ordered, ["dependency-cycle", blocked]] }
+        each item in ready { change ordered := push(ordered, item) }
+        change pending := blocked
+    }
+    yield [true, ordered, "ordered"]
+}
+
+export craft dependency_order(features) {
+    yield alllll_order(features)
+}
+
+export craft compatibility_check(left_profile, right_profile) {
+    when not fc["fc_record"](left_profile, 2) or not fc["fc_record"](right_profile, 2) {
+        yield [false, [], "profile-shape"]
+    }
+    when left_profile[0] != right_profile[0] { yield [false, [], "target-mismatch"] }
+    make common := fc["fc_intersect"](left_profile[1], right_profile[1])
+    when not common[0] { yield [false, [], common[2]] }
+    yield [true, common[1], "compatible-feature-intersection"]
+}
+
+export craft capability_diff(left_set, right_set) {
+    make common := fc["fc_intersect"](left_set, right_set)
+    when not common[0] { yield [false, [], common[2]] }
+    vary only_left := []
+    vary only_right := []
+    each item in left_set {
+        when not fc["fc_has"](common[1], item) { change only_left := push(only_left, item) }
+    }
+    each item in right_set {
+        when not fc["fc_has"](common[1], item) { change only_right := push(only_right, item) }
+    }
+    yield [true, [only_left, only_right, common[1]], "diff"]
 }

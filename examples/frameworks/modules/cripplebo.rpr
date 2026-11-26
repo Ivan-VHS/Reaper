@@ -1,17 +1,104 @@
-# Reaper framework metadata and source-level helper functions.
-# Operation contracts: language/frameworks.v1.json
+# CrippleBO: typed fault reports and bounded recovery policy descriptors.
+import "../federation_common.rpr" as fc
 
 export make framework_id := "cripplebo"
 export make display_name := "CrippleBO"
 export make feature_key := "RPR-FWK-017"
 export make operation_keys := ["RPR-FWK-017-F01", "RPR-FWK-017-F02", "RPR-FWK-017-F03", "RPR-FWK-017-F04", "RPR-FWK-017-F05", "RPR-FWK-017-F06"]
-export make maturity := "contract-only"
+export make maturity := "reference-handler-v1-partial"
+export make handler_status := "reference-source-handler-v1"
 export make native_registry := "reaper.framework-cabi.v1"
 
-export craft operation_key(index) {
-    yield operation_keys[index]
+export craft operation_key(index) { yield operation_keys[index] }
+export craft framework_manifest() { yield [framework_id, display_name, feature_key, operation_keys, maturity] }
+
+export craft fault_record(source, event) {
+    when not fc["fc_record"](source, 2) or not fc["fc_record"](event, 4) {
+        yield [false, nothing, "fault-input-shape"]
+    }
+    when not fc["fc_nonempty_text"](source[0]) or not fc["fc_nonempty_text"](event[0]) or not fc["fc_nonempty_text"](event[2]) {
+        yield [false, nothing, "fault-identity-required"]
+    }
+    yield [true, [source[0], source[1], event[0], event[1], event[2], event[3], "recorded"], "fault-record"]
 }
 
-export craft framework_manifest() {
-    yield [framework_id, display_name, feature_key, operation_keys, maturity]
+export craft retry_plan(attempts, base_delay, maximum_delay) {
+    when not fc["fc_nonnegative"](attempts) or not fc["fc_nonnegative"](base_delay) or not fc["fc_nonnegative"](maximum_delay) {
+        yield [false, [], "retry-bounds-invalid"]
+    }
+    when maximum_delay < base_delay { yield [false, [], "maximum-below-base"] }
+    when attempts > 64 { yield [false, [], "attempt-limit-exceeded"] }
+    vary delays := []
+    vary current := base_delay
+    vary index := 0
+    loop while index < attempts {
+        when current > maximum_delay { change current := maximum_delay }
+        change delays := push(delays, current)
+        when current < maximum_delay { change current := current * 2 }
+        change index := index + 1
+    }
+    yield [true, delays, "bounded-retry-plan"]
+}
+
+# Circuit: [state, failures, threshold, retry_after]; outcome is success/failure/probe result.
+export craft circuit_check(circuit, outcome) {
+    when not fc["fc_record"](circuit, 4) { yield [false, circuit, "circuit-shape"] }
+    when not fc["fc_nonnegative"](circuit[1]) or not fc["fc_nonnegative"](circuit[2]) {
+        yield [false, circuit, "circuit-counters-invalid"]
+    }
+    when circuit[2] <= 0 { yield [false, circuit, "circuit-threshold-invalid"] }
+    when circuit[0] == "closed" {
+        when outcome == "success" { yield [true, ["closed", 0, circuit[2], circuit[3]], "reset"] }
+        when outcome == "failure" {
+            make failures := circuit[1] + 1
+            when failures >= circuit[2] { yield [true, ["open", failures, circuit[2], circuit[3]], "opened"] }
+            yield [true, ["closed", failures, circuit[2], circuit[3]], "failure-counted"]
+        }
+    }
+    when circuit[0] == "open" {
+        when outcome == "probe-success" { yield [true, ["closed", 0, circuit[2], circuit[3]], "closed-after-probe"] }
+        when outcome == "probe-failure" { yield [true, circuit, "remain-open"] }
+        yield [false, circuit, "probe-required"]
+    }
+    yield [false, circuit, "unknown-circuit-state-or-outcome"]
+}
+
+export craft fallback_select(fallbacks, failed_component) {
+    when kind(fallbacks) != "list" or not fc["fc_nonempty_text"](failed_component) {
+        yield [false, nothing, "fallback-query-shape"]
+    }
+    each fallback in fallbacks {
+        when fc["fc_record"](fallback, 3) {
+            when fallback[0] == failed_component and fallback[2] == "healthy" {
+                yield [true, fallback[1], "fallback-selected"]
+            }
+        }
+    }
+    yield [false, nothing, "no-healthy-fallback"]
+}
+
+# This is only an isolation plan; host enforcement must create the real boundary.
+export craft isolate_component(component, isolation_policy) {
+    when not fc["fc_nonempty_text"](component) or not fc["fc_record"](isolation_policy, 2) {
+        yield [false, nothing, "isolation-input-shape"]
+    }
+    when not fc["fc_nonempty_text"](isolation_policy[0]) or kind(isolation_policy[1]) != "list" {
+        yield [false, nothing, "isolation-policy-invalid"]
+    }
+    yield [true, [component, isolation_policy[0], isolation_policy[1], "host-enforcement-required"], "isolation-plan"]
+}
+
+export craft recovery_report(attempts) {
+    when kind(attempts) != "list" { yield [false, nothing, "attempts-must-be-list"] }
+    vary succeeded := []
+    vary failed := []
+    each attempt in attempts {
+        when fc["fc_record"](attempt, 3) {
+            when attempt[1] == "recovered" { change succeeded := push(succeeded, attempt[0]) }
+            otherwise { change failed := push(failed, [attempt[0], attempt[2]]) }
+        } otherwise {
+            change failed := push(failed, ["invalid-attempt", attempt])
+        }
+    }
+    yield [true, [succeeded, failed], "recovery-summary"]
 }

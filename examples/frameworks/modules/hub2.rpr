@@ -1,17 +1,91 @@
-# Reaper framework metadata and source-level helper functions.
-# Operation contracts: language/frameworks.v1.json
+# Hub2: host-owned service and event registry descriptors.
+import "../federation_common.rpr" as fc
 
 export make framework_id := "hub2"
 export make display_name := "Hub2"
 export make feature_key := "RPR-FWK-014"
 export make operation_keys := ["RPR-FWK-014-F01", "RPR-FWK-014-F02", "RPR-FWK-014-F03", "RPR-FWK-014-F04", "RPR-FWK-014-F05", "RPR-FWK-014-F06"]
-export make maturity := "contract-only"
+export make maturity := "reference-handler-v1-partial"
+export make handler_status := "reference-source-handler-v1"
 export make native_registry := "reaper.framework-cabi.v1"
 
-export craft operation_key(index) {
-    yield operation_keys[index]
+export craft operation_key(index) { yield operation_keys[index] }
+export craft framework_manifest() { yield [framework_id, display_name, feature_key, operation_keys, maturity] }
+
+# Service: [name, semantic_version, state, endpoint, capabilities].
+export craft service_register(registry, service) {
+    when kind(registry) != "list" or not fc["fc_record"](service, 5) {
+        yield [false, registry, "service-registry-shape"]
+    }
+    when not fc["fc_nonempty_text"](service[0]) or not fc["fc_version_valid"](service[1]) or not fc["fc_nonempty_text"](service[3]) {
+        yield [false, registry, "service-descriptor-invalid"]
+    }
+    vary next := []
+    each existing in registry {
+        when existing[0] == service[0] {
+            yield [false, registry, "service-name-already-registered"]
+        }
+        change next := push(next, existing)
+    }
+    yield [true, push(next, service), "registered-descriptor"]
 }
 
-export craft framework_manifest() {
-    yield [framework_id, display_name, feature_key, operation_keys, maturity]
+# Query: [service_name, minimum_version].
+export craft service_resolve(registry, query) {
+    when kind(registry) != "list" or not fc["fc_record"](query, 2) {
+        yield [false, nothing, "service-query-shape"]
+    }
+    vary selected := nothing
+    each service in registry {
+        when fc["fc_record"](service, 5) {
+            when service[0] == query[0] and service[2] == "active" {
+                make version := fc["fc_version_compare"](service[1], query[1])
+                when version[0] and version[1] >= 0 {
+                    when selected == nothing { change selected := service }
+                    otherwise {
+                        make newer := fc["fc_version_compare"](service[1], selected[1])
+                        when newer[0] and newer[1] > 0 { change selected := service }
+                    }
+                }
+            }
+        }
+    }
+    when selected == nothing { yield [false, nothing, "active-service-not-found"] }
+    yield [true, selected, "resolved"]
+}
+
+export craft endpoint_health(endpoint, response) {
+    when not fc["fc_record"](endpoint, 2) or not fc["fc_record"](response, 2) {
+        yield [false, false, "health-input-shape"]
+    }
+    when not fc["fc_nonnegative"](endpoint[1]) or not fc["fc_nonnegative"](response[1]) {
+        yield [false, false, "health-latency-invalid"]
+    }
+    yield [true, response[0] == "healthy" and response[1] <= endpoint[1], "evaluated"]
+}
+
+# Event publication is a local descriptor only; transport is host-owned.
+export craft event_publish(topic, event) {
+    when not fc["fc_nonempty_text"](topic) or not fc["fc_record"](event, 3) {
+        yield [false, nothing, "event-descriptor-shape"]
+    }
+    when not fc["fc_nonempty_text"](event[0]) or not fc["fc_nonempty_text"](event[2]) {
+        yield [false, nothing, "event-identity-required"]
+    }
+    yield [true, [topic, event[0], event[1], event[2], "pending-host-transport"], "publish-descriptor"]
+}
+
+export craft event_subscribe(topic, subscriber) {
+    when not fc["fc_nonempty_text"](topic) or not fc["fc_nonempty_text"](subscriber) {
+        yield [false, nothing, "subscription-identity-required"]
+    }
+    yield [true, [topic, subscriber, "active"], "subscription-described"]
+}
+
+export craft event_ack(delivery, acknowledgement) {
+    when not fc["fc_record"](delivery, 3) or kind(acknowledgement) != "boolean" {
+        yield [false, nothing, "acknowledgement-shape"]
+    }
+    when not acknowledgement { yield [true, [delivery[0], delivery[1], "rejected"], "negative-ack"] }
+    yield [true, [delivery[0], delivery[1], "acknowledged"], "acknowledged"]
 }

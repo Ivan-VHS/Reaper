@@ -18,7 +18,7 @@ Reaper is a systems-programming language and local development workbench for com
 - NOO TAH delegates JavaScript execution to the official Node.js runtime.
 - Jora application scaffolding and capability composition; catalog packs remain specifications, not installable editors.\n- Twenty named framework namespaces with executable Reaper metadata helpers, stable operation keys and a shared C ABI call gate for trusted foreign hosts; domain handlers remain maturity-gated.
 
-See [Framework Federation v1](docs/REAPER_FRAMEWORK_FEDERATION_V1.md), [Features](docs/FEATURES.md), [Architecture](docs/ARCHITECTURE.md), [Hardware Language](docs/HARDWARE_LANGUAGE.md), [Jora factory](docs/JORA_APPLICATION_FACTORY.md), [Studio and IDE](docs/REAPER_IDE.md) and [NOO TAH](docs/NOO_TAH.md).
+See [Framework Federation v1](docs/REAPER_FRAMEWORK_FEDERATION_V1.md), [Reaper source handlers v1.1](docs/FRAMEWORK_FEDERATION_HANDLERS_V1.md), [Features](docs/FEATURES.md), [Architecture](docs/ARCHITECTURE.md), [Hardware Language](docs/HARDWARE_LANGUAGE.md), [Jora factory](docs/JORA_APPLICATION_FACTORY.md), [Studio and IDE](docs/REAPER_IDE.md) and [NOO TAH](docs/NOO_TAH.md).
 
 ## Quick start
 
@@ -29,6 +29,7 @@ python -m venv .venv
 python -m pip install -e .
 python -m reaper --check examples/flow.rpr
 python -m reaper examples/flow.rpr
+python -m reaper examples/frameworks/federation_handlers_smoke.rpr
 ```
 
 Open Studio or the REPL:

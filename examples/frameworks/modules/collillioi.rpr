@@ -1,17 +1,70 @@
-# Reaper framework metadata and source-level helper functions.
-# Operation contracts: language/frameworks.v1.json
+# Collillioi: deterministic sequence transformations over explicit inputs.
+import "../federation_common.rpr" as fc
 
 export make framework_id := "collillioi"
 export make display_name := "Collillioi"
 export make feature_key := "RPR-FWK-005"
 export make operation_keys := ["RPR-FWK-005-F01", "RPR-FWK-005-F02", "RPR-FWK-005-F03", "RPR-FWK-005-F04", "RPR-FWK-005-F05", "RPR-FWK-005-F06"]
-export make maturity := "contract-only"
+export make maturity := "reference-handler-v1-partial"
+export make handler_status := "reference-source-handler-v1"
 export make native_registry := "reaper.framework-cabi.v1"
 
-export craft operation_key(index) {
-    yield operation_keys[index]
+export craft operation_key(index) { yield operation_keys[index] }
+export craft framework_manifest() { yield [framework_id, display_name, feature_key, operation_keys, maturity] }
+
+export craft map_sequence(values, mapper) {
+    when kind(values) != "list" or kind(mapper) != "craft" { yield [false, [], "map-input-invalid"] }
+    yield [true, map(values, mapper), "mapped"]
 }
 
-export craft framework_manifest() {
-    yield [framework_id, display_name, feature_key, operation_keys, maturity]
+export craft filter_sequence(values, predicate) {
+    when kind(values) != "list" or kind(predicate) != "craft" { yield [false, [], "filter-input-invalid"] }
+    yield [true, filter(values, predicate), "filtered"]
+}
+
+export craft fold_sequence(values, initial, reducer) {
+    when kind(values) != "list" or kind(reducer) != "craft" { yield [false, initial, "fold-input-invalid"] }
+    yield [true, fold(values, initial, reducer), "folded"]
+}
+
+export craft zip_sequences(left, right) {
+    when kind(left) != "list" or kind(right) != "list" { yield [false, [], "zip-input-must-be-lists"] }
+    vary result := []
+    vary index := 0
+    make limit := size(left)
+    when size(right) < limit { change limit := size(right) }
+    loop while index < limit {
+        change result := push(result, [left[index], right[index]])
+        change index := index + 1
+    }
+    yield [true, result, [size(left) - limit, size(right) - limit]]
+}
+
+export craft stable_sort(values, key_function) {
+    when kind(values) != "list" or kind(key_function) != "craft" {
+        yield [false, [], "sort-input-invalid"]
+    }
+    yield [true, sort_by(values, key_function, "asc"), "stable-key-order"]
+}
+
+# Partition by positive chunk width or a Reaper predicate craft.
+export craft partition_sequence(values, selector) {
+    when kind(values) != "list" { yield [false, [], "partition-input-must-be-list"] }
+    when kind(selector) == "number" {
+        when selector <= 0 { yield [false, [], "chunk-width-must-be-positive"] }
+        yield [true, chunk(values, selector), "chunked"]
+    }
+    when kind(selector) == "craft" {
+        vary accepted := []
+        vary rejected := []
+        each value in values {
+            when selector(value) {
+                change accepted := push(accepted, value)
+            } otherwise {
+                change rejected := push(rejected, value)
+            }
+        }
+        yield [true, [accepted, rejected], "partitioned"]
+    }
+    yield [false, [], "selector-must-be-width-or-craft"]
 }

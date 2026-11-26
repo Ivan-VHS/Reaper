@@ -1,17 +1,81 @@
-# Reaper framework metadata and source-level helper functions.
-# Operation contracts: language/frameworks.v1.json
+# CodexNo: Reaper-native compiler and feature-catalog operations.
+import "../federation_common.rpr" as fc
 
 export make framework_id := "codex_no"
 export make display_name := "CodexNo"
 export make feature_key := "RPR-FWK-001"
 export make operation_keys := ["RPR-FWK-001-F01", "RPR-FWK-001-F02", "RPR-FWK-001-F03", "RPR-FWK-001-F04", "RPR-FWK-001-F05", "RPR-FWK-001-F06"]
-export make maturity := "contract-only"
+export make maturity := "reference-handler-v1-partial"
+export make handler_status := "reference-source-handler-v1"
 export make native_registry := "reaper.framework-cabi.v1"
 
-export craft operation_key(index) {
-    yield operation_keys[index]
+export craft operation_key(index) { yield operation_keys[index] }
+export craft framework_manifest() { yield [framework_id, display_name, feature_key, operation_keys, maturity] }
+
+# Catalog row: [stable_symbol, descriptor].
+export craft lookup_symbol(catalog, symbol) {
+    make checked := fc["fc_valid_pairs"](catalog)
+    when not checked[0] { yield [false, nothing, checked[1]] }
+    yield fc["fc_lookup"](catalog, symbol)
 }
 
-export craft framework_manifest() {
-    yield [framework_id, display_name, feature_key, operation_keys, maturity]
+# Feature row: [feature_id, display_name, maturity, targets].
+export craft inspect_feature(features, feature_id) {
+    when kind(features) != "list" { yield [false, nothing, "features-must-be-list"] }
+    vary found := nothing
+    each feature in features {
+        when fc["fc_record"](feature, 4) {
+            when feature[0] == feature_id { change found := feature }
+        }
+    }
+    when found == nothing { yield [false, nothing, "feature-not-found"] }
+    yield [true, found, "found"]
+}
+
+# Enumerate only descriptors for which the caller supplies evidence.
+export craft list_contracts(registry) {
+    when kind(registry) != "list" { yield [false, [], "registry-must-be-list"] }
+    vary contracts := []
+    each row in registry {
+        when kind(row) == "list" {
+            when size(row) >= 3 { change contracts := push(contracts, row) }
+        }
+    }
+    yield [true, contracts, size(contracts)]
+}
+
+# Request: [framework_descriptors, framework_id].
+export craft describe_framework(request) {
+    when not fc["fc_record"](request, 2) { yield [false, nothing, "request-shape"] }
+    when kind(request[0]) != "list" { yield [false, nothing, "descriptors-must-be-list"] }
+    vary found := nothing
+    each descriptor in request[0] {
+        when kind(descriptor) == "list" {
+            when size(descriptor) >= 2 {
+                when descriptor[0] == request[1] { change found := descriptor }
+            }
+        }
+    }
+    when found == nothing { yield [false, nothing, "framework-not-found"] }
+    yield [true, found, "described"]
+}
+
+export craft compare_versions(left, right) {
+    yield fc["fc_version_compare"](left, right)
+}
+
+export craft export_catalog(catalog) {
+    when kind(catalog) != "list" { yield [false, [], "catalog-must-be-list"] }
+    vary errors := []
+    each descriptor in catalog {
+        when kind(descriptor) != "list" {
+            change errors := push(errors, ["invalid-catalog-descriptor", descriptor])
+        } otherwise {
+            when size(descriptor) < 2 {
+                change errors := push(errors, ["invalid-catalog-descriptor", descriptor])
+            }
+        }
+    }
+    when size(errors) > 0 { yield [false, [], errors] }
+    yield [true, catalog, "catalog-view"]
 }

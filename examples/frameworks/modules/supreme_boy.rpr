@@ -1,17 +1,132 @@
-# Reaper framework metadata and source-level helper functions.
-# Operation contracts: language/frameworks.v1.json
+# SupremeBoy: release gates, evidence sets and regression comparisons.
+import "../federation_common.rpr" as fc
 
-export make framework_id := "supreme_boy"
+export make framework_id := "supreme-boy"
 export make display_name := "SupremeBoy"
 export make feature_key := "RPR-FWK-011"
 export make operation_keys := ["RPR-FWK-011-F01", "RPR-FWK-011-F02", "RPR-FWK-011-F03", "RPR-FWK-011-F04", "RPR-FWK-011-F05", "RPR-FWK-011-F06"]
-export make maturity := "contract-only"
+export make maturity := "reference-handler-v1-partial"
+export make handler_status := "reference-source-handler-v1"
 export make native_registry := "reaper.framework-cabi.v1"
 
-export craft operation_key(index) {
-    yield operation_keys[index]
+export craft operation_key(index) { yield operation_keys[index] }
+export craft framework_manifest() { yield [framework_id, display_name, feature_key, operation_keys, maturity] }
+
+# Gate: [gate_id, required_evidence_ids]; evidence rows: [id, status, detail].
+export craft quality_gate(gate, evidence) {
+    when not fc["fc_record"](gate, 2) or kind(evidence) != "list" {
+        yield [false, [], "gate-or-evidence-shape"]
+    }
+    vary missing := []
+    vary failed := []
+    each required in gate[1] {
+        vary found := false
+        each item in evidence {
+            when fc["fc_record"](item, 3) {
+                when item[0] == required {
+                    change found := true
+                    when item[1] != "passed" { change failed := push(failed, [required, item[1]]) }
+                }
+            }
+        }
+        when not found { change missing := push(missing, required) }
+    }
+    yield [size(missing) == 0 and size(failed) == 0, [missing, failed], "gate-evaluated"]
 }
 
-export craft framework_manifest() {
-    yield [framework_id, display_name, feature_key, operation_keys, maturity]
+export craft build_matrix(targets, configurations) {
+    when kind(targets) != "list" or kind(configurations) != "list" {
+        yield [false, [], "matrix-input-must-be-lists"]
+    }
+    vary matrix := []
+    each target in targets {
+        each configuration in configurations {
+            change matrix := push(matrix, [target, configuration])
+        }
+    }
+    yield [true, matrix, size(matrix)]
+}
+
+# Report: [suite_id, status, total, passed, failed].
+export craft test_evidence(report, minimum_tests) {
+    when not fc["fc_record"](report, 5) or not fc["fc_nonnegative"](minimum_tests) {
+        yield [false, nothing, "test-report-shape"]
+    }
+    when not fc["fc_nonnegative"](report[2]) or not fc["fc_nonnegative"](report[3]) or not fc["fc_nonnegative"](report[4]) {
+        yield [false, nothing, "test-count-invalid"]
+    }
+    when report[3] + report[4] != report[2] { yield [false, nothing, "test-counts-do-not-reconcile"] }
+    when report[2] < minimum_tests { yield [false, nothing, "insufficient-test-evidence"] }
+    when report[1] != "passed" or report[4] != 0 { yield [false, nothing, "test-evidence-failed"] }
+    yield [true, report, "test-evidence-accepted"]
+}
+
+# Metric rows: [name, value, preferred_direction] where lower/higher/exact are explicit.
+export craft regression_compare(before_snapshot, after_snapshot) {
+    when kind(before_snapshot) != "list" or kind(after_snapshot) != "list" {
+        yield [false, [], "metric-snapshot-invalid"]
+    }
+    vary regressions := []
+    vary changes := []
+    each before in before_snapshot {
+        when not fc["fc_record"](before, 3) {
+            yield [false, [], ["before-metric-shape", before]]
+        }
+        vary after := nothing
+        each candidate in after_snapshot {
+            when fc["fc_record"](candidate, 3) {
+                when candidate[0] == before[0] { change after := candidate }
+            }
+        }
+        when after == nothing {
+            change regressions := push(regressions, ["metric-missing", before[0]])
+        } otherwise {
+            when kind(before[1]) == "number" and kind(after[1]) == "number" {
+                change changes := push(changes, [before[0], before[1], after[1], after[1] - before[1]])
+                when before[2] == "lower" and after[1] > before[1] {
+                    change regressions := push(regressions, before[0])
+                }
+                when before[2] == "higher" and after[1] < before[1] {
+                    change regressions := push(regressions, before[0])
+                }
+                when before[2] == "exact" and after[1] != before[1] {
+                    change regressions := push(regressions, before[0])
+                }
+            } otherwise {
+                when before[1] != after[1] { change regressions := push(regressions, before[0]) }
+            }
+        }
+    }
+    yield [size(regressions) == 0, changes, regressions]
+}
+
+# Provenance is descriptive only; digest authenticity is not established here.
+export craft artifact_attest(artifact, provenance) {
+    when not fc["fc_record"](artifact, 3) or kind(provenance) != "list" {
+        yield [false, nothing, "artifact-or-provenance-shape"]
+    }
+    when not fc["fc_nonempty_text"](artifact[0]) or not fc["fc_nonempty_text"](artifact[1]) {
+        yield [false, nothing, "artifact-identity-required"]
+    }
+    when size(provenance) == 0 { yield [false, nothing, "provenance-required"] }
+    yield [true, [artifact, provenance, "descriptive-provenance-only"], "attestation-record"]
+}
+
+export craft release_check(candidate) {
+    when not fc["fc_record"](candidate, 3) { yield [false, nothing, "release-candidate-shape"] }
+    when kind(candidate[2]) != "list" { yield [false, nothing, "release-gates-must-be-list"] }
+    vary missing := []
+    vary failed := []
+    each gate in candidate[2] {
+        when not fc["fc_record"](gate, 3) {
+            change missing := push(missing, ["invalid-gate", gate])
+        } otherwise {
+            when kind(gate[1]) != "boolean" or kind(gate[2]) != "boolean" {
+                change missing := push(missing, ["invalid-gate-flags", gate[0]])
+            } otherwise {
+                when gate[2] and not gate[1] { change failed := push(failed, gate[0]) }
+            }
+        }
+    }
+    yield [size(missing) == 0 and size(failed) == 0, [candidate[0], candidate[1], missing, failed], "release-readiness"]
 }

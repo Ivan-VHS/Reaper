@@ -2,8 +2,8 @@
 
 **Schema:** `reaper.framework-registry/v1`  
 **C ABI:** `reaper.framework-cabi.v1`  
-**Implementation:** C17 registry with importable Reaper metadata modules  
-**Maturity:** registry and signature validation implemented; domain operation handlers remain contract-only
+**Implementation:** C17 registry plus twenty Reaper source modules  
+**Maturity:** native registry and signature validation implemented; Reaper reference-runtime handlers are defined in the v1.1 handler increment; native C17 domain handlers remain contract-only
 
 ## What is delivered
 
@@ -50,9 +50,9 @@ The shared library exports a platform C ABI for compatible foreign-language host
 
 ## Reaper source modules
 
-Each namespace has an importable `.rpr` module under `examples/frameworks/modules/`. Besides stable metadata, each module exports `operation_key(index)` and `framework_manifest()` as executable Reaper functions. `examples/frameworks/manifest_client.rpr` imports all twenty modules, invokes their exported helper functions and prints stable public keys.
+Each namespace has an importable `.rpr` module under `examples/frameworks/modules/`. Each module exports metadata helpers and six named Reaper source operations matching its stable function keys. The shared helper module is `examples/frameworks/federation_common.rpr`. The complete operation list and semantics are documented in [Framework Federation Reaper handlers v1.1](FRAMEWORK_FEDERATION_HANDLERS_V1.md).
 
-These helpers are implemented in Reaper, but they do not call native domain handlers. Binding Reaper expressions to `reaper_framework_invoke()` remains a separate compiler/FFI milestone.
+`examples/frameworks/manifest_client.rpr` checks metadata; `examples/frameworks/federation_handlers_smoke.rpr` exercises all 120 source operations through the Reaper reference interpreter. These are reference-runtime handlers, not built-in handlers in the native C17 registry. Binding Reaper expressions to `reaper_framework_invoke()` remains a separate compiler/FFI milestone.
 
 ## Public statistics and maturity
 
@@ -71,10 +71,11 @@ The statistics are computed from the compiled registry and intentionally disting
 | Registered frameworks | 20 |
 | Registered function contracts | 120 |
 | Native registry API functions | 8 |
-| Executable domain operation handlers | 0 |
+| Reaper reference-runtime source handlers | 120 |
+| Executable native C17 domain operation handlers | 0 |
 | Reaper source-level native bindings | 0 |
 
-The zeroes are intentional and important. A registered signature is not an implementation. No live usage analytics, personal data or network telemetry is collected.
+The native zeroes are intentional and important: a Reaper reference handler is not a native C17 built-in handler, and neither implies a source-level C ABI binding. No live usage analytics, personal data or network telemetry is collected.
 
 ## Cross-language boundary
 

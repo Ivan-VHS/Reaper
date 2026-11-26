@@ -1,17 +1,104 @@
-# Reaper framework metadata and source-level helper functions.
-# Operation contracts: language/frameworks.v1.json
+# Aspdoi: structured task descriptors, deadlines and bounded scope joins.
+import "../federation_common.rpr" as fc
 
 export make framework_id := "aspdoi"
 export make display_name := "Aspdoi"
 export make feature_key := "RPR-FWK-006"
 export make operation_keys := ["RPR-FWK-006-F01", "RPR-FWK-006-F02", "RPR-FWK-006-F03", "RPR-FWK-006-F04", "RPR-FWK-006-F05", "RPR-FWK-006-F06"]
-export make maturity := "contract-only"
+export make maturity := "reference-handler-v1-partial"
+export make handler_status := "reference-source-handler-v1"
 export make native_registry := "reaper.framework-cabi.v1"
 
-export craft operation_key(index) {
-    yield operation_keys[index]
+export craft operation_key(index) { yield operation_keys[index] }
+export craft framework_manifest() { yield [framework_id, display_name, feature_key, operation_keys, maturity] }
+
+# Scope: [scope_id, owner, active_state, task_records].
+# Task: [task_id, state, result, deadline].
+export craft task_spawn(scope, task) {
+    when not fc["fc_record"](scope, 4) or not fc["fc_record"](task, 4) {
+        yield [false, scope, "scope-or-task-shape"]
+    }
+    when scope[2] != "active" { yield [false, scope, "scope-not-active"] }
+    when not fc["fc_nonempty_text"](task[0]) or not fc["fc_nonempty_text"](task[1]) {
+        yield [false, scope, "task-identity-required"]
+    }
+    when not fc["fc_nonnegative"](task[3]) { yield [false, scope, "task-deadline-invalid"] }
+    each existing in scope[3] {
+        when existing[0] == task[0] { yield [false, scope, "duplicate-task-id"] }
+    }
+    yield [true, [scope[0], scope[1], scope[2], push(scope[3], task)], "task-described"]
 }
 
-export craft framework_manifest() {
-    yield [framework_id, display_name, feature_key, operation_keys, maturity]
+export craft task_cancel(scope, task_id) {
+    when not fc["fc_record"](scope, 4) or not fc["fc_nonempty_text"](task_id) {
+        yield [false, scope, "cancel-input-invalid"]
+    }
+    vary tasks := []
+    vary found := false
+    each task in scope[3] {
+        when not fc["fc_record"](task, 4) {
+            yield [false, scope, "scope-contains-invalid-task"]
+        } otherwise {
+            when task[0] == task_id {
+                change found := true
+                when task[1] == "completed" or task[1] == "failed" or task[1] == "cancelled" {
+                    change tasks := push(tasks, task)
+                } otherwise {
+                    change tasks := push(tasks, [task[0], "cancelled", task[2], task[3]])
+                }
+            } otherwise {
+                change tasks := push(tasks, task)
+            }
+        }
+    }
+    when not found { yield [false, scope, "task-not-found"] }
+    yield [true, [scope[0], scope[1], scope[2], tasks], "cancellation-requested"]
+}
+
+export craft await_result(task, wait_policy) {
+    when not fc["fc_record"](task, 4) or not fc["fc_record"](wait_policy, 2) {
+        yield [false, nothing, "await-input-shape"]
+    }
+    when not fc["fc_nonnegative"](wait_policy[0]) or not fc["fc_nonnegative"](wait_policy[1]) {
+        yield [false, nothing, "wait-policy-invalid"]
+    }
+    when task[1] == "completed" { yield [true, task[2], "completed"] }
+    when task[1] == "failed" { yield [false, task[2], "task-failed"] }
+    when task[1] == "cancelled" { yield [false, nothing, "task-cancelled"] }
+    when task[3] <= wait_policy[1] { yield [false, nothing, "deadline-expired"] }
+    yield [true, [task[0], task[3], wait_policy[0]], "pending-bounded-wait"]
+}
+
+export craft deadline_after(monotonic_now, duration) {
+    when not fc["fc_nonnegative"](monotonic_now) or not fc["fc_nonnegative"](duration) {
+        yield [false, nothing, "clock-or-duration-invalid"]
+    }
+    yield [true, monotonic_now + duration, "deadline"]
+}
+
+export craft schedule_task(task, policy, priority) {
+    when not fc["fc_record"](task, 4) or not fc["fc_nonempty_text"](policy) or not fc["fc_is_number"](priority) {
+        yield [false, nothing, "schedule-input-invalid"]
+    }
+    when policy != "fifo" and policy != "priority" and policy != "deadline" {
+        yield [false, nothing, "unsupported-schedule-policy"]
+    }
+    yield [true, [task[0], policy, priority, task[3]], "schedule-descriptor"]
+}
+
+export craft join_scope(scope) {
+    when not fc["fc_record"](scope, 4) { yield [false, [], "scope-shape"] }
+    vary pending := []
+    vary failed := []
+    each task in scope[3] {
+        when not fc["fc_record"](task, 4) {
+            yield [false, [], "scope-contains-invalid-task"]
+        } otherwise {
+            when task[1] == "failed" { change failed := push(failed, task[0]) }
+            when task[1] != "completed" and task[1] != "failed" and task[1] != "cancelled" {
+                change pending := push(pending, task[0])
+            }
+        }
+    }
+    yield [size(pending) == 0 and size(failed) == 0, [pending, failed], "scope-join-inspection"]
 }

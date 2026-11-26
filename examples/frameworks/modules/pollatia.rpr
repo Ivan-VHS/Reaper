@@ -1,17 +1,135 @@
-# Reaper framework metadata and source-level helper functions.
-# Operation contracts: language/frameworks.v1.json
+# PollATIA: bounded public metrics snapshots and privacy-aware filtering.
+import "../federation_common.rpr" as fc
 
 export make framework_id := "pollatia"
 export make display_name := "PollATIA"
 export make feature_key := "RPR-FWK-020"
 export make operation_keys := ["RPR-FWK-020-F01", "RPR-FWK-020-F02", "RPR-FWK-020-F03", "RPR-FWK-020-F04", "RPR-FWK-020-F05", "RPR-FWK-020-F06"]
-export make maturity := "contract-only"
+export make maturity := "reference-handler-v1-partial"
+export make handler_status := "reference-source-handler-v1"
 export make native_registry := "reaper.framework-cabi.v1"
 
-export craft operation_key(index) {
-    yield operation_keys[index]
+export craft operation_key(index) { yield operation_keys[index] }
+export craft framework_manifest() { yield [framework_id, display_name, feature_key, operation_keys, maturity] }
+
+# Snapshot: [schema_id, version, public_counter_pairs].
+export craft stats_snapshot(counters) {
+    make checked := fc["fc_valid_pairs"](counters)
+    when not checked[0] { yield [false, nothing, checked[1]] }
+    each counter in counters {
+        when not fc["fc_nonnegative"](counter[1]) {
+            yield [false, nothing, ["counter-value-invalid", counter[0]]]
+        }
+    }
+    yield [true, ["reaper.public-metrics.v1", 0, counters], "snapshot"]
 }
 
-export craft framework_manifest() {
-    yield [framework_id, display_name, feature_key, operation_keys, maturity]
+export craft counter_add(snapshot, update) {
+    when not fc["fc_record"](snapshot, 3) or not fc["fc_record"](update, 2) {
+        yield [false, snapshot, "counter-update-shape"]
+    }
+    when not fc["fc_nonnegative"](update[1]) { yield [false, snapshot, "counter-delta-invalid"] }
+    make current := fc["fc_lookup"](snapshot[2], update[0])
+    vary next_value := update[1]
+    when current[0] { change next_value := current[1] + update[1] }
+    make written := fc["fc_put"](snapshot[2], update[0], next_value)
+    when not written[0] { yield [false, snapshot, written[2]] }
+    yield [true, [snapshot[0], snapshot[1] + 1, written[1]], "counter-updated"]
+}
+
+export craft gauge_set(snapshot, update) {
+    when not fc["fc_record"](snapshot, 3) or not fc["fc_record"](update, 2) {
+        yield [false, snapshot, "gauge-update-shape"]
+    }
+    when not fc["fc_is_number"](update[1]) { yield [false, snapshot, "gauge-value-invalid"] }
+    make written := fc["fc_put"](snapshot[2], update[0], update[1])
+    when not written[0] { yield [false, snapshot, written[2]] }
+    yield [true, [snapshot[0], snapshot[1] + 1, written[1]], "gauge-set"]
+}
+
+# Histogram: [bounds, bucket_counts]; observation is a number.
+export craft histogram_observe(histogram, observation) {
+    when not fc["fc_record"](histogram, 2) or not fc["fc_is_number"](observation) {
+        yield [false, histogram, "histogram-input-shape"]
+    }
+    when kind(histogram[0]) != "list" or kind(histogram[1]) != "list" {
+        yield [false, histogram, "histogram-buckets-invalid"]
+    }
+    when size(histogram[1]) != size(histogram[0]) + 1 {
+        yield [false, histogram, "histogram-bucket-count"]
+    }
+    vary previous_bound := nothing
+    each bound in histogram[0] {
+        when not fc["fc_is_number"](bound) { yield [false, histogram, "histogram-bound-invalid"] }
+        when previous_bound != nothing {
+            when bound <= previous_bound {
+                yield [false, histogram, "histogram-bounds-not-increasing"]
+            }
+        }
+        change previous_bound := bound
+    }
+    each count in histogram[1] {
+        when not fc["fc_nonnegative"](count) { yield [false, histogram, "histogram-count-invalid"] }
+    }
+    vary bucket := size(histogram[0])
+    vary index := 0
+    loop while index < size(histogram[0]) {
+        when observation <= histogram[0][index] {
+            change bucket := index
+            change index := size(histogram[0])
+        } otherwise {
+            change index := index + 1
+        }
+    }
+    vary counts := []
+    vary cursor := 0
+    loop while cursor < size(histogram[1]) {
+        when cursor == bucket {
+            change counts := push(counts, histogram[1][cursor] + 1)
+        } otherwise {
+            change counts := push(counts, histogram[1][cursor])
+        }
+        change cursor := cursor + 1
+    }
+    yield [true, [histogram[0], counts], bucket]
+}
+
+export craft metrics_export(snapshot, policy) {
+    when not fc["fc_record"](snapshot, 3) or not fc["fc_record"](policy, 2) {
+        yield [false, [], "metrics-export-shape"]
+    }
+    when not fc["fc_valid_pairs"](snapshot[2])[0] {
+        yield [false, [], "metrics-snapshot-counters-invalid"]
+    }
+    when kind(policy[0]) != "list" or not fc["fc_nonnegative"](policy[1]) {
+        yield [false, [], "metrics-export-policy-invalid"]
+    }
+    vary selected := []
+    each counter in snapshot[2] {
+        when fc["fc_has"](policy[0], counter[0]) {
+            change selected := push(selected, counter)
+        }
+    }
+    when not fc["fc_nonnegative"](policy[1]) { yield [false, [], "export-item-limit-invalid"] }
+    when size(selected) > policy[1] { yield [false, [], "export-item-limit"] }
+    yield [true, ["reaper.metrics-export.v1", selected], "aggregate-export"]
+}
+
+export craft privacy_filter(metrics, policy) {
+    when not fc["fc_valid_pairs"](metrics)[0] or not fc["fc_record"](policy, 2) {
+        yield [false, [], "privacy-filter-input-shape"]
+    }
+    when kind(policy[0]) != "list" or kind(policy[1]) != "list" {
+        yield [false, [], "privacy-filter-policy-invalid"]
+    }
+    vary allowed := []
+    vary removed := []
+    each metric in metrics {
+        when fc["fc_has"](policy[0], metric[0]) and not fc["fc_has"](policy[1], metric[0]) {
+            change allowed := push(allowed, metric)
+        } otherwise {
+            change removed := push(removed, metric[0])
+        }
+    }
+    yield [true, [allowed, removed], "privacy-filtered"]
 }
