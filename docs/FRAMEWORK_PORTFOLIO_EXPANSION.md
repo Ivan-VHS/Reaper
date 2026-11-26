@@ -5,6 +5,8 @@
 **Scale target:** 50,000 qualified production Reaper LOC per independently owned framework module  
 **Truth rule:** proposals, manifests, operation signatures, generated catalogues and documentation are not executable handlers.
 
+Machine-readable portfolio: [frameworks/portfolio.v1.json](../frameworks/portfolio.v1.json).
+
 ## 1. Portfolio topology
 
 All first-party Reaper frameworks belong to one ecosystem, but not all are peers in the runtime architecture.
