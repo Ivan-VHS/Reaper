@@ -58,7 +58,11 @@ def ensure_no_symlink(root: Path, value: str) -> None:
 
 def changed_paths(root: Path, patch: bytes) -> list[str]:
     """Ask Git to parse the patch; never infer coverage from diff header regexes."""
-    if b"rename from " in patch or b"rename to " in patch or b"copy from " in patch or b"copy to " in patch:
+    headers = patch.splitlines()
+    if any(
+        line.startswith((b"rename from ", b"rename to ", b"copy from ", b"copy to "))
+        for line in headers
+    ):
         raise ValueError("renames and copies are not supported by v1")
 
     output = run_git_bytes(root, "apply", "--numstat", "-z", "--", input_bytes=patch)
