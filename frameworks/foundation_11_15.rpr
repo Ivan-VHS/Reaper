@@ -170,29 +170,23 @@ export craft ecosystem_peers() {
 
 export craft ecosystem_links() {
     yield [
-        ["reaper", "pytyliki", "pytyliki.c-abi.v1", "opt-in"],
-        ["oplague", "reaper", "oplage.device-snapshot.v1", "read-only-snapshot"],
-        ["reaper", "pytyliki", "octa.pyramid.peer-mesh.v1", "shared-contract"],
-        ["reaper", "oplague", "octa.pyramid.peer-mesh.v1", "shared-contract"],
-        ["reaper", "ventusample", "octa.pyramid.peer-mesh.v1", "shared-contract"]
+        ["reaper", "oplague", "reaper.oplage-comparison.v1", "json-file", "implemented"],
+        ["oplague", "reaper", "oplage.device-snapshot.v1", "json-file", "implemented"],
+        ["reaper", "pytyliki", "pytyliki.c-abi.v1", "native-ffi", "implemented"],
+        ["pytyliki", "reaper", "pytyliki.c-abi.v1", "native-ffi", "implemented"],
+        ["oplague", "pytyliki", "pytyliki.c-abi.v1", "native-ffi", "implemented"],
+        ["pytyliki", "oplague", "pytyliki.c-abi.v1", "native-ffi", "implemented"],
+        ["ventusample", "reaper", "not-applicable.v1", "none", "not_applicable"],
+        ["reaper", "ventusample", "not-applicable.v1", "none", "not_applicable"],
+        ["ventusample", "pytyliki", "pytyliki.c-abi.v1", "native-ffi", "planned"],
+        ["pytyliki", "ventusample", "pytyliki.c-abi.v1", "native-ffi", "planned"],
+        ["ventusample", "oplague", "not-applicable.v1", "none", "not_applicable"],
+        ["oplague", "ventusample", "not-applicable.v1", "none", "not_applicable"]
     ]
 }
 
 export craft ecosystem_validate_peers(peers) {
-    when kind(peers) != "list" or size(peers) != 4 {
-        yield false
-    }
-    vary identifiers := []
-    each peer in peers {
-        when kind(peer) != "list" or size(peer) != 4 {
-            yield false
-        }
-        when kind(peer[0]) != "text" or peer[0] == "" {
-            yield false
-        }
-        change identifiers := push(identifiers, peer[0])
-    }
-    yield size(unique(identifiers)) == 4
+    yield peers == ecosystem_peers()
 }
 
 export craft ecosystem_find_peer(identifier) {
@@ -210,7 +204,7 @@ export craft ecosystem_validate_link(link) {
 }
 
 export craft extension_capabilities() {
-    yield ["console.write", "filesystem.read", "filesystem.write", "process.spawn", "network.connect", "clock.read", "native.ffi", "device.mmio"]
+    yield ["PROCESS_INSPECT", "PROCESS_CONTROL", "THREAD_CONTROL", "SYNC", "FS_HANDLE", "FS_READ", "FS_WRITE", "CLOCK", "NETWORK", "CRYPTO", "DESKTOP_WINDOW", "DESKTOP_DISPLAY", "DESKTOP_INPUT", "DESKTOP_SESSION", "DESKTOP_COMPOSITOR", "DESKTOP_GPU", "DESKTOP_SHELL", "DESKTOP_DISPLAY_ADMIN", "DESKTOP_SESSION_ADMIN", "DESKTOP_GPU_ADMIN"]
 }
 
 export craft extension_lifecycle_states() {
