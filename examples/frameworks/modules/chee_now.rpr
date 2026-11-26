@@ -34,10 +34,9 @@ export craft channel_receive(channel, wait_policy) {
     when not fc["fc_record"](channel, 4) or not fc["fc_record"](wait_policy, 2) {
         yield [false, channel, "receive-input-shape"]
     }
+    when not fc["fc_nonempty_text"](channel[0]) { yield [false, channel, "channel-id-invalid"] }
     when kind(channel[2]) != "list" { yield [false, channel, "channel-queue-invalid"] }
-    when not fc["fc_nonnegative"](channel[0]) and kind(channel[0]) != "text" {
-        yield [false, channel, "channel-id-invalid"]
-    }
+    when not fc["fc_nonnegative"](channel[1]) { yield [false, channel, "channel-capacity-invalid"] }
     when not fc["fc_nonnegative"](wait_policy[0]) or not fc["fc_nonnegative"](wait_policy[1]) {
         yield [false, channel, "wait-policy-invalid"]
     }
