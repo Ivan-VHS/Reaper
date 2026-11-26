@@ -60,6 +60,7 @@ export craft scope_intersect(left, right) {
 # Policy: [policy_id, required fact pairs]. Facts are explicit key/value pairs.
 export craft policy_match(policy, facts) {
     when not fc["fc_record"](policy, 2) { yield [false, false, "policy-shape"] }
+    when kind(policy[1]) != "list" { yield [false, false, "policy-clauses-invalid"] }
     make checked := fc["fc_valid_pairs"](facts)
     when not checked[0] { yield [false, false, checked[1]] }
     vary matches := true
