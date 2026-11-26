@@ -244,4 +244,26 @@ make invalid_target_program := frontend["parse_program"](invalid_target_tokens)
 make invalid_target := validate_platform(invalid_target_program[1][3][0])
 assert(invalid_target[0] == "ERROR", "inconsistent target triples must be rejected")
 
+make duplicate_field_tokens := lexer["tokenize"]("struct Duplicate {\n    item: u8\n    item: u16\n}\n")
+make duplicate_field_program := frontend["parse_program"](duplicate_field_tokens)
+make duplicate_field := validate_struct(duplicate_field_program[1][3][0])
+assert(duplicate_field[0] == "ERROR", "duplicate structure fields must be rejected")
+
+make target_sources := [
+    "platform windows_x64 {\n    triple := \"x86_64-pc-windows-msvc\"\n    arch := \"x86_64\"\n    os := \"windows\"\n    abi := \"msvc\"\n    endian := \"little\"\n    pointer_bits := 64\n    object_format := \"pe\"\n    call_abi := \"win64\"\n    max_align := 16\n}\n",
+    "platform macos_arm64 {\n    triple := \"aarch64-apple-darwin\"\n    arch := \"aarch64\"\n    os := \"macos\"\n    abi := \"darwin\"\n    endian := \"little\"\n    pointer_bits := 64\n    object_format := \"macho\"\n    call_abi := \"aapcs64\"\n    max_align := 16\n}\n",
+    "platform wasi_wasm32 {\n    triple := \"wasm32-unknown-wasi\"\n    arch := \"wasm32\"\n    os := \"wasi\"\n    abi := \"wasi\"\n    endian := \"little\"\n    pointer_bits := 32\n    object_format := \"wasm\"\n    call_abi := \"wasm32\"\n    max_align := 16\n}\n",
+    "platform baremetal_x64 {\n    triple := \"x86_64-unknown-none-elf\"\n    arch := \"x86_64\"\n    os := \"none\"\n    abi := \"none\"\n    endian := \"little\"\n    pointer_bits := 64\n    object_format := \"elf\"\n    call_abi := \"sysv\"\n    max_align := 16\n}\n"
+]
+vary target_index := 0
+loop while target_index < size(target_sources) {
+    make target_tokens := lexer["tokenize"](target_sources[target_index])
+    make target_program := frontend["parse_program"](target_tokens)
+    assert(target_program[0] == "OK", "supported platform declaration must parse")
+    make target_node := target_program[1][3][0]
+    make target_result := validate_platform(target_node)
+    assert(target_result[0] == "OK", "supported platform profile must validate")
+    change target_index := target_index + 1
+}
+
 emit "SELFHOST_TYPE_DECLARATIONS_OK"
