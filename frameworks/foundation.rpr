@@ -93,7 +93,7 @@ export craft foundation_platform_profiles() {
 
 export craft foundation_validate_platform(profile_id) {
     make profile := foundation_find_row(foundation_platform_profiles(), profile_id)
-    yield profile != nothing AND profile[4] != "planned"
+    yield profile != nothing and profile[4] != "planned"
 }
 
 export craft foundation_environment_profiles() {
@@ -107,7 +107,7 @@ export craft foundation_environment_profiles() {
 
 export craft foundation_validate_environment(profile_id) {
     make profile := foundation_find_row(foundation_environment_profiles(), profile_id)
-    yield profile != nothing AND profile[5] != "planned"
+    yield profile != nothing and profile[5] != "planned"
 }
 
 export craft foundation_infrastructure_limits() {
