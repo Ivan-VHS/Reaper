@@ -45,6 +45,8 @@ When a changed source is valid, MAZA refreshes the export set and increments its
 
 ## Runtime operations
 
+Initial attachment errors use `RPR-E0110`; see the [diagnostic registry](errors/DIAGNOSTICS.md).
+
 - `maza_links()` returns status records for all active links.
 - `maza_status("alias")` returns one link's state, revision, source digest, interval and timestamps.
 - `maza_refresh("alias")` requests an immediate refresh and returns the resulting status.
