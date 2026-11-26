@@ -76,17 +76,6 @@ export craft valid_graph(graph) {
         yield false
     }
 
-    each node in graph[3] {
-        each dependency in node[2] {
-            when dependency == node[0] or not contains(node_ids, dependency) {
-                yield false
-            }
-            when not edge_exists(graph[4], node[0], dependency) {
-                yield false
-            }
-        }
-    }
-
     vary edge_pairs := []
     each edge in graph[4] {
         when kind(edge) != "list" or size(edge) != 3 {
@@ -105,6 +94,17 @@ export craft valid_graph(graph) {
             yield false
         }
         change edge_pairs := push(edge_pairs, [edge[0], edge[1]])
+    }
+
+    each node in graph[3] {
+        each dependency in node[2] {
+            when dependency == node[0] or not contains(node_ids, dependency) {
+                yield false
+            }
+            when not edge_exists(graph[4], node[0], dependency) {
+                yield false
+            }
+        }
     }
 
     each edge in graph[4] {
