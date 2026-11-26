@@ -103,3 +103,21 @@ automated reference-runtime test. They are not yet native C17 modules and do
 not establish native compiler parity. Asynchronous callbacks, persistent
 storage, concurrent state mutation, source-map-aware rewriting, filesystem
 patch application and privileged capabilities remain outside this v1 scope.
+
+
+## Integration with ДОМ
+
+The standalone modules are domain components, not replacement runtimes. ДОМ is the canonical runtime for application and system lifecycle, resource admission, service communication, reactive state and startup/recovery.
+
+| Standalone module | ДОМ integration boundary |
+|---|---|
+| GalHero | Establish dependency-graph adapter |
+| Call-and-Back | System Carriere synchronous callback adapter |
+| Stacked Options | Establish configuration adapter |
+| PerenosiMOST | Reaper language tooling; exact alias table only |
+| MOST | Reaper language tooling; facade over the same alias table |
+| Blau | JennyFlash snapshot/value adapter |
+| Shashio | JLOM state-machine adapter |
+| Showel Fleppery CODE | Jenny Flashing Boy in-memory development pipeline |
+
+No standalone module may create a competing scheduler, message bus, resource ledger, module registry or application lifecycle. See [Framework Portfolio](FRAMEWORK_PORTFOLIO_EXPANSION.md) for all framework groups and their ownership map.
