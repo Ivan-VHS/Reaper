@@ -48,7 +48,7 @@ jobs:
         run: python -m reaper examples/mora_archive_contracts.rpr
       - name: Run example
         run: python -m reaper examples/flow.rpr
-      - name: Run Reaper framework family smoke tests
+      - name: Run expanded Reaper framework standard-library smoke tests
         run: python -m reaper frameworks/smoke.rpr
       - name: Run end-to-end read-only device audit example
         run: |
