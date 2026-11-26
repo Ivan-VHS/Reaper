@@ -1,25 +1,341 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "schema": "ivan-vhs.reaper.framework-catalog.v1",
-  "version": "1.0.0",
-  "description": "Central discovery index for framework families explicitly registered in this integration branch.",
-  "registry_scope": "registered framework families and their canonical manifests; not a claim that every experimental module in every open branch has been inventoried",
+  "version": "1.1.0",
+  "description": "Central discovery and integration index for Reaper framework families and their independently reviewable implementation branches.",
+  "registry_scope": "Known framework-family PRs and canonical source families inspected in Ivan-VHS/Reaper as of 2026-11-26. Open PR entries are proposals, not merged mainline capabilities. This catalogue is intentionally evidence-linked and must be extended when new families are found.",
+  "repository": "Ivan-VHS/Reaper",
   "families": [
     {
-      "id": "aesthetic-evolution",
-      "name": "Reaper Aesthetic & Architecture Evolution Framework",
+      "id": "aesthetic-architecture-evolution",
+      "name": "Reaper Aesthetic & Architecture Evolution Framework (RAAEF)",
       "manifest": "frameworks/aesthetic/manifest.v1.json",
       "entrypoint": "frameworks/aesthetic/all.rpr",
-      "status": "source_present_runtime_validation_pending",
-      "capabilities": ["typed_profile_contracts", "HIR", "MIR", "LIR", "compiler_adapter", "architecture_evolution", "design_evolution", "source_evolution_planning"]
+      "branch": "feat/aesthetic-architecture-evolution",
+      "base_branch": "feat/plague-foundation-v1",
+      "status": "open_pr",
+      "maturity": "Genesis",
+      "pull_request": null,
+      "dependencies": [
+        "plague"
+      ],
+      "capabilities": [
+        "typed_profile_contracts",
+        "aesthetic_HIR",
+        "aesthetic_MIR",
+        "aesthetic_LIR",
+        "Reaper_reference_runtime_compiler_adapter",
+        "architecture_graph_validation",
+        "design_evolution_proposals",
+        "source_evolution_planning",
+        "observe_propose_orchestration"
+      ],
+      "limitations": [
+        "not_the_general_Reaper_compiler_IR",
+        "no_native_C17_profile_compilation",
+        "no_live_renderer",
+        "no_source_patch_application",
+        "apply_mode_blocked"
+      ]
+    },
+    {
+      "id": "aesthetica",
+      "name": "AESTHETICA dual-axis aesthetic evaluation",
+      "source": "frameworks/aesthetica/core.rpr",
+      "branch": "feat/aesthetica-duality-framework-v1",
+      "base_branch": "main",
+      "status": "open_pr",
+      "maturity": "Partial",
+      "pull_request": 360,
+      "url": "https://github.com/Ivan-VHS/Reaper/pull/360",
+      "dependencies": [],
+      "capabilities": [
+        "independent_beauty_and_ugliness_axes",
+        "evidence_based_aesthetic_evaluation",
+        "profile_comparison",
+        "evolution_reports"
+      ],
+      "limitations": [
+        "reference_runtime_only",
+        "no_first_class_record_or_span_types",
+        "native_C17_and_Studio_integration_pending"
+      ]
+    },
+    {
+      "id": "repository-engineering-66",
+      "name": "Repository Engineering Family 66",
+      "source": "src/frameworks.c",
+      "branch": "feat/66-framework-family",
+      "base_branch": "main",
+      "status": "open_pr",
+      "maturity": "Partial",
+      "pull_request": 363,
+      "url": "https://github.com/Ivan-VHS/Reaper/pull/363",
+      "dependencies": [],
+      "capabilities": [
+        "66_domain_profiles",
+        "native_C17_catalogue_API",
+        "lookup",
+        "evidence_gated_review_assessment"
+      ],
+      "limitations": [
+        "profile_registry_not_66_independent_mutators",
+        "review_only_no_mutation_or_merge"
+      ]
+    },
+    {
+      "id": "foundational-five",
+      "name": "Reaper Foundational Frameworks",
+      "source": "frameworks/foundation.rpr",
+      "branch": "feat/foundational-frameworks-1-5",
+      "base_branch": "main",
+      "status": "open_pr",
+      "maturity": "Partial",
+      "pull_request": 362,
+      "url": "https://github.com/Ivan-VHS/Reaper/pull/362",
+      "dependencies": [],
+      "capabilities": [
+        "Scaffold",
+        "Platform",
+        "Environment",
+        "Infrastructure",
+        "Architecture"
+      ],
+      "limitations": [
+        "reference_contracts_only",
+        "no_filesystem_or_host_side_effects",
+        "native_freestanding_targets_pending"
+      ]
+    },
+    {
+      "id": "native-reaper-framework-modules",
+      "name": "Eight Reaper-native framework modules",
+      "source": "frameworks/",
+      "branch": "feat/native-reaper-frameworks-v1-20261125",
+      "base_branch": "main",
+      "status": "open_pr",
+      "maturity": "Partial",
+      "pull_request": 336,
+      "url": "https://github.com/Ivan-VHS/Reaper/pull/336",
+      "dependencies": [],
+      "capabilities": [
+        "GalHero",
+        "Call-and-Back",
+        "Stacked Options",
+        "PerenosiMOST",
+        "Blau",
+        "Shashio",
+        "Showel Fleppery CODE"
+      ],
+      "limitations": [
+        "reference_runtime_modules",
+        "native_C17_parity_not_claimed"
+      ]
+    },
+    {
+      "id": "native-framework-core",
+      "name": "Native C17 Framework Core",
+      "source": "src/framework.c",
+      "branch": "feat/framework-core-v1",
+      "base_branch": "main",
+      "status": "open_pr",
+      "maturity": "Partial",
+      "pull_request": 335,
+      "url": "https://github.com/Ivan-VHS/Reaper/pull/335",
+      "dependencies": [],
+      "capabilities": [
+        "typed_C17_manifests",
+        "ABI_gate",
+        "dependency_and_version_resolution",
+        "conflict_detection",
+        "topological_order",
+        "capability_grants",
+        "lifecycle_rollback"
+      ],
+      "limitations": [
+        "no_dynamic_loading",
+        "no_Reaper_source_syntax",
+        "profiles_contract_only"
+      ]
+    },
+    {
+      "id": "framework-federation-20",
+      "name": "Reaper Framework Federation",
+      "source": "reaper/framework-registry/v1",
+      "branch": "feat/framework-federation-20",
+      "base_branch": "main",
+      "status": "open_pr",
+      "maturity": "Partial",
+      "pull_request": 333,
+      "url": "https://github.com/Ivan-VHS/Reaper/pull/333",
+      "dependencies": [],
+      "capabilities": [
+        "20_framework_namespaces",
+        "120_operation_contract_keys",
+        "C_ABI_registry",
+        "bounded_host_callback_dispatch"
+      ],
+      "limitations": [
+        "operation_metadata_contracts",
+        "120_domain_handlers_not_all_implemented",
+        "Reaper_to_native_dispatch_pending"
+      ]
+    },
+    {
+      "id": "framework-federation-120-handlers",
+      "name": "Framework Federation Reaper handlers",
+      "branch": "feat/federation-reaper-handlers-20261126",
+      "base_branch": "feat/framework-federation-20",
+      "status": "open_draft_pr",
+      "maturity": "Genesis",
+      "pull_request": 356,
+      "url": "https://github.com/Ivan-VHS/Reaper/pull/356",
+      "dependencies": [
+        "framework-federation-20"
+      ],
+      "capabilities": [
+        "120_Reaper_reference_runtime_handlers",
+        "Reaper_smoke_program"
+      ],
+      "limitations": [
+        "C17_native_handler_count_zero",
+        "no_ambient_host_authority"
+      ]
     },
     {
       "id": "plague",
-      "name": "PLAGUE",
+      "name": "PLAGUE Repository Evolution Framework",
       "manifest": "plague/manifest.v1.json",
       "entrypoint": "plague/engine/registry.rpr",
-      "status": "foundation",
-      "capabilities": ["repository_evolution_policy", "bounded_proposal_assessment", "risk_aware_selection"]
+      "branch": "feat/plague-foundation-v1",
+      "base_branch": "main",
+      "status": "open_draft_pr",
+      "maturity": "Genesis",
+      "pull_request": 358,
+      "url": "https://github.com/Ivan-VHS/Reaper/pull/358",
+      "dependencies": [],
+      "capabilities": [
+        "ten_component_registry",
+        "observe_propose_apply_policy",
+        "bounded_proposal_assessment",
+        "risk_aware_candidate_selection"
+      ],
+      "limitations": [
+        "no_repository_discovery_or_source_adapters",
+        "no_authenticated_grant_validation",
+        "no_source_patch_application",
+        "no_sandboxed_runner",
+        "no_branch_write_or_PR_creation"
+      ]
+    },
+    {
+      "id": "rforge-product-factory-spec",
+      "name": "RForge multi-product factory",
+      "branch": "feat/rforge-product-factory-spec",
+      "base_branch": "main",
+      "status": "open_draft_pr",
+      "maturity": "Genesis",
+      "pull_request": 354,
+      "url": "https://github.com/Ivan-VHS/Reaper/pull/354",
+      "dependencies": [],
+      "capabilities": [
+        "seven_product_family_contracts",
+        "versioned_product_requests",
+        "twenty_archetype_proposals"
+      ],
+      "limitations": [
+        "specification_and_catalogue_only",
+        "generator_and_composers_not_complete"
+      ]
+    },
+    {
+      "id": "rforge-framework-archetypes",
+      "name": "RForge Reaper framework archetypes",
+      "source": "frameworks/rforge/",
+      "branch": "feat/rforge-framework-archetypes",
+      "base_branch": "feat/rforge-product-factory-spec",
+      "status": "open_draft_pr",
+      "maturity": "Genesis",
+      "pull_request": 357,
+      "url": "https://github.com/Ivan-VHS/Reaper/pull/357",
+      "dependencies": [
+        "rforge-product-factory-spec"
+      ],
+      "capabilities": [
+        "20_Reaper_reference_runtime_modules",
+        "all_rpr_aggregate_surface"
+      ],
+      "limitations": [
+        "native_AOT_module_exports_not_supported",
+        "full_runtime_validation_pending"
+      ]
+    },
+    {
+      "id": "rivet-composition-planner",
+      "name": "Rivet Framework and Multitool Composition Planner",
+      "branch": "feat/rivet-framework-multitool-factory",
+      "base_branch": "main",
+      "status": "open_draft_pr",
+      "maturity": "Genesis",
+      "pull_request": 355,
+      "url": "https://github.com/Ivan-VHS/Reaper/pull/355",
+      "dependencies": [],
+      "capabilities": [
+        "17_capability_module_catalogue",
+        "dependency_closure",
+        "cycle_detection",
+        "profile_conflict_and_permission_planning"
+      ],
+      "limitations": [
+        "plan_only",
+        "source_emission_and_packaging_not_implemented"
+      ]
+    },
+    {
+      "id": "dom-runtime-foundation",
+      "name": "ДОМ Runtime Foundation",
+      "branch": "feat/dom-framework-foundation",
+      "base_branch": "main",
+      "status": "open_draft_pr",
+      "maturity": "Genesis",
+      "pull_request": 350,
+      "url": "https://github.com/Ivan-VHS/Reaper/pull/350",
+      "dependencies": [],
+      "capabilities": [
+        "canonical_application_runtime_architecture",
+        "lifecycle_resource_and_message_contracts"
+      ],
+      "limitations": [
+        "architecture_and_contract_foundation_only"
+      ]
+    },
+    {
+      "id": "dom-native-foundation-slice",
+      "name": "ДОМ Reaper-native Foundation Slice",
+      "branch": "feat/dom-native-foundation-20261126",
+      "base_branch": "feat/native-reaper-frameworks-v1-20261125",
+      "status": "open_draft_pr",
+      "maturity": "Genesis",
+      "pull_request": 353,
+      "url": "https://github.com/Ivan-VHS/Reaper/pull/353",
+      "dependencies": [
+        "native-reaper-framework-modules"
+      ],
+      "capabilities": [
+        "initial_DОM_native_components",
+        "integration_smoke_program"
+      ],
+      "limitations": [
+        "reference_runtime_vertical_slice",
+        "not_complete_native_runtime"
+      ]
     }
+  ],
+  "integration_rules": [
+    "Each family retains its own stable identity, owner and maturity.",
+    "Families are composed through versioned manifests and explicit capability contracts; duplicate runtimes or competing schedulers are not introduced.",
+    "Open PR and draft PR entries are not treated as merged or available on main.",
+    "A dependent PR is reviewed only after its declared base/dependency PR is integrated or deliberately retargeted.",
+    "No catalogue entry grants filesystem, network, process, driver, firmware, merge or release authority."
   ]
 }
