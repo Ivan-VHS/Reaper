@@ -17,6 +17,10 @@ Reaper source → tokens → AST → bounded reference runtime → explicit outp
 
 `frameworks/aesthetica/core.rpr` is an independently importable reference-runtime module. It validates caller-supplied evidence, context weights and ordered stage contracts; aggregates beauty and ugliness as independent axes; and emits versioned reports, source-provenance findings and same-object profile comparisons. `examples/aesthetica.rpr` is its executable acceptance example. The module uses only the current Reaper grammar and built-ins. It performs no I/O and does not mutate evaluated objects. Typed records, compiler-generated Span integration, native C17 parity and Studio/LSP presentation remain future gates; see [AESTHETICA](AESTHETICA.md).
 
+## AESTHETICA evaluation layer
+
+`frameworks/aesthetica/core.rpr` is an independently importable reference-runtime module. It validates caller-supplied evidence, context weights and ordered stage contracts; aggregates beauty and ugliness as independent axes; and emits versioned reports, source-provenance findings and same-object profile comparisons. `examples/aesthetica.rpr` is its executable acceptance example. The module uses only the current Reaper grammar and built-ins. It performs no I/O and does not mutate evaluated objects. Typed records, compiler-generated Span integration, native C17 parity and Studio/LSP presentation remain future gates; see [AESTHETICA](AESTHETICA.md).
+
 ## Integrated product layer
 
 Reaper exposes eighteen in-process product services through `reaper.products` and the Studio product registry. The canonical workflow product name is **Doopraul** (replacing the earlier planning name Patakee). Product services share the Python reference host and do not claim C17 parity. See [INTERNAL_PRODUCTS.md](INTERNAL_PRODUCTS.md) for responsibilities, operations and safety boundaries.
