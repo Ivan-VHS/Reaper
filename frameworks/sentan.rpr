@@ -1,0 +1,115 @@
+# Sentan: explicit policy evaluation with deny-by-default semantics.
+# Rule: [rule_id, effect, action, resource, required_capabilities].
+# Request: [action, resource, actor_capabilities, context].
+# Decisions are advisory data; the trusted host remains the enforcement point.
+
+craft contains_value(values, target) {
+    vary found := false
+    each value in values {
+        when value == target { change found := true }
+    }
+    yield found
+}
+
+craft rule_valid(rule) {
+    when kind(rule) != "list" or size(rule) != 5 { yield false }
+    when kind(rule[0]) != "text" or size(rule[0]) == 0 { yield false }
+    when rule[1] != "allow" and rule[1] != "deny" { yield false }
+    when kind(rule[2]) != "text" or size(rule[2]) == 0 { yield false }
+    when kind(rule[3]) != "text" or size(rule[3]) == 0 { yield false }
+    yield kind(rule[4]) == "list"
+}
+
+export craft validate_rules(rules) {
+    when kind(rules) != "list" { yield [false, ["rules-must-be-list"]] }
+    vary ids := []
+    vary errors := []
+    each rule in rules {
+        when not rule_valid(rule) {
+            change errors := push(errors, "invalid-rule")
+        } otherwise {
+            when contains_value(ids, rule[0]) {
+                change errors := push(errors, "duplicate-rule:" ++ rule[0])
+            } otherwise {
+                change ids := push(ids, rule[0])
+            }
+            each capability in rule[4] {
+                when kind(capability) != "text" or size(capability) == 0 {
+                    change errors := push(errors, "invalid-capability:" ++ rule[0])
+                }
+            }
+        }
+    }
+    yield [size(errors) == 0, errors]
+}
+
+export craft request_valid(request) {
+    when kind(request) != "list" or size(request) != 4 { yield false }
+    when kind(request[0]) != "text" or size(request[0]) == 0 { yield false }
+    when kind(request[1]) != "text" or size(request[1]) == 0 { yield false }
+    yield kind(request[2]) == "list" and kind(request[3]) == "list"
+}
+
+craft rule_matches(rule, request) {
+    yield rule[2] == request[0] and rule[3] == request[1]
+}
+
+craft capabilities_satisfied(required, granted) {
+    vary satisfied := true
+    each capability in required {
+        when not contains_value(granted, capability) {
+            change satisfied := false
+        }
+    }
+    yield satisfied
+}
+
+export craft evaluate(rules, request) {
+    make checked := validate_rules(rules)
+    when not checked[0] { yield ["deny", "invalid-policy", nothing] }
+    when not request_valid(request) { yield ["deny", "invalid-request", nothing] }
+    vary allowed := nothing
+    each rule in rules {
+        when rule_matches(rule, request) {
+            when rule[1] == "deny" {
+                yield ["deny", "explicit-deny", rule[0]]
+            }
+            when capabilities_satisfied(rule[4], request[2]) {
+                change allowed := rule[0]
+            }
+        }
+    }
+    when allowed == nothing {
+        yield ["deny", "no-matching-allow", nothing]
+    }
+    yield ["allow", "capabilities-satisfied", allowed]
+}
+
+export craft explain(rules, request) {
+    make decision := evaluate(rules, request)
+    yield [
+        ["decision", decision[0]],
+        ["reason", decision[1]],
+        ["rule_id", decision[2]],
+        ["action", request[0]],
+        ["resource", request[1]]
+    ]
+}
+
+export craft least_privilege(requested, approved) {
+    when kind(requested) != "list" or kind(approved) != "list" {
+        yield [false, [], "capability-lists-required"]
+    }
+    vary granted := []
+    vary denied := []
+    each capability in requested {
+        when contains_value(approved, capability) {
+            when not contains_value(granted, capability) {
+                change granted := push(granted, capability)
+            }
+        } otherwise {
+            change denied := push(denied, capability)
+        }
+    }
+    yield [size(denied) == 0, granted, denied]
+}
