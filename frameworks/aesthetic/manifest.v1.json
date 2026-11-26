@@ -137,7 +137,9 @@
     "empty_and_escaped_text_literal_lowering",
     "trusted_host_clock_for_grant_expiry_and_revocation",
     "request_digest_bound_signed_repository_grant_verification",
-    "partial_workspace_commit_rollback_snapshot_handling"
+    "partial_workspace_commit_rollback_snapshot_handling",
+    "native_hmac_sha256_grant_signature_verification_primitive",
+    "native_length_prefixed_audit_hash_chain_digest_primitive"
   ],
   "not_implemented": [
     "first_class_reaper_struct_and_enum_syntax",
@@ -157,7 +159,9 @@
     "verified_real_repository_apply_and_rollback_evidence",
     "cryptographic_evidence_attestation",
     "automatic_merge_or_release",
-    "full_reaper_semantic_frontend_for_identifiers_modules_functions_and_calls"
+    "full_reaper_semantic_frontend_for_identifiers_modules_functions_and_calls",
+    "host_trust_key_provisioning_rotation_and_revocation_storage",
+    "durable_tamper_resistant_audit_journal_backend"
   ],
   "safety": {
     "default_mode": "observe",
