@@ -55,7 +55,7 @@ class FrameworkFederationRegistryTests(unittest.TestCase):
                 self.assertNotIn(key, seen_function_keys)
                 seen_function_keys.add(key)
                 self.assertEqual(operation["status"], "reference-source-handler-v1")
-                pattern = rf"export\\s+craft\\s+{re.escape(operation['name'])}\\s*\\("
+                pattern = r"export\s+craft\s+" + re.escape(operation["name"]) + r"\s*\("
                 self.assertRegex(source, pattern, f"{framework_id}.{operation['name']}")
                 source_handler_count += 1
 
