@@ -1,0 +1,29 @@
+# Outbreak — Frame Soft
+# Frame-first shell composition with bounded soft-surface slots.
+
+export make FRAMEWORK_ID := "outbreak.frame_soft"
+export make FRAMEWORK_VERSION := "1.0.0"
+export make FRAMEWORK_PROFILE := "Frame Soft"
+
+export craft outbreak_slot_valid(index, capacity) {
+    yield capacity > 0 and index >= 0 and index < capacity
+}
+
+export craft outbreak_softness_valid(softness) {
+    yield softness >= 0 and softness <= 100
+}
+
+export craft outbreak_shell_create(frame_count, capacity, softness) {
+    when frame_count > 0 and frame_count <= capacity and outbreak_softness_valid(softness) {
+        yield [FRAMEWORK_ID, frame_count, capacity, softness, "frame_root"]
+    }
+    yield []
+}
+
+export craft outbreak_attach_allowed(index, capacity, already_attached) {
+    yield outbreak_slot_valid(index, capacity) and not already_attached
+}
+
+export craft outbreak_surface_ready(mounted, visible, opacity) {
+    yield mounted and visible and opacity > 0 and opacity <= 100
+}

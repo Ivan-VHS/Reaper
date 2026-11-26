@@ -17,6 +17,9 @@ Start with the [project README](../README.md) for installation, first commands a
 
 ## Browse by topic
 
+- [RForge framework collection](../frameworks/rforge/README.md) — twenty Reaper source modules, API contracts and maturity boundaries.
+- [RForge framework catalogue](../examples/rforge/frameworks.v1.json) — machine-readable framework inventory.
+
 - [Language and toolchain](clusters/language-toolchain.md)
 - [Psychoporter 666 function categories](FUNCTION_CATEGORIES_666.md)
 - [Architecture and systems](clusters/architecture-systems.md)

@@ -1,0 +1,103 @@
+# RForge — aggregate import surface for the twenty framework modules.
+# Import this module when a consumer needs the complete framework inventory.
+
+import "plague_soft_frame.rpr" as plague
+import "outbreak_frame_soft.rpr" as outbreak
+import "pestilence_frame_saas.rpr" as pestilence
+import "malady_saas_frame.rpr" as malady
+import "epidemic_framework_native.rpr" as epidemic
+import "miasma_native_framework.rpr" as miasma
+import "pandemic_program_summary.rpr" as pandemic
+import "fever_summary_program.rpr" as fever
+import "scourge_system_control.rpr" as scourge
+import "bane_control_system.rpr" as bane
+import "blight_tunnel_justice.rpr" as blight
+import "curse_justice_tunnel.rpr" as curse
+import "calamity_native_realisation.rpr" as calamity
+import "menace_realisation_native.rpr" as menace
+import "affliction_ui_unreal.rpr" as affliction
+import "cataclysm_unreal_ui.rpr" as cataclysm
+import "infestation_concrete_cosmos.rpr" as infestation
+import "devastation_cosmos_concrete.rpr" as devastation
+import "contagion_base_space.rpr" as contagion
+import "desolation_space_base.rpr" as desolation
+
+export make FRAMEWORK_ID := "rforge.framework_collection"
+export make FRAMEWORK_VERSION := "1.0.0"
+export make FRAMEWORK_COUNT := 20
+
+export craft framework_ids() {
+    yield [
+        plague["FRAMEWORK_ID"], outbreak["FRAMEWORK_ID"],
+        pestilence["FRAMEWORK_ID"], malady["FRAMEWORK_ID"],
+        epidemic["FRAMEWORK_ID"], miasma["FRAMEWORK_ID"],
+        pandemic["FRAMEWORK_ID"], fever["FRAMEWORK_ID"],
+        scourge["FRAMEWORK_ID"], bane["FRAMEWORK_ID"],
+        blight["FRAMEWORK_ID"], curse["FRAMEWORK_ID"],
+        calamity["FRAMEWORK_ID"], menace["FRAMEWORK_ID"],
+        affliction["FRAMEWORK_ID"], cataclysm["FRAMEWORK_ID"],
+        infestation["FRAMEWORK_ID"], devastation["FRAMEWORK_ID"],
+        contagion["FRAMEWORK_ID"], desolation["FRAMEWORK_ID"]
+    ]
+}
+
+export craft framework_profiles() {
+    yield [
+        ["Soft", "Frame"], ["Frame", "Soft"],
+        ["Frame", "Saas"], ["Saas", "Frame"],
+        ["Framework", "native"], ["native", "Framework"],
+        ["Program", "Summary"], ["Summary", "Program"],
+        ["System", "Control"], ["Control", "System"],
+        ["Tunnel", "Justice"], ["Justice", "Tunnel"],
+        ["native", "Realisation"], ["Realisation", "native"],
+        ["UI", "Unreal"], ["Unreal", "UI"],
+        ["Concrete", "Cosmos"], ["Cosmos", "Concrete"],
+        ["base", "Space"], ["Space", "base"]
+    ]
+}
+
+export craft framework_exists(framework_id) {
+    yield contains(framework_ids(), framework_id)
+}
+
+export craft framework_id_at(index) {
+    make ids := framework_ids()
+    when index >= 0 and index < size(ids) {
+        yield ids[index]
+    }
+    yield nothing
+}
+
+export craft framework_pair_members(pair_number) {
+    when pair_number == 1 {
+        yield ["plague.soft_frame", "outbreak.frame_soft"]
+    }
+    when pair_number == 2 {
+        yield ["pestilence.frame_saas", "malady.saas_frame"]
+    }
+    when pair_number == 3 {
+        yield ["epidemic.framework_native", "miasma.native_framework"]
+    }
+    when pair_number == 4 {
+        yield ["pandemic.program_summary", "fever.summary_program"]
+    }
+    when pair_number == 5 {
+        yield ["scourge.system_control", "bane.control_system"]
+    }
+    when pair_number == 6 {
+        yield ["blight.tunnel_justice", "curse.justice_tunnel"]
+    }
+    when pair_number == 7 {
+        yield ["calamity.native_realisation", "menace.realisation_native"]
+    }
+    when pair_number == 8 {
+        yield ["affliction.ui_unreal", "cataclysm.unreal_ui"]
+    }
+    when pair_number == 9 {
+        yield ["infestation.concrete_cosmos", "devastation.cosmos_concrete"]
+    }
+    when pair_number == 10 {
+        yield ["contagion.base_space", "desolation.space_base"]
+    }
+    yield []
+}

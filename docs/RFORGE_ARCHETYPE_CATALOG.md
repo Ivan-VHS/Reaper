@@ -1,9 +1,11 @@
-# RForge proposed product archetypes
+# RForge Reaper framework archetypes
 
 **Contract:** `reaper.rforge.archetype-catalog.v1`  
-**Status:** proposed names and ordered profile tokens; semantic contracts and implementations are pending
+**Status:** twenty Reaper source modules are present; runtime validation is pending
 
-This catalogue records twenty product directions in ten mirrored pairs. Each product has an independent identity. Within each pair, the second product reverses the two profile tokens of the first.
+The original ten mirror pairs are now implemented as twenty distinct Reaper `.rpr` framework modules. The pair relation is still an ordered token reversal, and each side has a distinct API and responsibility.
+
+See [the full framework collection](../frameworks/rforge/README.md) for descriptions, public APIs, invariants, imports and current runtime/native-AOT limits.
 
 ## Pair catalogue
 
@@ -22,16 +24,11 @@ This catalogue records twenty product directions in ten mirrored pairs. Each pro
 
 ## Composition rules
 
-- Product names are independent identities; they are not aliases for the RForge platform.
-- The two profile tokens are ordered inputs. RForge must preserve their order exactly.
-- A reversed pair is a distinct composition candidate, not an automatic alias or duplicate.
-- RForge may compare both candidates, but it must not assume that reversing tokens has no semantic effect.
-- The profile tokens are user-supplied vocabulary. Their exact runtime meaning, product-family assignment, interfaces, permissions and acceptance criteria must be supplied by a semantic contract before code generation.
-- Product kind remains `pending` until the architecture is classified as a framework, multitool, multiapp, framework bundle, multiframe, multiwork or frame/application/tool suite.
-- All twenty entries remain `proposal`; no source generation, compilation, installation or executable capability is claimed.
+- Product names remain independent identities.
+- Profile tokens remain ordered and are preserved exactly as supplied.
+- Reverse members are distinct framework candidates, not aliases.
+- All twenty entries are classified as `framework` and point to an importable Reaper source module.
+- Source presence is not the same as runtime verification or native compilation.
+- No executable capability is claimed until the framework passes runtime and contract tests.
 
-## Why this is useful
-
-The mirrored pairs give RForge a deterministic way to explore composition order. Once the token meanings have contracts, the planner can construct both orderings, compare dependency graphs and report whether the order changes lifecycle ownership, capability routing, UI composition, deployment shape or other measurable properties.
-
-The machine-readable catalogue is `examples/rforge/product-archetypes.v1.json`.
+The machine-readable implementation catalogue is [`examples/rforge/frameworks.v1.json`](../examples/rforge/frameworks.v1.json).

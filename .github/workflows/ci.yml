@@ -48,6 +48,10 @@ jobs:
         run: python -m reaper examples/mora_archive_contracts.rpr
       - name: Run example
         run: python -m reaper examples/flow.rpr
+      - name: Check RForge framework smoke suite
+        run: python -m reaper --check tests/rforge/frameworks_smoke.rpr
+      - name: Run RForge framework smoke suite
+        run: python -m reaper tests/rforge/frameworks_smoke.rpr
       - name: Run end-to-end read-only device audit example
         run: |
           python -m reaper examples/device_audit.rpr

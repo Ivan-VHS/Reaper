@@ -1,0 +1,32 @@
+# Epidemic — Framework Native
+# Native ABI, scalar width, alignment and memory-region contracts.
+
+export make FRAMEWORK_ID := "epidemic.framework_native"
+export make FRAMEWORK_VERSION := "1.0.0"
+export make FRAMEWORK_PROFILE := "Framework native"
+
+export craft epidemic_scalar_width_valid(bits) {
+    yield bits == 8 or bits == 16 or bits == 32 or bits == 64
+}
+
+export craft epidemic_abi_valid(abi_name, pointer_width, endian) {
+    when abi_name == "DABI64-v1" {
+        yield pointer_width == 64 and endian == "little"
+    }
+    when abi_name == "C17" {
+        yield (pointer_width == 32 or pointer_width == 64) and (endian == "little" or endian == "big")
+    }
+    yield false
+}
+
+export craft epidemic_alignment_valid(alignment) {
+    yield alignment == 1 or alignment == 2 or alignment == 4 or alignment == 8 or alignment == 16 or alignment == 32 or alignment == 64
+}
+
+export craft epidemic_region_valid(base, byte_size, alignment) {
+    yield base >= 0 and byte_size > 0 and epidemic_alignment_valid(alignment) and base % alignment == 0
+}
+
+export craft epidemic_native_contract(abi_name, pointer_width, endian, scalar_bits, alignment) {
+    yield epidemic_abi_valid(abi_name, pointer_width, endian) and epidemic_scalar_width_valid(scalar_bits) and epidemic_alignment_valid(alignment)
+}

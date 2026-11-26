@@ -28,6 +28,7 @@ Never move a row to Delivered because a registry, design, README, schema or gene
 | Native C17 | Partial lexer/parser/AST/checked-i64 IR/limited lowering | `src/`, `include/`, `tests/`, native C workflow |
 | Native MMIO | Descriptor validation and callback contract only | Native headers, source and negative tests |
 | Jora factory | Deterministic request validation, catalogue/composition and scaffold generation | `docs/JORA_APPLICATION_FACTORY.md`, CLI tests; generated packs remain non-installable |
+| RForge frameworks | 20 Reaper modules with ordered mirror pairs, API catalogue and reference-runtime smoke suite | `frameworks/rforge/`, `examples/rforge/frameworks.v1.json`, `tests/rforge/frameworks_smoke.rpr`; source present, runtime validation pending |
 | Federation | Versioned metadata/adapters for OPlague, VentuSample and optional Pytyliki ABI | Federation manifests and integration tests |
 | МОСТ | 21 executable aliases and 33 reserved aliases | `docs/MOST_IMPLEMENTATION_STATUS.md`, registry validator |
 
@@ -130,3 +131,15 @@ A public hosted API, cloud deployment, kernel driver, privileged device manager 
 ## Change protocol
 
 For each capability change, update together: owning source, regression tests, feature matrix, relevant architecture/contract page, documentation index and CI. Record the exact acceptance command and CI run. Keep Partial/Planned status when any required gate is missing.
+
+## RForge framework collection
+
+**Status: Source present; runtime verification pending.**
+
+- Twenty independently importable Reaper modules implement ten mirrored product pairs; `frameworks/rforge/all.rpr` provides an aggregate import, lookup and pair-inventory surface.
+- Each module has a versioned identity, explicit public API and domain invariants.
+- The 84-assertion smoke suite is a Reaper `.rpr` program and is wired into CI.
+- Current native AOT cannot compile module imports/exports or collection values, so the collection currently targets the reference runtime.
+- SaaS hosting, Unreal integration, network tunnels, privileged system controls and native loading remain contract boundaries; no hosted service, Unreal plugin, tunnel transport, driver or privileged executor is claimed.
+
+Evidence: [framework collection](../frameworks/rforge/README.md), [machine-readable catalogue](../examples/rforge/frameworks.v1.json), [smoke suite](../tests/rforge/frameworks_smoke.rpr).

@@ -1,0 +1,44 @@
+# Cataclysm — Unreal UI
+# Unreal-first UI host compatibility, widget lifecycle and bounded batches.
+
+export make FRAMEWORK_ID := "cataclysm.unreal_ui"
+export make FRAMEWORK_VERSION := "1.0.0"
+export make FRAMEWORK_PROFILE := "Unreal UI"
+
+export craft cataclysm_engine_supported(engine_major, minimum_major, maximum_major) {
+    yield engine_major >= minimum_major and engine_major <= maximum_major and minimum_major > 0 and maximum_major >= minimum_major
+}
+
+export craft cataclysm_widget_transition(current, next) {
+    when current == next {
+        yield current == "unbound" or current == "bound" or current == "visible" or current == "hidden" or current == "destroyed"
+    }
+    when current == "unbound" {
+        yield next == "bound"
+    }
+    when current == "bound" {
+        yield next == "visible" or next == "hidden" or next == "destroyed"
+    }
+    when current == "visible" {
+        yield next == "hidden" or next == "destroyed"
+    }
+    when current == "hidden" {
+        yield next == "visible" or next == "destroyed"
+    }
+    yield false
+}
+
+export craft cataclysm_batch_valid(widget_count, maximum_widgets, draw_calls, maximum_draw_calls) {
+    yield widget_count >= 0 and maximum_widgets > 0 and widget_count <= maximum_widgets and draw_calls >= 0 and maximum_draw_calls > 0 and draw_calls <= maximum_draw_calls
+}
+
+export craft cataclysm_ui_commit_allowed(engine_supported, batch_valid, frame_open) {
+    yield engine_supported and batch_valid and frame_open
+}
+
+export craft cataclysm_adapter_version(major, minor) {
+    when major >= 5 and minor >= 0 {
+        yield [major, minor, "supported_profile"]
+    }
+    yield []
+}

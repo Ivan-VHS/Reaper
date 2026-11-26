@@ -1,0 +1,29 @@
+# Infestation — Concrete Cosmos
+# Concrete entity identity and bounded directed scene-graph composition.
+
+export make FRAMEWORK_ID := "infestation.concrete_cosmos"
+export make FRAMEWORK_VERSION := "1.0.0"
+export make FRAMEWORK_PROFILE := "Concrete Cosmos"
+
+export craft infestation_entity_valid(entity_id, entity_kind, parent_id) {
+    yield entity_id > 0 and size(trim(entity_kind)) > 0 and parent_id >= 0 and parent_id != entity_id
+}
+
+export craft infestation_link_valid(source_id, target_id, relation) {
+    yield source_id > 0 and target_id > 0 and source_id != target_id and (relation == "contains" or relation == "references" or relation == "depends_on" or relation == "attached")
+}
+
+export craft infestation_depth_valid(depth, maximum_depth) {
+    yield depth >= 0 and maximum_depth > 0 and depth <= maximum_depth
+}
+
+export craft infestation_attach_allowed(parent_id, child_id, child_depth, maximum_depth, already_parented) {
+    yield parent_id > 0 and child_id > 0 and parent_id != child_id and infestation_depth_valid(child_depth, maximum_depth) and not already_parented
+}
+
+export craft infestation_entity_record(entity_id, entity_kind, parent_id) {
+    when infestation_entity_valid(entity_id, entity_kind, parent_id) {
+        yield [FRAMEWORK_ID, entity_id, entity_kind, parent_id]
+    }
+    yield []
+}

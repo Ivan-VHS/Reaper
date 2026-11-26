@@ -1,0 +1,46 @@
+# Calamity — native Realisation
+# Ordered native realisation stages and backend readiness gates.
+
+export make FRAMEWORK_ID := "calamity.native_realisation"
+export make FRAMEWORK_VERSION := "1.0.0"
+export make FRAMEWORK_PROFILE := "native Realisation"
+
+export craft calamity_stage_index(stage) {
+    when stage == "source" {
+        yield 0
+    }
+    when stage == "parsed" {
+        yield 1
+    }
+    when stage == "typed" {
+        yield 2
+    }
+    when stage == "ir_verified" {
+        yield 3
+    }
+    when stage == "lowered" {
+        yield 4
+    }
+    when stage == "linked" {
+        yield 5
+    }
+    yield -1
+}
+
+export craft calamity_stage_transition(current, next) {
+    make current_index := calamity_stage_index(current)
+    make next_index := calamity_stage_index(next)
+    yield current_index >= 0 and next_index == current_index + 1
+}
+
+export craft calamity_realisation_ready(parse_ok, typing_ok, ir_ok, abi_ok, link_ok) {
+    yield parse_ok and typing_ok and ir_ok and abi_ok and link_ok
+}
+
+export craft calamity_native_emit_allowed(target_supported, source_supported, ir_verified, abi_verified) {
+    yield target_supported and source_supported and ir_verified and abi_verified
+}
+
+export craft calamity_stage_complete(stage, evidence_count) {
+    yield calamity_stage_index(stage) >= 0 and evidence_count > 0
+}

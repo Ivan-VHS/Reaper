@@ -1,0 +1,41 @@
+# Curse — Justice Tunnel
+# Justice-first evidence review and signed tunnel release records.
+
+export make FRAMEWORK_ID := "curse.justice_tunnel"
+export make FRAMEWORK_VERSION := "1.0.0"
+export make FRAMEWORK_PROFILE := "Justice Tunnel"
+
+export craft curse_case_valid(case_id, subject_id, evidence_count) {
+    yield case_id > 0 and subject_id > 0 and evidence_count >= 0
+}
+
+export craft curse_disposition(violation, evidence_count, appeal_open) {
+    when evidence_count < 0 {
+        yield "invalid"
+    }
+    when not violation {
+        yield "allow"
+    }
+    when evidence_count == 0 {
+        yield "review"
+    }
+    when appeal_open {
+        yield "hold"
+    }
+    yield "deny"
+}
+
+export craft curse_tunnel_release_allowed(disposition, signed_release) {
+    yield signed_release and (disposition == "allow" or disposition == "reversed")
+}
+
+export craft curse_audit_record(case_id, decision, reviewer_id) {
+    when case_id > 0 and reviewer_id > 0 and (decision == "allow" or decision == "review" or decision == "hold" or decision == "deny" or decision == "reversed") {
+        yield [case_id, decision, reviewer_id, "auditable"]
+    }
+    yield []
+}
+
+export craft curse_appeal_allowed(disposition, new_evidence_count) {
+    yield disposition == "deny" and new_evidence_count > 0
+}
