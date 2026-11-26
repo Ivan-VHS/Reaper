@@ -1,4 +1,4 @@
-# Reaper Framework Family: single import surface for the ten independent frameworks.
+# Reaper Framework Family: one public import surface for ten independent frameworks.
 import "Lokaliza/src/locale.rpr" as lokaliza
 import "Sealise/src/blueprint.rpr" as sealise
 import "Blebby/src/package.rpr" as blebby
@@ -9,6 +9,17 @@ import "Porteo/src/lifecycle.rpr" as porteo
 import "Portable-Bortable/src/target.rpr" as portable_bortable
 import "SWO/src/pipeline.rpr" as swo
 import "ScoHOPE/src/application.rpr" as scohope
+
+export lokaliza
+export sealise
+export blebby
+export centen
+export kaso
+export shinnn
+export porteo
+export portable_bortable
+export swo
+export scohope
 
 export make framework_names := [
     "Lokaliza",
@@ -30,4 +41,18 @@ export craft framework_count() {
 export craft framework_name(index) {
     when index < 0 or index >= size(framework_names) { yield "" }
     yield framework_names[index]
+}
+
+export craft framework_get(name) {
+    when name == "Lokaliza" { yield lokaliza }
+    when name == "Sealise" { yield sealise }
+    when name == "Blebby" { yield blebby }
+    when name == "Centen" { yield centen }
+    when name == "Kaso" { yield kaso }
+    when name == "Shinnn" { yield shinnn }
+    when name == "Porteo" { yield porteo }
+    when name == "Portable Bortable" { yield portable_bortable }
+    when name == "SWO" { yield swo }
+    when name == "ScoHOPE" { yield scohope }
+    yield nothing
 }
