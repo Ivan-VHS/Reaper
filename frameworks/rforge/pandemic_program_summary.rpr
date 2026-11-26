@@ -1,0 +1,47 @@
+# Pandemic — Program Summary
+# Program execution accounting and deterministic outcome summaries.
+
+export make FRAMEWORK_ID := "pandemic.program_summary"
+export make FRAMEWORK_VERSION := "1.0.0"
+export make FRAMEWORK_PROFILE := "Program Summary"
+
+export craft pandemic_counts_valid(total, completed, failed, skipped) {
+    yield total >= 0 and completed >= 0 and failed >= 0 and skipped >= 0 and completed + failed + skipped <= total
+}
+
+export craft pandemic_success_rate(completed, total) {
+    when total > 0 and completed >= 0 and completed <= total {
+        yield completed * 100 / total
+    }
+    yield 0
+}
+
+export craft pandemic_outcome(total, completed, failed, skipped) {
+    when not pandemic_counts_valid(total, completed, failed, skipped) {
+        yield "invalid"
+    }
+    when total == 0 {
+        yield "empty"
+    }
+    when completed == total and failed == 0 and skipped == 0 {
+        yield "passed"
+    }
+    when failed > 0 and completed + failed + skipped == total {
+        yield "failed"
+    }
+    yield "partial"
+}
+
+export craft pandemic_summary(total, completed, failed, skipped) {
+    when pandemic_counts_valid(total, completed, failed, skipped) {
+        yield [FRAMEWORK_ID, total, completed, failed, skipped, pandemic_success_rate(completed, total), pandemic_outcome(total, completed, failed, skipped)]
+    }
+    yield []
+}
+
+export craft pandemic_remaining(total, completed, failed, skipped) {
+    when pandemic_counts_valid(total, completed, failed, skipped) {
+        yield total - completed - failed - skipped
+    }
+    yield -1
+}
