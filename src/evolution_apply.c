@@ -315,6 +315,7 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
         !valid_slash_identifier(request->base_branch, 128u) ||
         !valid_slash_identifier(request->target_branch, 128u) ||
         strcmp(request->target_branch, request->default_branch) == 0 ||
+        strcmp(request->target_branch, request->base_branch) == 0 ||
         !valid_revision(request) ||
         request->signed_grant == NULL || request->signed_grant_size == 0u ||
         request->signed_grant_size > 65536u ||
@@ -503,7 +504,11 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
             request->target_branch, request->revision_algorithm,
             request->base_revision, result.published_revision, &published_rollback)) {
         result.status = REAPER_APPLY_PUBLISH_FAILED;
-        if (published_rollback != NULL) branch_published = 1;
+        if (published_rollback != NULL) {
+            branch_published = 1;
+            (void)snprintf(result.published_branch, sizeof result.published_branch,
+                           "%s", request->target_branch);
+        }
         goto fail;
     }
     branch_published = 1;
