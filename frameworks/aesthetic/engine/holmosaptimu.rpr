@@ -1,0 +1,45 @@
+# Holmosaptimu — Reaper compiler adapter for aesthetic-profile programs.
+# This adapter compiles design profiles into domain HIR/MIR/LIR. It does not
+# claim to extend the scalar-only native C17 backend or the general AST grammar.
+import "vorke.rpr" as Vorke
+import "lejjyfish.rpr" as LejjyFish
+import "lejjy.rpr" as Lejjy
+import "oplos.rpr" as Oplos
+
+export craft compile(profile, target) {
+    when not Vorke["valid_profile"](profile) {
+        yield ["AestheticError", "RPR-AE1401", "compiler rejected invalid profile"]
+    }
+    when not Vorke["valid_target"](target) {
+        yield ["AestheticError", "RPR-AE1402", "compiler rejected invalid target"]
+    }
+
+    make high := LejjyFish["build"](profile)
+    when high[0] != "AestheticHIR" {
+        yield high
+    }
+
+    make middle := Lejjy["normalize"](high)
+    when middle[0] != "AestheticMIR" {
+        yield middle
+    }
+
+    make low := Oplos["lower"](middle, target)
+    when low[0] != "AestheticLIR" {
+        yield low
+    }
+
+    yield [
+        "AestheticCompileResult", Vorke["VERSION"], profile[2],
+        high, middle, low,
+        ["Vorke", "Jellymeat", "LejjyFish", "Lejjy", "Oplos", "Holmosaptimu"]
+    ]
+}
+
+export craft compile_status(result) {
+    when kind(result) == "list" and size(result) == 7
+        and result[0] == "AestheticCompileResult" {
+        yield "compiled"
+    }
+    yield "rejected"
+}
