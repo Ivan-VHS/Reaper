@@ -1,0 +1,11 @@
+# Compose a Reaper-first service framework from the Rivet catalogue.
+import "../../rivet/engine.rpr" as rivet
+
+make plan := rivet["compose"](
+    "Northstar Service Framework",
+    "framework",
+    ["framework.http", "framework.plugin", "framework.config", "framework.events"]
+)
+
+assert(plan[0] == "ok", "framework composition should pass contract validation")
+emit rivet["describe"](plan)
