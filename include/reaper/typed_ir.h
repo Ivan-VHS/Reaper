@@ -30,6 +30,7 @@ typedef enum {
 typedef struct {
     uint32_t id;
     const char *path;
+    const unsigned char *contents;
     uint64_t byte_length;
     uint32_t line_count;
 } ReaperSourceFile;
@@ -200,6 +201,12 @@ int reaper_typed_ir_verify(
 
 const char *reaper_typed_ir_type_name(ReaperTypedIrTypeKind kind);
 const char *reaper_typed_ir_opcode_name(ReaperTypedIrOpcode opcode);
+int reaper_source_map_resolve(
+    const ReaperSourceMap *source_map,
+    uint32_t span_id,
+    const ReaperSourceFile **source_file,
+    const ReaperSpan **span
+);
 
 #ifdef __cplusplus
 }
