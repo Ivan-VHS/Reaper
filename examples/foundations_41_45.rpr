@@ -1,0 +1,8 @@
+import "../frameworks/foundation_41_45.rpr" as engineering
+
+emit "All forty-five frameworks valid = " ++ text(engineering["foundation_validate_catalog_45"]())
+emit "Methodology valid = " ++ text(engineering["methodology_validate_plan"](["inventory", "specify", "design", "implement", "verify"]))
+emit "Approaches valid = " ++ text(engineering["approach_validate_selection"](["compatibility-first", "evidence-driven"]))
+emit "System manifest valid = " ++ text(engineering["system_validate_manifest"](["reaper.system.v1", 1, ["language", "runtime", "tests"], ["reaper.foundation.v1"]]))
+emit "Subsystem flow valid = " ++ text(engineering["subsystem_validate_flow"](["lexer", "parser"]))
+emit "Module graph valid = " ++ text(engineering["module_validate_graph"]([["app.math", "math.rpr", 1, 0, ["double"], [], ["pure"]], ["app.main", "main.rpr", 1, 0, ["run"], ["app.math"], ["console"]]]))
