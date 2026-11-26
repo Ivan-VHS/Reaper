@@ -293,7 +293,6 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
     ReaperEvolutionApplyResult result = result_init();
     ApplyEntry entries[REAPER_EVOLUTION_APPLY_MAX_FILES];
     size_t index, total_replacement_bytes = 0u;
-    void *staged_handles[REAPER_EVOLUTION_APPLY_MAX_FILES] = {0};
     void *workspace = NULL;
     void *published_rollback = NULL;
     char canonical_path[REAPER_EVOLUTION_APPLY_MAX_PATH];
@@ -447,8 +446,16 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
             (void)snprintf(result.failed_path, sizeof result.failed_path, "%s", patch->relative_path);
             goto fail;
         }
+        for (size_t prior = 0u; prior < index; ++prior) {
+            if (strcmp(entries[prior].canonical_path, canonical_path) == 0) {
+                result.status = REAPER_APPLY_PATH_DENIED;
+                (void)snprintf(result.failed_path, sizeof result.failed_path, "%s", patch->relative_path);
+                goto fail;
+            }
+        }
         (void)snprintf(entries[index].path, sizeof entries[index].path, "%s", patch->relative_path);
-        staged_handles[index] = entries[index].staged;
+        (void)snprintf(entries[index].canonical_path, sizeof entries[index].canonical_path,
+                       "%s", canonical_path);
         if (!host->audit_append(host->context, "patch.staged", request->request_id,
                 request->repository_id, request->target_branch, request->base_revision,
                 patch->relative_path, patch->expected_original_sha256, "source pinned in isolated workspace")) {
@@ -470,6 +477,7 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
             goto fail;
         }
         entries[index].committed = 1;
+        entries[index].staged = NULL;
         if (entries[index].rollback == NULL) {
             result.status = REAPER_APPLY_ROLLBACK_FAILED;
             (void)snprintf(result.failed_path, sizeof result.failed_path, "%s", entries[index].path);
@@ -485,7 +493,6 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
     }
 
     if (!host->run_declared_checks(host->context, workspace,
-            staged_handles, request->patch_count,
             request->check_ids, request->check_count, &request->limits,
             result.report, sizeof result.report)) {
         result.status = REAPER_APPLY_CHECKS_FAILED;
