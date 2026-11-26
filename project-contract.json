@@ -123,6 +123,17 @@
         "tests/test_octa_pyramid.py",
         "docs/OCTA_PYRAMID_FEDERATION.md"
       ]
+    },
+    {
+      "id": "architecture.foundation-registry.v1",
+      "status": "implemented",
+      "summary": "Native C17 catalog of 66 stable architecture concepts across nine layers, with exact lookup, bounded graph validation and deterministic dependency-first ordering.",
+      "evidence": [
+        "include/reaper/architecture.h",
+        "src/architecture.c",
+        "tests/test_architecture.c",
+        "docs/REAPER_ARCHITECTURE_FOUNDATION_66.md"
+      ]
     }
   ],
   "interfaces": [
@@ -203,13 +214,15 @@
     "Execution quotas are resource guardrails, not a security sandbox for untrusted programs.",
     "Filesystem, process, network, clock, shell and native-library effects remain explicit or opt-in rather than ambient expression behavior.",
     "Native FFI executes in-process native code and must only load trusted ABI-compatible libraries.",
-    "The native C17 implementation and self-hosting frontend remain partial; Python is the compatibility reference."
+    "The native C17 implementation and self-hosting frontend remain partial; Python is the compatibility reference.",
+    "The architecture foundation registry validates metadata and declared dependency graphs only; it does not load code, start runtimes, isolate containers or grant hardware privileges."
   ],
   "extension_points": [
     "Canonical IR and selectable execution engines.",
     "Versioned .rpr module interfaces and explicit import/export boundaries.",
     "Opt-in C ABI adapters and validated versioned JSON interchange.",
     "Native C17 frontend stages with Python reference behavior as the compatibility oracle.",
-    "Bounded vertical self-composition for deterministic compiler and data-flow transformation pipelines."
+    "Bounded vertical self-composition for deterministic compiler and data-flow transformation pipelines.",
+    "Stable architecture concept IDs, layer metadata and bounded dependency graph validation."
   ]
 }
