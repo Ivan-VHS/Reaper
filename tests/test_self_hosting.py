@@ -31,6 +31,15 @@ class SelfHostingBootstrapTests(unittest.TestCase):
     def test_reaper_written_diagnostics_run_on_the_reference_runtime(self) -> None:
         self._run_selfhost_program("selfhost/diagnostics.rpr", "SELFHOST_DIAGNOSTICS_OK")
 
+    def test_reaper_written_line_index_runs_on_the_reference_runtime(self) -> None:
+        self._run_selfhost_program("selfhost/line_index.rpr", "SELFHOST_LINE_INDEX_OK")
+
+    def test_reaper_written_ast_contract_runs_on_the_reference_runtime(self) -> None:
+        self._run_selfhost_program("selfhost/ast.rpr", "SELFHOST_AST_OK")
+
+    def test_reaper_written_operator_table_runs_on_the_reference_runtime(self) -> None:
+        self._run_selfhost_program("selfhost/operator_table.rpr", "SELFHOST_OPERATOR_TABLE_OK")
+
 
 if __name__ == "__main__":
     unittest.main()
