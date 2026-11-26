@@ -553,7 +553,13 @@
       "negative": {
         "args": "([\"x86_64\", \"linux\", \"aapcs\", 64, \"little\"])",
         "output": "false"
-      }
+      },
+      "additional_positive": [
+        [
+          "([\"armv7\", \"baremetal\", \"aapcs\", 32, \"little\"])",
+          "true"
+        ]
+      ]
     },
     {
       "id": "02.abi-contract",
@@ -629,7 +635,17 @@
       "negative": {
         "args": "([[0, 4096, \"flash\"], [2048, 1024, \"ram\"]])",
         "output": "false"
-      }
+      },
+      "additional_negative": [
+        [
+          "([[18446744073709551600, 64, \"ram\"]])",
+          "false"
+        ],
+        [
+          "([[0, 4096, \"flash\"], [4096, 2048, \"ram\"]])",
+          "true"
+        ]
+      ]
     },
     {
       "id": "03.manifest",
@@ -686,7 +702,17 @@
       "negative": {
         "args": "(\"../secrets/key\")",
         "output": "false"
-      }
+      },
+      "additional_negative": [
+        [
+          "(\"C:/private/file\")",
+          "false"
+        ],
+        [
+          "(\"..\\\\\\\\private\\\\\\\\key\")",
+          "false"
+        ]
+      ]
     },
     {
       "id": "03.profile-chain",
