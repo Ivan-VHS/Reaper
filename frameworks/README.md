@@ -1,32 +1,35 @@
 # Reaper Framework Family
 
-This directory contains the first Reaper-source implementation slice for ten independent frameworks.
+Ten independent Reaper-source frameworks with one standard-library facade.
 
-| Framework | Primary source | Initial responsibility |
+| Framework | Responsibility | Primary API |
 |---|---|---|
-| Lokaliza | `Lokaliza/src/locale.rpr` | Locale registry, fallback and catalog lookup |
-| Sealise | `Sealise/src/blueprint.rpr` | Project blueprints and structural coverage |
-| Blebby | `Blebby/src/package.rpr` | Package metadata, versions and dependency checks |
-| Centen | `Centen/src/resource.rpr` | Bounded resource accounting |
-| Kaso | `Kaso/src/template.rpr` | Template slots and deterministic rendering |
-| Shinnn | `Shinnn/src/graph.rpr` | Architecture graph validation |
-| Porteo | `Porteo/src/lifecycle.rpr` | Component lifecycle and dependency readiness |
-| Portable Bortable | `Portable-Bortable/src/target.rpr` | Target profiles and compatibility |
-| SWO | `SWO/src/pipeline.rpr` | Workflow states and stage dependencies |
-| ScoHOPE | `ScoHOPE/src/application.rpr` | Application profiles and lifecycle |
+| Lokaliza | Locale negotiation, plural rules, catalogs, fallback and message formatting | `locale.rpr` |
+| Sealise | Project blueprints, public contracts, layering and migrations | `blueprint.rpr` |
+| Blebby | Packages, semantic versions, constraints, lock snapshots and provenance | `package.rpr` |
+| Centen | Resource ledgers, quotas, atomic reservation batches and lexical region models | `resource.rpr` |
+| Kaso | Typed template contexts, escaping, conditionals and bounded rendering | `template.rpr` |
+| Shinnn | Architecture graphs, deterministic topology, reachability and impact | `graph.rpr` |
+| Porteo | Component lifecycle, readiness, launch plans, health and bounded restart policy | `lifecycle.rpr` |
+| Portable Bortable | Target profiles, ABI compatibility and target matrices | `target.rpr` |
+| SWO | Workflows, quality gates, retry schedules and release candidates | `pipeline.rpr` |
+| ScoHOPE | Application profiles, typed configuration and service readiness | `application.rpr` |
+
+## Reaper entry points
+
+- `frameworks/family.rpr`: direct family import surface.
+- `stdlib/frameworks.rpr`: standard-library facade for applications.
+- `frameworks/smoke.rpr`: executable positive/negative integration coverage.
+- `language/framework-adoption.v1.json`: traceability for all 666 catalogued API contracts and current feature records.
 
 ## Source budget
 
-Each framework has an implementation-source target of exactly **666,666 Unicode characters**. The machine-readable manifest records the initial source count and remaining balance. Only implementation files under each framework's `src/` directory count toward the target. Documentation, tests, generated files and manifests do not count.
+Each framework targets exactly **666,666 Unicode code points** of implementation source. Only tracked `.rpr` files under that framework's `src/` directory count. Whitespace and comments count; docs, tests, manifests and generated files do not. The manifest stores actual counts and remaining balances.
 
-Source counts include whitespace and comments in tracked `.rpr` files. Source files use UTF-8 and LF line endings. The count is recalculated from the committed source files; it is not inferred from line count or repository size.
+## Capability boundaries
 
-## Compatibility boundary
+These are executable Reaper-source libraries on the current reference runtime. The current native AOT backend does not yet support every list, module and dynamic-call construct used here. The source library therefore does not claim native-AOT parity.
 
-The first slice uses the current `.rpr` surface: `craft`, `make`, `vary`, `change`, `yield`, `when/otherwise`, `loop while`, lists, indexing, imports and exports. It is source code in Reaper, but it is **not yet native-AOT complete**: the repository's documented native backend does not currently compile list operations, module imports or the full collection runtime.
+Pure transformations do not grant filesystem, process, network, clock, device or privileged access. Any such capability must be explicitly supplied by a host adapter. Package provenance metadata is not signature verification; target compatibility checks are not cross-compilation; resource ledgers are not a process memory allocator.
 
-The framework contracts are kept narrow and explicit. Shared lifecycle and runtime services remain owned by ДОМ; these modules do not introduce a competing runtime. No filesystem, process, network, shell, clock or hardware authority is added by these pure transformations.
-
-## Status
-
-This is a bootstrap implementation slice, not a completed product release. Each subsystem still needs focused positive/negative tests, resource-limit checks, source-span diagnostics, module-graph validation and integration evidence before its status can be raised.
+ДОМ remains the shared runtime owner. The frameworks do not implement a competing scheduler, resource manager or application lifecycle.
