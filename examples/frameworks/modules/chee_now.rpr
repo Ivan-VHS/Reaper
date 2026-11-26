@@ -22,6 +22,8 @@ export craft channel_open(channel_id, capacity) {
 
 export craft channel_send(channel, message) {
     when not fc["fc_record"](channel, 4) { yield [false, channel, "channel-shape"] }
+    when kind(channel[2]) != "list" { yield [false, channel, "channel-queue-invalid"] }
+    when not fc["fc_nonnegative"](channel[1]) { yield [false, channel, "channel-capacity-invalid"] }
     when channel[3] != "open" { yield [false, channel, "channel-closed"] }
     when size(channel[2]) >= channel[1] { yield [false, channel, "channel-full"] }
     yield [true, [channel[0], channel[1], push(channel[2], message), channel[3]], "queued"]
@@ -31,6 +33,10 @@ export craft channel_send(channel, message) {
 export craft channel_receive(channel, wait_policy) {
     when not fc["fc_record"](channel, 4) or not fc["fc_record"](wait_policy, 2) {
         yield [false, channel, "receive-input-shape"]
+    }
+    when kind(channel[2]) != "list" { yield [false, channel, "channel-queue-invalid"] }
+    when not fc["fc_nonnegative"](channel[0]) and kind(channel[0]) != "text" {
+        yield [false, channel, "channel-id-invalid"]
     }
     when not fc["fc_nonnegative"](wait_policy[0]) or not fc["fc_nonnegative"](wait_policy[1]) {
         yield [false, channel, "wait-policy-invalid"]
@@ -43,6 +49,7 @@ export craft channel_receive(channel, wait_policy) {
 
 export craft channel_close(channel) {
     when not fc["fc_record"](channel, 4) { yield [false, channel, "channel-shape"] }
+    when kind(channel[2]) != "list" { yield [false, channel, "channel-queue-invalid"] }
     when channel[3] == "closed" { yield [true, channel, "already-closed"] }
     yield [true, [channel[0], channel[1], channel[2], "closed"], "closed"]
 }
