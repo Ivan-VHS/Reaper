@@ -1,6 +1,6 @@
 # SOMO — deterministic architecture/design/source evolution orchestration.
-# Observe and propose are pure planning modes. Apply is deliberately blocked
-# until authenticated grants, path enforcement, sandboxing and rollback exist.
+# Observe and propose are non-mutating. Apply is fail-closed until repository
+# grants, a patch adapter, isolation, audit and rollback are available.
 import "vorke.rpr" as Vorke
 import "holmosaptimu.rpr" as Holmosaptimu
 import "sentan.rpr" as Sentan
@@ -8,7 +8,11 @@ import "cellene.rpr" as Cellene
 import "kolir.rpr" as Kolir
 import "../../../plague/engine/policy.rpr" as PlaguePolicy
 
-export craft evolve(current_profile, target_profile, architecture, request, mode) {
+export craft evolve(
+    current_profile, target_profile,
+    current_architecture, proposed_architecture,
+    request, mode
+) {
     when mode != "observe" and mode != "propose" and mode != "apply" {
         yield ["EvolutionResult", "blocked", ["unknown_mode"], [], []]
     }
@@ -17,9 +21,6 @@ export craft evolve(current_profile, target_profile, architecture, request, mode
         or not PlaguePolicy["action_allowed"](mode, "analyze_source")
         or not PlaguePolicy["action_allowed"](mode, "produce_report") {
         yield ["EvolutionResult", "blocked", ["plague_policy_denied_analysis"], [], []]
-    }
-    when mode == "propose" and not PlaguePolicy["action_allowed"](mode, "create_plan") {
-        yield ["EvolutionResult", "blocked", ["plague_policy_denied_plan"], [], []]
     }
 
     when not Vorke["valid_profile"](current_profile)
@@ -38,35 +39,85 @@ export craft evolve(current_profile, target_profile, architecture, request, mode
     }
 
     make design_assessment := Cellene["assess"](target_profile)
-    make design_proposal := Cellene["propose"](current_profile, target_profile)
-    make architecture_assessment := Sentan["inspect"](architecture)
-    make source_plan := Kolir["plan"](request)
+    make current_architecture_assessment := Sentan["inspect"](current_architecture)
+    make proposed_architecture_assessment := Sentan["inspect"](proposed_architecture)
 
-    when architecture_assessment[1] != "valid" {
+    when current_architecture_assessment[1] != "valid"
+        or proposed_architecture_assessment[1] != "valid" {
         yield [
             "EvolutionResult", "blocked", ["architecture_validation_failed"],
-            [baseline, candidate, design_assessment, design_proposal, architecture_assessment], [source_plan]
+            [baseline, candidate, design_assessment,
+             current_architecture_assessment, proposed_architecture_assessment], []
         ]
     }
+
+    make architecture_delta := Sentan["compare"](current_architecture, proposed_architecture)
+    when architecture_delta[1] == "blocked" {
+        yield [
+            "EvolutionResult", "blocked", ["architecture_comparison_failed"],
+            [baseline, candidate, design_assessment, architecture_delta], []
+        ]
+    }
+
+    # Observe produces evidence and comparisons only. It does not create a
+    # code-change plan or a design-evolution proposal.
+    when mode == "observe" {
+        yield [
+            "EvolutionResult", "observed", [],
+            [baseline, candidate, design_assessment,
+             current_architecture_assessment, proposed_architecture_assessment,
+             architecture_delta], []
+        ]
+    }
+
+    when not PlaguePolicy["action_allowed"](mode, "create_plan") {
+        yield [
+            "EvolutionResult", "blocked", ["plague_policy_denied_plan"],
+            [baseline, candidate, design_assessment, architecture_delta], []
+        ]
+    }
+
+    make design_proposal := Cellene["propose"](current_profile, target_profile)
+    make source_plan := Kolir["plan"](request)
+
     when source_plan[0] != "SourceEvolutionPlan" {
         yield [
             "EvolutionResult", "blocked", ["source_plan_rejected"],
-            [baseline, candidate, design_assessment, design_proposal, architecture_assessment], [source_plan]
+            [baseline, candidate, design_assessment, architecture_delta, design_proposal],
+            [source_plan]
         ]
     }
     when design_proposal[0] != "DesignEvolutionProposal" {
         yield [
             "EvolutionResult", "blocked", ["design_proposal_rejected"],
-            [baseline, candidate, design_assessment, design_proposal, architecture_assessment], [source_plan]
+            [baseline, candidate, design_assessment, architecture_delta], [source_plan]
         ]
     }
+
+    when design_proposal[6] != "no_change"
+        and design_proposal[5] >= design_proposal[4] {
+        yield [
+            "EvolutionResult", "deferred", ["design_risk_not_offset_by_expected_benefit"],
+            [baseline, candidate, design_assessment, architecture_delta, design_proposal],
+            [source_plan]
+        ]
+    }
+    when source_plan[8] >= source_plan[9] {
+        yield [
+            "EvolutionResult", "deferred", ["source_risk_not_offset_by_expected_benefit"],
+            [baseline, candidate, design_assessment, architecture_delta, design_proposal],
+            [source_plan]
+        ]
+    }
+
     when mode == "apply" {
         when not PlaguePolicy["action_allowed"](mode, "write_topic_branch")
             or not PlaguePolicy["action_allowed"](mode, "run_declared_check")
             or not PlaguePolicy["action_allowed"](mode, "open_pull_request") {
             yield [
                 "EvolutionResult", "blocked", ["plague_policy_denied_apply"],
-                [baseline, candidate, design_assessment, design_proposal, architecture_assessment], [source_plan]
+                [baseline, candidate, design_assessment, architecture_delta, design_proposal],
+                [source_plan]
             ]
         }
         yield [
@@ -74,18 +125,14 @@ export craft evolve(current_profile, target_profile, architecture, request, mode
             ["apply_adapter_not_implemented", "repository_grant_validation_required",
              "path_allowlist_enforcement_required", "revision_pinning_required",
              "sandbox_and_rollback_required", "audit_journal_required"],
-            [baseline, candidate, design_assessment, design_proposal, architecture_assessment], [source_plan]
+            [baseline, candidate, design_assessment, architecture_delta, design_proposal],
+            [source_plan]
         ]
     }
 
-    when mode == "observe" {
-        yield [
-            "EvolutionResult", "observed", [],
-            [baseline, candidate, design_assessment, architecture_assessment], []
-        ]
-    }
     yield [
         "EvolutionResult", "proposed", [],
-        [baseline, candidate, design_assessment, design_proposal, architecture_assessment], [source_plan]
+        [baseline, candidate, design_assessment, architecture_delta, design_proposal],
+        [source_plan]
     ]
 }
