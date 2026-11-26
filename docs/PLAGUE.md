@@ -35,11 +35,11 @@ The current maturity is **Genesis**. The foundation does not yet discover reposi
 | Maladrix | Performance and resilience |
 | Necrovex | Recovery and compatibility migrations |
 
-Plaguecore is Partial only for its action-policy slice. The other nine components are Planned. No framework component is feature-complete.
+Plaguecore is Partial for its action-policy and advisory proposal-evaluation slices. The other nine components are Planned. No framework component is feature-complete.
 
 ## Advisory evolution evaluator
 
-The Reaper core validates bounded repository profiles and change proposals. The evolution evaluator rejects target mismatches, ungranted scopes, exceeded path/byte budgets, missing assurance gates, absent required rollback evidence and risk above the profile ceiling. It returns blocked, defer, review_required or eligible_for_review and ranks up to 128 candidates by expected benefit minus risk. This is advisory only: proposal eligibility never grants write authority, and evidence references are not cryptographically verified in this slice.
+The Reaper modules plague/engine/core.rpr and plague/engine/evolution.rpr validate bounded repository profiles and change proposals. The evaluator rejects target mismatches, ungranted scopes, exceeded path/byte budgets, missing assurance gates, absent required rollback evidence and risk above the profile ceiling. It returns blocked, defer, review_required or eligible_for_review and ranks up to 128 candidates by expected benefit minus risk. This is advisory only: proposal eligibility never grants write authority, and evidence references are not cryptographically verified in this slice.
 
 See PLAGUE_FOUNDATION_V1.md for tuple layouts and acceptance fixtures.
 
