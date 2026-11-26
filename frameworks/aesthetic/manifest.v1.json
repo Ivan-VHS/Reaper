@@ -129,11 +129,12 @@
     "sha256_pinned_whole_file_patch_descriptor_generator",
     "capability_gated_transactional_apply_engine_contract",
     "isolated_workspace_and_atomic_topic_branch_publication_contract",
-    "durable_audit_and_conditional_rollback_recovery_callbacks"
+    "durable_audit_and_conditional_rollback_recovery_callbacks",
+    "native_expression_ast_to_typed_hir_frontend",
+    "source_named_line_column_span_preservation_in_native_hir"
   ],
   "not_implemented": [
     "first_class_reaper_struct_and_enum_syntax",
-    "full_reaper_parser_to_typed_hir_frontend",
     "complete_native_c17_parity_for_reaper_modules_collections_control_flow_and_effects",
     "native_c17_backend_support_for_complete_profile_modules",
     "live_native_widget_renderer",
@@ -149,7 +150,8 @@
     "reaper_to_native_evolution_apply_bridge",
     "verified_real_repository_apply_and_rollback_evidence",
     "cryptographic_evidence_attestation",
-    "automatic_merge_or_release"
+    "automatic_merge_or_release",
+    "full_reaper_semantic_frontend_for_identifiers_modules_functions_and_calls"
   ],
   "safety": {
     "default_mode": "observe",
