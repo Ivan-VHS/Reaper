@@ -1,0 +1,32 @@
+# Blight — Tunnel Justice
+# Tunnel endpoint policy and clearance-based route decisions.
+
+export make FRAMEWORK_ID := "blight.tunnel_justice"
+export make FRAMEWORK_VERSION := "1.0.0"
+export make FRAMEWORK_PROFILE := "Tunnel Justice"
+
+export craft blight_endpoint_valid(endpoint_id, zone_id) {
+    yield endpoint_id > 0 and zone_id > 0
+}
+
+export craft blight_clearance_sufficient(subject_clearance, required_clearance) {
+    yield subject_clearance >= 0 and required_clearance >= 0 and subject_clearance >= required_clearance
+}
+
+export craft blight_justice_decision(subject_clearance, required_clearance, has_audit_reason) {
+    when not has_audit_reason {
+        yield "review"
+    }
+    when blight_clearance_sufficient(subject_clearance, required_clearance) {
+        yield "allow"
+    }
+    yield "deny"
+}
+
+export craft blight_route_admit(source_zone, target_zone, subject_clearance, required_clearance, has_audit_reason) {
+    yield source_zone > 0 and target_zone > 0 and source_zone != target_zone and blight_justice_decision(subject_clearance, required_clearance, has_audit_reason) == "allow"
+}
+
+export craft blight_tunnel_lease_valid(duration_ticks, maximum_ticks) {
+    yield duration_ticks > 0 and maximum_ticks > 0 and duration_ticks <= maximum_ticks
+}
