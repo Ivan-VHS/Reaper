@@ -29,7 +29,10 @@
         "design_evolution_proposals",
         "source_evolution_planning",
         "observe_propose_orchestration",
-        "PLAGUE_default_deny_policy_integration"
+        "PLAGUE_default_deny_policy_integration",
+        "current_proposed_architecture_graph_comparison",
+        "dependency_edge_consistency_validation",
+        "risk_benefit_gated_proposals"
       ],
       "limitations": [
         "not_the_general_Reaper_compiler_IR",
