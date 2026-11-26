@@ -28,12 +28,12 @@ The metaphor is intentionally constrained: a repository cannot grant itself new 
 
 The implementation is authored in Reaper source:
 
-- `plague/core.rpr` validates repository profiles and change proposals.
-- `plague/evolution.rpr` checks target compatibility, scope grants, change budgets, required assurance gates, risk ceiling and rollback evidence.
+- `plague/engine/core.rpr` validates repository profiles and change proposals.
+- `plague/engine/evolution.rpr` checks target compatibility, scope grants, change budgets, required assurance gates, risk ceiling and rollback evidence.
 - `select_candidate` ranks up to 128 proposals deterministically by expected benefit minus risk. Ties preserve input order.
-- `schemas/plague.repository-profile.v1.schema.json` and `schemas/plague.evolution-proposal.v1.schema.json` define the external JSON contracts.
-- `examples/plague/evolution_smoke.rpr` exercises eligible, blocked and selected proposals.
-- `tests/test_plague_framework.py` is a host-side test adapter; policy behavior itself remains in `.rpr`.
+- `plague/schemas/repository-profile.v1.schema.json` and `plague/schemas/evolution-proposal.v1.schema.json` define the external JSON contracts.
+- `plague/examples/evolution_smoke.rpr` exercises eligible, blocked and selected proposals.
+- `tests/test_plague_evolution.py` is a host-side test adapter; policy behavior itself remains in `.rpr`.
 
 ### Canonical Reaper tuple layouts
 
