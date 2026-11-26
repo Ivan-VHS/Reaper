@@ -12,6 +12,8 @@ The wire header contains no native pointer, sender PID or caller-supplied capabi
 
 All multi-byte fields are little-endian. Version 1 targets the x86-64 DABI64 ABI. Reserved flags must be zero. Incompatible future layouts require a new ABI version.
 
+Both public v1 header types have an 8-byte alignment requirement in addition to their fixed sizes and offsets. The public header enforces size, alignment and field offsets at compile time for C11/C17 and C++ consumers. Packed-structure compiler options are unsupported for this ABI.
+
 ### Request frame v1
 
 The request header is exactly 40 bytes:
