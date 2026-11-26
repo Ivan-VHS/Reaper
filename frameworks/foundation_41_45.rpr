@@ -134,16 +134,30 @@ export craft system_validate_manifest(manifest) {
     yield true
 }
 
+craft system_component_index(component) {
+    vary position := 0
+    each known in system_component_catalog() {
+        when known == component {
+            yield position
+        }
+        change position := position + 1
+    }
+    yield nothing
+}
+
 export craft system_validate_dependency_order(components) {
     when kind(components) != "list" or size(components) == 0 {
         yield false
     }
+    vary previous_index := -1
     each component in components {
-        when not contains(system_component_catalog(), component) {
+        make current_index := system_component_index(component)
+        when current_index == nothing or current_index <= previous_index {
             yield false
         }
+        change previous_index := current_index
     }
-    yield size(unique(components)) == size(components)
+    yield true
 }
 
 export craft subsystem_contracts() {
