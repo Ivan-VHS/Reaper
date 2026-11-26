@@ -24,6 +24,22 @@
   },
   "capabilities": [
     {
+      "id": "foundations.first-five-frameworks",
+      "status": "partial",
+      "summary": "Executable Reaper contracts aligned with native architecture concepts 1–5: Framework frame, Platform, Environment, Infrastructure and Architecture; target integration and complete native compiler support remain partial.",
+      "evidence": [
+        "frameworks/foundation.rpr",
+        "docs/FOUNDATIONAL_FRAMEWORKS_V1.md",
+        "examples/foundations.rpr",
+        "tests/test_foundational_frameworks.py",
+        "include/reaper/architecture.h",
+        "docs/REAPER_ARCHITECTURE_FOUNDATION_66.md",
+        "docs/HARDWARE_LANGUAGE.md",
+        "docs/RUNTIME_PLATFORM.md",
+        "docs/SYSTEM_RUNTIME_ABI_V1.md"
+      ]
+    },
+    {
       "id": "language.python-reference-runtime",
       "status": "implemented",
       "summary": "Reference lexer, parser, AST interpreter, CLI and bounded execution semantics.",
