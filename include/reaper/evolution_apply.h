@@ -100,8 +100,12 @@ typedef struct {
     uint32_t capabilities;
     void *context;
 
+    /* Returns trusted host wall-clock time. Guest-supplied timestamps are
+     * never accepted for not-before, expiry or revocation decisions. */
+    int (*trusted_time_unix_seconds)(void *context, uint64_t *now_unix_seconds);
     /* Verifies signature, issuer, subject, repository, target branch, expiry,
-     * revocation and repository.apply scope using a host-held trust key. */
+     * revocation and repository.apply scope using a host-held trust key and
+     * the trusted timestamp above. */
     int (*verify_repository_grant)(
         void *context, const void *grant, size_t grant_size,
         const char *repository_id, const char *target_branch,
