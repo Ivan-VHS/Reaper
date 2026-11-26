@@ -20,7 +20,7 @@ Reaper — мова системного програмування та лок�
 - RAAEF — окрема гілка типізованих естетичних профілів і планування еволюції архітектури, дизайну та коду. Нативне ядро C17 також має SHA-256-прив’язані patch descriptors і fail-closed контракт транзакційного застосування: підписані grants, файлові області, ізольований workspace, sandbox-перевірки за ID, публікація topic-гілки, аудит і rollback. Конкретні Windows/POSIX Git- та sandbox-адаптери ще не постачаються; SOMO apply залишається заблокованим.
 - Єдиний [каталог фреймворків](frameworks/README.md) показує відомі сімейства та статус їхніх PR; відкриті PR не вважаються частиною main.
 
-Документи: [Естетика та еволюція архітектури](docs/AESTHETIC_EVOLUTION.md) · [Каталог фреймворків](frameworks/README.md) · [Можливості](docs/FEATURES.md) · [Архітектура](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Фабрика Jora](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md).
+Документи: [Естетика та еволюція архітектури](docs/AESTHETIC_EVOLUTION.md) · [Нативний типізований IR](docs/NATIVE_IR_EXECUTION.md) · [Нативний рушій застосування патчів](docs/REAPER_AUTONOMOUS_EVOLUTION.md) · [Каталог фреймворків](frameworks/README.md) · [Можливості](docs/FEATURES.md) · [Архітектура](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Фабрика Jora](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md).
 
 ## Швидкий старт
 
