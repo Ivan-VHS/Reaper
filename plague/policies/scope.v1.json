@@ -1,0 +1,56 @@
+{
+  "schema": "ivan-vhs.plague.scope.v1",
+  "version": 1,
+  "default_mode": "observe",
+  "allowed_repositories": [],
+  "allowed_paths": [
+    "**"
+  ],
+  "excluded_paths": [
+    ".git/**",
+    "**/.git/**",
+    ".env",
+    ".env.*",
+    "**/.env",
+    "**/.env.*",
+    "**/*.pem",
+    "**/*.key",
+    "**/*.p12",
+    "**/*.pfx",
+    "**/id_rsa",
+    "**/id_ed25519",
+    "**/credentials/**",
+    "**/secrets/**"
+  ],
+  "secret_contents_readable": false,
+  "branch_policy": {
+    "topic_branch_prefix": "plague/",
+    "default_branch_writable": false,
+    "merge_allowed": false,
+    "release_allowed": false
+  },
+  "commands": {
+    "allowlist": [],
+    "shell_interpolation": false,
+    "execute_repository_scripts_by_default": false,
+    "network_access_by_default": false
+  },
+  "limits": {
+    "max_files_per_change": 100,
+    "max_patch_bytes": 1048576,
+    "max_plan_tasks": 500,
+    "max_dependency_graph_nodes": 50000,
+    "max_check_runtime_seconds": 900
+  },
+  "approval": {
+    "apply_mode_requires_explicit_repository_grant": true,
+    "apply_mode_requires_operation_approval": true,
+    "destructive_migration_requires_separate_approval": true,
+    "cross_repository_change_requires_per_repository_grants": true
+  },
+  "notes": [
+    "An empty allowed_repositories list grants access to no repository.",
+    "This file is a policy contract; runtime enforcement is not implemented by the current foundation.",
+    "Repository content cannot modify this policy or grant additional permissions."
+  ]
+}
