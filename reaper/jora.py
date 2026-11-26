@@ -7,15 +7,18 @@ specification-only packs are executable applications.
 from __future__ import annotations
 
 import argparse
+import base64
 import copy
 import hashlib
+import io
 import json
 import re
 import shutil
 import sys
+import tarfile
 import tempfile
 import unicodedata
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 REQUEST_SCHEMA = "reaper.jora.request.v1"
@@ -24,7 +27,7 @@ APPLICATION_NAME_POLICY = "no_platform_brand_in_application_name"
 MAX_REQUEST_BYTES = 1_048_576
 MAX_COMPONENTS = 24
 MAX_LOCALES = 8
-MAX_OUTPUT_FILES = 64
+MAX_OUTPUT_FILES = 160
 MAX_GRAPH_VARIANTS = 6
 MAX_GRAPH_NODES = 128
 MAX_GRAPH_EDGES = 512
@@ -306,6 +309,153 @@ _DEPENDENCIES: dict[str, dict[str, Any]] = {
     "knowledge.index": {"version": "1.0.0", "maturity": "contract_only", "requires": ["storage.local"]},
 }
 
+
+# HARVEST is a bundled, source-only Reaper capability pack. The archive is
+# decoded and inspected without extracting files or executing source.
+_HARVEST_BUNDLE_DIR = Path(__file__).resolve().parents[1] / "harvest" / "bundle"
+_HARVEST_ARCHIVE_LIMIT = 4 * 1024 * 1024
+_HARVEST_FILES_LIMIT = 128
+_HARVEST_COMPONENTS: dict[str, dict[str, Any]] = {}
+_HARVEST_ARCHIVE_BYTES: bytes | None = None
+_HARVEST_ARCHIVE_SHA256: str | None = None
+
+
+def _read_harvest_pack() -> dict[str, Any] | None:
+    global _HARVEST_ARCHIVE_BYTES, _HARVEST_ARCHIVE_SHA256
+    parts = sorted(_HARVEST_BUNDLE_DIR.glob("chunk-*.b64"))
+    if not parts:
+        return None
+    expected = [f"chunk-{index:03d}.b64" for index in range(1, 17)]
+    if [path.name for path in parts] != expected:
+        raise JoraError("HARVEST source bundle is incomplete or has unexpected segments")
+    encoded_parts: list[str] = []
+    for path in parts:
+        if path.is_symlink() or not path.is_file() or path.stat().st_size > 3000:
+            raise JoraError(f"invalid HARVEST archive segment: {path.name}")
+        encoded = path.read_text(encoding="ascii").strip()
+        if not encoded or any(char not in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=" for char in encoded):
+            raise JoraError(f"invalid base64 in HARVEST archive segment: {path.name}")
+        encoded_parts.append(encoded)
+    try:
+        archive_bytes = base64.b64decode("".join(encoded_parts), validate=True)
+    except (ValueError, base64.binascii.Error) as error:
+        raise JoraError(f"HARVEST source bundle is not valid base64: {error}") from error
+    if not archive_bytes or len(archive_bytes) > _HARVEST_ARCHIVE_LIMIT:
+        raise JoraError("HARVEST source archive exceeds its configured size limit")
+
+    try:
+        with tarfile.open(fileobj=io.BytesIO(archive_bytes), mode="r:gz") as archive:
+            members = archive.getmembers()
+            if len(members) > _HARVEST_FILES_LIMIT:
+                raise JoraError("HARVEST source archive contains too many files")
+            names: set[str] = set()
+            total_size = 0
+            for member in members:
+                member_path = PurePosixPath(member.name)
+                if member_path.is_absolute() or ".." in member_path.parts or "\\" in member.name:
+                    raise JoraError(f"unsafe path in HARVEST source archive: {member.name}")
+                if member.name in names:
+                    raise JoraError(f"duplicate path in HARVEST source archive: {member.name}")
+                names.add(member.name)
+                if member.isdir():
+                    continue
+                if not member.isfile():
+                    raise JoraError(f"unsupported archive entry type: {member.name}")
+                if not (member.name.startswith("harvest/") or member.name == "docs/HARVEST_ARCHITECTURE.md"):
+                    raise JoraError(f"unexpected path in HARVEST source archive: {member.name}")
+                total_size += member.size
+                if total_size > _HARVEST_ARCHIVE_LIMIT:
+                    raise JoraError("HARVEST uncompressed source exceeds its configured size limit")
+            pack_member = archive.extractfile("harvest/jora/components.v1.json")
+            if pack_member is None:
+                raise JoraError("HARVEST archive does not contain its Jora component manifest")
+            pack = json.loads(pack_member.read().decode("utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError, tarfile.TarError) as error:
+        raise JoraError(f"cannot inspect HARVEST source archive: {error}") from error
+
+    if not isinstance(pack, dict) or pack.get("schema") != "harvest.jora.pack.v1":
+        raise JoraError("HARVEST component manifest has an unsupported schema")
+    components = pack.get("components")
+    if pack.get("pack_id") != "harvest.frameworks" or pack.get("version") != "1.0.0":
+        raise JoraError("HARVEST pack identity or version is unsupported")
+    if not isinstance(components, list) or len(components) != 16:
+        raise JoraError("HARVEST pack must declare exactly 16 framework components")
+
+    seen: set[str] = set()
+    for spec in components:
+        if not isinstance(spec, dict):
+            raise JoraError("HARVEST component entries must be objects")
+        identifier = spec.get("id")
+        source_module = spec.get("source_module")
+        if (
+            not isinstance(identifier, str)
+            or not re.fullmatch(r"harvest\.[a-z0-9_]{1,40}", identifier)
+            or identifier in seen
+        ):
+            raise JoraError(f"invalid or duplicate HARVEST component id: {identifier!r}")
+        if not isinstance(source_module, str) or not re.fullmatch(r"[a-z0-9_]{1,48}\.rpr", source_module):
+            raise JoraError(f"invalid HARVEST source module for {identifier}")
+        for field in ("name", "domain", "version", "summary", "input_schema", "ir_schema", "output_schema", "ir_schema_file"):
+            if not isinstance(spec.get(field), str) or not spec[field]:
+                raise JoraError(f"HARVEST component {identifier} is missing {field}")
+        for field in ("provides", "consumes", "requires"):
+            if not isinstance(spec.get(field), list) or not all(isinstance(item, str) and item for item in spec[field]):
+                raise JoraError(f"HARVEST component {identifier} has invalid {field}")
+        seen.add(identifier)
+        _HARVEST_COMPONENTS[identifier] = copy.deepcopy(spec)
+
+    for filename in pack.get("core_files", []):
+        if not isinstance(filename, str) or not re.fullmatch(r"[a-z0-9_]{1,48}\.rpr", filename):
+            raise JoraError("HARVEST core file list contains an invalid path")
+        if "harvest/core/" + filename not in names:
+            raise JoraError(f"HARVEST core module is missing: {filename}")
+    for filename in pack.get("schema_files", []):
+        if not isinstance(filename, str) or not re.fullmatch(r"[a-z0-9_.-]{1,96}\.schema\.json", filename):
+            raise JoraError("HARVEST schema file list contains an invalid path")
+        if "harvest/schemas/" + filename not in names:
+            raise JoraError(f"HARVEST schema file is missing: {filename}")
+    if "harvest/registry/" + str(pack.get("registry_file", "")) not in names:
+        raise JoraError("HARVEST registry file is missing")
+    for spec in components:
+        if "harvest/frameworks/" + spec["source_module"] not in names:
+            raise JoraError(f"HARVEST source module is missing: {spec['source_module']}")
+
+    _HARVEST_ARCHIVE_BYTES = archive_bytes
+    _HARVEST_ARCHIVE_SHA256 = hashlib.sha256(archive_bytes).hexdigest()
+    return pack
+
+
+_HARVEST_PACK = _read_harvest_pack()
+if _HARVEST_PACK is not None:
+    _DEPENDENCIES["harvest.runtime"] = {
+        "version": _HARVEST_PACK["version"],
+        "maturity": "partial",
+        "requires": [],
+    }
+    for _harvest_id, _harvest_spec in _HARVEST_COMPONENTS.items():
+        _COMPONENTS[_harvest_id] = {
+            "name": _harvest_spec["name"],
+            "domain": _harvest_spec["domain"],
+            "version": _harvest_spec["version"],
+            "summary": _harvest_spec["summary"],
+            "provides": list(_harvest_spec["provides"]),
+            "consumes": list(_harvest_spec["consumes"]),
+            "requires": list(_harvest_spec["requires"]),
+            "conflicts": [],
+            "preferred_languages": [],
+            "maturity": _harvest_spec.get("maturity", "partial"),
+            "source_module": _harvest_spec["source_module"],
+            "input_schema": _harvest_spec["input_schema"],
+            "ir_schema": _harvest_spec["ir_schema"],
+            "output_schema": _harvest_spec["output_schema"],
+            "ir_schema_file": _harvest_spec["ir_schema_file"],
+        }
+        _DEPENDENCIES[_harvest_id] = {
+            "version": _harvest_spec["version"],
+            "maturity": _harvest_spec.get("maturity", "partial"),
+            "requires": list(_harvest_spec["requires"]),
+        }
+
 _LOCALE_ALIASES = {
     "en": "en", "en-us": "en", "ru": "ru", "ru-ru": "ru",
     "uk": "uk", "uk-ua": "uk", "ua": "uk", "most": "most",
@@ -484,6 +634,16 @@ def _naming_profile(component_ids: list[str], style: str) -> dict[str, Any]:
         "archive.manager": {"short": "Archive", "domain": "System", "action": "Archive Management", "formula": "Archive"},
         "knowledge.graph": {"short": "Knowledge", "domain": "Knowledge", "action": "Knowledge Mapping", "formula": "Knowledge"},
     }
+    for component_id in component_ids:
+        if component_id not in terms:
+            spec = _COMPONENTS[component_id]
+            short = re.sub(r"[^A-Za-z0-9]+", "", str(spec["name"]))[:16] or "Research"
+            terms[component_id] = {
+                "short": short,
+                "domain": DOMAIN_LABELS.get(str(spec["domain"]), str(spec["domain"]).title()),
+                "action": str(spec["summary"])[:60],
+                "formula": short,
+            }
     short_terms = list(dict.fromkeys(terms[item]["short"] for item in component_ids))
     descriptors = list(dict.fromkeys(terms[item]["domain"] for item in component_ids))
     action_terms = list(dict.fromkeys(terms[item]["action"] for item in component_ids))
@@ -1077,7 +1237,19 @@ def compose_application(request: dict[str, Any]) -> dict[str, Any]:
             "consumes": list(spec.get("consumes", [])),
             "requires": list(spec["requires"]),
             "maturity": spec["maturity"],
-            "generated_unit": "src/components/" + component_id.replace(".", "_") + ".rpr",
+            "generated_unit": (
+                "src/harvest/frameworks/" + spec["source_module"]
+                if spec.get("source_module")
+                else "src/components/" + component_id.replace(".", "_") + ".rpr"
+            ),
+            **({
+                "source_module": spec["source_module"],
+                "input_schema": spec["input_schema"],
+                "ir_schema": spec["ir_schema"],
+                "output_schema": spec["output_schema"],
+                "ir_schema_file": spec["ir_schema_file"],
+                "source_status": "authored_unverified",
+            } if spec.get("source_module") else {}),
         })
 
     dependencies = []
@@ -1098,6 +1270,25 @@ def compose_application(request: dict[str, Any]) -> dict[str, Any]:
         graph_options,
         hashlib.sha256(json.dumps(canonical, sort_keys=True).encode("utf-8")).hexdigest(),
     )
+
+    harvest_framework_ids = [
+        identifier for identifier in dependency_order
+        if identifier in _HARVEST_COMPONENTS
+    ]
+    source_bundle = None
+    if harvest_framework_ids:
+        source_bundle = {
+            "schema": "harvest.jora.source-bundle.v1",
+            "pack_id": _HARVEST_PACK["pack_id"],
+            "version": _HARVEST_PACK["version"],
+            "archive_sha256": _HARVEST_ARCHIVE_SHA256,
+            "runtime": _HARVEST_PACK["runtime"],
+            "framework_ids": harvest_framework_ids,
+            "core_files": list(_HARVEST_PACK["core_files"]),
+            "schema_files": list(_HARVEST_PACK["schema_files"]),
+            "registry_file": _HARVEST_PACK["registry_file"],
+            "status": "authored_unverified",
+        }
 
     language_targets = []
     for target_id in target_ids:
@@ -1138,6 +1329,7 @@ def compose_application(request: dict[str, Any]) -> dict[str, Any]:
         "components": components,
         "dependency_order": dependency_order,
         "dependencies": dependencies,
+        "source_bundle": source_bundle,
         "locales": locales,
         "preferred_locale": preferred,
         "syntax": {"mode": syntax_mode, "status": "implemented"},
@@ -1229,6 +1421,84 @@ def _render_mermaid_graph(graph: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
+
+def _copy_harvest_bundle(staging: Path, source_bundle: dict[str, Any] | None) -> dict[str, Any] | None:
+    if source_bundle is None:
+        return None
+    if _HARVEST_ARCHIVE_BYTES is None or _HARVEST_ARCHIVE_SHA256 is None or _HARVEST_PACK is None:
+        raise JoraError("HARVEST source bundle is unavailable")
+    if source_bundle.get("archive_sha256") != _HARVEST_ARCHIVE_SHA256:
+        raise JoraError("HARVEST source bundle checksum does not match the composed request")
+
+    written: list[str] = []
+    total_bytes = 0
+    try:
+        with tarfile.open(fileobj=io.BytesIO(_HARVEST_ARCHIVE_BYTES), mode="r:gz") as archive:
+            members = archive.getmembers()
+            if len(members) > _HARVEST_FILES_LIMIT:
+                raise JoraError("HARVEST source archive contains too many files")
+            for member in members:
+                if member.isdir():
+                    continue
+                if not member.isfile():
+                    raise JoraError(f"unsupported HARVEST archive entry type: {member.name}")
+                relative = PurePosixPath(member.name)
+                if relative.is_absolute() or ".." in relative.parts or "\\" in member.name:
+                    raise JoraError(f"unsafe path in HARVEST source archive: {member.name}")
+                if member.name.startswith("harvest/"):
+                    destination_relative = Path("src") / Path(*relative.parts)
+                elif member.name == "docs/HARVEST_ARCHITECTURE.md":
+                    destination_relative = Path(*relative.parts)
+                else:
+                    raise JoraError(f"unexpected HARVEST archive member: {member.name}")
+                target = staging / destination_relative
+                target.parent.mkdir(parents=True, exist_ok=True)
+                if target.exists() or target.is_symlink():
+                    raise JoraError(f"HARVEST file would overwrite an existing generated path: {destination_relative}")
+                stream = archive.extractfile(member)
+                if stream is None:
+                    raise JoraError(f"cannot read HARVEST archive member: {member.name}")
+                payload = stream.read()
+                if len(payload) != member.size:
+                    raise JoraError(f"HARVEST archive member size mismatch: {member.name}")
+                total_bytes += len(payload)
+                if total_bytes > _HARVEST_ARCHIVE_LIMIT:
+                    raise JoraError("HARVEST extracted source exceeds its configured size limit")
+                try:
+                    payload.decode("utf-8")
+                except UnicodeError as error:
+                    raise JoraError(f"HARVEST source is not UTF-8: {member.name}") from error
+                target.write_bytes(payload)
+                written.append(str(destination_relative).replace("\\", "/"))
+    except (OSError, tarfile.TarError) as error:
+        raise JoraError(f"cannot copy HARVEST source pack: {error}") from error
+
+    required = {
+        "src/harvest/core/" + filename for filename in _HARVEST_PACK["core_files"]
+    }
+    required.update(
+        "src/harvest/schemas/" + filename for filename in _HARVEST_PACK["schema_files"]
+    )
+    required.add("src/harvest/registry/" + _HARVEST_PACK["registry_file"])
+    required.update(
+        "src/harvest/frameworks/" + _HARVEST_COMPONENTS[identifier]["source_module"]
+        for identifier in source_bundle["framework_ids"]
+    )
+    missing = sorted(required - set(written))
+    if missing:
+        raise JoraError("HARVEST source bundle is missing required output files: " + ", ".join(missing[:8]))
+    source_bundle["files_copied"] = len(written)
+    source_bundle["bytes_copied"] = total_bytes
+    return {
+        "schema": "harvest.jora.build-result.v1",
+        "archive_sha256": _HARVEST_ARCHIVE_SHA256,
+        "files_copied": len(written),
+        "bytes_copied": total_bytes,
+        "framework_ids": list(source_bundle["framework_ids"]),
+        "status": "authored_unverified",
+    }
+
+
 def build_application(request: dict[str, Any], output: str | Path) -> dict[str, Any]:
     application = compose_application(request)
     raw_output = Path(output).expanduser()
@@ -1246,14 +1516,49 @@ def build_application(request: dict[str, Any], output: str | Path) -> dict[str, 
     staging = Path(tempfile.mkdtemp(prefix=".jora-build-", dir=parent))
     try:
         component_names = [item["name"] for item in application["components"]]
-        main_source = (
-            f'emit "Jora application: {application["name"]}"\n'
-            f'emit "Composed from: {application["formula"]["expression"]}"\n'
-            'emit "Scaffold only: capability packs require implementation."\n'
-        )
+        harvest_build = _copy_harvest_bundle(staging, application.get("source_bundle"))
+        if harvest_build is not None:
+            application["source_bundle"].update({
+                "files_copied": harvest_build["files_copied"],
+                "bytes_copied": harvest_build["bytes_copied"],
+                "archive_sha256": harvest_build["archive_sha256"],
+            })
+            framework_imports = []
+            for framework_id in application["source_bundle"]["framework_ids"]:
+                module = _HARVEST_COMPONENTS[framework_id]["source_module"]
+                alias = "harvest_" + module[:-4]
+                framework_imports.append(
+                    f'import "harvest/frameworks/{module}" as {alias}'
+                )
+            selected_framework_ids = [
+                item["id"] for item in application["components"]
+                if item.get("source_module")
+            ]
+            main_source = "\n".join([
+                'import "harvest/core/jora_adapter.rpr" as harvest_app',
+                *framework_imports,
+                "",
+                f'make framework_ids := {json.dumps(selected_framework_ids, ensure_ascii=False)}',
+                f'make application_plan := harvest_app["application_plan"]("{application["id"]}", "{application["name"]}", framework_ids, "{application["preferred_locale"]}")',
+                'make application_ir := harvest_app["application_ir"](application_plan)',
+                f'emit "Application: {application["name"]}"',
+                f'emit "HARVEST frameworks: {len(selected_framework_ids)}"',
+                'emit application_plan',
+                'emit application_ir',
+                'emit "Sources and schemas were bundled; runtime verification remains a separate gate."',
+                "",
+            ])
+        else:
+            main_source = (
+                f'emit "Jora application: {application["name"]}"\n'
+                f'emit "Composed from: {application["formula"]["expression"]}"\n'
+                'emit "Scaffold only: capability packs require implementation."\n'
+            )
         _write_text(staging, "src/main.rpr", main_source)
 
         for component in application["components"]:
+            if component.get("source_module"):
+                continue
             source_name = component["id"].replace(".", "_") + ".rpr"
             component_source = (
                 f'emit "Jora component contract: {component["id"]}"\n'
@@ -1300,6 +1605,7 @@ def build_application(request: dict[str, Any], output: str | Path) -> dict[str, 
             "selected_graph_score": next(item["metrics"]["objective_score"] for item in application["graphs"]["variants"] if item["id"] == application["graphs"]["selected"]),
             "graph_signatures": [item["signature"] for item in application["graphs"]["variants"]],
             "generator": "Reaper Jora 2.0",
+            "harvest_source_bundle": application.get("source_bundle"),
         }
         _write_text(staging, "jora.lock.json", json.dumps(lock, ensure_ascii=False, indent=2) + "\n")
 
@@ -1309,7 +1615,8 @@ def build_application(request: dict[str, Any], output: str | Path) -> dict[str, 
             f"{application['description']}\n\n"
             "## Project contents\n\n"
             "- src/main.rpr: Reaper entry-point scaffold.\n"
-            "- src/components/: one contract stub per selected component.\n"
+            "- src/components/: contract stubs for non-HARVEST specification packs.\n"
+            "- src/harvest/: bundled HARVEST Reaper modules and versioned JSON schemas when selected.\n"
             "- locales/: generated EN/RU/UK/MOST interface dictionaries.\n"
             "- jora.app.json: versioned application manifest.\n"
             "- jora.lock.json: resolved component, dependency, naming and graph versions.\n"
@@ -1319,6 +1626,13 @@ def build_application(request: dict[str, Any], output: str | Path) -> dict[str, 
             "This directory is a reproducible scaffold, not an installable application. "
             "The selected feature packs are specification-only. Storage, translation and "
             "audio host adapters need separate implementations. No source was executed.\n"
+            + (
+                "\n## HARVEST source bundle\n\n"
+                "Selected HARVEST Reaper modules and their versioned schemas are included under src/harvest/. "
+                "Their maturity is authored_unverified until Reaper parser, typechecker and integration checks pass. "
+                "Jora bundles but does not install or execute the source.\n"
+                if harvest_build is not None else ""
+            )
         )
         _write_text(staging, "README.md", readme)
 
@@ -1346,6 +1660,7 @@ def build_application(request: dict[str, Any], output: str | Path) -> dict[str, 
         "validation": validation,
         "installable": False,
         "source_executed": False,
+        "source_bundle": harvest_build,
     }
 
 
