@@ -7,11 +7,11 @@ export make FOUNDATION_VERSION := 1
 
 export craft foundation_frameworks() {
     yield [
-        ["foundation.scaffold.v1", "Scaffold", "repository layout and extension points", "implemented", "docs/FOUNDATIONAL_FRAMEWORKS_V1.md"],
-        ["foundation.platform.v1", "Platform", "target, operating system and ABI profile", "partial", "docs/HARDWARE_LANGUAGE.md"],
-        ["foundation.environment.v1", "Environment", "runtime and execution profile", "partial", "docs/RUNTIME_PLATFORM.md"],
-        ["foundation.infrastructure.v1", "Infrastructure", "bounded resources and host services", "partial", "docs/SYSTEM_RUNTIME_ABI_V1.md"],
-        ["foundation.architecture.v1", "Architecture", "ordered language, compiler and host layers", "partial", "docs/REAPER_UNIFIED_ARCHITECTURE.md"]
+        ["architecture.framework-frame.v1", "Framework frame", "structural frame, allowed relationships and project extension points", "implemented", "docs/FOUNDATIONAL_FRAMEWORKS_V1.md"],
+        ["architecture.platform.v1", "Platform", "target, operating system and ABI profile", "partial", "docs/HARDWARE_LANGUAGE.md"],
+        ["architecture.environment.v1", "Environment", "runtime and execution profile", "partial", "docs/RUNTIME_PLATFORM.md"],
+        ["architecture.infrastructure.v1", "Infrastructure", "bounded resources and host services", "partial", "docs/SYSTEM_RUNTIME_ABI_V1.md"],
+        ["architecture.architecture.v1", "Architecture", "ordered language, compiler and host layers", "partial", "docs/REAPER_UNIFIED_ARCHITECTURE.md"]
     ]
 }
 
