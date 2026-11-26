@@ -115,7 +115,7 @@
       "variant": "forward",
       "profile_tokens": [
         "Frame",
-        "SaaS"
+        "Saas"
       ],
       "profile_expression": "Frame SaaS",
       "mirror_of": null,
@@ -132,7 +132,7 @@
       "pair_id": "pair-02",
       "variant": "reverse",
       "profile_tokens": [
-        "SaaS",
+        "Saas",
         "Frame"
       ],
       "profile_expression": "SaaS Frame",
