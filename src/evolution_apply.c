@@ -67,11 +67,11 @@ static int valid_relative_path(const char *path) {
 
 static int valid_hex(const char *value, size_t expected_length) {
     size_t index;
-    if (value == NULL || strlen(value) != expected_length) return 0;
+    if (value == NULL) return 0;
     for (index = 0u; index < expected_length; ++index) {
-        if (!isxdigit((unsigned char)value[index])) return 0;
+        if (value[index] == '\\0' || !isxdigit((unsigned char)value[index])) return 0;
     }
-    return 1;
+    return value[expected_length] == '\\0';
 }
 
 static int valid_revision(const ReaperEvolutionApplyRequest *request) {
@@ -353,6 +353,10 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
                 patch->expected_original_sha256, patch->replacement,
                 patch->replacement_size, &entries[index].staged) ||
             entries[index].staged == NULL) {
+            if (entries[index].staged != NULL) {
+                (void)host->discard_staged(host->context, entries[index].staged);
+                entries[index].staged = NULL;
+            }
             result.status = REAPER_APPLY_STAGE_FAILED;
             (void)snprintf(result.failed_path, sizeof result.failed_path, "%s", patch->relative_path);
             goto fail;
