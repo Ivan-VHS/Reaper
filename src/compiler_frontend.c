@@ -126,6 +126,7 @@ int reaper_compiler_ir_lower_ast_to_hir(
         uint32_t pending[REAPER_COMPILER_IR_MAX_NODES];
         size_t pending_count = 0u;
         pending[pending_count++] = ast->root;
+        reachable[ast->root] = 1u;
         while (pending_count > 0u) {
             const uint32_t current = pending[--pending_count];
             const ReaperAstNode *item;
@@ -133,21 +134,27 @@ int reaper_compiler_ir_lower_ast_to_hir(
                 return frontend_fail(error, current, source_name, 0u, 0u,
                     "AST contains an out-of-range node reference");
             }
-            if (reachable[current] != 0u) continue;
-            reachable[current] = 1u;
             item = &ast->items[current];
             if (item->kind == REAPER_AST_UNARY) {
                 if (item->left >= current || item->right != REAPER_AST_NO_NODE)
                     return frontend_fail(error, current, source_name, item->line, item->column,
                         "unary AST node has invalid child references");
-                pending[pending_count++] = item->left;
+                if (reachable[item->left] == 0u) {
+                    reachable[item->left] = 1u;
+                    pending[pending_count++] = item->left;
+                }
             } else if (item->kind == REAPER_AST_BINARY) {
-                if (item->left >= current || item->right >= current ||
-                    pending_count + 2u > REAPER_COMPILER_IR_MAX_NODES)
+                if (item->left >= current || item->right >= current)
                     return frontend_fail(error, current, source_name, item->line, item->column,
                         "binary AST node has invalid child references");
-                pending[pending_count++] = item->left;
-                pending[pending_count++] = item->right;
+                if (reachable[item->left] == 0u) {
+                    reachable[item->left] = 1u;
+                    pending[pending_count++] = item->left;
+                }
+                if (reachable[item->right] == 0u) {
+                    reachable[item->right] = 1u;
+                    pending[pending_count++] = item->right;
+                }
             } else if (item->left != REAPER_AST_NO_NODE ||
                        item->right != REAPER_AST_NO_NODE) {
                 return frontend_fail(error, current, source_name, item->line, item->column,
