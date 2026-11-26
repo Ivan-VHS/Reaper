@@ -452,21 +452,6 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
         }
     }
 
-    if (!host->run_declared_checks(host->context, workspace,
-            staged_handles, request->patch_count,
-            request->check_ids, request->check_count, &request->limits,
-            result.report, sizeof result.report)) {
-        result.status = REAPER_APPLY_CHECKS_FAILED;
-        goto fail;
-    }
-    checks_passed = 1;
-    if (!host->audit_append(host->context, "checks.passed", request->request_id,
-            request->repository_id, request->target_branch, request->base_revision,
-            "", result.request_digest, result.report)) {
-        result.status = REAPER_APPLY_AUDIT_FAILED;
-        goto fail;
-    }
-
     for (index = 0u; index < request->patch_count; ++index) {
         if (!host->commit_staged(host->context, workspace,
                 entries[index].staged, &entries[index].rollback)) {
@@ -482,6 +467,28 @@ ReaperEvolutionApplyResult reaper_evolution_apply(
         }
         ++result.applied_files;
     }
+    if (!host->audit_append(host->context, "workspace.materialized", request->request_id,
+            request->repository_id, request->target_branch, request->base_revision,
+            "", result.request_digest, "all patch replacements committed only inside isolated workspace")) {
+        result.status = REAPER_APPLY_AUDIT_FAILED;
+        goto fail;
+    }
+
+    if (!host->run_declared_checks(host->context, workspace,
+            staged_handles, request->patch_count,
+            request->check_ids, request->check_count, &request->limits,
+            result.report, sizeof result.report)) {
+        result.status = REAPER_APPLY_CHECKS_FAILED;
+        goto fail;
+    }
+    checks_passed = 1;
+    if (!host->audit_append(host->context, "checks.passed", request->request_id,
+            request->repository_id, request->target_branch, request->base_revision,
+            "", result.request_digest, result.report)) {
+        result.status = REAPER_APPLY_AUDIT_FAILED;
+        goto fail;
+    }
+
 
     if (!host->publish_topic_branch(host->context, workspace,
             request->target_branch, request->revision_algorithm,
@@ -531,8 +538,8 @@ fail:
                 request->repository_id, request->target_branch,
                 branch_published ? result.published_revision : request->base_revision,
                 result.failed_path, result.request_digest,
-                checks_passed ? "branch publication failed or audit did not commit; rollback attempted" :
-                                "isolated workspace operation failed; staged changes discarded")) {
+                checks_passed ? "branch publication or final audit failed; conditional ref and workspace rollback attempted" :
+                                "isolated workspace operation failed before topic-branch publication; rollback attempted")) {
             if (rollback_ok) result.status = REAPER_APPLY_AUDIT_FAILED;
         }
         if (!rollback_ok) result.status = REAPER_APPLY_ROLLBACK_FAILED;
