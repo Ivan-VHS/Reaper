@@ -89,7 +89,10 @@ export craft tooling_validate_probe(probe) {
     when tooling_find_command(probe[0]) == nothing {
         yield false
     }
-    yield true
+    when probe[2] == "available" {
+        yield probe[1] != ""
+    }
+    yield probe[1] == ""
 }
 
 export craft tooling_probe_policy() {
