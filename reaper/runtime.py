@@ -67,6 +67,42 @@ class UserFunction:
     closure: Environment
 
 
+
+@dataclass(frozen=True, slots=True)
+class ResultValue:
+    is_ok: bool
+    value: Any = None
+    error: Any = None
+
+    @classmethod
+    def ok(cls, value: Any) -> "ResultValue":
+        return cls(True, value=value)
+
+    @classmethod
+    def err(cls, error: Any) -> "ResultValue":
+        return cls(False, error=error)
+
+    def __repr__(self) -> str:
+        return f"Ok({self.value!r})" if self.is_ok else f"Err({self.error!r})"
+
+
+@dataclass(frozen=True, slots=True)
+class OptionValue:
+    is_some: bool
+    value: Any = None
+
+    @classmethod
+    def some(cls, value: Any) -> "OptionValue":
+        return cls(True, value)
+
+    @classmethod
+    def none(cls) -> "OptionValue":
+        return cls(False)
+
+    def __repr__(self) -> str:
+        return f"Some({self.value!r})" if self.is_some else "None"
+
+
 @dataclass(slots=True)
 class Builtin:
     name: str
@@ -526,6 +562,62 @@ class Interpreter:
             if not isinstance(value, (UserFunction, Builtin, NativeFunction)) and not getattr(value, "__reaper_bytecode__", False):
                 raise TypeError("expected a Reaper function")
 
+
+        def require_result(value: Any) -> ResultValue:
+            if not isinstance(value, ResultValue):
+                raise TypeError("expected a Result value")
+            return value
+
+        def require_option(value: Any) -> OptionValue:
+            if not isinstance(value, OptionValue):
+                raise TypeError("expected an Option value")
+            return value
+
+        def result_value(value: Any) -> Any:
+            result = require_result(value)
+            if not result.is_ok:
+                raise ValueError("result_value() cannot unwrap Err")
+            return result.value
+
+        def result_error(value: Any) -> Any:
+            result = require_result(value)
+            if result.is_ok:
+                raise ValueError("result_error() cannot read Ok")
+            return result.error
+
+        def option_value(value: Any) -> Any:
+            option = require_option(value)
+            if not option.is_some:
+                raise ValueError("option_value() cannot unwrap None")
+            return option.value
+
+        def option_or(value: Any, fallback: Any) -> Any:
+            option = require_option(value)
+            return option.value if option.is_some else fallback
+
+        def map_ok(value: Any, function: Any) -> ResultValue:
+            result = require_result(value)
+            callback(function)
+            if not result.is_ok:
+                return result
+            mapped = self._call(function, [result.value], Token("BUILTIN", "map_ok", 1, 1))
+            return ResultValue.ok(mapped)
+
+        def map_err(value: Any, function: Any) -> ResultValue:
+            result = require_result(value)
+            callback(function)
+            if result.is_ok:
+                return result
+            mapped = self._call(function, [result.error], Token("BUILTIN", "map_err", 1, 1))
+            return ResultValue.err(mapped)
+
+        def zip_results(values: list[Any]) -> ResultValue:
+            results = [require_result(value) for value in values]
+            for result in results:
+                if not result.is_ok:
+                    return result
+            return ResultValue.ok([result.value for result in results])
+
         def iterate(seed: Any, steps: Any, function: Any) -> list[Any]:
             callback(function)
             if isinstance(steps, bool) or not isinstance(steps, int) or steps < 0:
@@ -540,6 +632,23 @@ class Interpreter:
                 value = self._call(function, [value], token)
                 history.append(value)
             return history
+
+        register("ok", ResultValue.ok, 1, 1)
+        register("err", ResultValue.err, 1, 1)
+        register("some", OptionValue.some, 1, 1)
+        register("none", OptionValue.none, 0, 0)
+        register("result_is_ok", lambda value: require_result(value).is_ok, 1, 1)
+        register("result_is_err", lambda value: not require_result(value).is_ok, 1, 1)
+        register("result_value", result_value, 1, 1)
+        register("result_error", result_error, 1, 1)
+        register("option_is_some", lambda value: require_option(value).is_some, 1, 1)
+        register("option_is_none", lambda value: not require_option(value).is_some, 1, 1)
+        register("option_value", option_value, 1, 1)
+        register("option_or", option_or, 2, 2)
+        register("map_ok", map_ok, 2, 2)
+        register("map_err", map_err, 2, 2)
+        register("zip_ok", lambda left, right: zip_results([left, right]), 2, 2)
+        register("zip3_ok", lambda first, second, third: zip_results([first, second, third]), 3, 3)
 
         register("divmod_euclidean", euclidean_divmod, 2, 2)
         register("euclidean_divmod", euclidean_divmod, 2, 2)
@@ -970,6 +1079,10 @@ class Interpreter:
             return "list"
         if isinstance(value, dict):
             return "map"
+        if isinstance(value, ResultValue):
+            return "result"
+        if isinstance(value, OptionValue):
+            return "option"
         if isinstance(value, (UserFunction, Builtin, NativeFunction)) or getattr(value, "__reaper_bytecode__", False):
             return "craft"
         if isinstance(value, ResourceHandle):
@@ -1008,6 +1121,8 @@ class Interpreter:
             return "[" + ", ".join(self._display(item) for item in value) + "]"
         if isinstance(value, str):
             return value
+        if isinstance(value, (ResultValue, OptionValue)):
+            return repr(value)
         if isinstance(value, range):
             return f"range({value.start}, {value.stop}, {value.step})"
         return str(value)
