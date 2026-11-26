@@ -177,6 +177,24 @@ static int valid_digest_hex(const char digest[65], uint8_t bytes[32]) {
     return digest[64] == '\0';
 }
 
+static void secure_clear(void *memory, size_t length) {
+    volatile uint8_t *bytes = (volatile uint8_t *)memory;
+    size_t index;
+    for (index = 0u; index < length; ++index) bytes[index] = 0u;
+}
+
+static int bounded_string_length(const char *value, size_t maximum, size_t *length) {
+    size_t index;
+    if (value == NULL || length == NULL) return 0;
+    for (index = 0u; index <= maximum; ++index) {
+        if (value[index] == '\\0') {
+            *length = index;
+            return 1;
+        }
+    }
+    return 0;
+}
+
 static int hash_length_prefixed(
     ReaperSha256Context *context, const void *data, size_t length
 ) {
@@ -197,17 +215,21 @@ int reaper_hmac_sha256_buffer(
     char output[65]
 ) {
     uint8_t key_block[64] = {0};
-    uint8_t inner_pad[64], outer_pad[64];
-    uint8_t inner_digest[32], final_digest[32];
+    uint8_t inner_pad[64] = {0}, outer_pad[64] = {0};
+    uint8_t inner_digest[32] = {0}, final_digest[32] = {0};
     ReaperSha256Context context;
     size_t index;
+    int ok = 0;
     if (output == NULL || (key_length > 0u && key == NULL) ||
         (data_length > 0u && data == NULL)) return 0;
 
     if (key_length > sizeof key_block) {
         ReaperSha256Context key_context;
         reaper_sha256_init(&key_context);
-        if (!reaper_sha256_update(&key_context, key, key_length)) return 0;
+        if (!reaper_sha256_update(&key_context, key, key_length)) {
+            secure_clear(&key_context, sizeof key_context);
+            goto cleanup;
+        }
         reaper_sha256_final(&key_context, key_block);
     } else if (key_length > 0u) {
         memcpy(key_block, key, key_length);
@@ -220,21 +242,29 @@ int reaper_hmac_sha256_buffer(
 
     reaper_sha256_init(&context);
     if (!reaper_sha256_update(&context, inner_pad, sizeof inner_pad) ||
-        !reaper_sha256_update(&context, data, data_length)) return 0;
+        !reaper_sha256_update(&context, data, data_length)) {
+        secure_clear(&context, sizeof context);
+        goto cleanup;
+    }
     reaper_sha256_final(&context, inner_digest);
 
     reaper_sha256_init(&context);
     if (!reaper_sha256_update(&context, outer_pad, sizeof outer_pad) ||
-        !reaper_sha256_update(&context, inner_digest, sizeof inner_digest)) return 0;
+        !reaper_sha256_update(&context, inner_digest, sizeof inner_digest)) {
+        secure_clear(&context, sizeof context);
+        goto cleanup;
+    }
     reaper_sha256_final(&context, final_digest);
     reaper_sha256_hex(final_digest, output);
+    ok = 1;
 
-    memset(key_block, 0, sizeof key_block);
-    memset(inner_pad, 0, sizeof inner_pad);
-    memset(outer_pad, 0, sizeof outer_pad);
-    memset(inner_digest, 0, sizeof inner_digest);
-    memset(final_digest, 0, sizeof final_digest);
-    return 1;
+cleanup:
+    secure_clear(key_block, sizeof key_block);
+    secure_clear(inner_pad, sizeof inner_pad);
+    secure_clear(outer_pad, sizeof outer_pad);
+    secure_clear(inner_digest, sizeof inner_digest);
+    secure_clear(final_digest, sizeof final_digest);
+    return ok;
 }
 
 int reaper_hmac_sha256_verify(
@@ -272,6 +302,7 @@ int reaper_audit_chain_next(
     ReaperSha256Context context;
     uint8_t previous[32], digest[32];
     const char *fields[8];
+    size_t field_lengths[8];
     size_t index;
     if (output_digest == NULL || !valid_digest_hex(previous_digest, previous)) return 0;
     fields[0] = event;
@@ -283,15 +314,27 @@ int reaper_audit_chain_next(
     fields[6] = content_digest;
     fields[7] = details;
 
-    reaper_sha256_init(&context);
-    if (!hash_length_prefixed(&context, previous, sizeof previous)) return 0;
     for (index = 0u; index < sizeof fields / sizeof fields[0]; ++index) {
-        if (fields[index] == NULL) return 0;
-        if (!hash_length_prefixed(&context, fields[index], strlen(fields[index]))) return 0;
+        if (!bounded_string_length(fields[index], 16384u, &field_lengths[index]))
+            goto fail;
+    }
+
+    reaper_sha256_init(&context);
+    if (!hash_length_prefixed(&context, previous, sizeof previous)) goto fail_context;
+    for (index = 0u; index < sizeof fields / sizeof fields[0]; ++index) {
+        if (!hash_length_prefixed(&context, fields[index], field_lengths[index]))
+            goto fail_context;
     }
     reaper_sha256_final(&context, digest);
     reaper_sha256_hex(digest, output_digest);
-    memset(previous, 0, sizeof previous);
-    memset(digest, 0, sizeof digest);
+    secure_clear(previous, sizeof previous);
+    secure_clear(digest, sizeof digest);
     return 1;
+
+fail_context:
+    secure_clear(&context, sizeof context);
+fail:
+    secure_clear(previous, sizeof previous);
+    secure_clear(digest, sizeof digest);
+    return 0;
 }
