@@ -8,7 +8,7 @@
 extern "C" {
 #endif
 
-#define REAPER_EVOLUTION_APPLY_ABI_VERSION UINT32_C(1)
+#define REAPER_EVOLUTION_APPLY_ABI_VERSION UINT32_C(2)
 #define REAPER_EVOLUTION_APPLY_MAX_FILES 64u
 #define REAPER_EVOLUTION_APPLY_MAX_CHECKS 32u
 #define REAPER_EVOLUTION_APPLY_MAX_PATH 512u
@@ -25,10 +25,12 @@ typedef enum {
     REAPER_APPLY_PATH_DENIED,
     REAPER_APPLY_FINGERPRINT_MISMATCH,
     REAPER_APPLY_LIMIT_EXCEEDED,
+    REAPER_APPLY_WORKSPACE_FAILED,
     REAPER_APPLY_READ_FAILED,
     REAPER_APPLY_STAGE_FAILED,
     REAPER_APPLY_CHECKS_FAILED,
     REAPER_APPLY_COMMIT_FAILED,
+    REAPER_APPLY_PUBLISH_FAILED,
     REAPER_APPLY_AUDIT_FAILED,
     REAPER_APPLY_ROLLBACK_FAILED
 } ReaperApplyStatus;
@@ -44,7 +46,10 @@ enum {
     REAPER_APPLY_HOST_RESOURCE_LIMITED    = UINT32_C(1) << 7,
     REAPER_APPLY_HOST_DURABLE_AUDIT       = UINT32_C(1) << 8,
     REAPER_APPLY_HOST_ROLLBACK            = UINT32_C(1) << 9,
-    REAPER_APPLY_HOST_RECOVERY_STORE      = UINT32_C(1) << 10
+    REAPER_APPLY_HOST_RECOVERY_STORE      = UINT32_C(1) << 10,
+    REAPER_APPLY_HOST_ISOLATED_WORKSPACE  = UINT32_C(1) << 11,
+    REAPER_APPLY_HOST_TOPIC_BRANCH_PUBLISH= UINT32_C(1) << 12,
+    REAPER_APPLY_HOST_CONDITIONAL_REF_CAS = UINT32_C(1) << 13
 };
 
 #define REAPER_APPLY_HOST_REQUIRED_CAPABILITIES ( \
@@ -53,7 +58,8 @@ enum {
     REAPER_APPLY_HOST_GRANT_CRYPTOGRAPHIC | REAPER_APPLY_HOST_SANDBOXED_CHECKS | \
     REAPER_APPLY_HOST_NO_NETWORK | REAPER_APPLY_HOST_RESOURCE_LIMITED | \
     REAPER_APPLY_HOST_DURABLE_AUDIT | REAPER_APPLY_HOST_ROLLBACK | \
-    REAPER_APPLY_HOST_RECOVERY_STORE)
+    REAPER_APPLY_HOST_RECOVERY_STORE | REAPER_APPLY_HOST_ISOLATED_WORKSPACE | \
+    REAPER_APPLY_HOST_TOPIC_BRANCH_PUBLISH | REAPER_APPLY_HOST_CONDITIONAL_REF_CAS)
 
 typedef struct {
     uint32_t timeout_ms;
@@ -63,10 +69,8 @@ typedef struct {
     uint32_t file_limit;
 } ReaperApplyLimits;
 
-/*
- * Exact whole-file patch. expected_original_sha256 pins the source bytes.
- * replacement storage remains caller-owned for the duration of apply().
- */
+/* Exact whole-file patch. expected_original_sha256 pins original source bytes.
+ * Replacement storage remains caller-owned for the duration of apply(). */
 typedef struct {
     const char *relative_path;
     char expected_original_sha256[65];
@@ -82,7 +86,7 @@ typedef struct {
     const char *target_branch;
     const char *revision_algorithm; /* "sha1" (40 hex) or "sha256" (64 hex). */
     const char *base_revision;
-    const void *signed_grant;       /* Opaque, host-issued token; never interpreted here. */
+    const void *signed_grant;       /* Opaque, host-issued token; never parsed by this engine. */
     size_t signed_grant_size;
     uint64_t now_unix_seconds;
     const ReaperSourcePatch *patches;
@@ -110,53 +114,78 @@ typedef struct {
         const char *repository_id, const char *relative_path,
         uint64_t now_unix_seconds
     );
-    /* Confirms the exact Git object and that base_branch resolves to it. */
+    /* Confirms base_branch resolves to the exact Git object named by revision. */
     int (*verify_git_revision)(
         void *context, const char *repository_id, const char *base_branch,
         const char *algorithm, const char *revision
     );
-    /* Resolves a repository-relative path under the granted root. The host
-     * must reject traversal, symlink/reparse-point escapes and non-regular files. */
+    /* Creates a fresh isolated workspace rooted at that immutable Git object.
+     * Must reject existing target refs, default-branch aliases, shared mutable
+     * checkouts and any path outside the repository sandbox. */
+    int (*begin_workspace)(
+        void *context, const char *repository_id,
+        const char *base_branch, const char *algorithm, const char *revision,
+        const char *target_branch, const ReaperApplyLimits *limits,
+        void **workspace
+    );
+    /* Resolves a repository-relative path inside this exact workspace.
+     * Rejects traversal, symlink/reparse-point escapes and non-regular files. */
     int (*resolve_confined_path)(
-        void *context, const char *repository_id, const char *relative_path,
+        void *context, void *workspace, const char *relative_path,
         char *canonical_path, size_t canonical_path_capacity
     );
-    /* Returns an owned byte buffer; release_buffer must free it. */
     int (*read_file)(
-        void *context, const char *canonical_path,
+        void *context, void *workspace, const char *canonical_path,
         uint8_t **bytes, size_t *length
     );
     void (*release_buffer)(void *context, uint8_t *bytes);
-    /* Creates a staged replacement and a rollback snapshot. It must re-check
-     * expected_original_sha256 under the same OS-level file identity lock used
-     * for replacement, preventing a read/stage TOCTOU race. */
+    /* Stages a replacement in the isolated workspace and re-checks the
+     * original digest under the same file-identity lock used for replacement. */
     int (*stage_replace)(
-        void *context, const char *canonical_path,
+        void *context, void *workspace, const char *canonical_path,
         const char *expected_original_sha256,
         const uint8_t *replacement, size_t replacement_size,
         void **staged_handle
     );
-    /* Runs only registered check IDs over the staged workspace. The callback
-     * must enforce sandbox, no-network and resource-limit capabilities. */
+    /* Runs only registered checks in the isolated workspace. The callback must
+     * enforce no-network and the declared CPU/memory/output/process/file limits. */
     int (*run_declared_checks)(
-        void *context, void *const *staged_handles, size_t staged_count,
+        void *context, void *workspace,
+        void *const *staged_handles, size_t staged_count,
         const char *const *check_ids, size_t check_count,
         const ReaperApplyLimits *limits,
         char *report, size_t report_capacity
     );
-    /* Commits one staged file atomically and retains a rollback snapshot. */
+    /* Commits a staged replacement only within the isolated workspace and
+     * returns a rollback snapshot. This must not update Git refs. */
     int (*commit_staged)(
-        void *context, void *staged_handle, void **rollback_handle
+        void *context, void *workspace,
+        void *staged_handle, void **rollback_handle
     );
-    int (*rollback_committed)(void *context, void *rollback_handle);
-    /* Persists a failed rollback snapshot for an explicit recovery operation. */
+    int (*rollback_committed)(void *context, void *workspace, void *rollback_handle);
+    int (*discard_staged)(void *context, void *workspace, void *staged_handle);
+
+    /* Creates a Git tree/commit from the verified workspace, with base_revision
+     * as the sole parent, then creates target_branch using an atomic
+     * create-if-absent ref update. Must never force-update a branch. Returns
+     * a 40- or 64-hex commit ID and a conditional ref rollback handle. */
+    int (*publish_topic_branch)(
+        void *context, void *workspace, const char *target_branch,
+        const char *algorithm, const char *base_revision,
+        char published_revision[65], void **published_rollback
+    );
+    /* Removes only the target ref created by this request and only while it
+     * still points to the published_revision recorded by the host handle. */
+    int (*rollback_topic_branch)(void *context, void *published_rollback);
+    void (*release_rollback)(void *context, void *rollback_handle);
+    /* Transfers a failed rollback handle to a durable recovery queue. */
     int (*preserve_failed_rollback)(
         void *context, void *rollback_handle, const char *request_id,
-        const char *relative_path
+        const char *target_branch, const char *relative_path
     );
-    int (*discard_staged)(void *context, void *staged_handle);
-    void (*release_rollback)(void *context, void *rollback_handle);
-    /* Must append to a durable, tamper-evident, hash-chained journal. */
+    /* Releases the ephemeral workspace. It must not delete a published branch. */
+    void (*end_workspace)(void *context, void *workspace);
+    /* Appends to a durable, tamper-evident, hash-chained journal. */
     int (*audit_append)(
         void *context, const char *event, const char *request_id,
         const char *repository_id, const char *branch,
@@ -170,12 +199,14 @@ typedef struct {
     size_t applied_files;
     size_t rolled_back_files;
     char request_digest[65];
+    char published_branch[REAPER_EVOLUTION_APPLY_MAX_PATH];
+    char published_revision[65];
     char failed_path[REAPER_EVOLUTION_APPLY_MAX_PATH];
     char report[REAPER_EVOLUTION_APPLY_MAX_REPORT];
 } ReaperEvolutionApplyResult;
 
 /* Generates a deterministic exact-replacement patch and pins the original
- * file contents with SHA-256. Output patch references caller-owned buffers. */
+ * bytes with SHA-256. Output patch references caller-owned buffers. */
 int reaper_evolution_patch_generate(
     const char *relative_path,
     const uint8_t *original, size_t original_size,
@@ -185,10 +216,11 @@ int reaper_evolution_patch_generate(
 );
 
 /*
- * Apply transaction:
- * grant + revision + path checks -> fingerprint -> stage -> sandboxed checks
- * -> atomic commits -> durable audit. Any failed commit/audit rolls back in
- * reverse order. The engine performs no ambient filesystem/process/network I/O.
+ * Transaction:
+ * grant + immutable revision -> isolated workspace -> path grants -> hash checks
+ * -> stage -> sandboxed checks -> workspace commits -> atomic topic-branch publish
+ * -> durable audit. Failures roll back file snapshots and the conditional Git ref.
+ * This engine performs no ambient filesystem/process/network I/O.
  */
 ReaperEvolutionApplyResult reaper_evolution_apply(
     const ReaperEvolutionApplyHost *host,
