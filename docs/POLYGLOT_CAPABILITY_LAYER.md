@@ -56,6 +56,10 @@ python -m reaper --check --syntax-only path/to/program.rpr
 
 `--check` now runs syntax parsing and the conservative type pass by default. Use `--syntax-only` only when a parser-only check is needed for compatibility. Normal program execution, tree-walk runtime and VM semantics remain unchanged; static diagnostics never execute the selected source. The checker is not yet a complete sound type system: parameters have no source-level annotations, generic user declarations are absent, and type inference across external module boundaries remains intentionally unknown.
 
+## Reaper System Features v1
+
+The C17 systems ABI now implements native contracts for ten system capability groups. The feature registry keeps each at specified for .rpr because syntax, type-checker, canonical IR, reference-runtime and backend bindings are not complete. Cooperative budgets are not hard preemption; local-only validation depends on compiler-provided transitive effect sets; mutation authorization and reconciliation planning do not themselves write data. See [System Features v1](REAPER_SYSTEM_FEATURES_V1.md).
+
 ## Snapshot integrity audit increment
 
 The native C17 core in include/reaper/snapshot_audit.h validates bounded manifests and compares sorted shard aggregates. It also offers a fixed-length transient comparison primitive that does not allocate, copy, log or retain its input. The core is offline and read-only. It does not provide row-level joins, personal-data processing, external I/O or mutation APIs. The .rpr standard-library facade and typed IR/runtime parity have not yet been implemented; see [the capability contract](SNAPSHOT_INTEGRITY_CAPABILITY.md).

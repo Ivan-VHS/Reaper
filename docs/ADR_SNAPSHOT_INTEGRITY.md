@@ -7,7 +7,7 @@
 
 Reaper needs a reusable capability for checking whether versioned snapshot metadata is structurally consistent across logical shards. The first slice must remain deterministic, bounded, portable and independent of external services.
 
-A request also described person-level aggregation and mutation of a military conscription registry. That application-specific workflow is outside this decision. This ADR adopts only the general snapshot-integrity problem and intentionally excludes personal-record linkage, demographic selection, data hydration and database mutation.
+A source request also described high-sensitivity personal-data aggregation and record mutation. That application-specific workflow is outside this decision. This ADR adopts only the general snapshot-integrity problem and intentionally excludes individual-level personal-record linkage, sensitive-attribute selection, bulk data hydration and database mutation.
 
 ## Decision
 

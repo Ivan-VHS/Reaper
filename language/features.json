@@ -318,6 +318,167 @@
         "native-c17-conformance",
         "rpr-binding-parity-before-promotion"
       ]
+    },
+    {
+      "id": "REAPER-SYS-001",
+      "name": "deterministic comptime contract dependency graph",
+      "area": "compiler",
+      "status": "specified",
+      "depends_on": [
+        "MOST-TYP-001"
+      ],
+      "acceptance": [
+        "contract-graph-positive",
+        "cycle-negative",
+        "field-compatibility-negative",
+        "deterministic-topological-order",
+        "compiler-pre-emission-hook"
+      ]
+    },
+    {
+      "id": "REAPER-SYS-002",
+      "name": "fixed-frame zero-allocation arena slots",
+      "area": "memory",
+      "status": "specified",
+      "depends_on": [
+        "MOST-MEM-001"
+      ],
+      "acceptance": [
+        "arena-alignment",
+        "capacity-negative",
+        "frame-lifecycle",
+        "zeroization",
+        "native-c17"
+      ]
+    },
+    {
+      "id": "REAPER-SYS-003",
+      "name": "bounded cooperative worker budgets",
+      "area": "runtime",
+      "status": "specified",
+      "depends_on": [
+        "MOST-EFF-001"
+      ],
+      "acceptance": [
+        "cpu-budget",
+        "memory-budget",
+        "halt-state-dump",
+        "monotonic-clock-negative",
+        "host-preemption-boundary"
+      ]
+    },
+    {
+      "id": "REAPER-SYS-004",
+      "name": "aggregate diff and reconcile plan operators",
+      "area": "stdlib",
+      "status": "specified",
+      "depends_on": [
+        "REAPER-STD-003"
+      ],
+      "acceptance": [
+        "deterministic-union-diff",
+        "upsert-drop-noop",
+        "invariant-rejection",
+        "atomic-plan-capacity",
+        "no-apply-side-effect"
+      ]
+    },
+    {
+      "id": "REAPER-SYS-005",
+      "name": "ephemeral no-persist comparison scopes",
+      "area": "memory",
+      "status": "specified",
+      "depends_on": [
+        "MOST-MEM-001"
+      ],
+      "acceptance": [
+        "constant-time-digest-compare",
+        "scope-lifecycle",
+        "wipe-on-end",
+        "inactive-scope-negative",
+        "no-persistence-sink"
+      ]
+    },
+    {
+      "id": "REAPER-SYS-006",
+      "name": "automatic and guarded manual mutation authorization",
+      "area": "effects",
+      "status": "specified",
+      "depends_on": [
+        "REAPER-SYS-004",
+        "MOST-EFF-001"
+      ],
+      "acceptance": [
+        "automatic-validator-required",
+        "manual-host-grant-required",
+        "revision-conflict-negative",
+        "revision-event",
+        "no-implicit-commit"
+      ]
+    },
+    {
+      "id": "REAPER-SYS-007",
+      "name": "typed UTC lease windows",
+      "area": "types",
+      "status": "specified",
+      "depends_on": [
+        "MOST-TYP-001"
+      ],
+      "acceptance": [
+        "compile-time-literal-bound",
+        "ttl-positive",
+        "expiry-negative",
+        "warning-horizon",
+        "overflow-negative"
+      ]
+    },
+    {
+      "id": "REAPER-SYS-008",
+      "name": "fixed-cost runtime latency percentiles",
+      "area": "runtime",
+      "status": "specified",
+      "depends_on": [
+        "REAPER-SYS-003"
+      ],
+      "acceptance": [
+        "bounded-histogram",
+        "p95",
+        "p99",
+        "overflow-negative",
+        "read-only-summary"
+      ]
+    },
+    {
+      "id": "REAPER-SYS-009",
+      "name": "local-only transitive effect boundary",
+      "area": "effects",
+      "status": "specified",
+      "depends_on": [
+        "MOST-EFF-001"
+      ],
+      "acceptance": [
+        "local-read-allow",
+        "network-effect-deny",
+        "transitive-import-deny",
+        "undeclared-effect-deny",
+        "compiler-effect-aggregation"
+      ]
+    },
+    {
+      "id": "REAPER-SYS-010",
+      "name": "paired typed migration and rollback plans",
+      "area": "stdlib",
+      "status": "specified",
+      "depends_on": [
+        "REAPER-SYS-001"
+      ],
+      "acceptance": [
+        "forward-step-contract",
+        "rollback-step-contract",
+        "version-monotonicity",
+        "forward-test-required",
+        "rollback-test-required"
+      ]
     }
   ],
   "profile": "МОСТ — exact Russian keyword aliases; no separate parser, semantics, runtime or backend"

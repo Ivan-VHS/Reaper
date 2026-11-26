@@ -7,6 +7,8 @@ Start with the [project README](../README.md) for installation, first commands a
 - [Features and maturity](FEATURES.md)
 - [Psychoporter 666 function categories](FUNCTION_CATEGORIES_666.md)
 - [Architecture](ARCHITECTURE.md)
+- [Reaper System Features v1](REAPER_SYSTEM_FEATURES_V1.md) — ten bounded systems-language contracts and their implementation maturity.
+- [System Features ADR](ADR_SYSTEM_FEATURES_V1.md) — native ABI decisions and language integration gates.
 - [Snapshot integrity audit capability](SNAPSHOT_INTEGRITY_CAPABILITY.md) — bounded, read-only aggregate snapshot checks and transient no-persist comparison.
 - [Snapshot integrity ADR](ADR_SNAPSHOT_INTEGRITY.md) — implementation scope and language-integration boundary.
 - [Architecture foundation: 66 concepts](REAPER_ARCHITECTURE_FOUNDATION_66.md) — native C17 registry, nine architectural layers, dependency graph validation and deterministic ordering.

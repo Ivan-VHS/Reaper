@@ -39,8 +39,8 @@ A host must not pass no-persist values, derived identifiers or their digests int
 
 This capability does not provide:
 
-- person-level or household-level linkage, identity resolution or demographic filtering;
-- bulk hydration of personal data or joins across citizen, personnel or conscription records;
+- individual-level linkage, identity resolution or sensitive-attribute filtering;
+- bulk hydration of personal data or joins across individual-level personal records across business systems;
 - live API, DBMS, shard or external service connectors;
 - row-level diff, upsert, delete, commit, override or hotfix execution;
 - an automated decision, ranking, eligibility or enforcement workflow.
