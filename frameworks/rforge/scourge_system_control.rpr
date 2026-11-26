@@ -1,0 +1,58 @@
+# Scourge — System Control
+# Guarded system state transitions and command admission.
+
+export make FRAMEWORK_ID := "scourge.system_control"
+export make FRAMEWORK_VERSION := "1.0.0"
+export make FRAMEWORK_PROFILE := "System Control"
+
+export craft scourge_state_valid(state) {
+    yield state == "stopped" or state == "running" or state == "paused" or state == "faulted"
+}
+
+export craft scourge_transition_allowed(current, next, guarded) {
+    when current == next {
+        yield scourge_state_valid(current)
+    }
+    when current == "stopped" {
+        yield next == "running" and guarded
+    }
+    when current == "running" {
+        yield next == "paused" or next == "stopped" or (next == "faulted" and guarded)
+    }
+    when current == "paused" {
+        yield next == "running" or next == "stopped" or (next == "faulted" and guarded)
+    }
+    when current == "faulted" {
+        yield next == "stopped" and guarded
+    }
+    yield false
+}
+
+export craft scourge_command_admit(state, operation, authorized, guarded) {
+    when operation == "inspect" {
+        yield scourge_state_valid(state)
+    }
+    when operation == "start" {
+        yield state == "stopped" and authorized and guarded
+    }
+    when operation == "pause" {
+        yield state == "running" and authorized
+    }
+    when operation == "resume" {
+        yield state == "paused" and authorized
+    }
+    when operation == "stop" {
+        yield (state == "running" or state == "paused") and authorized
+    }
+    when operation == "recover" {
+        yield state == "faulted" and authorized and guarded
+    }
+    yield false
+}
+
+export craft scourge_system_limits(max_workers, heartbeat_ticks) {
+    when max_workers > 0 and heartbeat_ticks > 0 {
+        yield [max_workers, heartbeat_ticks]
+    }
+    yield []
+}
