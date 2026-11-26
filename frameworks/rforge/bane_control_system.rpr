@@ -1,0 +1,41 @@
+# Bane — Control System
+# Control-first rule evaluation, guarded action plans and enforcement levels.
+
+export make FRAMEWORK_ID := "bane.control_system"
+export make FRAMEWORK_VERSION := "1.0.0"
+export make FRAMEWORK_PROFILE := "Control System"
+
+export craft bane_rule_matches(observed, expected, enabled) {
+    yield enabled and observed == expected
+}
+
+export craft bane_action_safe(action, locked, approved) {
+    when action == "inspect" or action == "hold" {
+        yield true
+    }
+    when action == "enable" or action == "disable" or action == "reset" {
+        yield not locked and approved
+    }
+    yield false
+}
+
+export craft bane_control_plan(current, target, locked, approved) {
+    when size(trim(current)) > 0 and size(trim(target)) > 0 and current != target and bane_action_safe(target, locked, approved) {
+        yield [FRAMEWORK_ID, current, target, "planned"]
+    }
+    yield []
+}
+
+export craft bane_enforcement_level(violations) {
+    when violations <= 0 {
+        yield "normal"
+    }
+    when violations <= 3 {
+        yield "restricted"
+    }
+    yield "locked"
+}
+
+export craft bane_transition_verified(plan_exists, policy_checked, operator_approved) {
+    yield plan_exists and policy_checked and operator_approved
+}
