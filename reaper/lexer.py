@@ -15,7 +15,7 @@ MAX_TOKEN_COUNT = 1_000_000
 KEYWORDS = {
     "make", "vary", "change", "craft", "yield", "emit", "when",
     "otherwise", "each", "in", "loop", "while", "true", "false",
-    "nothing", "and", "or", "not", "import", "export", "as",
+    "nothing", "and", "or", "not", "import", "export", "as", "maza",
 }
 
 # Exact Russian spellings map to canonical REAPER keyword spellings.
@@ -43,6 +43,7 @@ KEYWORD_ALIASES = {
     "импорт": "import",
     "экспорт": "export",
     "как": "as",
+    "маза": "maza",
     "модуль": "module",
     "публичный": "pub",
     "процедура": "fn",

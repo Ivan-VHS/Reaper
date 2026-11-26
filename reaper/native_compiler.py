@@ -227,6 +227,8 @@ int main(void) {{
         if kind in {"emit", "when", "while", "expression"}:
             self._compile_statement(node, self.global_scope, self.main_body)
             return
+        if kind == "maza":
+            self._fail(node, "MAZA live foundation attachment requires the reference runtime or VM; native AOT module loading is not supported yet")
         if kind == "yield":
             self._fail(node, "'yield' is only valid inside a craft function")
         self._fail(node, f"'{kind}' is outside the native scalar subset")
@@ -319,6 +321,8 @@ int main(void) {{
 
     def _compile_statement(self, node: Node, scope: Scope, output: list[str]) -> None:
         kind = node.kind
+        if kind == "maza":
+            self._fail(node, "MAZA live foundation attachment requires the reference runtime or VM; native AOT module loading is not supported yet")
         if kind == "block":
             self._compile_block(node, scope, output)
             return

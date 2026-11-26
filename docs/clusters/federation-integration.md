@@ -8,6 +8,8 @@ This hub groups related specifications and implementation references. The linked
 
 ## Documents
 
+- [MAZA live foundation federation](../MAZA.md)
+
 - [FEDERATED INTEGRATION](../FEDERATED_INTEGRATION.md)
 - [INTERNAL PRODUCT ECOSYSTEM](../INTERNAL_PRODUCT_ECOSYSTEM.md)
 - [INTERNAL PRODUCTS](../INTERNAL_PRODUCTS.md)

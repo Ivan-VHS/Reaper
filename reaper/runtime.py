@@ -18,6 +18,7 @@ from .debugger import RuntimeDebugger
 from .ffi import CAbiLibrary, NativeFunction, PytylikiBridge
 from .memory import HeapLimitError, MemoryManager, RegionError
 from .modules import ModuleError, ModuleLoader
+from .maza import MazaManager
 from .resources import ResourceError, ResourceHandle, ResourceManager
 from .token_catalog import token_catalog, token_info, token_is_reserved
 
@@ -91,6 +92,7 @@ class Interpreter:
         allow_native_ffi: bool = False,
         max_heap_bytes: int = 64 * 1024 * 1024,
         max_open_resources: int = 64,
+        maza_poll_interval_ms: int = 1_000,
         debugger: RuntimeDebugger | None = None,
         consent_authority: ConsentAuthority | None = None,
     ) -> None:
@@ -114,6 +116,7 @@ class Interpreter:
         self.memory = MemoryManager(max_heap_bytes=max_heap_bytes)
         self.resources = ResourceManager(max_open=max_open_resources)
         self.module_loader = ModuleLoader(self)
+        self.maza = MazaManager(self, maza_poll_interval_ms)
         self.debugger = debugger
         self.consent_authority = consent_authority
         self.call_stack: list[str] = []
@@ -123,7 +126,7 @@ class Interpreter:
         self._install_builtins()
 
     def _memory_roots(self) -> list[Any]:
-        roots: list[Any] = [self.globals, self.module_loader.cache]
+        roots: list[Any] = [self.globals, self.module_loader.cache, *self.maza.roots()]
         if self._current_environment is not None:
             roots.append(self._current_environment)
         return roots
@@ -164,6 +167,7 @@ class Interpreter:
                 f"{self.filename}:{token.line}:{token.column}: execution stopped after "
                 f"{self.max_steps} steps; increase --steps only for programs you trust"
             )
+        self.maza.poll()
 
     def _check_collection_size(self, values: Any, token: Token) -> Any:
         try:
@@ -198,6 +202,9 @@ class Interpreter:
             else:
                 for symbol, value in exports.items():
                     environment.define(symbol, value)
+        elif node.kind == "maza":
+            specifier, alias = node.value
+            self.maza.attach(specifier, alias, self.filename, environment)
         elif node.kind == "export":
             if children:
                 declaration = children[0]
@@ -410,6 +417,11 @@ class Interpreter:
     def _install_builtins(self) -> None:
         def register(name: str, callback: Callable[..., Any], minimum: int, maximum: int | None = None) -> None:
             self.globals.define(name, Builtin(name, callback, minimum, maximum))
+
+        register("maza_status", self.maza.status, 1, 1)
+        register("maza_links", self.maza.links, 0, 0)
+        register("maza_refresh", self.maza.refresh, 1, 1)
+        register("maza_detach", self.maza.detach, 1, 1)
 
         def sequence(value: Any) -> Any:
             if not isinstance(value, (list, tuple, str, range)):

@@ -5,6 +5,7 @@ Start with the [project README](../README.md) for installation, first commands a
 ## Key pages
 
 - [Features and maturity](FEATURES.md)
+- [MAZA live foundation federation](MAZA.md)
 - [Psychoporter 666 function categories](FUNCTION_CATEGORIES_666.md)
 - [Architecture](ARCHITECTURE.md)
 - [Architecture foundation: 66 concepts](REAPER_ARCHITECTURE_FOUNDATION_66.md) — native C17 registry, nine architectural layers, dependency graph validation and deterministic ordering.

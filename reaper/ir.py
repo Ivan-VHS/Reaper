@@ -113,6 +113,8 @@ class _Lowerer:
             self.scoped_block(node)
         elif node.kind == "import":
             self.emit("IMPORT", node.value, node.token)
+        elif node.kind == "maza":
+            self.emit("MAZA", node.value, node.token)
         elif node.kind == "export":
             if children:
                 child = children[0]
@@ -186,7 +188,7 @@ _ALLOWED = {
     "CONST", "LOAD", "DEFINE", "ASSIGN", "EMIT", "RETURN", "MAKE_FUNCTION",
     "JUMP_IF_FALSE", "JUMP", "ENTER_SCOPE", "EXIT_SCOPE", "ITER_INIT",
     "ITER_NEXT", "ITER_END", "POP", "BUILD_LIST", "INDEX", "UNARY",
-    "CALL", "PIPE_CALL", "BINARY", "AND_JUMP", "OR_JUMP", "IMPORT", "EXPORT",
+    "CALL", "PIPE_CALL", "BINARY", "AND_JUMP", "OR_JUMP", "IMPORT", "MAZA", "EXPORT",
 }
 
 
@@ -275,6 +277,12 @@ def verify(module: CanonicalIR) -> None:
                 require_name(argument[0], where)
                 if argument[1] is not None:
                     require_name(argument[1], where)
+
+            elif op == "MAZA":
+                if not isinstance(argument, tuple) or len(argument) != 2:
+                    raise IRVerificationError(f"{where}: MAZA requires (specifier, alias)")
+                require_name(argument[0], where)
+                require_name(argument[1], where)
 
             elif op == "UNARY":
                 if not isinstance(argument, str) or argument not in {"NOT", "-"}:

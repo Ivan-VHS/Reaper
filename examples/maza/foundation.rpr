@@ -1,0 +1,7 @@
+# A tiny foundation exported to other Reaper programs.
+export make foundation_name := "MAZA example foundation"
+
+craft add(left, right) {
+    yield left + right
+}
+export add

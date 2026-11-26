@@ -51,7 +51,7 @@ class ModuleLoader:
             raise ModuleError(f"Reaper modules must use the .rpr extension: {target}")
         return target
 
-    def load(self, specifier: str, importer: str) -> dict[str, Any]:
+    def load(self, specifier: str, importer: str, *, reload: bool = False) -> dict[str, Any]:
         target = self.resolve(specifier, importer)
         target_name = self._canonical(target)
         importer_name = self._canonical(Path(importer)) if not importer.startswith("<") else importer
@@ -60,7 +60,7 @@ class ModuleLoader:
             start = self.loading.index(target_name)
             chain = self.loading[start:] + [target_name]
             raise ModuleCycleError("cyclic .rpr import: " + " -> ".join(chain))
-        if target_name in self.cache:
+        if target_name in self.cache and not reload:
             return dict(self.cache[target_name])
         if len(self.loading) >= self.max_depth:
             raise ModuleError(f"module import depth limit ({self.max_depth}) exceeded")
@@ -128,7 +128,7 @@ class ModuleLoader:
             imports: list[str] = []
 
             def visit(node: Node) -> None:
-                if node.kind == "import":
+                if node.kind in {"import", "maza"}:
                     imports.append(node.value[0])
                 for child in node.children or []:
                     visit(child)
