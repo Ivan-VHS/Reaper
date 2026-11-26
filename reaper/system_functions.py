@@ -45,10 +45,16 @@ class OverrideAuthority:
             raise ValueError("override scope must contain 1..128 characters")
         if isinstance(ttl_ms, bool) or not isinstance(ttl_ms, int) or not 1 <= ttl_ms <= 300_000:
             raise ValueError("override ttl_ms must be between 1 and 300000")
+        now = time.monotonic_ns()
         token = secrets.token_urlsafe(32)
         digest = hashlib.sha256(token.encode("utf-8")).hexdigest()
         with self._lock:
-            self._tokens[digest] = (scope, time.monotonic_ns() + ttl_ms * 1_000_000)
+            expired = [key for key, (_, deadline) in self._tokens.items() if deadline <= now]
+            for key in expired:
+                self._tokens.pop(key, None)
+            if len(self._tokens) >= 4096:
+                raise ValueError("override authority token limit (4096) exceeded")
+            self._tokens[digest] = (scope, now + ttl_ms * 1_000_000)
         return token
 
     def consume(self, token: Any, scope: str) -> bool:
@@ -85,9 +91,11 @@ def _json_copy(value: Any, *, max_bytes: int = 4 * 1024 * 1024) -> Any:
         raise SystemFunctionError(f"expected finite JSON-compatible data: {error}") from error
 
 
-def _list(value: Any, label: str) -> list[Any]:
+def _list(value: Any, label: str, maximum: int = 100_000) -> list[Any]:
     if not isinstance(value, (list, tuple)):
         raise SystemFunctionError(f"{label} must be a list")
+    if len(value) > maximum:
+        raise SystemFunctionError(f"{label} exceeds the item limit ({maximum})")
     return list(value)
 
 
@@ -111,13 +119,16 @@ class ReaperSystemFunctions:
         self._journal: deque[dict[str, Any]] = deque(maxlen=512)
         self._latencies: dict[str, deque[float]] = defaultdict(lambda: deque(maxlen=4096))
 
+    def _items(self, value: Any, label: str) -> list[Any]:
+        return _list(value, label, self.interpreter.max_collection_items)
+
     def _invoke(self, function: Any, arguments: list[Any], name: str) -> Any:
         token = Token("BUILTIN", name, 1, 1)
         return self.interpreter._call(function, arguments, token)
 
     def contract_graph_check(self, contracts: Any) -> dict[str, Any]:
         """Validate ids, references, cycles and inherited field compatibility."""
-        records = _list(contracts, "contracts")
+        records = self._items(contracts, "contracts")
         if len(records) > self.interpreter.max_collection_items:
             raise SystemFunctionError("contract count exceeds the interpreter collection limit")
 
@@ -261,7 +272,7 @@ class ReaperSystemFunctions:
         """
         milliseconds = _integer(budget_ms, "budget_ms", 1)
         memory_limit = _integer(memory_bytes, "memory_bytes", 1)
-        args = _list(arguments, "worker arguments")
+        args = self._items(arguments, "worker arguments")
         if len(args) > 256:
             raise SystemFunctionError("worker argument count exceeds 256")
         started = time.monotonic_ns()
@@ -307,8 +318,8 @@ class ReaperSystemFunctions:
         }
 
     def diff_reconcile(self, before: Any, after: Any, key_field: Any) -> dict[str, Any]:
-        old_rows = _list(before, "before snapshot")
-        new_rows = _list(after, "after snapshot")
+        old_rows = self._items(before, "before snapshot")
+        new_rows = self._items(after, "after snapshot")
         if not isinstance(key_field, str) or not key_field:
             raise SystemFunctionError("key_field must be non-empty text")
 
@@ -348,7 +359,7 @@ class ReaperSystemFunctions:
         }
 
     def reconcile_apply(self, current: Any, plan: Any, invariant: Any) -> dict[str, Any]:
-        base = _list(current, "current snapshot")
+        base = self._items(current, "current snapshot")
         descriptor = _mapping(plan, "reconcile plan")
         if descriptor.get("schema") != "reaper.reconcile-plan.v1":
             raise SystemFunctionError("unsupported reconcile plan schema")
@@ -366,7 +377,7 @@ class ReaperSystemFunctions:
             rows[key] = row
 
         seen: set[Any] = set()
-        for index, raw in enumerate(_list(descriptor.get("operations"), "operations")):
+        for index, raw in enumerate(self._items(descriptor.get("operations"), "operations")):
             operation = _mapping(raw, f"operations[{index}]")
             action = operation.get("action")
             key = operation.get("key")
@@ -394,7 +405,7 @@ class ReaperSystemFunctions:
         digest = hashlib.sha256(rendered.encode("utf-8")).hexdigest()
         if descriptor.get("target_checksum") != digest:
             raise SystemFunctionError("reconcile candidate checksum does not match the plan")
-        return {"committed": True, "snapshot": candidate, "checksum": digest}
+        return {"applied": True, "snapshot": candidate, "checksum": digest}
 
     @staticmethod
     def ephemeral_match(left: Any, right: Any) -> bool:
@@ -477,7 +488,9 @@ class ReaperSystemFunctions:
     def latency_measure(self, label: Any, function: Any, arguments: Any) -> Any:
         if not isinstance(label, str) or not label or len(label) > 128:
             raise SystemFunctionError("latency label must contain 1..128 characters")
-        args = _list(arguments, "latency arguments")
+        args = self._items(arguments, "latency arguments")
+        if label not in self._latencies and len(self._latencies) >= 128:
+            raise SystemFunctionError("latency profiler series limit (128) exceeded")
         started = time.perf_counter_ns()
         try:
             return self._invoke(function, args, "latency_measure")
@@ -510,12 +523,11 @@ class ReaperSystemFunctions:
         self._latencies.clear()
         return count
 
-    @staticmethod
-    def local_only_check(enabled: Any, effects: Any, imports: Any) -> dict[str, Any]:
+    def local_only_check(self, enabled: Any, effects: Any, imports: Any) -> dict[str, Any]:
         if not isinstance(enabled, bool):
             raise SystemFunctionError("local_only flag must be boolean")
-        effect_items = _list(effects, "declared effects")
-        import_items = _list(imports, "declared imports")
+        effect_items = self._items(effects, "declared effects")
+        import_items = self._items(imports, "declared imports")
         denied_prefixes = (
             "network", "http", "https", "socket", "tcp", "udp", "dns",
             "web", "remote", "cloud", "grpc", "quic", "ws", "wss",
@@ -539,7 +551,7 @@ class ReaperSystemFunctions:
         return {"ok": not violations, "local_only": enabled, "violations": violations}
 
     def rollback_plan_check(self, migration: Any, rollback: Any, fixtures: Any) -> dict[str, Any]:
-        cases = _list(fixtures, "rollback fixtures")
+        cases = self._items(fixtures, "rollback fixtures")
         failures: list[str] = []
         for index, raw in enumerate(cases):
             fixture = _mapping(raw, f"fixtures[{index}]")

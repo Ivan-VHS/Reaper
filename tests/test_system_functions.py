@@ -80,7 +80,7 @@ emit contracts["phase"]
 emit arena["value"]
 emit budget["status"]
 emit budget["value"]
-emit applied["committed"]
+emit applied["applied"]
 emit matched
 emit lease["active"]
 emit mutation["mode"]
@@ -123,6 +123,15 @@ emit rollback_result["ok"]
         for engine in ("treewalk", "vm"):
             with self.subTest(engine=engine):
                 self.assertEqual(self._run_library(engine), expected)
+
+    def test_contract_graph_respects_interpreter_collection_limit(self) -> None:
+        interpreter = Interpreter(output=lambda _line: None, max_collection_items=2)
+        with self.assertRaisesRegex(SystemFunctionError, "item limit"):
+            interpreter.system_functions.contract_graph_check([
+                {"id": "one", "fields": {}},
+                {"id": "two", "fields": {}},
+                {"id": "three", "fields": {}},
+            ])
 
     def test_contract_graph_reports_cycles_and_inherited_field_conflicts(self) -> None:
         interpreter = Interpreter(output=lambda _line: None)
