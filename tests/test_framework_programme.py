@@ -32,13 +32,13 @@ class FrameworkProgrammeTests(unittest.TestCase):
 
     def test_programme_counts_and_domain_slots_are_consistent(self) -> None:
         self.assertEqual(self.index["total_target_framework_count"], 330)
-        self.assertEqual(self.index["remaining_target_framework_count"], 325)
+        self.assertEqual(self.index["remaining_target_framework_count"], 0)
         self.assertEqual(len(self.index["domains"]), 66)
         self.assertEqual(sum(domain["framework_slots"] for domain in self.index["domains"]), 330)
-        self.assertEqual(len(self.frameworks), 225)
+        self.assertEqual(self.index["new_source_count"], 325)\n        self.assertEqual(self.index["remaining_source_count"], 0)\n        self.assertEqual(len(self.frameworks), 325)
         self.assertEqual(self.index["remaining_source_count"], 305)
-        self.assertEqual(len({item["id"] for item in self.frameworks}), 225)
-        self.assertEqual(len({item["path"] for item in self.frameworks}), 225)
+        self.assertEqual(len({item["id"] for item in self.frameworks}), 325)
+        self.assertEqual(len({item["path"] for item in self.frameworks}), 325)\n        self.assertEqual({item["domain_number"] for item in self.frameworks}, set(range(2, 67)))\n        for domain in self.index["domains"][1:]:\n            with self.subTest(domain=domain["number"]):\n                self.assertEqual(domain["source_frameworks"], 5)
 
     def test_each_new_framework_is_an_independent_reaper_module(self) -> None:
         missing = [item["path"] for item in self.frameworks if not (ROOT / item["path"]).is_file()]
