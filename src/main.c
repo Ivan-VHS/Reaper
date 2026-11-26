@@ -1,6 +1,7 @@
 #include "reaper/lexer.h"
 #include "reaper/ast.h"
 #include "reaper/evolution.h"
+#include "reaper/frameworks.h"
 #include "reaper/token_catalog.h"
 #include "reaper/capability_suite.h"
 #include <stdio.h>
@@ -18,20 +19,24 @@ static char *read_file(const char *path) {
 }
 static void usage(FILE *f) {
     fprintf(f,"Reaper %s — native C17 development runtime\n"
-      "Usage: reaper-c [--version] [--evolution-status] [--tokens|--ast-json] <source.rpr>\n"
+      "Usage: reaper-c [--version] [--evolution-status] [--frameworks|--framework NAME] [--tokens|--ast-json] <source.rpr>\n"
       "       reaper-c [--capabilities|--capability MODULE]\n"
       "  --version           Show native runtime version\n"
       "  --evolution-status  Show native evolution gates and safety boundary\n"
+      "  --frameworks        List the 66 native repository frameworks\n"
+      "  --framework NAME   Inspect one framework profile and evidence gates\n"
       "  --tokens            Print lexical tokens\n"
       "  --ast-json          Parse one expression and print deterministic AST JSON\n"
       "  --capabilities      List the native capability registry\n"
       "  --capability NAME   Inspect one native capability module\n",REAPER_VERSION);
 }
 int main(int argc,char **argv) {
-    int dump=0,ast_json=0,catalog_dump=0,capability_dump=0; const char *catalog_lookup=NULL; const char *capability_lookup=NULL; const char *path=NULL;
+    int dump=0,ast_json=0,catalog_dump=0,capability_dump=0,framework_dump=0; const char *catalog_lookup=NULL; const char *capability_lookup=NULL; const char *framework_lookup=NULL; const char *path=NULL;
     for(int i=1;i<argc;++i) {
         if(strcmp(argv[i],"--version")==0){puts("Reaper " REAPER_VERSION " (C17 native core)");return 0;}
         if(strcmp(argv[i],"--evolution-status")==0){reaper_evolution_print_status();return 0;}
+        if(strcmp(argv[i],"--frameworks")==0){framework_dump=1;continue;}
+        if(strcmp(argv[i],"--framework")==0){if(i+1>=argc){usage(stderr);return 2;}framework_lookup=argv[++i];continue;}
         if(strcmp(argv[i],"--tokens")==0){dump=1;continue;}
         if(strcmp(argv[i],"--ast-json")==0){ast_json=1;continue;}
         if(strcmp(argv[i],"--catalog")==0){catalog_dump=1;continue;}
@@ -40,6 +45,38 @@ int main(int argc,char **argv) {
         if(strcmp(argv[i],"--catalog-token")==0){if(i+1>=argc){usage(stderr);return 2;}catalog_lookup=argv[++i];continue;}
         if(argv[i][0]=='-'||(dump&&ast_json)){usage(stderr);return 2;}
         if(path){usage(stderr);return 2;} path=argv[i];
+    }
+    if(framework_dump||framework_lookup){
+        if(path||dump||ast_json||catalog_dump||catalog_lookup||capability_dump||
+           capability_lookup||(framework_dump&&framework_lookup)){usage(stderr);return 2;}
+        if(!reaper_framework_catalog_validate()){
+            fprintf(stderr,"reaper-c: framework catalogue integrity failure\\n");return 1;
+        }
+        if(framework_lookup){
+            const ReaperFrameworkSpec *framework =
+                reaper_framework_find(framework_lookup);
+            if(framework==NULL){
+                fprintf(stderr,"reaper-c: unknown framework %s\\n",framework_lookup);
+                return 1;
+            }
+            printf("%s\\t%s\\t%s\\n",framework->id,framework->name,framework->domain);
+            printf("focus: %s\\n",framework->specialization);
+            printf("deliverable: %s\\n",framework->deliverable);
+            printf("required evidence:");
+            for(uint32_t bit=1U;bit<=REAPER_FRAMEWORK_EVIDENCE_ROLLBACK;bit<<=1U){
+                if((framework->required_evidence & bit)!=0U)
+                    printf(" %s",reaper_framework_evidence_name(bit));
+            }
+            putchar('\\n');
+            puts("mode: evidence assessment only; source mutation and merge are disabled");
+            return 0;
+        }
+        for(size_t i=0U;i<reaper_framework_catalog_count();++i){
+            const ReaperFrameworkSpec *framework = reaper_framework_catalog_at(i);
+            printf("%02zu\\t%s\\t%s\\t%s\\n",i+1U,framework->name,
+                   framework->id,framework->domain);
+        }
+        return 0;
     }
     if(capability_dump||capability_lookup){
         if(path||dump||ast_json||catalog_dump||catalog_lookup||
