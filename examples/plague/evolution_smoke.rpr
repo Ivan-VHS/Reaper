@@ -1,4 +1,4 @@
-import "../../plague/evolution.rpr" as plague
+import "../../plague/engine/evolution.rpr" as plague
 
 make profile := [
     "Ivan-VHS/Reaper",
