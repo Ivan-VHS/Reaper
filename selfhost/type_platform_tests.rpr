@@ -49,15 +49,23 @@ assert(not feature_miss[0] and feature_miss[1] == "RPR-PLATFORM-0015", "missing 
 make arch_miss := platform_satisfies(linux, "aarch64", 8, "little", [])
 assert(not arch_miss[0] and arch_miss[1] == "RPR-PLATFORM-0012", "wrong architecture must fail")
 
-assert(platform_is_abi_ready(windows), "Windows profile declares a process ABI")
-assert(platform_is_abi_ready(linux), "Linux profile declares a process ABI")
-assert(not platform_is_abi_ready(dak), "DABI64 desktop wire protocol must not be mistaken for process ABI")
+assert(platform_process_abi_declared(windows), "Windows profile declares a process ABI")
+assert(platform_process_abi_declared(linux), "Linux profile declares a process ABI")
+assert(not platform_process_abi_declared(dak), "DABI64 desktop wire protocol must not be mistaken for process ABI")
 assert(dak[10] == "DABI64_DESKTOP_HOST_V1", "DAK profile must retain its service wire ABI identity")
 make dak_wire_layout := type_layout_with_metadata(type_primitive("u8"), dak, [])
 assert(dak_wire_layout[0] and dak_wire_layout[1][8] == "DABI64_DESKTOP_HOST_V1", "layout metadata must retain the service wire ABI separately")
 assert(dak_wire_layout[1][9] == "profile_only", "layout metadata must retain profile maturity")
 make dak_c_long := primitive_layout("c_long", dak)
 assert(not dak_c_long[0], "unknown DAK C long layout must remain unavailable")
+
+make windows_long := primitive_layout("c_long", windows)
+make linux_long := primitive_layout("c_long", linux)
+assert(windows_long[0] and windows_long[1][0] == 4, "LLP64 C long must be four bytes")
+assert(linux_long[0] and linux_long[1][0] == 8, "LP64 C long must be eight bytes")
+
+make invalid_profile_layout := type_layout(type_primitive("u32"), bad_data_model, [], [])
+assert(not invalid_profile_layout[0] and invalid_profile_layout[1] == "RPR-PLATFORM-0018", "direct layout calls must reject invalid target profiles")
 
 make vec3 := type_struct("Vec3", "native", 0, [
     type_field("x", type_primitive("f32")),
