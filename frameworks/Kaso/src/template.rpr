@@ -182,3 +182,92 @@ export craft template_schema_validate(schema, context) {
     }
     yield [true, []]
 }
+
+
+# Template defaults, nested paths, render limits and output policies.
+export craft template_context_path(context, path) {
+    make parts := split(path, ".")
+    when size(parts) == 0 { yield [false, "empty_context_path"] }
+    make root := template_context_find(context, parts[0])
+    when not root[0] { yield [false, "context_root_missing"] }
+    vary current := root[1]
+    vary index := 1
+    loop while index < size(parts) {
+        when kind(current) != "map" { yield [false, "context_path_not_a_map"] }
+        when not contains(current, parts[index]) { yield [false, "context_path_segment_missing"] }
+        change current := current[parts[index]]
+        change index := index + 1
+    }
+    yield [true, current]
+}
+
+export craft template_context_default(context, name, default_value) {
+    make found := template_context_find(context, name)
+    when found[0] { yield [true, found[1], false] }
+    yield [true, default_value, true]
+}
+
+export craft template_render_default(context, name, default_value) {
+    make value := template_context_default(context, name, default_value)
+    when not value[0] { yield value }
+    yield [true, text(value[1])]
+}
+
+export craft template_render_blocks_bounded(blocks, context, depth, max_depth, max_blocks) {
+    when max_depth < 0 or max_blocks < 0 { yield [false, "invalid_render_budget"] }
+    when depth > max_depth { yield [false, "render_depth_exceeded"] }
+    when size(blocks) > max_blocks { yield [false, "render_block_budget_exceeded"] }
+    yield template_render_blocks(blocks, context, depth)
+}
+
+export craft template_render_optional(blocks, context, condition_name) {
+    make condition := template_context_find(context, condition_name)
+    when not condition[0] { yield [false, "condition_missing"] }
+    when not condition[1] { yield [true, ""] }
+    yield template_render_blocks(blocks, context, 0)
+}
+
+export craft template_context_remove(context, name) {
+    vary result := []
+    vary removed := false
+    vary index := 0
+    loop while index < size(context) {
+        when context[index][0] == name {
+            change removed := true
+        } otherwise {
+            change result := push(result, context[index])
+        }
+        change index := index + 1
+    }
+    yield [true, result, removed]
+}
+
+export craft template_validate_context(context) {
+    vary index := 0
+    loop while index < size(context) {
+        when size(context[index]) != 2 { yield [false, "invalid_context_entry"] }
+        when size(context[index][0]) == 0 { yield [false, "empty_context_key"] }
+        vary other := index + 1
+        loop while other < size(context) {
+            when context[index][0] == context[other][0] { yield [false, "duplicate_context_key"] }
+            change other := other + 1
+        }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+
+export craft template_context_overlay(parent, child) {
+    make valid_parent := template_validate_context(parent)
+    make valid_child := template_validate_context(child)
+    when not valid_parent[0] or not valid_child[0] { yield [false, "invalid_template_context"] }
+    yield template_context_merge(parent, child)
+}
+
+export craft template_render_text_limit(blocks, context, max_chars) {
+    when max_chars < 0 { yield [false, "invalid_text_budget"] }
+    make rendered := template_render_blocks(blocks, context, 0)
+    when not rendered[0] { yield rendered }
+    when size(rendered[1]) > max_chars { yield [false, "rendered_text_limit_exceeded"] }
+    yield rendered
+}
