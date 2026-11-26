@@ -808,4 +808,23 @@ assert(typed_function[2][2] == [["T", []]], "typed craft parameter types mismatc
 assert(typed_function[2][3] == ["Option", [["T", []]]], "generic return type mismatch")
 assert(typed_function[2][4] == ["T"], "generic parameter list mismatch")
 
+make empty_generic_parameters := parse_program([
+    ["CRAFT", "craft", 1, 1], ["IDENT", "broken", 1, 7],
+    ["<", "<", 1, 13], [">", ">", 1, 14],
+    ["(", "(", 1, 15], [")", ")", 1, 16],
+    ["{", "{", 1, 18], ["}", "}", 1, 19], ["EOF", "", 1, 20]
+])
+assert(empty_generic_parameters[0] == "ERROR", "empty generic parameter list must fail")
+assert(empty_generic_parameters[2] == 1 and empty_generic_parameters[3] == 14, "empty generic parameter error must point at closing delimiter")
+
+make empty_generic_arguments := parse_program([
+    ["CRAFT", "craft", 1, 1], ["IDENT", "broken", 1, 7],
+    ["(", "(", 1, 13], ["IDENT", "value", 1, 14],
+    [":", ":", 1, 19], ["IDENT", "Box", 1, 21],
+    ["<", "<", 1, 24], [">", ">", 1, 25],
+    [")", ")", 1, 26], ["->", "->", 1, 28], ["IDENT", "u32", 1, 31],
+    ["{", "{", 1, 35], ["}", "}", 1, 36], ["EOF", "", 1, 37]
+])
+assert(empty_generic_arguments[0] == "ERROR", "empty generic type argument list must fail")
+
 emit "SELFHOST_PROGRAM_PARSER_OK"
