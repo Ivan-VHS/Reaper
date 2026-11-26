@@ -1,0 +1,114 @@
+# Reaper-native conformance smoke for the ten new framework modules.
+
+import "../frameworks/vorke.rpr" as vorke
+import "../frameworks/jellymeat.rpr" as jellymeat
+import "../frameworks/lejjyfish.rpr" as lejjyfish
+import "../frameworks/lejjy.rpr" as lejjy
+import "../frameworks/oplos.rpr" as oplos
+import "../frameworks/holmosaptimu.rpr" as holmosaptimu
+import "../frameworks/sentan.rpr" as sentan
+import "../frameworks/cellene.rpr" as cellene
+import "../frameworks/kolir.rpr" as kolir
+import "../frameworks/somo.rpr" as somo
+import "../dom/adapters/framework_modules.rpr" as dom_frameworks
+
+# ДОМ adapter exposes one discoverable surface over all 18 standalone modules.
+assert(dom_frameworks["standalone_module_count"]() == 18, "ДОМ adapter indexes 18 standalone modules")
+assert(size(dom_frameworks["standalone_module_names"]()) == 18, "ДОМ adapter lists module names")
+
+# Vorke: validate app manifests and emit a declarative startup plan.
+make app_manifest := [
+    "sample.app", "1.0.0", "hosted", "main",
+    ["main", "storage"], 256
+]
+assert(vorke["validate_manifest"](app_manifest)[0], "Vorke accepts a valid manifest")
+assert(size(vorke["phase_plan"](app_manifest)[1]) == 5, "Vorke produces five startup phases")
+assert(not vorke["phase_transition"]("Declared", "Ready"), "Vorke rejects skipped lifecycle phases")
+
+# Jellymeat: validate schema, required fields and record projection.
+make user_schema := [["name", "text", true], ["age", "number", false]]
+make user_record := [["name", "Ada"], ["age", 37]]
+assert(jellymeat["validate_schema"](user_schema)[0], "Jellymeat accepts a valid schema")
+assert(jellymeat["validate_record"](user_schema, user_record)[0], "Jellymeat accepts a valid record")
+assert(not jellymeat["validate_record"](user_schema, [["age", 37]])[0], "Jellymeat enforces required fields")
+assert(jellymeat["migration_step_allowed"](1, 2), "Jellymeat allows adjacent schema migration")
+
+# LejjyFish: ordered streams, bounded append, batching and backpressure.
+make stream := [[1, "user", ["created"]], [2, "user", ["updated"]]]
+assert(lejjyfish["stream_valid"](stream)[0], "LejjyFish accepts increasing sequence numbers")
+make appended := lejjyfish["append"](stream, [3, "user", ["closed"]], 3)
+assert(appended[0] and size(appended[1]) == 3, "LejjyFish appends within capacity")
+assert(not lejjyfish["append"](appended[1], [4, "user", []], 3)[0], "LejjyFish applies backpressure")
+make stream_batch := lejjyfish["take_batch"](stream, 1)
+assert(size(stream_batch[1]) == 1 and size(stream_batch[2]) == 1, "LejjyFish splits a bounded batch")
+
+# Lejjy: explicit service provider resolution and safe lifetime scopes.
+make bindings := [
+    ["clock", "host.clock", "runtime"],
+    ["cache", "app.cache", "application"]
+]
+assert(lejjy["validate"](bindings)[0], "Lejjy accepts unique service bindings")
+assert(lejjy["resolve"](bindings, "cache")[1] == "app.cache", "Lejjy resolves declared providers")
+assert(lejjy["scope_allows"]("transient", "runtime"), "short-lived service may use runtime service")
+assert(not lejjy["scope_allows"]("runtime", "transient"), "runtime service cannot capture transient service")
+
+# Oplos: validate route and request/response correlation without network I/O.
+make routes := [["users.list", "GET", "/users", "users.query.v1", "users.page.v1"]]
+assert(oplos["validate_routes"](routes)[0], "Oplos accepts a valid route")
+assert(oplos["resolve_route"](routes, "GET", "/users")[0], "Oplos resolves a route")
+make request := [1, "req-1", [["limit", 20]]]
+make response := [1, "req-1", 200, [["items", []]]]
+assert(oplos["validate_envelope_pair"](request, response)[0], "Oplos correlates request and response")
+assert(oplos["status_class"](503) == "server-error", "Oplos classifies status codes")
+
+# Holmosaptimu: local metric shape validation and deterministic aggregation.
+make metrics := [["cpu", "gauge", "percent"], ["jobs", "counter", "count"]]
+make samples := [["cpu", 10, 20], ["cpu", 20, 40], ["jobs", 20, 3]]
+assert(holmosaptimu["validate_samples"](metrics, samples)[0], "Holmosaptimu accepts valid local samples")
+make cpu_summary := holmosaptimu["summarize"](metrics, samples, "cpu")
+assert(cpu_summary[0] and cpu_summary[1][3] == 2 and cpu_summary[1][6] == 30, "Holmosaptimu calculates summary statistics")
+assert(holmosaptimu["health_grade"](0, 0, 0) == "healthy", "Holmosaptimu reports healthy state")
+assert(holmosaptimu["health_grade"](1, 0, 0) == "critical", "Holmosaptimu prioritizes errors")
+
+# Sentan: explicit allow rules, missing grants and unconditional deny overrides.
+make rules := [
+    ["read-users", "allow", "read", "users", ["data.read"]],
+    ["block-write", "deny", "write", "users", []]
+]
+assert(sentan["evaluate"](rules, ["read", "users", ["data.read"], []])[0] == "allow", "Sentan allows explicit granted action")
+assert(sentan["evaluate"](rules, ["read", "users", [], []])[0] == "deny", "Sentan denies missing capability")
+assert(sentan["evaluate"](rules, ["write", "users", ["data.write"], []])[0] == "deny", "Sentan deny rule takes precedence")
+
+# Cellene: check component manifests, ABI compatibility and imported exports.
+make storage_component := [
+    "storage", "1.0.0", 1, 0, ["storage.read"], [], []
+]
+make app_component := [
+    "app", "1.0.0", 1, 1, ["app.start"], ["storage.read"], ["storage"]
+]
+assert(cellene["validate_composition"]([storage_component, app_component], 1, 1)[0], "Cellene validates ABI and imports")
+assert(not cellene["host_compatible"](app_component, 2, 0)[0], "Cellene rejects ABI major mismatch")
+
+# Kolir: validate accessible declarative UI structure and focus order.
+make ui_nodes := [
+    ["app", "application", "", "Application", 800, 600, false],
+    ["save", "button", "app", "Save", 80, 32, true],
+    ["content", "panel", "app", "Main content", 720, 520, false]
+]
+assert(kolir["validate_tree"](ui_nodes)[0], "Kolir accepts a connected single-root tree")
+assert(kolir["focus_order"](ui_nodes)[1] == ["save"], "Kolir preserves document focus order")
+assert(not kolir["validate_tree"]([
+    ["app", "application", "", "Application", 800, 600, false],
+    ["bad", "button", "missing", "", 20, 20, true]
+])[0], "Kolir rejects missing parents and inaccessible controls")
+
+# SOMO: evaluate deterministic scenarios and replay traces.
+make scenario := ["parser-basic", ["parse", "lower"], ["pass", "pass"], 2]
+make evaluation := somo["evaluate"](scenario, ["pass", "pass"])
+assert(evaluation[0] and evaluation[1][0] == 2, "SOMO passes matching scenarios")
+assert(not somo["evaluate"](scenario, ["pass", "fail"])[0], "SOMO reports regressions")
+assert(somo["replay_equal"](["open", "commit"], ["open", "commit"])[0], "SOMO compares identical replay traces")
+assert(somo["release_gate"]([["parse", "pass"], ["lower", "pass"]])[0], "SOMO opens a fully passing release gate")
+assert(not somo["release_gate"]([["parse", "pass"], ["lower", "skip"]])[0], "SOMO blocks skipped release cases")
+
+emit "ten framework smoke checks passed"

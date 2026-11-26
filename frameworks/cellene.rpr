@@ -1,0 +1,115 @@
+# Cellene: versioned component contracts and host compatibility checks.
+# Manifest: [component_id, version, abi_major, abi_minor, exports, imports, dependencies].
+# Cellene validates composition metadata; it does not load or activate native code.
+
+craft contains_value(values, target) {
+    vary found := false
+    each value in values {
+        when value == target { change found := true }
+    }
+    yield found
+}
+
+craft semver_pair_valid(major, minor) {
+    yield kind(major) == "number" and kind(minor) == "number" and
+        major >= 0 and minor >= 0
+}
+
+craft unique_text_list(values) {
+    when kind(values) != "list" { yield false }
+    vary seen := []
+    vary valid := true
+    each value in values {
+        when kind(value) != "text" or size(value) == 0 {
+            change valid := false
+        } otherwise {
+            when contains_value(seen, value) {
+                change valid := false
+            } otherwise {
+                change seen := push(seen, value)
+            }
+        }
+    }
+    yield valid
+}
+
+craft manifest_valid(manifest) {
+    when kind(manifest) != "list" or size(manifest) != 7 { yield false }
+    when kind(manifest[0]) != "text" or size(manifest[0]) == 0 { yield false }
+    when kind(manifest[1]) != "text" or size(manifest[1]) == 0 { yield false }
+    when not semver_pair_valid(manifest[2], manifest[3]) { yield false }
+    when not unique_text_list(manifest[4]) { yield false }
+    when not unique_text_list(manifest[5]) { yield false }
+    when not unique_text_list(manifest[6]) { yield false }
+    yield true
+}
+
+export craft validate_manifests(manifests) {
+    when kind(manifests) != "list" { yield [false, ["manifests-must-be-list"]] }
+    vary ids := []
+    vary errors := []
+    each manifest in manifests {
+        when not manifest_valid(manifest) {
+            change errors := push(errors, "invalid-manifest")
+        } otherwise {
+            when contains_value(ids, manifest[0]) {
+                change errors := push(errors, "duplicate-component:" ++ manifest[0])
+            } otherwise {
+                change ids := push(ids, manifest[0])
+            }
+        }
+    }
+    yield [size(errors) == 0, errors]
+}
+
+export craft host_compatible(manifest, host_major, host_minor) {
+    when not manifest_valid(manifest) { yield [false, "invalid-manifest"] }
+    when not semver_pair_valid(host_major, host_minor) {
+        yield [false, "invalid-host-abi"]
+    }
+    when manifest[2] != host_major { yield [false, "abi-major-mismatch"] }
+    when manifest[3] > host_minor { yield [false, "host-minor-too-old"] }
+    yield [true, "compatible"]
+}
+
+craft provider_exports(manifests, capability) {
+    vary found := false
+    each manifest in manifests {
+        when contains_value(manifest[4], capability) {
+            change found := true
+        }
+    }
+    yield found
+}
+
+export craft validate_composition(manifests, host_major, host_minor) {
+    make checked := validate_manifests(manifests)
+    when not checked[0] { yield [false, checked[1]] }
+    vary errors := []
+    each manifest in manifests {
+        make compatibility := host_compatible(manifest, host_major, host_minor)
+        when not compatibility[0] {
+            change errors := push(errors, manifest[0] ++ ":" ++ compatibility[1])
+        }
+        each required in manifest[5] {
+            when not provider_exports(manifests, required) {
+                change errors := push(errors, manifest[0] ++ ":missing-import:" ++ required)
+            }
+        }
+        each dependency in manifest[6] {
+            vary found_dependency := false
+            each provider in manifests {
+                when provider[0] == dependency { change found_dependency := true }
+            }
+            when not found_dependency {
+                change errors := push(errors, manifest[0] ++ ":missing-dependency:" ++ dependency)
+            }
+        }
+    }
+    yield [size(errors) == 0, errors]
+}
+
+export craft exports_of(manifest) {
+    when not manifest_valid(manifest) { yield [false, [], "invalid-manifest"] }
+    yield [true, manifest[4], "exports"]
+}

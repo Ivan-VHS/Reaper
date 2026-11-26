@@ -1,0 +1,120 @@
+# Lejjy: explicit service bindings and scope-safe dependency resolution.
+# Binding format: [service_id, provider_id, lifetime_scope].
+# Lejjy resolves declared providers; it does not construct or execute services.
+
+craft contains_value(values, target) {
+    vary found := false
+    each value in values {
+        when value == target { change found := true }
+    }
+    yield found
+}
+
+craft scope_rank(scope) {
+    when scope == "transient" { yield 0 }
+    when scope == "request" { yield 1 }
+    when scope == "application" { yield 2 }
+    when scope == "runtime" { yield 3 }
+    yield -1
+}
+
+craft binding_valid(binding) {
+    when kind(binding) != "list" or size(binding) != 3 { yield false }
+    yield kind(binding[0]) == "text" and size(binding[0]) > 0 and
+        kind(binding[1]) == "text" and size(binding[1]) > 0 and
+        scope_rank(binding[2]) >= 0
+}
+
+export craft validate(bindings) {
+    when kind(bindings) != "list" { yield [false, ["bindings-must-be-list"]] }
+    vary services := []
+    vary errors := []
+    each binding in bindings {
+        when not binding_valid(binding) {
+            change errors := push(errors, "invalid-binding")
+        } otherwise {
+            when contains_value(services, binding[0]) {
+                change errors := push(errors, "duplicate-service:" ++ binding[0])
+            } otherwise {
+                change services := push(services, binding[0])
+            }
+        }
+    }
+    yield [size(errors) == 0, errors]
+}
+
+export craft bind(bindings, service_id, provider_id, scope) {
+    make checked := validate(bindings)
+    when not checked[0] { yield [false, bindings, checked[1]] }
+    make candidate := [service_id, provider_id, scope]
+    when not binding_valid(candidate) {
+        yield [false, bindings, "invalid-binding"]
+    }
+    when contains_value(bindings, candidate) {
+        yield [false, bindings, "duplicate-binding"]
+    }
+    each binding in bindings {
+        when binding[0] == service_id {
+            yield [false, bindings, "service-already-bound"]
+        }
+    }
+    yield [true, push(bindings, candidate), "bound"]
+}
+
+export craft resolve(bindings, service_id) {
+    make checked := validate(bindings)
+    when not checked[0] { yield [false, nothing, nothing, checked[1]] }
+    each binding in bindings {
+        when binding[0] == service_id {
+            yield [true, binding[1], binding[2], "resolved"]
+        }
+    }
+    yield [false, nothing, nothing, "provider-not-found"]
+}
+
+export craft resolve_many(bindings, service_ids) {
+    make checked := validate(bindings)
+    when not checked[0] { yield [false, [], checked[1]] }
+    when kind(service_ids) != "list" { yield [false, [], "service-list-required"] }
+    vary resolved := []
+    vary errors := []
+    each service_id in service_ids {
+        make result := resolve(bindings, service_id)
+        when result[0] {
+            change resolved := push(resolved, [service_id, result[1], result[2]])
+        } otherwise {
+            change errors := push(errors, "unresolved-service:" ++ text(service_id))
+        }
+    }
+    yield [size(errors) == 0, resolved, errors]
+}
+
+export craft scope_allows(consumer_scope, dependency_scope) {
+    make consumer_rank := scope_rank(consumer_scope)
+    make dependency_rank := scope_rank(dependency_scope)
+    when consumer_rank < 0 or dependency_rank < 0 { yield false }
+    # A short-lived consumer may depend on a longer-lived service, not vice versa.
+    yield consumer_rank <= dependency_rank
+}
+
+export craft validate_dependencies(bindings, requests) {
+    make checked := validate(bindings)
+    when not checked[0] { yield [false, checked[1]] }
+    when kind(requests) != "list" { yield [false, ["requests-must-be-list"]] }
+    vary errors := []
+    each request in requests {
+        when kind(request) != "list" or size(request) != 2 {
+            change errors := push(errors, "request-shape")
+        } otherwise {
+            make resolved := resolve(bindings, request[0])
+            when not resolved[0] {
+                change errors := push(errors, "unresolved:" ++ text(request[0]))
+            } otherwise {
+                when not scope_allows(request[1], resolved[2]) {
+                    change errors := push(errors, "scope-capture:" ++ text(request[0]))
+                }
+            }
+        }
+    }
+    yield [size(errors) == 0, errors]
+}

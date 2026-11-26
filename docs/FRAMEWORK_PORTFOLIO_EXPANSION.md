@@ -13,8 +13,8 @@ All first-party Reaper frameworks belong to one ecosystem, but not all are peers
 
 1. ДОМ is the single foundational application/system runtime.
 2. Its eight subsystems own lifecycle, resources, contracts, communication, reactive state, composition and development control.
-3. The eight Reaper framework modules provide focused domain algorithms and language/workbench facilities.
-4. The twenty Framework Federation namespaces are separately versioned domain extension contracts. Their operation handlers must be implemented before their status can be promoted.
+3. The eighteen standalone Reaper framework modules provide focused domain algorithms and language/workbench facilities.
+4. The twenty Framework Federation namespaces are separately versioned domain extension contracts. PR #333 defines the registry contracts; draft PR #356 adds 120 Reaper reference-runtime handlers. Native source bindings and host providers remain separate gates.
 5. Native Framework Core is a host-side extension registry/activation mechanism. It is not a second application runtime and must not compete with ДОМ.
 6. Jora is an application composition/scaffolding service, not a runtime.
 7. Kora is a separate utility/plugin host surface with a Python runtime and Lua ReaScript integrations; it is not a Reaper-native ДОМ subsystem.
@@ -37,7 +37,7 @@ All first-party Reaper frameworks belong to one ecosystem, but not all are peers
 
 Establish is the sole composition root. The other subsystems must not create competing global registries, task schedulers, resource ledgers, message buses or reactive graphs. Jenny Flashing Boy is development-profile-only and must not be a production dependency.
 
-## 3. Eight standalone Reaper framework modules
+## 3. Eighteen standalone Reaper framework modules
 
 | Framework | Canonical owner/integration | Primary responsibility |
 |---|---|---|
@@ -49,8 +49,18 @@ Establish is the sole composition root. The other subsystems must not create com
 | Blau | JennyFlash adapter | Immutable versioned snapshots, compare-and-set and value diffs |
 | Shashio | JLOM/application domain adapter | Finite-state transitions and atomic event sequences |
 | Showel Fleppery CODE | Jenny Flashing Boy/tooling adapter | Validated in-memory source transformation pipelines and deterministic templates |
+| Vorke | Establish / ДОМ Core | Application manifest checks and declarative launch phases; ДОМ owns runtime lifecycle |
+| Jellymeat | Uu / Nonconcrete | Schema-first records, validation, projection and migration-step checks |
+| LejjyFish | System Carriere / JLOM | Ordered bounded streams, batch slicing, watermarks and fanout plans; not a live broker |
+| Lejjy | Establish / Nonconcrete | Explicit provider bindings, resolution and lifetime-scope validation |
+| Oplos | Nonconcrete / System Carriere | Transport-neutral endpoint and request/response contract validation |
+| Holmosaptimu | ДОМ observability boundary | Caller-supplied metric validation, aggregation and health summaries |
+| Sentan | Nonconcrete / trusted host policy adapter | Deny-by-default policy decisions with capability requirements and deny precedence |
+| Cellene | Nonconcrete / Native Framework Core | Component manifest, import/export and ABI compatibility validation |
+| Kolir | Reaper Studio / DAK UI host adapter | Declarative UI-tree, layout, focus and accessibility validation |
+| SOMO | Sretuo / Vprossee | Scenario-result evaluation, replay comparison, coverage and release gates |
 
-The module set and the ДОМ runtime have separate ownership. An application may use these modules through explicit adapters; ДОМ must not copy their implementations into its core.
+The module set and the ДОМ runtime have separate ownership. All ten additions are initial Reaper reference-runtime slices; they do not create new schedulers, transports, storage engines or privileged host services. An application may use these modules through explicit adapters; ДОМ must not copy their implementations into its core.
 
 ## 4. Twenty Framework Federation namespaces
 
@@ -100,11 +110,11 @@ The Framework Core must be treated as a host registry and activation adapter. Д
 
 ## 7. Fifty-thousand-line growth standard
 
-The requested scale is a target for independently owned implementation modules, not a reason to inflate source files.
+The current portfolio counts 60 owned entries (8 ДОМ slices + 18 standalone modules + 20 Federation namespaces + 14 language/runtime subsystems), giving a 3,000,000 qualified Reaper LOC target at 50,000 per module. This is a portfolio planning total, not current delivered code. Adjacent programmes and RForge/Aesthetica collections remain separately tracked and are not silently added to this 60-entry count. The requested scale is a target for independently owned implementation modules, not a reason to inflate source files.
 
 - Target per first-party framework module: 50,000 qualified production Reaper LOC.
 - The 8 ДОМ subsystems each receive their own target.
-- The 8 standalone Reaper framework modules each receive their own target.
+- The 18 standalone Reaper framework modules each receive their own target.
 - The 20 Federation namespaces each receive their own target after their public operation contracts and domain boundaries are reviewed.
 - The 14 canonical language/compiler/runtime subsystems are separately governed by the existing 700,000-line programme in NATIVE_REAPER_EXPANSION_50000.md.
 - Five Native Framework Core profiles are not counted as five additional runtime implementations; they are descriptors for domain extension surfaces.
@@ -122,11 +132,13 @@ Do not report a module as complete when it reaches 50,000 LOC. Completion also r
 4. ДОМ Communication: System Carriere.
 5. ДОМ Reactive: JennyFlash.
 6. ДОМ Development: Jenny Flashing Boy.
-7. Standalone eight-framework hardening and explicit ДОМ adapters.
-8. Federation namespaces implemented by owning subsystem, six or more operations at a time with end-to-end evidence.
+7. Standalone eighteen-framework hardening and explicit ДОМ adapters.
+8. Federation namespace handlers integrated from their stacked Reaper-source proposal, then native bindings by owning subsystem with end-to-end evidence.
 9. Native Framework Core adapter review; resolve duplicate lifecycle ownership before adoption.
 10. Migrate one real Reaper application, one editor workflow and one system service through ДОМ.
 11. DAK host adapter and cross-repository conformance.
 12. Continue the 14-subsystem language expansion without mixing framework LOC into language frontend/compiler totals.
+
+The authoritative discovery surface is [frameworks/portfolio.v1.json](../frameworks/portfolio.v1.json), validated by [framework-portfolio.v1.schema.json](../schemas/framework-portfolio.v1.schema.json). It records the 60 owned modules and the adjacent integration surfaces, including current PR/branch status. An open or draft entry is discoverable but not merged.
 
 Every step is a separate reviewable PR. Preserve protected main, Conventional Commits, required CI, compatibility and evidence-based maturity. A stacked PR is not shipped until its base PR is merged and its own checks pass.

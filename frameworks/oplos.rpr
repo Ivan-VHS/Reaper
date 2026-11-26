@@ -1,0 +1,97 @@
+# Oplos: transport-neutral endpoint and message contract validation.
+# Endpoint: [route_id, method, path, request_schema, response_schema].
+# No sockets, DNS, HTTP client or network authority are provided here.
+
+craft method_valid(method) {
+    yield method == "GET" or method == "POST" or method == "PUT" or
+        method == "PATCH" or method == "DELETE" or method == "HEAD" or
+        method == "OPTIONS"
+}
+
+craft path_valid(path) {
+    when kind(path) != "text" or size(path) < 2 { yield false }
+    yield path[0] == "/"
+}
+
+export craft endpoint_valid(endpoint) {
+    when kind(endpoint) != "list" or size(endpoint) != 5 { yield false }
+    when kind(endpoint[0]) != "text" or size(endpoint[0]) == 0 { yield false }
+    when not method_valid(endpoint[1]) { yield false }
+    when not path_valid(endpoint[2]) { yield false }
+    when kind(endpoint[3]) != "text" or size(endpoint[3]) == 0 { yield false }
+    when kind(endpoint[4]) != "text" or size(endpoint[4]) == 0 { yield false }
+    yield true
+}
+
+export craft validate_routes(routes) {
+    when kind(routes) != "list" { yield [false, ["routes-must-be-list"]] }
+    vary errors := []
+    vary seen := []
+    each endpoint in routes {
+        when not endpoint_valid(endpoint) {
+            change errors := push(errors, "invalid-endpoint")
+        } otherwise {
+            make key := endpoint[1] ++ " " ++ endpoint[2]
+            vary duplicate := false
+            each previous in seen {
+                when previous == key { change duplicate := true }
+            }
+            when duplicate {
+                change errors := push(errors, "duplicate-route:" ++ key)
+            } otherwise {
+                change seen := push(seen, key)
+            }
+        }
+    }
+    yield [size(errors) == 0, errors]
+}
+
+export craft resolve_route(routes, method, path) {
+    make checked := validate_routes(routes)
+    when not checked[0] { yield [false, nothing, checked[1]] }
+    vary found := nothing
+    each endpoint in routes {
+        when endpoint[1] == method and endpoint[2] == path {
+            change found := endpoint
+        }
+    }
+    when found == nothing { yield [false, nothing, "route-not-found"] }
+    yield [true, found, "resolved"]
+}
+
+export craft request_valid(request) {
+    # Request: [contract_version, request_id, body].
+    when kind(request) != "list" or size(request) != 3 { yield false }
+    yield request[0] == 1 and kind(request[1]) == "text" and
+        size(request[1]) > 0 and kind(request[2]) == "list"
+}
+
+export craft response_valid(response) {
+    # Response: [contract_version, request_id, status_code, body].
+    when kind(response) != "list" or size(response) != 4 { yield false }
+    when response[0] != 1 or kind(response[1]) != "text" or size(response[1]) == 0 {
+        yield false
+    }
+    when kind(response[2]) != "number" or response[2] < 100 or response[2] > 599 {
+        yield false
+    }
+    yield kind(response[3]) == "list"
+}
+
+export craft status_class(status_code) {
+    when kind(status_code) != "number" or status_code < 100 or status_code > 599 {
+        yield "invalid"
+    }
+    when status_code < 200 { yield "informational" }
+    when status_code < 300 { yield "success" }
+    when status_code < 400 { yield "redirect" }
+    when status_code < 500 { yield "client-error" }
+    yield "server-error"
+}
+
+export craft validate_envelope_pair(request, response) {
+    when not request_valid(request) { yield [false, "invalid-request"] }
+    when not response_valid(response) { yield [false, "invalid-response"] }
+    when request[1] != response[1] { yield [false, "request-id-mismatch"] }
+    yield [true, "matched"]
+}

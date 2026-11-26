@@ -1,0 +1,156 @@
+# Kolir: declarative interface-tree, layout and accessibility validation.
+# Node: [id, role, parent_id, accessible_label, width, height, focusable].
+# Kolir validates UI structure; the host owns windows, input and rendering.
+
+craft contains_value(values, target) {
+    vary found := false
+    each value in values {
+        when value == target { change found := true }
+    }
+    yield found
+}
+
+craft role_valid(role) {
+    yield role == "application" or role == "window" or role == "panel" or
+        role == "group" or role == "button" or role == "link" or
+        role == "input" or role == "text" or role == "image" or
+        role == "list" or role == "list-item"
+}
+
+craft interactive_role(role) {
+    yield role == "button" or role == "link" or role == "input"
+}
+
+craft node_valid(node) {
+    when kind(node) != "list" or size(node) != 7 { yield false }
+    when kind(node[0]) != "text" or size(node[0]) == 0 { yield false }
+    when not role_valid(node[1]) { yield false }
+    when kind(node[2]) != "text" { yield false }
+    when kind(node[3]) != "text" { yield false }
+    when kind(node[4]) != "number" or node[4] < 0 { yield false }
+    when kind(node[5]) != "number" or node[5] < 0 { yield false }
+    when node[6] != true and node[6] != false { yield false }
+    when interactive_role(node[1]) and size(node[3]) == 0 { yield false }
+    yield true
+}
+
+craft node_for(nodes, node_id) {
+    vary found := nothing
+    each node in nodes {
+        when kind(node) == "list" and size(node) == 7 and node[0] == node_id {
+            change found := node
+        }
+    }
+    yield found
+}
+
+craft children_of(nodes, parent_id) {
+    vary children := []
+    each node in nodes {
+        when kind(node) == "list" and size(node) == 7 and node[2] == parent_id {
+            change children := push(children, node[0])
+        }
+    }
+    yield children
+}
+
+export craft validate_tree(nodes) {
+    when kind(nodes) != "list" or size(nodes) == 0 {
+        yield [false, ["tree-must-be-non-empty-list"]]
+    }
+    vary ids := []
+    vary errors := []
+    vary roots := []
+    each node in nodes {
+        when not node_valid(node) {
+            change errors := push(errors, "invalid-node")
+        } otherwise {
+            when contains_value(ids, node[0]) {
+                change errors := push(errors, "duplicate-node:" ++ node[0])
+            } otherwise {
+                change ids := push(ids, node[0])
+            }
+            when node[2] == "" {
+                change roots := push(roots, node[0])
+            }
+        }
+    }
+    when size(roots) != 1 {
+        change errors := push(errors, "tree-must-have-one-root")
+    }
+    each node in nodes {
+        when node_valid(node) {
+            when node[2] != "" {
+                when not contains_value(ids, node[2]) {
+                    change errors := push(errors, "missing-parent:" ++ node[0])
+                }
+            }
+        }
+    }
+    when size(errors) > 0 { yield [false, errors] }
+
+    # Reachability catches disconnected cycles as well as orphaned subtrees.
+    vary queue := [roots[0]]
+    vary visited := []
+    loop while size(queue) > 0 {
+        make current := first(queue)
+        change queue := rest(queue)
+        when not contains_value(visited, current) {
+            change visited := push(visited, current)
+            make children := children_of(nodes, current)
+            each child in children {
+                when not contains_value(visited, child) {
+                    change queue := push(queue, child)
+                }
+            }
+        }
+    }
+    when size(visited) != size(nodes) {
+        change errors := push(errors, "unreachable-node-or-cycle")
+    }
+    yield [size(errors) == 0, errors]
+}
+
+export craft focus_order(nodes) {
+    make checked := validate_tree(nodes)
+    when not checked[0] { yield [false, [], checked[1]] }
+    vary order := []
+    each node in nodes {
+        when node[6] and interactive_role(node[1]) {
+            change order := push(order, node[0])
+        }
+    }
+    yield [true, order, "document-order"]
+}
+
+export craft viewport_admit(nodes, viewport_width, viewport_height) {
+    make checked := validate_tree(nodes)
+    when not checked[0] { yield [false, checked[1]] }
+    when kind(viewport_width) != "number" or kind(viewport_height) != "number" or
+        viewport_width <= 0 or viewport_height <= 0 {
+        yield [false, ["invalid-viewport"]]
+    }
+    vary errors := []
+    each node in nodes {
+        when node[4] > viewport_width or node[5] > viewport_height {
+            change errors := push(errors, "node-exceeds-viewport:" ++ node[0])
+        }
+    }
+    yield [size(errors) == 0, errors]
+}
+
+export craft accessibility_report(nodes) {
+    make checked := validate_tree(nodes)
+    when not checked[0] { yield [false, [], checked[1]] }
+    vary interactive_count := 0
+    vary labelled_count := 0
+    vary focus_count := 0
+    each node in nodes {
+        when interactive_role(node[1]) {
+            change interactive_count := interactive_count + 1
+            when size(node[3]) > 0 { change labelled_count := labelled_count + 1 }
+            when node[6] { change focus_count := focus_count + 1 }
+        }
+    }
+    yield [true, [interactive_count, labelled_count, focus_count], "structural-only"]
+}

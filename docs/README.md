@@ -9,6 +9,8 @@ Start with the [project README](../README.md) for installation, first commands a
 - [ДОМ Foundation implementation](DOM_FOUNDATION_IMPLEMENTATION.md)
 - [Framework portfolio and 50,000-LOC expansion](FRAMEWORK_PORTFOLIO_EXPANSION.md)
 - [Machine-readable framework portfolio](../frameworks/portfolio.v1.json)
+- [Framework portfolio JSON Schema](../schemas/framework-portfolio.v1.schema.json)
+- [Ten-module Reaper smoke program](../examples/frameworks_portfolio_smoke.rpr)
 - [Psychoporter 666 function categories](FUNCTION_CATEGORIES_666.md)
 - [Architecture](ARCHITECTURE.md)
 - [Hardware language track](HARDWARE_LANGUAGE.md)
@@ -17,6 +19,10 @@ Start with the [project README](../README.md) for installation, first commands a
 - [Implementation roadmap](IMPLEMENTATION_ROADMAP.md)
 - [Studio and IDE](REAPER_IDE.md)
 - [NEXUS federation profile](NEXUS_FEDERATION_PROFILE_V1.md) — Reaper ownership, peer contracts and compatibility boundaries.
+
+## Framework discovery
+
+Start with [frameworks/README.md](../frameworks/README.md) for the short module index. The portfolio JSON is the single machine-readable inventory for ДОМ, standalone modules, Federation namespaces, language/runtime subsystems and adjacent integration surfaces. Open and draft PRs remain labelled as such.
 
 ## Browse by topic
 

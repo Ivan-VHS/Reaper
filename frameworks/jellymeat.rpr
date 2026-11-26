@@ -1,0 +1,136 @@
+# Jellymeat: schema-first records and deterministic data validation.
+# Field format: [name, expected_kind, required].
+# Record format: [[field_name, value], ...]. Storage remains an explicit adapter.
+
+craft field_for(schema, field_name) {
+    vary found := nothing
+    each field in schema {
+        when kind(field) == "list" and size(field) == 3 and field[0] == field_name {
+            change found := field
+        }
+    }
+    yield found
+}
+
+craft record_value(record, field_name) {
+    vary found := [false, nothing]
+    each entry in record {
+        when kind(entry) == "list" and size(entry) == 2 and entry[0] == field_name {
+            change found := [true, entry[1]]
+        }
+    }
+    yield found
+}
+
+craft supported_kind(expected_kind) {
+    yield expected_kind == "any" or expected_kind == "text" or
+        expected_kind == "number" or expected_kind == "boolean" or
+        expected_kind == "list"
+}
+
+export craft validate_schema(schema) {
+    when kind(schema) != "list" { yield [false, ["schema-must-be-list"]] }
+    vary names := []
+    vary errors := []
+    each field in schema {
+        when kind(field) != "list" or size(field) != 3 {
+            change errors := push(errors, "field-shape")
+        } otherwise {
+            when kind(field[0]) != "text" or size(field[0]) == 0 {
+                change errors := push(errors, "field-name")
+            }
+            when not supported_kind(field[1]) {
+                change errors := push(errors, "unsupported-kind:" ++ text(field[1]))
+            }
+            when field[2] != true and field[2] != false {
+                change errors := push(errors, "required-flag:" ++ text(field[0]))
+            }
+            when field[0] != nothing {
+                vary duplicate := false
+                each name in names {
+                    when name == field[0] { change duplicate := true }
+                }
+                when duplicate {
+                    change errors := push(errors, "duplicate-field:" ++ text(field[0]))
+                } otherwise {
+                    change names := push(names, field[0])
+                }
+            }
+        }
+    }
+    yield [size(errors) == 0, errors]
+}
+
+export craft validate_record(schema, record) {
+    make checked_schema := validate_schema(schema)
+    when not checked_schema[0] { yield [false, checked_schema[1]] }
+    when kind(record) != "list" { yield [false, ["record-must-be-list"]] }
+    vary errors := []
+    vary seen := []
+    each entry in record {
+        when kind(entry) != "list" or size(entry) != 2 {
+            change errors := push(errors, "record-entry-shape")
+        } otherwise {
+            when kind(entry[0]) != "text" {
+                change errors := push(errors, "record-key-kind")
+            } otherwise {
+                when field_for(schema, entry[0]) == nothing {
+                    change errors := push(errors, "unknown-field:" ++ entry[0])
+                } otherwise {
+                    when contains(seen, entry[0]) {
+                        change errors := push(errors, "duplicate-record-field:" ++ entry[0])
+                    } otherwise {
+                        change seen := push(seen, entry[0])
+                    }
+                    make field := field_for(schema, entry[0])
+                    when field[1] != "any" and kind(entry[1]) != field[1] {
+                        change errors := push(errors, "kind-mismatch:" ++ entry[0])
+                    }
+                }
+            }
+        }
+    }
+    each field in schema {
+        make value := record_value(record, field[0])
+        when field[2] and not value[0] {
+            change errors := push(errors, "missing-required-field:" ++ field[0])
+        }
+    }
+    yield [size(errors) == 0, errors]
+}
+
+export craft project(record, requested_fields) {
+    when kind(record) != "list" or kind(requested_fields) != "list" {
+        yield [false, [], "list-required"]
+    }
+    vary selected := []
+    vary errors := []
+    each field_name in requested_fields {
+        make value := record_value(record, field_name)
+        when value[0] {
+            change selected := push(selected, [field_name, value[1]])
+        } otherwise {
+            change errors := push(errors, "missing-field:" ++ text(field_name))
+        }
+    }
+    yield [size(errors) == 0, selected, errors]
+}
+
+export craft migration_step_allowed(from_version, to_version) {
+    when kind(from_version) != "number" or kind(to_version) != "number" {
+        yield false
+    }
+    yield from_version >= 0 and to_version == from_version + 1
+}
+
+export craft select_matching(records, field_name, expected_value) {
+    when kind(records) != "list" { yield [false, [], "records-must-be-list"] }
+    vary matches := []
+    each record in records {
+        make value := record_value(record, field_name)
+        when value[0] and value[1] == expected_value {
+            change matches := push(matches, record)
+        }
+    }
+    yield [true, matches, "selected"]
+}

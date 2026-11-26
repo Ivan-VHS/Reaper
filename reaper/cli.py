@@ -61,6 +61,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--catalog", action="store_true", help="print all 666 reserved symbolic tokens as JSON")
     parser.add_argument("--catalog-group", choices=CATALOG_GROUPS, help="filter --catalog by domain")
     parser.add_argument("--catalog-token", metavar="LEXEME", help="show metadata for one token lexeme")
+    parser.add_argument("--frameworks", action="store_true", help="list the unified Reaper framework portfolio")
+    parser.add_argument("--framework-info", metavar="NAME_OR_ID", help="show one framework module or integration-surface entry")
+    parser.add_argument("--framework-search", metavar="QUERY", help="search framework names, IDs, responsibilities and integration surfaces")
     parser.add_argument("--products", action="store_true", help="list integrated internal Reaper products")
     parser.add_argument("--product-info", metavar="NAME", help="show one integrated internal product contract")
     parser.add_argument("--plugins", action="store_true", help="list built-in Reaper plugins")
@@ -125,7 +128,8 @@ def main(argv: list[str] | None = None) -> int:
         conflicting_mode = any((
             args.check, args.repl, args.evolve, args.audit_log, args.verify_audit_log,
             args.module_graph, args.catalog, args.catalog_group is not None,
-            args.catalog_token is not None, args.products, args.product_info is not None,
+            args.catalog_token is not None, args.frameworks, args.framework_info is not None,
+            args.framework_search is not None, args.products, args.product_info is not None,
             args.plugins, args.plugin_info is not None, args.run_plugin is not None,
             args.systems, args.systems_languages, args.language_profile is not None,
             args.available_languages, args.systems_json, args.systems_architectures,
@@ -187,6 +191,87 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 print(f"reaper: native compilation failed: {error}", file=sys.stderr)
             return 1
+    if args.frameworks or args.framework_info or args.framework_search:
+        if args.source or args.audit_log or args.verify_audit_log or args.repl or args.check or args.evolve or args.module_graph:
+            parser.error("framework portfolio inspection cannot be combined with source execution or audit options")
+        selected_modes = sum(bool(value) for value in (
+            args.frameworks, args.framework_info, args.framework_search,
+        ))
+        if selected_modes != 1:
+            parser.error("--frameworks, --framework-info and --framework-search are mutually exclusive")
+        portfolio_path = Path(__file__).resolve().parent.parent / "frameworks" / "portfolio.v1.json"
+        try:
+            portfolio = json.loads(portfolio_path.read_text(encoding="utf-8"))
+            if portfolio.get("schema") != "reaper.framework-portfolio.v1":
+                raise ValueError("unsupported framework portfolio schema")
+            module_records = []
+            for group in portfolio.get("groups", []):
+                for item in group.get("items", []):
+                    module_records.append({
+                        "record_type": "framework",
+                        "group_id": group.get("id"),
+                        "group_name": group.get("name"),
+                        **item,
+                    })
+            integration_records = [
+                {"record_type": "integration_surface", **item}
+                for item in portfolio.get("integration_surfaces", [])
+            ]
+            external_framework_records = []
+            for surface in portfolio.get("integration_surfaces", []):
+                for member in surface.get("members", []):
+                    external_framework_records.append({
+                        "record_type": "adjacent_framework",
+                        "collection_id": surface.get("id"),
+                        "collection_name": surface.get("name"),
+                        "collection_status": surface.get("status"),
+                        "collection_branch": surface.get("branch"),
+                        **member,
+                    })
+            records = module_records + external_framework_records + integration_records
+            if args.framework_info is not None:
+                query = args.framework_info.casefold()
+                matches = [
+                    item for item in records
+                    if item.get("id", "").casefold() == query
+                    or item.get("name", "").casefold() == query
+                ]
+                if not matches:
+                    print(f"reaper: framework not found: {args.framework_info}", file=sys.stderr)
+                    return 1
+                result = matches[0] if len(matches) == 1 else {"matches": matches}
+            elif args.framework_search is not None:
+                query = args.framework_search.casefold().strip()
+                if not query:
+                    parser.error("--framework-search requires a non-empty query")
+                matches = [
+                    item for item in records
+                    if query in json.dumps(item, ensure_ascii=False).casefold()
+                ]
+                result = {
+                    "query": args.framework_search,
+                    "count": len(matches),
+                    "results": matches,
+                }
+            else:
+                result = {
+                    "schema": portfolio["schema"],
+                    "version": portfolio["version"],
+                    "language": portfolio["language"],
+                    "canonical_runtime": portfolio["canonical_runtime"],
+                    "scale_policy": portfolio["scale_policy"],
+                    "module_count": len(module_records),
+                    "integration_surface_count": len(integration_records),
+                    "external_framework_count": len(external_framework_records),
+                    "total_discoverable_entries": len(records),
+                    "groups": portfolio["groups"],
+                    "integration_surfaces": integration_records,
+                }
+        except (OSError, UnicodeError, json.JSONDecodeError, ValueError, KeyError) as error:
+            print(f"reaper: framework portfolio unavailable: {error}", file=sys.stderr)
+            return 2
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0
     if args.plugins or args.plugin_info or args.run_plugin:
         if args.source or args.audit_log or args.verify_audit_log:
             parser.error("plugin host commands cannot be combined with a source or audit-log option")

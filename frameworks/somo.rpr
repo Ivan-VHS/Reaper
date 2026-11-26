@@ -1,0 +1,144 @@
+# SOMO: deterministic scenario evaluation, replay comparison and fault planning.
+# Scenario: [scenario_id, step_names, expected_outcomes, step_budget].
+# This module evaluates supplied results; it does not spawn tests or processes.
+
+craft outcome_valid(outcome) {
+    yield outcome == "pass" or outcome == "fail" or outcome == "skip"
+}
+
+export craft validate_scenario(scenario) {
+    when kind(scenario) != "list" or size(scenario) != 4 {
+        yield [false, ["scenario-shape"]]
+    }
+    vary errors := []
+    when kind(scenario[0]) != "text" or size(scenario[0]) == 0 {
+        change errors := push(errors, "scenario-id")
+    }
+    when kind(scenario[1]) != "list" or kind(scenario[2]) != "list" {
+        change errors := push(errors, "steps-and-expectations-must-be-lists")
+    } otherwise {
+        when size(scenario[1]) != size(scenario[2]) {
+            change errors := push(errors, "step-expectation-count-mismatch")
+        }
+        each step in scenario[1] {
+            when kind(step) != "text" or size(step) == 0 {
+                change errors := push(errors, "invalid-step-name")
+            }
+        }
+        each expected in scenario[2] {
+            when not outcome_valid(expected) {
+                change errors := push(errors, "invalid-expected-outcome")
+            }
+        }
+    }
+    when kind(scenario[3]) != "number" or scenario[3] < 1 {
+        change errors := push(errors, "invalid-step-budget")
+    }
+    when kind(scenario[1]) == "list" and size(scenario[1]) > scenario[3] {
+        change errors := push(errors, "step-budget-exceeded")
+    }
+    yield [size(errors) == 0, errors]
+}
+
+export craft evaluate(scenario, actual_outcomes) {
+    make checked := validate_scenario(scenario)
+    when not checked[0] { yield [false, "invalid-scenario", checked[1]] }
+    when kind(actual_outcomes) != "list" or
+        size(actual_outcomes) != size(scenario[2]) {
+        yield [false, "result-count-mismatch", []]
+    }
+    vary mismatches := []
+    vary passed := 0
+    vary failed := 0
+    vary skipped := 0
+    vary index := 0
+    each actual in actual_outcomes {
+        when not outcome_valid(actual) {
+            change mismatches := push(mismatches, [index, "invalid-actual-outcome"])
+            change failed := failed + 1
+        } otherwise {
+            when actual != scenario[2][index] {
+                change mismatches := push(mismatches, [index, scenario[2][index], actual])
+            }
+            when actual == "pass" { change passed := passed + 1 }
+            when actual == "fail" { change failed := failed + 1 }
+            when actual == "skip" { change skipped := skipped + 1 }
+        }
+        change index := index + 1
+    }
+    yield [
+        size(mismatches) == 0 and failed == 0,
+        [passed, failed, skipped, size(mismatches)],
+        mismatches
+    ]
+}
+
+export craft replay_equal(expected_trace, actual_trace) {
+    when kind(expected_trace) != "list" or kind(actual_trace) != "list" {
+        yield [false, "trace-must-be-list"]
+    }
+    when size(expected_trace) != size(actual_trace) {
+        yield [false, "trace-length-mismatch"]
+    }
+    vary index := 0
+    each event in expected_trace {
+        when event != actual_trace[index] {
+            yield [false, ["trace-divergence", index, event, actual_trace[index]]]
+        }
+        change index := index + 1
+    }
+    yield [true, "identical"]
+}
+
+export craft coverage_summary(cases) {
+    when kind(cases) != "list" { yield [false, [], "cases-must-be-list"] }
+    vary passed := 0
+    vary failed := 0
+    vary skipped := 0
+    each case_result in cases {
+        when kind(case_result) != "list" or size(case_result) != 2 {
+            yield [false, [], "case-result-shape"]
+        }
+        when case_result[1] == "pass" { change passed := passed + 1 }
+        when case_result[1] == "fail" { change failed := failed + 1 }
+        when case_result[1] == "skip" { change skipped := skipped + 1 }
+        when not outcome_valid(case_result[1]) {
+            yield [false, [], "unknown-outcome"]
+        }
+    }
+    make total := passed + failed + skipped
+    yield [true, [total, passed, failed, skipped], "summarized"]
+}
+
+export craft fault_plan(faults) {
+    when kind(faults) != "list" { yield [false, [], "faults-must-be-list"] }
+    vary plan := []
+    vary errors := []
+    each fault in faults {
+        when kind(fault) != "list" or size(fault) != 3 {
+            change errors := push(errors, "fault-shape")
+        } otherwise {
+            when kind(fault[0]) != "text" or size(fault[0]) == 0 {
+                change errors := push(errors, "fault-id")
+            }
+            when fault[1] != "transient" and fault[1] != "permanent" and
+                fault[1] != "resource" and fault[1] != "integrity" {
+                change errors := push(errors, "fault-kind:" ++ text(fault[0]))
+            }
+            when fault[2] != "retry" and fault[2] != "rollback" and
+                fault[2] != "isolate" and fault[2] != "abort" {
+                change errors := push(errors, "recovery-policy:" ++ text(fault[0]))
+            }
+            change plan := push(plan, [fault[0], fault[1], fault[2]])
+        }
+    }
+    yield [size(errors) == 0, plan, errors]
+}
+
+export craft release_gate(cases) {
+    make summary := coverage_summary(cases)
+    when not summary[0] { yield [false, summary[2]] }
+    when summary[1][2] > 0 { yield [false, "failed-cases"] }
+    when summary[1][3] > 0 { yield [false, "skipped-cases"] }
+    yield [true, "all-cases-pass"]
+}
