@@ -37,13 +37,14 @@ static void test_native_ast_to_typed_hir(void) {
     assert(lower_source_to_hir("-(19 + 23) * 2", "native_expr.rpr",
         nodes, 32u, &hir, &error));
     assert(hir.stage == REAPER_COMPILER_IR_HIR);
-    assert(hir.length == 5u);
+    assert(hir.length == 6u);
     assert(hir.nodes[0].type == REAPER_COMPILER_IR_TYPE_I64);
     assert(hir.nodes[2].opcode == REAPER_COMPILER_IR_HIR_BINARY);
     assert(hir.nodes[3].opcode == REAPER_COMPILER_IR_HIR_UNARY);
-    assert(hir.nodes[4].key[0] == '*');
-    assert(strcmp(hir.nodes[4].span.source, "native_expr.rpr") == 0);
-    assert(hir.nodes[4].span.line == 1u && hir.nodes[4].span.column > 0u);
+    assert(hir.nodes[5].opcode == REAPER_COMPILER_IR_HIR_BINARY);
+    assert(hir.nodes[5].key[0] == '*');
+    assert(strcmp(hir.nodes[5].span.source, "native_expr.rpr") == 0);
+    assert(hir.nodes[5].span.line == 1u && hir.nodes[5].span.column > 0u);
 
     assert(reaper_compiler_ir_lower_hir_to_mir(&hir, mir_nodes, 32u, &mir, &error));
     assert(reaper_compiler_ir_lower_mir_to_lir(
