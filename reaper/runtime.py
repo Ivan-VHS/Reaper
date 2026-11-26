@@ -92,9 +92,9 @@ class Interpreter:
         allow_native_ffi: bool = False,
         max_heap_bytes: int = 64 * 1024 * 1024,
         max_open_resources: int = 64,
-        maza_poll_interval_ms: int = 1_000,
         debugger: RuntimeDebugger | None = None,
         consent_authority: ConsentAuthority | None = None,
+        maza_poll_interval_ms: int = 1_000,
     ) -> None:
         if (
             max_steps < 1
