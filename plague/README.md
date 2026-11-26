@@ -46,7 +46,10 @@ Delivered in this foundation:
 - review-oriented outcomes: blocked, defer, review_required and eligible_for_review;
 - Reaper smoke programs for policy and evolution evaluation;
 - versioned JSON contracts for repository targets, change plans and evidence;
-- a conservative scope profile with no repositories pre-authorized.
+- a conservative scope profile with no repositories pre-authorized;
+- bounded repository-profile and change-proposal validation in Reaper source;
+- compatibility, scope, assurance-gate, quota, rollback and risk assessment;
+- deterministic candidate ranking by expected benefit minus declared risk.
 
 Not delivered yet:
 
@@ -57,7 +60,9 @@ Not delivered yet:
 - command execution or sandbox implementation;
 - persistent audit storage and recovery journal;
 - cross-repository dependency graph ingestion;
-- end-to-end completion evidence from real target applications.
+- end-to-end completion evidence from real target applications;
+- authenticated repository grants and per-path allowlist enforcement;
+- verification of the contents behind evidence references.
 
 Do not report any of those as implemented until source, tests and CI evidence exist.
 
@@ -72,12 +77,15 @@ From the Reaper repository root:
     python -m unittest discover -s tests -p "test_plague_framework.py" -v
     python -m reaper --check plague/engine/policy.rpr
     python -m reaper --check plague/engine/registry.rpr
+    python -m reaper --check plague/engine/core.rpr
+    python -m reaper --check plague/engine/evolution.rpr
     python -m reaper --check plague/examples/policy_smoke.rpr
+    python -m reaper --check plague/examples/evolution_smoke.rpr
     python -m reaper plague/examples/policy_smoke.rpr
 
 The evolution smoke program emits PLAGUE_V1_OK only after eligible, blocked, budget and candidate-selection assertions pass. CI checks the Reaper modules and test adapter.
 
-## Safety invariants
+## Bounded proposal assessment\n\nThe Reaper modules `engine/core.rpr` and `engine/evolution.rpr` validate fixed-width profile/proposal tuples, compare target platform and stack, enforce declared scopes and required gates, cap changes at 100 paths and 1 MiB, require rollback evidence when configured, and apply the profile risk ceiling. Candidate sets are capped at 128; ranking uses expected benefit minus caller-declared risk, with lexical proposal-ID tie-breaking. Risk scores and evidence references are input claims, not independently verified facts. Results are advisory and never authorize writes. See [the v1 policy specification](../docs/PLAGUE_FOUNDATION_V1.md).\n\n## Safety invariants
 
 1. A repository is not in scope until it is explicitly listed in a grant.
 2. Read-only is the default; apply mode is per-repository and never inferred.
