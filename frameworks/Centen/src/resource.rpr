@@ -149,3 +149,101 @@ export craft region_pop(stack, expected_name) {
     when stack[size(stack) - 1][0] != expected_name { yield [false, "region_lifo_violation"] }
     yield [true, take(stack, size(stack) - 1)]
 }
+
+
+# Multi-ledger transactions, conservation reports and usage policy.
+export craft resource_apply_batch(resources, operations) {
+    when not resource_ledger_valid(resources) { yield [false, "invalid_ledger"] }
+    vary staged := resources
+    vary index := 0
+    loop while index < size(operations) {
+        when size(operations[index]) != 3 { yield [false, "invalid_resource_operation", resources] }
+        when operations[index][1] != "reserve" and operations[index][1] != "release" {
+            yield [false, "unknown_resource_operation", resources]
+        }
+        when operations[index][1] == "reserve" {
+            make changed := resource_reserve_named(staged, operations[index][0], operations[index][2])
+            when not changed[0] { yield [false, changed[1], resources] }
+            change staged := changed[1]
+        } otherwise {
+            make found := resource_find(staged, operations[index][0])
+            when not found[0] { yield [false, "resource_not_found", resources] }
+            make released := resource_release(found[2], operations[index][2])
+            when not released[0] { yield [false, released[1], resources] }
+            change staged := resource_replace(staged, found[1], released[1])
+        }
+        change index := index + 1
+    }
+    yield [true, staged]
+}
+
+export craft resource_totals(resources) {
+    when not resource_ledger_valid(resources) { yield [false, "invalid_ledger"] }
+    vary capacity := 0
+    vary used := 0
+    vary index := 0
+    loop while index < size(resources) {
+        change capacity := capacity + resources[index][1]
+        change used := used + resources[index][2]
+        change index := index + 1
+    }
+    yield [true, [capacity, used, capacity - used]]
+}
+
+export craft resource_conservation(before, after) {
+    make old_total := resource_totals(before)
+    make new_total := resource_totals(after)
+    when not old_total[0] or not new_total[0] { yield [false, "invalid_ledger"] }
+    yield [true, new_total[1][1] - old_total[1][1]]
+}
+
+export craft resource_usage_policy(resource, warning_ratio, critical_ratio) {
+    when not resource_valid(resource) { yield [false, "invalid_resource"] }
+    when warning_ratio < 0 or critical_ratio > 1 or warning_ratio > critical_ratio {
+        yield [false, "invalid_usage_thresholds"]
+    }
+    make pressure := resource_pressure(resource)
+    when not pressure[0] { yield pressure }
+    when pressure[1] >= critical_ratio { yield [true, "critical", pressure[1]] }
+    when pressure[1] >= warning_ratio { yield [true, "warning", pressure[1]] }
+    yield [true, "normal", pressure[1]]
+}
+
+export craft resource_quota_set(quotas, quota) {
+    when size(quota) != 4 or quota[1] <= 0 or quota[2] < 0 or quota[2] > quota[1] {
+        yield [false, "invalid_quota"]
+    }
+    vary result := []
+    vary replaced := false
+    vary index := 0
+    loop while index < size(quotas) {
+        when quotas[index][0] == quota[0] {
+            change result := push(result, quota)
+            change replaced := true
+        } otherwise {
+            change result := push(result, quotas[index])
+        }
+        change index := index + 1
+    }
+    when not replaced { change result := push(result, quota) }
+    yield [true, result]
+}
+
+export craft region_generation_advance(token) {
+    when size(token) != 3 or token[2] < 1 { yield [false, "invalid_region_token"] }
+    yield [true, [token[0], token[1], token[2] + 1]]
+}
+
+export craft region_token_is_current(token, active_stack) {
+    when size(token) != 3 { yield false }
+    vary index := 0
+    loop while index < size(active_stack) {
+        when active_stack[index][0] == token[0] and
+             active_stack[index][1] == token[1] and
+             active_stack[index][2] == token[2] {
+            yield true
+        }
+        change index := index + 1
+    }
+    yield false
+}
