@@ -47,7 +47,7 @@ static ReaperSystemHost make_host(FakeHost *fake, uint64_t capabilities) {
 
 static void test_catalog(void) {
     size_t index;
-    assert(reaper_system_operation_count() == 42U);
+    assert(reaper_system_operation_count() == 52U);
     for (index = 0U; index < reaper_system_operation_count(); ++index) {
         const ReaperSystemOperationInfo *info = reaper_system_operation_at(index);
         assert(info != NULL);
@@ -56,7 +56,11 @@ static void test_catalog(void) {
         assert(info->effect != NULL && info->effect[0] != '\0');
         assert(reaper_system_operation_find(info->operation) == info);
     }
-    assert(reaper_system_operation_at(42U) == NULL);
+    assert(reaper_system_operation_at(52U) == NULL);
+    assert(reaper_system_operation_find(REAPER_SYSTEM_DESKTOP_OUTPUT_ENUMERATE) != NULL);
+    assert(reaper_system_operation_find(REAPER_SYSTEM_DESKTOP_WINDOW_CREATE) != NULL);
+    assert(reaper_system_operation_find(REAPER_SYSTEM_DESKTOP_SESSION_SWITCH) != NULL);
+    assert(reaper_system_operation_find(REAPER_SYSTEM_DESKTOP_NOTIFICATION_POST) != NULL);
     assert(reaper_system_operation_find((ReaperSystemOperation)0x7fff) == NULL);
 }
 
@@ -71,6 +75,8 @@ static void test_host_validation(void) {
     host.abi_version = REAPER_SYSTEM_ABI_VERSION;
     host.struct_size = 1U;
     assert(reaper_system_host_validate(&host, &error) == REAPER_SYSTEM_UNSUPPORTED_ABI);
+    host = make_host(&fake, REAPER_SYSTEM_CAP_DESKTOP_DISPLAY_READ);
+    assert(reaper_system_host_validate(&host, &error) == REAPER_SYSTEM_OK);
     host = make_host(&fake, UINT64_C(1) << 63);
     assert(reaper_system_host_validate(&host, &error) == REAPER_SYSTEM_INVALID_ARGUMENT);
     host = make_host(&fake, REAPER_SYSTEM_CAP_PROCESS_INSPECT);
@@ -123,6 +129,51 @@ static void test_bounded_dispatch(void) {
     assert(fake.calls == 1U);
 }
 
+static void test_desktop_capability_gates(void) {
+    FakeHost fake = {0};
+    ReaperSystemHost host = make_host(&fake, REAPER_SYSTEM_CAP_DESKTOP_DISPLAY_READ);
+    ReaperSystemError error;
+    size_t output_size = 17U;
+    const char request[] = "{}";
+    char response[8] = {0};
+
+    assert(reaper_system_invoke(&host, REAPER_SYSTEM_DESKTOP_OUTPUT_ENUMERATE,
+                                request, sizeof(request) - 1U,
+                                response, sizeof(response), &output_size,
+                                &error) == REAPER_SYSTEM_OK);
+    assert(fake.calls == 1U);
+    assert(fake.last_operation == REAPER_SYSTEM_DESKTOP_OUTPUT_ENUMERATE);
+
+    assert(reaper_system_invoke(&host, REAPER_SYSTEM_DESKTOP_WINDOW_CREATE,
+                                request, sizeof(request) - 1U,
+                                response, sizeof(response), &output_size,
+                                &error) == REAPER_SYSTEM_ACCESS_DENIED);
+    assert(output_size == 0U);
+    assert(fake.calls == 1U);
+
+    host = make_host(&fake, REAPER_SYSTEM_CAP_DESKTOP_WINDOW_CREATE |
+                            REAPER_SYSTEM_CAP_DESKTOP_WINDOW_CONTROL |
+                            REAPER_SYSTEM_CAP_DESKTOP_SURFACE_PRESENT |
+                            REAPER_SYSTEM_CAP_DESKTOP_INPUT_READ |
+                            REAPER_SYSTEM_CAP_DESKTOP_SESSION_CONTROL |
+                            REAPER_SYSTEM_CAP_DESKTOP_NOTIFICATION_POST);
+    assert(reaper_system_invoke(&host, REAPER_SYSTEM_DESKTOP_WINDOW_CREATE,
+                                request, sizeof(request) - 1U,
+                                response, sizeof(response), &output_size,
+                                &error) == REAPER_SYSTEM_OK);
+    assert(fake.last_operation == REAPER_SYSTEM_DESKTOP_WINDOW_CREATE);
+    assert(reaper_system_invoke(&host, REAPER_SYSTEM_DESKTOP_INPUT_READ,
+                                request, sizeof(request) - 1U,
+                                response, sizeof(response), &output_size,
+                                &error) == REAPER_SYSTEM_OK);
+    assert(fake.last_operation == REAPER_SYSTEM_DESKTOP_INPUT_READ);
+    assert(reaper_system_invoke(&host, REAPER_SYSTEM_DESKTOP_NOTIFICATION_POST,
+                                request, sizeof(request) - 1U,
+                                response, sizeof(response), &output_size,
+                                &error) == REAPER_SYSTEM_OK);
+    assert(fake.last_operation == REAPER_SYSTEM_DESKTOP_NOTIFICATION_POST);
+}
+
 static void test_host_failures_and_contract_violation(void) {
     FakeHost fake = {0};
     ReaperSystemHost host = make_host(&fake, REAPER_SYSTEM_CAP_CLOCK);
@@ -148,6 +199,7 @@ int main(void) {
     test_host_validation();
     test_rights_and_unknown_operations();
     test_bounded_dispatch();
+    test_desktop_capability_gates();
     test_host_failures_and_contract_violation();
     puts("reaper system API tests passed");
     return 0;
