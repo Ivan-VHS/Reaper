@@ -1,17 +1,91 @@
-# Reaper framework metadata and source-level helper functions.
-# Operation contracts: language/frameworks.v1.json
+# Allocate Purpose: bounded allocation accounting and quota admission.
+import "../federation_common.rpr" as fc
 
 export make framework_id := "allocate_purpose"
 export make display_name := "Allocate Purpose"
 export make feature_key := "RPR-FWK-004"
 export make operation_keys := ["RPR-FWK-004-F01", "RPR-FWK-004-F02", "RPR-FWK-004-F03", "RPR-FWK-004-F04", "RPR-FWK-004-F05", "RPR-FWK-004-F06"]
-export make maturity := "contract-only"
+export make maturity := "reference-handler-v1-partial"
 export make native_registry := "reaper.framework-cabi.v1"
 
-export craft operation_key(index) {
-    yield operation_keys[index]
+export craft operation_key(index) { yield operation_keys[index] }
+export craft framework_manifest() { yield [framework_id, display_name, feature_key, operation_keys, maturity] }
+
+export craft arena_create(capacity, owner) {
+    when not fc["fc_nonnegative"](capacity) or not fc["fc_nonempty_text"](owner) {
+        yield [false, nothing, "invalid-arena-request"]
+    }
+    yield [true, [owner, capacity, 0, []], "arena-described"]
 }
 
-export craft framework_manifest() {
-    yield [framework_id, display_name, feature_key, operation_keys, maturity]
+export craft arena_reserve(arena, amount) {
+    when not fc["fc_record"](arena, 4) { yield [false, arena, "arena-shape"] }
+    when not fc["fc_nonnegative"](amount) { yield [false, arena, "reservation-size-invalid"] }
+    when arena[2] + amount > arena[1] { yield [false, arena, "arena-capacity-exceeded"] }
+    make reservation := [size(arena[3]) + 1, amount, "active"]
+    yield [true, [arena[0], arena[1], arena[2] + amount, push(arena[3], reservation)], reservation]
+}
+
+export craft arena_release(arena) {
+    when not fc["fc_record"](arena, 4) { yield [false, arena, "arena-shape"] }
+    yield [true, [arena[0], arena[1], 0, []], "all-owned-regions-released"]
+}
+
+export craft budget_split(total, weights) {
+    when not fc["fc_nonnegative"](total) or kind(weights) != "list" or size(weights) == 0 {
+        yield [false, [], "split-input-invalid"]
+    }
+    vary sum_weights := 0
+    each weight in weights {
+        when not fc["fc_nonnegative"](weight) { yield [false, [], ["invalid-weight", weight]] }
+        change sum_weights := sum_weights + weight
+    }
+    when sum_weights <= 0 { yield [false, [], "zero-weight-sum"] }
+    vary shares := []
+    each weight in weights {
+        change shares := push(shares, total * weight / sum_weights)
+    }
+    yield [true, shares, "weighted-split"]
+}
+
+export craft quota_check(request, quota) {
+    when kind(request) != "list" or kind(quota) != "list" or size(request) != size(quota) {
+        yield [false, [], "quota-vector-shape"]
+    }
+    vary denied := []
+    vary index := 0
+    loop while index < size(request) {
+        when not fc["fc_nonnegative"](request[index]) or not fc["fc_nonnegative"](quota[index]) {
+            change denied := push(denied, ["invalid-value", index])
+        } otherwise {
+            when request[index] > quota[index] {
+                change denied := push(denied, ["quota-exceeded", index, request[index], quota[index]])
+            }
+        }
+        change index := index + 1
+    }
+    yield [size(denied) == 0, denied, "checked"]
+}
+
+# Event: [scope_id, delta, operation], delta is positive allocation or negative release.
+export craft allocation_trace(events) {
+    when kind(events) != "list" { yield [false, [], "events-must-be-list"] }
+    vary totals := []
+    vary errors := []
+    each event in events {
+        when not fc["fc_record"](event, 3) or not fc["fc_nonempty_text"](event[0]) or not fc["fc_is_number"](event[1]) {
+            change errors := push(errors, ["invalid-allocation-event", event])
+        } otherwise {
+            make current := fc["fc_lookup"](totals, event[0])
+            vary next_total := event[1]
+            when current[0] { change next_total := current[1] + event[1] }
+            when next_total < 0 {
+                change errors := push(errors, ["allocation-underflow", event[0]])
+            } otherwise {
+                make written := fc["fc_put"](totals, event[0], next_total)
+                change totals := written[1]
+            }
+        }
+    }
+    yield [size(errors) == 0, totals, errors]
 }
