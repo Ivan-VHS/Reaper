@@ -1,0 +1,404 @@
+# Eleventh group of Reaper foundations.
+import "foundation_46_50.rpr" as previous
+
+export make FOUNDATION_ELEVENTH_SCHEMA := "reaper.foundation.eleventh.v1"
+export make FOUNDATION_ELEVENTH_VERSION := 1
+
+export craft standard_levels() {
+    yield ["normative", "recommended", "advisory"]
+}
+
+export craft standard_catalog() {
+    yield [
+        ["std.bounds", "runtime", "normative", "all externally supplied work is bounded", "implemented"],
+        ["std.effects", "language", "normative", "host effects are explicit", "partial"],
+        ["std.compatibility", "contracts", "normative", "breaking contracts require a major version change", "partial"],
+        ["std.source-map", "diagnostics", "recommended", "diagnostics retain source coordinates", "partial"],
+        ["std.offline-first", "infrastructure", "recommended", "network operations require explicit selection", "partial"],
+        ["std.audit", "governance", "recommended", "promoted changes retain review and CI evidence", "partial"],
+        ["std.formatting", "tooling", "advisory", "canonical formatting is applied consistently", "implemented"]
+    ]
+}
+
+craft standard_find(identifier) {
+    vary found := nothing
+    each rule in standard_catalog() {
+        when rule[0] == identifier {
+            change found := rule
+        }
+    }
+    yield found
+}
+
+export craft standard_validate_rule(rule) {
+    when kind(rule) != "list" or size(rule) != 5 {
+        yield false
+    }
+    when kind(rule[0]) != "text" or rule[0] == "" or kind(rule[1]) != "text" or rule[1] == "" or not contains(standard_levels(), rule[2]) or kind(rule[3]) != "text" or rule[3] == "" {
+        yield false
+    }
+    yield contains(["implemented", "partial", "planned"], rule[4])
+}
+
+export craft standard_validate_catalog() {
+    vary identifiers := []
+    each rule in standard_catalog() {
+        when not standard_validate_rule(rule) or contains(identifiers, rule[0]) {
+            yield false
+        }
+        change identifiers := push(identifiers, rule[0])
+    }
+    yield true
+}
+
+export craft standard_validate_selection(selection) {
+    when kind(selection) != "list" or size(selection) == 0 {
+        yield false
+    }
+    each identifier in selection {
+        when standard_find(identifier) == nothing {
+            yield false
+        }
+    }
+    yield size(unique(selection)) == size(selection)
+}
+
+export craft standard_normative_rules() {
+    vary result := []
+    each rule in standard_catalog() {
+        when rule[2] == "normative" {
+            change result := push(result, rule[0])
+        }
+    }
+    yield result
+}
+
+export craft regulation_severities() {
+    yield ["critical", "high", "medium", "low"]
+}
+
+export craft regulation_policies() {
+    yield [
+        ["policy.no-ambient-network", "network", "deny-by-default", "critical", "implemented"],
+        ["policy.native-ffi-opt-in", "ffi", "explicit-consent", "high", "implemented"],
+        ["policy.bounded-host-io", "host-io", "maximum-payload", "high", "implemented"],
+        ["policy.no-physical-memory", "mmio", "trusted-adapter-only", "critical", "partial"],
+        ["policy.protected-main", "repository", "protected-branch-review", "high", "partial"],
+        ["policy.verified-promotion", "ci", "required-checks", "high", "partial"]
+    ]
+}
+
+craft regulation_find(identifier) {
+    vary found := nothing
+    each policy in regulation_policies() {
+        when policy[0] == identifier {
+            change found := policy
+        }
+    }
+    yield found
+}
+
+export craft regulation_validate_policy(policy) {
+    when kind(policy) != "list" or size(policy) != 5 {
+        yield false
+    }
+    when kind(policy[0]) != "text" or policy[0] == "" or kind(policy[1]) != "text" or policy[1] == "" or kind(policy[2]) != "text" or policy[2] == "" or not contains(regulation_severities(), policy[3]) {
+        yield false
+    }
+    yield contains(["implemented", "partial", "planned"], policy[4])
+}
+
+export craft regulation_validate_exception(exception) {
+    when kind(exception) != "list" or size(exception) != 5 {
+        yield false
+    }
+    when regulation_find(exception[0]) == nothing or kind(exception[1]) != "text" or exception[1] == "" or kind(exception[2]) != "text" or exception[2] == "" {
+        yield false
+    }
+    when kind(exception[3]) != "number" or exception[3] <= 0 or exception[3] % 1 != 0 {
+        yield false
+    }
+    yield contains(["proposed", "approved", "rejected", "expired"], exception[4])
+}
+
+export craft regulation_validate_catalog() {
+    vary identifiers := []
+    each policy in regulation_policies() {
+        when not regulation_validate_policy(policy) or contains(identifiers, policy[0]) {
+            yield false
+        }
+        change identifiers := push(identifiers, policy[0])
+    }
+    yield true
+}
+
+export craft regulation_validate_exceptions(exceptions) {
+    when kind(exceptions) != "list" {
+        yield false
+    }
+    vary identifiers := []
+    each exception in exceptions {
+        when not regulation_validate_exception(exception) or contains(identifiers, exception[0]) {
+            yield false
+        }
+        when exception[4] == "approved" and exception[3] <= 0 {
+            yield false
+        }
+        change identifiers := push(identifiers, exception[0])
+    }
+    yield true
+}
+
+export craft specification_requirement_levels() {
+    yield ["must", "should", "may"]
+}
+
+export craft specification_validate_requirement(requirement) {
+    when kind(requirement) != "list" or size(requirement) != 3 {
+        yield false
+    }
+    when kind(requirement[0]) != "text" or requirement[0] == "" or kind(requirement[1]) != "text" or requirement[1] == "" or not contains(specification_requirement_levels(), requirement[2]) {
+        yield false
+    }
+    yield true
+}
+
+export craft specification_validate_descriptor(specification) {
+    when kind(specification) != "list" or size(specification) != 5 {
+        yield false
+    }
+    when kind(specification[0]) != "text" or specification[0] == "" or kind(specification[1]) != "number" or specification[1] < 1 or specification[1] % 1 != 0 or kind(specification[2]) != "text" or specification[2] == "" or kind(specification[3]) != "list" or size(specification[3]) == 0 or kind(specification[4]) != "list" or size(specification[4]) == 0 {
+        yield false
+    }
+    vary requirement_ids := []
+    each requirement in specification[3] {
+        when not specification_validate_requirement(requirement) or contains(requirement_ids, requirement[0]) {
+            yield false
+        }
+        change requirement_ids := push(requirement_ids, requirement[0])
+    }
+    vary covered := []
+    each acceptance in specification[4] {
+        when kind(acceptance) != "list" or size(acceptance) != 2 or kind(acceptance[0]) != "text" or not contains(requirement_ids, acceptance[0]) or kind(acceptance[1]) != "text" or acceptance[1] == "" or contains(covered, acceptance[0]) {
+            yield false
+        }
+        change covered := push(covered, acceptance[0])
+    }
+    yield size(covered) == size(requirement_ids)
+}
+
+export craft specification_validate_evidence(evidence) {
+    when kind(evidence) != "list" or size(evidence) == 0 {
+        yield false
+    }
+    each item in evidence {
+        when kind(item) != "text" or item == "" {
+            yield false
+        }
+    }
+    yield size(unique(evidence)) == size(evidence)
+}
+
+export craft schema_field_types() {
+    yield ["boolean", "number", "text", "bytes", "list", "map", "u8", "u16", "u32", "u64", "u128", "i8", "i16", "i32", "i64", "i128"]
+}
+
+export craft schema_validate_field(field) {
+    when kind(field) != "list" or size(field) != 3 {
+        yield false
+    }
+    when kind(field[0]) != "text" or field[0] == "" or not contains(schema_field_types(), field[1]) or kind(field[2]) != "boolean" {
+        yield false
+    }
+    yield true
+}
+
+export craft schema_validate_descriptor(schema) {
+    when kind(schema) != "list" or size(schema) != 5 {
+        yield false
+    }
+    when kind(schema[0]) != "text" or schema[0] == "" or kind(schema[1]) != "number" or schema[1] < 1 or schema[1] % 1 != 0 or kind(schema[2]) != "number" or schema[2] < 0 or schema[2] % 1 != 0 or kind(schema[3]) != "list" or size(schema[3]) == 0 or kind(schema[4]) != "boolean" {
+        yield false
+    }
+    vary field_names := []
+    each field in schema[3] {
+        when not schema_validate_field(field) or contains(field_names, field[0]) {
+            yield false
+        }
+        change field_names := push(field_names, field[0])
+    }
+    yield true
+}
+
+export craft schema_validate_payload(schema, payload) {
+    when not schema_validate_descriptor(schema) or kind(payload) != "list" {
+        yield false
+    }
+    when size(payload) > size(schema[3]) or schema[4] == false and size(payload) != size(schema[3]) {
+        yield false
+    }
+    vary position := 0
+    each field in schema[3] {
+        when position < size(payload) {
+            when not contains(["boolean", "number", "text", "bytes", "list", "map", "u8", "u16", "u32", "u64", "u128", "i8", "i16", "i32", "i64", "i128"], field[1]) {
+                yield false
+            }
+            when field[1] == "boolean" and kind(payload[position]) != "boolean" {
+                yield false
+            }
+            when field[1] == "text" and kind(payload[position]) != "text" {
+                yield false
+            }
+            when field[1] == "bytes" and kind(payload[position]) != "text" and kind(payload[position]) != "list" {
+                yield false
+            }
+            when field[1] == "list" and kind(payload[position]) != "list" {
+                yield false
+            }
+            when field[1] == "map" and kind(payload[position]) != "map" {
+                yield false
+            }
+        }
+        when position >= size(payload) and field[2] == true {
+            yield false
+        }
+        change position := position + 1
+    }
+    yield true
+}
+
+export craft schema_validate_compatibility(producer, consumer) {
+    when not schema_validate_descriptor(producer) or not schema_validate_descriptor(consumer) or producer[0] != consumer[0] or producer[1] != consumer[1] {
+        yield false
+    }
+    each required_field in consumer[3] {
+        when required_field[2] == true {
+            vary matched := false
+            each provided_field in producer[3] {
+                when provided_field[0] == required_field[0] and provided_field[1] == required_field[1] {
+                    change matched := true
+                }
+            }
+            when not matched {
+                yield false
+            }
+        }
+    }
+    yield true
+}
+
+export craft matrix_statuses() {
+    yield ["covered", "partial", "missing", "not-applicable"]
+}
+
+export craft matrix_validate_dimensions(rows, columns) {
+    when kind(rows) != "list" or kind(columns) != "list" or size(rows) == 0 or size(columns) == 0 {
+        yield false
+    }
+    each item in rows {
+        when kind(item) != "text" or item == "" {
+            yield false
+        }
+    }
+    each item in columns {
+        when kind(item) != "text" or item == "" {
+            yield false
+        }
+    }
+    yield size(unique(rows)) == size(rows) and size(unique(columns)) == size(columns)
+}
+
+export craft matrix_validate_cells(rows, columns, cells) {
+    when not matrix_validate_dimensions(rows, columns) or kind(cells) != "list" {
+        yield false
+    }
+    vary keys := []
+    each cell in cells {
+        when kind(cell) != "list" or size(cell) != 4 or not contains(rows, cell[0]) or not contains(columns, cell[1]) or not contains(matrix_statuses(), cell[2]) or kind(cell[3]) != "text" {
+            yield false
+        }
+        when contains(keys, [cell[0], cell[1]]) {
+            yield false
+        }
+        when (cell[2] == "covered" or cell[2] == "partial") and cell[3] == "" {
+            yield false
+        }
+        change keys := push(keys, [cell[0], cell[1]])
+    }
+    yield size(cells) == size(rows) * size(columns)
+}
+
+export craft matrix_validate_complete(rows, columns, cells) {
+    when not matrix_validate_cells(rows, columns, cells) {
+        yield false
+    }
+    each row in rows {
+        each column in columns {
+            vary found := false
+            each cell in cells {
+                when cell[0] == row and cell[1] == column {
+                    change found := true
+                }
+            }
+            when not found {
+                yield false
+            }
+        }
+    }
+    yield true
+}
+
+export craft matrix_coverage_summary(rows, columns, cells) {
+    when not matrix_validate_cells(rows, columns, cells) {
+        yield nothing
+    }
+    vary covered := 0
+    vary partial := 0
+    vary missing := 0
+    vary not_applicable := 0
+    each cell in cells {
+        when cell[2] == "covered" {
+            change covered := covered + 1
+        }
+        when cell[2] == "partial" {
+            change partial := partial + 1
+        }
+        when cell[2] == "missing" {
+            change missing := missing + 1
+        }
+        when cell[2] == "not-applicable" {
+            change not_applicable := not_applicable + 1
+        }
+    }
+    yield [covered, partial, missing, not_applicable, size(cells)]
+}
+
+export craft foundation_eleventh_five() {
+    yield [
+        ["foundation.standard.v1", "Standard", "normative and advisory engineering rule registry", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_51_55.md"],
+        ["foundation.regulation.v1", "Regulation", "policy controls, severity and time-bounded exceptions", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_51_55.md"],
+        ["foundation.specification.v1", "Specification", "versioned requirements with acceptance evidence", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_51_55.md"],
+        ["foundation.schema.v1", "Schema", "typed fields, payload validation and schema compatibility", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_51_55.md"],
+        ["foundation.matrix.v1", "Matrix", "complete coverage grid with explicit status and evidence", "implemented", "docs/FOUNDATIONAL_FRAMEWORKS_51_55.md"]
+    ]
+}
+
+export craft foundation_all_frameworks_55() {
+    vary rows := previous["foundation_all_frameworks_50"]()
+    each row in foundation_eleventh_five() {
+        change rows := push(rows, row)
+    }
+    yield rows
+}
+
+export craft foundation_validate_catalog_55() {
+    make rows := foundation_all_frameworks_55()
+    vary identifiers := []
+    each row in rows {
+        when size(row) != 5 {
+            yield false
+        }
+        change identifiers := push(identifiers, row[0])
+    }
+    yield previous["foundation_validate_catalog_50"]() and size(rows) == 55 and size(unique(identifiers)) == 55
+}
