@@ -179,6 +179,18 @@
         "federation/octa-pyramid.v1.json",
         "docs/OCTA_PYRAMID_FEDERATION.md"
       ]
+    },
+    {
+      "id": "reaper.maza-local-foundation.v1",
+      "format": "Local .rpr exported namespace with SHA-256 source revision and live lifecycle status",
+      "direction": "consumes",
+      "status": "partial",
+      "evidence": [
+        "reaper/maza.py",
+        "reaper/modules.py",
+        "docs/MAZA.md",
+        "tests/test_maza.py"
+      ]
     }
   ],
   "integrations": [
