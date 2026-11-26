@@ -188,7 +188,7 @@ export craft base_layer_validate_profile(features) {
         yield false
     }
     each feature in features {
-        when not contains(base_layer_catalog(), [feature, "implemented", ""]) and base_layer_find(feature) == nothing {
+        when base_layer_find(feature) == nothing {
             yield false
         }
     }
