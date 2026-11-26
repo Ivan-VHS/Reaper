@@ -22,6 +22,15 @@ export craft grid_validate_descriptor(grid) {
     when kind(grid) != "list" or size(grid) != 4 or kind(grid[0]) != "text" or grid[0] == "" or kind(grid[1]) != "list" or size(grid[1]) != 2 or kind(grid[2]) != "list" or kind(grid[3]) != "list" {
         yield false
     }
+    vary kinds := []
+    vary names := []
+    each axis in grid[1] {
+        when not grid_validate_axis(axis) or contains(kinds, axis[0]) or contains(names, axis[1]) {
+            yield false
+        }
+        change kinds := push(kinds, axis[0])
+        change names := push(names, axis[1])
+    }
     when grid[1][0][0] != "row" or grid[1][1][0] != "column" or grid[1][0][2] != size(grid[2]) or grid[1][1][2] != size(grid[3]) {
         yield false
     }
@@ -34,15 +43,6 @@ export craft grid_validate_descriptor(grid) {
         when kind(coordinate) != "text" or coordinate == "" {
             yield false
         }
-    }
-    vary kinds := []
-    vary names := []
-    each axis in grid[1] {
-        when not grid_validate_axis(axis) or contains(kinds, axis[0]) or contains(names, axis[1]) {
-            yield false
-        }
-        change kinds := push(kinds, axis[0])
-        change names := push(names, axis[1])
     }
     yield size(grid[2]) > 0 and size(grid[3]) > 0 and size(unique(grid[2])) == size(grid[2]) and size(unique(grid[3])) == size(grid[3])
 }
