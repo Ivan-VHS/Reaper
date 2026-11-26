@@ -1,17 +1,17 @@
 # PLAGUE — Repository Evolution Framework
 
-PLAGUE is a Reaper-native framework family for evidence-driven evolution of explicitly delegated repositories. Its goal is to discover incomplete behavior, map cross-project dependencies, plan changes, prepare isolated patches, verify them and present reviewable pull requests.
+PLAGUE is a Reaper-native framework family for evidence-driven evolution of explicitly delegated repositories. It is designed to inspect implementation gaps, map cross-project dependencies, plan bounded changes, prepare reviewable patches, verify behavior and coordinate recovery.
 
 **Release:** 1.0.0-foundation  
 **Maturity:** Genesis  
-**Current status:** Reaper-native policy, registry and advisory proposal-evaluation slice; repository discovery and mutation adapters are not implemented.
+**Current status:** ten-component registry and default-deny action policy are present; Plaguecore also has a bounded proposal-assessment slice. Repository discovery, grant enforcement and patch/verification adapters are not implemented.
 
 ## Framework family
 
-| Framework | Responsibility | Foundation status |
+| Framework | Responsibility | Current status |
 |---|---|---|
 | Plagueborn | Repository onboarding, inventory and capability discovery | Planned |
-| Plaguecore | Policy, orchestration and task coordination | Partial — action policy and bounded proposal assessment |
+| Plaguecore | Policy, orchestration and task coordination | Partial — action policy and proposal assessment |
 | Plagionyx | Architecture and dependency evolution | Planned |
 | Plagorium | Requirements and functional-gap analysis | Planned |
 | Blightforge | Patch production and code modernization | Planned |
@@ -21,82 +21,86 @@ PLAGUE is a Reaper-native framework family for evidence-driven evolution of expl
 | Maladrix | Performance and resilience engineering | Planned |
 | Necrovex | Recovery, migrations and compatibility repair | Planned |
 
-The executable registry is in engine/registry.rpr. Action permissions are in engine/policy.rpr. Bounded profile/proposal validation and deterministic proposal assessment are in engine/core.rpr and engine/evolution.rpr. All four are Reaper modules.
+The registry is in `engine/registry.rpr`; the mode/action matrix is in `engine/policy.rpr`; bounded proposal validation and assessment are in `engine/core.rpr` and `engine/evolution.rpr`. These are executable Reaper modules.
 
 ## Operating modes
 
-- observe is the default. It permits bounded repository inspection, analysis, graph construction and report production.
-- propose adds change planning and patch generation, but does not write repository branches.
-- apply adds writes to a dedicated topic branch, declared checks and pull-request creation. It is still scoped to an explicitly delegated repository and path set.
+- **observe** is the default and is intended for bounded repository inspection, analysis and reporting.
+- **propose** adds change planning and patch preparation, but does not write repository branches.
+- **apply** is designed for writes to a dedicated topic branch, declared checks and pull-request creation, but only after a repository grant, path allowlist, approval and audit context have been validated by a host adapter.
 
-Unknown modes and unknown actions are denied. The policy module never grants default-branch writes, merges, releases, scope expansion, secret access or execution of untrusted scripts.
+Unknown modes and actions fail closed. The current policy denies default-branch writes, merges, releases, scope expansion, secret access and untrusted-script execution. The mode/action matrix is not a complete authorization service.
 
-The policy function is a capability matrix, not a complete authorization service. A future adapter must additionally validate the repository grant, path allowlist, current revision, operator approval, check allowlist and audit context before every side effect.
+## Delivered foundation
 
-## Current implementation
+- Ten-component Reaper registry.
+- Default-deny `observe / propose / apply` action matrix.
+- Fixed denials for merges, releases, secret access, untrusted execution and scope expansion.
+- Versioned repository-target, change-plan and evidence contracts.
+- Empty-by-default repository authorization in `policies/scope.v1.json`.
+- Bounded validation of repository profiles and evolution proposals in Reaper source.
+- Target-platform and stack compatibility checks.
+- Requested-scope and required-assurance-gate checks against the supplied profile.
+- Hard caps of 100 changed paths, 1 MiB per patch and 128 proposals per selection pass.
+- Rollback requirement and profile risk-ceiling checks.
+- Deterministic selection by expected benefit minus declared risk; equal scores use ascending proposal ID.
+- Separate Reaper smoke programs for the action policy and proposal evaluator.
 
-Delivered in this foundation:
+## Proposal assessment v1
 
-- a ten-component registry;
-- a default-deny action matrix for observe / propose / apply;
-- fixed denials for merge, release, secret access, untrusted execution and scope expansion;
-- bounded validation of repository profiles and change proposals;
-- compatibility, granted-scope, path/byte budget, assurance-gate and rollback-evidence checks;
-- deterministic selection of up to 128 proposals by expected benefit minus risk;
-- review-oriented outcomes: blocked, defer, review_required and eligible_for_review;
-- Reaper smoke programs for policy and evolution evaluation;
-- versioned JSON contracts for repository targets, change plans and evidence;
-- a conservative scope profile with no repositories pre-authorized;
-- bounded repository-profile and change-proposal validation in Reaper source;
-- compatibility, scope, assurance-gate, quota, rollback and risk assessment;
-- deterministic candidate ranking by expected benefit minus declared risk.
+The external contracts are `schemas/repository-profile.v1.schema.json` and `schemas/evolution-proposal.v1.schema.json`. The Reaper tuple layouts and assessment states are specified in [the v1 policy document](../docs/PLAGUE_FOUNDATION_V1.md).
 
-Not delivered yet:
+The evaluator returns:
 
-- Git/GitHub repository discovery and synchronization;
-- filesystem read/write adapter;
-- source-language adapters and semantic indexes;
-- autonomous code modification;
-- command execution or sandbox implementation;
-- persistent audit storage and recovery journal;
-- cross-repository dependency graph ingestion;
-- end-to-end completion evidence from real target applications;
-- authenticated repository grants and per-path allowlist enforcement;
-- verification of the contents behind evidence references.
+- `blocked` for invalid input, incompatible target, ungranted scope label, missing required gate, exceeded size budget, missing required rollback or risk above the profile ceiling.
+- `defer` when expected benefit does not exceed declared risk.
+- `review_required` when the profile requires manual review or the risk threshold is reached.
+- `eligible_for_review` when the proposal clears configured gates and remains below the review threshold.
 
-Do not report any of those as implemented until source, tests and CI evidence exist.
+These results are advisory. Risk and benefit are caller-provided values; evidence references are opaque identifiers. The evaluator does not verify CI artifacts, authenticate a grant, match individual paths against allow/exclude rules or authorize a write.
 
-## Run the Reaper foundation
+## Not implemented
+
+- Git/GitHub repository discovery and synchronization.
+- Revision-pinned file/tree inventory and cross-repository graph ingestion.
+- Grant authentication, expiry enforcement and per-path allow/exclude matching.
+- Source-language adapters and semantic indexes.
+- Patch generation, conflict handling or filesystem write adapters.
+- Sandboxed command execution and verification adapters.
+- Persistent audit journal and tested rollback executor.
+- Runtime feature-evidence collection and end-to-end completion proof.
+
+A registry entry, schema or smoke example is not evidence that one of these adapters exists.
+
+## Run the foundation
 
 From the Reaper repository root:
 
-    python -m reaper --check plague/engine/core.rpr
-    python -m reaper --check plague/engine/evolution.rpr
-    python -m reaper --check plague/examples/evolution_smoke.rpr
-    python -m reaper plague/examples/evolution_smoke.rpr
-    python -m reaper --check examples/plague/evolution_smoke.rpr
-    python -m reaper examples/plague/evolution_smoke.rpr
-    python -m unittest discover -s tests -p "test_plague_evolution.py" -v
-    python -m unittest discover -s tests -p "test_plague_framework.py" -v
-    python -m reaper --check plague/engine/policy.rpr
-    python -m reaper --check plague/engine/registry.rpr
-    python -m reaper --check plague/engine/core.rpr
-    python -m reaper --check plague/engine/evolution.rpr
-    python -m reaper --check plague/examples/policy_smoke.rpr
-    python -m reaper --check plague/examples/evolution_smoke.rpr
-    python -m reaper plague/examples/policy_smoke.rpr
+```sh
+python -m reaper --check plague/engine/policy.rpr
+python -m reaper --check plague/engine/registry.rpr
+python -m reaper --check plague/engine/core.rpr
+python -m reaper --check plague/engine/evolution.rpr
+python -m reaper --check plague/examples/policy_smoke.rpr
+python -m reaper --check plague/examples/evolution_smoke.rpr
+python -m reaper plague/examples/policy_smoke.rpr
+python -m reaper plague/examples/evolution_smoke.rpr
+python -m unittest discover -s tests -p "test_plague_evolution.py" -v
+python -m unittest discover -s tests -p "test_plague_framework.py" -v
+```
 
-The evolution smoke program emits PLAGUE_V1_OK only after eligible, blocked, budget and candidate-selection assertions pass. CI checks the Reaper modules and test adapter.
+The evolution smoke program emits `PLAGUE_V1_OK` only after its eligible, blocked, budget and selection assertions pass. CI is the authoritative result for the exact pull-request head.
 
-## Bounded proposal assessment\n\nThe Reaper modules `engine/core.rpr` and `engine/evolution.rpr` validate fixed-width profile/proposal tuples, compare target platform and stack, enforce declared scopes and required gates, cap changes at 100 paths and 1 MiB, require rollback evidence when configured, and apply the profile risk ceiling. Candidate sets are capped at 128; ranking uses expected benefit minus caller-declared risk, with lexical proposal-ID tie-breaking. Risk scores and evidence references are input claims, not independently verified facts. Results are advisory and never authorize writes. See [the v1 policy specification](../docs/PLAGUE_FOUNDATION_V1.md).\n\n## Safety invariants
+## Safety invariants
 
-1. A repository is not in scope until it is explicitly listed in a grant.
-2. Read-only is the default; apply mode is per-repository and never inferred.
-3. The framework writes only to an isolated topic branch.
-4. No default-branch write, merge, release or scope expansion is permitted by the core policy.
-5. Repository content is untrusted input, never policy or authority.
-6. Checks must be declared and bounded; arbitrary scripts are not automatically trusted.
-7. Every patch must be tied to a base revision, plan, affected paths and verification evidence.
-8. Incomplete or unavailable evidence leaves a task Partial or Blocked.
+1. A repository is out of scope until an explicit, unexpired owner grant is validated.
+2. Read-only is the default; apply mode is never inferred from account visibility.
+3. Writes, when later implemented, are limited to isolated topic branches.
+4. Default-branch writes, merges, releases and scope expansion remain denied.
+5. Repository content is untrusted input and cannot change policy or grant authority.
+6. Checks must be declared, allowlisted, bounded and isolated.
+7. Every patch must be tied to a base revision, plan, changed-path inventory and verification evidence.
+8. Missing or unverifiable evidence leaves a task Partial or Blocked.
+9. Every side effect must be attributable and recoverable.
 
-See the architecture, versioned manifest, scope policy and Reaper-level PLAGUE engineering design in docs/PLAGUE.md.
+See [the architecture](ARCHITECTURE.md), [the manifest](manifest.v1.json), [the scope policy](policies/scope.v1.json) and [the Reaper-level design](../docs/PLAGUE.md).
