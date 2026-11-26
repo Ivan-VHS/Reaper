@@ -1,17 +1,85 @@
-# Reaper framework metadata and source-level helper functions.
-# Operation contracts: language/frameworks.v1.json
+# Secator: explicit access decisions and non-secret security references.
+import "../federation_common.rpr" as fc
 
 export make framework_id := "secator"
 export make display_name := "Secator"
 export make feature_key := "RPR-FWK-019"
 export make operation_keys := ["RPR-FWK-019-F01", "RPR-FWK-019-F02", "RPR-FWK-019-F03", "RPR-FWK-019-F04", "RPR-FWK-019-F05", "RPR-FWK-019-F06"]
-export make maturity := "contract-only"
+export make maturity := "reference-handler-v1-partial"
 export make native_registry := "reaper.framework-cabi.v1"
 
-export craft operation_key(index) {
-    yield operation_keys[index]
+export craft operation_key(index) { yield operation_keys[index] }
+export craft framework_manifest() { yield [framework_id, display_name, feature_key, operation_keys, maturity] }
+
+# Policy rows: [principal_id, resource_id, decision].
+export craft access_decide(policy, principal, resource) {
+    when kind(policy) != "list" or not fc["fc_nonempty_text"](principal) or not fc["fc_nonempty_text"](resource) {
+        yield [false, "deny", "access-input-invalid"]
+    }
+    vary decision := "deny"
+    each rule in policy {
+        when fc["fc_record"](rule, 3) and rule[0] == principal and rule[1] == resource {
+            when rule[2] == "allow" { change decision := "allow" }
+            when rule[2] == "deny" { change decision := "deny" }
+        }
+    }
+    yield [true, decision, "explicit-policy-evaluation"]
 }
 
-export craft framework_manifest() {
-    yield [framework_id, display_name, feature_key, operation_keys, maturity]
+# Identity must be attested by an external trusted host; this validates the descriptor only.
+export craft principal_resolve(identity) {
+    when not fc["fc_record"](identity, 4) { yield [false, nothing, "identity-shape"] }
+    when not fc["fc_nonempty_text"](identity[0]) or not fc["fc_nonempty_text"](identity[1]) {
+        yield [false, nothing, "identity-issuer-or-subject"]
+    }
+    when identity[2] != true { yield [false, nothing, "host-identity-not-verified"] }
+    when kind(identity[3]) != "list" { yield [false, nothing, "identity-roles-invalid"] }
+    yield [true, [identity[0], identity[1], identity[3], "host-verified-claim"], "principal-descriptor"]
+}
+
+export craft secret_ref(name, version) {
+    when not fc["fc_nonempty_text"](name) or not fc["fc_version_valid"](version) {
+        yield [false, nothing, "secret-reference-invalid"]
+    }
+    yield [true, ["host-secret-provider", name, version, "reference-only"], "secret-reference"]
+}
+
+# Token metadata: [issuer, scopes, expiry, revoked]; policy: [issuer, required_scope, now].
+export craft token_validate(token, policy) {
+    when not fc["fc_record"](token, 4) or not fc["fc_record"](policy, 3) {
+        yield [false, false, "token-policy-shape"]
+    }
+    when token[0] != policy[0] { yield [true, false, "issuer-mismatch"] }
+    when token[3] { yield [true, false, "token-revoked"] }
+    when not fc["fc_nonnegative"](policy[2]) or token[2] <= policy[2] {
+        yield [true, false, "token-expired"]
+    }
+    yield [true, fc["fc_has"](token[1], policy[1]), "scope-checked"]
+}
+
+export craft policy_compile(policy, rules) {
+    when not fc["fc_nonempty_text"](policy) or kind(rules) != "list" {
+        yield [false, nothing, "policy-input-shape"]
+    }
+    vary errors := []
+    each rule in rules {
+        when not fc["fc_record"](rule, 3) { change errors := push(errors, ["rule-shape", rule]) }
+        otherwise {
+            when not fc["fc_nonempty_text"](rule[0]) or (rule[2] != "allow" and rule[2] != "deny") {
+                change errors := push(errors, ["rule-invalid", rule])
+            }
+        }
+    }
+    yield [size(errors) == 0, [policy, rules, "default-deny"], errors]
+}
+
+# Redacted audit output never includes arbitrary context payload or secret material.
+export craft security_audit(event, context) {
+    when not fc["fc_record"](event, 3) or not fc["fc_record"](context, 3) {
+        yield [false, nothing, "audit-input-shape"]
+    }
+    when not fc["fc_nonempty_text"](event[0]) or not fc["fc_nonempty_text"](context[0]) {
+        yield [false, nothing, "audit-identifiers-required"]
+    }
+    yield [true, [event[0], event[1], context[0], context[1], context[2], "redacted"], "security-audit-record"]
 }
