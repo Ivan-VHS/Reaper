@@ -5334,7 +5334,13 @@
       "negative": {
         "args": "([[\"R-2\", 4, \"migration\"]], 5)",
         "output": "false"
-      }
+      },
+      "additional_negative": [
+        [
+          "([], -1)",
+          "false"
+        ]
+      ]
     },
     {
       "id": "52.policy",
@@ -5372,7 +5378,19 @@
       "negative": {
         "args": "(\"compiler\", \"cache\", \"delete\", [[\"compiler\", \"cache\", \"read\", \"allow\"]])",
         "output": "deny"
-      }
+      },
+      "additional_positive": [
+        [
+          "(\"compiler\", \"cache\", \"read\", [[\"compiler\", \"cache\", \"read\", \"allow\"], [\"compiler\", \"cache\", \"read\", \"deny\"]])",
+          "deny"
+        ]
+      ],
+      "additional_negative": [
+        [
+          "(\"compiler\", \"cache\", \"read\", [[\"compiler\", \"cache\", \"read\", \"maybe\"]])",
+          "deny"
+        ]
+      ]
     },
     {
       "id": "52.roles",
@@ -5448,7 +5466,13 @@
       "negative": {
         "args": "[\"heap_bytes\", \"integer\", 65536, 1024]",
         "output": "false"
-      }
+      },
+      "additional_negative": [
+        [
+          "([\"heap_bytes\", \"integer\", 1.5, 4])",
+          "false"
+        ]
+      ]
     },
     {
       "id": "53.constraints",
@@ -5581,7 +5605,13 @@
       "negative": {
         "args": "([\"id\", \"missing\"], [[\"id\", \"integer\"]])",
         "output": "false"
-      }
+      },
+      "additional_negative": [
+        [
+          "([[\"id\", \"parent\"]], [[\"id\"]])",
+          "false"
+        ]
+      ]
     },
     {
       "id": "54.required",
@@ -6512,7 +6542,13 @@
       "negative": {
         "args": "([1, 10, 2], 2)",
         "output": "false"
-      }
+      },
+      "additional_negative": [
+        [
+          "([\"invalid\", 4], 2)",
+          "false"
+        ]
+      ]
     },
     {
       "id": "64.margin",
