@@ -8,6 +8,8 @@ This hub groups related specifications and implementation references. The linked
 
 ## Documents
 
+- [ДОМ — Reaper Fundamental Framework](../DOM_FRAMEWORK.md) — the canonical Reaper runtime, eight integrated subsystems, compatibility contracts and DAK host boundary.
+
 - [HARDWARE LANGUAGE](../HARDWARE_LANGUAGE.md) — systems-language target, MMIO safety contract and hardware qualification gates.
 - [ARCHITECTURE 66](../ARCHITECTURE_66.md)
 - [ARCHITECTURE](../ARCHITECTURE.md)
