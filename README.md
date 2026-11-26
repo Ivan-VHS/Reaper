@@ -16,6 +16,7 @@
 | Runtime platforms | Windows, Linux, macOS (reference runtime) |
 | Desktop platform | Windows Studio |
 | License | [Apache-2.0](LICENSE) |
+| Code of Conduct | Not published (no root `CODE_OF_CONDUCT.md`) |
 | Last documentation review | 2026-11-26 |
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/dashboard.svg"><img src="assets/readme/dashboard-light.svg" alt="Reaper language and developer tools overview" width="100%"></picture>
