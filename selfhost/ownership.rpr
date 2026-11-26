@@ -1,0 +1,160 @@
+# Bounded ownership, borrowing, regions, and deterministic drop verifier.
+# This is an executable semantic model; it is not yet wired into the production VM.
+
+export craft region_tree_validate(regions) {
+    when kind(regions) != "list" or size(regions) > 1024 {
+        yield ["ERROR", "region table must be a bounded list"]
+    }
+    vary index := 0
+    loop while index < size(regions) {
+        make region := regions[index]
+        when size(region) != 2 or region[0] == "" {
+            yield ["ERROR", "invalid region descriptor"]
+        }
+        vary prior := 0
+        loop while prior < index {
+            when regions[prior][0] == region[0] {
+                yield ["ERROR", "duplicate region: " ++ region[0]]
+            }
+            change prior := prior + 1
+        }
+        when region[1] != "root" and not contains(regions |> map(??), region[1]) {
+            # Parent existence is checked in region_parent_exists below.
+            when region[1] == "" { yield ["ERROR", "region parent cannot be empty"] }
+        }
+        change index := index + 1
+    }
+    yield ["OK", size(regions)]
+}
+
+export craft region_parent_exists(regions, parent) {
+    when parent == "root" { yield true }
+    each region in regions {
+        when region[0] == parent { yield true }
+    }
+    yield false
+}
+
+export craft region_tree_check(regions) {
+    make base := region_tree_validate(regions)
+    when base[0] == "ERROR" { yield base }
+    each region in regions {
+        when not region_parent_exists(regions, region[1]) {
+            yield ["ERROR", "unknown parent region: " ++ region[1]]
+        }
+    }
+    yield ["OK", size(regions)]
+}
+
+export craft region_is_ancestor(regions, ancestor, child) {
+    when ancestor == child or ancestor == "root" { yield true }
+    vary current := child
+    vary remaining := size(regions) + 1
+    loop while current != "root" and remaining > 0 {
+        vary found := false
+        each region in regions {
+            when region[0] == current {
+                change current := region[1]
+                change found := true
+            }
+        }
+        when not found { yield false }
+        when current == ancestor { yield true }
+        change remaining := remaining - 1
+    }
+    yield false
+}
+
+export craft region_escape_allowed(regions, source_region, destination_region) {
+    # An outer-lived value may flow into a shorter-lived destination;
+    # a short-lived value may not escape into an outer destination.
+    yield region_is_ancestor(regions, source_region, destination_region)
+}
+
+export craft borrow_set_validate(borrows) {
+    when kind(borrows) != "list" or size(borrows) > 4096 {
+        yield ["ERROR", "borrow set exceeds the v1 bound"]
+    }
+    vary index := 0
+    loop while index < size(borrows) {
+        make borrow := borrows[index]
+        when size(borrow) != 4 or borrow[0] == "" or borrow[1] == "" or borrow[2] == "" {
+            yield ["ERROR", "invalid borrow descriptor"]
+        }
+        when borrow[3] != true and borrow[3] != false {
+            yield ["ERROR", "borrow mutability must be boolean"]
+        }
+        vary prior := 0
+        loop while prior < index {
+            make earlier := borrows[prior]
+            when earlier[0] == borrow[0] and (earlier[3] or borrow[3]) {
+                yield ["ERROR", "mutable and shared borrows cannot overlap"]
+            }
+            change prior := prior + 1
+        }
+        change index := index + 1
+    }
+    yield ["OK", size(borrows)]
+}
+
+export craft ownership_declarations_validate(resources, regions) {
+    when size(resources) > 4096 { yield ["ERROR", "resource declaration count exceeds the v1 bound"] }
+    vary names := []
+    each resource in resources {
+        when size(resource) != 3 or resource[0] == "" {
+            yield ["ERROR", "invalid owned resource descriptor"]
+        }
+        when contains(names, resource[0]) {
+            yield ["ERROR", "duplicate owned resource: " ++ resource[0]]
+        }
+        when not region_parent_exists(regions, resource[1]) {
+            yield ["ERROR", "resource refers to an unknown region: " ++ resource[1]]
+        }
+        change names := push(names, resource[0])
+    }
+    yield ["OK", size(resources)]
+}
+
+export craft deterministic_drop_order(resources) {
+    vary result := []
+    vary index := size(resources) - 1
+    loop while index >= 0 {
+        change result := push(result, resources[index][0])
+        change index := index - 1
+    }
+    yield result
+}
+
+export craft drop_order_validate(resources, drops) {
+    make expected := deterministic_drop_order(resources)
+    when size(expected) != size(drops) {
+        yield ["ERROR", "drop list must release every owned resource exactly once"]
+    }
+    vary index := 0
+    loop while index < size(expected) {
+        when expected[index] != drops[index] {
+            yield ["ERROR", "drop order must be reverse declaration order"]
+        }
+        change index := index + 1
+    }
+    yield ["OK", true]
+}
+
+make sample_regions := [["request", "root"], ["buffer", "request"]]
+assert(region_tree_check(sample_regions)[0] == "OK", "valid nested regions should pass")
+assert(region_escape_allowed(sample_regions, "request", "buffer"), "outer borrow may enter an inner region")
+assert(not region_escape_allowed(sample_regions, "buffer", "request"), "inner borrow must not escape to an outer region")
+
+make shared_borrows := [["buffer", "reader_a", "request", false], ["buffer", "reader_b", "request", false]]
+make conflicting_borrows := [["buffer", "writer", "request", true], ["buffer", "reader", "request", false]]
+assert(borrow_set_validate(shared_borrows)[0] == "OK", "shared borrows may overlap")
+assert(borrow_set_validate(conflicting_borrows)[0] == "ERROR", "mutable/shared overlap must fail")
+
+make resources := [["socket", "request", "drop_socket"], ["buffer", "buffer", "drop_buffer"]]
+assert(ownership_declarations_validate(resources, sample_regions)[0] == "OK", "resource declarations should validate")
+make drops := deterministic_drop_order(resources)
+assert(drops == ["buffer", "socket"], "owned resources must drop in reverse declaration order")
+assert(drop_order_validate(resources, drops)[0] == "OK", "canonical drop order should pass")
+assert(drop_order_validate(resources, ["socket", "buffer"])[0] == "ERROR", "incorrect drop order must fail")
+
+emit "SELFHOST_OWNERSHIP_OK"
