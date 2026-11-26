@@ -11,6 +11,7 @@
 | Studio | Windows editor/debugger, command palette, MCU profile and hardware-boundary overview | desktop app; no live device inspector |
 | CODEX-66 | searchable 66-item native feature catalogue with JSON export and maturity labels | implemented metadata/UI; feature statuses remain evidence-based |
 | Native C17 | lexer, expression Pratt parser, owned AST, checked i64 IR, constant folding and limited lowering | partial |
+| Typed layouts and target profiles | Reaper-native descriptor model for fixed-width scalars, arrays, struct, union, enum, distinct and opaque data; Windows/Linux/DAK target profiles | partial; declaration syntax, canonical typed IR and native ABI lowering remain incomplete |
 | Native MMIO contract | checked region/register descriptors, widths, bounds, alignment, access policies, capability checks and adapter callbacks | implemented C API; no physical mapping or device driver |
 | LSP semantic tokens and diagnostics | lexical highlighting plus local inferred-type diagnostics from the reference AST checker | stdio LSP; UTF-16 positions; no cross-file type inference |
 | МОСТ | 54 aliases: 21 executable, 33 reserved | mixed |
