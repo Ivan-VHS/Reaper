@@ -5252,11 +5252,11 @@
       "api": "valid_standard_rule",
       "purpose": "Validate a normative rule identity, severity and mandatory flag.",
       "positive": {
-        "args": "[\"R-001\", \"critical\", true]",
+        "args": "([\"R-001\", \"critical\", true])",
         "output": "true"
       },
       "negative": {
-        "args": "[\"R-001\", \"unknown\", true]",
+        "args": "([\"R-001\", \"unknown\", true])",
         "output": "false"
       }
     },
@@ -5460,11 +5460,11 @@
       "api": "valid_spec_parameter",
       "purpose": "Validate a typed numeric specification parameter with an inclusive value range.",
       "positive": {
-        "args": "[\"heap_bytes\", \"integer\", 1024, 65536]",
+        "args": "([\"heap_bytes\", \"integer\", 1024, 65536])",
         "output": "true"
       },
       "negative": {
-        "args": "[\"heap_bytes\", \"integer\", 65536, 1024]",
+        "args": "([\"heap_bytes\", \"integer\", 65536, 1024])",
         "output": "false"
       },
       "additional_negative": [
@@ -5947,11 +5947,11 @@
       "api": "valid_perimeter_zone",
       "purpose": "Validate a named trust zone with a bounded integer trust level.",
       "positive": {
-        "args": "[\"user-space\", 2]",
+        "args": "([\"user-space\", 2])",
         "output": "true"
       },
       "negative": {
-        "args": "[\"\", 2]",
+        "args": "([\"\", 2])",
         "output": "false"
       }
     },
