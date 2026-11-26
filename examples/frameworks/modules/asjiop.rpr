@@ -86,8 +86,12 @@ export craft validate_layout(layout, abi_constraints) {
                 when field[1] + field[2] > layout[0] {
                     change errors := push(errors, ["field-out-of-bounds", field[0]])
                 }
-                when field[3] <= 0 or field[1] / field[3] != number(text(field[1] / field[3])) {
+                when field[3] <= 0 {
                     change errors := push(errors, ["field-alignment", field[0]])
+                } otherwise {
+                    when remainder(field[1], field[3]) != 0 {
+                        change errors := push(errors, ["field-alignment", field[0]])
+                    }
                 }
                 each previous in ranges {
                     when field[1] < previous[1] and field[1] + field[2] > previous[0] {
