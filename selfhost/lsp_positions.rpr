@@ -84,7 +84,11 @@ craft lsp_offset_to_position(source, line_index, offset) {
     when line_slot[0] != "OK" { yield line_slot }
     make bounds := lsp_line_content_end(source, line_index, line_slot[1])
     make start := line_index[line_slot[1]][1]
-    make column := lsp_utf16_column(source, start, bounds[1][1], offset)
+    vary mapped_offset := offset
+    when mapped_offset > bounds[1][1] {
+        change mapped_offset := bounds[1][1]
+    }
+    make column := lsp_utf16_column(source, start, bounds[1][1], mapped_offset)
     when column[0] != "OK" { yield column }
     yield ["OK", [line_index[line_slot[1]][0] - 1, column[1]]]
 }
