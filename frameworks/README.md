@@ -37,7 +37,13 @@ second language or silently acquire host permissions.
 
 ## Run the smoke programs
 
-From the repository root:
+From the repository root, browse the unified catalogue without opening source files:
+
+    python -m reaper --frameworks
+    python -m reaper --framework-info Vorke
+    python -m reaper --framework-search federation
+
+Run the source-level smoke programs:
 
     python -m reaper examples/frameworks_smoke.rpr
     python -m reaper examples/frameworks_portfolio_smoke.rpr
