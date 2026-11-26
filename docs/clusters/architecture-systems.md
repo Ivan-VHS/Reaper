@@ -18,6 +18,7 @@ This hub groups related specifications and implementation references. The linked
 - [FOUNDATIONAL FRAMEWORKS 21–25](../FOUNDATIONAL_FRAMEWORKS_21_25.md) — tool inventory, discovery, package and stack contracts.
 - [FOUNDATIONAL FRAMEWORKS 26–30](../FOUNDATIONAL_FRAMEWORKS_26_30.md) — target stacks, templates, canonical aliases and the core language base.
 - [FOUNDATIONAL FRAMEWORKS 31–35](../FOUNDATIONAL_FRAMEWORKS_31_35.md) — intermediate layers, middleware, federation envelopes and host contracts.
+- [FOUNDATIONAL FRAMEWORKS 36–40](../FOUNDATIONAL_FRAMEWORKS_36_40.md) — compiler context, type model, paradigm and concept relations.
 - [ATOMIC QUANTUM 133](../ATOMIC_QUANTUM_133.md)
 - [CLINICAL SYSTEMS CSR120](../CLINICAL_SYSTEMS_CSR120.md)
 - [CONSTITUTION 666 PROFILE](../CONSTITUTION_666_PROFILE.md)

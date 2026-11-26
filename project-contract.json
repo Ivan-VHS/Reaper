@@ -24,6 +24,29 @@
   },
   "capabilities": [
     {
+      "id": "foundations.eighth-five-frameworks",
+      "status": "partial",
+      "summary": "Adds executable contracts for source/execution context and Span validation, runtime/typed value model descriptors, reusable pattern requirements, language-paradigm maturity and a cross-framework concept graph; complete source maps, typed systems syntax and compiler semantics remain partial.",
+      "evidence": [
+        "frameworks/foundation_36_40.rpr",
+        "frameworks/foundation_31_35.rpr",
+        "frameworks/foundation_26_30.rpr",
+        "frameworks/foundation_21_25.rpr",
+        "frameworks/foundation_16_20.rpr",
+        "frameworks/foundation_11_15.rpr",
+        "frameworks/foundation_6_10.rpr",
+        "frameworks/foundation.rpr",
+        "docs/FOUNDATIONAL_FRAMEWORKS_36_40.md",
+        "examples/foundations_36_40.rpr",
+        "tests/test_foundational_frameworks_36_40.py",
+        "reaper/lexer.py",
+        "reaper/parser.py",
+        "reaper/ir.py",
+        "reaper/typecheck.py",
+        "docs/SEMANTIC_HYPERGRAPH_AND_SOURCE_MAP.md"
+      ]
+    },
+    {
       "id": "foundations.seventh-five-frameworks",
       "status": "partial",
       "summary": "Adds executable Reaper contracts for intermediate subsystem layers, ordered middleware hooks, versioned cross-project integration envelopes, bounded container profiles and embedding-host capability/lifecycle validation; live middleware dispatch, IPC, OS isolation and host syscall services remain adapter-dependent.",
