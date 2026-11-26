@@ -134,7 +134,10 @@
     "source_named_line_column_span_preservation_in_native_hir",
     "native_f64_unary_and_same_type_binary_arithmetic",
     "locale_independent_decimal_literal_parsing",
-    "empty_and_escaped_text_literal_lowering"
+    "empty_and_escaped_text_literal_lowering",
+    "trusted_host_clock_for_grant_expiry_and_revocation",
+    "request_digest_bound_signed_repository_grant_verification",
+    "partial_workspace_commit_rollback_snapshot_handling"
   ],
   "not_implemented": [
     "first_class_reaper_struct_and_enum_syntax",
