@@ -10,7 +10,7 @@ This catalogue records twenty product directions in ten mirrored pairs. Each pro
 | Pair | Forward product | Forward profile | Reverse product | Reverse profile |
 |---|---|---|---|---|
 | 01 | Plague | Soft Frame | Outbreak | Frame Soft |
-| 02 | Pestilence | Frame SaaS | Malady | SaaS Frame |
+| 02 | Pestilence | Frame Saas | Malady | Saas Frame |
 | 03 | Epidemic | Framework native | Miasma | native Framework |
 | 04 | Pandemic | Program Summary | Fever | Summary Program |
 | 05 | Scourge | System Control | Bane | Control System |
