@@ -28,7 +28,8 @@
         "architecture_graph_validation",
         "design_evolution_proposals",
         "source_evolution_planning",
-        "observe_propose_orchestration"
+        "observe_propose_orchestration",
+        "PLAGUE_default_deny_policy_integration"
       ],
       "limitations": [
         "not_the_general_Reaper_compiler_IR",
