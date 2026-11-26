@@ -20,8 +20,8 @@ def run_framework(entry: dict, args: str) -> list[str]:
     relative = Path(entry["path"]).relative_to("reaper")
     specifier = f"../reaper/{relative.as_posix()}"
     source = (
-        f'import "{specifier}" as framework\\n'
-        f'emit framework["{entry["api"]}"]{args}\\n'
+        f'import "{specifier}" as framework\n'
+        f'emit framework["{entry["api"]}"]{args}\n'
     )
     output: list[str] = []
     Interpreter(output=output.append).run(source, filename=str(RUNNER))
