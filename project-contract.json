@@ -132,6 +132,17 @@
         "tests/test_architecture.c",
         "docs/REAPER_ARCHITECTURE_FOUNDATION_66.md"
       ]
+    },
+    {
+      "id": "language.system-functions.v1",
+      "status": "partial",
+      "summary": "Exported Reaper system-function module provides deterministic contract-graph preflight, bounded tracked regions and cooperative worker budgets, atomic diff/reconcile plans, ephemeral byte-buffer comparison, guarded revisions, lease checks, local p95/p99 profiling, local-only effect preflight and migration rollback fixtures in the Python reference runtime; compile-time/type-level and native C17 parity remain incomplete.",
+      "evidence": [
+        "stdlib/system.rpr",
+        "reaper/system_functions.py",
+        "tests/test_system_functions.py",
+        "docs/SYSTEM_FUNCTIONS.md"
+      ]
     }
   ],
   "interfaces": [
@@ -163,6 +174,17 @@
       "evidence": [
         "federation/octa-pyramid.v1.json",
         "docs/OCTA_PYRAMID_FEDERATION.md"
+      ]
+    },
+    {
+      "id": "reaper.system-functions.v1",
+      "format": "Versioned .rpr module with JSON-compatible records and explicit callback contracts",
+      "direction": "provides",
+      "status": "partial",
+      "evidence": [
+        "stdlib/system.rpr",
+        "docs/SYSTEM_FUNCTIONS.md",
+        "tests/test_system_functions.py"
       ]
     }
   ],
@@ -213,7 +235,11 @@
     "Filesystem, process, network, clock, shell and native-library effects remain explicit or opt-in rather than ambient expression behavior.",
     "Native FFI executes in-process native code and must only load trusted ABI-compatible libraries.",
     "The native C17 implementation and self-hosting frontend remain partial; Python is the compatibility reference.",
-    "The architecture foundation registry validates metadata and declared dependency graphs only; it does not load code, start runtimes, isolate containers or grant hardware privileges."
+    "The architecture foundation registry validates metadata and declared dependency graphs only; it does not load code, start runtimes, isolate containers or grant hardware privileges.",
+    "The system-functions v1 worker quota is cooperative in the Python reference runtime; it is not OS-enforced process isolation or a hard process-RSS limit.",
+    "The arena-slot API limits tracked reference-runtime allocations and rejects escaped region allocations; it is not a zero-allocation host arena.",
+    "Ephemeral comparison overwrites only its owned mutable working buffers and cannot erase caller-owned or immutable copies.",
+    "Contract graph, lease, local-only and rollback checks are runtime preflight functions until the native compiler gains compile-time evaluation, type-level leases and effect-checked module headers."
   ],
   "extension_points": [
     "Canonical IR and selectable execution engines.",
@@ -221,6 +247,7 @@
     "Opt-in C ABI adapters and validated versioned JSON interchange.",
     "Native C17 frontend stages with Python reference behavior as the compatibility oracle.",
     "Bounded vertical self-composition for deterministic compiler and data-flow transformation pipelines.",
-    "Stable architecture concept IDs, layer metadata and bounded dependency graph validation."
+    "Stable architecture concept IDs, layer metadata and bounded dependency graph validation.",
+    "Explicit stdlib/system.rpr APIs for bounded system operations, revision guards, local telemetry and reversible migration preflight."
   ]
 }
