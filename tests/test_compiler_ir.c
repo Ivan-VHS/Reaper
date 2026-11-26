@@ -1,11 +1,123 @@
 #include "reaper/compiler_ir.h"
+#include "reaper/lexer.h"
 
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
 
+static int lower_source_to_hir(const char *source_text, const char *source_name,
+                                ReaperCompilerIrNode *nodes, size_t capacity,
+                                ReaperCompilerIrModule *hir,
+                                ReaperCompilerIrError *error) {
+    ReaperTokenArray tokens = {0};
+    ReaperLexError lex_error = {{0}, 0u, 0u};
+    ReaperAst ast;
+    ReaperParseError parse_error = {{0}, 0u, 0u};
+    int result;
+    if (!reaper_lex(source_text, &tokens, &lex_error)) return 0;
+    if (!reaper_parse_expression(&tokens, &ast, &parse_error)) {
+        reaper_tokens_free(&tokens);
+        return 0;
+    }
+    result = reaper_compiler_ir_lower_ast_to_hir(
+        &ast, source_name, nodes, capacity, hir, error);
+    reaper_ast_free(&ast);
+    reaper_tokens_free(&tokens);
+    return result;
+}
+
+static void test_native_ast_to_typed_hir(void) {
+    ReaperCompilerIrNode nodes[32], mir_nodes[32], lir_nodes[32];
+    ReaperCompilerIrModule hir, mir, lir;
+    ReaperCompilerIrError error;
+    char generated[16384];
+    size_t generated_length = 0u;
+
+    assert(lower_source_to_hir("-(19 + 23) * 2", "native_expr.rpr",
+        nodes, 32u, &hir, &error));
+    assert(hir.stage == REAPER_COMPILER_IR_HIR);
+    assert(hir.length == 5u);
+    assert(hir.nodes[0].type == REAPER_COMPILER_IR_TYPE_I64);
+    assert(hir.nodes[2].opcode == REAPER_COMPILER_IR_HIR_BINARY);
+    assert(hir.nodes[3].opcode == REAPER_COMPILER_IR_HIR_UNARY);
+    assert(hir.nodes[4].key[0] == '*');
+    assert(strcmp(hir.nodes[4].span.source, "native_expr.rpr") == 0);
+    assert(hir.nodes[4].span.line == 1u && hir.nodes[4].span.column > 0u);
+
+    assert(reaper_compiler_ir_lower_hir_to_mir(&hir, mir_nodes, 32u, &mir, &error));
+    assert(reaper_compiler_ir_lower_mir_to_lir(
+        &mir, "native.desktop", lir_nodes, 32u, &lir, &error));
+    assert(reaper_compiler_ir_emit_c17(
+        &lir, generated, sizeof generated, &generated_length, &error));
+    assert(generated_length == strlen(generated));
+    assert(strstr(generated, "lir.native_unary") != NULL);
+    assert(strstr(generated, "lir.native_arithmetic") != NULL);
+
+    assert(lower_source_to_hir("12.5", "literal.rpr",
+        nodes, 32u, &hir, &error));
+    assert(hir.nodes[0].type == REAPER_COMPILER_IR_TYPE_F64);
+    assert(hir.nodes[0].number == 12.5);
+
+    assert(lower_source_to_hir("\"a\\\"b\\n\"", "literal.rpr",
+        nodes, 32u, &hir, &error));
+    assert(hir.nodes[0].type == REAPER_COMPILER_IR_TYPE_TEXT);
+    assert(strcmp(hir.nodes[0].text, "a\"b\n") == 0);
+    assert(reaper_compiler_ir_verify(&hir, REAPER_COMPILER_IR_HIR, &error));
+
+    assert(lower_source_to_hir("true", "literal.rpr",
+        nodes, 32u, &hir, &error));
+    assert(hir.nodes[0].type == REAPER_COMPILER_IR_TYPE_BOOL);
+    assert(hir.nodes[0].integer == 1);
+
+    {
+        ReaperTokenArray tokens = {0};
+        ReaperLexError lex_error = {{0}, 0u, 0u};
+        ReaperAst ast;
+        ReaperParseError parse_error = {{0}, 0u, 0u};
+        assert(reaper_lex("unknown_name + 2", &tokens, &lex_error));
+        assert(reaper_parse_expression(&tokens, &ast, &parse_error));
+        assert(!reaper_compiler_ir_lower_ast_to_hir(
+            &ast, "unsupported.rpr", nodes, 32u, &hir, &error));
+        assert(error.span.line == 1u && error.span.column > 0u);
+        assert(strcmp(error.span.source, "unsupported.rpr") == 0);
+        assert(strstr(error.message, "identifier") != NULL);
+        reaper_ast_free(&ast);
+        reaper_tokens_free(&tokens);
+    }
+
+    {
+        ReaperTokenArray tokens = {0};
+        ReaperLexError lex_error = {{0}, 0u, 0u};
+        ReaperAst ast;
+        ReaperParseError parse_error = {{0}, 0u, 0u};
+        assert(reaper_lex("1.5 + 2.0", &tokens, &lex_error));
+        assert(reaper_parse_expression(&tokens, &ast, &parse_error));
+        assert(!reaper_compiler_ir_lower_ast_to_hir(
+            &ast, "unsupported.rpr", nodes, 32u, &hir, &error));
+        assert(error.span.line == 1u && error.span.column > 0u);
+        assert(strstr(error.message, "two i64") != NULL);
+        reaper_ast_free(&ast);
+        reaper_tokens_free(&tokens);
+    }
+
+    {
+        ReaperTokenArray tokens = {0};
+        ReaperLexError lex_error = {{0}, 0u, 0u};
+        ReaperAst ast;
+        ReaperParseError parse_error = {{0}, 0u, 0u};
+        assert(reaper_lex("nothing", &tokens, &lex_error));
+        assert(reaper_parse_expression(&tokens, &ast, &parse_error));
+        assert(!reaper_compiler_ir_lower_ast_to_hir(
+            &ast, "unsupported.rpr", nodes, 32u, &hir, &error));
+        assert(strstr(error.message, "unit/option") != NULL);
+        reaper_ast_free(&ast);
+        reaper_tokens_free(&tokens);
+    }
+}
+
 int main(int argc, char **argv) {
+    test_native_ast_to_typed_hir();
     const ReaperCompilerIrNode hir_nodes[] = {
         { .opcode = REAPER_COMPILER_IR_HIR_VALUE, .type = REAPER_COMPILER_IR_TYPE_I64,
           .integer = 20, .span = {"math.rpr", 1, 1},
