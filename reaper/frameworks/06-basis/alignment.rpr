@@ -1,0 +1,25 @@
+# BasisAddressAlignment — align an address upward to a power-of-two boundary.
+
+export craft align_basis_address(address, alignment) {
+    when kind(address) != "number" or kind(alignment) != "number" {
+        yield []
+    }
+    when address % 1 != 0 or alignment % 1 != 0 {
+        yield []
+    }
+    when address < 0 or address > 18446744073709551615 or alignment < 1 {
+        yield []
+    }
+    vary divisor := alignment
+    while divisor > 1 {
+        when divisor % 2 != 0 {
+            yield []
+        }
+        change divisor := divisor // 2
+    }
+    vary aligned := ((address + alignment - 1) // alignment) * alignment
+    when aligned > 18446744073709551615 {
+        yield []
+    }
+    yield aligned
+}
