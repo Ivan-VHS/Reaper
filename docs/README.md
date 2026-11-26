@@ -11,6 +11,8 @@ Start with the [project README](../README.md) for installation, first commands a
 - [System Runtime ABI v1](SYSTEM_RUNTIME_ABI_V1.md)
 - [DABI64 Desktop Host v1](DABI64_DESKTOP_HOST_V1.md)
 - [Implementation roadmap](IMPLEMENTATION_ROADMAP.md)
+- [Framework programme: 66 × 5](FRAMEWORKS_66X5_ROADMAP.md)
+- [Skeleton Frameworks: batch 01](SKELETON_FRAMEWORKS.md)
 - [Studio and IDE](REAPER_IDE.md)
 - [Mora archive contracts](MORA_ARCHIVE_CONTRACTS.md) — executable `.rpr` validators, record layouts, provenance rules and offline regression fixture.
 - [NEXUS federation profile](NEXUS_FEDERATION_PROFILE_V1.md) — Reaper ownership, peer contracts and compatibility boundaries.
