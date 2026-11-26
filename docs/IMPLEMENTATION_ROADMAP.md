@@ -136,9 +136,9 @@ For each capability change, update together: owning source, regression tests, fe
 
 **Status: Source present; runtime verification pending.**
 
-- Twenty independently importable Reaper modules implement ten mirrored product pairs.
+- Twenty independently importable Reaper modules implement ten mirrored product pairs; `frameworks/rforge/all.rpr` provides an aggregate import, lookup and pair-inventory surface.
 - Each module has a versioned identity, explicit public API and domain invariants.
-- The 80-assertion smoke suite is a Reaper `.rpr` program and is wired into CI.
+- The 84-assertion smoke suite is a Reaper `.rpr` program and is wired into CI.
 - Current native AOT cannot compile module imports/exports or collection values, so the collection currently targets the reference runtime.
 - SaaS hosting, Unreal integration, network tunnels, privileged system controls and native loading remain contract boundaries; no hosted service, Unreal plugin, tunnel transport, driver or privileged executor is claimed.
 
