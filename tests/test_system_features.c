@@ -134,22 +134,24 @@ static void test_reconcile_plan_is_deterministic_and_atomic(void) {
 /* 5. Ephemeral memory */
 static void test_ephemeral_scope_matches_then_wipes(void) {
     uint8_t scratch[64];
-    uint8_t left[REAPER_SYSTEM_DIGEST_BYTES];
-    uint8_t right[REAPER_SYSTEM_DIGEST_BYTES];
     memset(scratch, 0xD7, sizeof scratch);
+    uint8_t *left = scratch;
+    uint8_t *right = scratch + REAPER_SYSTEM_DIGEST_BYTES;
     fill_digest(left, 9U);
-    memcpy(right, left, sizeof right);
+    memcpy(right, left, REAPER_SYSTEM_DIGEST_BYTES);
     ReaperEphemeralScope scope = {0};
     int matches = 0;
     assert(reaper_ephemeral_scope_begin(&scope, scratch, sizeof scratch, 3U) == REAPER_SYSTEM_OK);
-    assert(reaper_ephemeral_match(&scope, left, right, sizeof left, &matches) == REAPER_SYSTEM_OK);
+    assert(reaper_ephemeral_match(&scope, left, right, REAPER_SYSTEM_DIGEST_BYTES, &matches) == REAPER_SYSTEM_OK);
     assert(matches == 1);
     right[7] ^= 1U;
-    assert(reaper_ephemeral_match(&scope, left, right, sizeof left, &matches) == REAPER_SYSTEM_OK);
+    assert(reaper_ephemeral_match(&scope, left, right, REAPER_SYSTEM_DIGEST_BYTES, &matches) == REAPER_SYSTEM_OK);
     assert(matches == 0);
+    const uint8_t external_digest[REAPER_SYSTEM_DIGEST_BYTES] = {0};
+    assert(reaper_ephemeral_match(&scope, left, external_digest, REAPER_SYSTEM_DIGEST_BYTES, &matches) == REAPER_SYSTEM_DENIED);
     assert(reaper_ephemeral_scope_end(&scope) == REAPER_SYSTEM_OK);
     for (size_t i = 0U; i < sizeof scratch; ++i) assert(scratch[i] == 0U);
-    assert(reaper_ephemeral_match(&scope, left, right, sizeof left, &matches) == REAPER_SYSTEM_NOT_ACTIVE);
+    assert(reaper_ephemeral_match(&scope, left, right, REAPER_SYSTEM_DIGEST_BYTES, &matches) == REAPER_SYSTEM_NOT_ACTIVE);
 }
 
 /* 6. Automatic and guarded manual mutation */

@@ -455,6 +455,18 @@ ReaperSystemStatus reaper_ephemeral_scope_begin(
     return REAPER_SYSTEM_OK;
 }
 
+static int ephemeral_contains(
+    const ReaperEphemeralScope *scope, const void *value, size_t length
+) {
+    if (scope == NULL || scope->bytes == NULL || value == NULL) return 0;
+    const uintptr_t begin = (uintptr_t)scope->bytes;
+    const uintptr_t address = (uintptr_t)value;
+    if (begin > UINTPTR_MAX - scope->length || address < begin) return 0;
+    const uintptr_t end = begin + scope->length;
+    if (address > end || length > (size_t)(end - address)) return 0;
+    return 1;
+}
+
 ReaperSystemStatus reaper_ephemeral_match(
     const ReaperEphemeralScope *scope, const void *left_digest,
     const void *right_digest, size_t digest_length, int *matches
@@ -462,8 +474,11 @@ ReaperSystemStatus reaper_ephemeral_match(
     if (scope == NULL || matches == NULL || left_digest == NULL ||
         right_digest == NULL || digest_length != REAPER_SYSTEM_DIGEST_BYTES)
         return REAPER_SYSTEM_INVALID_ARGUMENT;
-    if (scope->active == 0 || scope->bytes == NULL || scope->length < digest_length)
+    if (scope->active == 0 || scope->bytes == NULL)
         return REAPER_SYSTEM_NOT_ACTIVE;
+    if (!ephemeral_contains(scope, left_digest, digest_length) ||
+        !ephemeral_contains(scope, right_digest, digest_length))
+        return REAPER_SYSTEM_DENIED;
     *matches = bytes_equal_constant_time(left_digest, right_digest, digest_length);
     return REAPER_SYSTEM_OK;
 }
