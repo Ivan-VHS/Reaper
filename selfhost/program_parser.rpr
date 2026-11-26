@@ -252,24 +252,91 @@ export craft parse_program(tokens) {
         yield ast("block", close_token, nothing, statements)
     }
 
+    craft parse_type_expression() {
+        skip_newlines()
+        make name_token := consume("IDENT", "expected a type name")
+        vary arguments := []
+        when match_kind("<") {
+            skip_newlines()
+            when not check(">") {
+                change arguments := push(arguments, parse_type_expression())
+                skip_newlines()
+                loop while not failed and match_kind(",") {
+                    skip_newlines()
+                    change arguments := push(arguments, parse_type_expression())
+                    skip_newlines()
+                }
+            }
+            make ignored_close := consume(">", "expected '>' after generic type arguments")
+        }
+        yield [name_token[1], arguments]
+    }
+
+    craft parse_generic_parameters() {
+        vary names := []
+        when match_kind("<") {
+            skip_newlines()
+            when not check(">") {
+                change names := push(names, consume("IDENT", "expected a generic parameter name")[1])
+                skip_newlines()
+                loop while not failed and match_kind(",") {
+                    skip_newlines()
+                    change names := push(names, consume("IDENT", "expected a generic parameter name")[1])
+                    skip_newlines()
+                }
+            }
+            make ignored_close := consume(">", "expected '>' after generic parameters")
+        }
+        yield names
+    }
+
     craft parse_function(token) {
         make name_token := consume("IDENT", "expected a function name after 'craft'")
+        make generic_parameters := parse_generic_parameters()
         make ignored_open := consume("(", "expected '(' after function name")
         vary parameters := []
+        vary parameter_types := []
+        vary has_signature := size(generic_parameters) > 0
         skip_newlines()
 
         when not failed and not check(")") {
-            change parameters := push(parameters, consume("IDENT", "expected a parameter name")[1])
+            vary parameter_name := consume("IDENT", "expected a parameter name")
+            vary parameter_type := ["unknown", []]
+            when match_kind(":") {
+                change parameter_type := parse_type_expression()
+                change has_signature := true
+            }
+            change parameters := push(parameters, parameter_name[1])
+            change parameter_types := push(parameter_types, parameter_type)
             skip_newlines()
             loop while not failed and match_kind(",") {
                 skip_newlines()
-                change parameters := push(parameters, consume("IDENT", "expected a parameter name")[1])
+                change parameter_name := consume("IDENT", "expected a parameter name")
+                change parameter_type := ["unknown", []]
+                when match_kind(":") {
+                    change parameter_type := parse_type_expression()
+                    change has_signature := true
+                }
+                change parameters := push(parameters, parameter_name[1])
+                change parameter_types := push(parameter_types, parameter_type)
                 skip_newlines()
             }
         }
 
         make ignored_close := consume(")", "expected ')' after parameters")
+        vary return_type := ["unknown", []]
+        when match_kind("->") {
+            change return_type := parse_type_expression()
+            change has_signature := true
+        }
         make body := parse_block()
+        when has_signature {
+            yield ast("function", token, [
+                name_token[1], parameters, parameter_types,
+                return_type, generic_parameters
+            ], [body])
+        }
+        # Preserve the original AST contract for existing untyped functions.
         yield ast("function", token, [name_token[1], parameters], [body])
     }
 
@@ -714,5 +781,27 @@ make malformed_struct := parse_program([
 ])
 assert(malformed_struct[0] == "ERROR", "struct field without ':' was accepted")
 assert(malformed_struct[2] == 10 and malformed_struct[3] == 9, "struct diagnostic source position mismatch")
+
+# Typed craft signatures retain parameter types, generic variables and return types.
+make typed_function_result := parse_program([
+    ["CRAFT", "craft", 1, 1], ["IDENT", "identity", 1, 7],
+    ["<", "<", 1, 15], ["IDENT", "T", 1, 16], [">", ">", 1, 17],
+    ["(", "(", 1, 18], ["IDENT", "value", 1, 19],
+    [":", ":", 1, 24], ["IDENT", "T", 1, 26], [")", ")", 1, 27],
+    ["->", "->", 1, 29], ["IDENT", "Option", 1, 32],
+    ["<", "<", 1, 38], ["IDENT", "T", 1, 39], [">", ">", 1, 40],
+    ["{", "{", 1, 42], ["NEWLINE", "\\n", 1, 43],
+    ["YIELD", "yield", 2, 3], ["IDENT", "some", 2, 9],
+    ["(", "(", 2, 13], ["IDENT", "value", 2, 14], [")", ")", 2, 19],
+    ["NEWLINE", "\\n", 2, 20], ["}", "}", 3, 1], ["EOF", "", 3, 2]
+])
+assert(typed_function_result[0] == "OK", "typed craft signature must parse")
+make typed_function := typed_function_result[1][3][0]
+assert(typed_function[0] == "function", "typed craft must produce a function AST")
+assert(typed_function[2][0] == "identity", "typed craft name mismatch")
+assert(typed_function[2][1] == ["value"], "typed craft parameter names mismatch")
+assert(typed_function[2][2] == [["T", []]], "typed craft parameter types mismatch")
+assert(typed_function[2][3] == ["Option", [["T", []]]], "generic return type mismatch")
+assert(typed_function[2][4] == ["T"], "generic parameter list mismatch")
 
 emit "SELFHOST_PROGRAM_PARSER_OK"
