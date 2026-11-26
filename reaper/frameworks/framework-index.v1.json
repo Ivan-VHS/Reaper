@@ -4868,7 +4868,7 @@
       "slug": "47-block",
       "name": "Block Range Framework",
       "role": "ranges",
-      "path": "reaper/frameworks/47-block/ranges.rpr.rpr",
+      "path": "reaper/frameworks/47-block/ranges.rpr",
       "api": "valid_block_ranges",
       "purpose": "Validate sorted half-open address blocks with positive lengths and no overlap.",
       "positive": {
@@ -4887,7 +4887,7 @@
       "slug": "47-block",
       "name": "Block Capacity Framework",
       "role": "capacity",
-      "path": "reaper/frameworks/47-block/capacity.rpr.rpr",
+      "path": "reaper/frameworks/47-block/capacity.rpr",
       "api": "admit_block_items",
       "purpose": "Admit items only when they fit the non-negative block capacity.",
       "positive": {
@@ -4906,7 +4906,7 @@
       "slug": "47-block",
       "name": "Block Dependency Framework",
       "role": "dependencies",
-      "path": "reaper/frameworks/47-block/dependencies.rpr.rpr",
+      "path": "reaper/frameworks/47-block/dependencies.rpr",
       "api": "valid_block_dependencies",
       "purpose": "Validate forward-only block dependencies, making cycles impossible by construction.",
       "positive": {
@@ -4925,7 +4925,7 @@
       "slug": "47-block",
       "name": "Block Slot Framework",
       "role": "slots",
-      "path": "reaper/frameworks/47-block/slots.rpr.rpr",
+      "path": "reaper/frameworks/47-block/slots.rpr",
       "api": "missing_block_slots",
       "purpose": "Return required block slots that have no supplied implementation.",
       "positive": {
@@ -4944,7 +4944,7 @@
       "slug": "47-block",
       "name": "Block Lifecycle Framework",
       "role": "lifecycle",
-      "path": "reaper/frameworks/47-block/lifecycle.rpr.rpr",
+      "path": "reaper/frameworks/47-block/lifecycle.rpr",
       "api": "valid_block_lifecycle",
       "purpose": "Replay block states only through declared transitions.",
       "positive": {
@@ -4963,7 +4963,7 @@
       "slug": "48-node",
       "name": "Node Identity Framework",
       "role": "identity",
-      "path": "reaper/frameworks/48-node/identity.rpr.rpr",
+      "path": "reaper/frameworks/48-node/identity.rpr",
       "api": "valid_node_identity",
       "purpose": "Validate stable numeric node identity and non-negative generation.",
       "positive": {
@@ -4982,7 +4982,7 @@
       "slug": "48-node",
       "name": "Node Port Framework",
       "role": "ports",
-      "path": "reaper/frameworks/48-node/ports.rpr.rpr",
+      "path": "reaper/frameworks/48-node/ports.rpr",
       "api": "valid_node_ports",
       "purpose": "Ensure node input/output port counts fit the declared connection ceiling.",
       "positive": {
@@ -5001,7 +5001,7 @@
       "slug": "48-node",
       "name": "Node Graph Framework",
       "role": "graph",
-      "path": "reaper/frameworks/48-node/graph.rpr.rpr",
+      "path": "reaper/frameworks/48-node/graph.rpr",
       "api": "valid_node_graph",
       "purpose": "Validate directed node links with unique in-range endpoints and no self-links.",
       "positive": {
@@ -5020,7 +5020,7 @@
       "slug": "48-node",
       "name": "Node Requirements Framework",
       "role": "requirements",
-      "path": "reaper/frameworks/48-node/requirements.rpr.rpr",
+      "path": "reaper/frameworks/48-node/requirements.rpr",
       "api": "missing_node_dependencies",
       "purpose": "List node prerequisites absent from the supplied dependency set.",
       "positive": {
@@ -5039,7 +5039,7 @@
       "slug": "48-node",
       "name": "Node State Framework",
       "role": "state",
-      "path": "reaper/frameworks/48-node/state.rpr.rpr",
+      "path": "reaper/frameworks/48-node/state.rpr",
       "api": "valid_node_state",
       "purpose": "Validate node state against a unique lifecycle vocabulary.",
       "positive": {
@@ -5058,7 +5058,7 @@
       "slug": "49-interface",
       "name": "Interface Signature Framework",
       "role": "signature",
-      "path": "reaper/frameworks/49-interface/signature.rpr.rpr",
+      "path": "reaper/frameworks/49-interface/signature.rpr",
       "api": "valid_interface_signature",
       "purpose": "Validate a typed interface signature with unique parameter names.",
       "positive": {
@@ -5077,7 +5077,7 @@
       "slug": "49-interface",
       "name": "Interface Arity Framework",
       "role": "arity",
-      "path": "reaper/frameworks/49-interface/arity.rpr.rpr",
+      "path": "reaper/frameworks/49-interface/arity.rpr",
       "api": "interface_arity_compatible",
       "purpose": "Check required and provided callable arities for exact compatibility.",
       "positive": {
@@ -5096,7 +5096,7 @@
       "slug": "49-interface",
       "name": "Interface Binding Framework",
       "role": "binding",
-      "path": "reaper/frameworks/49-interface/binding.rpr.rpr",
+      "path": "reaper/frameworks/49-interface/binding.rpr",
       "api": "valid_interface_bindings",
       "purpose": "Validate output-to-input bindings between distinct endpoints with equal types.",
       "positive": {
@@ -5115,7 +5115,7 @@
       "slug": "49-interface",
       "name": "Interface Method Framework",
       "role": "methods",
-      "path": "reaper/frameworks/49-interface/methods.rpr.rpr",
+      "path": "reaper/frameworks/49-interface/methods.rpr",
       "api": "missing_interface_methods",
       "purpose": "Resolve required methods absent from an implementation interface.",
       "positive": {
@@ -5134,7 +5134,7 @@
       "slug": "49-interface",
       "name": "Interface Version Framework",
       "role": "version",
-      "path": "reaper/frameworks/49-interface/version.rpr.rpr",
+      "path": "reaper/frameworks/49-interface/version.rpr",
       "api": "valid_interface_version_bounds",
       "purpose": "Validate an interface version and inclusive supported minor-version interval.",
       "positive": {
@@ -5153,7 +5153,7 @@
       "slug": "50-protocol",
       "name": "Protocol Frame Framework",
       "role": "frame",
-      "path": "reaper/frameworks/50-protocol/frame.rpr.rpr",
+      "path": "reaper/frameworks/50-protocol/frame.rpr",
       "api": "valid_protocol_frame",
       "purpose": "Validate protocol version, message type, sequence number and payload bounds.",
       "positive": {
@@ -5172,7 +5172,7 @@
       "slug": "50-protocol",
       "name": "Protocol Sequence Framework",
       "role": "sequence",
-      "path": "reaper/frameworks/50-protocol/sequence.rpr.rpr",
+      "path": "reaper/frameworks/50-protocol/sequence.rpr",
       "api": "protocol_sequence_admissible",
       "purpose": "Accept strictly increasing sequence numbers only within the configured receive window.",
       "positive": {
@@ -5191,7 +5191,7 @@
       "slug": "50-protocol",
       "name": "Protocol Handshake Framework",
       "role": "handshake",
-      "path": "reaper/frameworks/50-protocol/handshake.rpr.rpr",
+      "path": "reaper/frameworks/50-protocol/handshake.rpr",
       "api": "valid_protocol_handshake",
       "purpose": "Replay handshake states against a declared transition graph.",
       "positive": {
@@ -5210,7 +5210,7 @@
       "slug": "50-protocol",
       "name": "Protocol Feature Framework",
       "role": "features",
-      "path": "reaper/frameworks/50-protocol/features.rpr.rpr",
+      "path": "reaper/frameworks/50-protocol/features.rpr",
       "api": "missing_protocol_features",
       "purpose": "Return protocol extensions required by a peer but absent from local support.",
       "positive": {
@@ -5229,7 +5229,7 @@
       "slug": "50-protocol",
       "name": "Protocol Message Order Framework",
       "role": "messages",
-      "path": "reaper/frameworks/50-protocol/messages.rpr.rpr",
+      "path": "reaper/frameworks/50-protocol/messages.rpr",
       "api": "valid_protocol_message_order",
       "purpose": "Validate unique message IDs and strictly increasing integer sequence numbers.",
       "positive": {
@@ -5248,7 +5248,7 @@
       "slug": "51-standard",
       "name": "Standard Rule Framework",
       "role": "rule",
-      "path": "reaper/frameworks/51-standard/rule.rpr.rpr",
+      "path": "reaper/frameworks/51-standard/rule.rpr",
       "api": "valid_standard_rule",
       "purpose": "Validate a normative rule identity, severity and mandatory flag.",
       "positive": {
@@ -5267,7 +5267,7 @@
       "slug": "51-standard",
       "name": "Standard Compliance Framework",
       "role": "compliance",
-      "path": "reaper/frameworks/51-standard/compliance.rpr.rpr",
+      "path": "reaper/frameworks/51-standard/compliance.rpr",
       "api": "standard_compliance_threshold",
       "purpose": "Check a minimum compliance percentage across explicit boolean control results.",
       "positive": {
@@ -5286,7 +5286,7 @@
       "slug": "51-standard",
       "name": "Standard Scope Framework",
       "role": "scope",
-      "path": "reaper/frameworks/51-standard/scope.rpr.rpr",
+      "path": "reaper/frameworks/51-standard/scope.rpr",
       "api": "standard_scope_applies",
       "purpose": "Check whether a release is inside an inclusive standard applicability range.",
       "positive": {
@@ -5305,7 +5305,7 @@
       "slug": "51-standard",
       "name": "Standard Controls Framework",
       "role": "controls",
-      "path": "reaper/frameworks/51-standard/controls.rpr.rpr",
+      "path": "reaper/frameworks/51-standard/controls.rpr",
       "api": "missing_standard_controls",
       "purpose": "List mandatory controls absent from compliance evidence.",
       "positive": {
@@ -5324,7 +5324,7 @@
       "slug": "51-standard",
       "name": "Standard Exception Framework",
       "role": "exceptions",
-      "path": "reaper/frameworks/51-standard/exceptions.rpr.rpr",
+      "path": "reaper/frameworks/51-standard/exceptions.rpr",
       "api": "valid_standard_exceptions",
       "purpose": "Validate unique, justified standard exceptions whose expiry is not before the current release.",
       "positive": {
@@ -5343,7 +5343,7 @@
       "slug": "52-regulation",
       "name": "Regulation Policy Framework",
       "role": "policy",
-      "path": "reaper/frameworks/52-regulation/policy.rpr.rpr",
+      "path": "reaper/frameworks/52-regulation/policy.rpr",
       "api": "valid_regulation_policy",
       "purpose": "Validate rules with explicit principal, resource, action and allow/deny effect.",
       "positive": {
@@ -5362,7 +5362,7 @@
       "slug": "52-regulation",
       "name": "Regulation Decision Framework",
       "role": "decision",
-      "path": "reaper/frameworks/52-regulation/decision.rpr.rpr",
+      "path": "reaper/frameworks/52-regulation/decision.rpr",
       "api": "regulation_decide",
       "purpose": "Resolve exact policy matches with explicit deny taking precedence over allow.",
       "positive": {
@@ -5381,7 +5381,7 @@
       "slug": "52-regulation",
       "name": "Regulation Role Framework",
       "role": "roles",
-      "path": "reaper/frameworks/52-regulation/roles.rpr.rpr",
+      "path": "reaper/frameworks/52-regulation/roles.rpr",
       "api": "valid_regulation_roles",
       "purpose": "Validate one unique, named role assignment per principal.",
       "positive": {
@@ -5400,7 +5400,7 @@
       "slug": "52-regulation",
       "name": "Regulation Controls Framework",
       "role": "controls",
-      "path": "reaper/frameworks/52-regulation/controls.rpr.rpr",
+      "path": "reaper/frameworks/52-regulation/controls.rpr",
       "api": "missing_regulation_controls",
       "purpose": "Find required policy controls absent from an approved regulation profile.",
       "positive": {
@@ -5419,7 +5419,7 @@
       "slug": "52-regulation",
       "name": "Regulation Review Framework",
       "role": "review",
-      "path": "reaper/frameworks/52-regulation/review.rpr.rpr",
+      "path": "reaper/frameworks/52-regulation/review.rpr",
       "api": "valid_regulation_review_window",
       "purpose": "Require periodic review before the maximum permitted policy age.",
       "positive": {
@@ -5438,7 +5438,7 @@
       "slug": "53-specification",
       "name": "Specification Parameter Framework",
       "role": "parameter",
-      "path": "reaper/frameworks/53-specification/parameter.rpr.rpr",
+      "path": "reaper/frameworks/53-specification/parameter.rpr",
       "api": "valid_spec_parameter",
       "purpose": "Validate a typed numeric specification parameter with an inclusive value range.",
       "positive": {
@@ -5457,7 +5457,7 @@
       "slug": "53-specification",
       "name": "Specification Constraint Framework",
       "role": "constraints",
-      "path": "reaper/frameworks/53-specification/constraints.rpr.rpr",
+      "path": "reaper/frameworks/53-specification/constraints.rpr",
       "api": "valid_spec_constraints",
       "purpose": "Validate unique named lower/upper constraints and their ordering.",
       "positive": {
@@ -5476,7 +5476,7 @@
       "slug": "53-specification",
       "name": "Specification Requirement Framework",
       "role": "requirements",
-      "path": "reaper/frameworks/53-specification/requirements.rpr.rpr",
+      "path": "reaper/frameworks/53-specification/requirements.rpr",
       "api": "missing_spec_requirements",
       "purpose": "List normative specification requirements without implementation evidence.",
       "positive": {
@@ -5495,7 +5495,7 @@
       "slug": "53-specification",
       "name": "Specification Traceability Framework",
       "role": "traceability",
-      "path": "reaper/frameworks/53-specification/traceability.rpr.rpr",
+      "path": "reaper/frameworks/53-specification/traceability.rpr",
       "api": "valid_spec_traceability",
       "purpose": "Validate unique requirement-to-evidence traceability links.",
       "positive": {
@@ -5514,7 +5514,7 @@
       "slug": "53-specification",
       "name": "Specification Version Framework",
       "role": "version",
-      "path": "reaper/frameworks/53-specification/version.rpr.rpr",
+      "path": "reaper/frameworks/53-specification/version.rpr",
       "api": "valid_spec_version",
       "purpose": "Validate a non-negative three-part specification version.",
       "positive": {
@@ -5533,7 +5533,7 @@
       "slug": "54-schema",
       "name": "Schema Definition Framework",
       "role": "definition",
-      "path": "reaper/frameworks/54-schema/definition.rpr.rpr",
+      "path": "reaper/frameworks/54-schema/definition.rpr",
       "api": "valid_schema_definition",
       "purpose": "Validate unique typed schema fields and explicit required flags.",
       "positive": {
@@ -5552,7 +5552,7 @@
       "slug": "54-schema",
       "name": "Schema Record Framework",
       "role": "record",
-      "path": "reaper/frameworks/54-schema/record.rpr.rpr",
+      "path": "reaper/frameworks/54-schema/record.rpr",
       "api": "schema_accepts_record",
       "purpose": "Check known unique record fields and every required schema field.",
       "positive": {
@@ -5571,7 +5571,7 @@
       "slug": "54-schema",
       "name": "Schema Reference Framework",
       "role": "references",
-      "path": "reaper/frameworks/54-schema/references.rpr.rpr",
+      "path": "reaper/frameworks/54-schema/references.rpr",
       "api": "valid_schema_references",
       "purpose": "Validate references between existing, distinct schema fields.",
       "positive": {
@@ -5590,7 +5590,7 @@
       "slug": "54-schema",
       "name": "Schema Required Field Framework",
       "role": "required",
-      "path": "reaper/frameworks/54-schema/required.rpr.rpr",
+      "path": "reaper/frameworks/54-schema/required.rpr",
       "api": "schema_missing_required_fields",
       "purpose": "Return required field names absent from a schema record.",
       "positive": {
@@ -5609,7 +5609,7 @@
       "slug": "54-schema",
       "name": "Schema Migration Framework",
       "role": "migration",
-      "path": "reaper/frameworks/54-schema/migration.rpr.rpr",
+      "path": "reaper/frameworks/54-schema/migration.rpr",
       "api": "valid_schema_migration",
       "purpose": "Allow only forward schema migration versions with non-negative integer components.",
       "positive": {
@@ -5628,7 +5628,7 @@
       "slug": "55-matrix",
       "name": "Square Matrix Framework",
       "role": "square",
-      "path": "reaper/frameworks/55-matrix/square.rpr.rpr",
+      "path": "reaper/frameworks/55-matrix/square.rpr",
       "api": "valid_square_numeric_matrix",
       "purpose": "Validate a non-empty square matrix containing only numeric values.",
       "positive": {
@@ -5647,7 +5647,7 @@
       "slug": "55-matrix",
       "name": "Matrix Multiplication Framework",
       "role": "multiply",
-      "path": "reaper/frameworks/55-matrix/multiply.rpr.rpr",
+      "path": "reaper/frameworks/55-matrix/multiply.rpr",
       "api": "matrix_product_compatible",
       "purpose": "Check rectangular numeric matrix dimensions for a valid multiplication.",
       "positive": {
@@ -5666,7 +5666,7 @@
       "slug": "55-matrix",
       "name": "Matrix Row Totals Framework",
       "role": "row-totals",
-      "path": "reaper/frameworks/55-matrix/row_totals.rpr.rpr",
+      "path": "reaper/frameworks/55-matrix/row_totals.rpr",
       "api": "matrix_row_totals",
       "purpose": "Calculate deterministic numeric totals for every row of a rectangular matrix.",
       "positive": {
@@ -5685,7 +5685,7 @@
       "slug": "55-matrix",
       "name": "Matrix Diagonal Framework",
       "role": "diagonal",
-      "path": "reaper/frameworks/55-matrix/diagonal.rpr.rpr",
+      "path": "reaper/frameworks/55-matrix/diagonal.rpr",
       "api": "matrix_diagonal",
       "purpose": "Extract the main diagonal of a square numeric matrix.",
       "positive": {
@@ -5704,7 +5704,7 @@
       "slug": "55-matrix",
       "name": "Matrix Sparsity Framework",
       "role": "sparsity",
-      "path": "reaper/frameworks/55-matrix/sparsity.rpr.rpr",
+      "path": "reaper/frameworks/55-matrix/sparsity.rpr",
       "api": "matrix_nonzero_count",
       "purpose": "Count nonzero elements in a rectangular numeric matrix.",
       "positive": {
@@ -5723,7 +5723,7 @@
       "slug": "56-grid",
       "name": "Grid Shape Framework",
       "role": "shape",
-      "path": "reaper/frameworks/56-grid/shape.rpr.rpr",
+      "path": "reaper/frameworks/56-grid/shape.rpr",
       "api": "valid_grid_shape",
       "purpose": "Validate positive integral grid width and height.",
       "positive": {
@@ -5742,7 +5742,7 @@
       "slug": "56-grid",
       "name": "Grid Cell Framework",
       "role": "cell",
-      "path": "reaper/frameworks/56-grid/cell.rpr.rpr",
+      "path": "reaper/frameworks/56-grid/cell.rpr",
       "api": "grid_cell_inside",
       "purpose": "Check an integer grid coordinate against width and height bounds.",
       "positive": {
@@ -5761,7 +5761,7 @@
       "slug": "56-grid",
       "name": "Grid Neighbors Framework",
       "role": "neighbors",
-      "path": "reaper/frameworks/56-grid/neighbors.rpr.rpr",
+      "path": "reaper/frameworks/56-grid/neighbors.rpr",
       "api": "grid_neighbors4",
       "purpose": "Return in-bounds four-directional orthogonal neighbours in deterministic order.",
       "positive": {
@@ -5780,7 +5780,7 @@
       "slug": "56-grid",
       "name": "Grid Occupancy Framework",
       "role": "occupancy",
-      "path": "reaper/frameworks/56-grid/occupancy.rpr.rpr",
+      "path": "reaper/frameworks/56-grid/occupancy.rpr",
       "api": "valid_grid_occupancy",
       "purpose": "Validate unique occupied cells, each inside a declared rectangular grid.",
       "positive": {
@@ -5799,7 +5799,7 @@
       "slug": "56-grid",
       "name": "Grid Distance Framework",
       "role": "distance",
-      "path": "reaper/frameworks/56-grid/distance.rpr.rpr",
+      "path": "reaper/frameworks/56-grid/distance.rpr",
       "api": "grid_manhattan_distance",
       "purpose": "Calculate Manhattan distance between two non-negative integral grid points.",
       "positive": {
@@ -5818,7 +5818,7 @@
       "slug": "57-circuit",
       "name": "Circuit Graph Framework",
       "role": "graph",
-      "path": "reaper/frameworks/57-circuit/graph.rpr.rpr",
+      "path": "reaper/frameworks/57-circuit/graph.rpr",
       "api": "valid_circuit_graph",
       "purpose": "Validate directed circuit connections with in-range endpoints and unique links.",
       "positive": {
@@ -5837,7 +5837,7 @@
       "slug": "57-circuit",
       "name": "Circuit Reachability Framework",
       "role": "reachability",
-      "path": "reaper/frameworks/57-circuit/reachability.rpr.rpr",
+      "path": "reaper/frameworks/57-circuit/reachability.rpr",
       "api": "circuit_reachable",
       "purpose": "Compute directed reachability with an iterative closure over supplied links.",
       "positive": {
@@ -5856,7 +5856,7 @@
       "slug": "57-circuit",
       "name": "Circuit Branch Framework",
       "role": "branches",
-      "path": "reaper/frameworks/57-circuit/branches.rpr.rpr",
+      "path": "reaper/frameworks/57-circuit/branches.rpr",
       "api": "valid_circuit_branch_count",
       "purpose": "Ensure circuit branch count remains inside the approved integer range.",
       "positive": {
@@ -5875,7 +5875,7 @@
       "slug": "57-circuit",
       "name": "Circuit Redundancy Framework",
       "role": "redundancy",
-      "path": "reaper/frameworks/57-circuit/redundancy.rpr.rpr",
+      "path": "reaper/frameworks/57-circuit/redundancy.rpr",
       "api": "valid_circuit_redundancy",
       "purpose": "Require enough independent circuit paths to tolerate the declared failure count.",
       "positive": {
@@ -5894,7 +5894,7 @@
       "slug": "57-circuit",
       "name": "Circuit State Framework",
       "role": "state",
-      "path": "reaper/frameworks/57-circuit/state.rpr.rpr",
+      "path": "reaper/frameworks/57-circuit/state.rpr",
       "api": "valid_circuit_state_sequence",
       "purpose": "Replay circuit states through explicitly declared transitions.",
       "positive": {
@@ -5913,7 +5913,7 @@
       "slug": "58-perimeter",
       "name": "Perimeter Zone Framework",
       "role": "zone",
-      "path": "reaper/frameworks/58-perimeter/zone.rpr.rpr",
+      "path": "reaper/frameworks/58-perimeter/zone.rpr",
       "api": "valid_perimeter_zone",
       "purpose": "Validate a named trust zone with a bounded integer trust level.",
       "positive": {
@@ -5932,7 +5932,7 @@
       "slug": "58-perimeter",
       "name": "Perimeter Action Framework",
       "role": "actions",
-      "path": "reaper/frameworks/58-perimeter/actions.rpr.rpr",
+      "path": "reaper/frameworks/58-perimeter/actions.rpr",
       "api": "perimeter_action_allowed",
       "purpose": "Authorize only an exact action explicitly listed in the perimeter allowlist.",
       "positive": {
@@ -5951,7 +5951,7 @@
       "slug": "58-perimeter",
       "name": "Perimeter Rule Framework",
       "role": "rules",
-      "path": "reaper/frameworks/58-perimeter/rules.rpr.rpr",
+      "path": "reaper/frameworks/58-perimeter/rules.rpr",
       "api": "valid_perimeter_rules",
       "purpose": "Validate unique source-zone, target-zone and action perimeter rules.",
       "positive": {
@@ -5970,7 +5970,7 @@
       "slug": "58-perimeter",
       "name": "Perimeter Route Framework",
       "role": "routes",
-      "path": "reaper/frameworks/58-perimeter/routes.rpr.rpr",
+      "path": "reaper/frameworks/58-perimeter/routes.rpr",
       "api": "missing_perimeter_routes",
       "purpose": "Return required trust-boundary routes that have no explicit rule.",
       "positive": {
@@ -5989,7 +5989,7 @@
       "slug": "58-perimeter",
       "name": "Perimeter Rate Limit Framework",
       "role": "rate-limit",
-      "path": "reaper/frameworks/58-perimeter/rate_limit.rpr.rpr",
+      "path": "reaper/frameworks/58-perimeter/rate_limit.rpr",
       "api": "valid_perimeter_rate_limit",
       "purpose": "Validate request count, window, and burst against an explicit perimeter quota.",
       "positive": {
@@ -6008,7 +6008,7 @@
       "slug": "59-work-environment",
       "name": "Work Environment Manifest Framework",
       "role": "manifest",
-      "path": "reaper/frameworks/59-work-environment/manifest.rpr.rpr",
+      "path": "reaper/frameworks/59-work-environment/manifest.rpr",
       "api": "valid_work_environment_manifest",
       "purpose": "Validate unique non-empty process-independent environment key/value pairs.",
       "positive": {
@@ -6027,7 +6027,7 @@
       "slug": "59-work-environment",
       "name": "Work Environment Overlay Framework",
       "role": "overlay",
-      "path": "reaper/frameworks/59-work-environment/overlay.rpr.rpr",
+      "path": "reaper/frameworks/59-work-environment/overlay.rpr",
       "api": "resolve_work_environment_value",
       "purpose": "Resolve a key from ordered environment layers where later definitions override earlier ones.",
       "positive": {
@@ -6046,7 +6046,7 @@
       "slug": "59-work-environment",
       "name": "Work Environment Tools Framework",
       "role": "tools",
-      "path": "reaper/frameworks/59-work-environment/tools.rpr.rpr",
+      "path": "reaper/frameworks/59-work-environment/tools.rpr",
       "api": "valid_work_environment_tools",
       "purpose": "Ensure every required development tool is present and tool identities are unique.",
       "positive": {
@@ -6065,7 +6065,7 @@
       "slug": "59-work-environment",
       "name": "Work Environment Locale Framework",
       "role": "locale",
-      "path": "reaper/frameworks/59-work-environment/locale.rpr.rpr",
+      "path": "reaper/frameworks/59-work-environment/locale.rpr",
       "api": "resolve_work_environment_locale",
       "purpose": "Resolve a requested locale, then a configured fallback, then English.",
       "positive": {
@@ -6084,7 +6084,7 @@
       "slug": "59-work-environment",
       "name": "Work Environment Limits Framework",
       "role": "limits",
-      "path": "reaper/frameworks/59-work-environment/limits.rpr.rpr",
+      "path": "reaper/frameworks/59-work-environment/limits.rpr",
       "api": "valid_work_environment_limits",
       "purpose": "Validate positive integer memory, step and open-file quotas for a work environment.",
       "positive": {
@@ -6103,7 +6103,7 @@
       "slug": "60-workspace",
       "name": "Workspace Layout Framework",
       "role": "layout",
-      "path": "reaper/frameworks/60-workspace/layout.rpr.rpr",
+      "path": "reaper/frameworks/60-workspace/layout.rpr",
       "api": "valid_workspace_layout",
       "purpose": "Validate unique relative workspace directories under a non-empty project root.",
       "positive": {
@@ -6122,7 +6122,7 @@
       "slug": "60-workspace",
       "name": "Workspace Artifact Framework",
       "role": "artifacts",
-      "path": "reaper/frameworks/60-workspace/artifacts.rpr.rpr",
+      "path": "reaper/frameworks/60-workspace/artifacts.rpr",
       "api": "valid_workspace_artifact_paths",
       "purpose": "Reject workspace artifact paths that are absolute, empty or traverse parent directories.",
       "positive": {
@@ -6141,7 +6141,7 @@
       "slug": "60-workspace",
       "name": "Workspace Directory Framework",
       "role": "directories",
-      "path": "reaper/frameworks/60-workspace/directories.rpr.rpr",
+      "path": "reaper/frameworks/60-workspace/directories.rpr",
       "api": "missing_workspace_directories",
       "purpose": "Find mandatory workspace directories not present in the project layout.",
       "positive": {
@@ -6160,7 +6160,7 @@
       "slug": "60-workspace",
       "name": "Workspace Project Framework",
       "role": "project",
-      "path": "reaper/frameworks/60-workspace/project.rpr.rpr",
+      "path": "reaper/frameworks/60-workspace/project.rpr",
       "api": "valid_workspace_project_selection",
       "purpose": "Ensure the active workspace project is one of the unique declared projects.",
       "positive": {
@@ -6179,7 +6179,7 @@
       "slug": "60-workspace",
       "name": "Workspace Quota Framework",
       "role": "quota",
-      "path": "reaper/frameworks/60-workspace/quota.rpr.rpr",
+      "path": "reaper/frameworks/60-workspace/quota.rpr",
       "api": "valid_workspace_quota",
       "purpose": "Ensure used and reserved workspace storage fit the configured quota.",
       "positive": {
@@ -6198,7 +6198,7 @@
       "slug": "61-staging-ground",
       "name": "Staging Manifest Framework",
       "role": "manifest",
-      "path": "reaper/frameworks/61-staging-ground/manifest.rpr.rpr",
+      "path": "reaper/frameworks/61-staging-ground/manifest.rpr",
       "api": "valid_staging_manifest",
       "purpose": "Validate unique staged artifact names and fixed-length content digests.",
       "positive": {
@@ -6217,7 +6217,7 @@
       "slug": "61-staging-ground",
       "name": "Staging Promotion Framework",
       "role": "promotion",
-      "path": "reaper/frameworks/61-staging-ground/promotion.rpr.rpr",
+      "path": "reaper/frameworks/61-staging-ground/promotion.rpr",
       "api": "staging_promotion_allowed",
       "purpose": "Allow promotion only when test, review and provenance gates are all explicitly true.",
       "positive": {
@@ -6236,7 +6236,7 @@
       "slug": "61-staging-ground",
       "name": "Staging Rollback Framework",
       "role": "rollback",
-      "path": "reaper/frameworks/61-staging-ground/rollback.rpr.rpr",
+      "path": "reaper/frameworks/61-staging-ground/rollback.rpr",
       "api": "staging_rollback_order",
       "purpose": "Return completed staging steps in reverse order for compensating execution.",
       "positive": {
@@ -6255,7 +6255,7 @@
       "slug": "61-staging-ground",
       "name": "Staging Provenance Framework",
       "role": "provenance",
-      "path": "reaper/frameworks/61-staging-ground/provenance.rpr.rpr",
+      "path": "reaper/frameworks/61-staging-ground/provenance.rpr",
       "api": "valid_staging_provenance",
       "purpose": "Require artifact, source commit, author and branch provenance identifiers.",
       "positive": {
@@ -6274,7 +6274,7 @@
       "slug": "61-staging-ground",
       "name": "Staging Gate Framework",
       "role": "gate",
-      "path": "reaper/frameworks/61-staging-ground/gate.rpr.rpr",
+      "path": "reaper/frameworks/61-staging-ground/gate.rpr",
       "api": "valid_staging_gate",
       "purpose": "Validate named unique staging checks and enforce a required passing threshold.",
       "positive": {
@@ -6293,7 +6293,7 @@
       "slug": "62-anchor-point",
       "name": "Anchor Identity Framework",
       "role": "identity",
-      "path": "reaper/frameworks/62-anchor-point/identity.rpr.rpr",
+      "path": "reaper/frameworks/62-anchor-point/identity.rpr",
       "api": "valid_anchor_identity",
       "purpose": "Validate a stable namespace/key anchor without whitespace or empty segments.",
       "positive": {
@@ -6312,7 +6312,7 @@
       "slug": "62-anchor-point",
       "name": "Anchor Resolution Framework",
       "role": "resolve",
-      "path": "reaper/frameworks/62-anchor-point/resolve.rpr.rpr",
+      "path": "reaper/frameworks/62-anchor-point/resolve.rpr",
       "api": "resolve_anchor_target",
       "purpose": "Resolve a stable anchor identifier to its unique declared target.",
       "positive": {
@@ -6331,7 +6331,7 @@
       "slug": "62-anchor-point",
       "name": "Anchor Binding Framework",
       "role": "bindings",
-      "path": "reaper/frameworks/62-anchor-point/bindings.rpr.rpr",
+      "path": "reaper/frameworks/62-anchor-point/bindings.rpr",
       "api": "valid_anchor_bindings",
       "purpose": "Validate unique anchor identifiers with non-empty target references.",
       "positive": {
@@ -6350,7 +6350,7 @@
       "slug": "62-anchor-point",
       "name": "Anchor Version Pin Framework",
       "role": "pin",
-      "path": "reaper/frameworks/62-anchor-point/pin.rpr.rpr",
+      "path": "reaper/frameworks/62-anchor-point/pin.rpr",
       "api": "anchor_version_pinned",
       "purpose": "Require an anchor's actual version to match its explicitly pinned version.",
       "positive": {
@@ -6369,7 +6369,7 @@
       "slug": "62-anchor-point",
       "name": "Anchor Reference Framework",
       "role": "references",
-      "path": "reaper/frameworks/62-anchor-point/references.rpr.rpr",
+      "path": "reaper/frameworks/62-anchor-point/references.rpr",
       "api": "missing_anchor_references",
       "purpose": "List required stable anchor references absent from a module's declared bindings.",
       "positive": {
@@ -6388,7 +6388,7 @@
       "slug": "63-baseline",
       "name": "Baseline Snapshot Framework",
       "role": "snapshot",
-      "path": "reaper/frameworks/63-baseline/snapshot.rpr.rpr",
+      "path": "reaper/frameworks/63-baseline/snapshot.rpr",
       "api": "valid_baseline_snapshot",
       "purpose": "Validate unique named numeric measurements in a reproducible baseline snapshot.",
       "positive": {
@@ -6407,7 +6407,7 @@
       "slug": "63-baseline",
       "name": "Baseline Drift Framework",
       "role": "drift",
-      "path": "reaper/frameworks/63-baseline/drift.rpr.rpr",
+      "path": "reaper/frameworks/63-baseline/drift.rpr",
       "api": "baseline_drift_metrics",
       "purpose": "Return baseline metric names whose absolute change exceeds a non-negative tolerance.",
       "positive": {
@@ -6426,7 +6426,7 @@
       "slug": "63-baseline",
       "name": "Baseline Coverage Framework",
       "role": "coverage",
-      "path": "reaper/frameworks/63-baseline/coverage.rpr.rpr",
+      "path": "reaper/frameworks/63-baseline/coverage.rpr",
       "api": "missing_baseline_metrics",
       "purpose": "Return baseline metrics that are absent from a new measurement set.",
       "positive": {
@@ -6445,7 +6445,7 @@
       "slug": "63-baseline",
       "name": "Baseline Profile Framework",
       "role": "profile",
-      "path": "reaper/frameworks/63-baseline/profile.rpr.rpr",
+      "path": "reaper/frameworks/63-baseline/profile.rpr",
       "api": "valid_baseline_profile",
       "purpose": "Validate a named measurement profile with sample count and unit label.",
       "positive": {
@@ -6464,7 +6464,7 @@
       "slug": "63-baseline",
       "name": "Baseline Regression Framework",
       "role": "regression",
-      "path": "reaper/frameworks/63-baseline/regression.rpr.rpr",
+      "path": "reaper/frameworks/63-baseline/regression.rpr",
       "api": "baseline_regression_within_budget",
       "purpose": "Check that a numeric measurement increase stays within its allowed regression budget.",
       "positive": {
@@ -6483,7 +6483,7 @@
       "slug": "64-load-bearing-structure",
       "name": "Load Bearing Profile Framework",
       "role": "profile",
-      "path": "reaper/frameworks/64-load-bearing-structure/profile.rpr.rpr",
+      "path": "reaper/frameworks/64-load-bearing-structure/profile.rpr",
       "api": "valid_load_bearing_profile",
       "purpose": "Ensure declared capacity supports demand plus the required reserve margin.",
       "positive": {
@@ -6502,7 +6502,7 @@
       "slug": "64-load-bearing-structure",
       "name": "Load Distribution Framework",
       "role": "distribution",
-      "path": "reaper/frameworks/64-load-bearing-structure/distribution.rpr.rpr",
+      "path": "reaper/frameworks/64-load-bearing-structure/distribution.rpr",
       "api": "balanced_load_distribution",
       "purpose": "Check that non-negative resource loads remain within the maximum allowed spread.",
       "positive": {
@@ -6521,7 +6521,7 @@
       "slug": "64-load-bearing-structure",
       "name": "Load Margin Framework",
       "role": "margin",
-      "path": "reaper/frameworks/64-load-bearing-structure/margin.rpr.rpr",
+      "path": "reaper/frameworks/64-load-bearing-structure/margin.rpr",
       "api": "load_bearing_margin",
       "purpose": "Calculate remaining supported capacity after a valid non-negative load.",
       "positive": {
@@ -6540,7 +6540,7 @@
       "slug": "64-load-bearing-structure",
       "name": "Load Redundancy Framework",
       "role": "redundancy",
-      "path": "reaper/frameworks/64-load-bearing-structure/redundancy.rpr.rpr",
+      "path": "reaper/frameworks/64-load-bearing-structure/redundancy.rpr",
       "api": "valid_load_redundancy",
       "purpose": "Require replica count to exceed the declared number of tolerated failures.",
       "positive": {
@@ -6559,7 +6559,7 @@
       "slug": "64-load-bearing-structure",
       "name": "Load Bearing Member Framework",
       "role": "members",
-      "path": "reaper/frameworks/64-load-bearing-structure/members.rpr.rpr",
+      "path": "reaper/frameworks/64-load-bearing-structure/members.rpr",
       "api": "valid_load_bearing_members",
       "purpose": "Validate unique structural members whose applied loads do not exceed member ratings.",
       "positive": {
@@ -6578,7 +6578,7 @@
       "slug": "65-hardware-software-base",
       "name": "Hardware Device Profile Framework",
       "role": "device",
-      "path": "reaper/frameworks/65-hardware-software-base/device.rpr.rpr",
+      "path": "reaper/frameworks/65-hardware-software-base/device.rpr",
       "api": "valid_hardware_device_profile",
       "purpose": "Validate device identity, target architecture, ABI and supported word width.",
       "positive": {
@@ -6597,7 +6597,7 @@
       "slug": "65-hardware-software-base",
       "name": "Hardware Memory Map Framework",
       "role": "memory-map",
-      "path": "reaper/frameworks/65-hardware-software-base/memory_map.rpr.rpr",
+      "path": "reaper/frameworks/65-hardware-software-base/memory_map.rpr",
       "api": "valid_hardware_memory_map",
       "purpose": "Validate aligned positive-size hardware regions with overflow-safe non-overlap.",
       "positive": {
@@ -6616,7 +6616,7 @@
       "slug": "65-hardware-software-base",
       "name": "Hardware Driver ABI Framework",
       "role": "driver-abi",
-      "path": "reaper/frameworks/65-hardware-software-base/driver_abi.rpr.rpr",
+      "path": "reaper/frameworks/65-hardware-software-base/driver_abi.rpr",
       "api": "valid_hardware_driver_abi",
       "purpose": "Require an exact driver/host ABI match and a supported word width.",
       "positive": {
@@ -6635,7 +6635,7 @@
       "slug": "65-hardware-software-base",
       "name": "Hardware DMA Framework",
       "role": "dma",
-      "path": "reaper/frameworks/65-hardware-software-base/dma.rpr.rpr",
+      "path": "reaper/frameworks/65-hardware-software-base/dma.rpr",
       "api": "valid_dma_buffer_contract",
       "purpose": "Validate a DMA buffer's positive size, power-of-two alignment and aligned address.",
       "positive": {
@@ -6654,7 +6654,7 @@
       "slug": "65-hardware-software-base",
       "name": "Hardware MMIO Register Framework",
       "role": "mmio",
-      "path": "reaper/frameworks/65-hardware-software-base/mmio.rpr.rpr",
+      "path": "reaper/frameworks/65-hardware-software-base/mmio.rpr",
       "api": "valid_hardware_mmio_register",
       "purpose": "Validate MMIO register offset, width, region bounds and access policy.",
       "positive": {
@@ -6673,7 +6673,7 @@
       "slug": "66-software-skeleton",
       "name": "Software Skeleton Application Framework",
       "role": "application",
-      "path": "reaper/frameworks/66-software-skeleton/application.rpr.rpr",
+      "path": "reaper/frameworks/66-software-skeleton/application.rpr",
       "api": "valid_software_skeleton_manifest",
       "purpose": "Validate app identity, semantic version, entry module/function and unique module inventory.",
       "positive": {
@@ -6692,7 +6692,7 @@
       "slug": "66-software-skeleton",
       "name": "Software Skeleton Composition Framework",
       "role": "composition",
-      "path": "reaper/frameworks/66-software-skeleton/composition.rpr.rpr",
+      "path": "reaper/frameworks/66-software-skeleton/composition.rpr",
       "api": "valid_software_skeleton_composition",
       "purpose": "Validate a module dependency graph with a deterministic topological ordering.",
       "positive": {
@@ -6711,7 +6711,7 @@
       "slug": "66-software-skeleton",
       "name": "Software Skeleton Module Framework",
       "role": "modules",
-      "path": "reaper/frameworks/66-software-skeleton/modules.rpr.rpr",
+      "path": "reaper/frameworks/66-software-skeleton/modules.rpr",
       "api": "missing_software_skeleton_modules",
       "purpose": "List declared application modules that do not have source implementations.",
       "positive": {
@@ -6730,7 +6730,7 @@
       "slug": "66-software-skeleton",
       "name": "Software Skeleton Entrypoint Framework",
       "role": "entrypoint",
-      "path": "reaper/frameworks/66-software-skeleton/entrypoint.rpr.rpr",
+      "path": "reaper/frameworks/66-software-skeleton/entrypoint.rpr",
       "api": "valid_software_skeleton_entrypoint",
       "purpose": "Require an exported entrypoint function from a declared application module.",
       "positive": {
@@ -6749,7 +6749,7 @@
       "slug": "66-software-skeleton",
       "name": "Software Skeleton Lifecycle Framework",
       "role": "lifecycle",
-      "path": "reaper/frameworks/66-software-skeleton/lifecycle.rpr.rpr",
+      "path": "reaper/frameworks/66-software-skeleton/lifecycle.rpr",
       "api": "valid_software_skeleton_lifecycle",
       "purpose": "Replay an application lifecycle using only declared state transitions.",
       "positive": {
