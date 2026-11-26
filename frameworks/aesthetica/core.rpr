@@ -361,6 +361,68 @@ craft build_findings(evidence) {
     yield findings
 }
 
+craft valid_axis_score(axis_score) {
+    when kind(axis_score) != "list" {
+        yield false
+    }
+    when size(axis_score) != 3 {
+        yield false
+    }
+    when not valid_unit(axis_score[0]) {
+        yield false
+    }
+    when not valid_unit(axis_score[1]) {
+        yield false
+    }
+    when kind(axis_score[2]) != "number" {
+        yield false
+    }
+    when axis_score[2] < 0 or axis_score[2] % 1 != 0 {
+        yield false
+    }
+    yield true
+}
+
+craft valid_report(report) {
+    when kind(report) != "list" {
+        yield false
+    }
+    when size(report) != 13 {
+        yield false
+    }
+    when report[0] != REPORT_SCHEMA {
+        yield false
+    }
+    when kind(report[1]) != "text" or size(trim(report[1])) == 0 {
+        yield false
+    }
+    when not valid_axis_score(report[5]) {
+        yield false
+    }
+    when not valid_axis_score(report[6]) {
+        yield false
+    }
+    when not valid_unit(report[7]) {
+        yield false
+    }
+    when not valid_unit(report[8]) {
+        yield false
+    }
+    when not valid_unit(report[9]) {
+        yield false
+    }
+    when not valid_unit(report[10]) {
+        yield false
+    }
+    when not valid_unit(report[11]) {
+        yield false
+    }
+    when kind(report[12]) != "list" {
+        yield false
+    }
+    yield true
+}
+
 export craft evaluate(object_id, context, evidence, weights) {
     when kind(object_id) != "text" {
         yield fail_default("AES-E040", "object_id must be text")
@@ -431,14 +493,11 @@ export craft compare_profiles(before, after, stability_threshold) {
     when not valid_unit(stability_threshold) {
         yield fail_default("AES-E050", "stability threshold must be in [0, 1]")
     }
-    when kind(before) != "list" or kind(after) != "list" {
-        yield fail_default("AES-E051", "profile comparison requires two report lists")
+    when not valid_report(before) {
+        yield fail_default("AES-E051", "before report is malformed or uses an unsupported schema")
     }
-    when size(before) != 13 or size(after) != 13 {
-        yield fail_default("AES-E052", "report shape is invalid")
-    }
-    when before[0] != REPORT_SCHEMA or after[0] != REPORT_SCHEMA {
-        yield fail_default("AES-E053", "unsupported report schema")
+    when not valid_report(after) {
+        yield fail_default("AES-E052", "after report is malformed or uses an unsupported schema")
     }
     when before[1] != after[1] {
         yield fail_default("AES-E054", "profiles belong to different object identities")
