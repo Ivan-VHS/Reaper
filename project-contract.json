@@ -24,6 +24,20 @@
   },
   "capabilities": [
     {
+      "id": "foundations.first-five-frameworks",
+      "status": "partial",
+      "summary": "Executable Reaper module defining Scaffold, Platform, Environment, Infrastructure and Architecture contracts with validation for repository areas, profile maturity, positive resource budgets and canonical layer ordering; native target integration remains partial.",
+      "evidence": [
+        "frameworks/foundation.rpr",
+        "docs/FOUNDATIONAL_FRAMEWORKS_V1.md",
+        "examples/foundations.rpr",
+        "tests/test_foundational_frameworks.py",
+        "docs/HARDWARE_LANGUAGE.md",
+        "docs/RUNTIME_PLATFORM.md",
+        "docs/SYSTEM_RUNTIME_ABI_V1.md"
+      ]
+    },
+    {
       "id": "language.python-reference-runtime",
       "status": "implemented",
       "summary": "Reference lexer, parser, AST interpreter, CLI and bounded execution semantics.",
