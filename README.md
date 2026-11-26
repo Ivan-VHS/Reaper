@@ -14,7 +14,7 @@ Reaper is a systems-programming language and local development workbench for com
 
 - Reaper source language, lexer/parser, reference runtime and diagnostics.
 - CLI, REPL, Windows Studio foundation, LSP and DAP services.
-- Experimental native C17 implementation; it is not yet feature-equivalent to the reference runtime. The native core now includes a shared typed HIR/MIR/LIR contract for bounded scalar and aesthetic nodes, an expression-AST-to-HIR frontend (i64/decimal/text/bool and i64 arithmetic), plus deterministic C17 instruction-table emission; full language/backend parity remains incomplete.
+- Experimental native C17 implementation; it is not yet feature-equivalent to the reference runtime. The native core now includes a shared typed HIR/MIR/LIR contract for bounded scalar and aesthetic nodes, an expression-AST-to-HIR frontend (i64/f64/text/bool and same-type numeric arithmetic), plus deterministic C17 instruction-table emission; full language/backend parity remains incomplete.
 - NOO TAH delegates JavaScript execution to the official Node.js runtime.
 - Jora application scaffolding and capability composition; catalog packs remain specifications, not installable editors.
 - PLAGUE 1.0.0 repository-evolution foundation is proposed in a separate open PR. The native C17 core also now provides SHA-256-pinned patch descriptors and a fail-closed transaction engine contract for signed grants, path scopes, isolated workspaces, sandboxed registered checks, topic-branch publication, audit and rollback. Concrete Windows/POSIX Git and sandbox adapters are not yet shipped, and SOMO apply remains blocked.
