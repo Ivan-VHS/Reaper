@@ -16,8 +16,8 @@ def run_framework(entry: dict, args: str) -> list[str]:
     relative = Path(entry["path"]).relative_to("reaper")
     specifier = f"../reaper/{relative.as_posix()}"
     source = (
-        f'import "{specifier}" as framework\\n'
-        f'emit framework["{entry["api"]}"]{args}\\n'
+        f'import "{specifier}" as framework\n'
+        f'emit framework["{entry["api"]}"]{args}\n'
     )
     output: list[str] = []
     Interpreter(output=output.append).run(source, filename=str(RUNNER))
@@ -56,6 +56,15 @@ class FrameworkProgrammeTests(unittest.TestCase):
                 if output != [entry["positive"]["output"]]:
                     failures.append(f'{entry["id"]}: expected {entry["positive"]["output"]!r}, got {output!r}')
         self.assertEqual(failures, [])
+
+    def test_additional_edge_fixtures(self) -> None:
+        for entry in self.frameworks:
+            for args, expected in entry.get("additional_positive", []):
+                with self.subTest(framework=entry["id"], args=args):
+                    self.assertEqual(run_framework(entry, args), [expected])
+            for args, expected in entry.get("additional_negative", []):
+                with self.subTest(framework=entry["id"], args=args):
+                    self.assertEqual(run_framework(entry, args), [expected])
 
     def test_each_new_framework_rejects_its_invalid_contract(self) -> None:
         failures = []
