@@ -58,16 +58,17 @@ Contracts: [profile schema](schemas/profile.v1.schema.json), [design IR schema](
 
 ## Automatic evolution loop
 
-SOMO coordinates a deterministic pipeline:
+SOMO coordinates a deterministic pipeline and consults the PLAGUE v1 action policy before analysis or planning:
 
-1. Validate the current and target aesthetic profiles.
+1. Validate the requested mode through PLAGUE's default-deny action policy.
+2. Validate the current and target aesthetic profiles.
 2. Compile the baseline profile through HIR, MIR and LIR.
 3. Assess the target design against the declared accessibility contract.
 4. Validate the architecture graph and dependency acyclicity.
 5. Generate a bounded Kolir plan for architecture, design, compiler, source, tests and documentation work.
 6. Return a proposal with evidence-bearing outputs for review.
 
-Observe performs assessment only. Propose emits a bounded change plan. Apply is intentionally blocked until repository grants, path allowlists, revision pinning, patch application, isolated checks, immutable audit and tested rollback are implemented. The system never treats an account's repository visibility as write authorization.
+Observe performs assessment only. Propose emits a bounded change plan. Apply is intentionally blocked until repository grants, path allowlists, revision pinning, patch application, isolated checks, immutable audit and tested rollback are implemented. The system never treats an account's repository visibility as write authorization. PLAGUE currently provides an action-policy matrix, not authenticated repository grants or path-level authorization.
 
 ## Example
 
