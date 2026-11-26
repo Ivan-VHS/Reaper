@@ -27,7 +27,7 @@ The tool catalogue contains compiler, build-system, embedded cross-compiler and 
 
 `[command, path_state, probe_state]`
 
-where probe state is `available`, `missing` or `not-probed`. This validates a report shape; the module does not itself inspect PATH or execute a compiler. Availability is not ABI certification. Installation and system mutation are explicitly outside the contract.
+where probe state is `available`, `missing` or `not-probed`. An available report must include a non-empty path; missing and not-probed reports must not claim a path. This validates a report shape; the module does not itself inspect PATH or execute a compiler. Availability is not ABI certification. Installation and system mutation are explicitly outside the contract.
 
 Public functions: `tooling_commands()`, `tooling_find_command(command)`, `tooling_validate_probe(probe)`, `tooling_probe_policy()`.
 
