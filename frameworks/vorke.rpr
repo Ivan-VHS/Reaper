@@ -1,0 +1,101 @@
+# Vorke: application launch plans layered over the canonical DOM runtime.
+# Manifest: [app_id, version, profile, entrypoint, module_ids, resource_budget].
+# Vorke plans application composition; Establish and JLOM remain DOM authorities.
+
+craft contains(values, target) {
+    vary found := false
+    each value in values {
+        when value == target { change found := true }
+    }
+    yield found
+}
+
+export craft profile_valid(profile) {
+    yield contains(["hosted", "freestanding", "embedded", "simulator"], profile)
+}
+
+export craft validate_manifest(manifest) {
+    when kind(manifest) != "list" or size(manifest) != 6 {
+        yield [false, ["manifest-shape"]]
+    }
+    vary errors := []
+    when kind(manifest[0]) != "text" or size(manifest[0]) == 0 {
+        change errors := push(errors, "app-id")
+    }
+    when kind(manifest[1]) != "text" or size(manifest[1]) == 0 {
+        change errors := push(errors, "app-version")
+    }
+    when not profile_valid(manifest[2]) {
+        change errors := push(errors, "unsupported-profile")
+    }
+    when kind(manifest[3]) != "text" or size(manifest[3]) == 0 {
+        change errors := push(errors, "entrypoint")
+    }
+    when kind(manifest[4]) != "list" or size(manifest[4]) == 0 {
+        change errors := push(errors, "module-list")
+    }
+    when kind(manifest[5]) != "number" or manifest[5] <= 0 {
+        change errors := push(errors, "resource-budget")
+    }
+    when size(errors) > 0 { yield [false, errors] }
+
+    vary seen := []
+    each module_id in manifest[4] {
+        when kind(module_id) != "text" or size(module_id) == 0 {
+            change errors := push(errors, "invalid-module-id")
+        } otherwise {
+            when contains(seen, module_id) {
+                change errors := push(errors, "duplicate-module:" ++ module_id)
+            } otherwise {
+                change seen := push(seen, module_id)
+            }
+        }
+    }
+    when not contains(seen, manifest[3]) {
+        change errors := push(errors, "entrypoint-not-in-modules")
+    }
+    yield [size(errors) == 0, errors]
+}
+
+export craft phase_plan(manifest) {
+    make checked := validate_manifest(manifest)
+    when not checked[0] { yield [false, [], checked[1]] }
+    yield [true, [
+        ["validate", manifest[0]],
+        ["resolve", manifest[4]],
+        ["prepare", manifest[2]],
+        ["start", manifest[3]],
+        ["ready", manifest[0]]
+    ], "planned-only"]
+}
+
+export craft phase_transition(from_phase, to_phase) {
+    make allowed := [
+        ["Declared", "Resolved"],
+        ["Resolved", "Prepared"],
+        ["Prepared", "Starting"],
+        ["Starting", "Ready"],
+        ["Declared", "Failed"],
+        ["Resolved", "Failed"],
+        ["Prepared", "Failed"],
+        ["Starting", "Failed"],
+        ["Ready", "Stopping"],
+        ["Stopping", "Stopped"],
+        ["Failed", "Stopped"]
+    ]
+    vary matched := false
+    each transition in allowed {
+        when transition[0] == from_phase and transition[1] == to_phase {
+            change matched := true
+        }
+    }
+    yield matched
+}
+
+export craft shutdown_plan(module_ids) {
+    when kind(module_ids) != "list" {
+        yield [false, [], "module-list-required"]
+    }
+    # Runtime teardown order belongs to DOM/JLOM; this is a declarative request.
+    yield [true, ["stop-runtime", "release-scopes", "close-modules", module_ids], "delegated-to-dom"]
+}
