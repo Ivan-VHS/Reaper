@@ -60,8 +60,8 @@ craft span_union(left, right) {
     when not span_overlaps(left, right) and not span_touches(left, right) {
         yield ["ERR", "disjoint spans have no contiguous union"]
     }
-    make start := left[0]
-    make finish := left[1]
+    vary start := left[0]
+    vary finish := left[1]
     when right[0] < start { change start := right[0] }
     when right[1] > finish { change finish := right[1] }
     yield ["OK", [start, finish]]
@@ -71,9 +71,9 @@ craft span_intersection(left, right) {
     when size(left) != 2 or size(right) != 2 {
         yield ["ERR", "both spans must contain two boundaries"]
     }
-    make start := left[0]
+    vary start := left[0]
     when right[0] > start { change start := right[0] }
-    make finish := left[1]
+    vary finish := left[1]
     when right[1] < finish { change finish := right[1] }
     when finish < start { yield ["NONE"] }
     yield ["OK", [start, finish]]
@@ -93,8 +93,8 @@ craft span_clamp(span, source_length) {
     when size(span) != 2 or source_length < 0 {
         yield ["ERR", "invalid span or source length"]
     }
-    make start := span[0]
-    make finish := span[1]
+    vary start := span[0]
+    vary finish := span[1]
     when start < 0 { change start := 0 }
     when start > source_length { change start := source_length }
     when finish < start { change finish := start }
