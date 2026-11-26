@@ -43,7 +43,7 @@ The API works on non-personal aggregate resource descriptors only. It does not a
 
 **API:** reaper_ephemeral_scope_begin, reaper_ephemeral_match, reaper_ephemeral_scope_end
 
-The caller supplies scratch storage. The match operation compares fixed-size 32-byte digests with a constant-time byte comparison. Ending the scope overwrites the complete caller buffer through volatile writes, invalidates the scope and retains no pointer.
+The caller supplies scratch storage. Both digest inputs must be located inside this buffer; external digest pointers are rejected. The match operation compares fixed-size 32-byte digests with a constant-time byte comparison. Ending the scope overwrites the complete caller buffer through volatile writes, invalidates the scope and retains no pointer.
 
 The API has no serializer, logger, cache or persistence callback. Callers must not export transient values or derived digests into persistent records, metrics, crash dumps or audit details. Initialize the scope descriptor to zero before its first begin.
 
