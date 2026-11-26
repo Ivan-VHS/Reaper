@@ -204,6 +204,17 @@ make result := _guarded_mutation([1], [2], "auto", reject, nothing)
         with self.assertRaisesRegex(Exception, "strict validator"):
             Interpreter(output=lambda _line: None).run(source)
 
+    def test_reconcile_rejects_non_scalar_operation_keys(self) -> None:
+        functions = Interpreter(output=lambda _line: None).system_functions
+        malformed = {
+            "schema": "reaper.reconcile-plan.v1",
+            "key_field": "id",
+            "operations": [{"action": "drop", "key": []}],
+            "target_checksum": "0" * 64,
+        }
+        with self.assertRaisesRegex(SystemFunctionError, "invalid key"):
+            functions.reconcile_apply([], malformed, None)
+
     def test_region_budget_is_enforced_and_released(self) -> None:
         source = '''
 craft work() {

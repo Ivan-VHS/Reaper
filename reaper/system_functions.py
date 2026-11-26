@@ -381,6 +381,8 @@ class ReaperSystemFunctions:
             operation = _mapping(raw, f"operations[{index}]")
             action = operation.get("action")
             key = operation.get("key")
+            if isinstance(key, bool) or not isinstance(key, (str, int)):
+                raise SystemFunctionError(f"operations[{index}] has an invalid key")
             if key in seen:
                 raise SystemFunctionError(f"reconcile plan repeats key {key!r}")
             seen.add(key)
