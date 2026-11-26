@@ -67,8 +67,10 @@ export craft fallback_select(fallbacks, failed_component) {
         yield [false, nothing, "fallback-query-shape"]
     }
     each fallback in fallbacks {
-        when fc["fc_record"](fallback, 3) and fallback[0] == failed_component and fallback[2] == "healthy" {
-            yield [true, fallback[1], "fallback-selected"]
+        when fc["fc_record"](fallback, 3) {
+            when fallback[0] == failed_component and fallback[2] == "healthy" {
+                yield [true, fallback[1], "fallback-selected"]
+            }
         }
     }
     yield [false, nothing, "no-healthy-fallback"]
