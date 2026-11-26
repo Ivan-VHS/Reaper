@@ -1,0 +1,24 @@
+# Hardware Memory Map Framework — Validate aligned positive-size hardware regions with overflow-safe non-overlap.
+
+export craft valid_hardware_memory_map(regions) {
+when kind(regions) != "list" { yield false }
+ craft is_power_of_two(value) {
+  when value < 1 { yield false }
+  vary power := 1
+  while power < value { change power := power * 2 }
+  yield power == value
+ }
+ craft valid_region(region) {
+  when kind(region) != "list" or size(region) != 3 { yield false }
+  each value in region { when kind(value) != "number" or value % 1 != 0 or value < 0 { yield false } }
+  yield region[1] > 0 and is_power_of_two(region[2]) and region[0] % region[2] == 0 and region[0] + region[1] <= 18446744073709551615
+ }
+ craft invalid_region(region) { yield not valid_region(region) }
+ when size(keep(regions, invalid_region)) != 0 { yield false }
+ each index in range(0, size(regions)) {
+  each other in range(index + 1, size(regions)) {
+   when regions[index][0] < regions[other][0] + regions[other][1] and regions[other][0] < regions[index][0] + regions[index][1] { yield false }
+  }
+ }
+ yield true
+}

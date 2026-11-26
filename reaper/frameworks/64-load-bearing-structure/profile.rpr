@@ -1,0 +1,6 @@
+# Load Bearing Profile Framework — Ensure declared capacity supports demand plus the required reserve margin.
+
+export craft valid_load_bearing_profile(demand, capacity, reserve) {
+each value in [demand, capacity, reserve] { when kind(value) != "number" or value < 0 { yield false } }
+ yield capacity >= demand + reserve
+}

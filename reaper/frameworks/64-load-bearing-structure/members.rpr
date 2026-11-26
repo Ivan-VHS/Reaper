@@ -1,0 +1,9 @@
+# Load Bearing Member Framework — Validate unique structural members whose applied loads do not exceed member ratings.
+
+export craft valid_load_bearing_members(members) {
+when kind(members) != "list" { yield false }
+ craft valid_member(item) { yield kind(item) == "list" and size(item) == 3 and kind(item[0]) == "text" and kind(item[1]) == "number" and kind(item[2]) == "number" and size(trim(item[0])) > 0 and item[1] >= 0 and item[2] > 0 and item[1] <= item[2] }
+ craft invalid_member(item) { yield not valid_member(item) }
+ craft member_name(item) { yield item[0] }
+ yield size(keep(members, invalid_member)) == 0 and size(unique(map(members, member_name))) == size(members)
+}

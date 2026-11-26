@@ -1,0 +1,6 @@
+# Hardware Driver ABI Framework — Require an exact driver/host ABI match and a supported word width.
+
+export craft valid_hardware_driver_abi(host_abi, driver_abi, word_bits) {
+when kind(host_abi) != "text" or kind(driver_abi) != "text" or kind(word_bits) != "number" { yield false }
+ yield size(trim(host_abi)) > 0 and host_abi == driver_abi and contains([32, 64], word_bits)
+}

@@ -1,0 +1,7 @@
+# Hardware Device Profile Framework — Validate device identity, target architecture, ABI and supported word width.
+
+export craft valid_hardware_device_profile(profile) {
+when kind(profile) != "list" or size(profile) != 5 { yield false }
+ each index in [0, 1, 2, 3] { when kind(profile[index]) != "text" or size(trim(profile[index])) == 0 { yield false } }
+ yield kind(profile[4]) == "number" and contains([8, 16, 32, 64, 128], profile[4]) and contains(["sysv", "aapcs", "win64", "freestanding"], profile[3])
+}

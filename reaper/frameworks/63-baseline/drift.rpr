@@ -1,0 +1,22 @@
+# Baseline Drift Framework — Return baseline metric names whose absolute change exceeds a non-negative tolerance.
+
+export craft baseline_drift_metrics(baseline, current, tolerance) {
+when kind(baseline) != "list" or kind(current) != "list" or kind(tolerance) != "number" or tolerance < 0 { yield [] }
+ craft valid_metric(metric) { yield kind(metric) == "list" and size(metric) == 2 and kind(metric[0]) == "text" and kind(metric[1]) == "number" }
+ craft invalid_metric(metric) { yield not valid_metric(metric) }
+ when size(keep(baseline, invalid_metric)) != 0 or size(keep(current, invalid_metric)) != 0 { yield [] }
+ vary drifted := []
+ each metric in baseline {
+  vary found := false
+  each actual in current {
+   when actual[0] == metric[0] {
+    change found := true
+    vary difference := actual[1] - metric[1]
+    when difference < 0 { change difference := 0 - difference }
+    when difference > tolerance { change drifted := push(drifted, metric[0]) }
+   }
+  }
+  when not found { change drifted := push(drifted, metric[0]) }
+ }
+ yield drifted
+}

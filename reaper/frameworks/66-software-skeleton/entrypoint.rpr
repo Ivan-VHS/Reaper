@@ -1,0 +1,7 @@
+# Software Skeleton Entrypoint Framework — Require an exported entrypoint function from a declared application module.
+
+export craft valid_software_skeleton_entrypoint(entry_module, entry_function, modules, exports) {
+when kind(entry_module) != "text" or kind(entry_function) != "text" or kind(modules) != "list" or kind(exports) != "list" { yield false }
+ when size(trim(entry_module)) == 0 or size(trim(entry_function)) == 0 { yield false }
+ yield contains(modules, entry_module) and contains(exports, entry_function)
+}

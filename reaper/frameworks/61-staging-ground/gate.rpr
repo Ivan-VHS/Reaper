@@ -1,0 +1,12 @@
+# Staging Gate Framework — Validate named unique staging checks and enforce a required passing threshold.
+
+export craft valid_staging_gate(checks, minimum_passed) {
+when kind(checks) != "list" or kind(minimum_passed) != "number" or minimum_passed % 1 != 0 { yield false }
+ when minimum_passed < 0 or minimum_passed > size(checks) { yield false }
+ craft valid_check(item) { yield kind(item) == "list" and size(item) == 2 and kind(item[0]) == "text" and size(trim(item[0])) > 0 and kind(item[1]) == "boolean" }
+ craft invalid_check(item) { yield not valid_check(item) }
+ craft check_name(item) { yield item[0] }
+ craft passed(item) { yield item[1] }
+ when size(keep(checks, invalid_check)) != 0 or size(unique(map(checks, check_name))) != size(checks) { yield false }
+ yield size(keep(checks, passed)) >= minimum_passed
+}

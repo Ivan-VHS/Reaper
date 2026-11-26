@@ -1,0 +1,7 @@
+# Workspace Project Framework — Ensure the active workspace project is one of the unique declared projects.
+
+export craft valid_workspace_project_selection(active, projects) {
+when kind(active) != "text" or kind(projects) != "list" or size(trim(active)) == 0 { yield false }
+ craft invalid_project(item) { yield kind(item) != "text" or size(trim(item)) == 0 }
+ yield size(keep(projects, invalid_project)) == 0 and size(unique(projects)) == size(projects) and contains(projects, active)
+}

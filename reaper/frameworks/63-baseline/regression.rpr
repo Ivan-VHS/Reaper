@@ -1,0 +1,6 @@
+# Baseline Regression Framework — Check that a numeric measurement increase stays within its allowed regression budget.
+
+export craft baseline_regression_within_budget(baseline, current, maximum_increase) {
+when kind(baseline) != "number" or kind(current) != "number" or kind(maximum_increase) != "number" or maximum_increase < 0 { yield false }
+ yield current - baseline <= maximum_increase
+}

@@ -1,0 +1,9 @@
+# Anchor Binding Framework — Validate unique anchor identifiers with non-empty target references.
+
+export craft valid_anchor_bindings(bindings) {
+when kind(bindings) != "list" { yield false }
+ craft valid_binding(item) { yield kind(item) == "list" and size(item) == 2 and kind(item[0]) == "text" and kind(item[1]) == "text" and size(trim(item[0])) > 0 and size(trim(item[1])) > 0 }
+ craft invalid_binding(item) { yield not valid_binding(item) }
+ craft anchor_id(item) { yield item[0] }
+ yield size(keep(bindings, invalid_binding)) == 0 and size(unique(map(bindings, anchor_id))) == size(bindings)
+}

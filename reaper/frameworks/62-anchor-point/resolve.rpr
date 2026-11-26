@@ -1,0 +1,15 @@
+# Anchor Resolution Framework — Resolve a stable anchor identifier to its unique declared target.
+
+export craft resolve_anchor_target(identifier, bindings) {
+when kind(identifier) != "text" or kind(bindings) != "list" { yield "" }
+ vary target := ""
+ vary found := false
+ each binding in bindings {
+  when kind(binding) == "list" and size(binding) == 2 and binding[0] == identifier {
+   when found { yield "" }
+   change found := true
+   change target := binding[1]
+  }
+ }
+ yield target
+}

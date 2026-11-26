@@ -1,0 +1,7 @@
+# Software Skeleton Module Framework — List declared application modules that do not have source implementations.
+
+export craft missing_software_skeleton_modules(required, present) {
+when kind(required) != "list" or kind(present) != "list" { yield [] }
+ craft missing(module_name) { yield not contains(present, module_name) }
+ yield keep(required, missing)
+}

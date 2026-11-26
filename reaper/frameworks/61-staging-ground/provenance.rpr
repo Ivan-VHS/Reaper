@@ -1,0 +1,9 @@
+# Staging Provenance Framework — Require artifact, source commit, author and branch provenance identifiers.
+
+export craft valid_staging_provenance(provenance) {
+when kind(provenance) != "list" or size(provenance) != 4 { yield false }
+ each item in provenance {
+  when kind(item) != "text" or size(trim(item)) == 0 { yield false }
+ }
+ yield true
+}

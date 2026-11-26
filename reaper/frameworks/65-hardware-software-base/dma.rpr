@@ -1,0 +1,11 @@
+# Hardware DMA Framework — Validate a DMA buffer's positive size, power-of-two alignment and aligned address.
+
+export craft valid_dma_buffer_contract(address, size_bytes, alignment) {
+each value in [address, size_bytes, alignment] {
+  when kind(value) != "number" or value % 1 != 0 or value < 0 { yield false }
+ }
+ when size_bytes == 0 or alignment == 0 { yield false }
+ vary power := 1
+ while power < alignment { change power := power * 2 }
+ yield power == alignment and address % alignment == 0 and address + size_bytes <= 18446744073709551615
+}

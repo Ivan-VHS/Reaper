@@ -1,0 +1,6 @@
+# Load Redundancy Framework — Require replica count to exceed the declared number of tolerated failures.
+
+export craft valid_load_redundancy(replicas, failures) {
+when kind(replicas) != "number" or kind(failures) != "number" { yield false }
+ yield replicas % 1 == 0 and failures % 1 == 0 and replicas >= 1 and failures >= 0 and replicas > failures
+}

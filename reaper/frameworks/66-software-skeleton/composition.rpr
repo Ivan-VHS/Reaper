@@ -1,0 +1,22 @@
+# Software Skeleton Composition Framework — Validate a module dependency graph with a deterministic topological ordering.
+
+export craft valid_software_skeleton_composition(count, edges) {
+when kind(count) != "number" or count % 1 != 0 or count < 1 or kind(edges) != "list" { yield false }
+ craft valid_edge(edge) { yield kind(edge) == "list" and size(edge) == 2 and kind(edge[0]) == "number" and kind(edge[1]) == "number" and edge[0] % 1 == 0 and edge[1] % 1 == 0 and edge[0] >= 0 and edge[1] >= 0 and edge[0] < count and edge[1] < count and edge[0] != edge[1] }
+ craft invalid_edge(edge) { yield not valid_edge(edge) }
+ when size(keep(edges, invalid_edge)) != 0 or size(unique(edges)) != size(edges) { yield false }
+ vary removed := []
+ while size(removed) < count {
+  vary candidate := -1
+  each node in range(0, count) {
+   when not contains(removed, node) {
+    vary blocked := false
+    each edge in edges { when edge[1] == node and not contains(removed, edge[0]) { change blocked := true } }
+    when not blocked and candidate == -1 { change candidate := node }
+   }
+  }
+  when candidate == -1 { yield false }
+  change removed := push(removed, candidate)
+ }
+ yield true
+}

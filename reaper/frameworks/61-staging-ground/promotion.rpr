@@ -1,0 +1,9 @@
+# Staging Promotion Framework — Allow promotion only when test, review and provenance gates are all explicitly true.
+
+export craft staging_promotion_allowed(gates) {
+when kind(gates) != "list" or size(gates) != 3 { yield false }
+ each gate in gates {
+  when kind(gate) != "boolean" or not gate { yield false }
+ }
+ yield true
+}

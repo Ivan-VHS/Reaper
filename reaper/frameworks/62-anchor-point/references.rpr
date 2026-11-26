@@ -1,0 +1,7 @@
+# Anchor Reference Framework — List required stable anchor references absent from a module's declared bindings.
+
+export craft missing_anchor_references(required, declared) {
+when kind(required) != "list" or kind(declared) != "list" { yield [] }
+ craft missing(anchor) { yield not contains(declared, anchor) }
+ yield keep(required, missing)
+}

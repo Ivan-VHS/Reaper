@@ -1,0 +1,7 @@
+# Workspace Directory Framework — Find mandatory workspace directories not present in the project layout.
+
+export craft missing_workspace_directories(required, present) {
+when kind(required) != "list" or kind(present) != "list" { yield [] }
+ craft missing(directory) { yield not contains(present, directory) }
+ yield keep(required, missing)
+}

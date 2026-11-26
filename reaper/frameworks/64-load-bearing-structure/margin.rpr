@@ -1,0 +1,6 @@
+# Load Margin Framework — Calculate remaining supported capacity after a valid non-negative load.
+
+export craft load_bearing_margin(capacity, load) {
+when kind(capacity) != "number" or kind(load) != "number" or capacity < 0 or load < 0 or capacity < load { yield -1 }
+ yield capacity - load
+}
