@@ -42,4 +42,15 @@ assert(evolution[0] == "EvolutionResult", "SOMO must return its contract")
 assert(evolution[1] == "proposed", "bounded proposal must be accepted")
 assert(evolution[4][0][0] == "SourceEvolutionPlan", "Kolir must provide a source plan")
 
+make apply_result := SOMO["evolve"](
+    current_profile, target_profile, graph, request, "apply"
+)
+assert(apply_result[1] == "blocked", "apply must fail closed before an audited adapter exists")
+assert(contains(apply_result[2], "apply_adapter_not_implemented"), "SOMO must report the missing apply adapter")
+
+make unknown_mode := SOMO["evolve"](
+    current_profile, target_profile, graph, request, "untrusted"
+)
+assert(unknown_mode[1] == "blocked", "unknown evolution modes must be rejected")
+
 emit "RAAEF_PIPELINE_OK"
