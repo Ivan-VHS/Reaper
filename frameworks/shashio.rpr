@@ -91,3 +91,61 @@ export craft apply_atomic(initial_state, events, transitions) {
     }
     yield [false, initial_state, [], result[3]]
 }
+
+export craft events_for_state(state, transitions) {
+    vary events := []
+    each rule in transitions {
+        when kind(rule) == "list" and size(rule) == 3 and rule[0] == state {
+            when not has_value(events, rule[1]) {
+                change events := push(events, rule[1])
+            }
+        }
+    }
+    yield events
+}
+
+export craft reachable_states(states, transitions, initial_state) {
+    make checked := validate(states, transitions, initial_state)
+    when not checked[0] { yield [false, [], checked[1]] }
+    vary queue := [initial_state]
+    vary visited := []
+    loop while size(queue) > 0 {
+        make current := first(queue)
+        change queue := rest(queue)
+        when not has_value(visited, current) {
+            change visited := push(visited, current)
+            each rule in transitions {
+                when rule[0] == current and not has_value(visited, rule[2]) {
+                    change queue := push(queue, rule[2])
+                }
+            }
+        }
+    }
+    yield [true, visited, "reachable"]
+}
+
+export craft terminal_states(states, transitions) {
+    vary terminal := []
+    each state in states {
+        when size(events_for_state(state, transitions)) == 0 {
+            change terminal := push(terminal, state)
+        }
+    }
+    yield terminal
+}
+
+export craft can_reach(states, transitions, initial_state, target_state) {
+    make reachable := reachable_states(states, transitions, initial_state)
+    when not reachable[0] { yield [false, false, reachable[2]] }
+    yield [true, has_value(reachable[1], target_state), "checked"]
+}
+
+export craft run_bounded(initial_state, events, transitions, max_steps) {
+    when kind(max_steps) != "number" or max_steps < 0 {
+        yield [false, initial_state, [], "invalid-step-limit"]
+    }
+    when size(events) > max_steps {
+        yield [false, initial_state, [], "step-limit-exceeded"]
+    }
+    yield run(initial_state, events, transitions)
+}
