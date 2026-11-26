@@ -1,5 +1,9 @@
-# Sentan — architecture graph validation and dependency-cycle analysis.
+# Sentan — bounded architecture graph validation and dependency-cycle analysis.
 import "vorke.rpr" as Vorke
+
+export craft get_id(node) {
+    yield node[0]
+}
 
 export craft has_path(edges, source, destination, visited, budget) {
     when source == destination {
@@ -30,6 +34,14 @@ export craft valid_graph(graph) {
         or kind(graph[3]) != "list" or kind(graph[4]) != "list" {
         yield false
     }
+    when size(graph[3]) == 0 or size(graph[3]) > 256 or size(graph[4]) > 1024 {
+        yield false
+    }
+
+    make node_ids := map(graph[3], get_id)
+    when size(unique(node_ids)) != size(node_ids) {
+        yield false
+    }
 
     each node in graph[3] {
         when kind(node) != "list" or size(node) != 3 {
@@ -37,14 +49,14 @@ export craft valid_graph(graph) {
         }
         when not Vorke["valid_text"](node[0], 96)
             or not Vorke["valid_text"](node[1], 48)
-            or kind(node[2]) != "list" {
+            or kind(node[2]) != "list" or size(node[2]) > 256 {
             yield false
         }
         when size(unique(node[2])) != size(node[2]) {
             yield false
         }
         each dependency in node[2] {
-            when dependency == node[0] or not contains(map(graph[3], get_id), dependency) {
+            when dependency == node[0] or not contains(node_ids, dependency) {
                 yield false
             }
         }
@@ -54,8 +66,7 @@ export craft valid_graph(graph) {
         when kind(edge) != "list" or size(edge) != 3 {
             yield false
         }
-        when not contains(map(graph[3], get_id), edge[0])
-            or not contains(map(graph[3], get_id), edge[1]) {
+        when not contains(node_ids, edge[0]) or not contains(node_ids, edge[1]) {
             yield false
         }
         when edge[0] == edge[1] or not Vorke["valid_text"](edge[2], 48) {
@@ -69,10 +80,6 @@ export craft valid_graph(graph) {
         }
     }
     yield true
-}
-
-export craft get_id(node) {
-    yield node[0]
 }
 
 export craft inspect(graph) {
