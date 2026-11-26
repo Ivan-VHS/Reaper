@@ -233,7 +233,7 @@ export craft workspace_validate_descriptor(workspace) {
         yield false
     }
     each module in workspace[5] {
-        when not previous["module_validate_relative_path"](module) {
+        when not workspace_validate_root(module) or not ends_with(module, ".rpr") {
             yield false
         }
     }
