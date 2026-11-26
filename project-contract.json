@@ -121,6 +121,16 @@
         "tests/test_octa_pyramid.py",
         "docs/OCTA_PYRAMID_FEDERATION.md"
       ]
+    },
+    {
+      "id": "native-ir.checked-u32",
+      "status": "partial",
+      "summary": "The C17 canonical IR verifier and executor support a bounded u32 scalar subset with checked constants and overflow-safe add/subtract/multiply/divide; source-level u32 syntax, parser/lowering integration and native AOT emission are not yet implemented.",
+      "evidence": [
+        "include/reaper/ir.h",
+        "src/ir.c",
+        "tests/test_ir.c"
+      ]
     }
   ],
   "interfaces": [

@@ -158,3 +158,17 @@ Use three separate labels:
 - **Planned:** a design or roadmap entry without executable support.
 
 A capability enters marketing copy as available only after its contract, implementation, tests and supported-target evidence are published together.
+
+
+## Native C17 IR — checked u32 primitive (2026-11-25)
+
+The native C17 IR now includes an experimental fixed-width unsigned 32-bit scalar subset:
+
+- a distinct `u32` IR type and CONST_U32 opcode;
+- typed ADD/SUB/MUL/DIV operations with checked overflow, underflow and division-by-zero behavior;
+- rejection of negative or out-of-range constants and mixed signed/unsigned operands;
+- caller-owned scratch storage and a result that is committed only after the final RETURN succeeds.
+
+This is implemented in the C17 IR verifier/executor and covered by the native C test target. It is **not yet** a source-level `.rpr` u32 declaration, does not flow through the parser/lowering or canonical Python IR, and is not yet emitted by the scalar C17 AOT compiler. The public capability remains Partial until those paths share one typed IR and differential fixtures.
+
+Next compiler steps: propagate fixed-width types through AST/Canonical IR, add source-located type diagnostics, lower supported u32 expressions, generate C17 with the same checked semantics, and compare reference/VM/native outputs on boundary fixtures. Do not treat a C IR primitive as freestanding kernel code or a DABI64 implementation.
