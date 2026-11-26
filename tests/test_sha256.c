@@ -25,6 +25,40 @@ int main(void) {
     reaper_sha256_hex(raw, digest);
     assert(strcmp(digest, expected_abc) == 0);
 
-    puts("native SHA-256 tests: 3 vectors passed");
+    {
+        static const uint8_t hmac_key[20] = {
+            0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b,
+            0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b
+        };
+        const char *expected_hmac =
+            "b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7";
+        char chain_one[65], chain_two[65], repeated[65];
+        assert(reaper_hmac_sha256_buffer(hmac_key, sizeof hmac_key,
+            "Hi There", 8u, digest));
+        assert(strcmp(digest, expected_hmac) == 0);
+        assert(reaper_hmac_sha256_verify(hmac_key, sizeof hmac_key,
+            "Hi There", 8u, expected_hmac));
+        assert(!reaper_hmac_sha256_verify(hmac_key, sizeof hmac_key,
+            "Hi There!", 9u, expected_hmac));
+
+        assert(reaper_audit_chain_next(expected_empty,
+            "apply.started", "req-1", "Ivan-VHS/Reaper", "feat/engine",
+            "0123456789012345678901234567890123456789", "", "", "started",
+            chain_one));
+        assert(reaper_audit_chain_next(chain_one,
+            "patch.staged", "req-1", "Ivan-VHS/Reaper", "feat/engine",
+            "0123456789012345678901234567890123456789", "src/main.rpr",
+            expected_abc, "staged", chain_two));
+        assert(reaper_audit_chain_next(expected_empty,
+            "apply.started", "req-1", "Ivan-VHS/Reaper", "feat/engine",
+            "0123456789012345678901234567890123456789", "", "", "started",
+            repeated));
+        assert(strcmp(chain_one, repeated) == 0);
+        assert(strcmp(chain_one, chain_two) != 0);
+        assert(!reaper_audit_chain_next("invalid", "event", "request", "repo",
+            "branch", "revision", "path", "digest", "details", repeated));
+    }
+
+    puts("native SHA-256 tests: SHA-256, HMAC-SHA-256 and audit-chain vectors passed");
     return 0;
 }
