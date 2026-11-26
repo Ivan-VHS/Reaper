@@ -6,6 +6,7 @@ export make display_name := "Secator"
 export make feature_key := "RPR-FWK-019"
 export make operation_keys := ["RPR-FWK-019-F01", "RPR-FWK-019-F02", "RPR-FWK-019-F03", "RPR-FWK-019-F04", "RPR-FWK-019-F05", "RPR-FWK-019-F06"]
 export make maturity := "reference-handler-v1-partial"
+export make handler_status := "reference-source-handler-v1"
 export make native_registry := "reaper.framework-cabi.v1"
 
 export craft operation_key(index) { yield operation_keys[index] }
