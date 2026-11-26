@@ -43,27 +43,50 @@ make cyclic_graph := [
 make cycle_result := Sentan["inspect"](cyclic_graph)
 assert(cycle_result[1] == "blocked", "dependency cycles must fail closed")
 
+make proposed_graph := [
+    "ArchitectureGraph", "1.0.0", "sample-app-next",
+    [
+        ["design.tokens", "foundation", []],
+        ["native.renderer", "platform", ["design.tokens"]],
+        ["application.shell", "product", ["native.renderer"]],
+        ["accessibility.audit", "quality", ["design.tokens"]]
+    ],
+    [
+        ["native.renderer", "design.tokens", "depends_on"],
+        ["application.shell", "native.renderer", "depends_on"],
+        ["accessibility.audit", "design.tokens", "depends_on"]
+    ]
+]
+
 make request := [
     "SourceEvolutionRequest", "sample-evolution",
     "sha256:baseline-pinned-by-caller",
     ["design", "compiler", "tests", "documentation"],
     12, 16384, 12, 60, true
 ]
+make observed := SOMO["evolve"](
+    current_profile, target_profile, graph, proposed_graph, request, "observe"
+)
+assert(observed[1] == "observed", "observe mode must return evidence")
+assert(size(observed[4]) == 0, "observe mode must not create a change plan")
+assert(observed[3][5][0] == "ArchitectureDelta", "observe mode must compare architecture graphs")
+
 make evolution := SOMO["evolve"](
-    current_profile, target_profile, graph, request, "propose"
+    current_profile, target_profile, graph, proposed_graph, request, "propose"
 )
 assert(evolution[0] == "EvolutionResult", "SOMO must return its contract")
 assert(evolution[1] == "proposed", "bounded proposal must be accepted")
+assert(evolution[3][3][0] == "ArchitectureDelta", "Sentan must provide an architecture delta")
 assert(evolution[4][0][0] == "SourceEvolutionPlan", "Kolir must provide a source plan")
 
 make apply_result := SOMO["evolve"](
-    current_profile, target_profile, graph, request, "apply"
+    current_profile, target_profile, graph, proposed_graph, request, "apply"
 )
 assert(apply_result[1] == "blocked", "apply must fail closed before an audited adapter exists")
 assert(contains(apply_result[2], "apply_adapter_not_implemented"), "SOMO must report the missing apply adapter")
 
 make unknown_mode := SOMO["evolve"](
-    current_profile, target_profile, graph, request, "untrusted"
+    current_profile, target_profile, graph, proposed_graph, request, "untrusted"
 )
 assert(unknown_mode[1] == "blocked", "unknown evolution modes must be rejected")
 
