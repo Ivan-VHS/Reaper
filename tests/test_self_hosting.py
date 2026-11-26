@@ -82,21 +82,5 @@ class SelfHostingBootstrapTests(unittest.TestCase):
     def test_reaper_written_lsp_positions_run_on_the_reference_runtime(self) -> None:
         self._run_selfhost_program("selfhost/lsp_positions.rpr", "SELFHOST_LSP_POSITIONS_OK")
 
-    def test_reaper_written_scope_model_runs_on_the_reference_runtime(self) -> None:
-        self._run_selfhost_program("selfhost/scopes.rpr", "SELFHOST_SCOPE_OK")
-
-    def test_reaper_written_generic_unifier_runs_on_the_reference_runtime(self) -> None:
-        self._run_selfhost_program("selfhost/generics.rpr", "SELFHOST_GENERICS_OK")
-
-    def test_reaper_written_dabi64_contract_runs_on_the_reference_runtime(self) -> None:
-        self._run_selfhost_program("selfhost/dabi64.rpr", "SELFHOST_DABI64_OK")
-
-    def test_reaper_written_hardware_contract_runs_on_the_reference_runtime(self) -> None:
-        self._run_selfhost_program("selfhost/hardware_contract.rpr", "SELFHOST_HARDWARE_CONTRACT_OK")
-
-    def test_reaper_written_lsp_positions_runs_on_the_reference_runtime(self) -> None:
-        self._run_selfhost_program("selfhost/lsp_positions.rpr", "SELFHOST_LSP_POSITIONS_OK")
-
-
 if __name__ == "__main__":
     unittest.main()
