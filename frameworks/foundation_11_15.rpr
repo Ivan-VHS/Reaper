@@ -136,7 +136,7 @@ export craft construction_validate_plan(plan) {
         when kind(step) != "list" or size(step) != 2 or kind(step[0]) != "text" or step[0] == "" or kind(step[1]) != "list" {
             yield false
         }
-        when contains(completed, step[0]) {
+        when contains(completed, step[0]) or size(unique(step[1])) != size(step[1]) {
             yield false
         }
         each dependency in step[1] {
