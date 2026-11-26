@@ -1,0 +1,308 @@
+# Seventh group of Reaper foundations.
+import "foundation_26_30.rpr" as previous
+
+export make FOUNDATION_SEVENTH_SCHEMA := "reaper.foundation.seventh.v1"
+export make FOUNDATION_SEVENTH_VERSION := 1
+
+export craft layer_catalog() {
+    yield [
+        ["frontend-boundary", "parser", "semantic-analysis", "syntax-tree.v1", "implemented"],
+        ["typed-lowering", "semantic-analysis", "canonical-ir", "typed-ir.v1", "partial"],
+        ["execution-boundary", "canonical-ir", "execution-engine", "canonical-ir.v1", "partial"],
+        ["host-boundary", "execution-engine", "host-adapters", "capability-request.v1", "partial"],
+        ["target-boundary", "host-adapters", "target-backend", "target-abi.v1", "partial"]
+    ]
+}
+
+craft layer_find(identifier) {
+    vary found := nothing
+    each layer in layer_catalog() {
+        when layer[0] == identifier {
+            change found := layer
+        }
+    }
+    yield found
+}
+
+export craft layer_validate_contract(contract) {
+    when kind(contract) != "list" or size(contract) != 5 {
+        yield false
+    }
+    yield contains(layer_catalog(), contract)
+}
+
+export craft layer_validate_chain(chain) {
+    when kind(chain) != "list" or size(chain) < 2 {
+        yield false
+    }
+    vary position := 0
+    each pair in chain {
+        when kind(pair) != "list" or size(pair) != 2 or kind(pair[0]) != "text" or kind(pair[1]) != "text" {
+            yield false
+        }
+        when position > 0 and chain[position - 1][1] != pair[0] {
+            yield false
+        }
+        change position := position + 1
+    }
+    yield true
+}
+
+export craft middleware_phases() {
+    yield ["before-lex", "after-parse", "before-execute", "after-execute", "on-error", "shutdown"]
+}
+
+export craft middleware_failure_modes() {
+    yield ["abort", "skip", "recover"]
+}
+
+export craft middleware_validate_hook(hook) {
+    when kind(hook) != "list" or size(hook) != 4 {
+        yield false
+    }
+    when kind(hook[0]) != "text" or hook[0] == "" or not contains(middleware_phases(), hook[1]) or kind(hook[2]) != "number" or hook[2] < 0 or hook[2] % 1 != 0 {
+        yield false
+    }
+    yield contains(middleware_failure_modes(), hook[3])
+}
+
+export craft middleware_validate_pipeline(pipeline) {
+    when kind(pipeline) != "list" {
+        yield false
+    }
+    vary identifiers := []
+    vary positions := []
+    each hook in pipeline {
+        when not middleware_validate_hook(hook) {
+            yield false
+        }
+        when contains(identifiers, hook[0]) or contains(positions, [hook[1], hook[2]]) {
+            yield false
+        }
+        change identifiers := push(identifiers, hook[0])
+        change positions := push(positions, [hook[1], hook[2]])
+    }
+    yield true
+}
+
+export craft middleware_order(pipeline) {
+    when not middleware_validate_pipeline(pipeline) {
+        yield nothing
+    }
+    vary order := []
+    each hook in pipeline {
+        change order := push(order, hook[0])
+    }
+    yield order
+}
+
+export craft integration_contracts() {
+    yield [
+        ["oplage.device-snapshot.v1", "json-file", "consumes", "implemented"],
+        ["reaper.oplage-comparison.v1", "json-file", "provides", "implemented"],
+        ["pytyliki.c-abi.v1", "native-ffi", "both", "opt-in"],
+        ["octa.pyramid.peer-mesh.v1", "shared-contract", "both", "implemented"],
+        ["not-applicable.v1", "none", "both", "not-applicable"]
+    ]
+}
+
+craft integration_find(identifier) {
+    vary found := nothing
+    each contract in integration_contracts() {
+        when contract[0] == identifier {
+            change found := contract
+        }
+    }
+    yield found
+}
+
+export craft integration_validate_envelope(envelope) {
+    when kind(envelope) != "list" or size(envelope) != 6 {
+        yield false
+    }
+    when kind(envelope[0]) != "text" or kind(envelope[1]) != "number" or kind(envelope[2]) != "number" or kind(envelope[3]) != "text" or kind(envelope[4]) != "number" or kind(envelope[5]) != "boolean" {
+        yield false
+    }
+    when envelope[1] % 1 != 0 or envelope[2] % 1 != 0 or envelope[1] < 0 or envelope[2] < 0 {
+        yield false
+    }
+    make contract := integration_find(envelope[0])
+    when contract == nothing or contract[3] == "not-applicable" {
+        yield false
+    }
+    when contract[3] == "opt-in" and envelope[5] != true {
+        yield false
+    }
+    when contract[3] != "opt-in" and envelope[5] != false {
+        yield false
+    }
+    when envelope[1] != 1 or envelope[2] > 0 or envelope[3] != "consumes" and envelope[3] != "provides" and envelope[3] != "both" {
+        yield false
+    }
+    when contract[2] != "both" and envelope[3] != "both" and envelope[3] != contract[2] {
+        yield false
+    }
+    yield envelope[4] >= 0 and envelope[4] <= 1048576 and envelope[4] % 1 == 0
+}
+
+export craft integration_validate_opt_in(identifier, enabled) {
+    make contract := integration_find(identifier)
+    when contract == nothing {
+        yield false
+    }
+    when contract[3] == "opt-in" {
+        yield enabled == true
+    }
+    yield enabled == false or enabled == true
+}
+
+export craft integration_transfer_policy() {
+    yield [
+        ["transport", "explicit JSON artifact or caller-selected ABI", "required"],
+        ["network", "no ambient network transport", "forbidden"],
+        ["provenance", "retain source and content digest", "required"],
+        ["privilege", "no driver mutation or privilege transfer", "forbidden"],
+        ["ffi", "trusted path and explicit opt-in", "required"]
+    ]
+}
+
+export craft container_profiles() {
+    yield [
+        ["reference-bounded", 67108864, 1000000, 64, "denied", "scoped", "implemented"],
+        ["test-simulator", 67108864, 1000000, 64, "denied", "none", "partial"],
+        ["explicit-network", 67108864, 1000000, 64, "explicit", "scoped", "planned"]
+    ]
+}
+
+craft container_find(identifier) {
+    vary found := nothing
+    each profile in container_profiles() {
+        when profile[0] == identifier {
+            change found := profile
+        }
+    }
+    yield found
+}
+
+export craft container_validate_profile(profile) {
+    when kind(profile) != "list" or size(profile) != 7 {
+        yield false
+    }
+    make known := container_find(profile[0])
+    when known == nothing or known[6] == "planned" {
+        yield false
+    }
+    yield profile == known
+}
+
+export craft container_validate_selection(identifier) {
+    make profile := container_find(identifier)
+    when profile == nothing {
+        yield false
+    }
+    yield profile[6] != "planned"
+}
+
+export craft container_boundary_rules() {
+    yield [
+        ["memory", "accounting limits only; not an OS memory sandbox"],
+        ["steps", "runtime execution quota"],
+        ["resources", "bounded handle inventory"],
+        ["network", "denied unless a separately reviewed host policy grants it"],
+        ["filesystem", "scoped host handles; no unrestricted root"],
+        ["privilege", "no elevation or kernel entry"]
+    ]
+}
+
+export craft host_lifecycle() {
+    yield ["construct", "initialize", "serve", "drain", "close", "destroy"]
+}
+
+export craft host_validate_lifecycle(trace) {
+    yield trace == host_lifecycle()
+}
+
+export craft host_known_capabilities() {
+    yield ["PROCESS_INSPECT", "PROCESS_CONTROL", "THREAD_CONTROL", "SYNC", "FS_HANDLE", "FS_READ", "FS_WRITE", "CLOCK", "NETWORK", "CRYPTO", "DESKTOP_WINDOW", "DESKTOP_DISPLAY", "DESKTOP_INPUT", "DESKTOP_SESSION", "DESKTOP_COMPOSITOR", "DESKTOP_GPU", "DESKTOP_SHELL", "DESKTOP_DISPLAY_ADMIN", "DESKTOP_SESSION_ADMIN", "DESKTOP_GPU_ADMIN"]
+}
+
+craft host_validate_capabilities(capabilities) {
+    when kind(capabilities) != "list" {
+        yield false
+    }
+    each capability in capabilities {
+        when not contains(host_known_capabilities(), capability) {
+            yield false
+        }
+    }
+    yield size(unique(capabilities)) == size(capabilities)
+}
+
+export craft host_contract_fields() {
+    yield ["host_id", "abi_version", "runtime_engine", "capabilities", "max_payload_bytes"]
+}
+
+export craft host_validate_descriptor(host) {
+    when kind(host) != "list" or size(host) != 5 {
+        yield false
+    }
+    when kind(host[0]) != "text" or host[0] == "" or kind(host[1]) != "number" or host[1] != 1 or host[1] % 1 != 0 {
+        yield false
+    }
+    when not contains(["treewalk", "canonical-vm"], host[2]) or not host_validate_capabilities(host[3]) {
+        yield false
+    }
+    yield kind(host[4]) == "number" and host[4] % 1 == 0 and host[4] > 0 and host[4] <= 1048576
+}
+
+export craft host_validate_grant_policy(requested, granted) {
+    when not host_validate_capabilities(requested) or not host_validate_capabilities(granted) {
+        yield false
+    }
+    each capability in granted {
+        when not contains(requested, capability) {
+            yield false
+        }
+    }
+    yield true
+}
+
+export craft host_boundary_rules() {
+    yield [
+        ["identity", "host-supplied trusted identity; clients cannot self-assert PID"],
+        ["authority", "minimum capability grant and explicit opt-in"],
+        ["lifecycle", "construct, initialize, serve, drain, close, destroy"],
+        ["dispatch", "versioned callback with exact payload bounds"],
+        ["failure", "fail closed and release owned resources"]
+    ]
+}
+
+export craft foundation_seventh_five() {
+    yield [
+        ["foundation.layer.v1", "Layer", "intermediate contracts between Reaper subsystems", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_31_35.md"],
+        ["foundation.middleware.v1", "Middleware", "ordered hook declarations and failure modes", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_31_35.md"],
+        ["foundation.integration-software.v1", "Integration Software", "versioned cross-project envelopes and adapter policy", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_31_35.md"],
+        ["foundation.container.v1", "Container", "bounded hosted and simulator execution profiles", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_31_35.md"],
+        ["foundation.host.v1", "Host", "embedding host lifecycle and capability grant boundary", "partial", "docs/FOUNDATIONAL_FRAMEWORKS_31_35.md"]
+    ]
+}
+
+export craft foundation_all_frameworks_35() {
+    vary rows := previous["foundation_all_frameworks_30"]()
+    each row in foundation_seventh_five() {
+        change rows := push(rows, row)
+    }
+    yield rows
+}
+
+export craft foundation_validate_catalog_35() {
+    make rows := foundation_all_frameworks_35()
+    vary identifiers := []
+    each row in rows {
+        when size(row) != 5 {
+            yield false
+        }
+        change identifiers := push(identifiers, row[0])
+    }
+    yield previous["foundation_validate_catalog_30"]() and size(rows) == 35 and size(unique(identifiers)) == 35
+}

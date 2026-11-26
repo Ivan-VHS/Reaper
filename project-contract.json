@@ -24,6 +24,26 @@
   },
   "capabilities": [
     {
+      "id": "foundations.seventh-five-frameworks",
+      "status": "partial",
+      "summary": "Adds executable Reaper contracts for intermediate subsystem layers, ordered middleware hooks, versioned cross-project integration envelopes, bounded container profiles and embedding-host capability/lifecycle validation; live middleware dispatch, IPC, OS isolation and host syscall services remain adapter-dependent.",
+      "evidence": [
+        "frameworks/foundation_31_35.rpr",
+        "frameworks/foundation_26_30.rpr",
+        "frameworks/foundation_21_25.rpr",
+        "frameworks/foundation_16_20.rpr",
+        "frameworks/foundation_11_15.rpr",
+        "frameworks/foundation_6_10.rpr",
+        "frameworks/foundation.rpr",
+        "docs/FOUNDATIONAL_FRAMEWORKS_31_35.md",
+        "examples/foundations_31_35.rpr",
+        "tests/test_foundational_frameworks_31_35.py",
+        "include/reaper/system.h",
+        "federation/octa-pyramid.v1.json",
+        "docs/SYSTEM_RUNTIME_ABI_V1.md"
+      ]
+    },
+    {
       "id": "foundations.sixth-five-frameworks",
       "status": "partial",
       "summary": "Adds executable Reaper contracts for target technology stacks, validated template inputs, a canonical Skeleton alias, reusable Reaper boilerplate snippets and an evidence-backed minimum language-core inventory; target builds, file generation and native typed lowering remain partial.",
