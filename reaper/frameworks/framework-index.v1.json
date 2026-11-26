@@ -3,8 +3,8 @@
   "total_target_framework_count": 330,
   "remaining_target_framework_count": 325,
   "existing_batch_01_source_count": 5,
-  "new_source_count": 20,
-  "remaining_source_count": 305,
+  "new_source_count": 30,
+  "remaining_source_count": 295,
   "domains": [
     {
       "number": 1,
@@ -51,16 +51,16 @@
       "slug": "06-basis",
       "name": "Базис",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "queued"
+      "source_frameworks": 5,
+      "state": "tests-first"
     },
     {
       "number": 7,
       "slug": "07-foundation",
       "name": "Основа",
       "framework_slots": 5,
-      "source_frameworks": 0,
-      "state": "queued"
+      "source_frameworks": 5,
+      "state": "tests-first"
     },
     {
       "number": 8,
@@ -940,6 +940,196 @@
       "negative": {
         "args": "([1, 3, 0], [2, 0, 0])",
         "output": "false"
+      }
+    },
+    {
+      "id": "06.integer-range",
+      "domain_number": 6,
+      "domain": "Базис",
+      "slug": "06-basis",
+      "name": "Integer Range Framework",
+      "role": "integer-range",
+      "path": "reaper/frameworks/06-basis/integer_range.rpr",
+      "api": "valid_basis_integer",
+      "purpose": "Check fixed-width signed/unsigned integer bounds for the requested bit width.",
+      "positive": {
+        "args": "(255, 8, false)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(256, 8, false)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "06.checked-add",
+      "domain_number": 6,
+      "domain": "Базис",
+      "slug": "06-basis",
+      "name": "Checked Addition Framework",
+      "role": "checked-add",
+      "path": "reaper/frameworks/06-basis/checked_add.rpr",
+      "api": "checked_basis_add",
+      "purpose": "Perform checked integer addition under an explicit signedness and width contract.",
+      "positive": {
+        "args": "(120, 7, 8, false)",
+        "output": "127"
+      },
+      "negative": {
+        "args": "(250, 10, 8, false)",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "06.checked-multiply",
+      "domain_number": 6,
+      "domain": "Базис",
+      "slug": "06-basis",
+      "name": "Checked Multiplication Framework",
+      "role": "checked-multiply",
+      "path": "reaper/frameworks/06-basis/checked_multiply.rpr",
+      "api": "checked_basis_multiply",
+      "purpose": "Perform checked integer multiplication and reject width overflow.",
+      "positive": {
+        "args": "(12, 10, 8, false)",
+        "output": "120"
+      },
+      "negative": {
+        "args": "(16, 16, 8, false)",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "06.ratio",
+      "domain_number": 6,
+      "domain": "Базис",
+      "slug": "06-basis",
+      "name": "Ratio Normalization Framework",
+      "role": "ratio",
+      "path": "reaper/frameworks/06-basis/ratio.rpr",
+      "api": "normalize_basis_ratio",
+      "purpose": "Reduce an integer ratio by GCD and normalize denominator sign.",
+      "positive": {
+        "args": "(-6, -8)",
+        "output": "[3, 4]"
+      },
+      "negative": {
+        "args": "(5, 0)",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "06.alignment",
+      "domain_number": 6,
+      "domain": "Базис",
+      "slug": "06-basis",
+      "name": "Address Alignment Framework",
+      "role": "alignment",
+      "path": "reaper/frameworks/06-basis/alignment.rpr",
+      "api": "align_basis_address",
+      "purpose": "Round an address upward to a validated power-of-two alignment within 64-bit address space.",
+      "positive": {
+        "args": "(4097, 4096)",
+        "output": "8192"
+      },
+      "negative": {
+        "args": "(4097, 3)",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "07.boot-order",
+      "domain_number": 7,
+      "domain": "Основа",
+      "slug": "07-foundation",
+      "name": "Boot Order Framework",
+      "role": "boot-order",
+      "path": "reaper/frameworks/07-foundation/boot_order.rpr",
+      "api": "valid_foundation_boot_order",
+      "purpose": "Verify a caller-supplied startup ordering against all dependency edges.",
+      "positive": {
+        "args": "(4, [0, 1, 2, 3], [[0, 2], [1, 2], [2, 3]])",
+        "output": "true"
+      },
+      "negative": {
+        "args": "(4, [0, 2, 1, 3], [[0, 2], [1, 2], [2, 3]])",
+        "output": "false"
+      }
+    },
+    {
+      "id": "07.bootstrap-order",
+      "domain_number": 7,
+      "domain": "Основа",
+      "slug": "07-foundation",
+      "name": "Bootstrap Order Framework",
+      "role": "bootstrap-order",
+      "path": "reaper/frameworks/07-foundation/bootstrap_order.rpr",
+      "api": "foundation_bootstrap_order",
+      "purpose": "Produce a deterministic topological startup order using the smallest ready step first.",
+      "positive": {
+        "args": "(4, [[0, 2], [1, 2], [2, 3]])",
+        "output": "[0, 1, 2, 3]"
+      },
+      "negative": {
+        "args": "(2, [[0, 1], [1, 0]])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "07.preflight",
+      "domain_number": 7,
+      "domain": "Основа",
+      "slug": "07-foundation",
+      "name": "Preflight Gate Framework",
+      "role": "preflight",
+      "path": "reaper/frameworks/07-foundation/preflight.rpr",
+      "api": "valid_foundation_preflight",
+      "purpose": "Validate named preflight checks and enforce a minimum passing count.",
+      "positive": {
+        "args": "([[\"disk\", true], [\"memory\", true], [\"network\", false]], 2)",
+        "output": "true"
+      },
+      "negative": {
+        "args": "([[\"disk\", true], [\"memory\", false]], 2)",
+        "output": "false"
+      }
+    },
+    {
+      "id": "07.rollback",
+      "domain_number": 7,
+      "domain": "Основа",
+      "slug": "07-foundation",
+      "name": "Rollback Plan Framework",
+      "role": "rollback",
+      "path": "reaper/frameworks/07-foundation/rollback.rpr",
+      "api": "foundation_rollback_plan",
+      "purpose": "Generate reverse-order compensation steps from a unique completed-step journal.",
+      "positive": {
+        "args": "([\"create\", \"configure\", \"start\"])",
+        "output": "[start, configure, create]"
+      },
+      "negative": {
+        "args": "([\"create\", \"create\"])",
+        "output": "[]"
+      }
+    },
+    {
+      "id": "07.checkpoint",
+      "domain_number": 7,
+      "domain": "Основа",
+      "slug": "07-foundation",
+      "name": "Checkpoint Selector Framework",
+      "role": "checkpoint",
+      "path": "reaper/frameworks/07-foundation/checkpoint.rpr",
+      "api": "foundation_latest_checkpoint",
+      "purpose": "Select the highest-numbered valid checkpoint after validating the checkpoint journal.",
+      "positive": {
+        "args": "([[1, \"valid\"], [2, \"invalid\"], [3, \"valid\"]])",
+        "output": "[3, valid]"
+      },
+      "negative": {
+        "args": "([[1, \"invalid\"], [2, \"rejected\"]])",
+        "output": "[]"
       }
     }
   ]
