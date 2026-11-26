@@ -151,10 +151,10 @@ export craft software_framework_validate_manifest(manifest) {
     when kind(manifest) != "list" or size(manifest) != 7 {
         yield false
     }
-    when manifest[0] != SOFTWARE_FRAMEWORK_SCHEMA or manifest[1] != SOFTWARE_FRAMEWORK_VERSION or manifest[2] > SOFTWARE_FRAMEWORK_MINOR or manifest[2] < 0 {
+    when manifest[0] != SOFTWARE_FRAMEWORK_SCHEMA or kind(manifest[1]) != "number" or kind(manifest[2]) != "number" or manifest[1] != SOFTWARE_FRAMEWORK_VERSION or manifest[1] % 1 != 0 or manifest[2] % 1 != 0 or manifest[2] > SOFTWARE_FRAMEWORK_MINOR or manifest[2] < 0 {
         yield false
     }
-    when manifest[3] != software_framework_id() or not software_framework_validate_load_order(manifest[4]) {
+    when manifest[3] != software_framework_id() or kind(manifest[4]) != "list" or not software_framework_validate_load_order(manifest[4]) {
         yield false
     }
     when kind(manifest[5]) != "list" or kind(manifest[6]) != "text" or manifest[6] != "partial" {
