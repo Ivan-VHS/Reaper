@@ -28,8 +28,8 @@ class FoundationalFrameworkTests(unittest.TestCase):
         self.assertEqual(self.run_expression('size(foundation["foundation_frameworks"]())'), ["5"])
         self.assertEqual(self.run_expression('foundation["foundation_validate_catalog"]()'), ["true"])
         self.assertEqual(
-            self.run_expression('foundation["foundation_find_framework"]("foundation.scaffold.v1")[1]'),
-            ["Scaffold"],
+            self.run_expression('foundation["foundation_find_framework"]("architecture.framework-frame.v1")[1]'),
+            ["Framework frame"],
         )
         self.assertEqual(self.run_expression('size(foundation["foundation_framework_ids"]())'), ["5"])
 
