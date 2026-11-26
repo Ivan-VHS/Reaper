@@ -94,11 +94,12 @@
     {
       "id": "selfhosting.frontend-bootstrap",
       "status": "partial",
-      "summary": "Reaper-written tokenizer, Pratt expression parser and statement parser cover a staged frontend subset; canonical AST parity and compiler self-rebuild remain incomplete.",
+      "summary": "Reaper-written tokenizer and statement/expression frontend include partial typed-structure and platform-declaration parsing, explicit target-profile validation and scalar C-ABI record layout; the bootstrap is not yet a complete self-hosting compiler.",
       "evidence": [
         "selfhost/lexer.rpr",
         "selfhost/parser.rpr",
         "selfhost/program_parser.rpr",
+        "selfhost/type_declarations.rpr",
         "tests/test_self_hosting.py"
       ]
     },
