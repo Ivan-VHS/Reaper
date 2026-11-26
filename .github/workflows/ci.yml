@@ -67,6 +67,10 @@ jobs:
           grep -F "PASS observe can read source" plague-smoke.log
           grep -F "PASS propose cannot write a branch" plague-smoke.log
           grep -F "PASS apply can write a topic branch" plague-smoke.log
+          grep -F "PASS default branch writes are denied" plague-smoke.log
+          grep -F "PASS merge capability is disabled" plague-smoke.log
+          grep -F "PASS release capability is disabled" plague-smoke.log
+          grep -F "PASS scope expansion is denied" plague-smoke.log
           grep -F "PASS merge is denied" plague-smoke.log
           grep -F "PASS secret access is denied" plague-smoke.log
           grep -F "PASS untrusted execution is denied" plague-smoke.log
