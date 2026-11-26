@@ -4,12 +4,92 @@
 #include <stdio.h>
 #include <string.h>
 
+static const char *EXPECTED_NAMES[] = {
+    "Jevron",
+    "Jarfen",
+    "Trexjon",
+    "Voljmer",
+    "Reijen",
+    "Drajen",
+    "Spijron",
+    "Vexjor",
+    "Krejndar",
+    "Morjen",
+    "Tarjen",
+    "Flixjen",
+    "Jorjan",
+    "Brejven",
+    "Keldjor",
+    "Vajpern",
+    "Grejmor",
+    "Teljorn",
+    "Sajfern",
+    "Deljen",
+    "Roxjon",
+    "Meljorn",
+    "Kejron",
+    "Fenjer",
+    "Vorjen",
+    "Trajven",
+    "Skorjen",
+    "Beljtor",
+    "Nexjen",
+    "Derjon",
+    "Kreijen",
+    "Veljkor",
+    "Tesjen",
+    "Morjden",
+    "Zefirn",
+    "Rexjen",
+    "Kajldor",
+    "Feljin",
+    "Vorjten",
+    "Trexjen",
+    "Seljven",
+    "Drajgon",
+    "Kesjin",
+    "Brejden",
+    "Neljkor",
+    "Tevjin",
+    "Merjok",
+    "Jorven",
+    "Rejnhar",
+    "Keljven",
+    "Fendjin",
+    "Vajden",
+    "Trevjorn",
+    "Skorjvin",
+    "Deljmor",
+    "Krejns",
+    "Veljin",
+    "Tesjendor",
+    "Morvajn",
+    "Zexjen",
+    "Rejnor",
+    "Kajlven",
+    "Fengjin",
+    "Vorjden",
+    "Trejns",
+    "Seljkorn"
+};
+
 static void catalogue_is_complete_and_well_formed(void) {
     assert(reaper_framework_catalog_count() == 66U);
     assert(reaper_framework_catalog_validate());
     assert(reaper_framework_catalog_at(0U) != NULL);
     assert(reaper_framework_catalog_at(65U) != NULL);
     assert(reaper_framework_catalog_at(66U) == NULL);
+}
+
+
+static void canonical_names_preserve_the_supplied_order(void) {
+    assert(sizeof(EXPECTED_NAMES) / sizeof(EXPECTED_NAMES[0]) == 66U);
+    for (size_t index = 0U; index < 66U; ++index) {
+        const ReaperFrameworkSpec *spec = reaper_framework_catalog_at(index);
+        assert(spec != NULL);
+        assert(strcmp(spec->name, EXPECTED_NAMES[index]) == 0);
+        assert(strcmp(spec->id, EXPECTED_NAMES[index]) != 0);
+    }
 }
 
 static void every_framework_has_a_unique_latin_name(void) {
@@ -83,11 +163,12 @@ static void invalid_names_and_evidence_bits_fail_closed(void) {
 
 int main(void) {
     catalogue_is_complete_and_well_formed();
+    canonical_names_preserve_the_supplied_order();
     every_framework_has_a_unique_latin_name();
     lookup_accepts_name_and_identifier_case_insensitively();
     missing_evidence_blocks_assessment();
     complete_evidence_requests_human_review_only();
     invalid_names_and_evidence_bits_fail_closed();
-    puts("native framework tests: 6 groups passed");
+    puts("native framework tests: 7 groups passed");
     return 0;
 }
