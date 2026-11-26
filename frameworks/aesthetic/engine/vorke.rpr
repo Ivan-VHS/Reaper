@@ -24,6 +24,12 @@ export craft valid_flag(value) {
     yield kind(value) == "boolean"
 }
 
+export craft valid_fingerprint(value) {
+    # Shape validation only. The host adapter must verify the digest against
+    # the exact source revision before any repository mutation is authorized.
+    yield kind(value) == "text" and size(value) == 71 and starts_with(value, "sha256:")
+}
+
 export craft valid_color(value) {
     # Strict hexadecimal syntax is also enforced by profile.v1.schema.json.
     yield valid_text(value, 7) and size(value) == 7 and starts_with(value, "#")
