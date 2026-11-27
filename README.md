@@ -55,6 +55,6 @@ The .rpr reference runtime, partial native C17 work, developer tools and externa
 - [Implementation roadmap](docs/IMPLEMENTATION_ROADMAP.md)
 - [Kora standard-library helpers](docs/KORA.md)
 - [Documentation index](docs/README.md)
-- [Shared ecosystem standards](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/SHARED_STANDARDS.md)
+- [Shared ecosystem standards](https://github.com/Ivan-VHS/DAK/blob/main/docs/SHARED_STANDARDS.md)
 
 [Contributing](CONTRIBUTING.md) · [Security policy](SECURITY.md) · [Apache-2.0](LICENSE)

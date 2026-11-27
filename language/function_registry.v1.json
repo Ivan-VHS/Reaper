@@ -1,6 +1,6 @@
 {
   "schema": "most.function-registry/v1",
-  "title": "MOST Function Registry 666",
+  "title": "MOST Function Contract Registry",
   "edition": "0.2-draft",
   "generated_on": "2026-11-20",
   "repository": "Ivan-VHS/Reaper",
@@ -15353,7 +15353,7 @@
       "architecture_category": "language-compiler"
     }
   ],
-  "category_scheme": "duckos-reaper-architecture/v1",
+  "category_scheme": "dak-reaper-architecture/v1",
   "architecture_categories": [
     {
       "id": "kernel-runtime",
@@ -15364,7 +15364,7 @@
         "MOST-EXEC"
       ],
       "description": "Физическая и виртуальная память, регионы, аллокаторы, управление задачами, потоки, атомики, блокировки, очереди и IPC-примитивы.",
-      "primary_owner": "DuckOS kernel and Reaper systems runtime"
+      "primary_owner": "DAK kernel and Reaper systems runtime"
     },
     {
       "id": "language-compiler",
@@ -15388,7 +15388,7 @@
         "MOST-UI-BASE"
       ],
       "description": "Компоненты UI, сигналы, рендеринг, состояние интерфейса, доступность, жесты, offline UI и интерактивность.",
-      "primary_owner": "DuckOS Mora and native desktop"
+      "primary_owner": "DAK Mora and native desktop"
     },
     {
       "id": "network-distributed",
@@ -15398,7 +15398,7 @@
         "MOST-NET-BASE"
       ],
       "description": "Сетевые кадры и сокеты, ограниченные потоки, таймауты, идемпотентность, трассировка, backpressure и распределённые сообщения.",
-      "primary_owner": "DuckOS network services and Reaper adapters"
+      "primary_owner": "DAK network services and Reaper adapters"
     },
     {
       "id": "storage-data",
@@ -15409,7 +15409,7 @@
         "MOST-DATA"
       ],
       "description": "Файловые пути и потоки, схемы и миграции, форматы сериализации, кодеки, текст, таблицы, индексы и потоковая обработка данных.",
-      "primary_owner": "DuckOS storage and Reaper standard library"
+      "primary_owner": "DAK storage and Reaper standard library"
     },
     {
       "id": "security-resilience",
@@ -15419,7 +15419,7 @@
         "MOST-SEC"
       ],
       "description": "Capabilities, политики доступа, аудит, криптография, валидация границ, лимиты ресурсов, отказоустойчивость и восстановление.",
-      "primary_owner": "DuckOS security and BAV"
+      "primary_owner": "DAK security and BAV"
     },
     {
       "id": "ecosystem-tooling",

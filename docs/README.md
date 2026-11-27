@@ -6,7 +6,7 @@ Start with the [project README](../README.md) for installation, first commands a
 - [NEXUS system-service boundaries](NEXUS_SYSTEM_SERVICE_BOUNDARIES_V1.md) — service ownership and evidence limits.
 
 - [Features and maturity](FEATURES.md)
-- [Psychoporter 666 function categories](FUNCTION_CATEGORIES_666.md)
+- [Psychoporter Engineering Code function categories](FUNCTION_CATEGORIES_666.md)
 - [Architecture](ARCHITECTURE.md)
 - [Reaper System Features v1](REAPER_SYSTEM_FEATURES_V1.md) — ten bounded systems-language contracts and their implementation maturity.
 - [System Features ADR](ADR_SYSTEM_FEATURES_V1.md) — native ABI decisions and language integration gates.
@@ -28,7 +28,7 @@ Start with the [project README](../README.md) for installation, first commands a
 ## Browse by topic
 
 - [Language and toolchain](clusters/language-toolchain.md)
-- [Psychoporter 666 function categories](FUNCTION_CATEGORIES_666.md)
+- [Psychoporter Engineering Code function categories](FUNCTION_CATEGORIES_666.md)
 - [Architecture and systems](clusters/architecture-systems.md)
 - [Studio and IDE](clusters/studio-ide-ui.md)
 - [Quality and evidence](clusters/quality-evidence.md)
@@ -37,7 +37,7 @@ Start with the [project README](../README.md) for installation, first commands a
 
 ## Shared rules
 
-- [Psychoporter 666 coding and human-layer standard](PSYCHOPORTER_666.md)
+- [Psychoporter Engineering Code coding and human-layer standard](PSYCHOPORTER_666.md)
 - [Documentation standard](UNIFIED_DOCUMENTATION_STANDARD.md)
 - [Engineering evolution framework](ENGINEERING_EVOLUTION_FRAMEWORK.md)
 - [Repository evolution directives](REPOSITORY_EVOLUTION_DIRECTIVES.md)

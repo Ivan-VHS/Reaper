@@ -6,9 +6,9 @@
 
 ## Role
 
-Reaper owns the programming-language and toolchain domain: source semantics, compiler/tooling, deterministic policy evaluation, bounded workflows and explicit integration adapters. It is not renamed to `KernelCore` and is not treated as the DuckOS kernel.
+Reaper owns the programming-language and toolchain domain: source semantics, compiler/tooling, deterministic policy evaluation, bounded workflows and explicit integration adapters. It is not renamed to `KernelCore` and is not treated as the DAK kernel.
 
-DuckOS remains the OS and privileged native boundary. Reaper supplies language and policy contracts used by DuckOS where explicitly integrated. The current Python reference runtime, partial native C17 track and other toolchain components retain their independently documented maturity; a policy contract is not evidence of native kernel enforcement.
+DAK remains the OS and privileged native boundary. Reaper supplies language and policy contracts used by DAK where explicitly integrated. The current Python reference runtime, partial native C17 track and other toolchain components retain their independently documented maturity; a policy contract is not evidence of native kernel enforcement.
 
 ## NEXUS vocabulary
 
@@ -28,7 +28,7 @@ Keep the current OCTA-8 topology and existing contracts authoritative:
 | OPlague | `oplage.device-snapshot.v1`, GPU telemetry snapshots | Validate schema, provenance, bounds and digest; produce a comparison/evidence report |
 | Pytyliki | `pytyliki.c-abi.v1` | Call only through an explicitly trusted library path and caller-owned buffers |
 | VentuSample | `ventusample.pack.v1` and offline render metadata | Read/validate manifests as artifacts; do not load audio plugins or claim runtime coupling |
-| DuckOS | Reaper policy contracts and bounded JSON workflows | Provide deterministic policy semantics; privileged effects remain DuckOS-owned |
+| DAK | Reaper policy contracts and bounded JSON workflows | Provide deterministic policy semantics; privileged effects remain DAK-owned |
 
 Do not create a second message bus, duplicate report envelope or implicit service discovery runtime. Preserve opt-in semantics and permit a peer to be absent.
 
@@ -47,7 +47,7 @@ Do not create a second message bus, duplicate report envelope or implicit servic
 - **Stage 0.2:** add compatibility fixtures for current OCTA-8 peers and schema-version failures.
 - **Stage 0.3:** expose read-only federation inspection to the future Nexus Hub through validated JSON output.
 - **Stage 1.0:** consider a stable Reaper service/capability descriptor only when two real consumers require it.
-- **Stage 2.0:** any native scheduler or host bridge requires an independent design, native tests and DuckOS integration evidence.
+- **Stage 2.0:** any native scheduler or host bridge requires an independent design, native tests and DAK integration evidence.
 
 ## Acceptance
 

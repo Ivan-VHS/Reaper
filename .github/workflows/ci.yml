@@ -39,7 +39,7 @@ jobs:
         run: python -m unittest discover -s tests -p "test_markdown_inventory.py" -v
       - name: Validate Duck Sovereign Canon palette
         run: python tools/validate_visual_canon.py reaper/ui_theme.py
-      - name: Validate MOST 666 function registry
+      - name: Validate MOST function contract registry
         run: python tools/validate_most_functions.py
       - name: Validate engineering evolution contract
         run: python tools/validate_engineering_evolution.py

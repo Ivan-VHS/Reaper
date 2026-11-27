@@ -1,6 +1,6 @@
 # Jora — Reaper-first application factory and unified store
 
-**Projects:** Reaper / DuckOS  
+**Projects:** Reaper / DAK  
 **Contract:** \`reaper.jora.application.v1\`  
 **Status:** first generator increment implemented; 21 catalogue packs remain specification-only; the 16-component HARVEST pack includes real Reaper source and versioned schemas, with runtime maturity still unverified
 
@@ -27,7 +27,7 @@ Jora is the platform identity, never the generated application name. The naming 
 - descriptive: `Workspace for writing, audio editing & translation`;
 - formula: `Text + Audio + Translation Workspace`.
 
-The request may supply an explicit `name`; otherwise the selected `name_style` (`compact`, `balanced`, `descriptive` or `formula`) chooses a deterministic candidate. Every candidate and final application name is validated against the bound `application_name_policy`; any case or compatibility-normalized occurrence of `Jora` is rejected. The policy is carried by DuckOS in the request, revalidated by Reaper, and recorded in the generated manifest. Platform metadata, graph nodes and store labels may still identify Jora because they are not application product names. The manifest preserves the independent application name, platform metadata, semantic descriptors, selected label and all validated suggestions.
+The request may supply an explicit `name`; otherwise the selected `name_style` (`compact`, `balanced`, `descriptive` or `formula`) chooses a deterministic candidate. Every candidate and final application name is validated against the bound `application_name_policy`; any case or compatibility-normalized occurrence of `Jora` is rejected. The policy is carried by DAK in the request, revalidated by Reaper, and recorded in the generated manifest. Platform metadata, graph nodes and store labels may still identify Jora because they are not application product names. The manifest preserves the independent application name, platform metadata, semantic descriptors, selected label and all validated suggestions.
 
 ## Composition graph engine
 
@@ -53,8 +53,8 @@ The complete graph set is embedded in `jora.app.json` and exported separately as
 ## Repository ownership
 
 - **Reaper** owns request validation, the component catalogue, dependency resolution, product composition, deterministic naming, Reaper source scaffolding, localization bundle generation and the Jora CLI.
-- **DuckOS** owns the desktop/store surface, package trust policy, approval flow and future native installation/update/rollback adapters.
-- **Mora** is the DuckOS desktop surface. The Jora marketplace replaces the product identity of the former Mora Commons catalogue while preserving its existing desktop application ID.
+- **DAK** owns the desktop/store surface, package trust policy, approval flow and future native installation/update/rollback adapters.
+- **Mora** is the DAK desktop surface. The Jora marketplace replaces the product identity of the former Mora Commons catalogue while preserving its existing desktop application ID.
 - Generated applications are user-space projects. They do not become kernel modules.
 
 ## Composition pipeline
@@ -170,7 +170,7 @@ A catalogue entry, scaffold generation or successful JSON validation is not evid
 3. Implement document models and local project storage.
 4. Deliver actual text editing, audio editing and translation modules.
 5. Add Java/Kotlin/TypeScript/native emitters with differential tests before advertising them as generated targets.
-6. Connect the store to a DuckOS native package manager only after signature verification, process isolation, capability enforcement and rollback are implemented.
+6. Connect the store to a DAK native package manager only after signature verification, process isolation, capability enforcement and rollback are implemented.
 
 
 ## Expanded capability registry and bounded composition

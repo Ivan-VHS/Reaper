@@ -1,6 +1,6 @@
-# MOST / Reaper function registry — 666 contracts
+# MOST / Reaper Function Contract Registry
 
-The registry contains **147 existing specifications + 519 proposals = 666 API contracts**.
+The registry contains **147 existing specifications + 519 proposals = complete API contract registry**.
 
 | State | Meaning |
 |---|---|
@@ -9,13 +9,13 @@ The registry contains **147 existing specifications + 519 proposals = 666 API co
 | Proposed | future acceptance target |
 | Deprecated | retained ID, no new use |
 
-A registry entry is not an implemented function. Use `language/functions_666.json` and the implementation-status ledger as the machine-readable source.
+A registry entry is not an implemented function. Use `language/function_registry.v1.json` and the implementation-status ledger as the machine-readable source.
 
 ## Architecture category view
 
 The registry now assigns every stable function ID to exactly one of seven architecture categories. The original 13 MOST groups, their order ranges and their names remain unchanged.
 
-See [Psychoporter 666 — function categories](FUNCTION_CATEGORIES_666.md) for the complete grouped list of all 666 entries.
+See [Psychoporter Engineering Code — function categories](FUNCTION_CATEGORIES_666.md) for the complete grouped list of all 666 entries.
 
 | Category | Count |
 |---|---:|
