@@ -10,7 +10,7 @@ from reaper.game_launch_contract import GameLaunchContractError, build_game_laun
 class GameLaunchContractTests(unittest.TestCase):
     def profile(self):
         return {
-            "schema": "duckos.game-launch-profile.v1",
+            "schema": "dakos.game-launch-profile.v1",
             "id": "classic-title",
             "name": "Classic Title",
             "executable": "game.exe",

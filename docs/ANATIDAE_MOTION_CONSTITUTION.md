@@ -1,6 +1,6 @@
 # Anatidae Motion Constitution — shared desktop profile
 
-This profile translates the supplied Pond / Duck Constitution visual language into the four native workstations. It is a design-system integration, not a product rename: each application keeps its own information architecture, product vocabulary and toolkit.
+This profile translates the supplied Pond / DAK Constitution visual language into the four native workstations. It is a design-system integration, not a product rename: each application keeps its own information architecture, product vocabulary and toolkit.
 
 ## Visual tokens
 
@@ -38,13 +38,13 @@ The paddle curve is clamped to each native property's legal range. It must not m
 
 ## Pond-specific motifs
 
-The supplied duck bob, tail waggle, wave glide, ripples, accent particles, floating feathers and parallax layers are treated as a reusable *brand-motion vocabulary*:
+The supplied dak bob, tail waggle, wave glide, ripples, accent particles, floating feathers and parallax layers are treated as a reusable *brand-motion vocabulary*:
 
 - Use bobbing and tail motion only for a mascot or illustration in a welcome, empty or showcase surface. Keep the movement small (about 6 px and 2 degrees).
 - A water ripple may acknowledge one deliberate primary action; it must not obscure labels, values, keyboard focus or hit targets.
 - Feather particles and voice bursts are optional showcase effects, not permanent UI chrome. They require an explicit pause/disable path.
 - Parallax is restricted to a low-contrast landing/hero background, with a small bounded offset. Never place moving layers behind editors, tables, plots, device inventories, logs or precision controls.
-- Duck-specific terminology and illustrations are not forced into product features. Reuse the physical motion principles, not the pond's fictional legal content.
+- DAK-specific terminology and illustrations are not forced into product features. Reuse the physical motion principles, not the pond's fictional legal content.
 
 ## Accessibility, performance and lifecycle
 
