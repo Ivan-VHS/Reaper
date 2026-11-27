@@ -50,7 +50,7 @@ each item in 2..0 {
     def test_registers_are_numeric_at_runtime(self) -> None:
         with self.assertRaisesRegex(ReaperRuntimeError, "'reg' requires a numeric value"):
             Interpreter(output=lambda _line: None).run('reg status := "ready"')
-        with self.assertRaisesRegex(ReaperRuntimeError, "only accepts numeric values"):
+        with self.assertRaisesRegex(ReaperRuntimeError, "only accepts finite numeric values"):
             Interpreter(output=lambda _line: None).run('reg count := 1\nchange count := "one"')
 
     def test_register_and_range_types_are_checked(self) -> None:
