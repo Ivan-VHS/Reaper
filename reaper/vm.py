@@ -7,7 +7,7 @@ from typing import Any
 from .debugger import DebuggerStopped
 from .errors import ReaperRuntimeError
 from .ir import CanonicalIR, IRFunction, IRInstruction, verify
-from .runtime import Builtin, Environment
+from .runtime import Builtin, Environment, _is_register_number
 from .lexer import Token
 
 
@@ -118,8 +118,8 @@ class VirtualMachine:
                 environment.define(variable, self.interpreter.memory.track(value), mutable)
             elif name == "DEFINE_REGISTER":
                 value = stack.pop()
-                if not self.interpreter._is_number(value):
-                    raise self.interpreter._error(token, "'reg' requires a numeric value")
+                if not _is_register_number(value):
+                    raise self.interpreter._error(token, "'reg' requires a finite numeric value")
                 environment.define(instruction.argument, self.interpreter.memory.track(value), mutable=True, register=True)
             elif name == "ASSIGN":
                 environment.change(
