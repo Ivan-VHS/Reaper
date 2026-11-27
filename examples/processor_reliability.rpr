@@ -140,6 +140,13 @@ make subsystems := core["processor_subsystem_matrix"]()
 assert(size(subsystems) == 9, "all requested processor/RAS subsystems have a Reaper contract")
 assert(core["processor_subsystem_entry"]("ap-smp")[2] == "reaper-policy-implemented", "AP/SMP policy is implemented in Reaper")
 assert(core["processor_subsystem_entry"]("physical-material-repair")[2] == "not-software-solvable", "physical repair is not misrepresented")
+assert(core["processor_subsystem_entry"]("apic-ipi-timer")[2] == "reaper-policy-implemented", "APIC and timer policy is implemented")
+assert(core["processor_subsystem_entry"]("mca-msr")[2] == "reaper-policy-implemented", "MCA handling policy is implemented")
+assert(core["processor_subsystem_entry"]("page-recovery")[2] == "reaper-policy-implemented", "page recovery policy is implemented")
+assert(core["processor_subsystem_entry"]("linux-edac-mce")[2] == "provider-contract-implemented", "Linux EDAC adapter contract is present")
+assert(core["processor_subsystem_entry"]("apple-swift")[2] == "abi-contract-implemented", "Apple Swift ABI contract is present")
+assert(core["processor_subsystem_entry"]("rust-native-ras")[2] == "abi-contract-implemented", "Rust ABI contract is present")
+assert(core["processor_subsystem_entry"]("typescript-diagnostics")[2] == "schema-contract-implemented", "TypeScript diagnostics schema is present")
 
 make ap_ready := ["reaper.ap-start.v1", "boot-1", 1, 2, "ready-to-start", true, true, true, true, true, true, 7]
 make ap_transition := core["ap_startup_transition"](ap_ready, "startup-sent")
@@ -177,6 +184,14 @@ assert(core["page_recovery_decision"](poisoned_page, mca_event, true) == "admit-
 assert(core["page_recovery_decision"](["reaper.page-recovery.v1", "page-17", 65536, "poisoned", true, true, 0, "page-18", true, 7, 9000], mca_event, true) == "defer-pinned-or-referenced-page", "pinned pages cannot be offlined")
 make memory_adapter := ["reaper.processor-adapter.v1", "duckos-memory-manager", "page-recovery", "duckos", "c", "duckos-memory-recovery-v1", "kernel-control", true, ["page-quarantine", "page-replace"]]
 assert(core["page_recovery_admission"](poisoned_page, mca_event, true, memory_adapter) == "admit-request-to-native-adapter", "page replacement is owned by the kernel memory manager")
+
+assert(core["processor_adapter_admits"](linux_provider, "linux-edac-mce", "linux", "event-query", "read-only") == "adapter-not-attached", "Linux provider remains unavailable until a native reader is installed")
+assert(core["processor_adapter_admits"](apple_provider, "apple-ras", "macos", "event-query", "read-only") == "adapter-not-attached", "Swift adapter remains unavailable until a native reader is installed")
+assert(core["mca_msr_read_admission"](1040, 4, true, mca_adapter) == "reject-msr-not-allowlisted", "MCA reads cannot exceed the discovered bank count")
+assert(core["ap_startup_readiness"](["reaper.ap-start.v1", "boot-1", 1, 2, "ready-to-start", true, true, false, true, true, true, 7], true, 7) == "reject-incomplete-per-cpu-startup-resources", "AP cannot start without its private stack")
+assert(core["apic_ipi_decision"](["reaper.apic-route.v1", 0, 1, 64, "reschedule", "edge", true, 7], true, true, 7, ipi_adapter) == "reject-masked-ipi-route", "masked IPI routes are rejected")
+assert(core["apic_ipi_decision"](apic_route, true, true, 8, ipi_adapter) == "reject-stale-topology-generation", "stale IPI topology generations are rejected")
+assert(core["page_recovery_decision"](poisoned_page, mca_event, false) == "reject-no-rollback-path", "page recovery requires rollback readiness")
 
 
 make linux_edac_before := ["linux.edac.counter.v1", "boot-1", "linux-edac-mce", "mc0", "dimm0", 10, 1, 1000, "sysfs:mc0/dimm0"]
