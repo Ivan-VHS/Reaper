@@ -798,7 +798,7 @@ export craft run_construct(state, spec) {
         change triggered := repair[3]
         make local_index := spec[2] % size(next[17])
         make local_cost := 0
-        when spec[4] > 0 { change local_cost := 1 }
+        when spent > 0 { change local_cost := 1 }
         make local := reserve_spend(next[17], local_index, local_cost)
         when not local[0] { yield [false, state, [], local[4]] }
         change next := state_put(next, 17, local[1])
@@ -882,7 +882,7 @@ export craft replay_validate(records, expected_checksum) {
     vary index := 0
     vary previous_cycle := -1
     each record in records {
-        when kind(record) != "list" or size(record) != 12 {
+        when kind(record) != "list" or size(record) != 13 {
             yield [false, "RPR-PYT-0011: malformed replay record"]
         }
         when record[0] != index + 1 or record[1] <= previous_cycle {
