@@ -63,6 +63,6 @@ The normative six-cycle engineering contract is maintained in [UI/UX Codex 40026
 
 See [UI_UX_2026_CONVERGENCE.md](UI_UX_2026_CONVERGENCE.md) for semantic tokens, accessibility targets, responsive behavior and motion budgets. Existing Reaper editor and atmospheric theme profiles remain supported.
 
-## Anatidae desktop visual refinement
+## Dak desktop visual refinement
 
 The Studio shell carries a restrained 5 px white-blue-red identity band. The code editor, syntax tokens, caret, selection and line-number gutter must follow the active light/dark palette together; no fixed light-theme labels or gutter colors may leak into dark mode. Keep the editor the primary surface and retain all keyboard shortcuts and runtime behavior.
