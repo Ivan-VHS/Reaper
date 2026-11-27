@@ -32,6 +32,9 @@ __all__ = [
     "accumulate", "aggregate", "amplify", "cartesianize", "combine", "compute",
     "compound", "convolve", "couple", "cross_multiply", "expand", "exponentiate",
     "factor", "fuse", "multiply", "pair", "product", "scale",
+    "Candy", "CandyLine", "GiftPlan", "GreetingEdge", "allocate_equal",
+    "allocate_weighted", "build_candy_basket", "build_greeting_graph",
+    "combination_count", "percent_of", "plan_gift",
     "compose", "concat", "concat_text", "merge_mappings", "pipe",
     "Interpreter", "LexError", "ParseError", "ReaperError", "ReaperRuntimeError",
     "decompose_sequence", "distribute_weighted", "divide_fraction",
@@ -45,3 +48,17 @@ __all__ = [
     "DebuggerStopped", "EmbeddedError", "McuProfile", "RegisterBank",
     "build_embedded_project", "init_embedded_project", "__version__",
 ]
+
+
+_GIFT_PLANNER_EXPORTS = {
+    "Candy", "CandyLine", "GiftPlan", "GreetingEdge", "allocate_equal",
+    "allocate_weighted", "build_candy_basket", "build_greeting_graph",
+    "combination_count", "percent_of", "plan_gift",
+}
+
+
+def __getattr__(name: str):
+    if name in _GIFT_PLANNER_EXPORTS:
+        from . import gift_planner
+        return getattr(gift_planner, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
