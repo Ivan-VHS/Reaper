@@ -44,7 +44,7 @@ ReaperProcessorBackendStatus reaper_rv32_emulate(
     uint64_t max_steps,
     ReaperRv32ExecutionReport *report
 ) {
-    uint32_t code_end;
+    uint64_t code_end;
     if (image == NULL || report == NULL || image->magic != REAPER_RV32_IMAGE_MAGIC ||
         image->abi_major != REAPER_PROCESSOR_BACKEND_ABI_MAJOR ||
         image->target_id != REAPER_RV32_TARGET_RV32I ||
@@ -52,9 +52,9 @@ ReaperProcessorBackendStatus reaper_rv32_emulate(
         image->byte_count > REAPER_RV32_MAX_IMAGE_BYTES ||
         max_steps == 0u || max_steps > REAPER_RV32_MAX_STEPS)
         return REAPER_BACKEND_INVALID_ARGUMENT;
-    if ((uint64_t)image->base_address + image->byte_count > (uint64_t)UINT32_MAX + 1u)
+    if ((uint64_t)image->base_address + image->byte_count > UINT32_MAX)
         return REAPER_BACKEND_INVALID_ARGUMENT;
-    code_end = image->base_address + image->byte_count;
+    code_end = (uint64_t)image->base_address + image->byte_count;
     memset(report, 0, sizeof(*report));
     if (initial_state != NULL) {
         if (initial_state->memory_size > REAPER_RV32_DATA_MEMORY_BYTES)
@@ -75,11 +75,11 @@ ReaperProcessorBackendStatus reaper_rv32_emulate(
         uint32_t next_pc, value = 0u;
         int32_t immediate = 0;
         uint32_t address;
-        if (report->pc == code_end) {
+        if ((uint64_t)report->pc == code_end) {
             report->halted = 1u;
             return REAPER_BACKEND_OK;
         }
-        if (report->pc < image->base_address || report->pc > code_end - 4u ||
+        if (report->pc < image->base_address || (uint64_t)report->pc > code_end - UINT64_C(4) ||
             ((report->pc - image->base_address) & 3u) != 0u)
             return REAPER_BACKEND_INVALID_MEMORY_ACCESS;
         offset = report->pc - image->base_address;
