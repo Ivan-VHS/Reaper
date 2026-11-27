@@ -159,6 +159,21 @@
         "tests/test_system_functions.py",
         "docs/SYSTEM_FUNCTIONS.md"
       ]
+    },
+    {
+      "id": "language.most-russian-lithos-flow",
+      "status": "partial",
+      "summary": "Expanded exact Russian keyword aliases and LITHOS::FLOW domain vocabulary integrated into the shared Reaper grammar path; 38 aliases execute in the current reference subset, 64 remain lexical reservations, and domain words are ordinary identifiers rather than implicit built-ins.",
+      "evidence": [
+        "language/most_keyword_aliases.json",
+        "language/most_russian_native_profile.json",
+        "language/most_lithos_vocabulary.v1.json",
+        "docs/MOST_LITHOS_FLOW_PROFILE.md",
+        "examples/lithos_flow_ru.most",
+        "tests/test_most_lithos_flow.py",
+        "tests/test_most_extended_russian_aliases.c",
+        "tools/validate_most_keywords.py"
+      ]
     }
   ],
   "interfaces": [
