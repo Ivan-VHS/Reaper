@@ -226,7 +226,7 @@ export craft state_put(state, index, value) {
 }
 
 export craft state_valid(state) {
-    when kind(state) != "list" or size(state) != 19 { yield false }
+    when kind(state) != "list" or size(state) != 20 { yield false }
     when state[0] != "RPC" or state[1] != 1 { yield false }
     when not contains(["production", "test"], state[6]) { yield false }
     when not valid_integer(state[2], 0, SAFE_INTEGER_MAX) { yield false }
@@ -249,7 +249,8 @@ export craft state_valid(state) {
     when state[7] and (state[8] < 64 or state[9] < 1 or state[9] > state[8] // 2) { yield false }
     when state[7] and state[16] != "fault-injection-active" { yield false }
     when state[6] == "production" and state[18] != 0 { yield false }
-    when not valid_integer(state[18], 0, SAFE_INTEGER_MAX) { yield false }
+    when not valid_integer(state[18], 0, SAFE_INTEGER_MAX) or
+         not valid_integer(state[19], 0, SAFE_INTEGER_MAX) { yield false }
     each reserve in state[17] {
         when not valid_integer(reserve, 0, 1000000) { yield false }
     }
@@ -280,7 +281,7 @@ export craft new_state(capacity, low_watermark, mode, local_reserves, initial_ph
     yield [true, [
         "RPC", 1, 0, capacity, capacity, low_watermark, mode,
         false, 0, 0, 0, 0, initial_phase_error_ps, 0, 0, 0,
-        "cold", local_reserves, 0
+        "cold", local_reserves, 0, 0
     ], ""]
 }
 
@@ -560,7 +561,7 @@ export craft hardware_register_snapshot(state) {
     }
     yield [true, [
         state[2], state[4], state[5], state[8], state[9],
-        fault_ctrl, copper_control, nano_command, state[13], state[14]
+        fault_ctrl, copper_control, nano_command, state[13], state[19]
     ], "simulated-register-bank"]
 }
 
@@ -590,6 +591,7 @@ export craft scenario_enable(state, period_cycles, duty_cycles) {
          not valid_integer(duty_cycles, 1, period_cycles // 2) {
         yield [false, state, "RPR-FAULT-0032: scenario period/duty is outside bounds"]
     }
+    when state[7] { yield [true, state, "already-active"] }
     make next := state_put(state, 7, true)
     change next := state_put(next, 8, period_cycles)
     change next := state_put(next, 9, duty_cycles)
@@ -763,10 +765,13 @@ export craft run_construct(state, spec) {
     when not checked[0] { yield [false, state, [], checked[1]] }
     make next_cycle := checked_add(state[2], 1)
     make next_step := checked_add(state[14], 1)
+    make next_fence := checked_add(state[19], 1)
     when not next_cycle[0] { yield [false, state, [], next_cycle[2]] }
     when not next_step[0] { yield [false, state, [], next_step[2]] }
+    when not next_fence[0] { yield [false, state, [], next_fence[2]] }
     make next := state_put(state, 2, next_cycle[1])
     change next := state_put(next, 14, next_step[1])
+    change next := state_put(next, 19, next_fence[1])
     when spec[1] == "SERVICE" {
         make service_count := checked_add(state[15], 1)
         when not service_count[0] { yield [false, state, [], service_count[2]] }
