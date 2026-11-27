@@ -1,0 +1,358 @@
+# Reaper-native processor state, trace and evidence model.
+# This module models bounded observations and plans. It does not execute
+# privileged processor instructions, throttle a CPU, or write hardware registers.
+#
+# state:
+#   ["processor.state.v1", next_sequence, last_tick, actions,
+#    checkpoints, accepted_actions, rejected_actions]
+#
+# action:
+#   ["processor.action.v1", sequence, operation, target, start_tick,
+#    duration_ticks, cycles, outcome, source_chunk]
+
+export craft processor_state_make() {
+    yield ["processor.state.v1", 1, 0, [], [], 0, 0]
+}
+
+export craft processor_action_valid(action) {
+    when kind(action) != "list" or size(action) != 9 { yield false }
+    when action[0] != "processor.action.v1" { yield false }
+    when kind(action[1]) != "number" or kind(action[2]) != "text" or kind(action[3]) != "text" { yield false }
+    when kind(action[4]) != "number" or kind(action[5]) != "number" or kind(action[6]) != "number" { yield false }
+    when kind(action[7]) != "text" or kind(action[8]) != "text" { yield false }
+    when action[1] < 1 or action[1] % 1 != 0 { yield false }
+    when action[4] < 0 or action[4] % 1 != 0 { yield false }
+    when action[5] < 0 or action[5] % 1 != 0 { yield false }
+    when action[6] < 0 or action[6] % 1 != 0 { yield false }
+    when size(action[2]) == 0 or size(action[3]) == 0 or size(action[8]) == 0 { yield false }
+    when action[7] != "ok" and action[7] != "err" { yield false }
+    yield true
+}
+
+export craft processor_state_valid(state) {
+    when kind(state) != "list" or size(state) != 7 { yield false }
+    when state[0] != "processor.state.v1" { yield false }
+    when kind(state[1]) != "number" or kind(state[2]) != "number" { yield false }
+    when kind(state[3]) != "list" or kind(state[4]) != "list" { yield false }
+    when kind(state[5]) != "number" or kind(state[6]) != "number" { yield false }
+    when state[1] < 1 or state[1] % 1 != 0 { yield false }
+    when state[2] < 0 or state[2] % 1 != 0 { yield false }
+    when state[5] < 0 or state[6] < 0 { yield false }
+    when state[1] != size(state[3]) + 1 { yield false }
+    when state[5] + state[6] != size(state[3]) { yield false }
+
+    vary expected_tick := 0
+    vary accepted := 0
+    vary rejected := 0
+    vary index := 0
+    loop while index < size(state[3]) {
+        make action := state[3][index]
+        when not processor_action_valid(action) { yield false }
+        when action[1] != index + 1 { yield false }
+        when action[4] < expected_tick { yield false }
+        change expected_tick := action[4] + action[5]
+        when action[7] == "ok" {
+            change accepted := accepted + 1
+        } otherwise {
+            change rejected := rejected + 1
+        }
+        change index := index + 1
+    }
+    yield expected_tick == state[2] and accepted == state[5] and rejected == state[6]
+}
+
+export craft processor_state_append(state, action) {
+    when not processor_state_valid(state) { yield ["ERR", "processor state is invalid"] }
+    when not processor_action_valid(action) { yield ["ERR", "processor action is invalid"] }
+    when action[1] != state[1] { yield ["ERR", "action sequence is not the next expected value", state[1]] }
+    when action[4] < state[2] { yield ["ERR", "action time moves backwards", state[2]] }
+
+    make accepted := state[5]
+    make rejected := state[6]
+    when action[7] == "ok" {
+        change accepted := accepted + 1
+    } otherwise {
+        change rejected := rejected + 1
+    }
+
+    make updated := [
+        "processor.state.v1",
+        state[1] + 1,
+        action[4] + action[5],
+        push(state[3], action),
+        state[4],
+        accepted,
+        rejected
+    ]
+    when not processor_state_valid(updated) { yield ["ERR", "updated processor state failed validation"] }
+    yield ["OK", updated]
+}
+
+export craft processor_action_count(state) {
+    when not processor_state_valid(state) { yield ["ERR", "processor state is invalid"] }
+    yield ["OK", size(state[3])]
+}
+
+export craft processor_action_counter(state) {
+    when not processor_state_valid(state) { yield ["ERR", "processor state is invalid"] }
+    make total := state[5] + state[6]
+    make confidence := 0
+    when total > 0 { change confidence := state[5] * 100 / total }
+    yield ["OK", [state[5], state[6], total, confidence]]
+}
+
+export craft processor_operation_expand(action) {
+    when not processor_action_valid(action) { yield ["ERR", "processor action is invalid"] }
+    yield ["OK", [
+        action[1],
+        action[2],
+        action[3],
+        action[4],
+        action[4] + action[5],
+        action[5],
+        action[6],
+        action[7],
+        action[8]
+    ]]
+}
+
+export craft processor_slowmo_plan(state, factor) {
+    when not processor_state_valid(state) { yield ["ERR", "processor state is invalid"] }
+    when kind(factor) != "number" or factor % 1 != 0 or factor < 1 or factor > 16 {
+        yield ["ERR", "slow-motion factor must be an integer from 1 to 16"]
+    }
+    vary rows := []
+    vary index := 0
+    loop while index < size(state[3]) {
+        make action := state[3][index]
+        change rows := push(rows, [
+            action[1],
+            action[4] * factor,
+            action[5] * factor,
+            action[6],
+            factor
+        ])
+        change index := index + 1
+    }
+    yield ["OK", rows]
+}
+
+export craft processor_pulse_analyze(intervals, expected_interval, tolerance_ratio) {
+    when kind(intervals) != "list" or size(intervals) < 2 or size(intervals) > 1000000 {
+        yield ["ERR", "pulse needs 2 to 1000000 intervals"]
+    }
+    when kind(expected_interval) != "number" or expected_interval <= 0 {
+        yield ["ERR", "expected pulse interval must be positive"]
+    }
+    when kind(tolerance_ratio) != "number" or tolerance_ratio <= 0 or tolerance_ratio > 1 {
+        yield ["ERR", "pulse tolerance must be in the range (0, 1]"]
+    }
+
+    vary total := 0
+    vary max_deviation := 0
+    vary consistent := true
+    vary index := 0
+    loop while index < size(intervals) {
+        make interval := intervals[index]
+        when kind(interval) != "number" or interval <= 0 {
+            yield ["ERR", "pulse interval must be a positive number", index]
+        }
+        change total := total + interval
+        vary delta := interval - expected_interval
+        when delta < 0 { change delta := 0 - delta }
+        make deviation := delta / expected_interval
+        when deviation > max_deviation { change max_deviation := deviation }
+        when deviation > tolerance_ratio { change consistent := false }
+        change index := index + 1
+    }
+    yield ["OK", [size(intervals), total / size(intervals), max_deviation, consistent]]
+}
+
+export craft processor_memory_budget(capacity, used, reserved) {
+    when kind(capacity) != "number" or kind(used) != "number" or kind(reserved) != "number" {
+        yield ["ERR", "memory values must be numbers"]
+    }
+    when capacity < 1 or used < 0 or reserved < 0 { yield ["ERR", "memory values are outside their valid range"] }
+    when capacity % 1 != 0 or used % 1 != 0 or reserved % 1 != 0 {
+        yield ["ERR", "memory accounting uses whole bytes"]
+    }
+    when used + reserved > capacity { yield ["ERR", "memory budget exceeded", capacity, used + reserved] }
+    make available := capacity - used - reserved
+    yield ["OK", [capacity, used, reserved, available, (used + reserved) * 100 / capacity]]
+}
+
+export craft processor_hardware_policy(operation, mode, capability) {
+    when operation == "read" and (mode == "read_only" or mode == "simulated") {
+        yield ["OK", "observation-only", false]
+    }
+    when operation == "write" and mode == "simulated" and capability == "processor.hardware.simulation.write" {
+        yield ["OK", "simulation-plan-only", false]
+    }
+    yield ["ERR", "hardware mutation is not executable through processor intelligence", operation, mode]
+}
+
+export craft processor_embedded_budget(flash_capacity, text_bytes, rodata_bytes, data_bytes, sram_capacity, bss_bytes, stack_bytes) {
+    when flash_capacity < 1 or sram_capacity < 1 { yield ["ERR", "FLASH and SRAM capacities must be positive"] }
+    when text_bytes < 0 or rodata_bytes < 0 or data_bytes < 0 or bss_bytes < 0 or stack_bytes < 0 {
+        yield ["ERR", "embedded section sizes cannot be negative"]
+    }
+    when flash_capacity % 1 != 0 or sram_capacity % 1 != 0 or text_bytes % 1 != 0 or rodata_bytes % 1 != 0 or data_bytes % 1 != 0 or bss_bytes % 1 != 0 or stack_bytes % 1 != 0 {
+        yield ["ERR", "embedded memory budgets use whole bytes"]
+    }
+    make flash_used := text_bytes + rodata_bytes + data_bytes
+    make sram_used := data_bytes + bss_bytes + stack_bytes
+    when flash_used > flash_capacity or sram_used > sram_capacity {
+        yield ["ERR", "embedded memory budget exceeded", flash_used, sram_used]
+    }
+    yield ["OK", [
+        flash_used,
+        flash_capacity,
+        flash_used * 100 / flash_capacity,
+        sram_used,
+        sram_capacity,
+        sram_used * 100 / sram_capacity
+    ]]
+}
+
+export craft processor_source_unpack(chunks) {
+    when kind(chunks) != "list" or size(chunks) == 0 or size(chunks) > 256 {
+        yield ["ERR", "source bundle must contain 1 to 256 chunks"]
+    }
+    vary source := ""
+    vary index := 0
+    loop while index < size(chunks) {
+        make chunk := chunks[index]
+        when kind(chunk) != "list" or size(chunk) != 4 { yield ["ERR", "source chunk shape is invalid", index] }
+        when chunk[0] != index + 1 or chunk[1] != size(chunks) {
+            yield ["ERR", "source chunks are missing, duplicated or out of order", index]
+        }
+        when kind(chunk[2]) != "text" or size(chunk[2]) == 0 or kind(chunk[3]) != "text" or size(chunk[3]) == 0 {
+            yield ["ERR", "source chunk identity and content must be non-empty text", index]
+        }
+        vary previous := 0
+        loop while previous < index {
+            when chunks[previous][2] == chunk[2] { yield ["ERR", "source chunk identity is duplicated", chunk[2]] }
+            change previous := previous + 1
+        }
+        change source := source ++ chunk[3]
+        when size(source) > 2000000 { yield ["ERR", "unpacked source exceeds the 2 MB limit"] }
+        change index := index + 1
+    }
+    yield ["OK", source]
+}
+
+export craft processor_graph_reduce(node_count, edge_count) {
+    when kind(node_count) != "number" or kind(edge_count) != "number" { yield ["ERR", "graph counts must be numbers"] }
+    when node_count < 0 or edge_count < 0 or node_count % 1 != 0 or edge_count % 1 != 0 {
+        yield ["ERR", "graph counts must be non-negative integers"]
+    }
+    when node_count > 10000 or edge_count > 1000000 { yield ["ERR", "graph exceeds the reduction limit"] }
+    when node_count == 0 and edge_count != 0 { yield ["ERR", "an empty graph cannot contain edges"] }
+    when node_count > 0 and edge_count > node_count * (node_count - 1) {
+        yield ["ERR", "edge count exceeds a simple directed graph"]
+    }
+    make average_degree := 0
+    make density := 0
+    when node_count > 0 {
+        change average_degree := edge_count / node_count
+        change density := edge_count / (node_count * (node_count - 1))
+    }
+    yield ["OK", [node_count, edge_count, average_degree, density]]
+}
+
+export craft processor_chip_snapshot_valid(profile) {
+    when kind(profile) != "list" or size(profile) != 6 { yield false }
+    when kind(profile[0]) != "number" or kind(profile[1]) != "number" or kind(profile[2]) != "number" or kind(profile[3]) != "number" {
+        yield false
+    }
+    when kind(profile[4]) != "text" or kind(profile[5]) != "text" { yield false }
+    when profile[0] < 1 or profile[1] < 1 or profile[2] < profile[1] or profile[3] < 1 { yield false }
+    when profile[0] % 1 != 0 or profile[1] % 1 != 0 or profile[2] % 1 != 0 or profile[3] % 1 != 0 { yield false }
+    when size(profile[4]) == 0 { yield false }
+    when profile[5] != "observed" and profile[5] != "reference" and profile[5] != "simulated" { yield false }
+    yield true
+}
+
+export craft processor_checkpoint_make(state) {
+    when not processor_state_valid(state) { yield ["ERR", "processor state is invalid"] }
+    yield ["OK", [
+        "processor.checkpoint.v1",
+        state[1] - 1,
+        state[2],
+        size(state[3]),
+        state[5],
+        state[6]
+    ]]
+}
+
+export craft processor_checkpoint_valid(state, checkpoint) {
+    when not processor_state_valid(state) { yield false }
+    when kind(checkpoint) != "list" or size(checkpoint) != 6 { yield false }
+    yield checkpoint[0] == "processor.checkpoint.v1" and
+        checkpoint[1] == state[1] - 1 and
+        checkpoint[2] == state[2] and
+        checkpoint[3] == size(state[3]) and
+        checkpoint[4] == state[5] and
+        checkpoint[5] == state[6]
+}
+
+export craft processor_cache_store(cache, checkpoint, capacity) {
+    when kind(cache) != "list" or kind(checkpoint) != "list" { yield ["ERR", "state cache values must be lists"] }
+    when capacity < 1 or capacity > 32 or capacity % 1 != 0 { yield ["ERR", "state cache capacity must be 1 to 32"] }
+    when size(checkpoint) != 6 or checkpoint[0] != "processor.checkpoint.v1" {
+        yield ["ERR", "checkpoint schema is invalid"]
+    }
+    vary retained := []
+    vary index := 0
+    when size(cache) >= capacity { change index := size(cache) - capacity + 1 }
+    loop while index < size(cache) {
+        when size(cache[index]) != 6 or cache[index][0] != "processor.checkpoint.v1" {
+            yield ["ERR", "state cache contains an invalid checkpoint", index]
+        }
+        change retained := push(retained, cache[index])
+        change index := index + 1
+    }
+    change retained := push(retained, checkpoint)
+    yield ["OK", retained]
+}
+
+export craft processor_table_export(state) {
+    when not processor_state_valid(state) { yield ["ERR", "processor state is invalid"] }
+    make header := ["sequence", "operation", "target", "start_tick", "end_tick", "duration_ticks", "cycles", "outcome", "source_chunk"]
+    vary rows := []
+    vary index := 0
+    loop while index < size(state[3]) {
+        make expanded := processor_operation_expand(state[3][index])
+        when expanded[0] != "OK" { yield expanded }
+        change rows := push(rows, expanded[1])
+        change index := index + 1
+    }
+    yield ["OK", [header, rows]]
+}
+
+export craft processor_humanize_status(code) {
+    when code == "OK" { yield "Operational" }
+    when code == "ATTENTION" { yield "Needs attention" }
+    when code == "ERR" { yield "Unavailable or invalid" }
+    when code == "UNKNOWN" { yield "Not measured" }
+    yield "Unrecognized status"
+}
+
+export craft processor_tray_snapshot(state, memory, pulse) {
+    when not processor_state_valid(state) { yield ["ERR", "processor state is invalid"] }
+    when kind(memory) != "list" or size(memory) != 2 or memory[0] != "OK" { yield ["ERR", "memory status is unavailable"] }
+    when kind(pulse) != "list" or size(pulse) != 2 or pulse[0] != "OK" { yield ["ERR", "processor pulse is unavailable"] }
+    make status := "OK"
+    when state[6] > 0 or not pulse[1][3] { change status := "ATTENTION" }
+    yield ["OK", [
+        "Reaper Processor",
+        status,
+        processor_humanize_status(status),
+        state[1] - 1,
+        state[5],
+        state[6],
+        memory[1][1] + memory[1][2],
+        memory[1][0],
+        pulse[1][3]
+    ]]
+}
