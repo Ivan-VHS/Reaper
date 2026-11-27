@@ -1,0 +1,404 @@
+# Reaper-written compiler core.
+# Input AST shape is the canonical stage-local expression form emitted by selfhost/parser.rpr:
+# ["literal", token_kind, value, line, column]
+# ["name", identifier, line, column]
+# ["unary", operator, operand, line, column]
+# ["binary", operator, left, right, line, column]
+#
+# This file deliberately keeps the bootstrap representation explicit. The versioned
+# REAPER-IR envelope is the boundary that later statement and module stages can extend.
+
+craft compiler_diagnostic(code, message, line, column) {
+    yield ["err", code, message, [line, column]]
+}
+
+craft compiler_find_symbol(symbols, name) {
+    each index in range(size(symbols)) {
+        when symbols[index][0] == name {
+            yield index
+        }
+    }
+    yield -1
+}
+
+craft compiler_typecheck(node, symbols) {
+    when kind(node) != "list" or size(node) < 1 {
+        yield compiler_diagnostic("RPR-E401", "malformed expression node", 1, 1)
+    }
+
+    make node_kind := node[0]
+
+    when node_kind == "literal" {
+        when size(node) != 5 {
+            yield compiler_diagnostic("RPR-E401", "literal node has an invalid shape", 1, 1)
+        }
+        when node[1] == "NUMBER" { yield ["ok", "number"] }
+        when node[1] == "STRING" { yield ["ok", "text"] }
+        when node[1] == "TRUE" or node[1] == "FALSE" { yield ["ok", "boolean"] }
+        when node[1] == "NOTHING" { yield ["ok", "nothing"] }
+        yield compiler_diagnostic("RPR-E402", "unknown literal token kind", node[3], node[4])
+    }
+
+    when node_kind == "name" {
+        when size(node) != 4 {
+            yield compiler_diagnostic("RPR-E401", "name node has an invalid shape", 1, 1)
+        }
+        make symbol_index := compiler_find_symbol(symbols, node[1])
+        when symbol_index < 0 {
+            yield compiler_diagnostic("RPR-E403", "unknown name: " ++ node[1], node[2], node[3])
+        }
+        yield ["ok", symbols[symbol_index][1]]
+    }
+
+    when node_kind == "unary" {
+        when size(node) != 5 {
+            yield compiler_diagnostic("RPR-E401", "unary node has an invalid shape", 1, 1)
+        }
+        make operand := compiler_typecheck(node[2], symbols)
+        when operand[0] == "err" {
+            yield operand
+        }
+        when node[1] == "-" and operand[1] == "number" {
+            yield ["ok", "number"]
+        }
+        when node[1] == "NOT" and operand[1] == "boolean" {
+            yield ["ok", "boolean"]
+        }
+        yield compiler_diagnostic("RPR-E404", "operator is not defined for the operand type", node[3], node[4])
+    }
+
+    when node_kind == "binary" {
+        when size(node) != 6 {
+            yield compiler_diagnostic("RPR-E401", "binary node has an invalid shape", 1, 1)
+        }
+        make left_type := compiler_typecheck(node[2], symbols)
+        when left_type[0] == "err" {
+            yield left_type
+        }
+        make right_type := compiler_typecheck(node[3], symbols)
+        when right_type[0] == "err" {
+            yield right_type
+        }
+        make operator := node[1]
+
+        when operator == "+" or operator == "-" or operator == "*" or operator == "/" or operator == "//" or operator == "%" or operator == "**" {
+            when left_type[1] == "number" and right_type[1] == "number" {
+                yield ["ok", "number"]
+            }
+            yield compiler_diagnostic("RPR-E405", "arithmetic operator requires two numbers", node[4], node[5])
+        }
+
+        when operator == "++" {
+            when left_type[1] == "text" and right_type[1] == "text" {
+                yield ["ok", "text"]
+            }
+            yield compiler_diagnostic("RPR-E406", "text concatenation requires two text values", node[4], node[5])
+        }
+
+        when operator == "AND" or operator == "OR" {
+            when left_type[1] == "boolean" and right_type[1] == "boolean" {
+                yield ["ok", "boolean"]
+            }
+            yield compiler_diagnostic("RPR-E407", "logical operator requires two booleans", node[4], node[5])
+        }
+
+        when operator == "==" or operator == "!=" or operator == "<" or operator == "<=" or operator == ">" or operator == ">=" {
+            when left_type[1] == right_type[1] or (left_type[1] == "number" and right_type[1] == "number") {
+                yield ["ok", "boolean"]
+            }
+            yield compiler_diagnostic("RPR-E408", "comparison operands have incompatible types", node[4], node[5])
+        }
+
+        when operator == "::" {
+            yield ["ok", "any"]
+        }
+        yield compiler_diagnostic("RPR-E409", "operator has no executable lowering", node[4], node[5])
+    }
+
+    yield compiler_diagnostic("RPR-E410", "expression kind is not supported by the scalar compiler stage", 1, 1)
+}
+
+craft compiler_optimize(node) {
+    when kind(node) != "list" or size(node) == 0 {
+        yield node
+    }
+    when node[0] == "literal" or node[0] == "name" {
+        yield node
+    }
+
+    when node[0] == "unary" {
+        make operand := compiler_optimize(node[2])
+        when operand[0] == "literal" and operand[1] == "NUMBER" and node[1] == "-" {
+            make folded := 0 - number(operand[2])
+            yield ["literal", "NUMBER", text(folded), node[3], node[4]]
+        }
+        when operand[0] == "literal" and node[1] == "NOT" {
+            when operand[2] == "true" {
+                yield ["literal", "FALSE", "false", node[3], node[4]]
+            }
+            when operand[2] == "false" {
+                yield ["literal", "TRUE", "true", node[3], node[4]]
+            }
+        }
+        yield ["unary", node[1], operand, node[3], node[4]]
+    }
+
+    when node[0] == "binary" {
+        make left := compiler_optimize(node[2])
+        make right := compiler_optimize(node[3])
+        make operator := node[1]
+
+        when left[0] == "literal" and right[0] == "literal" and left[1] == "NUMBER" and right[1] == "NUMBER" {
+            make a := number(left[2])
+            make b := number(right[2])
+            vary can_fold := true
+            vary folded := 0
+            when operator == "+" { change folded := a + b } otherwise {
+                when operator == "-" { change folded := a - b } otherwise {
+                    when operator == "*" { change folded := a * b } otherwise {
+                        when operator == "/" and b != 0 { change folded := a / b } otherwise {
+                            when operator == "//" and b != 0 { change folded := a // b } otherwise {
+                                when operator == "%" and b != 0 { change folded := a % b } otherwise {
+                                    when operator == "**" and b >= 0 and b <= 32 and b % 1 == 0 {
+                                        change folded := a ** b
+                                    } otherwise {
+                                        change can_fold := false
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            when can_fold {
+                yield ["literal", "NUMBER", text(folded), node[4], node[5]]
+            }
+        }
+
+        when left[0] == "literal" and right[0] == "literal" and left[1] == "STRING" and right[1] == "STRING" and operator == "++" {
+            yield ["literal", "STRING", left[2] ++ right[2], node[4], node[5]]
+        }
+
+        when left[0] == "literal" and right[0] == "literal" and (left[1] == "TRUE" or left[1] == "FALSE") {
+            when right[1] == "TRUE" or right[1] == "FALSE" {
+                make a := left[2] == "true"
+                make b := right[2] == "true"
+                when operator == "AND" {
+                    when a and b { yield ["literal", "TRUE", "true", node[4], node[5]] }
+                    yield ["literal", "FALSE", "false", node[4], node[5]]
+                }
+                when operator == "OR" {
+                    when a or b { yield ["literal", "TRUE", "true", node[4], node[5]] }
+                    yield ["literal", "FALSE", "false", node[4], node[5]]
+                }
+            }
+        }
+        yield ["binary", operator, left, right, node[4], node[5]]
+    }
+    yield node
+}
+
+craft compiler_opcode(operator) {
+    when operator == "+" { yield "ADD" }
+    when operator == "-" { yield "SUB" }
+    when operator == "*" { yield "MUL" }
+    when operator == "/" { yield "DIV" }
+    when operator == "//" { yield "FLOOR_DIV" }
+    when operator == "%" { yield "MOD" }
+    when operator == "**" { yield "POW" }
+    when operator == "++" { yield "CONCAT" }
+    when operator == "==" { yield "EQ" }
+    when operator == "!=" { yield "NE" }
+    when operator == "<" { yield "LT" }
+    when operator == "<=" { yield "LE" }
+    when operator == ">" { yield "GT" }
+    when operator == ">=" { yield "GE" }
+    when operator == "AND" { yield "AND" }
+    when operator == "OR" { yield "OR" }
+    when operator == "::" { yield "FLOW" }
+    yield ""
+}
+
+craft compiler_emit_expression(node) {
+    when kind(node) != "list" or size(node) == 0 {
+        yield compiler_diagnostic("RPR-E420", "cannot lower malformed expression", 1, 1)
+    }
+
+    when node[0] == "literal" {
+        yield ["ok", [["CONST", node[1], node[2], node[3], node[4]]]]
+    }
+
+    when node[0] == "name" {
+        yield ["ok", [["LOAD", node[1], node[2], node[3]]]]
+    }
+
+    when node[0] == "unary" {
+        make operand := compiler_emit_expression(node[2])
+        when operand[0] == "err" {
+            yield operand
+        }
+        vary opcode := ""
+        when node[1] == "-" { change opcode := "NEG" }
+        when node[1] == "NOT" { change opcode := "NOT" }
+        when opcode == "" {
+            yield compiler_diagnostic("RPR-E421", "unary operator has no lowering", node[3], node[4])
+        }
+        make code := operand[1]
+        change code := push(code, [opcode, node[3], node[4]])
+        yield ["ok", code]
+    }
+
+    when node[0] == "binary" {
+        make left := compiler_emit_expression(node[2])
+        when left[0] == "err" {
+            yield left
+        }
+        make right := compiler_emit_expression(node[3])
+        when right[0] == "err" {
+            yield right
+        }
+        make opcode := compiler_opcode(node[1])
+        when opcode == "" or opcode == "FLOW" {
+            yield compiler_diagnostic("RPR-E422", "operator is not supported by the scalar bytecode backend", node[4], node[5])
+        }
+        vary code := left[1]
+        each instruction in right[1] {
+            change code := push(code, instruction)
+        }
+        change code := push(code, [opcode, node[4], node[5]])
+        yield ["ok", code]
+    }
+
+    yield compiler_diagnostic("RPR-E423", "expression kind has no scalar bytecode lowering", 1, 1)
+}
+
+craft compiler_verify_bytecode(instructions) {
+    when size(instructions) > 65536 {
+        yield compiler_diagnostic("RPR-E430", "bytecode exceeds 65536 instructions", 1, 1)
+    }
+    vary depth := 0
+    vary maximum := 0
+    each instruction in instructions {
+        when kind(instruction) != "list" or size(instruction) < 1 {
+            yield compiler_diagnostic("RPR-E431", "malformed bytecode instruction", 1, 1)
+        }
+        make opcode := instruction[0]
+        when opcode == "CONST" or opcode == "LOAD" {
+            change depth := depth + 1
+        } otherwise {
+            when opcode == "NEG" or opcode == "NOT" {
+                when depth < 1 {
+                    yield compiler_diagnostic("RPR-E432", "unary instruction underflows the evaluation stack", 1, 1)
+                }
+            } otherwise {
+                when opcode == "ADD" or opcode == "SUB" or opcode == "MUL" or opcode == "DIV" or opcode == "FLOOR_DIV" or opcode == "MOD" or opcode == "POW" or opcode == "CONCAT" or opcode == "EQ" or opcode == "NE" or opcode == "LT" or opcode == "LE" or opcode == "GT" or opcode == "GE" or opcode == "AND" or opcode == "OR" {
+                    when depth < 2 {
+                        yield compiler_diagnostic("RPR-E433", "binary instruction underflows the evaluation stack", 1, 1)
+                    }
+                    change depth := depth - 1
+                } otherwise {
+                    yield compiler_diagnostic("RPR-E434", "unknown bytecode opcode: " ++ opcode, 1, 1)
+                }
+            }
+        }
+        when depth > maximum {
+            change maximum := depth
+        }
+    }
+    when depth != 1 {
+        yield compiler_diagnostic("RPR-E435", "expression bytecode must leave exactly one value", 1, 1)
+    }
+    yield ["ok", maximum]
+}
+
+craft compiler_make_ir(instructions) {
+    make verified := compiler_verify_bytecode(instructions)
+    when verified[0] == "err" {
+        yield verified
+    }
+    yield ["ok", ["REAPER-IR", 1, instructions, verified[1]]]
+}
+
+craft compiler_verify_ir(ir) {
+    when kind(ir) != "list" or size(ir) != 4 {
+        yield compiler_diagnostic("RPR-E440", "IR envelope has an invalid shape", 1, 1)
+    }
+    when ir[0] != "REAPER-IR" or ir[1] != 1 {
+        yield compiler_diagnostic("RPR-E441", "unsupported IR signature or version", 1, 1)
+    }
+    make verified := compiler_verify_bytecode(ir[2])
+    when verified[0] == "err" {
+        yield verified
+    }
+    when verified[1] != ir[3] {
+        yield compiler_diagnostic("RPR-E442", "IR stack metadata does not match verified bytecode", 1, 1)
+    }
+    yield ["ok", ["version", 1, "instructions", size(ir[2]), "max_stack", verified[1]]]
+}
+
+craft compiler_compile_expression(node, symbols) {
+    make typed := compiler_typecheck(node, symbols)
+    when typed[0] == "err" {
+        yield typed
+    }
+    make optimized := compiler_optimize(node)
+    make emitted := compiler_emit_expression(optimized)
+    when emitted[0] == "err" {
+        yield emitted
+    }
+    make ir := compiler_make_ir(emitted[1])
+    when ir[0] == "err" {
+        yield ir
+    }
+    make verified := compiler_verify_ir(ir[1])
+    when verified[0] == "err" {
+        yield verified
+    }
+    yield ["ok", ir[1], typed[1], verified[1][5], optimized]
+}
+
+# Bootstrap conformance: expression -> type analysis -> optimization -> IR -> verification.
+make compiler_symbols := [["base", "number", false]]
+make compiler_expression := [
+    "binary", "+",
+    ["name", "base", 1, 1],
+    ["binary", "*",
+        ["literal", "NUMBER", "2", 1, 9],
+        ["literal", "NUMBER", "3", 1, 13],
+        1, 11
+    ],
+    1, 7
+]
+make compiler_result := compiler_compile_expression(compiler_expression, compiler_symbols)
+assert(compiler_result[0] == "ok", "compiler pipeline rejected a valid scalar expression")
+assert(compiler_result[2] == "number", "compiler semantic result type mismatch")
+assert(compiler_result[1][0] == "REAPER-IR" and compiler_result[1][1] == 1, "compiler IR envelope mismatch")
+assert(size(compiler_result[1][2]) == 3, "constant folding did not reduce the expression")
+assert(compiler_result[3] == 2, "bytecode maximum stack depth mismatch")
+
+make compiler_missing := compiler_compile_expression(["name", "missing", 4, 2], compiler_symbols)
+assert(compiler_missing[0] == "err" and compiler_missing[1] == "RPR-E403", "unknown symbol was not diagnosed")
+
+make compiler_bad_type := compiler_compile_expression([
+    "binary", "+",
+    ["literal", "STRING", "left", 1, 1],
+    ["literal", "NUMBER", "1", 1, 8],
+    1, 6
+], compiler_symbols)
+assert(compiler_bad_type[0] == "err" and compiler_bad_type[1] == "RPR-E405", "invalid arithmetic types were accepted")
+
+make compiler_bad_stack := compiler_verify_bytecode([["ADD", 1, 1]])
+assert(compiler_bad_stack[0] == "err" and compiler_bad_stack[1] == "RPR-E433", "bytecode stack underflow was not rejected")
+
+make compiler_bad_ir := compiler_verify_ir(["REAPER-IR", 1, [["CONST", "NUMBER", "1", 1, 1]], 8])
+assert(compiler_bad_ir[0] == "err" and compiler_bad_ir[1] == "RPR-E442", "corrupted IR stack metadata was accepted")
+
+make compiler_folded := compiler_optimize([
+    "binary", "*",
+    ["literal", "NUMBER", "6", 2, 1],
+    ["literal", "NUMBER", "7", 2, 5],
+    2, 3
+])
+assert(compiler_folded == ["literal", "NUMBER", "42", 2, 3], "constant-folding pass failed")
+
+emit "SELFHOST_COMPILER_CORE_OK"

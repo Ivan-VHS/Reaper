@@ -1,0 +1,532 @@
+# Reaper-native framework suite.
+# Each framework is executable Reaper source; no host-language implementation is hidden here.
+# Values are explicit arrays so the contracts stay portable across the bootstrap and native runtimes.
+
+craft framework_contains(values, needle) {
+    each value in values {
+        when value == needle {
+            yield true
+        }
+    }
+    yield false
+}
+
+craft framework_error(code, message) {
+    yield ["err", code, message]
+}
+
+craft framework_ok(value) {
+    yield ["ok", value]
+}
+
+# GalHero: deterministic dependency planning with duplicate, edge and cycle checks.
+# nodes: [node_id, ...]
+# edges: [[dependency_id, dependent_id], ...]
+craft galhero_order(nodes, edges) {
+    when size(nodes) > 256 {
+        yield framework_error("GALHERO-LIMIT", "graph exceeds 256 nodes")
+    }
+    when size(nodes) != size(unique(nodes)) {
+        yield framework_error("GALHERO-DUPLICATE", "node identifiers must be unique")
+    }
+
+    each node in nodes {
+        when kind(node) != "text" or node == "" {
+            yield framework_error("GALHERO-NODE", "node identifiers must be non-empty text")
+        }
+    }
+
+    each edge in edges {
+        when kind(edge) != "list" or size(edge) != 2 {
+            yield framework_error("GALHERO-EDGE", "each edge must contain source and target identifiers")
+        }
+        when not framework_contains(nodes, edge[0]) or not framework_contains(nodes, edge[1]) {
+            yield framework_error("GALHERO-UNKNOWN", "edge references an unknown node")
+        }
+    }
+
+    vary completed := []
+    vary ordered := []
+
+    each pass in range(size(nodes)) {
+        vary selected := ""
+        each candidate in nodes {
+            when not framework_contains(completed, candidate) {
+                vary blocked := false
+                each edge in edges {
+                    when edge[1] == candidate and not framework_contains(completed, edge[0]) {
+                        change blocked := true
+                    }
+                }
+                when not blocked and selected == "" {
+                    change selected := candidate
+                }
+            }
+        }
+        when selected == "" {
+            yield framework_error("GALHERO-CYCLE", "dependency graph contains a cycle")
+        }
+        change completed := push(completed, selected)
+        change ordered := push(ordered, selected)
+    }
+    yield framework_ok(ordered)
+}
+
+craft galhero_dependencies(nodes, edges, target) {
+    when not framework_contains(nodes, target) {
+        yield framework_error("GALHERO-UNKNOWN", "requested target is not in the graph")
+    }
+    vary required := [target]
+    vary changed := true
+    vary rounds := 0
+    loop while changed and rounds < size(nodes) {
+        change changed := false
+        change rounds := rounds + 1
+        each edge in edges {
+            when framework_contains(required, edge[1]) and not framework_contains(required, edge[0]) {
+                change required := push(required, edge[0])
+                change changed := true
+            }
+        }
+    }
+    when changed {
+        yield framework_error("GALHERO-LIMIT", "dependency closure did not converge")
+    }
+    vary reduced_edges := []
+    each edge in edges {
+        when framework_contains(required, edge[0]) and framework_contains(required, edge[1]) {
+            change reduced_edges := push(reduced_edges, edge)
+        }
+    }
+    make ordered := galhero_order(required, reduced_edges)
+    when ordered[0] == "err" {
+        yield ordered
+    }
+    yield ordered
+}
+
+# Call-and-Back: bounded, ordered callback execution with explicit error propagation.
+craft call_and_back(value, callbacks) {
+    when size(callbacks) > 64 {
+        yield framework_error("CALLBACK-LIMIT", "callback chain exceeds 64 steps")
+    }
+    vary current := value
+    each callback in callbacks {
+        when kind(callback) != "craft" {
+            yield framework_error("CALLBACK-TYPE", "every callback must be a Reaper craft")
+        }
+        change current := callback(current)
+        when kind(current) == "list" and size(current) > 0 and current[0] == "err" {
+            yield current
+        }
+    }
+    yield framework_ok(current)
+}
+
+craft call_and_back_trace(value, callbacks) {
+    when size(callbacks) > 64 {
+        yield framework_error("CALLBACK-LIMIT", "callback chain exceeds 64 steps")
+    }
+    vary current := value
+    vary trace := [value]
+    each callback in callbacks {
+        when kind(callback) != "craft" {
+            yield framework_error("CALLBACK-TYPE", "every callback must be a Reaper craft")
+        }
+        change current := callback(current)
+        change trace := push(trace, current)
+        when kind(current) == "list" and size(current) > 0 and current[0] == "err" {
+            yield current
+        }
+    }
+    yield framework_ok(trace)
+}
+
+# Stacked Options: first layer wins; callers pass layers from highest to lowest priority.
+# A layer is [[option_name, option_value], ...].
+craft stacked_options_validate(layers) {
+    when size(layers) > 32 {
+        yield framework_error("OPTIONS-LIMIT", "option stack exceeds 32 layers")
+    }
+    each layer in layers {
+        when kind(layer) != "list" {
+            yield framework_error("OPTIONS-LAYER", "each option layer must be a list")
+        }
+        vary layer_names := []
+        each pair in layer {
+            when kind(pair) != "list" or size(pair) != 2 or kind(pair[0]) != "text" or pair[0] == "" {
+                yield framework_error("OPTIONS-PAIR", "each option must be a [name, value] pair")
+            }
+            when framework_contains(layer_names, pair[0]) {
+                yield framework_error("OPTIONS-DUPLICATE", "an option name may appear only once per layer")
+            }
+            change layer_names := push(layer_names, pair[0])
+        }
+    }
+    yield framework_ok(true)
+}
+
+craft stacked_options_resolve(layers, name, fallback) {
+    make valid := stacked_options_validate(layers)
+    when valid[0] == "err" {
+        yield valid
+    }
+    each layer in layers {
+        each pair in layer {
+            when pair[0] == name {
+                yield ["some", pair[1]]
+            }
+        }
+    }
+    yield ["none", fallback]
+}
+
+craft stacked_options_merge(layers) {
+    make valid := stacked_options_validate(layers)
+    when valid[0] == "err" {
+        yield valid
+    }
+    vary names := []
+    each layer in layers {
+        each pair in layer {
+            when not framework_contains(names, pair[0]) {
+                change names := push(names, pair[0])
+            }
+        }
+    }
+    vary merged := []
+    each name in names {
+        make resolved := stacked_options_resolve(layers, name, nothing)
+        change merged := push(merged, [name, resolved[1]])
+    }
+    yield framework_ok(merged)
+}
+
+# PerenosiMOST: explicit schema envelopes and bounded, deterministic migrations.
+# Envelope shape: [schema_name, schema_version, payload].
+# Adapter shape: [source_schema, target_schema, Reaper craft].
+craft perenosimost_validate(envelope, allowed_schemas, minimum_version) {
+    when kind(envelope) != "list" or size(envelope) != 3 {
+        yield framework_error("PERENOSIMOST-ENVELOPE", "expected [schema, version, payload]")
+    }
+    when not framework_contains(allowed_schemas, envelope[0]) {
+        yield framework_error("PERENOSIMOST-SCHEMA", "schema is not supported")
+    }
+    when kind(envelope[1]) != "number" or envelope[1] < minimum_version {
+        yield framework_error("PERENOSIMOST-VERSION", "schema version is below the minimum")
+    }
+    yield framework_ok(envelope[2])
+}
+
+craft perenosimost_upgrade(envelope, adapters, target_schema) {
+    when kind(envelope) != "list" or size(envelope) != 3 {
+        yield framework_error("PERENOSIMOST-ENVELOPE", "expected [schema, version, payload]")
+    }
+    when size(adapters) > 32 {
+        yield framework_error("PERENOSIMOST-LIMIT", "migration chain exceeds 32 adapters")
+    }
+
+    vary schema := envelope[0]
+    vary version := envelope[1]
+    vary payload := envelope[2]
+    vary visited := []
+    vary hops := 0
+
+    loop while schema != target_schema and hops < size(adapters) {
+        when framework_contains(visited, schema) {
+            yield framework_error("PERENOSIMOST-CYCLE", "migration chain contains a cycle")
+        }
+        change visited := push(visited, schema)
+        vary found := false
+        each adapter in adapters {
+            when not found and kind(adapter) == "list" and size(adapter) == 3 and adapter[0] == schema {
+                when kind(adapter[2]) != "craft" {
+                    yield framework_error("PERENOSIMOST-ADAPTER", "migration adapter must be a Reaper craft")
+                }
+                change payload := adapter[2](payload)
+                change schema := adapter[1]
+                change found := true
+                change hops := hops + 1
+            }
+        }
+        when not found {
+            yield framework_error("PERENOSIMOST-MISSING", "no adapter connects the current schema")
+        }
+    }
+
+    when schema != target_schema {
+        yield framework_error("PERENOSIMOST-LIMIT", "target schema was not reached within the hop budget")
+    }
+    yield framework_ok([schema, version, payload])
+}
+
+# MOST: explicit operator contracts; each stage is [name, unary Reaper craft].
+craft most_validate(operators) {
+    when size(operators) > 64 {
+        yield framework_error("MOST-LIMIT", "operator chain exceeds 64 stages")
+    }
+    vary names := []
+    each operator in operators {
+        when kind(operator) != "list" or size(operator) != 2 or kind(operator[0]) != "text" {
+            yield framework_error("MOST-CONTRACT", "operator must be [name, craft]")
+        }
+        when kind(operator[1]) != "craft" {
+            yield framework_error("MOST-CALLABLE", "operator implementation must be a Reaper craft")
+        }
+        when framework_contains(names, operator[0]) {
+            yield framework_error("MOST-DUPLICATE", "operator names must be unique in a chain")
+        }
+        change names := push(names, operator[0])
+    }
+    yield framework_ok(names)
+}
+
+craft most_apply(value, operators) {
+    make valid := most_validate(operators)
+    when valid[0] == "err" {
+        yield valid
+    }
+    vary current := value
+    vary trace := [value]
+    each operator in operators {
+        change current := operator[1](current)
+        change trace := push(trace, current)
+        when kind(current) == "list" and size(current) > 0 and current[0] == "err" {
+            yield current
+        }
+    }
+    yield framework_ok(["MOST", current, trace])
+}
+
+# Blau: declarative component blueprints validated against a token table.
+# Component shape: [id, kind, parent_id, token_name].
+craft blau_validate(components, tokens) {
+    when size(components) > 512 or size(tokens) > 512 {
+        yield framework_error("BLAU-LIMIT", "blueprint exceeds its component or token budget")
+    }
+    vary component_ids := []
+    vary token_names := []
+
+    each token in tokens {
+        when kind(token) != "list" or size(token) != 2 or kind(token[0]) != "text" or token[0] == "" {
+            yield framework_error("BLAU-TOKEN", "token must be [name, value]")
+        }
+        change token_names := push(token_names, token[0])
+    }
+    when size(token_names) != size(unique(token_names)) {
+        yield framework_error("BLAU-TOKEN-DUPLICATE", "token names must be unique")
+    }
+
+    each component in components {
+        when kind(component) != "list" or size(component) != 4 {
+            yield framework_error("BLAU-COMPONENT", "component must be [id, kind, parent, token]")
+        }
+        when kind(component[0]) != "text" or component[0] == "" or kind(component[1]) != "text" {
+            yield framework_error("BLAU-COMPONENT", "component id and kind must be non-empty text")
+        }
+        change component_ids := push(component_ids, component[0])
+    }
+    when size(component_ids) != size(unique(component_ids)) {
+        yield framework_error("BLAU-DUPLICATE", "component identifiers must be unique")
+    }
+
+    vary parent_edges := []
+    each component in components {
+        when component[2] != "" and not framework_contains(component_ids, component[2]) {
+            yield framework_error("BLAU-PARENT", "component references an unknown parent")
+        }
+        when component[3] != "" and not framework_contains(token_names, component[3]) {
+            yield framework_error("BLAU-TOKEN-MISSING", "component references an unknown design token")
+        }
+        when component[2] == component[0] {
+            yield framework_error("BLAU-SELF-PARENT", "component cannot parent itself")
+        }
+        when component[2] != "" {
+            change parent_edges := push(parent_edges, [component[2], component[0]])
+        }
+    }
+    make parent_order := galhero_order(component_ids, parent_edges)
+    when parent_order[0] == "err" {
+        yield framework_error("BLAU-PARENT-CYCLE", "component parent graph contains a cycle")
+    }
+    yield framework_ok(["components", component_ids, "tokens", token_names])
+}
+
+craft blau_token(tokens, name, fallback) {
+    each token in tokens {
+        when token[0] == name {
+            yield ["some", token[1]]
+        }
+    }
+    yield ["none", fallback]
+}
+
+# Shashio: stable shard assignment using an explicit integer key function.
+craft shashio_partition(values, shard_count, key_function) {
+    when kind(shard_count) != "number" or shard_count < 1 or shard_count > 256 or shard_count % 1 != 0 {
+        yield framework_error("SHASHIO-COUNT", "shard count must be an integer in 1..256")
+    }
+    when kind(key_function) != "craft" {
+        yield framework_error("SHASHIO-KEY", "shard key selector must be a Reaper craft")
+    }
+    when size(values) > 100000 {
+        yield framework_error("SHASHIO-LIMIT", "input exceeds 100000 items")
+    }
+
+    vary shards := []
+    each shard_index in range(shard_count) {
+        vary shard := []
+        each item in values {
+            make key := key_function(item)
+            when kind(key) != "number" or key % 1 != 0 {
+                yield framework_error("SHASHIO-KEY", "shard key must return an integer")
+            }
+            when key % shard_count == shard_index {
+                change shard := push(shard, item)
+            }
+        }
+        change shards := push(shards, shard)
+    }
+    yield framework_ok(shards)
+}
+
+craft shashio_merge(shards) {
+    when size(shards) > 256 {
+        yield framework_error("SHASHIO-LIMIT", "cannot merge more than 256 shards")
+    }
+    vary merged := []
+    each shard in shards {
+        when kind(shard) != "list" {
+            yield framework_error("SHASHIO-SHAPE", "every shard must be a list")
+        }
+        each item in shard {
+            change merged := push(merged, item)
+        }
+    }
+    yield framework_ok(merged)
+}
+
+# Showel Fleppery CODE: deterministic source assembly from dependency-described fragments.
+# Fragment shape: [fragment_id, source_text, required_fragment_ids].
+craft showel_validate(fragments) {
+    when size(fragments) > 256 {
+        yield framework_error("SHOWEL-LIMIT", "source assembly exceeds 256 fragments")
+    }
+    vary ids := []
+    vary edges := []
+    each fragment in fragments {
+        when kind(fragment) != "list" or size(fragment) != 3 {
+            yield framework_error("SHOWEL-FRAGMENT", "fragment must be [id, source, dependencies]")
+        }
+        when kind(fragment[0]) != "text" or fragment[0] == "" or kind(fragment[1]) != "text" {
+            yield framework_error("SHOWEL-FRAGMENT", "fragment id and source must be text")
+        }
+        when kind(fragment[2]) != "list" {
+            yield framework_error("SHOWEL-DEPENDENCIES", "fragment dependencies must be a list")
+        }
+        change ids := push(ids, fragment[0])
+    }
+    when size(ids) != size(unique(ids)) {
+        yield framework_error("SHOWEL-DUPLICATE", "fragment identifiers must be unique")
+    }
+    each fragment in fragments {
+        each dependency in fragment[2] {
+            when not framework_contains(ids, dependency) {
+                yield framework_error("SHOWEL-UNKNOWN", "fragment dependency is missing")
+            }
+            change edges := push(edges, [dependency, fragment[0]])
+        }
+    }
+    make order := galhero_order(ids, edges)
+    when order[0] == "err" {
+        yield order
+    }
+    yield framework_ok(order[1])
+}
+
+craft showel_assemble(fragments) {
+    make validation := showel_validate(fragments)
+    when validation[0] == "err" {
+        yield validation
+    }
+    vary source := ""
+    each fragment_id in validation[1] {
+        each fragment in fragments {
+            when fragment[0] == fragment_id {
+                change source := source ++ fragment[1] ++ "\n"
+            }
+        }
+    }
+    yield framework_ok(source)
+}
+
+craft showel_patch(source, patches) {
+    when kind(source) != "text" or size(source) > 1000000 {
+        yield framework_error("SHOWEL-SOURCE", "source must be text no longer than one million characters")
+    }
+    when size(patches) > 128 {
+        yield framework_error("SHOWEL-LIMIT", "patch set exceeds 128 replacements")
+    }
+    vary patched := source
+    each patch in patches {
+        when kind(patch) != "list" or size(patch) != 2 or kind(patch[0]) != "text" or patch[0] == "" or kind(patch[1]) != "text" {
+            yield framework_error("SHOWEL-PATCH", "patch must be [non-empty search text, replacement text]")
+        }
+        change patched := replace(patched, patch[0], patch[1])
+    }
+    yield framework_ok(patched)
+}
+
+# Framework conformance examples execute as part of the Reaper bootstrap suite.
+craft framework_plus_one(value) { yield value + 1 }
+craft framework_double(value) { yield value * 2 }
+craft framework_identity(value) { yield value }
+
+make galhero_good := galhero_order(["core", "vm", "cli"], [["core", "vm"], ["vm", "cli"]])
+assert(galhero_good == ["ok", ["core", "vm", "cli"]], "GalHero topological ordering failed")
+make galhero_cycle := galhero_order(["a", "b"], [["a", "b"], ["b", "a"]])
+assert(galhero_cycle[0] == "err" and galhero_cycle[1] == "GALHERO-CYCLE", "GalHero cycle was not rejected")
+make galhero_closure := galhero_dependencies(["core", "vm", "cli", "docs"], [["core", "vm"], ["vm", "cli"]], "cli")
+assert(galhero_closure == ["ok", ["core", "vm", "cli"]], "GalHero dependency closure included unrelated nodes")
+
+make callback_result := call_and_back(3, [framework_plus_one, framework_double])
+assert(callback_result == ["ok", 8], "Call-and-Back callback ordering failed")
+make callback_trace := call_and_back_trace(2, [framework_plus_one, framework_double])
+assert(callback_trace == ["ok", [2, 3, 6]], "Call-and-Back trace failed")
+
+make option_layers := [[["mode", "safe"], ["retries", 2]], [["mode", "fast"], ["timeout", 30]]]
+assert(stacked_options_resolve(option_layers, "mode", "default") == ["some", "safe"], "Stacked Options precedence failed")
+assert(stacked_options_resolve(option_layers, "missing", 7) == ["none", 7], "Stacked Options fallback failed")
+assert(stacked_options_validate([[["mode", "safe"], ["mode", "fast"]]])[0] == "err", "Stacked Options duplicate key was accepted")
+assert(stacked_options_merge(option_layers)[0] == "ok", "Stacked Options merge failed")
+
+make migration := perenosimost_upgrade(["legacy", 1, 4], [["legacy", "stable", framework_plus_one]], "stable")
+assert(migration == ["ok", ["stable", 1, 5]], "PerenosiMOST migration failed")
+assert(perenosimost_validate(["unknown", 1, []], ["stable"], 1)[0] == "err", "PerenosiMOST schema guard failed")
+
+make most_result := most_apply(4, [["increment", framework_plus_one], ["double", framework_double]])
+assert(most_result == ["ok", ["MOST", 10, [4, 5, 10]]], "MOST operator composition failed")
+assert(most_validate([["bad", 7]])[0] == "err", "MOST callable contract was not enforced")
+
+make blau_tokens := [["surface", "#070707"], ["accent", "#FFD700"]]
+make blau_components := [["root", "window", "", "surface"], ["title", "label", "root", "accent"]]
+assert(blau_validate(blau_components, blau_tokens)[0] == "ok", "Blau valid blueprint rejected")
+assert(blau_validate([["root", "window", "missing", "surface"]], blau_tokens)[0] == "err", "Blau unknown parent accepted")
+assert(blau_validate([["a", "panel", "b", ""], ["b", "panel", "a", ""]], [])[0] == "err", "Blau parent cycle was accepted")
+
+make shards := shashio_partition([0, 1, 2, 3, 4, 5], 3, framework_identity)
+assert(shards == ["ok", [[0, 3], [1, 4], [2, 5]]], "Shashio stable partition failed")
+assert(shashio_merge(shards[1]) == ["ok", [0, 3, 1, 4, 2, 5]], "Shashio merge failed")
+
+make fragments := [
+    ["runtime", "runtime();", []],
+    ["frontend", "frontend();", ["runtime"]],
+    ["driver", "driver();", ["frontend"]]
+]
+make assembled := showel_assemble(fragments)
+assert(assembled == ["ok", "runtime();\nfrontend();\ndriver();\n"], "Showel dependency assembly failed")
+assert(showel_validate([["a", "a();", ["missing"]]])[0] == "err", "Showel missing dependency accepted")
+assert(showel_validate([["a", "a();", ["b"]], ["b", "b();", ["a"]]])[0] == "err", "Showel cyclic dependencies were accepted")
+assert(showel_patch("alpha beta", [["beta", "gamma"]]) == ["ok", "alpha gamma"], "Showel bounded patch failed")
+
+emit "SELFHOST_FRAMEWORKS_OK"
