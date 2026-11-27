@@ -479,6 +479,74 @@
         "forward-test-required",
         "rollback-test-required"
       ]
+    },
+    {
+      "id": "REAPER-PEW-001",
+      "name": "versioned processor project and target manifest",
+      "area": "architecture",
+      "status": "implemented",
+      "depends_on": [
+        "MOST-TYP-001",
+        "MOST-EFF-001"
+      ],
+      "acceptance": [
+        "manifest-schema-positive",
+        "manifest-negative-paths",
+        "target-abi-invariants",
+        "bounded-memory-contract",
+        "deterministic-workload-descriptor"
+      ]
+    },
+    {
+      "id": "REAPER-PEW-002",
+      "name": "Pytyliki host CPU and usable-ISA evidence admission",
+      "area": "interop",
+      "status": "implemented",
+      "depends_on": [
+        "REAPER-PEW-001",
+        "MOST-TYP-001"
+      ],
+      "acceptance": [
+        "pytyliki-report-schema",
+        "host-architecture-match",
+        "required-isa-usable",
+        "available-memory-gate",
+        "benchmark-integrity",
+        "benchmark-envelope"
+      ]
+    },
+    {
+      "id": "REAPER-PEW-003",
+      "name": "Reaper scalar host AOT processor workbench smoke",
+      "area": "compiler",
+      "status": "partial",
+      "depends_on": [
+        "REAPER-PEW-001",
+        "REAPER-PEW-002"
+      ],
+      "acceptance": [
+        "scalar-c17-build",
+        "native-executable-smoke",
+        "processor-workbench-report",
+        "treewalk-vm-policy-parity"
+      ]
+    },
+    {
+      "id": "REAPER-PEW-004",
+      "name": "target-specific ISA instruction selection, object emission and linking",
+      "area": "compiler",
+      "status": "planned",
+      "depends_on": [
+        "REAPER-PEW-003"
+      ],
+      "acceptance": [
+        "typed-processor-hir-mir-lir",
+        "isa-legalization",
+        "assembly-emission",
+        "object-relocations",
+        "linker-map",
+        "cross-target-conformance"
+      ]
     }
   ],
   "profile": "МОСТ — exact Russian keyword aliases; no separate parser, semantics, runtime or backend"
