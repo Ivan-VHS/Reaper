@@ -74,7 +74,7 @@ function readJsonFile(filePath, label) {
   let text;
   try { text = new TextDecoder("utf-8", { fatal: true }).decode(bytes); }
   catch { fail("RPR-PFI-0009", label + " is not valid UTF-8"); }
-  try { return { value: JSON.parse(text), path: absolute }; }
+  try { return { value: JSON.parse(text), path: absolute, bytes }; }
   catch (error) { fail("RPR-PFI-0011", label + " is not valid JSON: " + error.message); }
 }
 
@@ -241,17 +241,16 @@ function validateFabric(fabric, topology) {
       list.push(to);
       dependencyAdj.set(from, list);
     } else if (kind === "maps-to") {
-      if (!(a.kind === "memory-region" && b.kind === "address-space") &&
-          !(a.kind === "logical-processor" && ["processor-group", "numa-node"].includes(b.kind)))
-        fail("RPR-PFI-0215", "maps-to has incompatible endpoint kinds");
+      if (!(a.kind === "memory-region" && b.kind === "address-space"))
+        fail("RPR-PFI-0215", "maps-to must connect a memory region to an address space");
     } else if (kind === "uses") {
-      if (a.kind !== "process") fail("RPR-PFI-0216", "uses must originate from a process");
+      const allowedTargets = ["logical-processor", "execution-unit", "register-bank",
+        "isa-profile", "address-space", "memory-region", "device"];
+      if (a.kind !== "process" || !allowedTargets.includes(b.kind))
+        fail("RPR-PFI-0216", "uses must connect a process to a typed worker or resource");
     } else if (kind === "produces") {
       if (a.kind !== "process" || b.kind !== "artifact")
         fail("RPR-PFI-0217", "produces must connect process to artifact");
-    } else if (kind === "shares-cache") {
-      if (a.kind !== "logical-processor" || b.kind !== "cache")
-        fail("RPR-PFI-0218", "shares-cache must connect a logical processor to cache");
     } else {
       fail("RPR-PFI-0219", "unknown PPF edge kind " + kind);
     }
@@ -266,7 +265,7 @@ function validateFabric(fabric, topology) {
     marks.set(id, 2);
   }
   for (const id of processIds) visitDependency(id);
-  return { generation, nodes, processIds, edgeCount: fabric.edges.length };
+  return { generation, nodes, processIds, edgeCount: fabric.edges.length, edges: fabric.edges };
 }
 
 function validateResources(resources, generation) {
@@ -398,17 +397,30 @@ function validateBridge(bridge, sourceBytes, sourceDigest, fabric, resourceInfo)
   const graph = requireRecord(bridge.graph, "bridge process graph");
   const processId = requireInteger(graph.process_id, "bridge process id", 1);
   if (!fabric.processIds.has(processId)) fail("RPR-PFI-0407", "construct references a missing PPF process");
-  const resources = new Set(resourceInfo.resourceIds || []);
+  const resourceIds = resourceInfo.resourceIds || new Set();
   if (!Array.isArray(graph.resource_refs) || !Array.isArray(graph.dependency_refs))
     fail("RPR-PFI-0408", "bridge resource/dependency references must be arrays");
-  for (const id of graph.resource_refs) {
-    requireInteger(id, "bridge resource ref", 1);
-    if (resources.size && !resources.has(id))
-      fail("RPR-PFI-0409", "bridge resource references an undeclared resource id");
+  const resourceRefs = new Set();
+  for (const idValue of graph.resource_refs) {
+    const id = requireInteger(idValue, "bridge resource ref", 1);
+    if (resourceRefs.has(id)) fail("RPR-PFI-0409", "duplicate bridge resource reference " + id);
+    resourceRefs.add(id);
+    const node = fabric.nodes.get(id);
+    if (!node || !["address-space", "memory-region", "register-bank", "device",
+        "register", "dma-buffer"].includes(node.kind))
+      fail("RPR-PFI-0409", "bridge resource reference must identify a PPF resource node");
+    if (typeof node.semantic_ref !== "string" || !resourceIds.has(node.semantic_ref))
+      fail("RPR-PFI-0409", "PPF resource node has no matching hardware resource contract reference");
   }
-  for (const id of graph.dependency_refs) {
-    requireInteger(id, "bridge dependency ref", 1);
+  const dependencyRefs = new Set();
+  for (const idValue of graph.dependency_refs) {
+    const id = requireInteger(idValue, "bridge dependency ref", 1);
+    if (dependencyRefs.has(id)) fail("RPR-PFI-0410", "duplicate bridge dependency reference " + id);
+    dependencyRefs.add(id);
     if (!fabric.processIds.has(id)) fail("RPR-PFI-0410", "bridge dependency references an unknown process");
+    if (!fabric.edges.some(edge => edge.kind === "depends-on" &&
+        edge.from_id === processId && edge.to_id === id))
+      fail("RPR-PFI-0410", "bridge dependency is not present in the PPF process graph");
   }
   const status = requireRecord(bridge.semantic_status, "producer semantic status");
   for (const key of ["name_resolution", "typing", "effects", "ownership", "capabilities"]) {
@@ -421,7 +433,9 @@ function validateBridge(bridge, sourceBytes, sourceDigest, fabric, resourceInfo)
     fail("RPR-PFI-0412", "producer cannot emit or bypass Reaper Canonical Typed IR validation");
   return {
     processId, semanticId: construct.semantic_id, kind: construct.kind, name: construct.name,
-    sourceSpan: { start, length }, bodySpan: { start: bodyStart, length: bodyLength }
+    sourceSpan: { start, length }, bodySpan: { start: bodyStart, length },
+    resourceRefs: [...resourceRefs].sort((a, b) => a - b),
+    dependencyRefs: [...dependencyRefs].sort((a, b) => a - b)
   };
 }
 
@@ -465,7 +479,7 @@ export function importProcessorFabric(input) {
     host_evidence: {
       schema: topologyInput.value.schema,
       generation: topology.generation,
-      sha256: hash(Buffer.from(JSON.stringify(topologyInput.value))),
+      sha256: hash(topologyInput.bytes),
       completeness: topologyInput.value.completeness,
       logical_processor_count: topology.cpuCount,
       online_logical_processor_count: topology.onlineCount
@@ -476,10 +490,15 @@ export function importProcessorFabric(input) {
       generation: fabric.generation,
       node_count: nodes.length,
       edge_count: fabric.edgeCount,
-      root_count: rootCount
+      root_count: rootCount,
+      nodes: [...fabric.nodes.values()].sort((a, b) => a.id - b.id),
+      edges: [...fabric.edges].sort((a, b) =>
+        a.from_id - b.from_id || a.to_id - b.to_id || a.kind.localeCompare(b.kind))
     },
     constructs: [bridge],
     resources: resourceInfo,
+    resource_contract: resourcesInput.value,
+    topology_evidence: topologyInput.value,
     semantic_admission: {
       name_resolution: "pending",
       types: "pending",
