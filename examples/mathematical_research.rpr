@@ -1,0 +1,22 @@
+import "../stdlib/research_math.rpr" as research
+
+make domains := research["catalog"]()
+assert(size(domains) == 17, "the catalog exposes all 17 research domains")
+
+make riemann := research["riemann_dirichlet_partial"](2.0, 0.0, 256)
+assert(riemann["function_id"] == "riemann.dirichlet_partial", "Riemann ID is stable")
+assert(riemann["api"] == "pl_math_riemann_dirichlet", "Riemann maps to its Pytyliki C symbol")
+assert(riemann["execution_performed"] == false, "planning does not execute the native kernel")
+
+make sat := research["complexity_sat_find_bounded"](
+    2,
+    [1, 2, -1],
+    3,
+    [0, 2, 3],
+    2,
+    4
+)
+assert(sat["function_id"] == "complexity.sat_find_bounded", "SAT plan uses its stable function ID")
+assert(sat["claim_status"] == "EXPERIMENTAL_EVIDENCE_ONLY", "open-problem evidence stays experimental")
+
+emit "MATHEMATICAL_RESEARCH_PLAN:PASS"
