@@ -20,7 +20,7 @@ z^{(l)} = W^{(l)} a^{(l-1)} + b^{(l)}, \qquad
 a^{(l)} = \phi_l(z^{(l)}), \qquad a^{(0)}=x
 \]
 
-The supported activations are linear, ReLU and leaky ReLU. The training loss is mean half-squared error. Back-propagation computes output and hidden-layer deltas, then applies:
+The supported activations are linear, ReLU and leaky ReLU. The training loss is mean half-squared error. Back-propagation computes output and hidden-layer deltas, normalizes the output error by vector width, then applies:
 
 \[
 W^{(l)} \leftarrow W^{(l)}-\eta\,\delta^{(l)}(a^{(l-1)})^T,\qquad
@@ -80,7 +80,7 @@ Invalid dimensions, malformed layers, unsupported activation functions, invalid 
 | 19 | Адаптивная модель | Распределённое нейросетевое соглашение | Проектирование архитектуры |
 | 20 | Искусственный разум | Программируемый нейроконтракт | Комплексная системная инженерия |
 
-The fixture checks that all twenty labels are present and unique in their respective columns.
+The source exports profile_catalog() as the canonical owner of all twenty labels. The fixture verifies its size and checks that labels are unique in their respective columns.
 
 ## Federation responsibilities
 
