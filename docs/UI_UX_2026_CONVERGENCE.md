@@ -1,7 +1,7 @@
 # UI/UX 2026 — shared product interface contract
 
 **Maintainer:** Ivan-VHS · **Product:** Reaper Studio  
-**Design language:** AETHER-ANAS / Anatidae — consistent white/blue/red identity adapted to native platform behavior.
+**Design language:** AETHER-ANAS / Dak — consistent white/blue/red identity adapted to native platform behavior.
 
 This is an implementation contract for an operational desktop tool. The next useful task should be obvious, information should stay legible, and visual feedback must never interrupt code execution or debugging.
 
