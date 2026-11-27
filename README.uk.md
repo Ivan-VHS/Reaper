@@ -87,8 +87,8 @@ reaper-studio
 - [Ліміти runtime](docs/RUNTIME_PLATFORM.md) · [Бібліотека Kora](docs/KORA.md)
 - [Studio та IDE](docs/REAPER_IDE.md) · [Фабрика Jora](docs/JORA_APPLICATION_FACTORY.md)
 - [План реалізації](docs/IMPLEMENTATION_ROADMAP.md) · [Індекс документації](docs/README.md)
-- [Інтеграція HARVEST і Reaper](docs/HARVEST_REAPER_INTEGRATION.md)
-- [Спільні стандарти екосистеми](https://github.com/Ivan-VHS/DAK/blob/main/docs/SHARED_STANDARDS.md)
+- [NOO TAH JavaScript boundary](docs/NOO_TAH.md)
+- [Shared ecosystem standards](https://github.com/Ivan-VHS/DAK/blob/main/docs/UNIFIED_DOCUMENTATION_STANDARD.md)
 
 ## Участь і ліцензія
 
