@@ -159,6 +159,17 @@
         "tests/test_system_functions.py",
         "docs/SYSTEM_FUNCTIONS.md"
       ]
+    },
+    {
+      "id": "interop.pytyliki-hardware-ir.v1",
+      "status": "partial",
+      "summary": "Strictly imports and semantically verifies the Pytyliki Hardware IR v1 JSON envelope, preserving eight-axis dimensions, source spans, symbol/register metadata and effect summaries. Lowers only the pure f64/physical-quantity host subset into Reaper CanonicalIR and executes it through the existing VM. Effectful MMIO and fixed-width integer nodes are rejected by the scalar CanonicalIR adapter; no hardware access is performed.",
+      "evidence": [
+        "reaper/pytyliki_hardware_ir.py",
+        "tests/test_pytyliki_hardware_ir.py",
+        "docs/PYTYLIKI_HARDWARE_IR_V1.md",
+        "schemas/reaper.pytyliki-hardware-ir.v1.schema.json"
+      ]
     }
   ],
   "interfaces": [

@@ -165,3 +165,10 @@ Use three separate labels:
 - **Planned:** a design or roadmap entry without executable support.
 
 A capability enters marketing copy as available only after its contract, implementation, tests and supported-target evidence are published together.
+
+
+## Pytyliki Hardware IR v1 consumer
+
+Reaper has an optional consumer adapter for Pytyliki's versioned Hardware IR envelope. The import boundary validates physical dimensions, fixed-width types, register access, effect summaries, HIR dependencies and source spans while preserving that information as typed metadata. A pure `f64`/physical-quantity host subset can lower into Reaper CanonicalIR and run through its VM. Hardware effects and fixed-width integer values are not coerced into the general scalar VM: MMIO remains inert, and widths/overflow semantics remain in the sidecar until a matching Reaper typed native IR exists.
+
+See [Pytyliki Hardware IR v1](PYTYLIKI_HARDWARE_IR_V1.md) for the schema, ownership split, supported subset and safety boundary. The adapter is a consumer contract, not a device driver or hardware execution environment.
