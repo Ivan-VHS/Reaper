@@ -41,12 +41,12 @@ static ReaperProcessorBackendStatus encode_instruction(
         *word = reaper_encode_i(0x13u, 2u, rd, rs1, imm);
         return REAPER_BACKEND_OK;
     case REAPER_RV32_LUI:
-        if (!reaper_fits_signed(imm, 20u)) return REAPER_BACKEND_RELOCATION_RANGE;
+        if (imm < -524288 || imm > 1048575) return REAPER_BACKEND_RELOCATION_RANGE;
         *word = (((uint32_t)imm & UINT32_C(0xFFFFF)) << 12u) |
                 ((uint32_t)rd << 7u) | UINT32_C(0x37);
         return REAPER_BACKEND_OK;
     case REAPER_RV32_AUIPC:
-        if (!reaper_fits_signed(imm, 20u)) return REAPER_BACKEND_RELOCATION_RANGE;
+        if (imm < -524288 || imm > 1048575) return REAPER_BACKEND_RELOCATION_RANGE;
         *word = (((uint32_t)imm & UINT32_C(0xFFFFF)) << 12u) |
                 ((uint32_t)rd << 7u) | UINT32_C(0x17);
         return REAPER_BACKEND_OK;
