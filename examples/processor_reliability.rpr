@@ -17,7 +17,7 @@ make initial := core["new_state"](
     [16, 16, 16, 16, 16, 16, 16, 16],
     80
 )
-assert(initial[0], "test kernel state must initialize")
+assert(initial[0] and size(initial[1]) == 20, "versioned test kernel state must initialize with twenty slots")
 vary state := initial[1]
 vary matrix_trace := []
 
@@ -133,15 +133,25 @@ make blocked_start := core["run_construct"](production_spend[1], ["START", "COMM
 assert(not blocked_start[0], "safe-degraded production state must block new streams")
 make recovery_denied := core["repair_recover"](production_spend[1], 0, 40, [])
 assert(not recovery_denied[0], "recovery without a ROOT capability must be denied")
-make recovery_capability := core["root_capability_descriptor"](
+make invalid_scope_capability := core["root_capability_descriptor"](
+    "mmio.write",
+    production_spend[1][14],
+    40,
+    "production"
+)
+assert(not invalid_scope_capability[0], "ROOT recovery capability must reject an unrelated scope")
+make recovery_capability_result := core["root_capability_descriptor"](
     "repair.recover",
     production_spend[1][14],
     40,
     "production"
 )
-make recovery := core["repair_recover"](production_spend[1], 0, 40, recovery_capability)
+assert(recovery_capability_result[0], "valid ROOT capability descriptor must be constructed")
+make recovery := core["repair_recover"](production_spend[1], 0, 40, recovery_capability_result[1])
 assert(recovery[0] and recovery[1][4] == 41 and recovery[1][16] == "ready", "ROOT-authorized local reserve must restore service")
 assert(recovery[1][17][0] == 40, "recovery must debit the supplying local reserve")
+make replayed_recovery := core["repair_recover"](recovery[1], 0, 1, recovery_capability_result[1])
+assert(not replayed_recovery[0], "revision-bound ROOT recovery capability must not be replayable")
 make recovered_start := core["run_construct"](recovery[1], ["START", "COMMAND", 3, "RECOVERED_STREAM", 1, 1024])
 assert(recovered_start[0], "production stream may start after verified recovery")
 make forbidden_injection := core["fault_inject"]("production", true, 1, 0, 64, 16)
