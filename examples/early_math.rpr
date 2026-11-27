@@ -17,6 +17,9 @@ craft balanced(shares) {
 }
 
 craft distribution_valid(total, group_count) {
+    when total < 0 {
+        yield false
+    }
     when group_count < 1 {
         yield false
     }
@@ -25,6 +28,9 @@ craft distribution_valid(total, group_count) {
 }
 
 craft makes_number(left, right, target) {
+    when left < 0 or right < 0 or target < 0 {
+        yield false
+    }
     yield left + right == target
 }
 
@@ -42,8 +48,11 @@ assert(balanced(pile_sizes), "partition sizes differ by at most one")
 make shares := distribute(10, 3)
 assert(shares == [4, 3, 3], "distribution conserves ten objects")
 assert(distribution_valid(12, 3), "twelve objects divide evenly among three groups")
+assert(distribution_valid(-1, 3) == false, "a negative object count is invalid")
 
 make bonds_to_five := [[1, 4], [2, 3], [3, 2], [4, 1]]
+assert(makes_number(-1, 1, 0) == false, "number parts cannot be negative")
+
 each bond in bonds_to_five {
     assert(makes_number(bond[0], bond[1], 5), "both parts compose five")
 }
