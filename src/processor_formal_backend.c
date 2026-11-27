@@ -9,12 +9,19 @@ static uint8_t evaluate_net(const ReaperLogicNet *net, uint32_t input_value) {
         const ReaperLogicGate *gate = &net->gates[i];
         const uint32_t output = (uint32_t)net->input_count + i;
         const uint8_t a = wires[gate->input_a];
-        const uint8_t b = wires[gate->input_b];
         switch (gate->operation) {
-        case REAPER_LOGIC_AND: wires[output] = (uint8_t)(a & b); break;
-        case REAPER_LOGIC_OR: wires[output] = (uint8_t)(a | b); break;
-        case REAPER_LOGIC_XOR: wires[output] = (uint8_t)(a ^ b); break;
-        case REAPER_LOGIC_NOT: wires[output] = (uint8_t)(a ^ 1u); break;
+        case REAPER_LOGIC_AND:
+            wires[output] = (uint8_t)(a & wires[gate->input_b]);
+            break;
+        case REAPER_LOGIC_OR:
+            wires[output] = (uint8_t)(a | wires[gate->input_b]);
+            break;
+        case REAPER_LOGIC_XOR:
+            wires[output] = (uint8_t)(a ^ wires[gate->input_b]);
+            break;
+        case REAPER_LOGIC_NOT:
+            wires[output] = (uint8_t)(a ^ 1u);
+            break;
         default: return 0u;
         }
     }
