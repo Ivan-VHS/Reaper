@@ -1,0 +1,689 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://reaper.dev/schemas/neural-contract.v1.schema.json",
+  "title": "Reaper Neural Contract v1",
+  "description": "Versioned contract for neural model identity, typed data ports, runtime admission, learning policy, topology, security, resources, provenance and lifecycle. The schema does not implement model execution.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "contract_id",
+    "status",
+    "subcontracts",
+    "model",
+    "ports",
+    "runtime",
+    "resources",
+    "security",
+    "learning",
+    "topology",
+    "behavior",
+    "lifecycle",
+    "provenance"
+  ],
+  "properties": {
+    "schema": {
+      "const": "reaper.neural-contract/v1"
+    },
+    "version": {
+      "const": 1
+    },
+    "contract_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9.-]{2,95}$"
+    },
+    "status": {
+      "enum": [
+        "contract_only",
+        "validated",
+        "bound",
+        "disabled"
+      ]
+    },
+    "subcontracts": {
+      "type": "array",
+      "minItems": 9,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "model",
+          "data",
+          "inference",
+          "learning",
+          "network",
+          "resource",
+          "security",
+          "governance",
+          "verification",
+          "cognitive"
+        ]
+      }
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "family",
+        "task",
+        "artifact"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9._-]{2,95}$"
+        },
+        "family": {
+          "enum": [
+            "dense",
+            "convolutional",
+            "recurrent",
+            "transformer",
+            "graph",
+            "hybrid"
+          ]
+        },
+        "task": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 128
+        },
+        "artifact": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "state",
+            "format",
+            "uri",
+            "sha256"
+          ],
+          "properties": {
+            "state": {
+              "enum": [
+                "unbound",
+                "bound"
+              ]
+            },
+            "format": {
+              "enum": [
+                "onnx",
+                "reaper-ir",
+                "tensor-pack",
+                "safetensors",
+                "custom"
+              ]
+            },
+            "uri": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 512,
+              "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$"
+            },
+            "sha256": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "state": {
+                    "const": "unbound"
+                  }
+                },
+                "required": [
+                  "state"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "uri": {
+                    "type": "null"
+                  },
+                  "sha256": {
+                    "type": "null"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "state": {
+                    "const": "bound"
+                  }
+                },
+                "required": [
+                  "state"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "uri": {
+                    "type": "string"
+                  },
+                  "sha256": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "ports": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "inputs",
+        "outputs"
+      ],
+      "properties": {
+        "inputs": {
+          "$ref": "#/$defs/ports"
+        },
+        "outputs": {
+          "$ref": "#/$defs/ports"
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "adapter",
+        "version",
+        "mode",
+        "determinism",
+        "local_only"
+      ],
+      "properties": {
+        "adapter": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 96
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "mode": {
+          "enum": [
+            "reference",
+            "local",
+            "trusted-host",
+            "accelerator"
+          ]
+        },
+        "determinism": {
+          "enum": [
+            "strict",
+            "seeded",
+            "best_effort"
+          ]
+        },
+        "local_only": {
+          "type": "boolean"
+        }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "memory_mb",
+        "cpu_threads",
+        "gpu_memory_mb",
+        "max_latency_ms",
+        "max_batch_items"
+      ],
+      "properties": {
+        "memory_mb": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        "cpu_threads": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        },
+        "gpu_memory_mb": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65536
+        },
+        "max_latency_ms": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 600000
+        },
+        "max_batch_items": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        }
+      }
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "external_transfer",
+        "telemetry",
+        "secrets",
+        "filesystem",
+        "network"
+      ],
+      "properties": {
+        "external_transfer": {
+          "enum": [
+            "deny",
+            "allowlisted"
+          ]
+        },
+        "telemetry": {
+          "const": "disabled"
+        },
+        "secrets": {
+          "const": "deny"
+        },
+        "filesystem": {
+          "enum": [
+            "none",
+            "model-read-only"
+          ]
+        },
+        "network": {
+          "enum": [
+            "disabled",
+            "allowlisted"
+          ]
+        }
+      }
+    },
+    "learning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "online_learning",
+        "manual_approval_required",
+        "max_steps",
+        "datasets"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "disabled",
+            "offline",
+            "federated"
+          ]
+        },
+        "online_learning": {
+          "const": false
+        },
+        "manual_approval_required": {
+          "const": true
+        },
+        "max_steps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000000
+        },
+        "datasets": {
+          "type": "array",
+          "maxItems": 128,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "consent_ref"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9._-]{2,95}$"
+              },
+              "consent_ref": {
+                "type": "string",
+                "minLength": 3,
+                "maxLength": 256
+              }
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "disabled"
+              }
+            },
+            "required": [
+              "mode"
+            ]
+          },
+          "then": {
+            "properties": {
+              "max_steps": {
+                "const": 0
+              },
+              "datasets": {
+                "maxItems": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "enum": [
+                  "offline",
+                  "federated"
+                ]
+              }
+            },
+            "required": [
+              "mode"
+            ]
+          },
+          "then": {
+            "properties": {
+              "max_steps": {
+                "minimum": 1
+              },
+              "datasets": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "topology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "peers"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "isolated",
+            "mesh",
+            "federated"
+          ]
+        },
+        "peers": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "authenticated",
+              "encrypted",
+              "allowlisted",
+              "max_payload_bytes"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9.-]{2,95}$"
+              },
+              "authenticated": {
+                "const": true
+              },
+              "encrypted": {
+                "const": true
+              },
+              "allowlisted": {
+                "const": true
+              },
+              "max_payload_bytes": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1048576
+              }
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "isolated"
+              }
+            },
+            "required": [
+              "mode"
+            ]
+          },
+          "then": {
+            "properties": {
+              "peers": {
+                "maxItems": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "enum": [
+                  "mesh",
+                  "federated"
+                ]
+              }
+            },
+            "required": [
+              "mode"
+            ]
+          },
+          "then": {
+            "properties": {
+              "peers": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "behavior": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "task",
+        "output_contract",
+        "uncertainty_policy",
+        "min_confidence_ppm",
+        "max_invalid_output_ppm"
+      ],
+      "properties": {
+        "task": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 128
+        },
+        "output_contract": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 128
+        },
+        "uncertainty_policy": {
+          "enum": [
+            "required",
+            "allowed",
+            "disabled"
+          ]
+        },
+        "min_confidence_ppm": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "max_invalid_output_ppm": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        }
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "revision",
+        "update_policy",
+        "rollback_required"
+      ],
+      "properties": {
+        "state": {
+          "enum": [
+            "contract_only",
+            "validated",
+            "bound",
+            "disabled"
+          ]
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "update_policy": {
+          "const": "manual_only"
+        },
+        "rollback_required": {
+          "const": true
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model_source",
+        "dataset_digest",
+        "training_run_id",
+        "license",
+        "dataset_ids"
+      ],
+      "properties": {
+        "model_source": {
+          "enum": [
+            "authored_specification",
+            "trained",
+            "converted",
+            "third_party"
+          ]
+        },
+        "dataset_digest": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "training_run_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 128
+        },
+        "license": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 128
+        },
+        "dataset_ids": {
+          "type": "array",
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 96
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "ports": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "dtype",
+          "shape",
+          "max_elements"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9._-]{2,95}$"
+          },
+          "dtype": {
+            "enum": [
+              "bool",
+              "i8",
+              "u8",
+              "i16",
+              "u16",
+              "i32",
+              "u32",
+              "i64",
+              "u64",
+              "f16",
+              "f32",
+              "f64",
+              "token"
+            ]
+          },
+          "shape": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 8,
+            "items": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65536
+            }
+          },
+          "max_elements": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16777216
+          }
+        }
+      }
+    }
+  }
+}
