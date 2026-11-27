@@ -144,3 +144,10 @@ The Reaper core now defines an implementation matrix for the nine requested proc
 - Physical copper/silicon repair: physical_repair_assessment always reports physical damage as not software-repairable. Software may isolate a resource and request qualified laboratory inspection or component replacement.
 
 The bytecode VM now accepts opcodes 66-70 for AP startup, IPI routing, timer preemption, MCA handling and page-recovery admission. They return typed policy decisions after normal domain/role verification. They do not execute RDMSR, WRMSR, MMIO, INIT/SIPI, APIC writes, page-table edits or hardware repair. No opcode can bypass adapter authority.
+
+
+### Provider normalization contracts
+
+The Linux EDAC adapter contract now has a pure counter-snapshot normalizer. It records a first snapshot as a baseline, computes only monotonic CE/UE deltas, rejects counter resets and cross-boot/resource comparisons, and emits common RAS envelopes. A UE counter without a poisoned page address is deliberately normalized as software-suspected/supporting evidence, not as a confirmed page-level MCA record.
+
+The Apple Swift contract accepts a versioned OS-diagnostics record and maps its explicit source severity/confidence into the shared RAS envelope. The Rust contract validates a DABI64 packet sequence and requires an attached read-only adapter before ingestion. These are executable Reaper ABI checks and normalizers; the actual sysfs/tracefs reader, Swift system API client and Rust FFI binary remain separate native deliverables.
