@@ -5,6 +5,7 @@ import math
 import unittest
 from pathlib import Path
 
+from reaper.runtime import Interpreter
 from reaper.research_math_contracts import (
     EXPECTED_FUNCTIONS,
     ResearchContractError,
@@ -188,6 +189,13 @@ class MathematicalResearchContractTests(unittest.TestCase):
         }
         with self.assertRaises(ResearchContractError):
             validate_catalog_document(altered)
+
+    def test_reaper_language_facade_runs_without_native_execution(self):
+        example_path = Path(__file__).resolve().parents[1] / "examples" / "mathematical_research.rpr"
+        output = []
+        runtime = Interpreter(output=output.append)
+        runtime.run(example_path.read_text(encoding="utf-8"), filename=str(example_path))
+        self.assertIn("MATHEMATICAL_RESEARCH_PLAN:PASS", output)
 
     def test_pytyliki_manifest_matches_the_canonical_registry(self):
         fixture_path = Path(__file__).resolve().parent / "fixtures" / (
