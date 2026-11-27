@@ -42,6 +42,21 @@ int reaper_seadlow_transform(
     ReaperSeadlowError *error
 );
 
+/* Transform exactly bit_count bits and count the transformed result in the
+ * same pass. population_count is committed only on success and must not
+ * overlap output, lhs, rhs, report, or error storage. Exact in-place operation
+ * follows the same rules as reaper_seadlow_transform. */
+int reaper_seadlow_transform_popcount(
+    ReaperSeadlowOp operation,
+    uint8_t *output,
+    const uint8_t *lhs,
+    const uint8_t *rhs,
+    size_t bit_count,
+    size_t *population_count,
+    ReaperSeadlowReport *report,
+    ReaperSeadlowError *error
+);
+
 /* Count set bits in exactly bit_count bits. */
 int reaper_seadlow_popcount(
     const uint8_t *input,
