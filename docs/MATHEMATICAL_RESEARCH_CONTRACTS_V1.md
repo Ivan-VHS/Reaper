@@ -122,6 +122,10 @@ Reaper canonical research catalog
 
 No implicit loading of a shared library is performed by the planner. Native dispatch must be a separately reviewed, explicitly opt-in integration that validates ABI version, function availability, buffer lengths, output ownership, return statuses and provenance.
 
+### Logical arguments versus native C signatures
+
+The catalog describes **logical inputs and result values**, not a byte-for-byte declaration of each C prototype. Several C kernels accept caller-owned output pointers, explicit capacities and output counters; those implementation-level parameters are intentionally absent from the Reaper call plan. A future adapter must map each logical contract to the exact C prototype, allocate bounded buffers, pass correct capacities, validate native status codes and only then construct the declared Reaper result. Until that adapter is implemented, a call plan must never be passed to a C function as though it were a marshalled ABI frame.
+
 ## Resource boundaries
 
 The native kernel limits are part of the Pytyliki contract and are mirrored in the Reaper catalog:
