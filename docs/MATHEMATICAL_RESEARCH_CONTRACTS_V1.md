@@ -65,7 +65,7 @@ The planner refuses missing or extra arguments, Boolean values masquerading as i
 
 ## Reaper language facade
 
-`stdlib/research_math.rpr` exports 51 named wrappers, one for each catalog function, plus `catalog()` and `kernel_plan()`. The wrapper names are namespaced by mathematical area, for example `riemann_dirichlet_partial`, `complexity_sat_find_bounded`, `navier_stokes_grid_divergence`, `bsd_curve_point_count_mod_prime`, `goldbach_find_pair_bounded`, `halting_vm_run_bounded`, and `matrix_scaling_exponent`.
+`stdlib/research_math.rpr` exports 51 named wrappers, one for each catalog function, plus `catalog()`, `catalog_area(area_id)` and `kernel_plan()`. The wrapper names are namespaced by mathematical area, for example `riemann_dirichlet_partial`, `complexity_sat_find_bounded`, `navier_stokes_grid_divergence`, `bsd_curve_point_count_mod_prime`, `goldbach_find_pair_bounded`, `halting_vm_run_bounded`, and `matrix_scaling_exponent`.
 
 Each wrapper accepts its declared positional arguments and returns a Reaper call-plan map. `examples/mathematical_research.rpr` imports the module and demonstrates Riemann and SAT plans. It asserts that the catalog contains 17 domains and that the plan remains marked as not executed. This language surface does not bypass the Python contract validator or call native code.
 
