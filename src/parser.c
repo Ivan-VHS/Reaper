@@ -51,7 +51,10 @@ static uint32_t parse_primary(Parser *p){
 static uint32_t parse_bp(Parser *p,int min_bp){
  if(++p->depth>REAPER_PARSE_MAX_DEPTH){--p->depth;set_error(p,"expression nesting limit exceeded");return REAPER_AST_NO_NODE;}
  uint32_t lhs=parse_primary(p);if(lhs==REAPER_AST_NO_NODE){--p->depth;return lhs;}
- for(;;){const ReaperToken *op=peek(p);if(!op)break;if(op->kind==REAPER_TOK_CATALOG_OPERATOR){set_error(p,"catalogue operator is reserved; executable semantics are not registered");--p->depth;return REAPER_AST_NO_NODE;}int bp=precedence(op->text);if(bp<min_bp||bp==0)break;
+ for(;;){const ReaperToken *op=peek(p);if(!op)break;if(op->kind==REAPER_TOK_CATALOG_OPERATOR){set_error(p,"catalogue operator is reserved; executable semantics are not registered");--p->depth;return REAPER_AST_NO_NODE;}
+  /* Keep the flow token |> distinct from bitwise OR in this expression-only frontend. */
+  if(strcmp(op->text,"|")==0&&p->pos+1u<p->tokens->length&&strcmp(p->tokens->items[p->pos+1u].text,">")==0)break;
+  int bp=precedence(op->text);if(bp<min_bp||bp==0)break;
   char *name=malloc(strlen(op->text)+1);if(!name){set_error(p,"out of memory parsing operator");--p->depth;return REAPER_AST_NO_NODE;}strcpy(name,op->text);size_t line=op->line,col=op->column;++p->pos;
   int next=bp+(!strcmp(name,"**")?0:1);uint32_t rhs=parse_bp(p,next);if(rhs==REAPER_AST_NO_NODE){free(name);--p->depth;return rhs;}
   uint32_t both=add_node(p,REAPER_AST_BINARY,name,lhs,rhs,line,col);free(name);if(both==REAPER_AST_NO_NODE){set_error(p,"out of memory building AST");--p->depth;return both;}lhs=both;
