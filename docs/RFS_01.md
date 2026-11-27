@@ -96,8 +96,11 @@ The reference runtime is deterministic and single-threaded. Nodes and links are 
 | Resource | v1.0 limit |
 |---|---:|
 | Source bytes | 1 MiB |
+| Tokens | 262,144 |
 | Nodes | 4,096 |
 | Links | 16,384 |
+| Phase gates | 4,096 |
+| Contrasts | 16,384 |
 | Signal frames | 65,536 |
 | Signal payload | 4 KiB |
 | Cycles | 108 |
