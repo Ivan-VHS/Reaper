@@ -1319,6 +1319,15 @@ export craft processor_adapter_valid(adapter) {
         when not contains(["event-query", "counter-read", "persisted-record-read", "msr-read", "ap-start", "ipi-send", "timer-arm", "page-quarantine", "page-replace", "timer-preempt", "diagnostic-export"], operation) {
             yield false
         }
+        when adapter[6] == "read-only" and contains(["msr-read", "ap-start", "ipi-send", "timer-arm", "page-quarantine", "page-replace", "timer-preempt"], operation) {
+            yield false
+        }
+        when adapter[6] == "kernel-read" and not contains(["event-query", "counter-read", "persisted-record-read", "msr-read", "diagnostic-export"], operation) {
+            yield false
+        }
+        when adapter[6] == "user-control" and contains(["msr-read", "ap-start", "ipi-send", "timer-arm", "page-quarantine", "page-replace", "timer-preempt"], operation) {
+            yield false
+        }
     }
     yield true
 }
@@ -1371,10 +1380,38 @@ export craft ap_startup_transition(ap, next_phase) {
     }
     when ap[4] == "discovered" and next_phase != "prepared" { yield [false, ap, "RPR-AP-0003: AP must be prepared first"] }
     when ap[4] == "prepared" and next_phase != "ready-to-start" and next_phase != "failed" { yield [false, ap, "RPR-AP-0004: AP resources must pass readiness before start"] }
-    when ap[4] == "ready-to-start" and next_phase != "startup-sent" and next_phase != "failed" { yield [false, ap, "RPR-AP-0005: INIT/SIPI must be sent by the kernel adapter"] }
-    when ap[4] == "startup-sent" and next_phase != "online" and next_phase != "failed" { yield [false, ap, "RPR-AP-0006: AP must report online or fail"] }
-    when ap[4] == "online" and next_phase != "quarantined" { yield [false, ap, "RPR-AP-0007: online AP requires a drain protocol before release"] }
+    when ap[4] == "prepared" and next_phase == "ready-to-start" and (not ap[5] or not ap[6] or not ap[7] or not ap[8] or not ap[9] or not ap[10]) {
+        yield [false, ap, "RPR-AP-0005: missing GDT/IDT/stack/per-CPU/LAPIC/trampoline resource"]
+    }
+    when next_phase == "startup-sent" or next_phase == "online" {
+        yield [false, ap, "RPR-AP-0006: hardware acknowledgements must use ap_startup_acknowledge"]
+    }
+    when ap[4] == "ready-to-start" and next_phase != "failed" and next_phase != "quarantined" {
+        yield [false, ap, "RPR-AP-0007: INIT/SIPI acknowledgement is required"]
+    }
+    when ap[4] == "startup-sent" and next_phase != "failed" and next_phase != "quarantined" {
+        yield [false, ap, "RPR-AP-0008: AP-online acknowledgement is required"]
+    }
+    when ap[4] == "online" and next_phase != "quarantined" { yield [false, ap, "RPR-AP-0009: online AP requires a drain protocol before release"] }
     yield [true, [ap[0], ap[1], ap[2], ap[3], next_phase, ap[5], ap[6], ap[7], ap[8], ap[9], ap[10], ap[11]], ""]
+}
+
+export craft ap_startup_acknowledge(ap, adapter_ack, next_phase) {
+    when not ap_startup_valid(ap) { yield [false, ap, "RPR-AP-0010: invalid AP startup record"] }
+    when kind(adapter_ack) != "text" { yield [false, ap, "RPR-AP-0011: native adapter acknowledgement must be text"] }
+    when next_phase == "startup-sent" {
+        when ap[4] != "ready-to-start" or adapter_ack != "init-sipi-sent" {
+            yield [false, ap, "RPR-AP-0012: INIT/SIPI acknowledgement missing"]
+        }
+        yield [true, [ap[0], ap[1], ap[2], ap[3], "startup-sent", ap[5], ap[6], ap[7], ap[8], ap[9], ap[10], ap[11]], ""]
+    }
+    when next_phase == "online" {
+        when ap[4] != "startup-sent" or adapter_ack != "ap-online-confirmed" {
+            yield [false, ap, "RPR-AP-0013: AP online acknowledgement missing"]
+        }
+        yield [true, [ap[0], ap[1], ap[2], ap[3], "online", ap[5], ap[6], ap[7], ap[8], ap[9], ap[10], ap[11]], ""]
+    }
+    yield [false, ap, "RPR-AP-0014: unsupported acknowledgement transition"]
 }
 
 export craft ap_smp_topology_valid(topology) {
@@ -1404,6 +1441,9 @@ export craft ap_smp_admit_cpu(topology, ap) {
     when contains(topology[5], ap[2]) { yield [false, topology, "RPR-SMP-0004: AP is already online"] }
     when size(topology[5]) >= topology[6] { yield [false, topology, "RPR-SMP-0005: online CPU capacity is exhausted"] }
     when ap[4] != "online" { yield [false, topology, "RPR-SMP-0006: AP has not completed startup handshake"] }
+    when not ap[5] or not ap[6] or not ap[7] or not ap[8] or not ap[9] or not ap[10] {
+        yield [false, topology, "RPR-SMP-0007: AP-online record lacks complete startup evidence"]
+    }
     make online := push(topology[5], ap[2])
     yield [true, [topology[0], topology[1], topology[2], topology[3], topology[4], online, topology[6]], ""]
 }
