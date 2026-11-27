@@ -13,6 +13,7 @@ Reaper — язык системного программирования и л�
 ## Состав
 
 - Processor Engineering Platform v1: манифесты проектов и целей, проверки Typed Registry, read-only сведения CPU/ISA от Pytyliki и текущий host AOT-срез scalar C17. Генерация кода под конкретные ISA и привилегированные операции с процессором не заявляются.
+- Processor backends v1: five independently tested bounded C17 prototypes — a structured RV32I encoder, flat-image linker, subset emulator, combinational SystemVerilog emitter and Boolean equivalence checker. They are not full target-qualified toolchains.
 - Исходный язык Reaper, lexer/parser, эталонная среда и диагностика.
 - CLI, REPL, основа Windows Studio, службы LSP и DAP.
 - Экспериментальная реализация на C17; она пока не равна по возможностям эталонной среде.
