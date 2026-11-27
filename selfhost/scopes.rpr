@@ -1,0 +1,199 @@
+# Reaper-native lexical scope and symbol-state model.
+# Scope: ["scope", scope_id, parent_scope_id, symbols].
+# Symbol: ["symbol", name, type_name, mutable, state, declared_in].
+# Root scope uses parent id -1. Shadowing is allowed; same-scope duplicates are not.
+
+craft scope_find(scopes, requested_id) {
+    vary index := 0
+    loop while index < size(scopes) {
+        when scopes[index][1] == requested_id { yield ["OK", index] }
+        change index := index + 1
+    }
+    yield ["ERR", "scope does not exist", requested_id]
+}
+
+craft scope_tree_validate(scopes) {
+    when size(scopes) == 0 { yield ["ERR", "scope tree is empty"] }
+    vary roots := 0
+    vary index := 0
+    loop while index < size(scopes) {
+        when size(scopes[index]) != 4 or scopes[index][0] != "scope" {
+            yield ["ERR", "malformed scope record", index]
+        }
+        when scopes[index][1] < 0 { yield ["ERR", "scope id must be non-negative"] }
+        when scopes[index][2] == -1 { change roots := roots + 1 }
+        vary previous := 0
+        loop while previous < index {
+            when scopes[previous][1] == scopes[index][1] {
+                yield ["ERR", "duplicate scope id", scopes[index][1]]
+            }
+            change previous := previous + 1
+        }
+        when scopes[index][2] != -1 {
+            make parent := scope_find(scopes, scopes[index][2])
+            when parent[0] != "OK" { yield ["ERR", "scope parent is missing", scopes[index][1]] }
+        }
+        change index := index + 1
+    }
+    when roots != 1 { yield ["ERR", "scope tree must have exactly one root", roots] }
+
+    change index := 0
+    loop while index < size(scopes) {
+        make start_id := scopes[index][1]
+        vary current_id := scopes[index][2]
+        vary steps := 0
+        loop while current_id != -1 {
+            when current_id == start_id { yield ["ERR", "scope parent cycle detected", start_id] }
+            make parent := scope_find(scopes, current_id)
+            when parent[0] != "OK" { yield parent }
+            change current_id := scopes[parent[1]][2]
+            change steps := steps + 1
+            when steps > size(scopes) { yield ["ERR", "scope ancestry exceeded tree size"] }
+        }
+        change index := index + 1
+    }
+    yield ["OK", size(scopes)]
+}
+
+craft scope_symbol_find(symbols, requested_name) {
+    vary index := 0
+    loop while index < size(symbols) {
+        when symbols[index][1] == requested_name { yield ["OK", index] }
+        change index := index + 1
+    }
+    yield ["ERR", "symbol not found in scope", requested_name]
+}
+
+craft scope_declare(scopes, scope_id, name, type_name, mutable) {
+    make valid := scope_tree_validate(scopes)
+    when valid[0] != "OK" { yield valid }
+    when size(name) == 0 or size(type_name) == 0 {
+        yield ["ERR", "symbol name and type are required"]
+    }
+    make found := scope_find(scopes, scope_id)
+    when found[0] != "OK" { yield found }
+    make scope := scopes[found[1]]
+    make duplicate := scope_symbol_find(scope[3], name)
+    when duplicate[0] == "OK" { yield ["ERR", "duplicate declaration in same scope", name] }
+
+    make symbol := ["symbol", name, type_name, mutable, "live", scope_id]
+    make next_symbols := push(scope[3], symbol)
+    vary updated := []
+    vary index := 0
+    loop while index < size(scopes) {
+        when index == found[1] {
+            change updated := push(updated, ["scope", scope[1], scope[2], next_symbols])
+        } otherwise {
+            change updated := push(updated, scopes[index])
+        }
+        change index := index + 1
+    }
+    yield ["OK", updated, symbol]
+}
+
+craft scope_lookup(scopes, scope_id, name) {
+    make valid := scope_tree_validate(scopes)
+    when valid[0] != "OK" { yield valid }
+    vary current_id := scope_id
+    vary steps := 0
+    loop while current_id != -1 {
+        make found := scope_find(scopes, current_id)
+        when found[0] != "OK" { yield found }
+        make scope := scopes[found[1]]
+        make symbol := scope_symbol_find(scope[3], name)
+        when symbol[0] == "OK" {
+            yield ["OK", scope[3][symbol[1]], current_id]
+        }
+        change current_id := scope[2]
+        change steps := steps + 1
+        when steps > size(scopes) { yield ["ERR", "scope lookup cycle detected"] }
+    }
+    yield ["ERR", "unresolved symbol", name]
+}
+
+craft scope_update_state(scopes, scope_id, name, next_state) {
+    make found := scope_find(scopes, scope_id)
+    when found[0] != "OK" { yield found }
+    make scope := scopes[found[1]]
+    make symbol_index := scope_symbol_find(scope[3], name)
+    when symbol_index[0] != "OK" { yield symbol_index }
+    make old_symbol := scope[3][symbol_index[1]]
+    vary next_symbols := []
+    vary index := 0
+    loop while index < size(scope[3]) {
+        when index == symbol_index[1] {
+            change next_symbols := push(next_symbols, ["symbol", old_symbol[1], old_symbol[2], old_symbol[3], next_state, old_symbol[5]])
+        } otherwise {
+            change next_symbols := push(next_symbols, scope[3][index])
+        }
+        change index := index + 1
+    }
+    vary updated := []
+    change index := 0
+    loop while index < size(scopes) {
+        when index == found[1] {
+            change updated := push(updated, ["scope", scope[1], scope[2], next_symbols])
+        } otherwise {
+            change updated := push(updated, scopes[index])
+        }
+        change index := index + 1
+    }
+    yield ["OK", updated]
+}
+
+craft scope_use(scopes, scope_id, name) {
+    make found := scope_lookup(scopes, scope_id, name)
+    when found[0] != "OK" { yield found }
+    when found[1][4] != "live" { yield ["ERR", "use after move or drop", name, found[1][4]] }
+    yield ["OK", found[1]]
+}
+
+craft scope_move(scopes, scope_id, name) {
+    make found := scope_lookup(scopes, scope_id, name)
+    when found[0] != "OK" { yield found }
+    when found[1][4] != "live" { yield ["ERR", "cannot move unavailable symbol", name] }
+    yield scope_update_state(scopes, found[2], name, "moved")
+}
+
+craft scope_drop(scopes, scope_id, name) {
+    make found := scope_lookup(scopes, scope_id, name)
+    when found[0] != "OK" { yield found }
+    when found[1][4] != "live" { yield ["ERR", "cannot drop unavailable symbol", name] }
+    yield scope_update_state(scopes, found[2], name, "dropped")
+}
+
+craft scope_assign(scopes, scope_id, name, value_type) {
+    make found := scope_lookup(scopes, scope_id, name)
+    when found[0] != "OK" { yield found }
+    when found[1][4] != "live" { yield ["ERR", "cannot assign unavailable symbol", name] }
+    when not found[1][3] { yield ["ERR", "cannot assign immutable symbol", name] }
+    when found[1][2] != value_type {
+        yield ["ERR", "assignment changes declared type", name, found[1][2], value_type]
+    }
+    yield ["OK", scopes]
+}
+
+make root := ["scope", 0, -1, []]
+make declared := scope_declare([root], 0, "count", "i64", true)
+assert(declared[0] == "OK", "root symbol declaration failed")
+make child := ["scope", 1, 0, []]
+make scopes := [declared[1][0], child]
+assert(scope_tree_validate(scopes) == ["OK", 2], "valid scope tree rejected")
+make nested := scope_declare(scopes, 1, "label", "text", false)
+assert(nested[0] == "OK", "nested symbol declaration failed")
+make shadow := scope_declare(nested[1], 1, "count", "text", false)
+assert(shadow[0] == "OK", "parent symbol shadowing rejected")
+assert(scope_lookup(shadow[1], 1, "count")[1][2] == "text", "inner shadow did not win lookup")
+assert(scope_lookup(shadow[1], 0, "count")[1][2] == "i64", "outer symbol changed during shadowing")
+assert(scope_assign(shadow[1], 1, "count", "text")[0] == "ERR", "immutable shadow assignment accepted")
+assert(scope_assign(shadow[1], 0, "count", "i64")[0] == "OK", "mutable binding assignment rejected")
+assert(scope_assign(shadow[1], 0, "count", "text")[0] == "ERR", "type-changing assignment accepted")
+make moved := scope_move(shadow[1], 0, "count")
+assert(moved[0] == "OK", "live symbol move failed")
+assert(scope_use(moved[1], 0, "count")[0] == "ERR", "moved symbol remained usable")
+assert(scope_drop(shadow[1], 0, "count")[0] == "OK", "live symbol drop failed")
+assert(scope_declare(shadow[1], 1, "count", "i64", true)[0] == "ERR", "same-scope duplicate accepted")
+assert(scope_lookup(shadow[1], 1, "missing")[0] == "ERR", "unresolved symbol accepted")
+assert(scope_tree_validate([["scope", 0, 1, []], ["scope", 1, 0, []]])[0] == "ERR", "scope parent cycle accepted")
+
+emit "SELFHOST_SCOPE_OK"
