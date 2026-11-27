@@ -1,0 +1,225 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://reaper.dev/schemas/reaper.processor-backend-qualification.v1.schema.json",
+  "title": "Reaper Processor Backend Qualification Evidence v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "backend_id",
+    "backend_kind",
+    "maturity",
+    "target",
+    "abi",
+    "implementation",
+    "tests",
+    "qualification",
+    "effects"
+  ],
+  "properties": {
+    "schema": {
+      "const": "reaper.processor-backend-qualification.v1"
+    },
+    "version": {
+      "const": 1
+    },
+    "backend_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 96
+    },
+    "backend_kind": {
+      "enum": [
+        "native-assembler",
+        "native-linker",
+        "emulator",
+        "rtl",
+        "formal-verification"
+      ]
+    },
+    "maturity": {
+      "enum": [
+        "specified",
+        "prototype",
+        "implemented",
+        "target-qualified",
+        "hardware-qualified",
+        "disabled"
+      ]
+    },
+    "target": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 96
+    },
+    "abi": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 96
+    },
+    "implementation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "language",
+        "entrypoints",
+        "bounded",
+        "deterministic",
+        "external_toolchain",
+        "source_refs"
+      ],
+      "properties": {
+        "language": {
+          "enum": [
+            "C17",
+            "Reaper",
+            "SystemVerilog",
+            "external-tool"
+          ]
+        },
+        "entrypoints": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "bounded": {
+          "const": true
+        },
+        "deterministic": {
+          "type": "boolean"
+        },
+        "external_toolchain": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 128
+        },
+        "source_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "maxLength": 256
+          }
+        }
+      }
+    },
+    "tests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "suite",
+        "total",
+        "passed",
+        "failed",
+        "ci_run"
+      ],
+      "properties": {
+        "suite": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "passed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ci_run": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        }
+      }
+    },
+    "qualification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target_qualified",
+        "hardware_qualified",
+        "abi_conformance",
+        "artifact_reproducible",
+        "evidence"
+      ],
+      "properties": {
+        "target_qualified": {
+          "type": "boolean"
+        },
+        "hardware_qualified": {
+          "type": "boolean"
+        },
+        "abi_conformance": {
+          "enum": [
+            "not-assessed",
+            "partial",
+            "passed",
+            "failed"
+          ]
+        },
+        "artifact_reproducible": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 256
+          }
+        }
+      }
+    },
+    "effects": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "host_scheduling_changed",
+        "hardware_access_performed",
+        "mmio_mapped",
+        "dma_submitted",
+        "firmware_changed",
+        "device_state_changed"
+      ],
+      "properties": {
+        "host_scheduling_changed": {
+          "const": false
+        },
+        "hardware_access_performed": {
+          "const": false
+        },
+        "mmio_mapped": {
+          "const": false
+        },
+        "dma_submitted": {
+          "const": false
+        },
+        "firmware_changed": {
+          "const": false
+        },
+        "device_state_changed": {
+          "const": false
+        }
+      }
+    }
+  }
+}
