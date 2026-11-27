@@ -72,7 +72,7 @@ Contract record:
 
 **["reaper.seam.contract.v1", name, version, inputs, outputs, effects, invariants]**
 
-Input/output lists contain unique non-empty type names. Effects are unique values from:
+Input/output lists contain unique non-empty type names. Version is a non-empty opaque label retained in the bridge record; v1 does not parse semantic versions or negotiate compatibility. The invariants list is declarative metadata: v1 validates unique non-empty names but does not execute or prove those invariants. Bridge compatibility is exact ordered equality between producer outputs and consumer inputs; no variance or generic substitution is implied. Effects are unique values from:
 
 **pure, io.read, io.write, process, network, native.ffi, device.read, device.write, unsafe**
 

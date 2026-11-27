@@ -108,6 +108,10 @@ assert(size(folded[1]) == 2, "adjacent identical events did not coalesce")
 assert(folded[1][0][4] == 2, "event multiplicity was not preserved")
 assert(folded[1][1][2] == 3, "high-severity event was lost")
 
+make separated := seam["events_squash"]([event_a[1], event_c[1], event_b[1]], 1, 8)
+assert(separated[0] == "ok" and size(separated[1]) == 3,
+    "non-adjacent identical events were incorrectly coalesced")
+
 make urgent_only := seam["events_squash"]([event_a[1], event_b[1], event_c[1]], 3, 8)
 assert(urgent_only[0] == "ok" and size(urgent_only[1]) == 1,
     "minimum severity filter failed")
@@ -133,5 +137,15 @@ assert(denied_effect[0] == "err", "ungranted host effect was accepted")
 
 make pure_effect := seam["effect_authorize"](["pure"], [])
 assert(pure_effect[0] == "ok", "pure operation should need no host grant")
+
+make pure_producer := seam["contract_make"](
+    "pure.source", "1.0.0", ["Seed"], ["Value"], ["pure"], []
+)
+make pure_consumer := seam["contract_make"](
+    "pure.target", "1.0.0", ["Value"], ["Report"], ["pure"], []
+)
+make pure_bridge := seam["bridge_validate"](pure_producer[1], pure_consumer[1], [])
+assert(pure_bridge[0] == "ok" and pure_bridge[1][5] == ["pure"],
+    "all-pure bridge must remain pure without host grants")
 
 emit "SELFHOST_SEAM_OK"
