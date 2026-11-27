@@ -1,0 +1,84 @@
+# Reaper kernel action pulse and deterministic operational counters.
+# Pulse: [schema, start_tick, last_tick, actions, dispatches, faults, live_bytes, peak_bytes, by_kind].
+# Rates are returned as integer numerator/denominator pairs; no wall-clock claims are made.
+
+craft kernel_pulse_kind_find(rows, kind) {
+    vary index := 0
+    loop while index < size(rows) {
+        when rows[index][0] == kind { yield ["OK", index] }
+        change index := index + 1
+    }
+    yield ["NONE"]
+}
+
+export craft kernel_pulse_make(start_tick) {
+    when start_tick < 0 { yield ["ERR", "pulse start tick cannot be negative"] }
+    yield ["OK", ["reaper.kernel.pulse.v1", start_tick, start_tick, 0, 0, 0, 0, 0, []]]
+}
+
+export craft kernel_pulse_valid(pulse) {
+    when size(pulse) != 9 or pulse[0] != "reaper.kernel.pulse.v1" { yield false }
+    when pulse[1] < 0 or pulse[2] < pulse[1] { yield false }
+    when pulse[3] < 0 or pulse[4] < 0 or pulse[5] < 0 or pulse[6] < 0 or pulse[7] < pulse[6] { yield false }
+    vary total := 0
+    vary index := 0
+    loop while index < size(pulse[8]) {
+        when size(pulse[8][index]) != 2 or size(pulse[8][index][0]) == 0 or pulse[8][index][1] < 1 { yield false }
+        vary previous := 0
+        loop while previous < index {
+            when pulse[8][previous][0] == pulse[8][index][0] { yield false }
+            change previous := previous + 1
+        }
+        change total := total + pulse[8][index][1]
+        change index := index + 1
+    }
+    yield total == pulse[3] and pulse[4] <= pulse[3] and pulse[5] <= pulse[3]
+}
+
+export craft kernel_pulse_record(pulse, kind, amount, logical_tick) {
+    when not kernel_pulse_valid(pulse) { yield ["ERR", "kernel pulse invariant failed"] }
+    when size(kind) == 0 or amount < 1 { yield ["ERR", "pulse kind and positive amount are required"] }
+    when logical_tick < pulse[2] { yield ["ERR", "pulse logical time cannot move backwards"] }
+
+    make found := kernel_pulse_kind_find(pulse[8], kind)
+    vary rows := []
+    when found[0] == "NONE" {
+        change rows := push(pulse[8], [kind, amount])
+    } otherwise {
+        vary index := 0
+        loop while index < size(pulse[8]) {
+            when index == found[1] {
+                change rows := push(rows, [kind, pulse[8][index][1] + amount])
+            } otherwise {
+                change rows := push(rows, pulse[8][index])
+            }
+            change index := index + 1
+        }
+    }
+
+    vary dispatches := pulse[4]
+    vary faults := pulse[5]
+    when kind == "scheduler.dispatch" { change dispatches := dispatches + amount }
+    when kind == "kernel.fault" { change faults := faults + amount }
+    make updated := ["reaper.kernel.pulse.v1", pulse[1], logical_tick, pulse[3] + amount, dispatches, faults, pulse[6], pulse[7], rows]
+    yield ["OK", updated]
+}
+
+export craft kernel_pulse_record_memory(pulse, live_bytes, logical_tick) {
+    when not kernel_pulse_valid(pulse) { yield ["ERR", "kernel pulse invariant failed"] }
+    when live_bytes < 0 { yield ["ERR", "live memory cannot be negative"] }
+    when logical_tick < pulse[2] { yield ["ERR", "pulse logical time cannot move backwards"] }
+    vary peak := pulse[7]
+    when live_bytes > peak { change peak := live_bytes }
+    yield ["OK", ["reaper.kernel.pulse.v1", pulse[1], logical_tick, pulse[3], pulse[4], pulse[5], live_bytes, peak, pulse[8]]]
+}
+
+export craft kernel_pulse_rate(pulse) {
+    when not kernel_pulse_valid(pulse) { yield ["ERR", "kernel pulse invariant failed"] }
+    yield ["OK", [pulse[3], pulse[2] - pulse[1]]]
+}
+
+export craft kernel_pulse_snapshot(pulse) {
+    when not kernel_pulse_valid(pulse) { yield ["ERR", "kernel pulse invariant failed"] }
+    yield ["OK", [pulse[1], pulse[2], pulse[3], pulse[4], pulse[5], pulse[6], pulse[7], pulse[8]]]
+}
