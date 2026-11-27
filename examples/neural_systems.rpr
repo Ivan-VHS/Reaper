@@ -94,8 +94,20 @@ make invalid_mode := neural["make_contract"](
 )
 assert(invalid_mode[0] == "ERR", "unlisted execution modes must fail")
 
-make invalid_external := contract_result[1]
-change invalid_external[7] := "external_upload"
+make source_contract := contract_result[1]
+make invalid_external := [
+    source_contract[0],
+    source_contract[1],
+    source_contract[2],
+    source_contract[3],
+    source_contract[4],
+    source_contract[5],
+    source_contract[6],
+    "external_upload",
+    source_contract[8],
+    source_contract[9],
+    source_contract[10]
+]
 assert(neural["validate_contract"](invalid_external) != "", "external data export must not be implicit")
 
 make oversized_model := neural["network"](
