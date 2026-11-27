@@ -1,1 +1,459 @@
-fd2bc84c943b35a9b21d5a51c4ad0fe9a0db3495
+# Reaper-native scalar medium and deterministic stack synthesis.
+# Records are validated positional lists until the language contract syntax lands.
+#
+# ScalarMedium: [potential_u64, density_u64, binding_energy_u64, half_life_ticks_u32]
+# StackModule:  [id_u64, contract_key, abi_major_u32, local_only, deprecated,
+#                private_bytes_u64, shared_runtime_key_u64, shared_bytes_u64,
+#                compute_units_u64]
+# Dependency:   [consumer_id, provider_id, required_contract_key, required_abi_major]
+# StackPolicy:  [memory_budget_bytes, compute_budget_units, require_local_only,
+#                allow_deprecated]
+
+make U64_MAX := 18446744073709551615
+make U32_MAX := 4294967295
+make Q16_ONE := 65536
+
+craft is_unsigned_integer(value, maximum) {
+    yield kind(value) == "number" and value % 1 == 0 and value >= 0 and value <= maximum
+}
+
+craft is_u64(value) {
+    yield is_unsigned_integer(value, U64_MAX)
+}
+
+craft is_u32(value) {
+    yield is_unsigned_integer(value, U32_MAX)
+}
+
+craft scalar_medium_valid(medium) {
+    when kind(medium) != "list" or size(medium) != 4 {
+        yield false
+    }
+    yield is_u64(medium[0]) and is_u64(medium[1]) and medium[1] > 0 and
+        is_u64(medium[2]) and is_u32(medium[3]) and medium[3] > 0
+}
+
+craft average_u64(left, right) {
+    # Divide before adding, so the mean cannot overflow u64.
+    yield left // 2 + right // 2 + (left % 2 + right % 2) // 2
+}
+
+craft scale_q16(value, factor_q16) {
+    # Split the product to preserve u64 range without a wider integer type.
+    yield (value // Q16_ONE) * factor_q16 +
+        ((value % Q16_ONE) * factor_q16) // Q16_ONE
+}
+
+craft decay_by_completed_half_lives(value, half_life_ticks, elapsed_ticks) {
+    make halvings := elapsed_ticks // half_life_ticks
+    when halvings >= 64 {
+        yield 0
+    }
+    yield value // (2 ** halvings)
+}
+
+craft scalar_field_step(field, relaxation_q16, elapsed_ticks) {
+    when kind(field) != "list" or size(field) == 0 {
+        yield ["err", "scalar field must contain at least one cell"]
+    }
+    when not is_unsigned_integer(relaxation_q16, Q16_ONE) {
+        yield ["err", "relaxation factor must be Q16 in the range 0..1"]
+    }
+    when not is_u64(elapsed_ticks) {
+        yield ["err", "elapsed ticks must be u64"]
+    }
+
+    each medium in field {
+        when not scalar_medium_valid(medium) {
+            yield ["err", "scalar field contains an invalid medium record"]
+        }
+    }
+
+    vary next_field := []
+    make cell_count := size(field)
+    each index in range(cell_count) {
+        make medium := field[index]
+        make left_index := (index + cell_count - 1) % cell_count
+        make right_index := (index + 1) % cell_count
+        make current := medium[0]
+        make neighbour_mean := average_u64(
+            field[left_index][0],
+            field[right_index][0]
+        )
+        vary difference := 0
+        when neighbour_mean >= current {
+            change difference := neighbour_mean - current
+        } otherwise {
+            change difference := current - neighbour_mean
+        }
+
+        make adjustment := scale_q16(difference, relaxation_q16)
+        vary relaxed_potential := current
+        when neighbour_mean >= current {
+            change relaxed_potential := current + adjustment
+        } otherwise {
+            change relaxed_potential := current - adjustment
+        }
+
+        make decayed_potential := decay_by_completed_half_lives(
+            relaxed_potential,
+            medium[3],
+            elapsed_ticks
+        )
+        change next_field := push(next_field, [
+            decayed_potential,
+            medium[1],
+            medium[2],
+            medium[3]
+        ])
+    }
+
+    yield ["ok", next_field]
+}
+
+craft scalar_field_gradient(field) {
+    when kind(field) != "list" or size(field) == 0 {
+        yield ["err", "scalar field must contain at least one cell"]
+    }
+    each medium in field {
+        when not scalar_medium_valid(medium) {
+            yield ["err", "scalar field contains an invalid medium record"]
+        }
+    }
+
+    vary maximum_gradient := 0
+    make cell_count := size(field)
+    each index in range(cell_count) {
+        make next_index := (index + 1) % cell_count
+        make left := field[index][0]
+        make right := field[next_index][0]
+        vary difference := 0
+        when left >= right {
+            change difference := left - right
+        } otherwise {
+            change difference := right - left
+        }
+        when difference > maximum_gradient {
+            change maximum_gradient := difference
+        }
+    }
+    yield ["ok", maximum_gradient]
+}
+
+craft scalar_field_flux(field, quantum_step) {
+    when kind(field) != "list" {
+        yield ["err", "scalar field must be a list"]
+    }
+    when not is_u64(quantum_step) {
+        yield ["err", "quantum step must be u64"]
+    }
+
+    vary total_flux := 0
+    each medium in field {
+        when not scalar_medium_valid(medium) {
+            yield ["err", "scalar field contains an invalid medium record"]
+        }
+        vary available := 0
+        when medium[0] > quantum_step {
+            change available := medium[0] - quantum_step
+        }
+        when available > U64_MAX - medium[2] {
+            yield ["err", "cell flux exceeds u64"]
+        }
+        make cell_flux := available + medium[2]
+        when total_flux > U64_MAX - cell_flux {
+            yield ["err", "total scalar flux exceeds u64"]
+        }
+        change total_flux := total_flux + cell_flux
+    }
+    yield ["ok", total_flux]
+}
+
+craft stack_module_valid(module) {
+    when kind(module) != "list" or size(module) != 9 {
+        yield false
+    }
+    yield is_u64(module[0]) and module[0] > 0 and
+        kind(module[1]) == "text" and size(module[1]) > 0 and
+        is_u32(module[2]) and module[2] > 0 and
+        kind(module[3]) == "boolean" and kind(module[4]) == "boolean" and
+        is_u64(module[5]) and is_u64(module[6]) and is_u64(module[7]) and
+        is_u64(module[8])
+}
+
+craft find_stack_module(modules, module_id) {
+    each module in modules {
+        when module[0] == module_id {
+            yield module
+        }
+    }
+    yield []
+}
+
+craft stack_synthesize(modules, dependencies, policy) {
+    when kind(modules) != "list" or size(modules) == 0 or size(modules) > 64 {
+        yield ["err", "stack must contain between 1 and 64 modules"]
+    }
+    when kind(dependencies) != "list" or size(dependencies) > 256 {
+        yield ["err", "dependency graph exceeds the 256-edge limit"]
+    }
+    when kind(policy) != "list" or size(policy) != 4 {
+        yield ["err", "stack policy must contain four fields"]
+    }
+    when not is_u64(policy[0]) or not is_u64(policy[1]) or
+        kind(policy[2]) != "boolean" or kind(policy[3]) != "boolean" {
+        yield ["err", "stack policy fields are invalid"]
+    }
+
+    vary seen_ids := []
+    each module in modules {
+        when not stack_module_valid(module) {
+            yield ["err", "stack contains an invalid module descriptor"]
+        }
+        when contains(seen_ids, module[0]) {
+            yield ["err", "duplicate module id"]
+        }
+        change seen_ids := push(seen_ids, module[0])
+    }
+
+    # A shared runtime key is a contract: every participant must agree on ABI
+    # major and the exact shared-memory footprint before it can be collapsed.
+    each module in modules {
+        when module[5] != 0 {
+            each other in modules {
+                when other[0] != module[0] and other[5] == module[5] {
+                    when other[2] != module[2] or other[7] != module[7] {
+                        yield ["err", "shared runtime key has incompatible ABI or memory contract"]
+                    }
+                }
+            }
+        }
+    }
+
+    each dependency in dependencies {
+        when kind(dependency) != "list" or size(dependency) != 4 {
+            yield ["err", "dependency edge must have four fields"]
+        }
+        make consumer := find_stack_module(modules, dependency[0])
+        make provider := find_stack_module(modules, dependency[1])
+        when size(consumer) == 0 or size(provider) == 0 {
+            yield ["err", "dependency edge references an unknown module"]
+        }
+        when dependency[0] == dependency[1] {
+            yield ["err", "module cannot depend on itself"]
+        }
+        when kind(dependency[2]) != "text" or
+            not is_u32(dependency[3]) or dependency[3] == 0 {
+            yield ["err", "dependency contract requirement is invalid"]
+        }
+        when provider[1] != dependency[2] or provider[2] != dependency[3] {
+            yield ["err", "provider does not satisfy the requested contract ABI"]
+        }
+    }
+
+    vary independent_bytes := 0
+    vary fused_bytes := 0
+    vary compute_units := 0
+    vary shared_keys := []
+
+    each module in modules {
+        when policy[2] and not module[3] {
+            yield ["err", "local-only policy rejects a non-local module"]
+        }
+        when not policy[3] and module[4] {
+            yield ["err", "deprecated module is not allowed by stack policy"]
+        }
+
+        when independent_bytes > U64_MAX - module[5] {
+            yield ["err", "independent private-memory estimate exceeds u64"]
+        }
+        change independent_bytes := independent_bytes + module[5]
+        when fused_bytes > U64_MAX - module[5] {
+            yield ["err", "fused private-memory estimate exceeds u64"]
+        }
+        change fused_bytes := fused_bytes + module[5]
+
+        when independent_bytes > U64_MAX - module[7] {
+            yield ["err", "independent shared-memory estimate exceeds u64"]
+        }
+        change independent_bytes := independent_bytes + module[7]
+
+        when module[6] == 0 or not contains(shared_keys, module[6]) {
+            when fused_bytes > U64_MAX - module[7] {
+                yield ["err", "fused shared-memory estimate exceeds u64"]
+            }
+            change fused_bytes := fused_bytes + module[7]
+            when module[6] != 0 {
+                change shared_keys := push(shared_keys, module[6])
+            }
+        }
+
+        when compute_units > U64_MAX - module[8] {
+            yield ["err", "stack compute estimate exceeds u64"]
+        }
+        change compute_units := compute_units + module[8]
+    }
+
+    when fused_bytes > policy[0] {
+        yield ["err", "fused stack exceeds the memory budget"]
+    }
+    when compute_units > policy[1] {
+        yield ["err", "stack exceeds the compute budget"]
+    }
+
+    # Stable Kahn ordering: among all ready nodes, always select the smallest
+    # numeric id. The result is independent of input file/module order.
+    vary ordered_ids := []
+    loop while size(ordered_ids) < size(modules) {
+        vary selected_id := 0
+        each candidate in modules {
+            when not contains(ordered_ids, candidate[0]) {
+                vary ready := true
+                each dependency in dependencies {
+                    when dependency[0] == candidate[0] and
+                        not contains(ordered_ids, dependency[1]) {
+                        change ready := false
+                    }
+                }
+                when ready and (selected_id == 0 or candidate[0] < selected_id) {
+                    change selected_id := candidate[0]
+                }
+            }
+        }
+        when selected_id == 0 {
+            yield ["err", "dependency graph contains a cycle"]
+        }
+        change ordered_ids := push(ordered_ids, selected_id)
+    }
+
+    yield [
+        "ok",
+        ordered_ids,
+        independent_bytes,
+        fused_bytes,
+        independent_bytes - fused_bytes,
+        compute_units
+    ]
+}
+
+craft assess_criticality(sample, minimum_q16, maximum_q16) {
+    when kind(sample) != "list" or size(sample) != 6 {
+        yield ["err", "criticality sample must contain six counters"]
+    }
+    each counter in sample {
+        when not is_u64(counter) {
+            yield ["err", "criticality counters must be u64"]
+        }
+    }
+    when not is_u64(minimum_q16) or not is_u64(maximum_q16) or
+        minimum_q16 > maximum_q16 {
+        yield ["err", "criticality window is invalid"]
+    }
+
+    make accepted_tasks := sample[0]
+    make spawned_tasks := sample[1]
+    make queue_depth := sample[2]
+    make queue_capacity := sample[3]
+    make active_workers := sample[4]
+    make worker_slots := sample[5]
+
+    when accepted_tasks == 0 {
+        yield ["err", "criticality cannot be measured without accepted tasks"]
+    }
+    when spawned_tasks > U64_MAX // Q16_ONE {
+        yield ["err", "criticality scaling would overflow u64"]
+    }
+
+    make k_eff_q16 := (spawned_tasks * Q16_ONE) // accepted_tasks
+    make queue_bounded := queue_capacity > 0 and queue_depth < queue_capacity
+    make workers_bounded := worker_slots > 0 and active_workers <= worker_slots
+    make stable := k_eff_q16 <= Q16_ONE and queue_bounded and workers_bounded
+    make balanced := stable and k_eff_q16 >= minimum_q16 and
+        k_eff_q16 <= maximum_q16
+
+    yield ["ok", k_eff_q16, stable, balanced]
+}
+
+# --- Executable acceptance cases ---
+
+make field := [
+    [100, 64, 10, 120],
+    [200, 64, 10, 120],
+    [300, 64, 10, 120],
+    [400, 64, 10, 120]
+]
+
+make stepped := scalar_field_step(field, 16384, 0)
+assert(stepped[0] == "ok", "scalar relaxation must succeed")
+assert(stepped[1][0][0] == 150, "first scalar cell relaxation mismatch")
+assert(stepped[1][1][0] == 200, "second scalar cell relaxation mismatch")
+assert(stepped[1][2][0] == 300, "third scalar cell relaxation mismatch")
+assert(stepped[1][3][0] == 350, "fourth scalar cell relaxation mismatch")
+
+make gradient := scalar_field_gradient(field)
+assert(gradient == ["ok", 300], "ring scalar gradient mismatch")
+
+make flux := scalar_field_flux(field, 16)
+assert(flux == ["ok", 976], "scalar flux aggregation mismatch")
+
+make decayed := scalar_field_step(field, 0, 120)
+assert(decayed[0] == "ok", "half-life decay step must succeed")
+assert(decayed[1][0][0] == 50 and decayed[1][3][0] == 200,
+    "one completed half-life must halve scalar potential")
+
+make modules := [
+    [10, "base.codec", 1, true, false, 100, 77, 40, 80],
+    [20, "audio.codec", 1, true, false, 60, 77, 40, 120],
+    [30, "vector.math", 2, true, false, 25, 0, 0, 40]
+]
+make edges := [
+    [20, 10, "base.codec", 1],
+    [30, 20, "audio.codec", 1]
+]
+make policy := [256, 300, true, false]
+make fused := stack_synthesize(modules, edges, policy)
+assert(fused[0] == "ok", "compatible local stack must synthesize")
+assert(fused[1] == [10, 20, 30], "topological order must be deterministic")
+assert(fused[2] == 265 and fused[3] == 225 and fused[4] == 40,
+    "shared runtime footprint calculation mismatch")
+assert(fused[5] == 240, "compute budget aggregation mismatch")
+
+make reordered := stack_synthesize([
+    modules[2], modules[1], modules[0]
+], edges, policy)
+assert(reordered == fused, "stack plan must not depend on descriptor order")
+
+make cycle := stack_synthesize(modules, [
+    [10, 20, "audio.codec", 1],
+    [20, 10, "base.codec", 1]
+], policy)
+assert(cycle[0] == "err", "dependency cycles must be rejected")
+
+make incompatible := stack_synthesize(modules, [
+    [20, 10, "base.codec", 2],
+    [30, 20, "audio.codec", 1]
+], policy)
+assert(incompatible[0] == "err", "ABI mismatch must be rejected")
+
+make over_budget := stack_synthesize(modules, edges, [224, 300, true, false])
+assert(over_budget[0] == "err", "memory over-budget plan must be rejected")
+
+make remote_module := [
+    40, "network.adapter", 1, false, false, 10, 0, 0, 10
+]
+make remote_plan := stack_synthesize(
+    push(modules, remote_module), edges, policy
+)
+assert(remote_plan[0] == "err", "local-only policy must reject remote modules")
+
+make unstable := assess_criticality([100, 120, 32, 128, 4, 8], 58982, 65536)
+assert(unstable[0] == "ok" and unstable[1] == 78643 and not unstable[2],
+    "supercritical task reproduction must be rejected")
+make balanced := assess_criticality([100, 95, 32, 128, 4, 8], 58982, 65536)
+assert(balanced == ["ok", 62259, true, true],
+    "bounded near-critical workload must be accepted")
+make queue_overflow := assess_criticality([100, 95, 128, 128, 9, 8], 58982, 65536)
+assert(queue_overflow[0] == "ok" and not queue_overflow[2],
+    "full queue and excess workers must fail the stability gate")
+
+emit "SELFHOST_SCALAR_STACK_OK"
