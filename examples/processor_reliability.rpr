@@ -1,0 +1,372 @@
+# End-to-end Reaper Processor Reliability Core conformance fixture.
+# Run from the Reaper repository root:
+#   python -m reaper --check examples/processor_reliability.rpr
+#   python -m reaper examples/processor_reliability.rpr
+# Every physical value in this fixture is deterministic simulated input.
+
+import "../stdlib/processor_reliability.rpr" as core
+
+make coverage := core["validate_matrix_coverage"](core["matrix_fixtures"]())
+assert(coverage[0], "all twenty type/role combinations must be registered")
+assert(coverage[1] == 20, "matrix coverage count must equal 20")
+
+make initial := core["new_state"](
+    4096,
+    512,
+    "test",
+    [16, 16, 16, 16, 16, 16, 16, 16],
+    80
+)
+assert(initial[0] and size(initial[1]) == 20, "versioned test kernel state must initialize with twenty slots")
+vary state := initial[1]
+vary matrix_trace := []
+
+each spec in core["matrix_fixtures"]() {
+    make result := core["run_construct"](state, spec)
+    assert(result[0], "every type/role combination must execute")
+    change state := result[1]
+    change matrix_trace := push(matrix_trace, result[2])
+}
+assert(size(matrix_trace) == 20, "twenty constructs must produce twenty trace records")
+assert(state[15] == 5, "one SERVICE invocation per core type must be counted")
+assert(state[14] == 20, "kernel step count must match dispatched constructs")
+make matrix_registers := core["hardware_register_snapshot"](state)
+assert(matrix_registers[0] and matrix_registers[1][9] == 20, "simulated barrier counter must track all matrix dispatches")
+
+# Formal core: dimensions, exact conversion, and checked arithmetic.
+make one_ns := core["convert_quantity"](1, "ns", "ps")
+assert(one_ns[0] and one_ns[1] == 1000, "ns to ps conversion must be exact")
+make invalid_dimension := core["convert_quantity"](1, "ns", "um")
+assert(not invalid_dimension[0], "time cannot be converted to length")
+make overflow := core["checked_add"](9007199254740991, 1)
+assert(not overflow[0], "safe integer overflow must be rejected")
+make fraction := core["valid_integer"](1.5, 0, 100)
+assert(not fraction, "fractional cycle counts must be rejected")
+
+# RPR-BC: 64-bit instruction round-trip and strict unknown-opcode rejection.
+make encoded := core["bytecode_encode"](17, "SCENARIO", 77, 512, 0)
+assert(encoded[0], "valid command instruction must encode")
+make decoded := core["bytecode_decode"](encoded[1])
+assert(decoded[0], "encoded instruction must decode")
+assert(decoded[1][0] == 17 and decoded[1][1] == "SCENARIO", "opcode/domain must survive round-trip")
+make invalid_opcode := core["bytecode_decode"]([4278196224, 0])
+assert(not invalid_opcode[0], "unknown opcode must not silently map to RULE")
+make executed := core["execute_bytecode"](state, encoded[1])
+assert(executed[0], "verified bytecode must dispatch through the execution core")
+change state := executed[1]
+
+make exec_word := core["bytecode_encode"](16, "RULE", 1, 4, 0)
+make exec_result := core["execute_bytecode"](state, exec_word[1])
+assert(exec_word[0] and exec_result[0], "generic execute opcode must dispatch")
+change state := exec_result[1]
+
+make operand_word := core["bytecode_encode"](16, "BOOT", 5, 1, 1)
+make operand_result := core["execute_bytecode"](state, operand_word[1])
+assert(operand_word[0] and operand_result[0], "operand flag must dispatch an OPERAND construct")
+assert(operand_result[2][3] == "OPERAND", "bytecode flags must preserve the operand role")
+change state := operand_result[1]
+
+make service_word := core["bytecode_encode"](18, "ROOT", 2, 0, 0)
+make service_result := core["execute_bytecode"](state, service_word[1])
+assert(service_word[0] and service_result[0], "service invoke opcode must dispatch")
+assert(service_result[1][15] == 6, "bytecode service invocation must be counted")
+change state := service_result[1]
+
+make repair_word := core["bytecode_encode"](32, "START", 3, 25, 0)
+make repair_result := core["execute_bytecode"](state, repair_word[1])
+assert(repair_word[0] and repair_result[0], "repair-spend opcode must dispatch")
+assert(repair_result[1][4] == state[4] - 25, "repair opcode must debit the finite budget")
+change state := repair_result[1]
+
+# Every specialized physical opcode has an explicit, checked handler.
+make cu_word := core["bytecode_encode"](48, "BOOT", 1000, 1000, 0)
+make cu_result := core["execute_bytecode"](state, cu_word[1])
+assert(cu_word[0] and cu_result[0], "Cu-Mesh tune opcode must execute")
+assert(cu_result[2][1][0] == "CU_MESH_RC", "Cu-Mesh opcode must return an RC estimate")
+assert(cu_result[1][16] == "fault-injection-active", "BOOT execution must not clear an active test fault state")
+change state := cu_result[1]
+
+make nano_word := core["bytecode_encode"](49, "START", 7, 8, 0)
+make nano_result := core["execute_bytecode"](state, nano_word[1])
+assert(nano_word[0] and nano_result[0], "nano pulse opcode must execute")
+assert(nano_result[2][1][0] == "NANO_PULSE", "nano opcode must expose local cell consumption")
+change state := nano_result[1]
+
+make fault_word := core["bytecode_encode"](33, "SCENARIO", 8, 256, 0)
+make fault_result := core["execute_bytecode"](state, fault_word[1])
+assert(fault_word[0] and fault_result[0], "fault-period opcode must execute only in test mode")
+assert(fault_result[1][11] == 1, "repeated scenario activation must be idempotent")
+change state := fault_result[1]
+make invalid_active_scenario := core["run_construct"](state, ["SCENARIO", "COMMAND", 9, "INVALID_DUTY", 100, 64])
+assert(not invalid_active_scenario[0], "active scenario must still reject an invalid duty cycle")
+
+make skew_word := core["bytecode_encode"](64, "ROOT", 9, 16, 0)
+make skew_result := core["execute_bytecode"](state, skew_word[1])
+assert(skew_word[0] and skew_result[0], "corrective-skew opcode must dispatch through ROOT")
+change state := skew_result[1]
+
+
+# RAS event evidence and periodicity. These samples are deterministic fixtures.
+make ras_provider := ["windows-whea", "windows", "windows-whea.v1", true, true, true, "user", true, ["event-query", "persisted-record-read"]]
+assert(core["ras_provider_valid"](ras_provider), "read-only WHEA provider descriptor must validate")
+assert(not core["ras_provider_valid"](["windows-whea", "windows", "windows-whea.v1", true, true, false, "user", true, ["event-query"]]), "a provider with write authority must be rejected")
+make ras_event_1 := ["pytyliki.ras.event.v1", "event-1", "boot-1", "windows-whea", "package-0", "corrected", "low", "confirmed", 1000000000, "record-1"]
+make ras_event_2 := ["pytyliki.ras.event.v1", "event-2", "boot-1", "windows-whea", "package-0", "corrected", "low", "confirmed", 2000000000, "record-2"]
+make ras_event_3 := ["pytyliki.ras.event.v1", "event-3", "boot-1", "windows-whea", "package-0", "corrected", "low", "confirmed", 3000000000, "record-3"]
+make ras_event_4 := ["pytyliki.ras.event.v1", "event-4", "boot-1", "windows-whea", "package-0", "corrected", "low", "confirmed", 4000000000, "record-4"]
+make ras_series_1 := core["ras_series_new"](ras_event_1)
+make ras_series_2 := core["ras_series_record"](ras_series_1[1], ras_event_2)
+make ras_series_3 := core["ras_series_record"](ras_series_2[1], ras_event_3)
+make ras_series_4 := core["ras_series_record"](ras_series_3[1], ras_event_4)
+assert(ras_series_1[0] and ras_series_2[0] and ras_series_3[0] and ras_series_4[0], "RAS observations must append to a boot/provider/resource series")
+make ras_period := core["ras_periodicity_analyze"](ras_series_4[1][5])
+assert(ras_period[0] and ras_period[1] == 3 and ras_period[2] == 1000000000 and ras_period[4] == "periodic", "regular corrected hardware events must expose a periodic interval")
+assert(core["ras_recovery_action"](ras_event_4, ras_period, 4, false, false) == "warn-and-collect", "periodic corrected errors warn but do not trigger hardware writes")
+make ras_uncorrected := ["pytyliki.ras.event.v1", "event-5", "boot-1", "windows-whea", "page-17", "uncorrected_recoverable", "high", "confirmed", 5000000000, "record-5"]
+assert(core["ras_recovery_action"](ras_uncorrected, ras_period, 1, false, true) == "request-operator-and-os-review", "uncorrected errors require explicit OS capability")
+assert(core["ras_recovery_action"](ras_uncorrected, ras_period, 1, true, true) == "request-os-recovery", "a confirmed recoverable record may request an authorized OS path")
+make ras_fatal := ["pytyliki.ras.event.v1", "event-6", "boot-1", "windows-whea", "package-0", "uncorrected_fatal", "fatal", "confirmed", 6000000000, "record-6"]
+assert(core["ras_recovery_action"](ras_fatal, ras_period, 1, true, true) == "safe-stop-and-defer-to-kernel", "fatal events never enter a user-level retry loop")
+make ras_bc := core["bytecode_encode"](65, "RULE", 1, 4, 1)
+make ras_bc_result := core["execute_bytecode"](state, ras_bc[1])
+assert(ras_bc[0] and ras_bc_result[0] and ras_bc_result[2][1][0] == "RAS_DECISION" and ras_bc_result[2][1][1] == "warn-and-collect", "verified RAS bytecode must return a bounded periodic-warning decision")
+change state := ras_bc_result[1]
+make invalid_ras_bc := core["bytecode_encode"](65, "BOOT", 1, 4, 1)
+assert(not invalid_ras_bc[0], "unknown RAS opcode/domain combinations must be rejected")
+
+
+# Processor control plane: executable policy, startup handshakes and adapter admission.
+make subsystems := core["processor_subsystem_matrix"]()
+assert(size(subsystems) == 9, "all requested processor/RAS subsystems have a Reaper contract")
+assert(core["processor_subsystem_entry"]("ap-smp")[2] == "reaper-policy-implemented", "AP/SMP policy is implemented in Reaper")
+assert(core["processor_subsystem_entry"]("physical-material-repair")[2] == "not-software-solvable", "physical repair is not misrepresented")
+assert(core["processor_subsystem_entry"]("apic-ipi-timer")[2] == "reaper-policy-implemented", "APIC and timer policy is implemented")
+assert(core["processor_subsystem_entry"]("mca-msr")[2] == "reaper-policy-implemented", "MCA handling policy is implemented")
+assert(core["processor_subsystem_entry"]("page-recovery")[2] == "reaper-policy-implemented", "page recovery policy is implemented")
+assert(core["processor_subsystem_entry"]("linux-edac-mce")[2] == "provider-contract-implemented", "Linux EDAC adapter contract is present")
+assert(core["processor_subsystem_entry"]("apple-swift")[2] == "abi-contract-implemented", "Apple Swift ABI contract is present")
+assert(core["processor_subsystem_entry"]("rust-native-ras")[2] == "abi-contract-implemented", "Rust ABI contract is present")
+assert(core["processor_subsystem_entry"]("typescript-diagnostics")[2] == "schema-contract-implemented", "TypeScript diagnostics schema is present")
+
+make ap_ready := ["reaper.ap-start.v1", "boot-1", 1, 2, "ready-to-start", true, true, true, true, true, true, 7]
+make ap_transition := core["ap_startup_acknowledge"](ap_ready, "init-sipi-sent", "startup-sent")
+assert(not core["ap_startup_transition"](ap_ready, "startup-sent")[0], "local policy cannot forge an INIT/SIPI acknowledgement")
+assert(not core["ap_startup_acknowledge"](ap_ready, "missing-ack", "startup-sent")[0], "AP startup cannot advance without native adapter acknowledgement")
+make ap_online_ack := core["ap_startup_acknowledge"](ap_transition[1], "ap-online-confirmed", "online")
+assert(ap_online_ack[0] and ap_online_ack[1][4] == "online", "AP admission requires a native online acknowledgement")
+assert(ap_transition[0] and ap_transition[1][4] == "startup-sent", "AP state machine permits prepared INIT/SIPI handoff")
+assert(core["ap_startup_readiness"](ap_ready, true, 7) == "ready-for-kernel-init-sipi", "AP admission requires all per-CPU startup resources")
+assert(core["ap_startup_readiness"](ap_ready, false, 7) == "reject-bsp-not-online", "AP startup is blocked until BSP is online")
+assert(core["ap_startup_readiness"](ap_ready, true, 8) == "reject-stale-topology-generation", "stale topology generation is rejected")
+make ap_control_adapter := ["reaper.processor-adapter.v1", "duckos-ap-start", "ap-smp", "duckos", "assembly", "dabi64-v1", "kernel-control", true, ["ap-start"]]
+assert(core["ap_startup_admission"](ap_ready, true, 7, ap_control_adapter) == "admit-request-to-native-adapter", "AP startup request is admitted only through a privileged native adapter")
+make smp_topology := ["reaper.processor-control.v1", "boot-1", 7, 0, [1, 2], [0], 8]
+make ap_online := ap_online_ack[1]
+make smp_admit := core["ap_smp_admit_cpu"](smp_topology, ap_online)
+assert(smp_admit[0] and contains(smp_admit[1][5], 1), "verified AP handshake updates the logical SMP topology")
+assert(smp_admit[1][2] == 8, "AP admission increments topology generation")
+
+make apic_route := ["reaper.apic-route.v1", 0, 1, 64, "reschedule", "edge", false, 7]
+make ipi_adapter := ["reaper.processor-adapter.v1", "duckos-apic", "apic-ipi-timer", "duckos", "assembly", "x86-apic-v1", "kernel-control", true, ["ipi-send", "timer-preempt", "timer-arm"]]
+assert(core["apic_ipi_decision"](apic_route, true, true, 7, ipi_adapter) == "admit-request-to-native-adapter", "IPI route is capability-gated")
+assert(core["apic_ipi_decision"](apic_route, true, false, 7, ipi_adapter) == "reject-offline-ipi-endpoint", "IPI cannot target offline CPU")
+make timer := ["reaper.timer-profile.v1", "tsc-deadline", 2400000000, 1000, true, "oneshot", "lapic-0"]
+assert(core["timer_preemption_decision"](timer, 1000, 1000, true, false) == "request-reschedule-through-kernel-ipi-adapter", "expired quantum requests preemption")
+assert(core["timer_preemption_decision"](timer, 1000, 1000, false, false) == "defer-tick-until-interrupts-enabled", "preemption defers while interrupts are disabled")
+assert(core["timer_preemption_admission"](timer, 1000, 1000, true, false, ipi_adapter) == "admit-request-to-native-adapter", "timer request needs kernel control adapter")
+
+make mca_adapter := ["reaper.processor-adapter.v1", "duckos-mca-msr", "mca-msr", "duckos", "assembly", "x86-msr-read-v1", "kernel-read", true, ["msr-read"]]
+assert(core["mca_msr_read_admission"](377, 4, true, mca_adapter) == "admit-allowlisted-msr-read", "IA32_MCG_CAP is an allowlisted read")
+assert(core["mca_msr_read_admission"](16, 4, true, mca_adapter) == "reject-msr-not-allowlisted", "arbitrary MSR reads are rejected")
+assert(core["mca_msr_read_admission"](377, 4, false, mca_adapter) == "reject-mca-not-advertised", "MCA reads require CPUID capability")
+make mca_event := ["reaper.mca-event.v1", "mca-1", "boot-1", 0, true, true, false, true, "page-17", 5000, "msr-adapter-1", "confirmed"]
+assert(core["mca_handler_decision"](mca_event, true) == "request-page-recovery-through-memory-manager", "confirmed uncorrected address evidence may request page recovery")
+assert(core["mca_handler_decision"](mca_event, "yes") == "reject-invalid-page-recovery-capability", "MCA recovery capability must be boolean")
+make mca_corrupt := ["reaper.mca-event.v1", "mca-2", "boot-1", 0, true, true, true, false, "cpu-0", 6000, "msr-adapter-1", "confirmed"]
+assert(core["mca_handler_decision"](mca_corrupt, true) == "safe-stop-context-corrupt-defer-to-kernel-fatal-path", "corrupt processor context is not handled in user policy")
+
+make poisoned_page := ["reaper.page-recovery.v1", "page-17", 65536, "poisoned", false, true, 0, "page-18", true, 7, 9000]
+assert(core["page_recovery_decision"](poisoned_page, mca_event, true) == "admit-transactional-page-quarantine-and-replacement", "verified page replacement can be admitted transactionally")
+assert(core["page_recovery_decision"](["reaper.page-recovery.v1", "page-17", 65536, "poisoned", true, true, 0, "page-18", true, 7, 9000], mca_event, true) == "defer-pinned-or-referenced-page", "pinned pages cannot be offlined")
+make memory_adapter := ["reaper.processor-adapter.v1", "duckos-memory-manager", "page-recovery", "duckos", "c", "duckos-memory-recovery-v1", "kernel-control", true, ["page-quarantine", "page-replace"]]
+assert(core["page_recovery_admission"](poisoned_page, mca_event, true, memory_adapter) == "admit-request-to-native-adapter", "page replacement is owned by the kernel memory manager")
+
+assert(core["mca_msr_read_admission"](1040, 4, true, mca_adapter) == "reject-msr-not-allowlisted", "MCA reads cannot exceed the discovered bank count")
+assert(core["ap_startup_readiness"](["reaper.ap-start.v1", "boot-1", 1, 2, "ready-to-start", true, true, false, true, true, true, 7], true, 7) == "reject-incomplete-per-cpu-startup-resources", "AP cannot start without its private stack")
+assert(core["apic_ipi_decision"](["reaper.apic-route.v1", 0, 1, 64, "reschedule", "edge", true, 7], true, true, 7, ipi_adapter) == "reject-masked-ipi-route", "masked IPI routes are rejected")
+assert(core["apic_ipi_decision"](apic_route, true, true, smp_admit[1][2], ipi_adapter) == "reject-stale-topology-generation", "pre-admission IPI routes become stale after topology change")
+assert(core["page_recovery_decision"](poisoned_page, mca_event, false) == "reject-no-rollback-path", "page recovery requires rollback readiness")
+
+
+make linux_edac_before := ["linux.edac.counter.v1", "boot-1", "linux-edac-mce", "mc0", "dimm0", 10, 1, 1000, "sysfs:mc0/dimm0"]
+make linux_edac_after := ["linux.edac.counter.v1", "boot-1", "linux-edac-mce", "mc0", "dimm0", 13, 2, 2000, "sysfs:mc0/dimm0"]
+make linux_edac_delta := core["linux_edac_counter_delta"](linux_edac_before, linux_edac_after)
+assert(linux_edac_delta[0] and linux_edac_delta[1] == 3 and linux_edac_delta[2] == 1, "Linux EDAC counters produce only new CE/UE deltas")
+make linux_edac_events := core["linux_edac_snapshot_to_ras_events"](linux_edac_before, linux_edac_after)
+assert(linux_edac_events[0] and size(linux_edac_events[1]) == 2, "Linux EDAC delta becomes two typed RAS evidence records")
+assert(linux_edac_events[1][1][5] == "software_suspected" and linux_edac_events[1][1][7] == "supported", "EDAC UE does not invent a page address or confirmed MCA classification")
+assert(core["linux_edac_snapshot_to_ras_events"](nothing, linux_edac_after)[2] == "baseline-only", "first Linux snapshot is only a baseline")
+make linux_edac_reset := ["linux.edac.counter.v1", "boot-1", "linux-edac-mce", "mc0", "dimm0", 1, 0, 3000, "sysfs:mc0/dimm0"]
+assert(not core["linux_edac_counter_delta"](linux_edac_after, linux_edac_reset)[0], "EDAC counter reset requires a new baseline")
+
+make apple_swift_record := ["apple.swift.ras.v1", "boot-1", "diag-7", "memory", "memory_poison", "high", "supported", 7000, "apple-diagnostic:7"]
+make apple_swift_event := core["apple_swift_record_to_ras_event"](apple_swift_record)
+assert(apple_swift_event[0] and apple_swift_event[1][3] == "apple-swift-ras", "Swift diagnostics normalizes to the common RAS envelope")
+
+make rust_event := ["pytyliki.ras.event.v1", "rust-event-1", "boot-1", "rust-native-ras", "cpu-0", "corrected", "warning", "confirmed", 8000, "rust-record-1"]
+make rust_packet := ["rust.native.ras.v1", "dabi64-ras-v1", 1, "rust-native-ras", rust_event]
+make rust_live_adapter := ["reaper.processor-adapter.v1", "rust-test-adapter", "processor-control", "any", "rust", "dabi64-ras-v1", "read-only", true, ["event-query", "diagnostic-export"]]
+make rust_ingest := core["rust_native_ras_ingest"](rust_packet, rust_live_adapter)
+assert(rust_ingest[0] and rust_ingest[1] == rust_event, "Rust ABI packet is ingested only through an attached read-only adapter")
+
+make linux_provider := core["linux_edac_provider_descriptor"]()
+make apple_provider := core["apple_swift_ras_adapter_descriptor"]()
+make rust_adapter := core["rust_native_ras_adapter_descriptor"]()
+make ts_adapter := core["typescript_diagnostics_adapter_descriptor"]()
+assert(core["processor_adapter_admits"](linux_provider, "linux-edac-mce", "linux", "event-query", "read-only") == "adapter-not-attached", "Linux provider remains unavailable until a native reader is installed")
+assert(core["processor_adapter_admits"](apple_provider, "apple-ras", "macos", "event-query", "read-only") == "adapter-not-attached", "Swift adapter remains unavailable until a native reader is installed")
+assert(core["processor_adapter_valid"](linux_provider) and linux_provider[7] == false, "Linux EDAC provider contract exists but is not falsely marked attached")
+assert(core["processor_adapter_valid"](apple_provider) and apple_provider[4] == "swift", "Apple adapter has a Swift ABI contract")
+assert(core["processor_adapter_valid"](rust_adapter) and rust_adapter[4] == "rust", "Rust native adapter has a DABI64 contract")
+assert(core["processor_adapter_valid"](ts_adapter) and ts_adapter[4] == "typescript", "TypeScript diagnostics has a read-only interface contract")
+make ts_packet := ["reaper.ras-diagnostic.v1", "boot-1", "mca-1", "mca-msr", "error", "confirmed", 5000, "uncorrected memory event", "record-1"]
+make ts_export := core["typescript_diagnostic_export"](ts_packet, ts_adapter)
+assert(ts_export[0] and ts_export[2] == "read-only-export-request", "TypeScript receives a validated read-only diagnostics packet")
+make bad_ts_adapter := ["reaper.processor-adapter.v1", "ts-write", "processor-control", "any", "typescript", "json-rpc-ras-v1", "user-control", true, ["diagnostic-export", "ipi-send"]]
+assert(not core["typescript_diagnostic_export"](ts_packet, bad_ts_adapter)[0], "diagnostics interface cannot acquire hardware-control authority")
+assert(not core["processor_adapter_valid"](bad_ts_adapter), "read-only/user adapters cannot advertise IPI or MSR write authority")
+
+make physical_assessment := core["physical_repair_assessment"]("copper", "electromigration", false)
+assert(physical_assessment[0] and physical_assessment[1] == "not-software-repairable", "physical copper damage requires qualified lab inspection or replacement")
+
+# Processor-control bytecode uses verified domain/role dispatch and returns plans, never hardware effects.
+make ap_bc := core["bytecode_encode"](66, "BOOT", 1, 2, 63)
+make ap_bc_exec := core["execute_bytecode"](state, ap_bc[1])
+assert(ap_bc[0] and ap_bc_exec[0] and ap_bc_exec[2][6] == "admit-ap-startup-to-kernel-adapter", "AP startup bytecode dispatches to the kernel adapter contract")
+change state := ap_bc_exec[1]
+make ipi_bc := core["bytecode_encode"](67, "START", 0, 1, 64)
+make ipi_bc_exec := core["execute_bytecode"](state, ipi_bc[1])
+assert(ipi_bc[0] and ipi_bc_exec[0] and ipi_bc_exec[2][6] == "admit-ipi-route-to-kernel-adapter", "IPI bytecode produces a bounded delivery plan")
+change state := ipi_bc_exec[1]
+make timer_bc := core["bytecode_encode"](68, "START", 1000, 1000, 1)
+make timer_bc_exec := core["execute_bytecode"](state, timer_bc[1])
+assert(timer_bc[0] and timer_bc_exec[0] and timer_bc_exec[2][6] == "request-reschedule-through-kernel-timer-adapter", "timer bytecode generates a bounded preemption request")
+change state := timer_bc_exec[1]
+make mca_bc := core["bytecode_encode"](69, "RULE", 0, 0, 5)
+make mca_bc_exec := core["execute_bytecode"](state, mca_bc[1])
+assert(mca_bc[0] and mca_bc_exec[0] and mca_bc_exec[2][6] == "request-kernel-machine-check-recovery-policy", "MCA bytecode returns a bounded kernel recovery decision")
+change state := mca_bc_exec[1]
+make page_bc := core["bytecode_encode"](70, "ROOT", 1, 18, 7)
+make page_bc_exec := core["execute_bytecode"](state, page_bc[1])
+assert(page_bc[0] and page_bc_exec[0] and page_bc_exec[2][6] == "admit-page-recovery-to-memory-manager", "page recovery bytecode reaches only the memory-manager boundary")
+change state := page_bc_exec[1]
+
+# Register, barrier and stream surfaces are explicit simulated descriptors.
+make registers := core["hardware_register_snapshot"](state)
+assert(registers[0] and size(registers[1]) == 10, "simulated register bank must expose ten registers")
+assert(registers[1][5] == 15, "active test injection must expose all fault-control flags")
+assert(registers[1][6] == 7 and registers[1][7] == 241, "active profile must expose simulated Cu-Mesh and nano-array commands")
+make barrier := core["silicon_barrier"](0, 0, 8)
+assert(barrier[0] and barrier[1] == 8 and barrier[2] == 1, "barrier model must advance cycle and fence counters")
+make stream := core["stream_state"](2, 4096, -100)
+assert(stream[0], "processor stream must validate")
+make stream_tick := core["stream_advance"](stream[1], 12, 500, 16, true)
+assert(stream_tick[0] and stream_tick[1][2] == -83 and stream_tick[3] == "", "stream correction must reduce signed residual error")
+make channel := core["copper_channel"](1, 1000, 1000000, 17, 1000, 1000, 85000)
+assert(channel[0], "copper channel must validate")
+make channel_aged := core["copper_channel_age"](channel[1], 100000)
+assert(channel_aged[0] and channel_aged[1][6] > 0, "channel age must update its wear counter")
+
+# Repair core: forecast, local reserve depletion, and safe production degradation.
+make forecast := core["repair_forecast"](state, 50, 10)
+assert(forecast[0] and forecast[1] < state[4], "repair forecast must project future consumption")
+make reserve := core["reserve_spend"]([8, 12, 16], 1, 20)
+assert(reserve[0] and reserve[2] == 12 and reserve[3] == 8, "local reserve shortfall must be explicit")
+
+make production := core["new_state"](100, 20, "production", [80, 8], 0)
+assert(production[0], "production state must initialize")
+make initially_degraded := core["new_state"](8, 8, "production", [8], 0)
+assert(initially_degraded[0] and initially_degraded[1][16] == "safe-degraded", "production starts below its low watermark in safe degradation")
+make initially_blocked := core["run_construct"](initially_degraded[1], ["START", "COMMAND", 1, "NO_RESERVE_START", 1, 1024])
+assert(not initially_blocked[0], "initial low budget must prevent production stream startup")
+make production_spend := core["repair_spend"](production[1], 99, 64, 16)
+assert(production_spend[0], "production budget debit must succeed")
+assert(production_spend[1][16] == "safe-degraded", "low budget must enter safe degradation")
+assert(not production_spend[1][7], "production mode must never enable fault injection")
+make blocked_boot := core["run_construct"](production_spend[1], ["BOOT", "COMMAND", 1, "BOOT_CANNOT_CLEAR_DEGRADE", 0, 0])
+assert(blocked_boot[0] and blocked_boot[1][16] == "safe-degraded", "BOOT must not bypass production degradation")
+make blocked_start := core["run_construct"](production_spend[1], ["START", "COMMAND", 2, "BLOCKED_STREAM", 1, 1024])
+assert(not blocked_start[0], "safe-degraded production state must block new streams")
+make recovery_denied := core["repair_recover"](production_spend[1], 0, 40, [])
+assert(not recovery_denied[0], "recovery without a ROOT capability must be denied")
+make invalid_scope_capability := core["root_capability_descriptor"](
+    "mmio.write",
+    production_spend[1][14],
+    40,
+    "production"
+)
+assert(not invalid_scope_capability[0], "ROOT recovery capability must reject an unrelated scope")
+make recovery_capability_result := core["root_capability_descriptor"](
+    "repair.recover",
+    production_spend[1][14],
+    40,
+    "production"
+)
+assert(recovery_capability_result[0], "valid ROOT capability descriptor must be constructed")
+make recovery := core["repair_recover"](production_spend[1], 0, 40, recovery_capability_result[1])
+assert(recovery[0] and recovery[1][4] == 41 and recovery[1][16] == "ready", "ROOT-authorized local reserve must restore service")
+assert(recovery[1][17][0] == 40, "recovery must debit the supplying local reserve")
+make replayed_recovery := core["repair_recover"](recovery[1], 0, 1, recovery_capability_result[1])
+assert(not replayed_recovery[0], "revision-bound ROOT recovery capability must not be replayable")
+make recovered_start := core["run_construct"](recovery[1], ["START", "COMMAND", 3, "RECOVERED_STREAM", 1, 1024])
+assert(recovered_start[0], "production stream may start after verified recovery")
+make forbidden_injection := core["fault_inject"]("production", true, 1, 0, 64, 16)
+assert(not forbidden_injection[0], "production fault injection must be denied")
+
+# Physical core: silicon thermal guards, copper RC estimate, EM wear, nano repair.
+make domain := core["silicon_domain"](1, 0, 900, 42000, 95000)
+assert(domain[0], "valid silicon domain must be constructed")
+make overheat := core["silicon_advance"](domain[1], 10, 60000)
+assert(not overheat[0], "thermal limit must reject unsafe state transition")
+
+make copper := core["copper_evaluate"](1000, 1000000, 17, 1000)
+assert(copper[0] and copper[1] > 0 and copper[2] > 0, "Cu-Mesh RC metrics must be positive")
+make aged := core["copper_age"](4, 1000, 85000, 100000)
+assert(aged[0] and aged[1] > 4, "electromigration model must increase wear under load")
+
+make cell := core["nano_cell"](3, 16, 900, 12, 0)
+assert(cell[0], "nanochip cell must validate")
+make repaired_cell := core["nano_repair"](cell[1], 20)
+assert(repaired_cell[0] and repaired_cell[1][1] == 0 and repaired_cell[3] == 4, "local repair depletion must expose its shortfall")
+
+# Correction core: signed feedback must reduce residual magnitude without overshoot.
+make positive_fix := core["correction_step"](100, 500, 16)
+make negative_fix := core["correction_step"](-100, 500, 16)
+assert(positive_fix[0] and positive_fix[2] == 84 and positive_fix[3], "positive phase error must converge")
+assert(negative_fix[0] and negative_fix[2] == -84 and negative_fix[3], "negative phase error must converge")
+make exact_fix := core["correction_step"](8, 1000, 64)
+assert(exact_fix[0] and exact_fix[2] == 0 and exact_fix[4], "bounded full-gain correction must reach zero")
+
+# Pytyliki: deterministic load, fault-injection replay and report envelope.
+make load_state := core["new_state"](512, 64, "test", [8, 8, 8, 8], 100)
+assert(load_state[0], "load-test state must initialize")
+make load := core["run_load_test"](load_state[1], 20, 64, 64)
+assert(load[0], "bounded load run must replay deterministically")
+assert(size(load[2]) == 20, "load trace must contain every step")
+assert(load[1][4] == 0, "test load must exhaust the finite repair budget")
+assert(load[1][7], "test-only periodic fault injection must engage at low reserve")
+assert(load[1][18] > 0, "fault windows must be counted in the test environment")
+make replayed_load := core["replay_load_test"](load_state[1], 20, 64, 64, load[3], load[2])
+assert(replayed_load[0], "a second complete execution must reproduce the original trace and checksum")
+assert(replayed_load[1] == load[1] and replayed_load[2] == load[3], "replayed final state and checksum must match")
+make report := core["pytyliki_report"](load[1], load[2], load[3])
+assert(report[0], "Pytyliki report must pass trace and checksum validation")
+assert(report[1][0] == "pytyliki.processor-reliability.v1", "report schema must be versioned")
+assert(report[1][1] == 20, "report must retain the executed sample count")
+assert(report[1][8] == "simulated", "report must identify simulated evidence")
+
+emit "REAPER_PROCESSOR_RELIABILITY:PASS"
+emit "TYPE_ROLE_COVERAGE:20/20"
+emit "PYTYLIKI_REPLAY:PASS"
+emit "HARDWARE_EFFECTS:SIMULATED_OR_ADAPTER_GATED"
+emit "PROCESSOR_CONTROL:PASS"

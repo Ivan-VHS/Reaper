@@ -58,6 +58,26 @@ jobs:
         run: python -m reaper --check examples/device_audit.rpr
       - name: Validate Reaper Typed Registry example
         run: python -m reaper --check examples/typed_registry.rpr
+      - name: Validate Reaper Processor Reliability Core example
+        run: python -m reaper --check examples/processor_reliability.rpr
+      - name: Run Reaper Processor Reliability Core conformance fixture
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m reaper examples/processor_reliability.rpr | tee processor-reliability.txt
+          grep -qx "REAPER_PROCESSOR_RELIABILITY:PASS" processor-reliability.txt
+          grep -qx "TYPE_ROLE_COVERAGE:20/20" processor-reliability.txt
+          grep -qx "PYTYLIKI_REPLAY:PASS" processor-reliability.txt
+          grep -qx "PROCESSOR_CONTROL:PASS" processor-reliability.txt
+      - name: Run Processor Reliability Core through the Reaper bytecode VM
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m reaper --engine vm examples/processor_reliability.rpr | tee processor-reliability-vm.txt
+          grep -qx "REAPER_PROCESSOR_RELIABILITY:PASS" processor-reliability-vm.txt
+          grep -qx "TYPE_ROLE_COVERAGE:20/20" processor-reliability-vm.txt
+          grep -qx "PYTYLIKI_REPLAY:PASS" processor-reliability-vm.txt
+          grep -qx "PROCESSOR_CONTROL:PASS" processor-reliability-vm.txt
       - name: Run Reaper Typed Registry conformance fixtures
         run: python -m reaper examples/typed_registry.rpr
       - name: Validate Mora archive contracts example

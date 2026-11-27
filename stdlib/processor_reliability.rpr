@@ -1,0 +1,1836 @@
+# Reaper Processor Reliability Core v1.
+# Executable Reaper source. All hardware effects are modeled or adapter-gated.
+# Public records are positional lists so they work with the current .rpr grammar.
+
+export make CORE_SCHEMA := "reaper.processor-core.v1"
+export make SAFE_INTEGER_MAX := 9007199254740991
+export make CORE_TYPES := ["RULE", "BOOT", "START", "ROOT", "SCENARIO"]
+export make CORE_ROLES := ["OPERAND", "OPERATION", "COMMAND", "SERVICE"]
+
+export craft abs_value(value) {
+    when value < 0 { yield 0 - value }
+    yield value
+}
+
+export craft valid_number(value, minimum, maximum) {
+    when kind(value) != "number" { yield false }
+    when value != value { yield false }
+    when value < minimum or value > maximum { yield false }
+    yield true
+}
+
+export craft valid_integer(value, minimum, maximum) {
+    when not valid_number(value, minimum, maximum) { yield false }
+    yield value % 1 == 0
+}
+
+export craft checked_add(left, right) {
+    when not valid_integer(left, 0 - SAFE_INTEGER_MAX, SAFE_INTEGER_MAX) {
+        yield [false, 0, "RPR-FORMAL-0001: left operand is not a safe integer"]
+    }
+    when not valid_integer(right, 0 - SAFE_INTEGER_MAX, SAFE_INTEGER_MAX) {
+        yield [false, 0, "RPR-FORMAL-0002: right operand is not a safe integer"]
+    }
+    when right > 0 and left > SAFE_INTEGER_MAX - right {
+        yield [false, 0, "RPR-FORMAL-0003: integer addition overflow"]
+    }
+    when right < 0 and left < (0 - SAFE_INTEGER_MAX) - right {
+        yield [false, 0, "RPR-FORMAL-0004: integer addition underflow"]
+    }
+    yield [true, left + right, ""]
+}
+
+export craft checked_multiply(left, right) {
+    when not valid_integer(left, 0 - SAFE_INTEGER_MAX, SAFE_INTEGER_MAX) or
+         not valid_integer(right, 0 - SAFE_INTEGER_MAX, SAFE_INTEGER_MAX) {
+        yield [false, 0, "RPR-FORMAL-0005: multiplication requires safe integers"]
+    }
+    when left != 0 and abs_value(right) > SAFE_INTEGER_MAX // abs_value(left) {
+        yield [false, 0, "RPR-FORMAL-0006: integer multiplication overflow"]
+    }
+    yield [true, left * right, ""]
+}
+
+export craft unit_descriptor(unit) {
+    each item in [
+        ["ps", "time", 1],
+        ["ns", "time", 1000],
+        ["us", "time", 1000000],
+        ["cycle", "cycle", 1],
+        ["um", "length", 1000],
+        ["nm", "length", 1],
+        ["fF", "capacitance", 1],
+        ["pF", "capacitance", 1000],
+        ["mA", "current", 1],
+        ["mA_per_um2_x1000", "current_density", 1],
+        ["permille", "ratio", 1],
+        ["mV", "voltage", 1],
+        ["mC", "temperature", 1],
+        ["byte", "size", 1]
+    ] {
+        when item[0] == unit { yield item }
+    }
+    yield nothing
+}
+
+export craft quantity(value, unit) {
+    when not valid_number(value, 0 - SAFE_INTEGER_MAX, SAFE_INTEGER_MAX) {
+        yield [false, 0, unit, "", "RPR-FORMAL-0010: quantity is not a finite safe number"]
+    }
+    make descriptor := unit_descriptor(unit)
+    when descriptor == nothing {
+        yield [false, 0, unit, "", "RPR-FORMAL-0011: unknown unit " ++ text(unit)]
+    }
+    make scaled := checked_multiply(value, descriptor[2])
+    when not scaled[0] {
+        yield [false, 0, unit, descriptor[1], scaled[2]]
+    }
+    yield [true, value, unit, descriptor[1], scaled[1]]
+}
+
+export craft convert_quantity(value, from_unit, to_unit) {
+    make source := unit_descriptor(from_unit)
+    make target := unit_descriptor(to_unit)
+    when source == nothing or target == nothing {
+        yield [false, 0, to_unit, "RPR-FORMAL-0012: conversion uses an unknown unit"]
+    }
+    when source[1] != target[1] {
+        yield [false, 0, to_unit, "RPR-FORMAL-0013: incompatible physical dimensions"]
+    }
+    when not valid_integer(value, 0 - SAFE_INTEGER_MAX, SAFE_INTEGER_MAX) {
+        yield [false, 0, to_unit, "RPR-FORMAL-0014: conversion value must be a safe integer"]
+    }
+    make base := checked_multiply(value, source[2])
+    when not base[0] { yield [false, 0, to_unit, base[2]] }
+    when base[1] % target[2] != 0 {
+        yield [false, 0, to_unit, "RPR-FORMAL-0015: conversion is not an exact integer"]
+    }
+    yield [true, base[1] // target[2], to_unit, ""]
+}
+
+export craft diagnostic(code, message, subject) {
+    yield [code, message, subject]
+}
+
+export craft type_role_matrix() {
+    yield [
+        ["RULE", "OPERAND", "OP_RULE_REF"],
+        ["RULE", "OPERATION", "OPR_RULE_EVAL"],
+        ["RULE", "COMMAND", "CMD_RULE_BIND"],
+        ["RULE", "SERVICE", "SVC_RULE_ENGINE"],
+        ["BOOT", "OPERAND", "OP_BOOT_IMAGE"],
+        ["BOOT", "OPERATION", "OPR_BOOT_STAGE"],
+        ["BOOT", "COMMAND", "CMD_BOOT_LATCH"],
+        ["BOOT", "SERVICE", "SVC_BOOT_FABRIC"],
+        ["START", "OPERAND", "OP_START_VECTOR"],
+        ["START", "OPERATION", "OPR_START_PULSE"],
+        ["START", "COMMAND", "CMD_START_FLOW"],
+        ["START", "SERVICE", "SVC_START_DISPATCH"],
+        ["ROOT", "OPERAND", "OP_ROOT_CAPABILITY"],
+        ["ROOT", "OPERATION", "OPR_ROOT_SEAL"],
+        ["ROOT", "COMMAND", "CMD_ROOT_VERIFY"],
+        ["ROOT", "SERVICE", "SVC_ROOT_GUARD"],
+        ["SCENARIO", "OPERAND", "OP_SCENARIO_PROFILE"],
+        ["SCENARIO", "OPERATION", "OPR_SCENARIO_MORPH"],
+        ["SCENARIO", "COMMAND", "CMD_SCENARIO_ACTIVATE"],
+        ["SCENARIO", "SERVICE", "SVC_SCENARIO_ORCHESTRATOR"]
+    ]
+}
+
+export craft matrix_entry(type_name, role_name) {
+    each item in type_role_matrix() {
+        when item[0] == type_name and item[1] == role_name {
+            yield item
+        }
+    }
+    yield nothing
+}
+
+export craft matrix_fixtures() {
+    vary fixtures := []
+    vary index := 0
+    each item in type_role_matrix() {
+        change fixtures := push(fixtures, [item[0], item[1], index + 1, item[2], 0, 0])
+        change index := index + 1
+    }
+    yield fixtures
+}
+
+export craft validate_matrix_coverage(fixtures) {
+    when kind(fixtures) != "list" { yield [false, 0, ["RPR-EXEC-0001: fixture set must be a list"]] }
+    vary missing := []
+    each required in type_role_matrix() {
+        vary found := false
+        each candidate in fixtures {
+            when kind(candidate) == "list" and size(candidate) == 6 and
+                 candidate[0] == required[0] and candidate[1] == required[1] {
+                change found := true
+            }
+        }
+        when not found {
+            change missing := push(missing, [required[0], required[1]])
+        }
+    }
+    yield [size(missing) == 0 and size(fixtures) == 20, 20 - size(missing), missing]
+}
+
+export craft validate_construct(spec) {
+    when kind(spec) != "list" or size(spec) != 6 {
+        yield [false, "RPR-EXEC-0010: construct must have six fields"]
+    }
+    when not contains(CORE_TYPES, spec[0]) {
+        yield [false, "RPR-EXEC-0011: unknown core type " ++ text(spec[0])]
+    }
+    when not contains(CORE_ROLES, spec[1]) {
+        yield [false, "RPR-EXEC-0012: unknown construct role " ++ text(spec[1])]
+    }
+    when matrix_entry(spec[0], spec[1]) == nothing {
+        yield [false, "RPR-EXEC-0013: type/role pair is not registered"]
+    }
+    when not valid_integer(spec[2], 0, 65535) {
+        yield [false, "RPR-EXEC-0014: construct id must fit u16"]
+    }
+    when kind(spec[3]) != "text" or size(spec[3]) == 0 or size(spec[3]) > 128 {
+        yield [false, "RPR-EXEC-0015: label must contain 1..128 characters"]
+    }
+    when not valid_integer(spec[4], 0, 1000000000) {
+        yield [false, "RPR-EXEC-0016: magnitude must be a bounded non-negative integer"]
+    }
+    when not valid_integer(spec[5], 0, 1000000) {
+        yield [false, "RPR-EXEC-0017: auxiliary parameter must be a bounded integer"]
+    }
+    yield [true, ""]
+}
+
+export craft list_replace(items, index, replacement) {
+    when kind(items) != "list" or not valid_integer(index, 0, 1000000) or index >= size(items) {
+        yield [false, [], "RPR-FORMAL-0020: list replacement index is invalid"]
+    }
+    vary result := []
+    vary cursor := 0
+    each item in items {
+        when cursor == index {
+            change result := push(result, replacement)
+        } otherwise {
+            change result := push(result, item)
+        }
+        change cursor := cursor + 1
+    }
+    yield [true, result, ""]
+}
+
+export craft state_put(state, index, value) {
+    make changed := list_replace(state, index, value)
+    when not changed[0] { yield state }
+    yield changed[1]
+}
+
+export craft state_valid(state) {
+    when kind(state) != "list" or size(state) != 20 { yield false }
+    when state[0] != "RPC" or state[1] != 1 { yield false }
+    when not contains(["production", "test"], state[6]) { yield false }
+    when not valid_integer(state[2], 0, SAFE_INTEGER_MAX) { yield false }
+    when not valid_integer(state[3], 0, 1000000000000) { yield false }
+    when not valid_integer(state[4], 0, state[3]) { yield false }
+    when not valid_integer(state[5], 0, state[3]) { yield false }
+    when kind(state[7]) != "boolean" { yield false }
+    when not valid_integer(state[8], 0, 1000000) or
+         not valid_integer(state[9], 0, 500000) or
+         not valid_integer(state[10], 0, SAFE_INTEGER_MAX) { yield false }
+    when not valid_integer(state[11], 0, SAFE_INTEGER_MAX) { yield false }
+    when not valid_integer(state[12], 0 - 1000000000, 1000000000) { yield false }
+    when not valid_integer(state[13], 0, SAFE_INTEGER_MAX) { yield false }
+    when not valid_integer(state[14], 0, SAFE_INTEGER_MAX) or
+         not valid_integer(state[15], 0, SAFE_INTEGER_MAX) { yield false }
+    when kind(state[16]) != "text" or
+         not contains(["cold", "ready", "safe-degraded", "fault-injection-active"], state[16]) or
+         kind(state[17]) != "list" or size(state[17]) == 0 or size(state[17]) > 256 { yield false }
+    when state[7] and state[6] != "test" { yield false }
+    when state[7] and (state[8] < 64 or state[9] < 1 or state[9] > state[8] // 2) { yield false }
+    when state[7] and state[16] != "fault-injection-active" { yield false }
+    when state[6] == "production" and state[18] != 0 { yield false }
+    when state[6] == "production" and state[4] <= state[5] and state[16] != "safe-degraded" { yield false }
+    when not valid_integer(state[18], 0, SAFE_INTEGER_MAX) or
+         not valid_integer(state[19], 0, SAFE_INTEGER_MAX) { yield false }
+    each reserve in state[17] {
+        when not valid_integer(reserve, 0, 1000000) { yield false }
+    }
+    yield true
+}
+
+export craft new_state(capacity, low_watermark, mode, local_reserves, initial_phase_error_ps) {
+    when not valid_integer(capacity, 0, 1000000000000) {
+        yield [false, [], "RPR-REPAIR-0001: capacity must be within 0..10^12"]
+    }
+    when not valid_integer(low_watermark, 0, capacity) {
+        yield [false, [], "RPR-REPAIR-0002: low watermark must be within the capacity"]
+    }
+    when not contains(["production", "test"], mode) {
+        yield [false, [], "RPR-REPAIR-0003: mode must be production or test"]
+    }
+    when kind(local_reserves) != "list" or size(local_reserves) == 0 or size(local_reserves) > 256 {
+        yield [false, [], "RPR-REPAIR-0004: one to 256 local reserves are required"]
+    }
+    each reserve in local_reserves {
+        when not valid_integer(reserve, 0, 1000000) {
+            yield [false, [], "RPR-REPAIR-0005: local reserve is outside its bound"]
+        }
+    }
+    when not valid_integer(initial_phase_error_ps, 0 - 1000000000, 1000000000) {
+        yield [false, [], "RPR-CORRECT-0001: initial phase error must be a bounded integer"]
+    }
+    make lifecycle := "cold"
+    when mode == "production" and capacity <= low_watermark {
+        change lifecycle := "safe-degraded"
+    }
+    make state := [
+        "RPC", 1, 0, capacity, capacity, low_watermark, mode,
+        false, 0, 0, 0, 0, initial_phase_error_ps, 0, 0, 0,
+        lifecycle, local_reserves, 0, 0
+    ]
+    yield [true, state, ""]
+}
+
+export craft repair_spend(state, cost, period_cycles, duty_cycles) {
+    when not state_valid(state) {
+        yield [false, state, 0, false, false, "RPR-REPAIR-0010: invalid kernel state"]
+    }
+    when not valid_integer(cost, 0, 1000000000) {
+        yield [false, state, 0, false, false, "RPR-REPAIR-0011: repair cost is invalid"]
+    }
+    when not valid_integer(period_cycles, 64, 1000000) or
+         not valid_integer(duty_cycles, 1, period_cycles // 2) {
+        yield [false, state, 0, false, false, "RPR-FAULT-0010: period/duty is outside safe bounds"]
+    }
+    make spent := cost
+    when spent > state[4] { change spent := state[4] }
+    make remaining := state[4] - spent
+    make next := state_put(state, 4, remaining)
+    make triggered := false
+    make exhausted := remaining == 0
+    when remaining <= state[5] {
+        when state[6] == "test" and not state[7] {
+            change next := state_put(next, 7, true)
+            change next := state_put(next, 8, period_cycles)
+            change next := state_put(next, 9, duty_cycles)
+            make activation_count := checked_add(state[11], 1)
+            when not activation_count[0] {
+                yield [false, state, 0, false, false, "RPR-FAULT-0033: activation counter overflow"]
+            }
+            change next := state_put(next, 10, 0)
+            change next := state_put(next, 11, activation_count[1])
+            change next := state_put(next, 16, "fault-injection-active")
+            change triggered := true
+        } otherwise {
+            when state[6] == "production" {
+                change next := state_put(next, 16, "safe-degraded")
+            }
+        }
+    }
+    yield [true, next, spent, triggered, exhausted, next[16]]
+}
+
+export craft repair_forecast(state, cost_per_step, horizon_steps) {
+    when not state_valid(state) { yield [false, 0, 0, "RPR-REPAIR-0020: invalid state"] }
+    when not valid_integer(cost_per_step, 0, 1000000000) or
+         not valid_integer(horizon_steps, 1, 1000000) {
+        yield [false, 0, 0, "RPR-REPAIR-0021: forecast inputs are outside bounds"]
+    }
+    when cost_per_step == 0 {
+        yield [true, state[4], SAFE_INTEGER_MAX, ""]
+    }
+    make product := checked_multiply(cost_per_step, horizon_steps)
+    when not product[0] { yield [false, 0, 0, product[2]] }
+    make projected := state[4] - product[1]
+    when projected < 0 { change projected := 0 }
+    make exhaustion_step := state[4] // cost_per_step
+    yield [true, projected, exhaustion_step, ""]
+}
+
+export craft reserve_spend(reserves, reserve_index, cost) {
+    when kind(reserves) != "list" or size(reserves) == 0 {
+        yield [false, reserves, 0, cost, "RPR-REPAIR-0030: reserve list is empty"]
+    }
+    when not valid_integer(reserve_index, 0, size(reserves) - 1) or
+         not valid_integer(cost, 0, 1000000) {
+        yield [false, reserves, 0, cost, "RPR-REPAIR-0031: reserve index or cost is invalid"]
+    }
+    make available := reserves[reserve_index]
+    when not valid_integer(available, 0, 1000000) {
+        yield [false, reserves, 0, cost, "RPR-REPAIR-0032: selected reserve is invalid"]
+    }
+    make spent := cost
+    when spent > available { change spent := available }
+    make remaining := available - spent
+    make updated := list_replace(reserves, reserve_index, remaining)
+    yield [true, updated[1], spent, cost - spent, ""]
+}
+
+export craft root_capability_descriptor(scope, revision, maximum_amount, target_mode) {
+    when scope != "repair.recover" or not valid_integer(revision, 0, SAFE_INTEGER_MAX) {
+        yield [false, [], "RPR-ROOT-0010: invalid capability scope or revision"]
+    }
+    when not valid_integer(maximum_amount, 1, 1000000000) or target_mode != "production" {
+        yield [false, [], "RPR-ROOT-0011: invalid capability quota or target mode"]
+    }
+    yield [true, ["ROOTCAP", 1, scope, revision, maximum_amount, target_mode], ""]
+}
+
+export craft root_capability_valid(capability, state, amount) {
+    when kind(capability) != "list" or size(capability) != 6 { yield false }
+    when not valid_integer(amount, 1, 1000000000) { yield false }
+    when capability[0] != "ROOTCAP" or capability[1] != 1 { yield false }
+    when capability[2] != "repair.recover" or
+         not valid_integer(capability[3], 0, SAFE_INTEGER_MAX) or
+         capability[3] != state[14] { yield false }
+    when capability[5] != "production" or capability[5] != state[6] { yield false }
+    when not valid_integer(capability[4], 1, 1000000000) or amount > capability[4] { yield false }
+    yield true
+}
+
+export craft repair_recover(state, reserve_index, amount, root_capability) {
+    when not state_valid(state) {
+        yield [false, state, 0, "RPR-REPAIR-0040: invalid state"]
+    }
+    when not root_capability_valid(root_capability, state, amount) {
+        yield [false, state, 0, "RPR-REPAIR-0041: recovery requires a current, scoped ROOT capability"]
+    }
+    when state[6] != "production" or state[16] != "safe-degraded" {
+        yield [false, state, 0, "RPR-REPAIR-0042: recovery is allowed only from production safe-degraded state"]
+    }
+    when not valid_integer(amount, 1, 1000000000) {
+        yield [false, state, 0, "RPR-REPAIR-0043: recovery amount is outside bounds"]
+    }
+    make room := state[3] - state[4]
+    make credited := amount
+    when credited > room { change credited := room }
+    when credited == 0 {
+        yield [false, state, 0, "RPR-REPAIR-0044: repair budget is already at capacity"]
+    }
+    make reserve := reserve_spend(state[17], reserve_index, credited)
+    when not reserve[0] {
+        yield [false, state, 0, reserve[4]]
+    }
+    when reserve[3] != 0 {
+        yield [false, state, 0, "RPR-REPAIR-0045: local recovery reserve is insufficient"]
+    }
+    make restored := checked_add(state[4], credited)
+    when not restored[0] {
+        yield [false, state, 0, restored[2]]
+    }
+    make next_step := checked_add(state[14], 1)
+    make next_service := checked_add(state[15], 1)
+    make next_fence := checked_add(state[19], 1)
+    when not next_step[0] or not next_service[0] or not next_fence[0] {
+        yield [false, state, 0, "RPR-REPAIR-0047: recovery audit counter overflow"]
+    }
+    make next := state_put(state, 4, restored[1])
+    change next := state_put(next, 17, reserve[1])
+    change next := state_put(next, 14, next_step[1])
+    change next := state_put(next, 15, next_service[1])
+    change next := state_put(next, 19, next_fence[1])
+    when restored[1] > state[5] {
+        change next := state_put(next, 16, "ready")
+    }
+    yield [true, next, credited, ""]
+}
+
+export craft silicon_domain(domain_id, cycle, voltage_mv, temperature_mc, maximum_temperature_mc) {
+    when not valid_integer(domain_id, 0, 65535) or
+         not valid_integer(cycle, 0, SAFE_INTEGER_MAX) or
+         not valid_integer(voltage_mv, 0, 2000) or
+         not valid_integer(temperature_mc, -40000, 150000) or
+         not valid_integer(maximum_temperature_mc, -40000, 150000) {
+        yield [false, [], "RPR-PHYS-0001: silicon domain fields are outside bounds"]
+    }
+    when maximum_temperature_mc <= 0 or temperature_mc > maximum_temperature_mc {
+        yield [false, [], "RPR-PHYS-0002: silicon domain exceeds its thermal limit"]
+    }
+    yield [true, [domain_id, cycle, voltage_mv, temperature_mc, maximum_temperature_mc, "simulated"], ""]
+}
+
+export craft silicon_advance(domain, elapsed_cycles, temperature_delta_mc) {
+    when kind(domain) != "list" or size(domain) != 6 {
+        yield [false, domain, "RPR-PHYS-0010: malformed silicon domain"]
+    }
+    when not valid_integer(elapsed_cycles, 0, 1000000000) or
+         not valid_integer(temperature_delta_mc, -100000, 100000) {
+        yield [false, domain, "RPR-PHYS-0011: cycle or temperature delta is invalid"]
+    }
+    make cycle := checked_add(domain[1], elapsed_cycles)
+    make temperature := checked_add(domain[3], temperature_delta_mc)
+    when not cycle[0] or not temperature[0] {
+        yield [false, domain, "RPR-PHYS-0012: silicon counter or temperature overflow"]
+    }
+    when temperature[1] > domain[4] {
+        yield [false, domain, "RPR-PHYS-0013: thermal guard rejected the transition"]
+    }
+    make next := [domain[0], cycle[1], domain[2], temperature[1], domain[4], domain[5]]
+    yield [true, next, ""]
+}
+
+export craft copper_evaluate(length_um, area_nm2, resistivity_n_ohm_m, capacitance_ff) {
+    when not valid_integer(length_um, 1, 1000000) or
+         not valid_integer(area_nm2, 1000, 1000000000) or
+         not valid_integer(resistivity_n_ohm_m, 1, 1000) or
+         not valid_integer(capacitance_ff, 1, 1000000) {
+        yield [false, 0, 0, "RPR-PHYS-0020: copper geometry/material values are outside bounds"]
+    }
+    make numerator := checked_multiply(resistivity_n_ohm_m, length_um)
+    when not numerator[0] { yield [false, 0, 0, numerator[2]] }
+    make scaled := checked_multiply(numerator[1], 1000000)
+    when not scaled[0] { yield [false, 0, 0, scaled[2]] }
+    make resistance_mohm := scaled[1] // area_nm2
+    make delay_product := checked_multiply(resistance_mohm, capacitance_ff)
+    when not delay_product[0] { yield [false, 0, 0, delay_product[2]] }
+    make delay_ps := delay_product[1] // 1000000
+    yield [true, resistance_mohm, delay_ps, ""]
+}
+
+export craft copper_age(wear_permille, density_milli_ma_um2, temperature_mc, elapsed_cycles) {
+    when not valid_integer(wear_permille, 0, 1000) or
+         not valid_integer(density_milli_ma_um2, 0, 5000) or
+         not valid_integer(temperature_mc, -40000, 125000) or
+         not valid_integer(elapsed_cycles, 0, 100000) {
+        yield [false, wear_permille, "RPR-PHYS-0021: electromigration inputs are outside bounds"]
+    }
+    make density_squared := checked_multiply(density_milli_ma_um2, density_milli_ma_um2)
+    when not density_squared[0] { yield [false, wear_permille, density_squared[2]] }
+    make thermal_factor := 1000
+    when temperature_mc > 25000 {
+        change thermal_factor := thermal_factor + ((temperature_mc - 25000) // 100)
+    }
+    make load := checked_multiply(density_squared[1], elapsed_cycles)
+    when not load[0] { yield [false, wear_permille, load[2]] }
+    make thermal_load := checked_multiply(load[1], thermal_factor)
+    when not thermal_load[0] { yield [false, wear_permille, thermal_load[2]] }
+    make delta := thermal_load[1] // 1000000000000
+    make next_wear := wear_permille + delta
+    when next_wear > 1000 { change next_wear := 1000 }
+    yield [true, next_wear, ""]
+}
+
+export craft nano_cell(chip_id, local_repair_cells, health_permille, phase_error_ps, fault_latches) {
+    when not valid_integer(chip_id, 0, 65535) or
+         not valid_integer(local_repair_cells, 0, 1000000) or
+         not valid_integer(health_permille, 0, 1000) or
+         not valid_integer(phase_error_ps, -1000000, 1000000) or
+         not valid_integer(fault_latches, 0, SAFE_INTEGER_MAX) {
+        yield [false, [], "RPR-PHYS-0030: nanochip cell fields are outside bounds"]
+    }
+    yield [true, [chip_id, local_repair_cells, health_permille, phase_error_ps, fault_latches], ""]
+}
+
+export craft nano_repair(cell, requested_cells) {
+    when kind(cell) != "list" or size(cell) != 5 {
+        yield [false, cell, 0, "RPR-PHYS-0031: malformed nanochip cell"]
+    }
+    when not valid_integer(requested_cells, 0, 1000000) {
+        yield [false, cell, 0, "RPR-PHYS-0032: requested local repair is invalid"]
+    }
+    make spent := requested_cells
+    when spent > cell[1] { change spent := cell[1] }
+    make shortfall := requested_cells - spent
+    make health := cell[2] + spent - shortfall
+    when health > 1000 { change health := 1000 }
+    when health < 0 { change health := 0 }
+    make next := [cell[0], cell[1] - spent, health, cell[3], cell[4]]
+    yield [true, next, spent, shortfall]
+}
+
+export craft silicon_barrier(cycle, fence_count, elapsed_cycles) {
+    when not valid_integer(cycle, 0, SAFE_INTEGER_MAX) or
+         not valid_integer(fence_count, 0, SAFE_INTEGER_MAX) or
+         not valid_integer(elapsed_cycles, 1, 1000000) {
+        yield [false, cycle, fence_count, "RPR-PHYS-0014: barrier counters are outside bounds"]
+    }
+    make next_cycle := checked_add(cycle, elapsed_cycles)
+    make next_fence := checked_add(fence_count, 1)
+    when not next_cycle[0] or not next_fence[0] {
+        yield [false, cycle, fence_count, "RPR-PHYS-0015: barrier counter overflow"]
+    }
+    yield [true, next_cycle[1], next_fence[1], "simulated-ordering-only"]
+}
+
+export craft stream_state(stream_id, program_counter, phase_error_ps) {
+    when not valid_integer(stream_id, 0, 65535) or
+         not valid_integer(program_counter, 0, 4294967295) or
+         not valid_integer(phase_error_ps, -1000000000, 1000000000) {
+        yield [false, [], "RPR-EXEC-0040: stream descriptor is outside bounds"]
+    }
+    yield [true, [stream_id, program_counter, phase_error_ps, 0, 0], ""]
+}
+
+export craft stream_advance(stream, repair_spent, correction_gain_permille, maximum_step_ps, injected_fault) {
+    when kind(stream) != "list" or size(stream) != 5 {
+        yield [false, stream, [], "RPR-EXEC-0041: malformed stream descriptor"]
+    }
+    when not valid_integer(repair_spent, 0, 1000000000) or
+         kind(injected_fault) != "boolean" {
+        yield [false, stream, [], "RPR-EXEC-0042: stream update parameters are invalid"]
+    }
+    make pc := checked_add(stream[1], 4)
+    when not pc[0] or pc[1] > 4294967295 {
+        yield [false, stream, [], "RPR-EXEC-0043: 32-bit program counter overflow"]
+    }
+    make error := stream[2]
+    make fault_hits := stream[4]
+    when injected_fault {
+        make noisy := checked_add(error, 1)
+        make hit_count := checked_add(fault_hits, 1)
+        when not noisy[0] or not hit_count[0] {
+            yield [false, stream, [], "RPR-EXEC-0044: stream fault counter overflow"]
+        }
+        change error := noisy[1]
+        change fault_hits := hit_count[1]
+    }
+    make correction := correction_step(error, correction_gain_permille, maximum_step_ps)
+    when not correction[0] { yield [false, stream, [], correction[5]] }
+    make repairs := checked_add(stream[3], repair_spent)
+    when not repairs[0] { yield [false, stream, [], repairs[2]] }
+    make next := [stream[0], pc[1], correction[2], repairs[1], fault_hits]
+    yield [true, next, [error, correction[1], correction[2], correction[3], correction[4]], ""]
+}
+
+export craft copper_channel(channel_id, length_um, area_nm2, resistivity_n_ohm_m, capacitance_ff, density_milli_ma_um2, temperature_mc) {
+    when not valid_integer(channel_id, 0, 65535) or
+         not valid_integer(density_milli_ma_um2, 0, 5000) or
+         not valid_integer(temperature_mc, -40000, 125000) {
+        yield [false, [], "RPR-PHYS-0040: copper channel metadata is invalid"]
+    }
+    make electrical := copper_evaluate(length_um, area_nm2, resistivity_n_ohm_m, capacitance_ff)
+    when not electrical[0] { yield [false, [], electrical[3]] }
+    yield [true, [
+        channel_id, length_um, area_nm2, resistivity_n_ohm_m, capacitance_ff,
+        density_milli_ma_um2, 0, electrical[1], electrical[2], temperature_mc
+    ], ""]
+}
+
+export craft copper_channel_age(channel, elapsed_cycles) {
+    when kind(channel) != "list" or size(channel) != 10 {
+        yield [false, channel, "RPR-PHYS-0041: malformed copper channel"]
+    }
+    make aged := copper_age(channel[6], channel[5], channel[9], elapsed_cycles)
+    when not aged[0] { yield [false, channel, aged[2]] }
+    make next := [
+        channel[0], channel[1], channel[2], channel[3], channel[4],
+        channel[5], aged[1], channel[7], channel[8], channel[9]
+    ]
+    yield [true, next, ""]
+}
+
+export craft hardware_register_snapshot(state) {
+    when not state_valid(state) {
+        yield [false, [], "RPR-HW-0001: invalid state for register snapshot"]
+    }
+    make fault_ctrl := 0
+    when state[7] { change fault_ctrl := 15 }
+    make copper_control := 0
+    make nano_command := 0
+    when state[16] != "cold" {
+        change copper_control := 7
+        change nano_command := 165
+    }
+    when state[7] {
+        change nano_command := 241
+    }
+    yield [true, [
+        state[2], state[4], state[5], state[8], state[9],
+        fault_ctrl, copper_control, nano_command, state[13], state[19]
+    ], "simulated-register-bank"]
+}
+
+export craft fault_window_open(enabled, cycle, phase, period_cycles, duty_cycles) {
+    when kind(enabled) != "boolean" or not enabled { yield false }
+    when not valid_integer(cycle, 0, SAFE_INTEGER_MAX) or
+         not valid_integer(phase, 0, SAFE_INTEGER_MAX) or
+         not valid_integer(period_cycles, 1, 1000000) or
+         not valid_integer(duty_cycles, 1, period_cycles) { yield false }
+    when cycle < phase { yield false }
+    yield ((cycle - phase) % period_cycles) < duty_cycles
+}
+
+export craft fault_inject(mode, enabled, cycle, phase, period_cycles, duty_cycles) {
+    when mode != "test" {
+        yield [false, false, "RPR-FAULT-0020: fault injection is test-mode only"]
+    }
+    yield [true, fault_window_open(enabled, cycle, phase, period_cycles, duty_cycles), ""]
+}
+
+export craft scenario_enable(state, period_cycles, duty_cycles) {
+    when not state_valid(state) { yield [false, state, "RPR-FAULT-0030: invalid kernel state"] }
+    when state[6] != "test" {
+        yield [false, state, "RPR-FAULT-0031: scenarios cannot inject faults in production mode"]
+    }
+    when not valid_integer(period_cycles, 64, 1000000) or
+         not valid_integer(duty_cycles, 1, period_cycles // 2) {
+        yield [false, state, "RPR-FAULT-0032: scenario period/duty is outside bounds"]
+    }
+    when state[7] { yield [true, state, "already-active"] }
+    make next := state_put(state, 7, true)
+    change next := state_put(next, 8, period_cycles)
+    change next := state_put(next, 9, duty_cycles)
+    make activation_count := checked_add(state[11], 1)
+    when not activation_count[0] {
+        yield [false, state, "RPR-FAULT-0033: activation counter overflow"]
+    }
+    change next := state_put(next, 10, 0)
+    change next := state_put(next, 11, activation_count[1])
+    change next := state_put(next, 16, "fault-injection-active")
+    yield [true, next, ""]
+}
+
+export craft correction_step(error_ps, gain_permille, maximum_step_ps) {
+    when not valid_integer(error_ps, -1000000000, 1000000000) or
+         not valid_integer(gain_permille, 1, 1000) or
+         not valid_integer(maximum_step_ps, 1, 1000000) {
+        yield [false, 0, error_ps, false, false, "RPR-CORRECT-0010: correction input is outside bounds"]
+    }
+    make magnitude := abs_value(error_ps)
+    when magnitude == 0 {
+        yield [true, 0, 0, true, true, ""]
+    }
+    make scaled := checked_multiply(magnitude, gain_permille)
+    when not scaled[0] {
+        yield [false, 0, error_ps, false, false, scaled[2]]
+    }
+    make step := scaled[1] // 1000
+    when step == 0 { change step := 1 }
+    when step > maximum_step_ps { change step := maximum_step_ps }
+    when step > magnitude { change step := magnitude }
+    make applied := step
+    when error_ps > 0 { change applied := 0 - step }
+    make residual := error_ps + applied
+    make monotonic := abs_value(residual) <= magnitude
+    yield [true, applied, residual, monotonic, residual == 0, ""]
+}
+
+export craft apply_correction(state, gain_permille, maximum_step_ps) {
+    when not state_valid(state) { yield [false, state, [], "RPR-CORRECT-0020: invalid kernel state"] }
+    make result := correction_step(state[12], gain_permille, maximum_step_ps)
+    when not result[0] { yield [false, state, result, result[5]] }
+    make total := checked_add(state[13], abs_value(result[1]))
+    when not total[0] { yield [false, state, result, total[2]] }
+    make next := state_put(state, 12, result[2])
+    change next := state_put(next, 13, total[1])
+    yield [true, next, result, ""]
+}
+
+export craft bytecode_domain_code(domain_type) {
+    when domain_type == "RULE" { yield 1 }
+    when domain_type == "BOOT" { yield 2 }
+    when domain_type == "START" { yield 3 }
+    when domain_type == "ROOT" { yield 4 }
+    when domain_type == "SCENARIO" { yield 5 }
+    yield 0
+}
+
+export craft bytecode_domain_name(code) {
+    when code == 1 { yield "RULE" }
+    when code == 2 { yield "BOOT" }
+    when code == 3 { yield "START" }
+    when code == 4 { yield "ROOT" }
+    when code == 5 { yield "SCENARIO" }
+    yield ""
+}
+
+export craft bytecode_opcode_valid(opcode) {
+    yield contains([16, 17, 18, 32, 33, 48, 49, 64, 65, 66, 67, 68, 69, 70], opcode)
+}
+
+export craft bytecode_encode(opcode, domain_type, operand_a, operand_b, flags) {
+    make domain_code := bytecode_domain_code(domain_type)
+    when not bytecode_opcode_valid(opcode) or domain_code == 0 {
+        yield [false, [], "RPR-BC-0001: unknown opcode or domain"]
+    }
+    when opcode == 65 and domain_type != "RULE" {
+        yield [false, [], "RPR-BC-0003: RAS classify opcode requires RULE domain"]
+    }
+    when not valid_integer(operand_a, 0, 65535) or
+         not valid_integer(operand_b, 0, 65535) or
+         not valid_integer(flags, 0, 65535) {
+        yield [false, [], "RPR-BC-0002: bytecode operands and flags must fit u16"]
+    }
+    make high32 := opcode * 16777216 + domain_code * 65536 + operand_a
+    make low32 := operand_b * 65536 + flags
+    yield [true, [high32, low32], ""]
+}
+
+export craft bytecode_decode(word) {
+    when kind(word) != "list" or size(word) != 2 {
+        yield [false, [], "RPR-BC-0010: bytecode word must be a [high32, low32] pair"]
+    }
+    when not valid_integer(word[0], 0, 4294967295) or
+         not valid_integer(word[1], 0, 4294967295) {
+        yield [false, [], "RPR-BC-0011: 32-bit word is outside u32"]
+    }
+    make opcode := word[0] // 16777216
+    make domain_code := (word[0] // 65536) % 256
+    make operand_a := word[0] % 65536
+    make operand_b := word[1] // 65536
+    make flags := word[1] % 65536
+    make domain_type := bytecode_domain_name(domain_code)
+    when not bytecode_opcode_valid(opcode) or domain_type == "" {
+        yield [false, [], "RPR-BC-0012: unsupported opcode or domain code"]
+    }
+    yield [true, [opcode, domain_type, operand_a, operand_b, flags], ""]
+}
+
+export craft opcode_role(opcode) {
+    when opcode == 17 or opcode == 33 { yield "COMMAND" }
+    when opcode == 18 { yield "SERVICE" }
+    when opcode == 65 { yield "SERVICE" }
+    when contains([66, 67, 68, 69, 70], opcode) { yield "SERVICE" }
+    when contains([16, 32, 48, 49, 64], opcode) { yield "OPERATION" }
+    yield ""
+}
+
+export craft execute_bytecode(state, word) {
+    make decoded := bytecode_decode(word)
+    when not decoded[0] { yield [false, state, [], decoded[2]] }
+    make instruction := decoded[1]
+    make opcode := instruction[0]
+    make role := opcode_role(opcode)
+    when role == "" { yield [false, state, [], "RPR-BC-0020: opcode has no execution role"] }
+    when opcode == 16 and instruction[4] % 2 == 1 {
+        change role := "OPERAND"
+    }
+    when opcode == 32 and instruction[1] != "START" {
+        yield [false, state, [], "RPR-BC-0021: repair-spend opcode requires START domain"]
+    }
+    when opcode == 33 and instruction[1] != "SCENARIO" {
+        yield [false, state, [], "RPR-BC-0022: fault-period opcode requires SCENARIO domain"]
+    }
+    when opcode == 48 and instruction[1] != "BOOT" {
+        yield [false, state, [], "RPR-BC-0023: copper-tune opcode requires BOOT domain"]
+    }
+    when opcode == 49 and instruction[1] != "START" {
+        yield [false, state, [], "RPR-BC-0024: nano-pulse opcode requires START domain"]
+    }
+    when opcode == 64 and instruction[1] != "ROOT" {
+        yield [false, state, [], "RPR-BC-0025: corrective-skew opcode requires ROOT domain"]
+    }
+    when opcode == 65 and instruction[1] != "RULE" {
+        yield [false, state, [], "RPR-BC-0026: RAS classify opcode requires RULE domain"]
+    }
+    when opcode == 66 and instruction[1] != "BOOT" { yield [false, state, [], "RPR-BC-0028: AP startup opcode requires BOOT domain"] }
+    when opcode == 67 and instruction[1] != "START" { yield [false, state, [], "RPR-BC-0029: APIC IPI opcode requires START domain"] }
+    when opcode == 68 and instruction[1] != "START" { yield [false, state, [], "RPR-BC-0030: timer preemption opcode requires START domain"] }
+    when opcode == 69 and instruction[1] != "RULE" { yield [false, state, [], "RPR-BC-0031: MCA handler opcode requires RULE domain"] }
+    when opcode == 70 and instruction[1] != "ROOT" { yield [false, state, [], "RPR-BC-0032: page recovery opcode requires ROOT domain"] }
+    when opcode == 65 and (instruction[2] < 1 or instruction[2] > 4 or instruction[4] > 7) {
+        yield [false, state, [], "RPR-BC-0027: RAS bytecode fields are outside bounds"]
+    }
+    when opcode >= 66 and opcode <= 70 {
+        make decision := processor_control_bytecode_decision(opcode, instruction[2], instruction[3], instruction[4])
+        yield processor_control_service_dispatch(state, instruction, decision)
+    }
+    make label := "RPR_BC_" ++ text(opcode)
+    make magnitude := instruction[3]
+    make auxiliary := instruction[4]
+    when opcode == 33 {
+        change magnitude := instruction[4]
+        change auxiliary := instruction[3]
+    }
+    make spec := [instruction[1], role, instruction[2], label, magnitude, auxiliary]
+    make executed := run_construct(state, spec)
+    when not executed[0] { yield executed }
+
+    when opcode == 65 {
+        make decision := ras_bytecode_decision(instruction[2], instruction[3], instruction[4])
+        yield [true, executed[1], [executed[2], ["RAS_DECISION", decision]], ""]
+    }
+    when opcode == 48 {
+        make length_um := instruction[2] + 1
+        make capacitance_ff := instruction[3] + 1
+        make copper := copper_evaluate(length_um, 1000000, 17, capacitance_ff)
+        when not copper[0] { yield [false, state, [], copper[3]] }
+        yield [true, executed[1], [executed[2], ["CU_MESH_RC", copper[1], copper[2]]], ""]
+    }
+    when opcode == 49 {
+        make cell := nano_cell(instruction[2], 16, 1000, 0, 0)
+        when not cell[0] { yield [false, state, [], cell[2]] }
+        make requested := instruction[3]
+        when requested == 0 { change requested := 1 }
+        make pulse := nano_repair(cell[1], requested)
+        when not pulse[0] { yield [false, state, [], pulse[3]] }
+        yield [true, executed[1], [executed[2], ["NANO_PULSE", pulse[2], pulse[3], pulse[1][2]]], ""]
+    }
+    yield executed
+}
+
+export craft run_construct(state, spec) {
+    when not state_valid(state) {
+        yield [false, state, [], "RPR-EXEC-0030: invalid kernel state"]
+    }
+    make checked := validate_construct(spec)
+    when not checked[0] { yield [false, state, [], checked[1]] }
+    when state[6] == "production" and state[16] == "safe-degraded" and spec[0] == "START" {
+        yield [false, state, [], "RPR-REPAIR-0046: safe-degraded state blocks new production streams"]
+    }
+    make next_cycle := checked_add(state[2], 1)
+    make next_step := checked_add(state[14], 1)
+    make next_fence := checked_add(state[19], 1)
+    when not next_cycle[0] { yield [false, state, [], next_cycle[2]] }
+    when not next_step[0] { yield [false, state, [], next_step[2]] }
+    when not next_fence[0] { yield [false, state, [], next_fence[2]] }
+    make next := state_put(state, 2, next_cycle[1])
+    change next := state_put(next, 14, next_step[1])
+    change next := state_put(next, 19, next_fence[1])
+    when spec[1] == "SERVICE" {
+        make service_count := checked_add(state[15], 1)
+        when not service_count[0] { yield [false, state, [], service_count[2]] }
+        change next := state_put(next, 15, service_count[1])
+    }
+    make spent := 0
+    make local_spent := 0
+    make triggered := false
+
+    when spec[0] == "BOOT" {
+        when next[16] == "cold" and not next[7] {
+            change next := state_put(next, 16, "ready")
+        }
+    }
+    when spec[0] == "RULE" {
+        when next[4] <= next[5] and next[6] == "production" {
+            change next := state_put(next, 16, "safe-degraded")
+        } otherwise {
+            when next[16] == "cold" { change next := state_put(next, 16, "ready") }
+        }
+    }
+    when spec[0] == "START" {
+        make period := spec[5]
+        when period < 64 { change period := 1024 }
+        make duty := period // 4
+        when duty < 16 { change duty := 16 }
+        make repair := repair_spend(next, spec[4], period, duty)
+        when not repair[0] { yield [false, state, [], repair[5]] }
+        change next := repair[1]
+        change spent := repair[2]
+        change triggered := repair[3]
+        make local_index := spec[2] % size(next[17])
+        make local_cost := 0
+        when spent > 0 { change local_cost := 1 }
+        make local := reserve_spend(next[17], local_index, local_cost)
+        when not local[0] { yield [false, state, [], local[4]] }
+        change next := state_put(next, 17, local[1])
+        change local_spent := local[2]
+    }
+    when spec[0] == "SCENARIO" {
+        when next[6] != "test" {
+            yield [false, state, [], "RPR-EXEC-0031: scenario fault controls are test-mode only"]
+        }
+        make period := spec[5]
+        when period < 64 { change period := 1024 }
+        make duty := period // 4
+        when duty < 16 { change duty := 16 }
+        when spec[4] > 0 { change duty := spec[4] }
+        make scenario := scenario_enable(next, period, duty)
+        when not scenario[0] { yield [false, state, [], scenario[2]] }
+        change next := scenario[1]
+        change next := state_put(next, 16, "fault-injection-active")
+    }
+    when spec[0] == "ROOT" {
+        when next[0] != "RPC" or next[1] != 1 {
+            yield [false, state, [], "RPR-ROOT-0001: root invariant seal failed"]
+        }
+        when next[16] == "cold" { change next := state_put(next, 16, "ready") }
+    }
+
+    make injection := fault_inject(
+        next[6], next[7], next[2], next[10], next[8], next[9]
+    )
+    make injected_now := false
+    when injection[0] and injection[1] {
+        make injected_count := checked_add(next[18], 1)
+        make noisy_error := checked_add(next[12], 1)
+        when not injected_count[0] or not noisy_error[0] {
+            yield [false, state, [], "RPR-FAULT-0040: injection counter or synthetic error overflow"]
+        }
+        change next := state_put(next, 18, injected_count[1])
+        change next := state_put(next, 12, noisy_error[1])
+        change injected_now := true
+    }
+
+    make before_error := next[12]
+    make corrected := apply_correction(next, 500, 16)
+    when not corrected[0] { yield [false, state, [], corrected[3]] }
+    change next := corrected[1]
+    make correction := corrected[2]
+    make record := [
+        next[14], next[2], spec[0], spec[1], next[4], spent,
+        local_spent, before_error, correction[2], correction[1], triggered,
+        injected_now, next[16]
+    ]
+    yield [true, next, record, ""]
+}
+
+export craft trace_checksum(records) {
+    when kind(records) != "list" { yield [false, 0, "RPR-PYT-0001: trace must be a list"] }
+    vary checksum := 216613626
+    vary count := 0
+    each record in records {
+        when kind(record) != "list" or size(record) != 13 {
+            yield [false, checksum, "RPR-PYT-0002: malformed trace record"]
+        }
+        make step_mix := checked_add(checksum * 31, record[0])
+        when not step_mix[0] { yield [false, checksum, step_mix[2]] }
+        make cycle_mix := checked_add(step_mix[1], record[1] % 2147483647)
+        when not cycle_mix[0] { yield [false, checksum, cycle_mix[2]] }
+        make budget_mix := checked_add(cycle_mix[1], record[4] % 2147483647)
+        when not budget_mix[0] { yield [false, checksum, budget_mix[2]] }
+        make error_mix := checked_add(budget_mix[1], abs_value(record[8]) % 2147483647)
+        when not error_mix[0] { yield [false, checksum, error_mix[2]] }
+        change checksum := error_mix[1] % 2147483647
+        change count := count + 1
+    }
+    yield [true, checksum, count]
+}
+
+export craft replay_validate(records, expected_checksum) {
+    when kind(records) != "list" or not valid_integer(expected_checksum, 0, 2147483646) {
+        yield [false, "RPR-PYT-0010: invalid replay input"]
+    }
+    vary index := 0
+    vary previous_cycle := -1
+    each record in records {
+        when kind(record) != "list" or size(record) != 13 {
+            yield [false, "RPR-PYT-0011: malformed replay record"]
+        }
+        when record[0] != index + 1 or record[1] <= previous_cycle {
+            yield [false, "RPR-PYT-0012: trace order or cycle monotonicity failed"]
+        }
+        when not valid_integer(record[4], 0, 1000000000000) or
+             not valid_integer(record[5], 0, 1000000000) or
+             not valid_integer(record[6], 0, 1000000) or
+             not valid_integer(record[7], -1000000000, 1000000000) or
+             not valid_integer(record[8], -1000000000, 1000000000) {
+            yield [false, "RPR-PYT-0013: trace measurement is outside bounds"]
+        }
+        when abs_value(record[8]) > abs_value(record[7]) {
+            yield [false, "RPR-PYT-0014: correction step did not converge"]
+        }
+        change previous_cycle := record[1]
+        change index := index + 1
+    }
+    make checksum := trace_checksum(records)
+    when not checksum[0] or checksum[1] != expected_checksum {
+        yield [false, "RPR-PYT-0015: deterministic replay checksum mismatch"]
+    }
+    yield [true, ""]
+}
+
+export craft run_load_test(initial_state, steps, repair_cost, period_cycles) {
+    when not state_valid(initial_state) or initial_state[6] != "test" {
+        yield [false, initial_state, [], 0, "RPR-PYT-0020: load tests require a valid test-mode state"]
+    }
+    when not valid_integer(steps, 1, 5000) or
+         not valid_integer(repair_cost, 0, 1000000000) or
+         not valid_integer(period_cycles, 64, 1000000) {
+        yield [false, initial_state, [], 0, "RPR-PYT-0021: load-test parameters are outside bounds"]
+    }
+    vary state := initial_state
+    vary records := []
+    vary index := 0
+    loop while index < steps {
+        make spec := ["START", "COMMAND", index % 65536, "PYTYLIKI_LOAD", repair_cost, period_cycles]
+        make result := run_construct(state, spec)
+        when not result[0] {
+            yield [false, initial_state, records, 0, result[3]]
+        }
+        change state := result[1]
+        change records := push(records, result[2])
+        change index := index + 1
+    }
+    make checksum := trace_checksum(records)
+    when not checksum[0] { yield [false, initial_state, records, 0, checksum[2]] }
+    make replay := replay_validate(records, checksum[1])
+    yield [replay[0], state, records, checksum[1], replay[1]]
+}
+
+export craft replay_load_test(initial_state, steps, repair_cost, period_cycles, expected_checksum, expected_records) {
+    when kind(expected_records) != "list" or size(expected_records) > 5000 {
+        yield [false, initial_state, 0, "RPR-PYT-0022: expected replay trace is invalid"]
+    }
+    when not valid_integer(expected_checksum, 0, 2147483646) {
+        yield [false, initial_state, 0, "RPR-PYT-0023: expected replay checksum is invalid"]
+    }
+    make replayed := run_load_test(initial_state, steps, repair_cost, period_cycles)
+    when not replayed[0] {
+        yield [false, initial_state, 0, replayed[4]]
+    }
+    when replayed[3] != expected_checksum {
+        yield [false, initial_state, 0, "RPR-PYT-0024: replay checksum differs from original"]
+    }
+    when replayed[2] != expected_records {
+        yield [false, initial_state, 0, "RPR-PYT-0025: replay trace differs from original"]
+    }
+    yield [true, replayed[1], replayed[3], ""]
+}
+
+export craft pytyliki_report(state, records, checksum) {
+    when not state_valid(state) or kind(records) != "list" or
+         not valid_integer(checksum, 0, 2147483646) {
+        yield [false, [], "RPR-PYT-0030: report inputs are invalid"]
+    }
+    make replay := replay_validate(records, checksum)
+    when not replay[0] { yield [false, [], replay[1]] }
+    yield [true, [
+        "pytyliki.processor-reliability.v1",
+        size(records),
+        checksum,
+        state[4],
+        state[18],
+        state[11],
+        abs_value(state[12]),
+        state[16],
+        "simulated",
+        "no hardware writes; no scheduler or voltage changes"
+    ], ""]
+}
+
+
+# RAS event model. Timestamps are monotonic nanoseconds in one boot clock.
+# Hardware/provider records are evidence, not inferred CPU-worker attribution.
+export make RAS_EVENT_SCHEMA := "pytyliki.ras.event.v1"
+export make RAS_SERIES_SCHEMA := "reaper.ras.series.v1"
+
+export craft ras_provider_valid(provider) {
+    # [provider_id, platform, schema, mce_supported, mca_supported, read_only, privilege, available, operations]
+    when kind(provider) != "list" or size(provider) != 9 { yield false }
+    when kind(provider[0]) != "text" or size(provider[0]) == 0 { yield false }
+    when not contains(["windows", "linux", "apple", "simulator"], provider[1]) { yield false }
+    when kind(provider[2]) != "text" or size(provider[2]) == 0 { yield false }
+    when kind(provider[3]) != "boolean" or kind(provider[4]) != "boolean" { yield false }
+    when kind(provider[5]) != "boolean" or not provider[5] { yield false }
+    when provider[6] != "user" and provider[6] != "kernel" { yield false }
+    when kind(provider[7]) != "boolean" or kind(provider[8]) != "list" { yield false }
+    each operation in provider[8] {
+        when not contains(["event-query", "counter-read", "persisted-record-read", "simulator-input"], operation) {
+            yield false
+        }
+    }
+    yield true
+}
+
+export craft ras_event_valid(event) {
+    # [schema, event_id, boot_id, provider_id, resource_scope, kind, severity, confidence, monotonic_ns, raw_record_ref]
+    when kind(event) != "list" or size(event) != 10 { yield false }
+    when event[0] != RAS_EVENT_SCHEMA { yield false }
+    each index in [1, 2, 3, 4, 9] {
+        when kind(event[index]) != "text" or size(event[index]) == 0 { yield false }
+    }
+    when not contains(["corrected", "uncorrected_recoverable", "uncorrected_fatal", "info", "thermal", "bus_link", "memory_poison", "software_suspected"], event[5]) { yield false }
+    when not contains(["info", "low", "warning", "high", "fatal"], event[6]) { yield false }
+    when not contains(["confirmed", "supported", "indicative", "unknown", "conflicted"], event[7]) { yield false }
+    when not valid_integer(event[8], 0, SAFE_INTEGER_MAX) { yield false }
+    yield true
+}
+
+export craft ras_series_valid(series) {
+    # [schema, boot_id, provider_id, resource_scope, kind, timestamps_ns, dropped]
+    when kind(series) != "list" or size(series) != 7 { yield false }
+    when series[0] != RAS_SERIES_SCHEMA { yield false }
+    each index in [1, 2, 3, 4] {
+        when kind(series[index]) != "text" or size(series[index]) == 0 { yield false }
+    }
+    when kind(series[5]) != "list" or size(series[5]) == 0 or size(series[5]) > 8 { yield false }
+    when not valid_integer(series[6], 0, SAFE_INTEGER_MAX) { yield false }
+    make previous := -1
+    each timestamp in series[5] {
+        when not valid_integer(timestamp, 0, SAFE_INTEGER_MAX) or timestamp <= previous { yield false }
+        change previous := timestamp
+    }
+    yield true
+}
+
+export craft ras_series_new(event) {
+    when not ras_event_valid(event) { yield [false, [], "RPR-RAS-0001: invalid event envelope"] }
+    yield [true, [RAS_SERIES_SCHEMA, event[2], event[3], event[4], event[5], [event[8]], 0], ""]
+}
+
+export craft ras_series_record(series, event) {
+    when not ras_series_valid(series) or not ras_event_valid(event) {
+        yield [false, series, "RPR-RAS-0010: invalid event series or envelope"]
+    }
+    when series[1] != event[2] or series[2] != event[3] or
+         series[3] != event[4] or series[4] != event[5] {
+        yield [false, series, "RPR-RAS-0011: event belongs to another boot/provider/resource series"]
+    }
+    make timestamps := series[5]
+    make dropped := series[6]
+    when event[8] <= timestamps[size(timestamps) - 1] {
+        yield [false, series, "RPR-RAS-0012: monotonic timestamp did not advance"]
+    }
+    when size(timestamps) == 8 {
+        vary retained := []
+        vary index := 0
+        each timestamp in timestamps {
+            when index > 0 { change retained := push(retained, timestamp) }
+            change index := index + 1
+        }
+        change timestamps := retained
+        make next_dropped := checked_add(dropped, 1)
+        when not next_dropped[0] { yield [false, series, "RPR-RAS-0013: dropped-record counter overflow"] }
+        change dropped := next_dropped[1]
+    }
+    change timestamps := push(timestamps, event[8])
+    make updated := [series[0], series[1], series[2], series[3], series[4], timestamps, dropped]
+    yield [ras_series_valid(updated), updated, ""]
+}
+
+export craft ras_periodicity_analyze(timestamps) {
+    when kind(timestamps) != "list" or size(timestamps) < 3 or size(timestamps) > 8 {
+        yield [false, 0, 0, 0, "insufficient-samples", "RPR-RAS-0020: three to eight timestamps are required"]
+    }
+    make previous := -1
+    make minimum := SAFE_INTEGER_MAX
+    make maximum := 0
+    make interval_sum := 0
+    make interval_count := size(timestamps) - 1
+    each timestamp in timestamps {
+        when not valid_integer(timestamp, 0, SAFE_INTEGER_MAX) or timestamp <= previous {
+            yield [false, interval_count, 0, 0, "invalid-order", "RPR-RAS-0021: timestamps must be strictly increasing safe integers"]
+        }
+        when previous >= 0 {
+            make interval := timestamp - previous
+            when interval > 1000000000000 {
+                yield [false, interval_count, 0, 0, "interval-out-of-range", "RPR-RAS-0022: interval exceeds the 1000-second analysis bound"]
+            }
+            when interval < minimum { change minimum := interval }
+            when interval > maximum { change maximum := interval }
+            make summed := checked_add(interval_sum, interval)
+            when not summed[0] { yield [false, interval_count, 0, 0, "overflow", summed[2]] }
+            change interval_sum := summed[1]
+        }
+        change previous := timestamp
+    }
+    make mean := interval_sum // interval_count
+    when mean == 0 { yield [false, interval_count, 0, 0, "zero-period", "RPR-RAS-0023: mean interval is zero"] }
+    make spread := maximum - minimum
+    make scaled_spread := checked_multiply(spread, 1000)
+    when not scaled_spread[0] { yield [false, interval_count, mean, 0, "overflow", scaled_spread[2]] }
+    make jitter_permille := scaled_spread[1] // mean
+    make classification := "irregular"
+    when jitter_permille <= 10 { change classification := "periodic" }
+    when jitter_permille > 10 and jitter_permille <= 100 { change classification := "drifting" }
+    yield [true, interval_count, mean, jitter_permille, classification, ""]
+}
+
+export craft ras_recovery_action(event, analysis, repeated_count, os_recovery_capability, rollback_ready) {
+    when not ras_event_valid(event) or kind(analysis) != "list" or size(analysis) != 6 {
+        yield "reject-invalid-evidence"
+    }
+    when not valid_integer(repeated_count, 0, SAFE_INTEGER_MAX) { yield "reject-repeat-count" }
+    when kind(os_recovery_capability) != "boolean" or kind(rollback_ready) != "boolean" {
+        yield "reject-capability-shape"
+    }
+    when event[5] == "uncorrected_fatal" or event[6] == "fatal" {
+        yield "safe-stop-and-defer-to-kernel"
+    }
+    when event[5] == "uncorrected_recoverable" {
+        when event[7] != "confirmed" { yield "advisory-only-insufficient-confidence" }
+        when not os_recovery_capability or not rollback_ready { yield "request-operator-and-os-review" }
+        yield "request-os-recovery"
+    }
+    when event[5] == "memory_poison" and event[7] == "confirmed" {
+        when os_recovery_capability and rollback_ready { yield "request-os-page-recovery" }
+        yield "request-operator-and-os-review"
+    }
+    when event[5] == "corrected" {
+        when repeated_count >= 4 and analysis[0] and analysis[4] == "periodic" {
+            yield "warn-and-collect"
+        }
+        yield "observe"
+    }
+    when event[5] == "thermal" or event[5] == "bus_link" { yield "observe-and-correlate" }
+    yield "advisory-only"
+}
+
+export craft ras_bytecode_decision(kind_code, repeated_count, flags) {
+    # flags: bit 0 confirmed, bit 1 authorized OS recovery, bit 2 rollback ready.
+    when not valid_integer(kind_code, 1, 4) or
+         not valid_integer(repeated_count, 0, 65535) or
+         not valid_integer(flags, 0, 7) {
+        yield "reject-invalid-bytecode-operands"
+    }
+    make confirmed := flags % 2 == 1
+    make os_capability := (flags // 2) % 2 == 1
+    make rollback := (flags // 4) % 2 == 1
+    when kind_code == 1 {
+        when confirmed and repeated_count >= 4 { yield "warn-and-collect" }
+        yield "observe"
+    }
+    when kind_code == 2 {
+        when not confirmed { yield "advisory-only-insufficient-confidence" }
+        when not os_capability or not rollback { yield "request-operator-and-os-review" }
+        yield "request-os-recovery"
+    }
+    when kind_code == 3 { yield "safe-stop-and-defer-to-kernel" }
+    when kind_code == 4 { yield "observe-and-correlate" }
+    yield "reject-unknown-fault-kind"
+}
+
+
+# Processor control and platform adapter contracts.
+# Reaper computes verified plans. Privileged effects belong to a native kernel adapter.
+export make PROCESSOR_CONTROL_SCHEMA := "reaper.processor-control.v1"
+export make PROCESSOR_ADAPTER_SCHEMA := "reaper.processor-adapter.v1"
+export make AP_START_SCHEMA := "reaper.ap-start.v1"
+export make APIC_ROUTE_SCHEMA := "reaper.apic-route.v1"
+export make TIMER_PROFILE_SCHEMA := "reaper.timer-profile.v1"
+export make MCA_EVENT_SCHEMA := "reaper.mca-event.v1"
+export make PAGE_RECOVERY_SCHEMA := "reaper.page-recovery.v1"
+export make TS_DIAGNOSTIC_SCHEMA := "reaper.ras-diagnostic.v1"
+
+export craft processor_subsystem_matrix() {
+    yield [
+        ["ap-smp", "AP startup and SMP admission", "reaper-policy-implemented", "duckos-kernel-adapter-required", "init-sipi-admission"],
+        ["apic-ipi-timer", "APIC routing, IPI delivery and timer preemption", "reaper-policy-implemented", "duckos-kernel-adapter-required", "route-and-reschedule-plan"],
+        ["mca-msr", "MCA event handling and MSR reads", "reaper-policy-implemented", "privileged-x86-adapter-required", "allowlisted-read-only-msr"],
+        ["page-recovery", "OS page quarantine and verified replacement", "reaper-policy-implemented", "memory-manager-adapter-required", "transactional-page-recovery"],
+        ["linux-edac-mce", "Linux EDAC/MCE event provider", "provider-contract-implemented", "linux-provider-not-attached", "sysfs-tracefs-event-query"],
+        ["apple-swift", "Apple Swift hardware-event adapter", "abi-contract-implemented", "swift-adapter-not-attached", "read-only-os-diagnostics"],
+        ["rust-native-ras", "Rust native RAS adapter", "abi-contract-implemented", "rust-adapter-not-attached", "versioned-native-abi"],
+        ["typescript-diagnostics", "TypeScript diagnostics interface", "schema-contract-implemented", "typescript-client-not-attached", "read-only-diagnostic-envelope"],
+        ["physical-material-repair", "Physical copper/interconnect/silicon repair", "not-software-solvable", "external-lab-or-component-replacement", "no-software-repair-command"]
+    ]
+}
+
+export craft processor_subsystem_entry(subsystem_id) {
+    each item in processor_subsystem_matrix() {
+        when item[0] == subsystem_id { yield item }
+    }
+    yield nothing
+}
+
+export craft processor_adapter_valid(adapter) {
+    # [schema, id, subsystem, platform, language, abi, authority, available, operations]
+    when kind(adapter) != "list" or size(adapter) != 9 { yield false }
+    when adapter[0] != PROCESSOR_ADAPTER_SCHEMA { yield false }
+    each index in [1, 2, 3, 4, 5] {
+        when kind(adapter[index]) != "text" or size(adapter[index]) == 0 { yield false }
+    }
+    when not contains(["duckos", "linux", "windows", "macos", "any"], adapter[3]) { yield false }
+    when not contains(["c", "assembly", "rust", "swift", "typescript", "reaper"], adapter[4]) { yield false }
+    when not contains(["read-only", "kernel-read", "kernel-control", "user-control"], adapter[6]) { yield false }
+    when kind(adapter[7]) != "boolean" or kind(adapter[8]) != "list" { yield false }
+    each operation in adapter[8] {
+        when not contains(["event-query", "counter-read", "persisted-record-read", "msr-read", "ap-start", "ipi-send", "timer-arm", "page-quarantine", "page-replace", "timer-preempt", "diagnostic-export"], operation) {
+            yield false
+        }
+        when adapter[6] == "read-only" and contains(["msr-read", "ap-start", "ipi-send", "timer-arm", "page-quarantine", "page-replace", "timer-preempt"], operation) {
+            yield false
+        }
+        when adapter[6] == "kernel-read" and not contains(["event-query", "counter-read", "persisted-record-read", "msr-read", "diagnostic-export"], operation) {
+            yield false
+        }
+        when adapter[6] == "user-control" and contains(["msr-read", "ap-start", "ipi-send", "timer-arm", "page-quarantine", "page-replace", "timer-preempt"], operation) {
+            yield false
+        }
+    }
+    yield true
+}
+
+export craft processor_adapter_admits(adapter, subsystem_id, platform, operation, authority) {
+    when not processor_adapter_valid(adapter) { yield "reject-adapter-schema" }
+    when adapter[2] != subsystem_id and adapter[2] != "processor-control" { yield "reject-adapter-subsystem" }
+    when adapter[3] != platform and adapter[3] != "any" { yield "reject-platform-mismatch" }
+    when adapter[6] != authority { yield "reject-insufficient-authority" }
+    when not adapter[7] { yield "adapter-not-attached" }
+    when not contains(adapter[8], operation) { yield "reject-unsupported-operation" }
+    yield "admit-request-to-native-adapter"
+}
+
+export craft ap_startup_valid(ap) {
+    # [schema, boot_id, cpu_id, apic_id, phase, gdt, idt, stack, per_cpu, lapic, trampoline, generation]
+    when kind(ap) != "list" or size(ap) != 12 { yield false }
+    when ap[0] != AP_START_SCHEMA { yield false }
+    when kind(ap[1]) != "text" or size(ap[1]) == 0 { yield false }
+    when not valid_integer(ap[2], 1, 4095) or not valid_integer(ap[3], 1, 4294967295) { yield false }
+    when not contains(["discovered", "prepared", "ready-to-start", "startup-sent", "online", "failed", "quarantined"], ap[4]) { yield false }
+    each index in [5, 6, 7, 8, 9, 10] {
+        when kind(ap[index]) != "boolean" { yield false }
+    }
+    when not valid_integer(ap[11], 0, SAFE_INTEGER_MAX) { yield false }
+    yield true
+}
+
+export craft ap_startup_readiness(ap, bsp_online, expected_generation) {
+    when not ap_startup_valid(ap) { yield "reject-invalid-ap-record" }
+    when kind(bsp_online) != "boolean" or not bsp_online { yield "reject-bsp-not-online" }
+    when ap[11] != expected_generation { yield "reject-stale-topology-generation" }
+    when ap[4] != "ready-to-start" { yield "reject-ap-not-prepared" }
+    when not ap[5] or not ap[6] or not ap[7] or not ap[8] or not ap[9] or not ap[10] {
+        yield "reject-incomplete-per-cpu-startup-resources"
+    }
+    yield "ready-for-kernel-init-sipi"
+}
+
+export craft ap_startup_admission(ap, bsp_online, expected_generation, adapter) {
+    make readiness := ap_startup_readiness(ap, bsp_online, expected_generation)
+    when readiness != "ready-for-kernel-init-sipi" { yield readiness }
+    yield processor_adapter_admits(adapter, "ap-smp", "duckos", "ap-start", "kernel-control")
+}
+
+export craft ap_startup_transition(ap, next_phase) {
+    when not ap_startup_valid(ap) { yield [false, ap, "RPR-AP-0001: invalid AP startup record"] }
+    when not contains(["prepared", "ready-to-start", "startup-sent", "online", "failed", "quarantined"], next_phase) {
+        yield [false, ap, "RPR-AP-0002: unknown AP phase"]
+    }
+    when ap[4] == "discovered" and next_phase != "prepared" { yield [false, ap, "RPR-AP-0003: AP must be prepared first"] }
+    when ap[4] == "prepared" and next_phase != "ready-to-start" and next_phase != "failed" { yield [false, ap, "RPR-AP-0004: AP resources must pass readiness before start"] }
+    when ap[4] == "prepared" and next_phase == "ready-to-start" and (not ap[5] or not ap[6] or not ap[7] or not ap[8] or not ap[9] or not ap[10]) {
+        yield [false, ap, "RPR-AP-0005: missing GDT/IDT/stack/per-CPU/LAPIC/trampoline resource"]
+    }
+    when next_phase == "startup-sent" or next_phase == "online" {
+        yield [false, ap, "RPR-AP-0006: hardware acknowledgements must use ap_startup_acknowledge"]
+    }
+    when ap[4] == "ready-to-start" and next_phase != "failed" and next_phase != "quarantined" {
+        yield [false, ap, "RPR-AP-0007: INIT/SIPI acknowledgement is required"]
+    }
+    when ap[4] == "startup-sent" and next_phase != "failed" and next_phase != "quarantined" {
+        yield [false, ap, "RPR-AP-0008: AP-online acknowledgement is required"]
+    }
+    when ap[4] == "online" and next_phase != "quarantined" { yield [false, ap, "RPR-AP-0009: online AP requires a drain protocol before release"] }
+    yield [true, [ap[0], ap[1], ap[2], ap[3], next_phase, ap[5], ap[6], ap[7], ap[8], ap[9], ap[10], ap[11]], ""]
+}
+
+export craft ap_startup_acknowledge(ap, adapter_ack, next_phase) {
+    when not ap_startup_valid(ap) { yield [false, ap, "RPR-AP-0010: invalid AP startup record"] }
+    when kind(adapter_ack) != "text" { yield [false, ap, "RPR-AP-0011: native adapter acknowledgement must be text"] }
+    when next_phase == "startup-sent" {
+        when ap_startup_readiness(ap, true, ap[11]) != "ready-for-kernel-init-sipi" {
+            yield [false, ap, "RPR-AP-0012: AP startup resources are not ready"]
+        }
+        when adapter_ack != "init-sipi-sent" {
+            yield [false, ap, "RPR-AP-0013: INIT/SIPI acknowledgement missing"]
+        }
+        yield [true, [ap[0], ap[1], ap[2], ap[3], "startup-sent", ap[5], ap[6], ap[7], ap[8], ap[9], ap[10], ap[11]], ""]
+    }
+    when next_phase == "online" {
+        when ap[4] != "startup-sent" or adapter_ack != "ap-online-confirmed" {
+            yield [false, ap, "RPR-AP-0013: AP online acknowledgement missing"]
+        }
+        yield [true, [ap[0], ap[1], ap[2], ap[3], "online", ap[5], ap[6], ap[7], ap[8], ap[9], ap[10], ap[11]], ""]
+    }
+    yield [false, ap, "RPR-AP-0014: unsupported acknowledgement transition"]
+}
+
+export craft ap_smp_topology_valid(topology) {
+    # [schema, boot_id, generation, bsp_id, discovered_ap_ids, online_cpu_ids, maximum_online]
+    when kind(topology) != "list" or size(topology) != 7 { yield false }
+    when topology[0] != PROCESSOR_CONTROL_SCHEMA { yield false }
+    when kind(topology[1]) != "text" or size(topology[1]) == 0 { yield false }
+    when not valid_integer(topology[2], 0, SAFE_INTEGER_MAX) or not valid_integer(topology[3], 0, 4095) { yield false }
+    when kind(topology[4]) != "list" or kind(topology[5]) != "list" { yield false }
+    when not valid_integer(topology[6], 1, 4096) or size(topology[5]) > topology[6] { yield false }
+    when not contains(topology[5], topology[3]) { yield false }
+    each cpu_id in topology[4] {
+        when not valid_integer(cpu_id, 1, 4095) or cpu_id == topology[3] { yield false }
+    }
+    each cpu_id in topology[5] {
+        when not valid_integer(cpu_id, 0, 4095) { yield false }
+    }
+    yield true
+}
+
+export craft ap_smp_admit_cpu(topology, ap) {
+    when not ap_smp_topology_valid(topology) or not ap_startup_valid(ap) {
+        yield [false, topology, "RPR-SMP-0001: topology or AP record is invalid"]
+    }
+    when ap[1] != topology[1] or ap[11] != topology[2] { yield [false, topology, "RPR-SMP-0002: AP boot identity or topology generation is stale"] }
+    when not contains(topology[4], ap[2]) { yield [false, topology, "RPR-SMP-0003: AP is absent from discovered topology"] }
+    when contains(topology[5], ap[2]) { yield [false, topology, "RPR-SMP-0004: AP is already online"] }
+    when size(topology[5]) >= topology[6] { yield [false, topology, "RPR-SMP-0005: online CPU capacity is exhausted"] }
+    when ap[4] != "online" { yield [false, topology, "RPR-SMP-0006: AP has not completed startup handshake"] }
+    when not ap[5] or not ap[6] or not ap[7] or not ap[8] or not ap[9] or not ap[10] {
+        yield [false, topology, "RPR-SMP-0007: AP-online record lacks complete startup evidence"]
+    }
+    make online := push(topology[5], ap[2])
+    make next_generation := checked_add(topology[2], 1)
+    when not next_generation[0] {
+        yield [false, topology, "RPR-SMP-0008: topology generation overflow"]
+    }
+    yield [true, [topology[0], topology[1], next_generation[1], topology[3], topology[4], online, topology[6]], ""]
+}
+
+export craft apic_route_valid(route) {
+    # [schema, source_cpu, destination_cpu, vector, delivery, trigger, masked, topology_generation]
+    when kind(route) != "list" or size(route) != 8 { yield false }
+    when route[0] != APIC_ROUTE_SCHEMA { yield false }
+    when not valid_integer(route[1], 0, 4095) or not valid_integer(route[2], 0, 4095) { yield false }
+    when route[1] == route[2] or not valid_integer(route[3], 32, 255) { yield false }
+    when not contains(["fixed", "nmi", "reschedule", "tlb-shootdown"], route[4]) { yield false }
+    when not contains(["edge", "level"], route[5]) or kind(route[6]) != "boolean" { yield false }
+    when not valid_integer(route[7], 0, SAFE_INTEGER_MAX) { yield false }
+    yield true
+}
+
+export craft apic_ipi_decision(route, source_online, destination_online, current_generation, adapter) {
+    when not apic_route_valid(route) { yield "reject-invalid-apic-route" }
+    when not valid_integer(current_generation, 0, SAFE_INTEGER_MAX) { yield "reject-invalid-current-topology-generation" }
+    when kind(source_online) != "boolean" or kind(destination_online) != "boolean" { yield "reject-cpu-state-type" }
+    when not source_online or not destination_online { yield "reject-offline-ipi-endpoint" }
+    when route[7] != current_generation { yield "reject-stale-topology-generation" }
+    when route[6] { yield "reject-masked-ipi-route" }
+    yield processor_adapter_admits(adapter, "apic-ipi-timer", "duckos", "ipi-send", "kernel-control")
+}
+
+export craft timer_profile_valid(timer) {
+    # [schema, clock_source, frequency_hz, quantum_ticks, enabled, mode, adapter_id]
+    when kind(timer) != "list" or size(timer) != 7 { yield false }
+    when timer[0] != TIMER_PROFILE_SCHEMA { yield false }
+    when not contains(["tsc-deadline", "lapic-countdown", "hpet", "pit"], timer[1]) { yield false }
+    when not valid_integer(timer[2], 1, 10000000000) or not valid_integer(timer[3], 1, 1000000) { yield false }
+    when kind(timer[4]) != "boolean" or not contains(["oneshot", "periodic"], timer[5]) { yield false }
+    when kind(timer[6]) != "text" or size(timer[6]) == 0 { yield false }
+    yield true
+}
+
+export craft timer_preemption_decision(timer, elapsed_ticks, remaining_quantum, interrupts_enabled, reschedule_pending) {
+    when not timer_profile_valid(timer) { yield "reject-invalid-timer-profile" }
+    when not timer[4] { yield "timer-disabled" }
+    when not valid_integer(elapsed_ticks, 0, SAFE_INTEGER_MAX) or not valid_integer(remaining_quantum, 0, SAFE_INTEGER_MAX) { yield "reject-invalid-tick-accounting" }
+    when kind(interrupts_enabled) != "boolean" or kind(reschedule_pending) != "boolean" { yield "reject-invalid-interrupt-state" }
+    when not interrupts_enabled { yield "defer-tick-until-interrupts-enabled" }
+    when reschedule_pending { yield "coalesce-existing-reschedule-request" }
+    when elapsed_ticks < remaining_quantum { yield "account-quantum-without-preemption" }
+    yield "request-reschedule-through-kernel-ipi-adapter"
+}
+
+export craft timer_preemption_admission(timer, elapsed_ticks, remaining_quantum, interrupts_enabled, reschedule_pending, adapter) {
+    make decision := timer_preemption_decision(timer, elapsed_ticks, remaining_quantum, interrupts_enabled, reschedule_pending)
+    when decision != "request-reschedule-through-kernel-ipi-adapter" { yield decision }
+    yield processor_adapter_admits(adapter, "apic-ipi-timer", "duckos", "timer-preempt", "kernel-control")
+}
+
+export craft mca_msr_allowlisted(msr, bank_count) {
+    when not valid_integer(msr, 0, 4095) or not valid_integer(bank_count, 1, 255) { yield false }
+    when contains([377, 378, 379], msr) { yield true }
+    when msr >= 1024 and msr < 1024 + bank_count * 4 { yield true }
+    yield false
+}
+
+export craft mca_msr_read_admission(msr, bank_count, cpuid_mca, adapter) {
+    when kind(cpuid_mca) != "boolean" or not cpuid_mca { yield "reject-mca-not-advertised" }
+    when not mca_msr_allowlisted(msr, bank_count) { yield "reject-msr-not-allowlisted" }
+    when not processor_adapter_valid(adapter) { yield "reject-adapter-schema" }
+    when adapter[2] != "mca-msr" and adapter[2] != "processor-control" { yield "reject-adapter-subsystem" }
+    when adapter[3] != "duckos" and adapter[3] != "any" { yield "reject-platform-mismatch" }
+    when adapter[6] != "kernel-read" { yield "reject-msr-read-requires-kernel-privilege" }
+    when not adapter[7] { yield "adapter-not-attached" }
+    when not contains(adapter[8], "msr-read") { yield "reject-msr-read-not-declared" }
+    yield "admit-allowlisted-msr-read"
+}
+
+export craft mca_event_valid(event) {
+    # [schema, event_id, boot_id, bank, status_valid, uncorrected, context_corrupt, address_valid, scope, timestamp_ns, provider_ref, confidence]
+    when kind(event) != "list" or size(event) != 12 { yield false }
+    when event[0] != MCA_EVENT_SCHEMA { yield false }
+    when kind(event[1]) != "text" or size(event[1]) == 0 or kind(event[2]) != "text" or size(event[2]) == 0 { yield false }
+    when not valid_integer(event[3], 0, 255) { yield false }
+    each index in [4, 5, 6, 7] {
+        when kind(event[index]) != "boolean" { yield false }
+    }
+    when kind(event[8]) != "text" or size(event[8]) == 0 or not valid_integer(event[9], 0, SAFE_INTEGER_MAX) { yield false }
+    when kind(event[10]) != "text" or size(event[10]) == 0 { yield false }
+    when not contains(["confirmed", "supported", "indicative", "unknown", "conflicted"], event[11]) { yield false }
+    yield true
+}
+
+export craft mca_handler_decision(event, page_recovery_supported) {
+    when kind(page_recovery_supported) != "boolean" { yield "reject-invalid-page-recovery-capability" }
+    when not mca_event_valid(event) { yield "reject-invalid-mca-record" }
+    when not event[4] { yield "ignore-invalid-mca-status" }
+    when event[6] { yield "safe-stop-context-corrupt-defer-to-kernel-fatal-path" }
+    when event[5] and event[11] != "confirmed" { yield "quarantine-evidence-and-request-operator-review" }
+    when event[5] and event[7] and page_recovery_supported { yield "request-page-recovery-through-memory-manager" }
+    when event[5] { yield "request-kernel-machine-check-recovery-policy" }
+    yield "record-corrected-machine-check-and-monitor"
+}
+
+export craft mca_handler_admission(event, page_recovery_supported, adapter) {
+    make decision := mca_handler_decision(event, page_recovery_supported)
+    when decision == "reject-invalid-mca-record" or decision == "ignore-invalid-mca-status" { yield decision }
+    yield processor_adapter_admits(adapter, "mca-msr", "duckos", "msr-read", "kernel-read")
+}
+
+export craft page_recovery_plan_valid(plan) {
+    # [schema, page_ref, source_frame, state, pinned, dirty, refcount, replacement_ref, copy_verified, generation, deadline_ns]
+    when kind(plan) != "list" or size(plan) != 11 { yield false }
+    when plan[0] != PAGE_RECOVERY_SCHEMA { yield false }
+    when kind(plan[1]) != "text" or size(plan[1]) == 0 or kind(plan[7]) != "text" or size(plan[7]) == 0 { yield false }
+    when not valid_integer(plan[2], 0, SAFE_INTEGER_MAX) or not contains(["present", "poisoned", "quarantined", "offline", "replaced"], plan[3]) { yield false }
+    each index in [4, 5, 8] {
+        when kind(plan[index]) != "boolean" { yield false }
+    }
+    when not valid_integer(plan[6], 0, 1000000) or not valid_integer(plan[9], 0, SAFE_INTEGER_MAX) or not valid_integer(plan[10], 1, SAFE_INTEGER_MAX) { yield false }
+    yield true
+}
+
+export craft page_recovery_decision(plan, event, rollback_ready) {
+    when not page_recovery_plan_valid(plan) or not mca_event_valid(event) { yield "reject-invalid-page-or-mca-evidence" }
+    when not event[4] or not event[5] or not event[7] { yield "reject-page-recovery-without-valid-uncorrected-address" }
+    when event[11] != "confirmed" { yield "defer-page-recovery-low-confidence" }
+    when event[8] != plan[1] { yield "reject-page-resource-scope-mismatch" }
+    when plan[3] != "poisoned" and plan[3] != "quarantined" { yield "reject-page-not-poisoned" }
+    when plan[4] or plan[6] > 0 { yield "defer-pinned-or-referenced-page" }
+    when plan[5] and not plan[8] { yield "require-copy-verify-before-replacement" }
+    when kind(rollback_ready) != "boolean" or not rollback_ready { yield "reject-no-rollback-path" }
+    yield "admit-transactional-page-quarantine-and-replacement"
+}
+
+export craft page_recovery_admission(plan, event, rollback_ready, adapter) {
+    make decision := page_recovery_decision(plan, event, rollback_ready)
+    when decision != "admit-transactional-page-quarantine-and-replacement" { yield decision }
+    yield processor_adapter_admits(adapter, "page-recovery", "duckos", "page-replace", "kernel-control")
+}
+
+export craft linux_edac_provider_descriptor() {
+    yield [PROCESSOR_ADAPTER_SCHEMA, "linux-edac-mce", "linux-edac-mce", "linux", "c", "sysfs-tracefs-ras-v1", "read-only", false, ["event-query", "counter-read", "persisted-record-read"]]
+}
+
+export craft apple_swift_ras_adapter_descriptor() {
+    yield [PROCESSOR_ADAPTER_SCHEMA, "apple-swift-ras", "apple-ras", "macos", "swift", "swift-cabi-ras-v1", "read-only", false, ["event-query", "persisted-record-read", "diagnostic-export"]]
+}
+
+export craft rust_native_ras_adapter_descriptor() {
+    yield [PROCESSOR_ADAPTER_SCHEMA, "rust-native-ras", "processor-control", "any", "rust", "dabi64-ras-v1", "read-only", false, ["event-query", "counter-read", "persisted-record-read", "diagnostic-export"]]
+}
+
+export craft typescript_diagnostics_adapter_descriptor() {
+    yield [PROCESSOR_ADAPTER_SCHEMA, "typescript-ras-diagnostics", "processor-control", "any", "typescript", "json-rpc-ras-v1", "read-only", false, ["event-query", "diagnostic-export"]]
+}
+
+export craft typescript_diagnostic_valid(packet) {
+    # [schema, boot_id, event_id, subsystem, severity, confidence, timestamp_ns, message, source_ref]
+    when kind(packet) != "list" or size(packet) != 9 { yield false }
+    when packet[0] != TS_DIAGNOSTIC_SCHEMA { yield false }
+    each index in [1, 2, 3, 7, 8] {
+        when kind(packet[index]) != "text" or size(packet[index]) == 0 { yield false }
+    }
+    when not contains(["info", "warning", "error", "fatal"], packet[4]) { yield false }
+    when not contains(["confirmed", "supported", "indicative", "unknown", "conflicted"], packet[5]) { yield false }
+    when not valid_integer(packet[6], 0, SAFE_INTEGER_MAX) { yield false }
+    yield true
+}
+
+export craft typescript_diagnostic_export(packet, adapter) {
+    when not typescript_diagnostic_valid(packet) { yield [false, [], "RPR-TS-0001: invalid diagnostics packet"] }
+    when not processor_adapter_valid(adapter) or adapter[4] != "typescript" or adapter[5] != "json-rpc-ras-v1" {
+        yield [false, [], "RPR-TS-0002: TypeScript diagnostics adapter ABI mismatch"]
+    }
+    when adapter[6] != "read-only" or not contains(adapter[8], "diagnostic-export") {
+        yield [false, [], "RPR-TS-0003: diagnostics interface must be read-only"]
+    }
+    yield [true, packet, "read-only-export-request"]
+}
+
+export craft physical_repair_assessment(material, damage_kind, software_authority) {
+    when not contains(["copper", "silicon", "package-substrate", "bond-wire"], material) {
+        yield [false, "unknown-material", "RPR-PHYSICAL-0001: material is not registered"]
+    }
+    when not contains(["open-circuit", "short-circuit", "delamination", "electromigration", "crack", "thermal-damage"], damage_kind) {
+        yield [false, "unknown-damage", "RPR-PHYSICAL-0002: damage kind is not registered"]
+    }
+    when kind(software_authority) != "boolean" { yield [false, "invalid-authority", "RPR-PHYSICAL-0003: authority flag must be boolean"] }
+    yield [true, "not-software-repairable", "isolate-affected-resource-and-request-qualified-lab-inspection-or-component-replacement"]
+}
+
+export craft processor_control_bytecode_decision(opcode, operand_a, operand_b, flags) {
+    when not valid_integer(opcode, 66, 70) or not valid_integer(operand_a, 0, 65535) or
+         not valid_integer(operand_b, 0, 65535) or not valid_integer(flags, 0, 65535) {
+        yield "reject-invalid-processor-control-instruction"
+    }
+    when opcode == 66 {
+        when flags != 63 or operand_a == 0 or operand_b == 0 { yield "reject-ap-startup-readiness-bitmap" }
+        yield "admit-ap-startup-to-kernel-adapter"
+    }
+    when opcode == 67 {
+        when operand_a == operand_b or operand_a > 4095 or operand_b > 4095 { yield "reject-invalid-ipi-endpoints" }
+        when flags < 32 or flags > 255 { yield "reject-invalid-ipi-vector" }
+        yield "admit-ipi-route-to-kernel-adapter"
+    }
+    when opcode == 68 {
+        when flags > 1 { yield "reject-invalid-timer-flags" }
+        when operand_b == 0 or operand_a < operand_b { yield "account-timer-tick-without-preemption" }
+        when flags == 0 { yield "defer-preemption-interrupts-disabled" }
+        yield "request-reschedule-through-kernel-timer-adapter"
+    }
+    when opcode == 69 {
+        when operand_a > 255 or flags > 7 { yield "reject-invalid-mca-bank-or-flags" }
+        when flags % 2 == 0 { yield "ignore-invalid-mca-status" }
+        when (flags // 2) % 2 == 1 { yield "safe-stop-context-corrupt" }
+        when (flags // 4) % 2 == 1 { yield "request-kernel-machine-check-recovery-policy" }
+        yield "record-corrected-machine-check"
+    }
+    when opcode == 70 {
+        when operand_a == 0 or operand_b == 0 { yield "reject-invalid-page-recovery-reference" }
+        when flags % 8 != 7 { yield "reject-page-recovery-preconditions" }
+        yield "admit-page-recovery-to-memory-manager"
+    }
+    yield "reject-unknown-processor-control-opcode"
+}
+
+
+export craft processor_control_service_dispatch(state, instruction, decision) {
+    when not state_valid(state) or kind(instruction) != "list" or size(instruction) != 5 {
+        yield [false, state, [], "RPR-BC-0040: processor service dispatch input is invalid"]
+    }
+    make next_cycle := checked_add(state[2], 1)
+    make next_step := checked_add(state[14], 1)
+    make next_service := checked_add(state[15], 1)
+    make next_fence := checked_add(state[19], 1)
+    when not next_cycle[0] or not next_step[0] or not next_service[0] or not next_fence[0] {
+        yield [false, state, [], "RPR-BC-0041: processor service audit counter overflow"]
+    }
+    make next := state_put(state, 2, next_cycle[1])
+    change next := state_put(next, 14, next_step[1])
+    change next := state_put(next, 15, next_service[1])
+    change next := state_put(next, 19, next_fence[1])
+    yield [true, next, [
+        "PROCESSOR_CONTROL",
+        instruction[0],
+        instruction[1],
+        instruction[2],
+        instruction[3],
+        instruction[4],
+        decision
+    ], ""]
+}
+
+
+export craft linux_edac_counter_valid(snapshot) {
+    # [schema, boot_id, provider_id, mc_id, dimm_id, ce_count, ue_count, monotonic_ns, source_ref]
+    when kind(snapshot) != "list" or size(snapshot) != 9 { yield false }
+    when snapshot[0] != "linux.edac.counter.v1" { yield false }
+    each index in [1, 2, 3, 4, 8] {
+        when kind(snapshot[index]) != "text" or size(snapshot[index]) == 0 { yield false }
+    }
+    when not valid_integer(snapshot[5], 0, SAFE_INTEGER_MAX) or
+         not valid_integer(snapshot[6], 0, SAFE_INTEGER_MAX) or
+         not valid_integer(snapshot[7], 0, SAFE_INTEGER_MAX) { yield false }
+    yield true
+}
+
+export craft linux_edac_counter_delta(previous, current) {
+    when not linux_edac_counter_valid(previous) or not linux_edac_counter_valid(current) {
+        yield [false, 0, 0, "RPR-LINUX-0001: invalid EDAC counter snapshot"]
+    }
+    when previous[1] != current[1] or previous[2] != current[2] or
+         previous[3] != current[3] or previous[4] != current[4] {
+        yield [false, 0, 0, "RPR-LINUX-0002: snapshots belong to different boot/provider/memory resources"]
+    }
+    when current[7] <= previous[7] {
+        yield [false, 0, 0, "RPR-LINUX-0003: monotonic sample time did not advance"]
+    }
+    when current[5] < previous[5] or current[6] < previous[6] {
+        yield [false, 0, 0, "RPR-LINUX-0004: EDAC counter reset requires a new baseline"]
+    }
+    yield [true, current[5] - previous[5], current[6] - previous[6], ""]
+}
+
+export craft linux_edac_snapshot_to_ras_events(previous, current) {
+    when not linux_edac_counter_valid(current) {
+        yield [false, [], "RPR-LINUX-0010: invalid current EDAC snapshot"]
+    }
+    when previous == nothing {
+        yield [true, [], "baseline-only"]
+    }
+    make delta := linux_edac_counter_delta(previous, current)
+    when not delta[0] { yield [false, [], delta[3]] }
+    vary events := []
+    make scope := current[3] ++ "/" ++ current[4]
+    when delta[1] > 0 {
+        make corrected := [
+            RAS_EVENT_SCHEMA,
+            current[2] ++ ":ce:" ++ text(current[5]),
+            current[1],
+            current[2],
+            scope,
+            "corrected",
+            "warning",
+            "confirmed",
+            current[7],
+            current[8]
+        ]
+        when not ras_event_valid(corrected) { yield [false, [], "RPR-LINUX-0011: corrected EDAC event normalization failed"] }
+        change events := push(events, corrected)
+    }
+    when delta[2] > 0 {
+        # EDAC UE counters do not identify a poisoned physical page by themselves.
+        # Preserve the evidence as software_suspected; never invent an address.
+        make uncorrected := [
+            RAS_EVENT_SCHEMA,
+            current[2] ++ ":ue:" ++ text(current[6]),
+            current[1],
+            current[2],
+            scope,
+            "software_suspected",
+            "high",
+            "supported",
+            current[7],
+            current[8]
+        ]
+        when not ras_event_valid(uncorrected) { yield [false, [], "RPR-LINUX-0012: uncorrected EDAC event normalization failed"] }
+        change events := push(events, uncorrected)
+    }
+    yield [true, events, ""]
+}
+
+export craft apple_swift_record_valid(record) {
+    # [schema, boot_id, diagnostic_id, subsystem, event_kind, severity, confidence, monotonic_ns, source_ref]
+    when kind(record) != "list" or size(record) != 9 { yield false }
+    when record[0] != "apple.swift.ras.v1" { yield false }
+    each index in [1, 2, 3, 8] {
+        when kind(record[index]) != "text" or size(record[index]) == 0 { yield false }
+    }
+    when not contains(["corrected", "uncorrected_recoverable", "uncorrected_fatal", "info", "thermal", "bus_link", "memory_poison", "software_suspected"], record[4]) { yield false }
+    when not contains(["info", "low", "warning", "high", "fatal"], record[5]) { yield false }
+    when not contains(["confirmed", "supported", "indicative", "unknown", "conflicted"], record[6]) { yield false }
+    when not valid_integer(record[7], 0, SAFE_INTEGER_MAX) { yield false }
+    yield true
+}
+
+export craft apple_swift_record_to_ras_event(record) {
+    when not apple_swift_record_valid(record) { yield [false, [], "RPR-APPLE-0001: invalid Swift diagnostics record"] }
+    make event := [
+        RAS_EVENT_SCHEMA,
+        record[2],
+        record[1],
+        "apple-swift-ras",
+        record[3],
+        record[4],
+        record[5],
+        record[6],
+        record[7],
+        record[8]
+    ]
+    when not ras_event_valid(event) { yield [false, [], "RPR-APPLE-0002: normalized RAS envelope failed validation"] }
+    yield [true, event, ""]
+}
+
+export craft rust_native_ras_packet_valid(packet) {
+    # [schema, abi, sequence, provider, event]
+    when kind(packet) != "list" or size(packet) != 5 { yield false }
+    when packet[0] != "rust.native.ras.v1" or packet[1] != "dabi64-ras-v1" { yield false }
+    when not valid_integer(packet[2], 1, SAFE_INTEGER_MAX) { yield false }
+    when kind(packet[3]) != "text" or size(packet[3]) == 0 { yield false }
+    when not ras_event_valid(packet[4]) or packet[4][3] != packet[3] { yield false }
+    yield true
+}
+
+export craft rust_native_ras_ingest(packet, adapter) {
+    when not rust_native_ras_packet_valid(packet) {
+        yield [false, [], "RPR-RUST-0001: invalid native RAS ABI packet"]
+    }
+    when not processor_adapter_valid(adapter) or adapter[4] != "rust" or adapter[5] != "dabi64-ras-v1" {
+        yield [false, [], "RPR-RUST-0002: Rust adapter ABI mismatch"]
+    }
+    when adapter[6] != "read-only" or not contains(adapter[8], "event-query") {
+        yield [false, [], "RPR-RUST-0003: Rust ingestion must be read-only"]
+    }
+    when not adapter[7] { yield [false, [], "RPR-RUST-0004: Rust adapter is not attached"] }
+    yield [true, packet[4], ""]
+}
