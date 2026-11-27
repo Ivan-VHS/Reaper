@@ -6,8 +6,8 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from reaper.duckos_bridge import (
-    DuckOSInventoryError, REPORT_SCHEMA, audit_file, audit_snapshot, main,
+from reaper.dak_bridge import (
+    DAKInventoryError, REPORT_SCHEMA, audit_file, audit_snapshot, main,
 )
 
 
@@ -33,10 +33,10 @@ def make_snapshot():
         },
     ]
     snapshot = {
-        "schema": "duckos.hardware-inventory.v1",
+        "schema": "dak.hardware-inventory.v1",
         "captured_utc": "2026-11-23T10:00:00Z",
         "source": {
-            "provider": "duckos-host-inventory", "mode": "read_only",
+            "provider": "dak-host-inventory", "mode": "read_only",
             "platform": "windows", "architecture": "amd64",
         },
         "summary": {
@@ -52,7 +52,7 @@ def make_snapshot():
     return snapshot
 
 
-class DuckOSBridgeTests(unittest.TestCase):
+class DAKBridgeTests(unittest.TestCase):
     def test_valid_snapshot_produces_read_only_audit_findings(self):
         report = audit_snapshot(make_snapshot())
         self.assertEqual(report["schema"], REPORT_SCHEMA)
@@ -61,7 +61,7 @@ class DuckOSBridgeTests(unittest.TestCase):
         self.assertEqual(report["summary"]["findings"], 2)
         self.assertEqual(
             {item["code"] for item in report["findings"]},
-            {"DUCKOS-DRIVER-MISSING", "DUCKOS-DEVICE-PROBLEM"},
+            {"DAK-DRIVER-MISSING", "DAK-DEVICE-PROBLEM"},
         )
         self.assertFalse(report["execution_performed"])
         self.assertFalse(report["disk_writes_performed"])
@@ -70,7 +70,7 @@ class DuckOSBridgeTests(unittest.TestCase):
     def test_changed_content_is_rejected_by_snapshot_digest(self):
         snapshot = make_snapshot()
         snapshot["devices"][0]["driver"] = "untrusted_change"
-        with self.assertRaisesRegex(DuckOSInventoryError, "SHA-256"):
+        with self.assertRaisesRegex(DAKInventoryError, "SHA-256"):
             audit_snapshot(snapshot)
 
     def test_inconsistent_summary_is_rejected_even_with_resealed_hash(self):
@@ -81,7 +81,7 @@ class DuckOSBridgeTests(unittest.TestCase):
             unsigned, sort_keys=True, separators=(",", ":"),
             ensure_ascii=False, allow_nan=False,
         ).encode("utf-8")).hexdigest()
-        with self.assertRaisesRegex(DuckOSInventoryError, "summary.driver_bound"):
+        with self.assertRaisesRegex(DAKInventoryError, "summary.driver_bound"):
             audit_snapshot(snapshot)
 
     def test_bound_driver_cannot_be_missing_from_record(self):
@@ -92,7 +92,7 @@ class DuckOSBridgeTests(unittest.TestCase):
             unsigned, sort_keys=True, separators=(",", ":"),
             ensure_ascii=False, allow_nan=False,
         ).encode("utf-8")).hexdigest()
-        with self.assertRaisesRegex(DuckOSInventoryError, "bound driver"):
+        with self.assertRaisesRegex(DAKInventoryError, "bound driver"):
             audit_snapshot(snapshot)
 
     def test_cli_reads_snapshot_and_writes_report(self):

@@ -41,7 +41,7 @@ def validate(data):
         raise ValueError("groups do not cover 1..666")
 
     categories = data.get("architecture_categories")
-    if data.get("category_scheme") != "duckos-reaper-architecture/v1":
+    if data.get("category_scheme") != "dak-reaper-architecture/v1":
         raise ValueError("unsupported or missing architecture category scheme")
     if not isinstance(categories, list) or not categories:
         raise ValueError("architecture_categories must be a non-empty array")

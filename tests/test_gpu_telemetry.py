@@ -49,7 +49,7 @@ def snapshot(gpus=None, available=True, reason=None):
 
 
 class OPlagueGpuTelemetryTests(unittest.TestCase):
-    def test_normalizes_raw_v1_snapshot_for_duckos_policy(self) -> None:
+    def test_normalizes_raw_v1_snapshot_for_dak_policy(self) -> None:
         result = normalize_oplage_gpu_snapshot(snapshot())
         self.assertEqual(len(result), 10)
         self.assertEqual(result[0], OPLAGE_GPU_SCHEMA)
