@@ -1,6 +1,6 @@
 # Reaper — UI/UX implementation profile
 
-**Shared standard:** [UI/UX Codex 40026](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/UI_UX_CODEX_40026.md).
+**Shared standard:** [UI/UX Codex 40026](https://github.com/Ivan-VHS/DAK/blob/main/docs/UI_UX_CODEX_40026.md).
 
 This file keeps only the Reaper Studio toolkit notes. The shared specification owns common interaction rules, accessibility budgets, theme/component contracts and the definition of done.
 

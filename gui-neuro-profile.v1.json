@@ -1,0 +1,82 @@
+{
+  "schema": "dak.gui-neuro-profile.v1",
+  "version": 1,
+  "repository": "Ivan-VHS/Reaper",
+  "ui_stack": [
+    "Reaper language and native C17 track",
+    "Python/Tkinter Studio reference UI",
+    "C DABI64 desktop wire contract"
+  ],
+  "primary_ui_surfaces": [
+    "reaper/ui_theme.py",
+    "reaper/ui_motion.py",
+    "reaper/desktop.py",
+    "reaper/codex66_ui.py",
+    "src/dabi64_desktop.c",
+    "include/reaper/dabi64_desktop.h",
+    "tests/test_ui_motion.py",
+    "tests/test_ui_theme.py"
+  ],
+  "automation": {
+    "agent_mode": "supervised-neuro-agent",
+    "stages": [
+      "observe",
+      "measure",
+      "diagnose",
+      "propose",
+      "sandbox",
+      "validate",
+      "feature-branch",
+      "human-review"
+    ],
+    "target_branch_policy": "feature-branch-only",
+    "human_review_required": true,
+    "allow_main_branch_writes": false,
+    "allow_auto_merge": false,
+    "model_runtime": "operator-configured; not invoked by this workflow",
+    "change_budget": {
+      "max_files_per_pr": 20,
+      "prefer_small_reviewable_changes": true,
+      "require_rollback_plan": true
+    }
+  },
+  "privacy": {
+    "external_model_data": "deny_by_default",
+    "telemetry": "disabled",
+    "secret_access": "deny",
+    "local_artifacts_only": true
+  },
+  "allowed_write_paths": [
+    "gui-neuro-profile.v1.json",
+    "docs/GUI_NEURO_AUTOIMPROVEMENT.md",
+    "tools/validate_gui_neuro_profile.mjs",
+    ".github/workflows/gui-neuro-profile.yml",
+    "reaper/",
+    "src/dabi64_desktop.c",
+    "include/reaper/dabi64_desktop.h",
+    "tests/",
+    "docs/"
+  ],
+  "protected_write_paths": [
+    "src/lexer.c",
+    "src/parser.c",
+    "src/lower.c",
+    "src/optimizer.c",
+    "src/ir.c",
+    "security/",
+    "selfhost/"
+  ],
+  "quality_gates": [
+    "Python reference UI and motion/theme unit tests",
+    "Reaper source and examples validation",
+    "Visual canon and contrast validation",
+    "DABI64 layout and frame validation for ABI changes"
+  ],
+  "success_metrics": [
+    "finite and bounded animation state",
+    "strict boolean preference decoding",
+    "theme contrast requirements pass",
+    "no ABI wire-format drift from GUI-only work"
+  ],
+  "implementation_boundary": "Reaper is a systems-programming language and workbench. UI automation must not change compiler semantics, parser/lexer contracts or DABI64 wire compatibility without a separately scoped implementation and ABI tests."
+}

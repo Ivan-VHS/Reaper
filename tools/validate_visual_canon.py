@@ -9,6 +9,10 @@ import sys
 from pathlib import Path
 
 ALLOWED = {
+    # Imperial Noir & Glass canonical base + semantic status colors.
+    "#050505", "#070707", "#101010", "#181818", "#343434", "#3B3000",
+    "#A3A3A3", "#D8D8D8", "#FFD700", "#FFE36E", "#FF7777", "#FF9A9A",
+    "#6EDAA3", "#79B8FF", "#858585",
     # Shared 2026 semantic light/dark token extension.
     "#F4F8FD",
     "#0F2A45",
@@ -48,7 +52,7 @@ ALLOWED = {
     "#3B4262", "#353054", "#FF8EAC", "#330A1A", "#FFB0C3", "#B0B4CC",
     "#F5F3FA", "#211F31", "#4E4B63", "#66627A", "#5B43B5",
     "#49359D", "#006F68", "#FFFFFF",
-    # Mora Amber semantic profile shared across DuckOS and native workspaces.
+    # Mora Amber semantic profile shared across DAK and native workspaces.
     "#211913", "#33261D", "#493326", "#526347", "#60442E", "#75543A",
     "#9EC39A", "#B09A83", "#B64A40", "#C4A98A", "#C85C50",
     "#D58B3D", "#E7D2B8", "#E8C99F", "#EAA653", "#EF8E7C",
@@ -58,6 +62,12 @@ HEX = re.compile(r"#[0-9A-Fa-f]{6}\b")
 RGB = re.compile(r"\bRGB\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)", re.IGNORECASE)
 
 AAA_TEXT_PAIRS = (
+    ("#FFFFFF", "#050505"),
+    ("#FFFFFF", "#101010"),
+    ("#A3A3A3", "#050505"),
+    ("#070707", "#FFD700"),
+    ("#070707", "#FF7777"),
+    ("#070707", "#79B8FF"),
     ("#122C45", "#F4F8FD"),
     ("#E8EDF2", "#071A2D"),
     ("#FFFFFF", "#004E98"),
