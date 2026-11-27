@@ -857,7 +857,9 @@ export craft run_construct(state, spec) {
     make triggered := false
 
     when spec[0] == "BOOT" {
-        change next := state_put(next, 16, "ready")
+        when next[16] == "cold" and not next[7] {
+            change next := state_put(next, 16, "ready")
+        }
     }
     when spec[0] == "RULE" {
         when next[4] <= next[5] and next[6] == "production" {
