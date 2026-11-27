@@ -21,4 +21,6 @@
 | Pytyliki | optional C ABI metric calls | explicit trusted path |
 | Registries | 813 proposals; canonical API contract registry; canonical symbolic-token catalogue | specification, not completion |
 
+Processor Kernel v1 implementation details and the runnable Reaper example are documented in [PROCESSOR_KERNEL_V1.md](PROCESSOR_KERNEL_V1.md). The model is intentionally distinct from a native SMP scheduler or privileged hardware runtime.
+
 Python remains the compatibility reference. Native C17 is not yet a full interpreter or general machine-code backend. The MMIO API is a checked adapter contract, not a complete hardware runtime. The systems-language migration and maturity gates are documented in [HARDWARE_LANGUAGE.md](HARDWARE_LANGUAGE.md).
