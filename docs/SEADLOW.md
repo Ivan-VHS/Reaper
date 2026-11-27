@@ -34,9 +34,50 @@ Precedence is ordered as logical operators, comparison operators, bitwise OR, XO
 - rejection of partial output/input overlap;
 - deterministic clearing of unused high bits in a final partial byte;
 - popcount over the requested bit range;
+- fused transform-plus-popcount, which computes the population count while writing each transformed word/byte instead of rereading the completed output;
 - counters for processed bits, words, tail bytes/bits and tiles.
 
 The API does not spawn worker threads or assume SIMD support. The fixed-size word loop gives optimizing compilers a simple vectorization target while retaining a portable C17 implementation. Actual SIMD, multicore scheduling and device offload require target-specific implementations and benchmark evidence.
+
+## Algebraic model and fused reduction
+
+For a bit-vector \(x \in \mathbb{B}^n\), where \(\mathbb{B}=\{0,1\}\), define the
+wordwise transform \(z=T_\circ(x,y)\). Its population count is
+
+\[
+\operatorname{wt}(z)=\sum_{i=0}^{n-1}z_i
+=\lVert z\rVert_1,
+\qquad
+d_H(x,y)=\operatorname{wt}(x\oplus y).
+\]
+
+For NOT, the finite-width complement is taken only over the declared domain:
+\[
+\operatorname{wt}(\neg_n x)=n-\operatorname{wt}(x).
+\]
+Unused high bits in the final byte are therefore excluded from both the output
+and the reduction.
+
+The new function reaper_seadlow_transform_popcount fuses the map and reduction:
+\[
+(c,z)\leftarrow(c+\operatorname{wt}(T_\circ(x_j,y_j)),
+               T_\circ(x_j,y_j))
+\]
+for each 64-bit word \(j\), followed by the exact byte/bit tail. The count is
+published only after the operation succeeds. Its result is identical to
+\[
+z\leftarrow T_\circ(x,y);
+\qquad c\leftarrow\operatorname{popcount}(z),
+\]
+but avoids the second full read of the transformed buffer. Both paths remain
+\(O(\lceil n/64\rceil)\) in word operations; the fused path reduces memory
+traffic rather than changing the asymptotic complexity. No speedup percentage
+is claimed without a reproducible benchmark on named hardware.
+
+The test suite exhaustively checks all 8-bit operand pairs for AND/OR/XOR,
+checks finite-width complement and Hamming-weight identities, compares fused
+results against the two-pass reference at byte, word and 256-word tile
+boundaries, and verifies that invalid requests do not commit the count output.
 
 ## Example
 
