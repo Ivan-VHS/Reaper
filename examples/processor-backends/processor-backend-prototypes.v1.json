@@ -1,0 +1,183 @@
+{
+  "schema": "reaper.processor-backend-registry.v1",
+  "version": 1,
+  "registry_generation": 1,
+  "backends": [
+    {
+      "id": "reaper.rv32i.assembler.v1",
+      "kind": "native-assembler",
+      "maturity": "prototype",
+      "target": "RV32I",
+      "abi": "ILP32",
+      "input_contract": "reaper.rv32i-instruction-list.v1",
+      "output_contract": "reaper.rv32i-object.v1",
+      "entrypoints": [
+        "reaper_rv32_assemble"
+      ],
+      "source_refs": [
+        "src/processor_rv32_assembler.c",
+        "include/reaper/processor_backends.h"
+      ],
+      "test_refs": [
+        "tests/test_processor_assembler.c",
+        "processor-native-assembler-rv32i"
+      ],
+      "deterministic": true,
+      "bounded": true,
+      "toolchain": null,
+      "resource_limits": {
+        "instructions": 256,
+        "symbols": 64,
+        "relocations": 128
+      },
+      "qualification": {
+        "target_qualified": false,
+        "hardware_qualified": false,
+        "abi_conformance": "partial"
+      },
+      "execution_performed": false,
+      "hardware_access_performed": false
+    },
+    {
+      "id": "reaper.rv32i.linker.v1",
+      "kind": "native-linker",
+      "maturity": "prototype",
+      "target": "RV32I",
+      "abi": "ILP32",
+      "input_contract": "reaper.rv32i-object.v1",
+      "output_contract": "reaper.rv32i-flat-image.v1",
+      "entrypoints": [
+        "reaper_rv32_link"
+      ],
+      "source_refs": [
+        "src/processor_rv32_linker.c",
+        "include/reaper/processor_backends.h"
+      ],
+      "test_refs": [
+        "tests/test_processor_linker.c",
+        "processor-native-linker-flat-image"
+      ],
+      "deterministic": true,
+      "bounded": true,
+      "toolchain": null,
+      "resource_limits": {
+        "objects": 8,
+        "instructions": 2048,
+        "output_bytes": 8192,
+        "relocations": 1024
+      },
+      "qualification": {
+        "target_qualified": false,
+        "hardware_qualified": false,
+        "abi_conformance": "partial"
+      },
+      "execution_performed": false,
+      "hardware_access_performed": false
+    },
+    {
+      "id": "reaper.rv32i.emulator.v1",
+      "kind": "emulator",
+      "maturity": "prototype",
+      "target": "RV32I-subset",
+      "abi": "ILP32",
+      "input_contract": "reaper.rv32i-flat-image.v1",
+      "output_contract": "reaper.rv32i-execution-report.v1",
+      "entrypoints": [
+        "reaper_rv32_emulate"
+      ],
+      "source_refs": [
+        "src/processor_rv32_emulator.c",
+        "include/reaper/processor_backends.h"
+      ],
+      "test_refs": [
+        "tests/test_processor_emulator.c",
+        "processor-bounded-rv32i-emulator"
+      ],
+      "deterministic": true,
+      "bounded": true,
+      "toolchain": null,
+      "resource_limits": {
+        "memory_bytes": 4096,
+        "max_steps": 1000000,
+        "trace_entries": 128
+      },
+      "qualification": {
+        "target_qualified": false,
+        "hardware_qualified": false,
+        "abi_conformance": "partial"
+      },
+      "execution_performed": false,
+      "hardware_access_performed": false
+    },
+    {
+      "id": "reaper.logic-net.rtl.v1",
+      "kind": "rtl",
+      "maturity": "prototype",
+      "target": "combinational-logic-net",
+      "abi": "logic-net/v1",
+      "input_contract": "reaper.boolean-logic-net.v1",
+      "output_contract": "systemverilog-module.v1",
+      "entrypoints": [
+        "reaper_rtl_emit_systemverilog"
+      ],
+      "source_refs": [
+        "src/processor_logic_net.c",
+        "src/processor_rtl_backend.c",
+        "include/reaper/processor_backends.h"
+      ],
+      "test_refs": [
+        "tests/test_processor_rtl.c",
+        "processor-systemverilog-rtl-emitter"
+      ],
+      "deterministic": true,
+      "bounded": true,
+      "toolchain": null,
+      "resource_limits": {
+        "inputs": 32,
+        "gates": 64
+      },
+      "qualification": {
+        "target_qualified": false,
+        "hardware_qualified": false,
+        "abi_conformance": "partial"
+      },
+      "execution_performed": false,
+      "hardware_access_performed": false
+    },
+    {
+      "id": "reaper.logic-net.formal.v1",
+      "kind": "formal-verification",
+      "maturity": "prototype",
+      "target": "combinational-logic-net",
+      "abi": "logic-net/v1",
+      "input_contract": "reaper.boolean-logic-net-pair.v1",
+      "output_contract": "reaper.boolean-equivalence-report.v1",
+      "entrypoints": [
+        "reaper_formal_equivalence"
+      ],
+      "source_refs": [
+        "src/processor_logic_net.c",
+        "src/processor_formal_backend.c",
+        "include/reaper/processor_backends.h"
+      ],
+      "test_refs": [
+        "tests/test_processor_formal.c",
+        "processor-bounded-formal-equivalence"
+      ],
+      "deterministic": true,
+      "bounded": true,
+      "toolchain": null,
+      "resource_limits": {
+        "inputs": 8,
+        "cases": 256
+      },
+      "qualification": {
+        "target_qualified": false,
+        "hardware_qualified": false,
+        "abi_conformance": "partial"
+      },
+      "execution_performed": false,
+      "hardware_access_performed": false
+    }
+  ]
+}
