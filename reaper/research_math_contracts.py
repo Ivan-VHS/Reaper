@@ -426,9 +426,12 @@ def _validate_cross_constraints(function_id: str, arguments: Mapping[str, Any]) 
     if function_id == "hadwiger_nelson.unit_graph_build":
         require(len(arguments["xy"]) == 2 * arguments["vertex_count"],
                 "xy must contain one integer coordinate pair per vertex")
-    elif function_id == "hadwiger_nelson.coloring_verify":
+        require(all(-33_000_000 <= value <= 33_000_000 for value in arguments["xy"]),
+                "coordinates must fit the native scaled-coordinate range")
+    elif function_id in {"hadwiger_nelson.coloring_verify", "hadwiger_nelson.coloring_search_bounded"}:
         vertices = arguments["vertex_count"]
-        require(len(arguments["colors"]) == vertices, "colors length must equal vertex_count")
+        if function_id == "hadwiger_nelson.coloring_verify":
+            require(len(arguments["colors"]) == vertices, "colors length must equal vertex_count")
         for edge in arguments["edges"]:
             require(edge[0] < vertices and edge[1] < vertices, "edge endpoint is outside vertex_count")
 
@@ -450,15 +453,23 @@ def _validate_cross_constraints(function_id: str, arguments: Mapping[str, Any]) 
                 require(register in (0, 1), f"program[{index}] register must be 0 or 1")
             if opcode in (2, 3):
                 require(target < len(program), f"program[{index}] jump target is outside the program")
-        if function_id == "halting.vm_run_bounded":
+        if function_id == "halting.vm_step":
+            state = arguments["before"]
+            require(state["halted"] or state["pc"] < len(program), "input PC is outside the program")
+        elif function_id == "halting.vm_run_bounded":
             state = arguments["initial_state"]
             require(state["halted"] or state["pc"] < len(program), "initial PC is outside the program")
         if function_id == "halting.vm_trace_verify":
-            require(len(arguments["trace"]) > 0, "trace cannot be empty")
+            trace = arguments["trace"]
+            require(len(trace) > 0, "trace cannot be empty")
+            require(all(state["halted"] or state["pc"] < len(program) for state in trace),
+                    "trace contains a non-halted state with an out-of-range PC")
 
     if function_id.startswith("matrix."):
-        dimension = arguments["dimension"] if "dimension" in arguments else None
-        if dimension is not None:
+        if function_id == "matrix.scaling_exponent":
+            require(arguments["n2"] > arguments["n1"], "n2 must be larger than n1")
+        else:
+            dimension = arguments["dimension"]
             for name in ("left", "right"):
                 require(len(arguments[name]) == dimension * dimension,
                         f"{name} matrix length must equal dimension squared")
