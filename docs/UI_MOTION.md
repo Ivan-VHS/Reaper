@@ -1,6 +1,6 @@
 # Desktop UI motion contract
 
-The Reaper Studio desktop UI follows the AETHER-ANAS white/blue/red contract, extended by the shared Anatidae / Pond Motion profile. Motion is functional feedback, not ambient decoration. The 2026 Motion Lab concepts are implemented as native Tk transitions; browser-only CSS effects are not copied into the desktop IDE.
+The Reaper Studio desktop UI follows the AETHER-ANAS white/blue/red contract, extended by the shared Dak / shared motion Motion profile. Motion is functional feedback, not ambient decoration. The 2026 Motion Lab concepts are implemented as native Tk transitions; browser-only CSS effects are not copied into the desktop IDE.
 
 ## Timing and curves
 
@@ -34,13 +34,13 @@ Preferences are persisted separately from theme settings, and old preference fil
 All animation work stays on the Tk UI thread and must never block execution, embedded builds, debug pauses, worker, keyboard or drag operations.
 
 
-## Anatidae / Pond Motion translation
+## Dak / shared motion Motion translation
 
 Reaper's existing `Spring1D` controller provides the expressive paddle response using a bounded mass-spring-damper solver. The CSS-style paddle/water values are stable design tokens; they describe the intended feel, while the native spring solver remains the actual Tk implementation. The shared tokens are `PADDLE_EASING = cubic-bezier(0.22, 1.18, 0.36, 1)` and `WATER_EASING = cubic-bezier(0.37, 0, 0.63, 1)`; the former describes the short, damped control response, while the latter is reserved for optional showcase artwork. Reduce Motion and Eco continue to override Expressive Motion and cap retained transitions at 80 ms.
 
 Decorative illustrations, parallax, particles and water ripples are optional landing/showcase motifs only. They are not placed behind the editor, debugger, project tree, diagnostics or terminal output. The native IDE keeps opaque work surfaces, predictable focus paths and all animation on the Tk UI thread.
 
-See the [shared Anatidae motion constitution](ANATIDAE_MOTION_CONSTITUTION.md).
+See the [shared Dak motion constitution](DAK_MOTION_CONSTITUTION.md).
 
 
 ## Motion Constitution v2026 mapping
@@ -55,4 +55,4 @@ The shared token, accessibility and documentation source is [Motion Constitution
 
 ### Product-specific maturity
 
-Reaper Studio has native Tk spring presentation, persisted Reduce Motion/Eco/Expressive preferences, editor/debugger and local LSP/DAP tooling. CODEX-66 and the language service are local; they are not a cloud AI agent or streamed AI Diff. AST fold and diff timeline states must be exposed only where the corresponding editor model exists. No motion may delay runtime execution, debugging or language-service work.
+Reaper Studio has native Tk spring presentation, persisted Reduce Motion/Eco/Expressive preferences, editor/debugger and local LSP/DAP tooling. CODEX-66 and the language service are local; they are not a cloud AI agent or streamed AI Diff. AST fold and diff timeline states must be exposed only where the corresshared motioning editor model exists. No motion may delay runtime execution, debugging or language-service work.
