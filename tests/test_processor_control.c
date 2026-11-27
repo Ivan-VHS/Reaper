@@ -88,6 +88,7 @@ static void test_live_update_and_power(void) {
 
 typedef struct {
     uint32_t frequency_calls;
+    uint32_t power_calls;
     uint32_t debug_calls;
     uint32_t verify_calls;
     uint32_t stage_calls;
@@ -104,6 +105,17 @@ static ReaperProcessorStatus fake_frequency(
     assert(cpu_id == 1U && minimum_khz <= target_khz);
     assert(target_khz <= maximum_khz && generation == 4U);
     ++fake->frequency_calls;
+    return REAPER_PROCESSOR_OK;
+}
+
+static ReaperProcessorStatus fake_power_profile(
+    void *context, uint32_t cpu_id, ReaperProcessorPowerProfile profile,
+    uint32_t generation
+) {
+    FakeProcessorAdapter *fake = (FakeProcessorAdapter *)context;
+    assert(cpu_id == 1U && profile == REAPER_PROCESSOR_POWER_BALANCED);
+    assert(generation == 4U);
+    ++fake->power_calls;
     return REAPER_PROCESSOR_OK;
 }
 
@@ -176,6 +188,7 @@ static void test_capability_gated_platform_adapters(void) {
                         REAPER_PROCESSOR_CAP_PATCH_ACTIVATE |
                         REAPER_PROCESSOR_CAP_PATCH_ROLLBACK,
         .set_frequency_cap = fake_frequency,
+        .set_power_profile = fake_power_profile,
         .debug_capture = fake_debug,
         .verify_artifact = fake_verify,
         .stage_patch = fake_stage,
@@ -187,6 +200,13 @@ static void test_capability_gated_platform_adapters(void) {
         &ops, 1U, 800000U, 3000000U, 5000000U, 4U
     ) == REAPER_PROCESSOR_OK);
     assert(fake.frequency_calls == 1U);
+    assert(reaper_processor_apply_power_profile(
+        &ops, 1U, REAPER_PROCESSOR_POWER_BALANCED, 4U
+    ) == REAPER_PROCESSOR_OK);
+    assert(fake.power_calls == 1U);
+    assert(reaper_processor_apply_power_profile(
+        &ops, 1U, (ReaperProcessorPowerProfile)99, 4U
+    ) == REAPER_PROCESSOR_INVALID_ARGUMENT);
     assert(reaper_processor_apply_frequency_cap(
         &ops, 1U, 4000000U, 3000000U, 5000000U, 4U
     ) == REAPER_PROCESSOR_INVALID_ARGUMENT);
