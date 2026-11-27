@@ -1,6 +1,6 @@
 # Engineering Evolution Framework
 
-**Canonical shared specification:** [DuckOS — Engineering Evolution Framework](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/ENGINEERING_EVOLUTION_FRAMEWORK.md).
+**Canonical shared specification:** [DAK — Engineering Evolution Framework](https://github.com/Ivan-VHS/DAK/blob/main/docs/ENGINEERING_EVOLUTION_FRAMEWORK.md).
 
 Reaper keeps its own versioned adoption data:
 - [Manifest](../engineering-evolution.v1.json)

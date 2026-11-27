@@ -1,0 +1,204 @@
+# Reaper-native canonical IR verifier.
+# Module: [schema, name, entry_block_id, blocks].
+# Block: [id, instructions].
+# Instruction: [opcode, destination, operands, result_type, [start, end]].
+# Every basic block must end in exactly one control-flow terminator.
+
+craft ir_opcode_known(opcode) {
+    yield opcode == "const" or opcode == "copy" or opcode == "add" or opcode == "sub" or opcode == "mul" or opcode == "div" or opcode == "mod" or opcode == "compare" or opcode == "call" or opcode == "load" or opcode == "store" or opcode == "jump" or opcode == "branch" or opcode == "return" or opcode == "emit" or opcode == "drop" or opcode == "alloc" or opcode == "free"
+}
+
+craft ir_is_terminator(opcode) {
+    yield opcode == "jump" or opcode == "branch" or opcode == "return"
+}
+
+craft ir_instruction_valid(instruction, source_length) {
+    when size(instruction) != 5 { yield false }
+    when not ir_opcode_known(instruction[0]) { yield false }
+    when size(instruction[3]) == 0 { yield false }
+    when size(instruction[4]) != 2 { yield false }
+    when instruction[4][0] < 0 or instruction[4][1] < instruction[4][0] or instruction[4][1] > source_length {
+        yield false
+    }
+
+    when ir_is_terminator(instruction[0]) {
+        when instruction[1] != nothing { yield false }
+    } otherwise {
+        when instruction[1] == nothing { yield false }
+        when size(instruction[1]) == 0 { yield false }
+    }
+
+    when instruction[0] == "const" and size(instruction[2]) != 1 { yield false }
+    when instruction[0] == "copy" and size(instruction[2]) != 1 { yield false }
+    when (instruction[0] == "add" or instruction[0] == "sub" or instruction[0] == "mul" or instruction[0] == "div" or instruction[0] == "mod" or instruction[0] == "compare") and size(instruction[2]) != 2 { yield false }
+    when instruction[0] == "jump" and size(instruction[2]) != 1 { yield false }
+    when instruction[0] == "branch" and size(instruction[2]) != 3 { yield false }
+    when instruction[0] == "return" and size(instruction[2]) > 1 { yield false }
+    when instruction[0] == "emit" and size(instruction[2]) != 1 { yield false }
+    yield true
+}
+
+craft ir_block_validate(block, source_length) {
+    when size(block) != 2 { yield ["ERR", "IR block record must have two fields"] }
+    when block[0] < 0 { yield ["ERR", "IR block id must be non-negative", block[0]] }
+    when size(block[1]) == 0 { yield ["ERR", "IR block cannot be empty", block[0]] }
+
+    vary index := 0
+    vary terminators := 0
+    loop while index < size(block[1]) {
+        make instruction := block[1][index]
+        when not ir_instruction_valid(instruction, source_length) {
+            yield ["ERR", "invalid IR instruction", block[0], index]
+        }
+        when ir_is_terminator(instruction[0]) {
+            change terminators := terminators + 1
+            when index != size(block[1]) - 1 {
+                yield ["ERR", "IR terminator must be the final instruction", block[0], index]
+            }
+        }
+        change index := index + 1
+    }
+    when terminators != 1 {
+        yield ["ERR", "IR block must have exactly one terminator", block[0], terminators]
+    }
+    yield ["OK", block[0]]
+}
+
+craft ir_find_block(blocks, requested_id) {
+    vary index := 0
+    loop while index < size(blocks) {
+        when blocks[index][0] == requested_id { yield ["OK", index] }
+        change index := index + 1
+    }
+    yield ["ERR", "IR block id not found", requested_id]
+}
+
+craft ir_list_contains(values, requested) {
+    vary index := 0
+    loop while index < size(values) {
+        when values[index] == requested { yield true }
+        change index := index + 1
+    }
+    yield false
+}
+
+craft ir_successors(block) {
+    when size(block) != 2 or size(block[1]) == 0 {
+        yield ["ERR", "cannot read successors from malformed block"]
+    }
+    make final_instruction := block[1][size(block[1]) - 1]
+    when final_instruction[0] == "return" { yield ["OK", []] }
+    when final_instruction[0] == "jump" { yield ["OK", [final_instruction[2][0]]] }
+    when final_instruction[0] == "branch" { yield ["OK", [final_instruction[2][1], final_instruction[2][2]]] }
+    yield ["ERR", "block has no supported terminator", block[0]]
+}
+
+craft ir_module_validate(module, source_length) {
+    when size(module) != 4 { yield ["ERR", "IR module record must have four fields"] }
+    when module[0] != "reaper.ir.v1" { yield ["ERR", "unsupported IR schema", module[0]] }
+    when size(module[1]) == 0 { yield ["ERR", "IR module name is empty"] }
+    when size(module[3]) == 0 { yield ["ERR", "IR module has no basic blocks"] }
+
+    make entry := ir_find_block(module[3], module[2])
+    when entry[0] != "OK" { yield ["ERR", "IR entry block is missing", module[2]] }
+
+    vary index := 0
+    loop while index < size(module[3]) {
+        make block := module[3][index]
+        make valid := ir_block_validate(block, source_length)
+        when valid[0] != "OK" { yield valid }
+
+        vary previous := 0
+        loop while previous < index {
+            when module[3][previous][0] == block[0] {
+                yield ["ERR", "duplicate IR block id", block[0]]
+            }
+            change previous := previous + 1
+        }
+        change index := index + 1
+    }
+
+    change index := 0
+    loop while index < size(module[3]) {
+        make next := ir_successors(module[3][index])
+        when next[0] != "OK" { yield next }
+        vary edge := 0
+        loop while edge < size(next[1]) {
+            make target := ir_find_block(module[3], next[1][edge])
+            when target[0] != "OK" {
+                yield ["ERR", "control-flow target does not exist", module[3][index][0], next[1][edge]]
+            }
+            change edge := edge + 1
+        }
+        change index := index + 1
+    }
+    yield ["OK", [module[1], size(module[3])]]
+}
+
+craft ir_reachable_blocks(module) {
+    when size(module) != 4 { yield ["ERR", "malformed IR module"] }
+    make entry := ir_find_block(module[3], module[2])
+    when entry[0] != "OK" { yield entry }
+
+    vary queue := [module[2]]
+    vary visited := []
+    vary cursor := 0
+    loop while cursor < size(queue) {
+        make current_id := queue[cursor]
+        when not ir_list_contains(visited, current_id) {
+            change visited := push(visited, current_id)
+            make block_index := ir_find_block(module[3], current_id)
+            when block_index[0] != "OK" { yield block_index }
+            make next := ir_successors(module[3][block_index[1]])
+            when next[0] != "OK" { yield next }
+            vary edge := 0
+            loop while edge < size(next[1]) {
+                when not ir_list_contains(visited, next[1][edge]) and not ir_list_contains(queue, next[1][edge]) {
+                    change queue := push(queue, next[1][edge])
+                }
+                change edge := edge + 1
+            }
+        }
+        change cursor := cursor + 1
+    }
+    yield ["OK", visited]
+}
+
+craft ir_unreachable_count(module) {
+    make reachable := ir_reachable_blocks(module)
+    when reachable[0] != "OK" { yield reachable }
+    yield ["OK", size(module[3]) - size(reachable[1])]
+}
+
+make const_value := ["const", "value", [7], "i64", [0, 1]]
+make branch_value := ["branch", nothing, ["value", 1, 2], "unit", [1, 2]]
+make return_left := ["return", nothing, ["value"], "i64", [2, 3]]
+make return_right := ["return", nothing, [], "unit", [4, 5]]
+make block_entry := [0, [const_value, branch_value]]
+make block_left := [1, [return_left]]
+make block_right := [2, [return_right]]
+make module := ["reaper.ir.v1", "branch_sample", 0, [block_entry, block_left, block_right]]
+
+assert(ir_instruction_valid(const_value, 10), "valid constant instruction rejected")
+assert(not ir_instruction_valid(["unknown", "x", [], "i64", [0, 1]], 10), "unknown opcode accepted")
+assert(not ir_instruction_valid(["add", nothing, [1], "i64", [0, 1]], 10), "malformed add accepted")
+assert(not ir_instruction_valid(["return", "x", [], "unit", [0, 1]], 10), "terminator destination accepted")
+assert(ir_block_validate(block_entry, 10) == ["OK", 0], "valid branch block rejected")
+assert(ir_block_validate([4, [const_value]], 10)[0] == "ERR", "unterminated block accepted")
+assert(ir_block_validate([4, [branch_value, return_right]], 10)[0] == "ERR", "instruction after terminator accepted")
+assert(ir_module_validate(module, 10) == ["OK", ["branch_sample", 3]], "valid IR module rejected")
+assert(ir_find_block(module[3], 2) == ["OK", 2], "IR block lookup mismatch")
+assert(ir_find_block(module[3], 9)[0] == "ERR", "missing IR block lookup accepted")
+assert(ir_successors(block_entry) == ["OK", [1, 2]], "branch successors mismatch")
+assert(ir_reachable_blocks(module) == ["OK", [0, 1, 2]], "IR reachability mismatch")
+assert(ir_unreachable_count(module) == ["OK", 0], "reachable IR module has unreachable blocks")
+
+make missing_target := ["reaper.ir.v1", "broken_target", 0, [[0, [["jump", nothing, [7], "unit", [0, 1]]]]]]
+assert(ir_module_validate(missing_target, 10)[0] == "ERR", "missing branch target accepted")
+make duplicate_ids := ["reaper.ir.v1", "duplicate", 0, [block_left, block_left]]
+assert(ir_module_validate(duplicate_ids, 10)[0] == "ERR", "duplicate block ids accepted")
+make unreachable := ["reaper.ir.v1", "unreachable", 0, [block_entry, block_left, block_right, [9, [["return", nothing, [], "unit", [6, 7]]]]]]
+assert(ir_module_validate(unreachable, 10)[0] == "OK", "well-formed unreachable block rejected")
+assert(ir_unreachable_count(unreachable) == ["OK", 1], "unreachable block count mismatch")
+
+emit "SELFHOST_IR_OK"
