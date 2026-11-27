@@ -1,0 +1,110 @@
+# Reaper processor-kernel v1: integrated control-plane contract.
+# All scheduling and time in this example are logical and deterministic.
+import "../selfhost/kernel_version.rpr" as versions
+import "../selfhost/kernel_state.rpr" as state
+import "../selfhost/kernel_scheduler.rpr" as scheduler
+import "../selfhost/kernel_trace.rpr" as trace
+import "../selfhost/kernel_pulse.rpr" as pulse
+import "../selfhost/kernel_graph.rpr" as graph
+import "../selfhost/kernel_table.rpr" as tables
+import "../selfhost/kernel_target.rpr" as target
+
+make scheduler_contract := versions["kernel_version_contract_make"](
+    "kernel.scheduler",
+    [1, 2, 0],
+    [1, 0, 0],
+    [1, 4, 0]
+)
+assert(scheduler_contract[0] == "OK", "scheduler version contract rejected")
+assert(versions["kernel_version_contract_accepts"](scheduler_contract[1], [1, 3, 1]) == ["OK", true], "compatible reader version rejected")
+assert(versions["kernel_version_contract_accepts"](scheduler_contract[1], [1, 5, 0]) == ["OK", false], "reader outside compatibility window accepted")
+assert(versions["kernel_version_contract_accepts"](scheduler_contract[1], [2, 0, 0]) == ["OK", false], "different major version accepted")
+
+make created_state := state["kernel_state_make"]([1, 0, 0])
+make booting_state := state["kernel_state_transition"](created_state[1], "booting", "")
+make online_state := state["kernel_state_transition"](booting_state[1], "online", "")
+assert(created_state[0] == "OK" and booting_state[0] == "OK" and online_state[0] == "OK", "kernel boot lifecycle failed")
+assert(state["kernel_state_transition"](created_state[1], "online", "")[0] == "ERR", "illegal lifecycle transition accepted")
+make ticked_state := state["kernel_state_tick"](online_state[1], 4)
+make action_state := state["kernel_state_record_action"](ticked_state[1], 7)
+make worker_state := state["kernel_state_set_active_workers"](action_state[1], 2)
+assert(worker_state[0] == "OK" and state["kernel_state_valid"](worker_state[1]), "kernel state accounting failed")
+assert(worker_state[1][4] == 4 and worker_state[1][5] == 7 and worker_state[1][6] == 2, "kernel state counters mismatch")
+
+make empty_scheduler := scheduler["kernel_scheduler_make"](8)
+make audio_task := scheduler["kernel_scheduler_add"](empty_scheduler[1], "audio-mix", 3, 2)
+make compiler_task := scheduler["kernel_scheduler_add"](audio_task[1], "reaper-build", 5, 1)
+make blocked_scheduler := scheduler["kernel_scheduler_block"](compiler_task[1], audio_task[2], "buffer-ready")
+make ready_scheduler := scheduler["kernel_scheduler_wake"](blocked_scheduler[1], audio_task[2])
+assert(ready_scheduler[0] == "OK", "task wake failed")
+make dispatch_one := scheduler["kernel_scheduler_dispatch"](ready_scheduler[1])
+make dispatch_two := scheduler["kernel_scheduler_dispatch"](dispatch_one[1])
+make dispatch_three := scheduler["kernel_scheduler_dispatch"](dispatch_two[1])
+assert(dispatch_one[0] == "OK" and dispatch_one[2][0] == compiler_task[2] and dispatch_one[2][1] == "completed", "highest-priority task was not dispatched first")
+assert(dispatch_two[0] == "OK" and dispatch_two[2][0] == audio_task[2], "round-robin dispatch did not select the remaining ready task")
+assert(dispatch_three[0] == "OK" and dispatch_three[2][1] == "completed", "bounded task did not complete")
+assert(dispatch_three[1][3] == 3 and scheduler["kernel_scheduler_ready_count"](dispatch_three[1]) == ["OK", 0], "scheduler dispatch accounting mismatch")
+assert(scheduler["kernel_scheduler_cancel"](dispatch_three[1], audio_task[2])[0] == "ERR", "completed task was cancelled")
+
+make empty_trace := trace["kernel_trace_make"]()
+make boot_event := trace["kernel_trace_append"](empty_trace[1], "kernel.boot", "core", ["online", 1], 0)
+make dispatch_event := trace["kernel_trace_append"](boot_event[1], "scheduler.dispatch", "reaper-build", [compiler_task[2]], 1)
+make action_event := trace["kernel_trace_append"](dispatch_event[1], "kernel.action", "source-edit", ["accepted", 7], 2)
+assert(action_event[0] == "OK" and trace["kernel_trace_valid"](action_event[1]), "deterministic event journal rejected")
+make expected_events := [
+    ["kernel.boot", "core", ["online", 1], 0],
+    ["scheduler.dispatch", "reaper-build", [compiler_task[2]], 1],
+    ["kernel.action", "source-edit", ["accepted", 7], 2]
+]
+assert(trace["kernel_trace_replay_matches"](action_event[1], expected_events) == ["OK", 3], "deterministic replay mismatch")
+assert(trace["kernel_trace_append"](action_event[1], "late.event", "core", [], 1)[0] == "ERR", "backwards logical time accepted")
+
+make empty_pulse := pulse["kernel_pulse_make"](0)
+make boot_pulse := pulse["kernel_pulse_record"](empty_pulse[1], "kernel.boot", 1, 0)
+make dispatch_pulse := pulse["kernel_pulse_record"](boot_pulse[1], "scheduler.dispatch", 3, 3)
+make action_pulse := pulse["kernel_pulse_record"](dispatch_pulse[1], "source.action", 7, 4)
+make memory_pulse := pulse["kernel_pulse_record_memory"](action_pulse[1], 4096, 4)
+assert(memory_pulse[0] == "OK" and pulse["kernel_pulse_valid"](memory_pulse[1]), "kernel pulse invariant failed")
+assert(memory_pulse[1][3] == 11 and memory_pulse[1][4] == 3 and memory_pulse[1][6] == 4096 and memory_pulse[1][7] == 4096, "kernel pulse counters mismatch")
+assert(pulse["kernel_pulse_rate"](memory_pulse[1]) == ["OK", [11, 4]], "logical action rate mismatch")
+
+make dependency_graph := ["reaper.kernel.graph.v1",
+    ["frontend", "typed-ir", "verified-ir", "native-lowering"],
+    [["frontend", "typed-ir"], ["typed-ir", "verified-ir"], ["verified-ir", "native-lowering"]]
+]
+make compact_graph := graph["kernel_graph_compact"](dependency_graph)
+assert(compact_graph[0] == "OK", "valid processor dependency graph rejected")
+assert(compact_graph[1][1] == ["frontend", "typed-ir", "verified-ir", "native-lowering"], "topological graph order mismatch")
+assert(compact_graph[2] == [4, 3], "compact graph dimensions mismatch")
+make cyclic_graph := ["reaper.kernel.graph.v1", ["a", "b"], [["a", "b"], ["b", "a"]]]
+assert(graph["kernel_graph_topological_order"](cyclic_graph)[0] == "ERR", "cyclic processor graph accepted")
+
+make cpu_target := target["kernel_target_make"](
+    "DAK x86-64",
+    "x86_64-unknown-dak",
+    "x86_64",
+    "dak",
+    "DABI64",
+    64,
+    "little",
+    8,
+    ["sse2", "avx2"],
+    ["clock", "process", "thread", "sync"]
+)
+assert(cpu_target[0] == "OK", "valid DAK processor target rejected")
+assert(target["kernel_target_has_capability"](cpu_target[1], "thread") == ["OK", true], "declared thread capability missing")
+assert(target["kernel_target_has_capability"](cpu_target[1], "mmio.write") == ["OK", false], "undeclared MMIO capability appeared")
+assert(target["kernel_target_make"]("bad", "x86_64-linux", "x86_64", "linux", "DABI64", 64, "little", 4, [], [])[0] == "ERR", "invalid DABI64 host target accepted")
+
+make kernel_table := tables["kernel_table_make"](
+    "kernel.components",
+    [1, 0, 0],
+    [["component", "text"], ["generation", "u64"], ["state", "text"]]
+)
+make table_with_row := tables["kernel_table_add_row"](kernel_table[1], ["scheduler", 1, "ready"])
+make table_export := tables["kernel_table_export"](table_with_row[1])
+assert(table_export[0] == "OK", "kernel table export failed")
+assert(table_export[1][4] == 1 and table_export[1][5] == [["scheduler", 1, "ready"]], "kernel table export changed row order or values")
+assert(tables["kernel_table_add_row"](kernel_table[1], ["short", 1])[0] == "ERR", "malformed kernel table row accepted")
+
+emit "REAPER_PROCESSOR_KERNEL_V1_OK"
