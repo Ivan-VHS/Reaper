@@ -17,32 +17,27 @@ Reaper 是一款面向编译器工具、嵌入式软件和硬件相关程序的�
 - 实验性 C17 原生实现；当前尚未与参考运行时功能对等。
 - NOO TAH 将 JavaScript 执行交给官方 Node.js 运行时。
 - Jora 项目脚手架和能力组合；目录中的应用包仍是规范，不是可安装的编辑器。
+- PLAGUE 1.0.0 基础：Reaper 原生的十组件注册表、默认拒绝的操作策略、受限提案评估、确定性的风险/收益排序、版本化契约和 CI 冒烟测试。目前尚不能自主修改仓库。
 
-文档：[功能](docs/FEATURES.md) · [架构](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Jora 工厂](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md)。
+文档：[功能](docs/FEATURES.md) · [架构](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Jora 工厂](docs/JORA_APPLICATION_FACTORY.md) · [PLAGUE](docs/PLAGUE.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md)。
 
 ## 快速开始
 
 要求：参考运行时使用 Python 3.10–3.12；可选兼容性测试使用 Node.js 22/24；Windows Studio 需要 Tkinter；原生路线需要 CMake 3.16+ 和 C17 编译器。
 
-```sh
-python -m venv .venv
-python -m pip install -e .
-python -m reaper --check examples/flow.rpr
-python -m reaper examples/flow.rpr
-```
+    python -m venv .venv
+    python -m pip install -e .
+    python -m reaper --check examples/flow.rpr
+    python -m reaper examples/flow.rpr
 
 启动 Studio 或 REPL：
 
-```sh
-python reaper_desktop.py
-python -m reaper --repl
-```
+    python reaper_desktop.py
+    python -m reaper --repl
 
 参考运行时测试：
 
-```sh
-python -m unittest discover -s tests -v
-```
+    python -m unittest discover -s tests -v
 
 ## 架构与状态
 
