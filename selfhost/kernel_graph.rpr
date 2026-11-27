@@ -116,5 +116,21 @@ export craft kernel_graph_stats(graph) {
     when not kernel_graph_valid(graph) { yield ["ERR", "processor dependency graph is invalid"] }
     make ordered := kernel_graph_topological_order(graph)
     when ordered[0] != "OK" { yield ordered }
-    yield ["OK", [size(graph[1]), size(graph[2]), size(graph[1]) - size(graph[2])]]
+
+    vary isolated_count := 0
+    vary node_index := 0
+    loop while node_index < size(graph[1]) {
+        make node := graph[1][node_index]
+        vary connected := false
+        vary edge_index := 0
+        loop while edge_index < size(graph[2]) {
+            when graph[2][edge_index][0] == node or graph[2][edge_index][1] == node {
+                change connected := true
+            }
+            change edge_index := edge_index + 1
+        }
+        when not connected { change isolated_count := isolated_count + 1 }
+        change node_index := node_index + 1
+    }
+    yield ["OK", [size(graph[1]), size(graph[2]), isolated_count]]
 }
