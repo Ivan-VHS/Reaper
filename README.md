@@ -57,4 +57,4 @@ The .rpr reference runtime, partial native C17 work, developer tools and externa
 - [Documentation index](docs/README.md)
 - [Shared ecosystem standards](https://github.com/Ivan-VHS/DAK/blob/main/docs/SHARED_STANDARDS.md)
 
-[Contributing](CONTRIBUTING.md) · [Security policy](SECURITY.md) · [Apache-2.0](LICENSE)
+[Project maturity](docs/PROJECT_LADDER.md) · [Contributing](CONTRIBUTING.md) · [Security policy](SECURITY.md) · [Apache-2.0](LICENSE)
