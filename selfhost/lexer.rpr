@@ -6,6 +6,22 @@ craft is_ascii_letter(char) {
     yield (char >= "a" and char <= "z") or (char >= "A" and char <= "Z")
 }
 
+craft is_unicode_letter(char) {
+    yield (char >= "À" and char <= "Ö") or (char >= "Ø" and char <= "ö") or (char >= "ø" and char <= "ÿ") or (char >= "Ā" and char <= "ʯ") or (char >= "Ά" and char <= "Ϋ") or (char >= "α" and char <= "ϋ") or (char >= "ϐ" and char <= "Ͽ") or (char >= "Ѐ" and char <= "ӿ") or (char >= "Ա" and char <= "Ֆ") or (char >= "ա" and char <= "և") or (char >= "א" and char <= "ת") or (char >= "ء" and char <= "ي") or (char >= "ہ" and char <= "ے") or (char >= "अ" and char <= "ह") or (char >= "क़" and char <= "ॡ") or (char >= "あ" and char <= "ゖ") or (char >= "ァ" and char <= "ヺ") or (char >= "㐀" and char <= "䶿") or (char >= "一" and char <= "鿿") or (char >= "가" and char <= "힣")
+}
+
+craft is_combining_mark(char) {
+    yield (char >= "̀" and char <= "ͯ") or (char >= "᪰" and char <= "᫿") or (char >= "᷀" and char <= "᷿") or (char >= "⃐" and char <= "⃿") or (char >= "︠" and char <= "︯")
+}
+
+craft is_identifier_start(char) {
+    yield is_ascii_letter(char) or is_unicode_letter(char) or char == "_"
+}
+
+craft is_identifier_continue(char) {
+    yield is_identifier_start(char) or is_ascii_digit(char) or is_combining_mark(char)
+}
+
 craft is_ascii_digit(char) {
     yield char >= "0" and char <= "9"
 }
@@ -15,43 +31,28 @@ craft is_identifier_continue(char) {
 }
 
 craft keyword_kind(word) {
-    when word == "make" { yield "MAKE" } otherwise {
-        when word == "vary" { yield "VARY" } otherwise {
-            when word == "change" { yield "CHANGE" } otherwise {
-                when word == "craft" { yield "CRAFT" } otherwise {
-                    when word == "yield" { yield "YIELD" } otherwise {
-                        when word == "emit" { yield "EMIT" } otherwise {
-                            when word == "when" { yield "WHEN" } otherwise {
-                                when word == "otherwise" { yield "OTHERWISE" } otherwise {
-                                    when word == "each" { yield "EACH" } otherwise {
-                                        when word == "in" { yield "IN" } otherwise {
-                                            when word == "loop" { yield "LOOP" } otherwise {
-                                                when word == "while" { yield "WHILE" } otherwise {
-                                                    when word == "true" { yield "TRUE" } otherwise {
-                                                        when word == "false" { yield "FALSE" } otherwise {
-                                                            when word == "nothing" { yield "NOTHING" } otherwise {
-                                                                when word == "and" { yield "AND" } otherwise {
-                                                                    when word == "or" { yield "OR" } otherwise {
-                                                                        when word == "not" { yield "NOT" } otherwise {
-                                                                            yield "IDENT"
-                                                                        }
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+    when word == "make" or word == "пусть" { yield "MAKE" }
+    when word == "vary" or word == "переменная" { yield "VARY" }
+    when word == "change" or word == "изменить" { yield "CHANGE" }
+    when word == "craft" or word == "функция" { yield "CRAFT" }
+    when word == "yield" or word == "вернуть" { yield "YIELD" }
+    when word == "emit" or word == "вывести" { yield "EMIT" }
+    when word == "when" or word == "если" { yield "WHEN" }
+    when word == "otherwise" or word == "иначе" { yield "OTHERWISE" }
+    when word == "each" or word == "для" { yield "EACH" }
+    when word == "in" or word == "в" { yield "IN" }
+    when word == "loop" or word == "цикл" { yield "LOOP" }
+    when word == "while" or word == "пока" { yield "WHILE" }
+    when word == "true" or word == "истина" { yield "TRUE" }
+    when word == "false" or word == "ложь" { yield "FALSE" }
+    when word == "nothing" or word == "ничего" { yield "NOTHING" }
+    when word == "and" or word == "и" { yield "AND" }
+    when word == "or" or word == "или" { yield "OR" }
+    when word == "not" or word == "не" { yield "NOT" }
+    when word == "import" or word == "импорт" { yield "IMPORT" }
+    when word == "export" or word == "экспорт" { yield "EXPORT" }
+    when word == "as" or word == "как" { yield "AS" }
+    yield "IDENT"
 }
 
 craft tokenize(source) {
@@ -197,7 +198,7 @@ craft tokenize(source) {
                         when is_ascii_digit(char) {
                             change item := scan_number(start_line, start_column)
                         } otherwise {
-                            when is_ascii_letter(char) or char == "_" {
+                            when is_identifier_start(char) {
                                 change item := scan_identifier(start_line, start_column)
                             } otherwise {
                                 change item := scan_operator(start_line, start_column)
@@ -258,5 +259,21 @@ assert(pipeline == [
     ["IDENT", "transform", 1, 15],
     ["EOF", "", 1, 24]
 ], "pipeline operator tokenization mismatch")
+
+
+make unicode_tokens := tokenize("emit α 名 \"x\"")
+assert(unicode_tokens[1] == ["IDENT", "α", 1, 6], "Greek identifier recognition mismatch")
+assert(unicode_tokens[2] == ["IDENT", "名", 1, 8], "CJK identifier recognition mismatch")
+
+make combining_tokens := tokenize("emit á")
+assert(combining_tokens[1] == ["IDENT", "á", 1, 6], "combining marks must continue identifiers")
+
+make russian_keyword_tokens := tokenize("пусть x := 1")
+assert(russian_keyword_tokens[0] == ["MAKE", "пусть", 1, 1], "Russian keyword alias mismatch")
+assert(russian_keyword_tokens[1] == ["IDENT", "x", 1, 7], "Russian keyword identifier position mismatch")
+
+make module_tokens := tokenize("import \"math.rpr\" as math")
+assert(module_tokens[0] == ["IMPORT", "import", 1, 1], "import keyword mismatch")
+assert(module_tokens[2] == ["AS", "as", 1, 19], "as keyword mismatch")
 
 emit "SELFHOST_LEXER_OK"
