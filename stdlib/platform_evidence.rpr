@@ -1,0 +1,91 @@
+# Versioned platform evidence contracts shared by Pytyliki adapters and Reaper.
+# Reaper validates the envelope and provenance shape; the host verifier checks SHA-256.
+
+export craft evidence_decimal_u64(value) {
+    when kind(value) != "text" { yield false }
+    when size(value) == 0 or size(value) > 20 { yield false }
+    yield true
+}
+
+export craft evidence_sha256_valid(value) {
+    when kind(value) != "text" or size(value) != 64 { yield false }
+    yield true
+}
+
+export craft platform_event_valid(event) {
+    when kind(event) != "map" { yield false }
+    when not ("schema" in event) or event.schema != "pytyliki.platform-evidence.v1" {
+        yield false
+    }
+    when not ("sequence" in event) or not evidence_decimal_u64(event.sequence) {
+        yield false
+    }
+    when not ("timestamp_epoch_ns" in event) or
+         not evidence_decimal_u64(event.timestamp_epoch_ns) {
+        yield false
+    }
+    when not ("source_record_id" in event) or
+         not evidence_decimal_u64(event.source_record_id) {
+        yield false
+    }
+    when not ("counter_total" in event) or
+         not evidence_decimal_u64(event.counter_total) {
+        yield false
+    }
+    when not ("provider" in event) or
+         (event.provider != "windows-whea" and event.provider != "linux-edac") {
+        yield false
+    }
+    when not ("event_code" in event) or kind(event.event_code) != "number" or
+         event.event_code < 0 or event.event_code > 4294967295 or
+         event.event_code % 1 != 0 {
+        yield false
+    }
+    when not ("event_kind" in event) or
+         (event.event_kind != "unknown" and event.event_kind != "corrected" and
+          event.event_kind != "uncorrected" and event.event_kind != "fatal" and
+          event.event_kind != "counter_snapshot") {
+        yield false
+    }
+    when not ("severity" in event) or
+         (event.severity != "unknown" and event.severity != "info" and
+          event.severity != "warning" and event.severity != "error" and
+          event.severity != "critical") {
+        yield false
+    }
+    when not ("cpu_id" in event) { yield false }
+    when event.cpu_id != null and
+         (kind(event.cpu_id) != "number" or event.cpu_id < 0 or
+          event.cpu_id > 4294967294 or event.cpu_id % 1 != 0) {
+        yield false
+    }
+    when not ("source_identity" in event) or
+         kind(event.source_identity) != "text" or
+         size(event.source_identity) == 0 or size(event.source_identity) > 95 {
+        yield false
+    }
+    when not ("payload_sha256" in event) or
+         not evidence_sha256_valid(event.payload_sha256) {
+        yield false
+    }
+    when not ("event_sha256" in event) or
+         not evidence_sha256_valid(event.event_sha256) {
+        yield false
+    }
+    when not ("chain_sha256" in event) or
+         not evidence_sha256_valid(event.chain_sha256) {
+        yield false
+    }
+    yield true
+}
+
+export craft platform_evidence_batch_valid(records) {
+    when kind(records) != "list" or size(records) > 256 { yield false }
+    vary index := 0
+    loop while index < size(records) {
+        when not platform_event_valid(records[index]) { yield false }
+        when records[index].sequence != text(index + 1) { yield false }
+        change index := index + 1
+    }
+    yield true
+}
