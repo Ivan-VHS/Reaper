@@ -285,10 +285,10 @@ class _Parser:
         return float(value)
 
     @staticmethod
-    def _text(fields: dict[str, Any], key: str, span: Span) -> str:
+    def _text(fields: dict[str, Any], key: str, span: Span, allow_empty: bool = False) -> str:
         value = fields[key]
-        if not isinstance(value, str) or not value:
-            raise RFS01Error(f"field {key!r} must be non-empty text", "RFS-E101", span)
+        if not isinstance(value, str) or (not allow_empty and not value):
+            raise RFS01Error(f"field {key!r} must be text", "RFS-E101", span)
         return value
 
     @staticmethod
@@ -376,7 +376,7 @@ class _Parser:
                     self._require_fields(fields, {"sequence", "origin", "payload", "trusted", "manufactured"}, set(), item.span)
                     sequence = self._number(fields, "sequence", item.span)
                     origin = self._text(fields, "origin", item.span)
-                    payload = self._text(fields, "payload", item.span)
+                    payload = self._text(fields, "payload", item.span, allow_empty=True)
                     if sequence < 0 or not sequence.is_integer() or len(payload.encode("utf-8")) > MAX_PAYLOAD_BYTES:
                         raise RFS01Error("signal sequence or payload exceeds its domain", "RFS-E101", item.span)
                     signals.append(SignalFrame(int(sequence), origin, payload, self._boolean(fields, "trusted", item.span), self._boolean(fields, "manufactured", item.span)))
@@ -384,6 +384,9 @@ class _Parser:
 
             if statement == "phase":
                 phase_id = self.identifier("expected phase identifier")
+                if phase_id.value in declared_ids:
+                    raise RFS01Error(f"duplicate declaration id {phase_id.value!r}", "RFS-E101", phase_id.span)
+                declared_ids.add(phase_id.value)
                 self.expect("on")
                 node = self.identifier("expected node identifier").value
                 self.expect("[")
@@ -450,12 +453,15 @@ class _Parser:
             raise RFS01Error("RFS-01 structural resource limit exceeded", "RFS-E401")
 
         self._validate_references(nodes, links, signals, phases, actions, contrasts)
-        seen_sequences: set[tuple[str, int]] = set()
+        last_sequences: dict[str, int] = {}
         for frame in signals:
-            key = (frame.origin, frame.sequence)
-            if key in seen_sequences:
-                raise RFS01Error(f"duplicate signal sequence {frame.sequence} for {frame.origin!r}", "RFS-E101")
-            seen_sequences.add(key)
+            previous = last_sequences.get(frame.origin)
+            if previous is not None and frame.sequence <= previous:
+                raise RFS01Error(
+                    f"signal sequence for {frame.origin!r} must be strictly increasing",
+                    "RFS-E101",
+                )
+            last_sequences[frame.origin] = frame.sequence
         return RFSProgram(name, version, tuple(nodes), tuple(links), tuple(signals), tuple(phases), tuple(actions), tuple(contrasts), cycles, tuple(messages))
 
     def _comparison(self) -> Comparison:
