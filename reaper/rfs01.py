@@ -215,6 +215,7 @@ def _lex(source: str) -> list[Token]:
                 column += len(value)
             continue
         if kind == "COMMENT":
+            column += len(value)
             continue
         if kind == "STRING":
             try:
