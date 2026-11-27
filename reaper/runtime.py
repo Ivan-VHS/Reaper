@@ -133,11 +133,17 @@ class Interpreter:
             roots.append(self._current_environment)
         return roots
 
-    def run(self, source: str, filename: str = "<memory>", engine: str = "treewalk") -> Any:
+    def run(
+        self,
+        source: str,
+        filename: str = "<memory>",
+        engine: str = "treewalk",
+        syntax: str | None = None,
+    ) -> Any:
         if engine not in {"treewalk", "vm"}:
             raise ValueError("engine must be 'treewalk' or 'vm'")
         self.filename = filename
-        tree = parse(source, filename)
+        tree = parse(source, filename, syntax=syntax)
         root = self.module_loader.begin_root(filename)
         try:
             if engine == "vm":

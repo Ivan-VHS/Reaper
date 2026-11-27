@@ -1,4 +1,4 @@
-"""Deterministic .rpr module loading, export isolation, and dependency graphs."""
+"""Deterministic multi-syntax module loading, export isolation, and dependency graphs."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -6,6 +6,7 @@ from typing import Any
 
 from .errors import ReaperRuntimeError
 from .parser import Node, parse
+from .syntax_profiles import supported_source_extensions
 
 
 class ModuleError(ReaperRuntimeError):
@@ -47,8 +48,9 @@ class ModuleLoader:
             raise ModuleError("import path must be non-empty text")
         base = Path(importer).resolve().parent if not importer.startswith("<") else Path.cwd()
         target = (base / specifier).resolve()
-        if target.suffix.lower() != ".rpr":
-            raise ModuleError(f"Reaper modules must use the .rpr extension: {target}")
+        if target.suffix.casefold() not in supported_source_extensions():
+            supported = ", ".join(sorted(supported_source_extensions()))
+            raise ModuleError(f"unsupported Reaper module extension for {target}; expected one of: {supported}")
         return target
 
     def load(self, specifier: str, importer: str) -> dict[str, Any]:
@@ -59,7 +61,7 @@ class ModuleLoader:
         if target_name in self.loading:
             start = self.loading.index(target_name)
             chain = self.loading[start:] + [target_name]
-            raise ModuleCycleError("cyclic .rpr import: " + " -> ".join(chain))
+            raise ModuleCycleError("cyclic Reaper module import: " + " -> ".join(chain))
         if target_name in self.cache:
             return dict(self.cache[target_name])
         if len(self.loading) >= self.max_depth:
@@ -96,7 +98,7 @@ class ModuleLoader:
     def graph_dict(self) -> dict[str, list[str]]:
         return {source: sorted(targets) for source, targets in sorted(self.graph.items())}
 
-    def scan(self, entry: str) -> dict[str, list[str]]:
+    def scan(self, entry: str, syntax: str | None = None) -> dict[str, list[str]]:
         """Parse imports recursively without executing any source."""
         self.graph.clear()
         self.loading.clear()
@@ -109,7 +111,7 @@ class ModuleLoader:
             name = self._canonical(path)
             if name in visiting:
                 cycle = visiting[visiting.index(name):] + [name]
-                raise ModuleCycleError("cyclic .rpr import: " + " -> ".join(cycle))
+                raise ModuleCycleError("cyclic Reaper module import: " + " -> ".join(cycle))
             if name in self.graph and name != root and self.graph[name] == set():
                 # A parsed leaf is already complete.
                 pass
@@ -124,7 +126,7 @@ class ModuleLoader:
             if len(raw) > self.max_source_bytes:
                 raise ModuleError(f"module source limit ({self.max_source_bytes} bytes) exceeded: {path}")
             source = raw.decode("utf-8")
-            tree = parse(source, name)
+            tree = parse(source, name, syntax=syntax if name == root else None)
             imports: list[str] = []
 
             def visit(node: Node) -> None:

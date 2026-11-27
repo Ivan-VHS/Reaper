@@ -9,6 +9,7 @@ from .errors import LexError, ReaperError
 from .diagnostic_catalog import explain_diagnostic
 from .lexer import KEYWORD_ALIASES
 from .parser import parse
+from .syntax_profiles import keyword_spellings, resolve_syntax_profile
 
 IDENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*|[^\W\d]\w*", re.UNICODE)
 DECLARATIONS = {"make","vary","craft","fn","let","const","struct","enum","type"}
@@ -79,15 +80,25 @@ def _offset(text, pos):
     return sum(map(len, lines[:line])) + index
 
 def _scan(snapshot):
+    profile = resolve_syntax_profile(filename=snapshot.uri)
+    declaration_spellings = DECLARATIONS | {
+        alias for alias, canonical in profile.keyword_aliases.items()
+        if canonical in DECLARATIONS
+    }
+    declaration_pattern = re.compile(
+        r"\b(" + "|".join(map(re.escape, sorted(declaration_spellings))) + r")\s+([\w]+)"
+    )
     symbols, identifiers, diagnostics, stack = [], [], [], []
     for row, source in enumerate(snapshot.text.splitlines()):
         clean = re.sub(r'"(?:\\.|[^"\\])*"|#.*$', lambda m: " " * len(m.group()), source)
         for match in IDENT.finditer(clean):
             identifiers.append((match.group(), Span(row, match.start(), match.end())))
-        for match in DECL.finditer(clean):
+        for match in declaration_pattern.finditer(clean):
             name = match.group(2)
-            symbols.append(Symbol(name, "function" if match.group(1) in {"craft","fn","функция","процедура"} else "variable",
-                                  snapshot.uri, Span(row, match.start(2), match.end(2))))
+            canonical = profile.keyword_aliases.get(match.group(1), match.group(1))
+            kind = "function" if canonical in {"craft", "fn"} else "variable"
+            symbols.append(Symbol(name, kind, snapshot.uri,
+                                  Span(row, match.start(2), match.end(2))))
         for col, char in enumerate(clean):
             if char in "([{": stack.append((char, row, col))
             elif char in ")]}":
@@ -185,7 +196,8 @@ class LanguageService:
         result = self.result(uri) or self.analyze(uri)
         names = {s.name:s.kind for s in result.symbols}
         for name,_ in result.identifiers: names.setdefault(name,"variable")
-        for name in KEYWORDS: names.setdefault(name,"keyword")
+        for name in KEYWORDS | keyword_spellings(filename=result.snapshot.uri):
+            names.setdefault(name,"keyword")
         for name in BUILTINS: names.setdefault(name,"function")
         ranked = sorted(names, key=lambda n:(not n.startswith(prefix),
                          -SequenceMatcher(None,prefix,n).ratio(), n.casefold()))
@@ -197,7 +209,8 @@ class LanguageService:
         result = self.result(uri) or self.analyze(uri)
         return [span for value,span in result.identifiers if value == name]
     def rename(self, uri, name, replacement):
-        if not IDENT.fullmatch(replacement) or replacement in KEYWORDS or replacement in BUILTINS:
+        active_keywords = KEYWORDS | keyword_spellings(filename=uri)
+        if not IDENT.fullmatch(replacement) or replacement in active_keywords or replacement in BUILTINS:
             raise ValueError("replacement must be a non-keyword identifier")
         return [(span,replacement) for span in self.references(uri,name)]
     def _workspace_analyses(self):

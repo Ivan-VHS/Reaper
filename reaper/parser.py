@@ -46,7 +46,7 @@ class Parser:
     def _statement(self) -> Node:
         if self._match("IMPORT"):
             token = self._previous()
-            specifier = self._consume("STRING", "expected a quoted .rpr path after 'import'")
+            specifier = self._consume("STRING", "expected a quoted Reaper module path after 'import'")
             alias = None
             if self._match("AS"):
                 alias = self._consume("IDENT", "expected an import alias after 'as'").value
@@ -257,5 +257,6 @@ class Parser:
         return ParseError(f"{self.filename}:{token.line}:{token.column}: {message} (found {token.value or token.kind})")
 
 
-def parse(source: str, filename: str = "<memory>") -> Node:
-    return Parser(tokenize(source, filename), filename).parse()
+def parse(source: str, filename: str = "<memory>", syntax: str | None = None) -> Node:
+    """Parse one source file through its selected surface syntax and shared AST."""
+    return Parser(tokenize(source, filename, syntax=syntax), filename).parse()
