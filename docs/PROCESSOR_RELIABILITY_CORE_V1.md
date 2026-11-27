@@ -15,7 +15,7 @@ The module composes six bounded subsystems:
 | Repair Core | `new_state`, `repair_spend`, `repair_forecast`, `reserve_spend`, `root_capability_descriptor`, `repair_recover` | Finite shared budget, reserve-backed recovery, explicit exhaustion and safe degradation |
 | Physical Core | `silicon_domain`, `silicon_advance`, `silicon_barrier`, `hardware_register_snapshot`, `copper_evaluate`, `copper_age`, `copper_channel`, `copper_channel_age`, `nano_cell`, `nano_repair`, `stream_state`, `stream_advance` | Bounded deterministic silicon, stream, simulated register/barrier, copper RC, electromigration and nano-cell models |
 | Correction Core | `correction_step`, `apply_correction` | Signed feedback, bounded gain and step, no intentional overshoot, residual-error convergence checks |
-| Pytyliki | `trace_checksum`, `replay_validate`, `run_load_test`, `pytyliki_report` | Deterministic trace, bounded load run, replay verification and versioned report envelope |
+| Pytyliki | `trace_checksum`, `replay_validate`, `run_load_test`, `replay_load_test`, `pytyliki_report` | Deterministic trace, repeat-execution comparison, bounded load run, replay verification and versioned report envelope |
 
 The source uses the currently supported Reaper grammar and positional list records. It does not introduce unsupported parser-level struct, enum, MMIO or IRQ syntax.
 
@@ -101,7 +101,7 @@ python -m reaper --check examples/processor_reliability.rpr
 python -m reaper examples/processor_reliability.rpr
 ```
 
-The fixture asserts all 20 matrix entries, operand/operation/command/service bytecode dispatch, bytecode round-trip and rejection, arithmetic/unit invariants, production fault-injection denial, safe degradation and blocked dispatch, revision-bound reserve-backed ROOT recovery, silicon thermal guards, simulated registers/barriers, stream correction, copper RC and wear calculations, nano-cell shortfall, signed correction, deterministic load replay and the Pytyliki report schema.
+The fixture asserts all 20 matrix entries, operand/operation/command/service bytecode dispatch, bytecode round-trip and rejection, arithmetic/unit invariants, production fault-injection denial, safe degradation and blocked dispatch, revision-bound reserve-backed ROOT recovery, silicon thermal guards, simulated registers/barriers, stream correction, copper RC and wear calculations, nano-cell shortfall, signed correction, trace validation, a second full deterministic load execution with complete trace comparison and the Pytyliki report schema.
 
 CI must require these exact output lines:
 
