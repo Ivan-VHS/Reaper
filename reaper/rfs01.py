@@ -597,31 +597,116 @@ def lower_to_ir(program: RFSProgram) -> RFSIRModule:
 
 
 def verify_ir(module: RFSIRModule) -> None:
-    """Reject malformed or unresolved typed IR before runtime execution."""
+    """Reject malformed, out-of-domain, or unresolved typed IR before execution."""
+    if not isinstance(module, RFSIRModule):
+        raise RFS01Error("value is not an RFS-01 typed IR module", "RFS-E501")
     if module.schema != "rfs-01.typed-ir.v1" or module.version != "1.0":
         raise RFS01Error("unsupported typed IR schema or language version", "RFS-E501")
-    if not 1 <= module.cycles <= MAX_CYCLES:
+    if not isinstance(module.name, str) or not module.name:
+        raise RFS01Error("typed IR module name is invalid", "RFS-E501")
+    if isinstance(module.cycles, bool) or not isinstance(module.cycles, int) or not 1 <= module.cycles <= MAX_CYCLES:
         raise RFS01Error("typed IR cycle budget is outside the supported range", "RFS-E501")
 
+    def valid_text(value: Any, max_bytes: int, allow_empty: bool = False) -> bool:
+        if not isinstance(value, str) or (not allow_empty and not value) or "\\0" in value:
+            return False
+        try:
+            return len(value.encode("utf-8", errors="strict")) <= max_bytes
+        except UnicodeError:
+            return False
+
+    def finite_number(value: Any, minimum: float | None = None) -> bool:
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(float(value)):
+            return False
+        return minimum is None or float(value) >= minimum
+
+    if not 1 <= len(module.nodes) <= MAX_NODES:
+        raise RFS01Error("typed IR node count is outside the supported range", "RFS-E501")
+    if len(module.links) > MAX_LINKS or len(module.signals) > MAX_FRAMES or len(module.phases) > MAX_PHASES:
+        raise RFS01Error("typed IR table exceeds a structural resource limit", "RFS-E501")
+    if len(module.instructions) > MAX_ACTIONS + MAX_CONTRASTS + MAX_EMITS:
+        raise RFS01Error("typed IR instruction count exceeds its resource limit", "RFS-E501")
+
     node_ids = [node.id for node in module.nodes]
-    if len(node_ids) != len(set(node_ids)) or not node_ids:
-        raise RFS01Error("typed IR node table is empty or contains duplicate IDs", "RFS-E501")
+    if any(not valid_text(node_id, 63) for node_id in node_ids) or len(node_ids) != len(set(node_ids)):
+        raise RFS01Error("typed IR node identifiers are invalid or duplicated", "RFS-E501")
     known_nodes = set(node_ids)
-    link_pairs = {(link.origin, link.target) for link in module.links}
-    if len(link_pairs) != len(module.links):
-        raise RFS01Error("typed IR contains duplicate directed links", "RFS-E501")
+    declaration_ids = set(node_ids)
+
+    for node in module.nodes:
+        if (
+            node.layer not in LAYERS
+            or not finite_number(node.pressure, 0.0)
+            or not finite_number(node.load_limit, 0.0)
+            or float(node.load_limit) <= 0.0
+            or not finite_number(node.integrity, 0.0)
+            or float(node.integrity) > 1.0
+            or not finite_number(node.noise_db, -160.0)
+            or float(node.noise_db) > 24.0
+            or not valid_text(node.core_seed, 127)
+            or not isinstance(node.active, bool)
+        ):
+            raise RFS01Error(f"typed IR node {node.id!r} is outside its declared domain", "RFS-E501")
+
+    link_pairs: set[tuple[str, str]] = set()
     for link in module.links:
-        if link.origin not in known_nodes or link.target not in known_nodes:
-            raise RFS01Error("typed IR link has an unresolved node reference", "RFS-E501")
+        if (
+            not valid_text(link.id, 63)
+            or link.id in declaration_ids
+            or link.origin not in known_nodes
+            or link.target not in known_nodes
+            or link.channel not in CHANNELS
+            or not isinstance(link.blocked, bool)
+            or not finite_number(link.weight, 0.0)
+        ):
+            raise RFS01Error("typed IR link is malformed or has an unresolved reference", "RFS-E501")
+        declaration_ids.add(link.id)
+        pair = (link.origin, link.target)
+        if pair in link_pairs:
+            raise RFS01Error("typed IR contains duplicate directed links", "RFS-E501")
+        link_pairs.add(pair)
+
+    last_sequences: dict[str, int] = {}
+    for frame in module.signals:
+        if (
+            isinstance(frame.sequence, bool)
+            or not isinstance(frame.sequence, int)
+            or not 0 <= frame.sequence < (1 << 64)
+            or frame.origin not in known_nodes
+            or not valid_text(frame.payload, MAX_PAYLOAD_BYTES, allow_empty=True)
+            or not isinstance(frame.trusted, bool)
+            or not isinstance(frame.manufactured, bool)
+        ):
+            raise RFS01Error("typed IR signal frame is malformed", "RFS-E501")
+        previous = last_sequences.get(frame.origin)
+        if previous is not None and frame.sequence <= previous:
+            raise RFS01Error("typed IR signal sequence is not strictly increasing", "RFS-E501")
+        last_sequences[frame.origin] = frame.sequence
+
+    phase_ids: set[str] = set()
     for phase in module.phases:
-        if phase.node not in known_nodes:
-            raise RFS01Error("typed IR phase has an unresolved node reference", "RFS-E501")
+        if (
+            not valid_text(phase.id, 63)
+            or phase.id in declaration_ids
+            or phase.node not in known_nodes
+        ):
+            raise RFS01Error("typed IR phase is malformed or unresolved", "RFS-E501")
+        declaration_ids.add(phase.id)
+        phase_ids.add(phase.id)
+        for comparison in (phase.first, phase.second):
+            if (
+                comparison.metric not in METRICS
+                or comparison.operator not in _COMPARATORS
+                or not finite_number(comparison.value)
+            ):
+                raise RFS01Error("typed IR phase comparison is invalid", "RFS-E501")
 
     known_opcodes = {
         "FLOW_SIGNAL", "FLOW_PRESSURE_FORWARD", "FLOW_PRESSURE_REVERSE",
         "RECOVER_ROOT", "RECOVER_CORE",
         "CONTRAST_COMPLEMENT", "CONTRAST_DIFFERENTIAL", "EMIT",
     }
+    emit_count = 0
     for expected_sequence, instruction in enumerate(module.instructions):
         if instruction.sequence != expected_sequence or instruction.opcode not in known_opcodes:
             raise RFS01Error("typed IR instruction sequence or opcode is invalid", "RFS-E501", instruction.span)
@@ -639,8 +724,9 @@ def verify_ir(module: RFSIRModule) -> None:
             if len(args) != 2 or args[0] not in known_nodes or args[1] not in known_nodes:
                 raise RFS01Error("typed IR contrast has an unresolved operand", "RFS-E501", instruction.span)
         elif instruction.opcode == "EMIT":
-            if len(args) != 1 or not isinstance(args[0], str):
-                raise RFS01Error("typed IR emit instruction has invalid payload", "RFS-E501", instruction.span)
+            emit_count += 1
+            if len(args) != 1 or not valid_text(args[0], 4096, allow_empty=True) or emit_count > MAX_EMITS:
+                raise RFS01Error("typed IR emit instruction has invalid payload or exceeds its limit", "RFS-E501", instruction.span)
 
 
 def compile_ir(source: str) -> RFSIRModule:
