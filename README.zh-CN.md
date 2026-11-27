@@ -1,147 +1,100 @@
-# ⚙️ Reaper — 系统语言与开发工作台
+# Reaper — 系统语言与开发工作台
 
-<p align="center">[English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)</p>
+[English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
 [![CI](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/ci.yml?branch=main&label=CI)](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml) [![Native C17](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/native-c.yml?branch=main&label=Native%20C17)](https://github.com/Ivan-VHS/Reaper/actions/workflows/native-c.yml) [![Apache-2.0](https://img.shields.io/github/license/Ivan-VHS/Reaper)](LICENSE)
 
-> **显式契约、类型化流程，以及带源码定位的诊断。**
+> **Flow-first 语法、显式契约，以及保留源码上下文的诊断。**
 
-**项目状态:** Alpha · 参考运行时可用 · 原生 C17 路线尚未完整 · **版本:** Python package 0.1.0 · Native CMake track 0.2.0 · **License:** [Apache-2.0](LICENSE) · **README 标准:** Psychoporter 666 v1.0 · **审阅日期:** 2026-11-25 · UTC · **Source:** [Ivan-VHS/Reaper](https://github.com/Ivan-VHS/Reaper)
+**项目记录：** Alpha · Python 参考运行时可用 · 原生 C17 编译器路线部分实现 · Python package 0.1.0 · CMake track 0.2.0 · Apache-2.0 · **文档审核：** 2026-11-27 UTC
 
-<p align="center"><img src="assets/reaper-hero.svg" alt="Reaper — 系统语言与开发工作台 — project overview" width="100%"></p>
-<p align="center"><a href="assets/screenshots/reaper-studio.png"><img src="assets/screenshots/reaper-studio.png" alt="Reaper — 系统语言与开发工作台 — application screenshot" width="100%"></a></p>
+<p align="center"><img src="assets/reaper-hero.svg" alt="Reaper 系统语言与开发工作台概览" width="100%"></p>
+<p align="center"><a href="assets/screenshots/reaper-studio.png"><img src="assets/screenshots/reaper-studio.png" alt="Reaper Studio 截图" width="100%"></a></p>
 
-## 快速导航
+## 项目用途与范围
 
-[🚀 Demo: Studio screenshot](assets/screenshots/reaper-studio.png) · [Documentation](docs/README.md) · [Source repository](https://github.com/Ivan-VHS/Reaper) · [Issues](https://github.com/Ivan-VHS/Reaper/issues)
+Reaper 是一款系统编程语言和本地开发工作台。当前实现分为两个独立方向：Python 参考运行时和实验性的原生 C17 实现。原生路线尚未达到参考运行时的功能对等。Windows Studio、LSP/DAP 服务和外部适配器属于独立的开发工具接口。
 
-## 目标与范围
+## 语言示例
 
-Reaper 是系统编程语言与本地开发工作台。Python 参考运行时、CLI/REPL、LSP/DAP 服务和 Windows Studio 基础，与实验性原生 C17 编译器路线相互独立。原生功能对等和特权硬件服务尚未完成。
+`.rpr` 语言采用 flow-first 表达式和 `::` 运算符：左侧值作为第一个参数传递给右侧函数。
 
-## 功能
+~~~reaper
+craft double(value) {
+    yield value * 2
+}
 
-- .rpr 源语言、词法/语法分析器、参考解释器和结构化诊断。
-- CLI、REPL、Windows Studio 基础，以及基于 stdio 的 LSP/DAP 服务。
-- 参考运行时中的静态检查和资源配额；仅检查模式不会执行源代码。
-- 原生 C17 路线包含词法分析、解析、拥有型 AST、受检 IR、常量折叠和有限 lowering。
-- 经过检查的 MMIO 描述符与 ABI 契约只是接口，不是物理映射器或设备驱动。
-- Jora 脚手架、Kora 助手，以及具有明确信任边界的可选生态集成。
-
-## 架构与数据流
-
-~~~mermaid
-flowchart TB
-  S[".rpr source"] --> P["Lexer / parser"]
-  P --> V["Reference runtime"]
-  V --> C["CLI / REPL"]
-  V --> L["stdio LSP / DAP"]
-  S --> N["Native C17 track — partial"]
-  N --> I["Checked IR / limited lowering"]
-  H["Hardware contracts"] --> A["Checked ABI descriptors"]
-  A -.-> X["No implicit device access"]
+make values := [1, 2, 3]
+make result := values :: map(double) :: sum()
+emit "result = " ++ text(result)
 ~~~
 
-源码、架构模式、构建配置、测试和 CI 是已实现行为的依据。路线图和目录仅描述计划或清单，不代表已交付功能。
-
-## 环境要求
-
-参考运行时和包工具需要 Python 3.10+；原生路线需要 CMake 3.16+ 和 C17 编译器；可选兼容性检查需要 Node.js 22/24；Windows Studio 图形界面需要 Tkinter。
-
-## 构建
+安装参考运行时后，可运行仓库中的示例：
 
 ~~~sh
 python -m venv .venv
-. .venv/bin/activate
 python -m pip install -e .
 python -m reaper --check examples/flow.rpr
 python -m reaper examples/flow.rpr
 ~~~
 
-### 原生 C17 开发路线
+## 已实现内容
+
+- **参考语言运行时：** lexer、parser、AST 解释器、CLI/REPL、结构化诊断和有界执行。
+- **Canonical IR 与 VM：** 可选的 Python bytecode VM 在 Canonical IR 上执行；默认兼容路径仍为树遍历执行。
+- **模块系统：** 版本化 `.rpr` 导入/导出、隔离作用域、导出缓存、依赖图检查和循环诊断。
+- **静态分析：** 对现有 AST 子集进行保守类型推断。模块和宿主边界的未知值仍为 `Any`；这还不是完整且可靠的类型系统。
+- **资源核算：** heap/打开文件配额、执行上限和确定性清理。这些是运行时防护措施，不是针对恶意程序的安全沙箱。
+- **原生 C17 路线：** 部分 lexer/parser、自有 AST、受检 IR、优化器和有限 lowering。Scalar AOT 子集可为已安装的 GCC/Clang 兼容工具链生成 C17；目前不具备参考运行时的完整功能。
+- **架构注册表：** 覆盖九个层级的 66 个稳定架构概念，支持精确查询和有界依赖图验证。
+- **开发工具：** Windows Studio 基础、stdio LSP/DAP 服务、Kora 辅助库和可选 NOO TAH 集成。NOO TAH 将 JavaScript 执行委托给官方 Node.js 运行时。
+- **产品组合：** 参考运行时提供 18 个进程内产品服务。Jora 目录包和 framework 描述不会自动成为可安装应用。
+
+Embedded 工作台可创建和检查 MCU 参考项目，并调用用户自行安装的工具链。它不提供内置固件烧录或实时硬件调试。MMIO 描述符通过宿主提供的总线进行验证，不会映射物理内存。
+
+## 构建与测试
+
+要求：参考运行时需要 Python 3.10+；原生路线需要 CMake 3.16+ 和 C17 编译器；可选兼容性测试需要 Node.js 22/24；Windows Studio GUI 需要 Tkinter。
 
 ~~~sh
-cmake -S . -B build -DREAPER_BUILD_TESTS=ON
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DREAPER_BUILD_TESTS=ON
 cmake --build build --parallel
 ctest --test-dir build --output-on-failure
 ~~~
 
-Python 参考运行时与原生 C17 开发路线是两条独立的实现路径；其中一条路径通过测试，并不代表另一条路径已达到功能对等。
+CTest 会运行原生 C 测试；检测到 Python 解释器时，也会运行额外的参考运行时和仓库验证测试。
 
-## 首次检查
+启动 REPL 或已安装的 Studio：
 
 ~~~sh
-python -m reaper --check examples/flow.rpr
 python -m reaper --repl
+reaper-studio
 ~~~
 
---check 命令会在执行前进行静态验证。Windows PowerShell 使用 .venv\Scripts\Activate.ps1 激活环境。
+## 集成与信任边界
 
-## 运行
+- OPlague 设备快照以版本化 JSON 导入，并进行离线比较。
+- Pytyliki C ABI 调用必须显式启用，并由调用方选择可信且 ABI 兼容的库。
+- VentuSample 通过 manifest 交换素材包：Reaper 只读取声明的元数据，不修改 WAV 资产。
+- OCTA-8 联邦记录对等契约，不会创建中心运行时或授予额外权限。
 
-安装后，若系统提供 Tkinter，软件包会提供 `reaper-studio` 图形界面脚本；语言服务与调试服务通过独立的 stdio 进程运行。
+文件系统、进程、网络、时钟、shell 和原生库等副作用必须保持显式或 opt-in。原生 FFI 会在当前进程中执行代码，因此只能加载可信库。
 
-## 接口
+## 文档
 
-| 接口 | 契约 / 入口 | 能力边界 |
-|---|---|---|
-| CLI / REPL | `reaper` | 源码检查、执行和交互模式。 |
-| 语言服务 | `reaper-lsp / stdio` | 文档级诊断、补全及已支持的导航功能。 |
-| 调试适配器 | `reaper-dap / stdio` | 已实现的断点与单步调试子集。 |
-| Native ABI | `reaper_ffi / reaper_system / reaper_dabi64_desktop` | 版本化 C 接口；原生编译器的功能对等尚未完成。 |
+- [功能](docs/FEATURES.md) · [架构](docs/ARCHITECTURE.md)
+- [原生编译器](docs/NATIVE_COMPILER.md) · [硬件语言](docs/HARDWARE_LANGUAGE.md)
+- [运行时限制](docs/RUNTIME_PLATFORM.md) · [Kora 辅助库](docs/KORA.md)
+- [Studio 与 IDE](docs/REAPER_IDE.md) · [Jora 工厂](docs/JORA_APPLICATION_FACTORY.md)
+- [实现路线图](docs/IMPLEMENTATION_ROADMAP.md) · [文档索引](docs/README.md)
+- [HARVEST Reaper 集成](docs/HARVEST_REAPER_INTEGRATION.md)
+- [生态共享标准](https://github.com/Ivan-VHS/DAK/blob/main/docs/SHARED_STANDARDS.md)
 
-若仓库中没有版本化实现和测试，则不将 REST/GraphQL、WebSocket、OAuth、云部署或 Cookie 机制描述为现有功能。
+## 贡献与许可证
 
-## 安全与信任边界
+修改语言语义、编译器阶段或公共契约前，请阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。保持改动可审查，并添加确定性测试。安全问题请参阅 [SECURITY.md](SECURITY.md)。
 
-参考运行时采用有界资源控制和显式能力契约。MMIO API 会验证描述符与访问策略，但不会映射物理设备。LSP/DAP 使用本地 stdio 传输；文档所述运行时不包含托管 REST 服务、OAuth 提供商或云控制平面。
-
-安全策略：[SECURITY.md](SECURITY.md)。请勿在公开问题中发布密钥、设备标识符或私人日志。
-
-## 质量验证
-
-~~~sh
-python -m unittest discover -s tests -v
-
-cmake -S . -B build -DREAPER_BUILD_TESTS=ON
-cmake --build build --parallel
-ctest --test-dir build --output-on-failure
-~~~
-
-测试范围由已注册的 CTest/unittest 目标和工作流定义。没有公开报告时，不声明覆盖率百分比、模糊测试结果或负载测试报告。
-
-## 性能证据
-
-参考运行时和部分原生路线尚未发布稳定的跨机器延迟或内存占用指标。比较时应记录编译器、目标平台、构建模式和输入数据。
-
-## 兼容性
-
-参考包支持 Python 3.10+；原生 C17 路线使用 CMake 和主机 C17 编译器。Windows Studio 需要 Tkinter。平台和编译器对等性应按目标分别验证。
-
-## 文档与生态
-
-- [功能与成熟度](docs/FEATURES.md)
-- [架构](docs/ARCHITECTURE.md)
-- [硬件契约语言](docs/HARDWARE_LANGUAGE.md)
-- [实现路线图](docs/IMPLEMENTATION_ROADMAP.md)
-- [Studio 与 IDE](docs/REAPER_IDE.md)
-- [Psychoporter 666](docs/PSYCHOPORTER_666.md)
-- [文档索引](docs/README.md)
-
-功能矩阵和实现路线图明确区分已交付的参考运行时行为、部分原生工作和未来硬件能力。
-
-跨项目集成使用有文档说明的版本化接口和显式适配器。可选适配器不会授予其他项目运行时权限或硬件访问权限。
-
-## 参与贡献
-
-修改代码或契约前请阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。保持改动可审查，添加确定性测试，并按贡献指南使用 Conventional Commits。
-
-## 许可证与法律说明
-
-本项目依据 [Apache-2.0](LICENSE) 许可。软件按许可条款以“按现状”方式提供。第三方项目名称与商标归其各自权利人所有。
-
-本仓库记录的是本地软件接口。除非另行引入并记录托管服务，否则云服务条款、Cookie 同意、OAuth 和 CORS 均不适用于上述本地运行组件。
+本项目采用 [Apache-2.0](LICENSE) 许可证。第三方项目名称和商标归其各自权利人所有。
 
 ---
-
-<p align="center"><sub>Psychoporter 666 README Standard v1.0 · Ivan-VHS · 2026-11-25 · UTC</sub></p>
+<p align="center"><sub>Reaper · README 审核 2026-11-27 UTC</sub></p>
