@@ -30,6 +30,20 @@ int main(void) {
         assert(reaper_rv32_assemble(&invalid, 1u, NULL, 0u, &object) ==
                REAPER_BACKEND_RELOCATION_RANGE);
     }
+    {
+        const ReaperRv32Instruction lui = {
+            REAPER_RV32_LUI, 1u, 0u, 0u, 1048575, 0u
+        };
+        assert(reaper_rv32_assemble(&lui, 1u, NULL, 0u, &object) == REAPER_BACKEND_OK);
+        assert(object.words[0] == UINT32_C(0xFFFFF0B7));
+    }
+    {
+        const ReaperRv32Instruction branch = {
+            REAPER_RV32_BEQ, 0u, 1u, 2u, 8, 0u
+        };
+        assert(reaper_rv32_assemble(&branch, 1u, NULL, 0u, &object) == REAPER_BACKEND_OK);
+        assert((object.words[0] & UINT32_C(0x7F)) == UINT32_C(0x63));
+    }
     puts("RV32I assembler backend tests passed");
     return 0;
 }
