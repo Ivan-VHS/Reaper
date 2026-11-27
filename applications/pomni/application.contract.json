@@ -1,0 +1,78 @@
+{
+  "schema": "reaper.application.foundation.v1",
+  "id": "dak.pomni",
+  "name": "Pomni",
+  "purpose": "Local-first notes, tasks, reminders, calendar planning and personal knowledge.",
+  "source_language": "Reaper",
+  "source_format": ".rpr",
+  "source_files": [
+    "domain.rpr",
+    "main.rpr",
+    "checks.rpr"
+  ],
+  "source_lines_target": 20000,
+  "maturity": "foundation",
+  "executable_scope": [
+    "deterministic domain rules",
+    "explicit policy decisions",
+    "local demonstration entry point",
+    "smoke-check scenarios"
+  ],
+  "pending": [
+    "DOM lifecycle and task contracts",
+    "DAK native application shell and UI",
+    "persistent local storage adapters",
+    "localization and accessibility implementation",
+    "runtime conformance and CI evidence"
+  ],
+  "safety": {
+    "ambient_filesystem_access": false,
+    "ambient_network_access": false,
+    "ambient_process_launch": false,
+    "ambient_privilege_changes": false,
+    "hardware_control": false,
+    "default_mode": "local-first-read-only"
+  },
+  "planned_line_budget": [
+    {
+      "area": "Notes and document model",
+      "planned_source_lines": 2000
+    },
+    {
+      "area": "Tasks and dependencies",
+      "planned_source_lines": 2000
+    },
+    {
+      "area": "Reminder policies",
+      "planned_source_lines": 2000
+    },
+    {
+      "area": "Calendar and planning",
+      "planned_source_lines": 2000
+    },
+    {
+      "area": "Knowledge graph and backlinks",
+      "planned_source_lines": 2000
+    },
+    {
+      "area": "Local search",
+      "planned_source_lines": 2000
+    },
+    {
+      "area": "Tags and collections",
+      "planned_source_lines": 2000
+    },
+    {
+      "area": "Offline sync and conflict handling",
+      "planned_source_lines": 2000
+    },
+    {
+      "area": "Import, export and backup",
+      "planned_source_lines": 2000
+    },
+    {
+      "area": "Localization and accessibility",
+      "planned_source_lines": 2000
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+# Omni domain smoke checks. Expected output: four PASS lines.
+import "domain.rpr" as omni
+
+when omni["product_count"]() == 6 { emit "PASS omni.product_count" } otherwise { emit "FAIL omni.product_count" }
+when omni["readiness_percent"](3, 4) == 75 { emit "PASS omni.readiness" } otherwise { emit "FAIL omni.readiness" }
+when omni["service_label"](true, false) == "READY" { emit "PASS omni.service_label" } otherwise { emit "FAIL omni.service_label" }
+when omni["launch_decision"](true, true, false, true) == "NEEDS_USER_CONSENT" { emit "PASS omni.consent_gate" } otherwise { emit "FAIL omni.consent_gate" }
