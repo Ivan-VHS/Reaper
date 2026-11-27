@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import math
 import unittest
 from pathlib import Path
@@ -153,18 +154,10 @@ class MathematicalResearchContractTests(unittest.TestCase):
             validate_catalog_document(altered)
 
     def test_pytyliki_manifest_matches_the_canonical_registry(self):
-        manifest = {
-            "schema": "pytyliki.mathematical-research-kernels.v1",
-            "version": "1.0.0",
-            "owner": "Pytyliki",
-            "contract_schema": "reaper.mathematical-research-contracts.v1",
-            "execution_performed": False,
-            "functions": [
-                {"id": function["id"], "api": function["api"]}
-                for area in self.catalog["areas"]
-                for function in area["functions"]
-            ],
-        }
+        fixture_path = Path(__file__).resolve().parent / "fixtures" / (
+            "pytyliki.mathematical-research-kernels.v1.json"
+        )
+        manifest = json.loads(fixture_path.read_text(encoding="utf-8"))
         validate_pytyliki_kernel_manifest(manifest, self.catalog)
         manifest["functions"][0], manifest["functions"][1] = (
             manifest["functions"][1], manifest["functions"][0]
