@@ -149,7 +149,9 @@ assert(core["processor_subsystem_entry"]("rust-native-ras")[2] == "abi-contract-
 assert(core["processor_subsystem_entry"]("typescript-diagnostics")[2] == "schema-contract-implemented", "TypeScript diagnostics schema is present")
 
 make ap_ready := ["reaper.ap-start.v1", "boot-1", 1, 2, "ready-to-start", true, true, true, true, true, true, 7]
-make ap_transition := core["ap_startup_transition"](ap_ready, "startup-sent")
+make ap_transition := core["ap_startup_acknowledge"](ap_ready, "init-sipi-sent", "startup-sent")
+assert(not core["ap_startup_transition"](ap_ready, "startup-sent")[0], "local policy cannot forge an INIT/SIPI acknowledgement")
+assert(not core["ap_startup_acknowledge"](ap_ready, "missing-ack", "startup-sent")[0], "AP startup cannot advance without native adapter acknowledgement")
 assert(ap_transition[0] and ap_transition[1][4] == "startup-sent", "AP state machine permits prepared INIT/SIPI handoff")
 assert(core["ap_startup_readiness"](ap_ready, true, 7) == "ready-for-kernel-init-sipi", "AP admission requires all per-CPU startup resources")
 assert(core["ap_startup_readiness"](ap_ready, false, 7) == "reject-bsp-not-online", "AP startup is blocked until BSP is online")
@@ -228,6 +230,7 @@ make ts_export := core["typescript_diagnostic_export"](ts_packet, ts_adapter)
 assert(ts_export[0] and ts_export[2] == "read-only-export-request", "TypeScript receives a validated read-only diagnostics packet")
 make bad_ts_adapter := ["reaper.processor-adapter.v1", "ts-write", "processor-control", "any", "typescript", "json-rpc-ras-v1", "user-control", true, ["diagnostic-export", "ipi-send"]]
 assert(not core["typescript_diagnostic_export"](ts_packet, bad_ts_adapter)[0], "diagnostics interface cannot acquire hardware-control authority")
+assert(not core["processor_adapter_valid"](bad_ts_adapter), "read-only/user adapters cannot advertise IPI or MSR write authority")
 
 make physical_assessment := core["physical_repair_assessment"]("copper", "electromigration", false)
 assert(physical_assessment[0] and physical_assessment[1] == "not-software-repairable", "physical copper damage requires qualified lab inspection or replacement")
