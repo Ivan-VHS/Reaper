@@ -16,13 +16,14 @@ HARVEST adds sixteen versioned Reaper capability modules for voice-feature profi
 
 ## What is included
 
+- Neural Contract System v1: versioned model, typed data-port, inference-admission, supervised learning, federation, resource, security, provenance and output-behavior contracts. The Reaper reference policy model is present; model execution/training and native C17 parity are not claimed.
 - Reaper source language, lexer/parser, reference runtime and diagnostics.
 - CLI, REPL, Windows Studio foundation, LSP and DAP services.
 - Experimental native C17 implementation; it is not yet feature-equivalent to the reference runtime.
 - NOO TAH delegates JavaScript execution to the official Node.js runtime.
 - Jora application scaffolding and capability composition; catalog packs remain specifications, not installable editors.
 
-See [Features](docs/FEATURES.md), [Architecture](docs/ARCHITECTURE.md), [Hardware Language](docs/HARDWARE_LANGUAGE.md), [Jora factory](docs/JORA_APPLICATION_FACTORY.md), [Studio and IDE](docs/REAPER_IDE.md) and [NOO TAH](docs/NOO_TAH.md).
+See [Neural Contract System](docs/NEURAL_CONTRACT_SYSTEM.md), [Features](docs/FEATURES.md), [Architecture](docs/ARCHITECTURE.md), [Hardware Language](docs/HARDWARE_LANGUAGE.md), [Jora factory](docs/JORA_APPLICATION_FACTORY.md), [Studio and IDE](docs/REAPER_IDE.md) and [NOO TAH](docs/NOO_TAH.md).
 
 ## Quick start
 
