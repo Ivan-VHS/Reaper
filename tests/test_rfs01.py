@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import unittest
+from dataclasses import replace
 
-from reaper.rfs01 import RFS01Error, compile_source, run_source
+from reaper.rfs01 import RFS01Error, RFSIRInstruction, compile_ir, compile_source, run_source, verify_ir
 
 
 BASE = """
@@ -27,6 +28,8 @@ class RFS01Tests(unittest.TestCase):
     def test_compile_and_execute_typed_mesh(self):
         result = run_source(BASE)
         self.assertEqual(result["schema"], "rfs-01.runtime-result.v1")
+        self.assertEqual(result["ir_schema"], "rfs-01.typed-ir.v1")
+        self.assertGreater(result["ir_instruction_count"], 0)
         self.assertEqual(result["clean_signal_frames"], 1)
         self.assertEqual(result["rejected_signal_frames"], 1)
         self.assertEqual(result["nodes"][1]["pressure"], 4.0)
@@ -34,6 +37,30 @@ class RFS01Tests(unittest.TestCase):
         self.assertLess(result["nodes"][1]["noise_db"], -10.0)
         self.assertEqual(len(result["contrasts"]), 2)
         self.assertEqual(result["messages"], ["ok"])
+
+
+    def test_typed_ir_lowering_and_verifier(self):
+        module = compile_ir(BASE)
+        self.assertEqual(module.schema, "rfs-01.typed-ir.v1")
+        self.assertTrue(any(item.opcode == "FLOW_PRESSURE_FORWARD" for item in module.instructions))
+        verify_ir(module)
+
+        instructions = list(module.instructions)
+        index = next(i for i, item in enumerate(instructions) if item.opcode == "FLOW_PRESSURE_FORWARD")
+        item = instructions[index]
+        instructions[index] = RFSIRInstruction(item.sequence, item.opcode, ("a", "missing"), item.span)
+        malformed = replace(module, instructions=tuple(instructions))
+        with self.assertRaisesRegex(RFS01Error, "RFS-E501"):
+            verify_ir(malformed)
+
+    def test_empty_signal_payload_is_allowed(self):
+        result = run_source(BASE.replace('payload: "trusted"', 'payload: ""'))
+        self.assertEqual(result["clean_signal_frames"], 1)
+
+    def test_signal_sequence_is_strictly_monotonic_per_origin(self):
+        source = BASE.replace("sequence: 1", "sequence: 3")
+        with self.assertRaisesRegex(RFS01Error, "RFS-E101"):
+            compile_source(source)
 
     def test_legacy_reaper_parser_is_not_redefined(self):
         from reaper.parser import parse
