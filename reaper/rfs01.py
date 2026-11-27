@@ -21,6 +21,8 @@ MAX_NUMERIC_LITERAL_BYTES = 324
 MAX_NODES = 4096
 MAX_LINKS = 16384
 MAX_PHASES = 4096
+MAX_EXECUTION_STEPS = 1_000_000
+MAX_PHASE_EVALUATIONS = 1_048_576
 MAX_CONTRASTS = 16384
 MAX_FRAMES = 65536
 MAX_PAYLOAD_BYTES = 4096
@@ -735,6 +737,7 @@ def verify_ir(module: RFSIRModule) -> None:
         "CONTRAST_COMPLEMENT", "CONTRAST_DIFFERENTIAL", "EMIT",
     }
     emit_count = 0
+    action_count = 0
     for expected_sequence, instruction in enumerate(module.instructions):
         if (
             not isinstance(instruction, RFSIRInstruction)
@@ -749,6 +752,7 @@ def verify_ir(module: RFSIRModule) -> None:
             raise RFS01Error("typed IR instruction sequence or opcode is invalid", "RFS-E501", span)
         args = instruction.operands
         if instruction.opcode in {"FLOW_SIGNAL", "FLOW_PRESSURE_FORWARD", "FLOW_PRESSURE_REVERSE"}:
+            action_count += 1
             if (
                 len(args) != 2
                 or not valid_text(args[0], 63)
@@ -761,6 +765,7 @@ def verify_ir(module: RFSIRModule) -> None:
             if (origin, target) not in link_pairs:
                 raise RFS01Error("typed IR flow has no matching directed link", "RFS-E501", instruction.span)
         elif instruction.opcode in {"RECOVER_ROOT", "RECOVER_CORE"}:
+            action_count += 1
             if len(args) != 1 or not valid_text(args[0], 63) or args[0] not in known_nodes:
                 raise RFS01Error("typed IR recovery has an unresolved node", "RFS-E501", instruction.span)
         elif instruction.opcode in {"CONTRAST_COMPLEMENT", "CONTRAST_DIFFERENTIAL"}:
@@ -776,6 +781,8 @@ def verify_ir(module: RFSIRModule) -> None:
             emit_count += 1
             if len(args) != 1 or not valid_text(args[0], 4096, allow_empty=True) or emit_count > MAX_EMITS:
                 raise RFS01Error("typed IR emit instruction has invalid payload or exceeds its limit", "RFS-E501", instruction.span)
+    if module.cycles * action_count > MAX_EXECUTION_STEPS:
+        raise RFS01Error("typed IR execution-step budget exceeded", "RFS-E401")
 
 
 def compile_ir(source: str) -> RFSIRModule:
@@ -804,6 +811,7 @@ class RFSRuntime:
                 self.clean_signal_counts[frame.origin] = self.clean_signal_counts.get(frame.origin, 0) + 1
         self._revisions = {node.id: 0 for node in program.nodes}
         self._phase_cache: dict[str, tuple[int, bool]] = {}
+        self.phase_evaluations = 0
         self.events: list[dict[str, Any]] = []
         self.dropped_events = 0
         self._event_sequence = 0
@@ -829,11 +837,18 @@ class RFSRuntime:
             return cached[1]
 
         node = self.nodes[node_id]
-        result = all(
-            self._compare(float(getattr(node, check.metric)), check.operator, check.value)
-            for phase in self.phases.get(node_id, ())
-            for check in (phase.first, phase.second)
-        )
+        result = True
+        for phase in self.phases.get(node_id, ()):
+            for check in (phase.first, phase.second):
+                self.phase_evaluations += 1
+                if self.phase_evaluations > MAX_PHASE_EVALUATIONS:
+                    raise RFS01Error("typed IR phase-evaluation budget exceeded", "RFS-E401")
+                if not self._compare(float(getattr(node, check.metric)), check.operator, check.value):
+                    result = False
+                    break
+            if not result:
+                break
+
         self._phase_cache[node_id] = (revision, result)
         return result
 
@@ -941,12 +956,21 @@ class RFSRuntime:
             }
             for node in self.nodes.values()
         ]
+        execution_steps = self.ir.cycles * sum(
+            instruction.opcode in {
+                "FLOW_SIGNAL", "FLOW_PRESSURE_FORWARD", "FLOW_PRESSURE_REVERSE",
+                "RECOVER_ROOT", "RECOVER_CORE",
+            }
+            for instruction in self.ir.instructions
+        )
         return {
             "schema": "rfs-01.runtime-result.v1",
             "module": self.program.name,
             "version": self.program.version,
             "ir_schema": self.ir.schema,
             "ir_instruction_count": len(self.ir.instructions),
+            "execution_steps": execution_steps,
+            "phase_evaluations": self.phase_evaluations,
             "status": "MeshInMotion" if any(node["active"] for node in node_rows) else "MeshIdle",
             "cycles": self.ir.cycles,
             "nodes": node_rows,
