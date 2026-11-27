@@ -178,6 +178,28 @@ assert(core["page_recovery_decision"](["reaper.page-recovery.v1", "page-17", 655
 make memory_adapter := ["reaper.processor-adapter.v1", "duckos-memory-manager", "page-recovery", "duckos", "c", "duckos-memory-recovery-v1", "kernel-control", true, ["page-quarantine", "page-replace"]]
 assert(core["page_recovery_admission"](poisoned_page, mca_event, true, memory_adapter) == "admit-request-to-native-adapter", "page replacement is owned by the kernel memory manager")
 
+
+make linux_edac_before := ["linux.edac.counter.v1", "boot-1", "linux-edac-mce", "mc0", "dimm0", 10, 1, 1000, "sysfs:mc0/dimm0"]
+make linux_edac_after := ["linux.edac.counter.v1", "boot-1", "linux-edac-mce", "mc0", "dimm0", 13, 2, 2000, "sysfs:mc0/dimm0"]
+make linux_edac_delta := core["linux_edac_counter_delta"](linux_edac_before, linux_edac_after)
+assert(linux_edac_delta[0] and linux_edac_delta[1] == 3 and linux_edac_delta[2] == 1, "Linux EDAC counters produce only new CE/UE deltas")
+make linux_edac_events := core["linux_edac_snapshot_to_ras_events"](linux_edac_before, linux_edac_after)
+assert(linux_edac_events[0] and size(linux_edac_events[1]) == 2, "Linux EDAC delta becomes two typed RAS evidence records")
+assert(linux_edac_events[1][1][5] == "software_suspected" and linux_edac_events[1][1][7] == "supported", "EDAC UE does not invent a page address or confirmed MCA classification")
+assert(core["linux_edac_snapshot_to_ras_events"](nothing, linux_edac_after)[2] == "baseline-only", "first Linux snapshot is only a baseline")
+make linux_edac_reset := ["linux.edac.counter.v1", "boot-1", "linux-edac-mce", "mc0", "dimm0", 1, 0, 3000, "sysfs:mc0/dimm0"]
+assert(not core["linux_edac_counter_delta"](linux_edac_after, linux_edac_reset)[0], "EDAC counter reset requires a new baseline")
+
+make apple_swift_record := ["apple.swift.ras.v1", "boot-1", "diag-7", "memory", "memory_poison", "high", "supported", 7000, "apple-diagnostic:7"]
+make apple_swift_event := core["apple_swift_record_to_ras_event"](apple_swift_record)
+assert(apple_swift_event[0] and apple_swift_event[1][3] == "apple-swift-ras", "Swift diagnostics normalizes to the common RAS envelope")
+
+make rust_event := ["pytyliki.ras.event.v1", "rust-event-1", "boot-1", "rust-native-ras", "cpu-0", "corrected", "warning", "confirmed", 8000, "rust-record-1"]
+make rust_packet := ["rust.native.ras.v1", "dabi64-ras-v1", 1, "rust-native-ras", rust_event]
+make rust_live_adapter := ["reaper.processor-adapter.v1", "rust-test-adapter", "processor-control", "any", "rust", "dabi64-ras-v1", "read-only", true, ["event-query", "diagnostic-export"]]
+make rust_ingest := core["rust_native_ras_ingest"](rust_packet, rust_live_adapter)
+assert(rust_ingest[0] and rust_ingest[1] == rust_event, "Rust ABI packet is ingested only through an attached read-only adapter")
+
 make linux_provider := core["linux_edac_provider_descriptor"]()
 make apple_provider := core["apple_swift_ras_adapter_descriptor"]()
 make rust_adapter := core["rust_native_ras_adapter_descriptor"]()
