@@ -8,7 +8,7 @@ Reaper is a systems-programming language and local development workbench for com
 
 [![CI](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml) [![Apache-2.0](https://img.shields.io/github/license/Ivan-VHS/Reaper?style=flat-square)](LICENSE)
 
-**Status:** the Python reference runtime, CLI/REPL, Windows Studio foundation, stdio LSP/DAP services and a partial native C17 track are present. Native compiler parity and privileged hardware services are not complete.
+**Status:** the Python reference runtime, CLI/REPL, Windows Studio foundation, stdio LSP/DAP services and a partial native C17 track are present. RFS-01 has a separate bounded v1.0 reference compiler/runtime and native lexer operator coverage; the full native C17 RFS parser and typed-IR lowering remain incomplete. Privileged hardware services are not complete.
 
 ## HARVEST creative-research framework pack
 
@@ -22,7 +22,7 @@ HARVEST adds sixteen versioned Reaper capability modules for voice-feature profi
 - NOO TAH delegates JavaScript execution to the official Node.js runtime.
 - Jora application scaffolding and capability composition; catalog packs remain specifications, not installable editors.
 
-See [Features](docs/FEATURES.md), [Architecture](docs/ARCHITECTURE.md), [Hardware Language](docs/HARDWARE_LANGUAGE.md), [Jora factory](docs/JORA_APPLICATION_FACTORY.md), [Studio and IDE](docs/REAPER_IDE.md) and [NOO TAH](docs/NOO_TAH.md).
+See [RFS-01](docs/RFS_01.md), [Features](docs/FEATURES.md), [Architecture](docs/ARCHITECTURE.md), [Hardware Language](docs/HARDWARE_LANGUAGE.md), [Jora factory](docs/JORA_APPLICATION_FACTORY.md), [Studio and IDE](docs/REAPER_IDE.md) and [NOO TAH](docs/NOO_TAH.md).
 
 ## Quick start
 

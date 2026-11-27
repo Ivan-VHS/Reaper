@@ -159,6 +159,36 @@
         "tests/test_system_functions.py",
         "docs/SYSTEM_FUNCTIONS.md"
       ]
+    },
+    {
+      "id": "language.rfs-01-reference.v1",
+      "status": "implemented",
+      "summary": "Separate v1.0 Rhythm-Field Syntax compiler/parser, bounded typed source model, deterministic graph-flow execution, phase gates, contrast operators, root/core recovery, stable diagnostics and resource limits.",
+      "evidence": [
+        "docs/RFS_01.md",
+        "reaper/rfs01.py",
+        "examples/block-pulse.rfs",
+        "tests/test_rfs01.py"
+      ]
+    },
+    {
+      "id": "language.rfs-01-native-lexer",
+      "status": "partial",
+      "summary": "Native C17 lexer recognizes RFS-01 state, flow, contrast and recovery operators. A complete native RFS module parser, typed-IR lowering and native execution backend are not yet implemented.",
+      "evidence": [
+        "src/lexer.c",
+        "tests/test_lexer.c"
+      ]
+    },
+    {
+      "id": "interop.pytyliki-rfs01-cabi.v1",
+      "status": "implemented",
+      "summary": "Explicit-path Reaper host bridge for Pytyliki's opt-in RFS-01 C11 extension; typed fixed-size records, reserve metrics, pressure/signal transition proposals and distinct root/core restoration.",
+      "evidence": [
+        "reaper/rfs01_ffi.py",
+        "tests/test_rfs01_ffi.py",
+        "docs/RFS_01.md"
+      ]
     }
   ],
   "interfaces": [
@@ -202,6 +232,26 @@
         "docs/SYSTEM_FUNCTIONS.md",
         "tests/test_system_functions.py"
       ]
+    },
+    {
+      "id": "rfs-01.reaper-runtime.v1",
+      "format": "RFS-01 v1.0 source unit and deterministic runtime-result JSON",
+      "direction": "provides",
+      "status": "implemented",
+      "evidence": [
+        "docs/RFS_01.md",
+        "reaper/rfs01.py"
+      ]
+    },
+    {
+      "id": "rfs-01.pytyliki-c-abi.v1",
+      "format": "Fixed-size C11 v1 records with caller-owned output structs",
+      "direction": "consumes",
+      "status": "implemented",
+      "evidence": [
+        "reaper/rfs01_ffi.py",
+        "tests/test_rfs01_ffi.py"
+      ]
     }
   ],
   "integrations": [
@@ -244,6 +294,24 @@
       "status": "implemented",
       "opt_in": false,
       "summary": "Records membership in the shared four-project OCTA-8 topology without introducing a runtime dependency."
+    },
+    {
+      "project": "duck",
+      "repository": "Ivan-VHS/DAK",
+      "interface": "rfs-01.duckos.v1",
+      "mode": "reaper-native-contract-adapter",
+      "status": "implemented",
+      "opt_in": true,
+      "summary": "Duck OS consumes the canonical node/link/signal and recovery contract through a Reaper-native policy module; no RFS privilege or hardware access is implied."
+    },
+    {
+      "project": "pytyliki",
+      "repository": "Ivan-VHS/Pytyliki",
+      "interface": "rfs-01.pytyliki-c-abi.v1",
+      "mode": "native-ffi",
+      "status": "implemented",
+      "opt_in": true,
+      "summary": "Reaper can use the optional versioned Pytyliki C11 adapter through an explicitly supplied trusted library path; no implicit loading or mandatory runtime dependency."
     }
   ],
   "safety_boundaries": [
@@ -264,6 +332,7 @@
     "Native C17 frontend stages with Python reference behavior as the compatibility oracle.",
     "Bounded vertical self-composition for deterministic compiler and data-flow transformation pipelines.",
     "Stable architecture concept IDs, layer metadata and bounded dependency graph validation.",
-    "Explicit stdlib/system.rpr APIs for bounded system operations, revision guards, local telemetry and reversible migration preflight."
+    "Explicit stdlib/system.rpr APIs for bounded system operations, revision guards, local telemetry and reversible migration preflight.",
+    "RFS-01 native C17 frontend completion: standalone module parsing, canonical typed-IR lowering, native runtime backend and differential conformance against the reference implementation."
   ]
 }

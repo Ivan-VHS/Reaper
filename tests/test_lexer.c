@@ -386,6 +386,25 @@ static void test_utf8_columns_count_codepoints(void)
     reaper_tokens_free(&tokens);
 }
 
+
+static void test_rfs01_operator_lexing(void)
+{
+    const char *source = "node <> State flow a ~> b flow a >> b flow a << b contrast a || b contrast a ^^ b recover a <-root recover a ^core";
+    ReaperTokenArray tokens = {0};
+    ReaperLexError error = {{0}, 0u, 0u};
+
+    assert(reaper_lex(source, &tokens, &error));
+    assert(has(&tokens, "<>", REAPER_TOK_OPERATOR));
+    assert(has(&tokens, "~>", REAPER_TOK_OPERATOR));
+    assert(has(&tokens, ">>", REAPER_TOK_OPERATOR));
+    assert(has(&tokens, "<<", REAPER_TOK_OPERATOR));
+    assert(has(&tokens, "||", REAPER_TOK_OPERATOR));
+    assert(has(&tokens, "^^", REAPER_TOK_OPERATOR));
+    assert(has(&tokens, "<-root", REAPER_TOK_OPERATOR));
+    assert(has(&tokens, "^core", REAPER_TOK_OPERATOR));
+    reaper_tokens_free(&tokens);
+}
+
 int main(void)
 {
     test_program();
@@ -394,6 +413,7 @@ int main(void)
     test_unterminated();
     test_most_surface();
     test_most_operator_family();
+    test_rfs01_operator_lexing();
     test_most_russian_vocabulary();
     test_most_extended_aliases();
     test_utf8_columns_count_codepoints();
@@ -402,6 +422,6 @@ int main(void)
     test_source_size_limit_is_enforced();
     test_token_count_limit_is_enforced();
 
-    puts("native lexer tests: 13 groups passed");
+    puts("native lexer tests: 14 groups passed");
     return 0;
 }

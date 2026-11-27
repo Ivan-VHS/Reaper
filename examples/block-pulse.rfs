@@ -1,0 +1,69 @@
+module BlockPulse_Architecture version "1.0" {
+  node basement :: Node {
+    layer: Basement,
+    pressure: 40,
+    load_limit: 100,
+    integrity: 0.92,
+    noise_db: -18,
+    core_seed: "core:basement"
+  }
+
+  state corridor <> State {
+    layer: Corridor,
+    pressure: 4,
+    load_limit: 80,
+    integrity: 0.88,
+    noise_db: -12,
+    core_seed: "core:corridor"
+  }
+
+  node gate :: Node {
+    layer: Gate,
+    pressure: 2,
+    load_limit: 60,
+    integrity: 0.95,
+    noise_db: -9,
+    core_seed: "core:gate"
+  }
+
+  link basement_corridor :: Link {
+    origin: basement,
+    target: corridor,
+    channel: Bridge,
+    weight: 0.10,
+    blocked: false
+  }
+
+  link basement_gate :: Link {
+    origin: basement,
+    target: gate,
+    channel: Beat,
+    weight: 0.05,
+    blocked: false
+  }
+
+  signal clean_origin :: Signal {
+    sequence: 1,
+    origin: basement,
+    payload: "block pulse",
+    trusted: true,
+    manufactured: false
+  }
+
+  signal false_hype :: Signal {
+    sequence: 2,
+    origin: basement,
+    payload: "manufactured noise",
+    trusted: false,
+    manufactured: true
+  }
+
+  phase backbone_guard on basement [pressure <= 100 : integrity > 0.10]
+
+  flow basement >> corridor
+  flow basement ~> gate
+  contrast basement || corridor
+  contrast basement ^^ gate
+  cycles 4
+  emit "RFS-01 deterministic mesh active"
+}
