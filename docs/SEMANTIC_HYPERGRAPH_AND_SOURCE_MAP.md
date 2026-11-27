@@ -35,7 +35,7 @@ This module does not execute graphs, schedule CPU/GPU/remote workers, prove arbi
 | Ontological structural typing | Structural graph-port types plus current AST/IR verification and feature contracts. | Partial; not a complete static type checker. |
 | Feather-oil / effects | Runtime limits, governance/consent adapters and effect-aware contracts. | Partial; not a complete algebraic-effects runtime. |
 | Flock concurrency | Graph can inform dataflow scheduling. | Scheduler, bounded worker queues and backpressure remain executor work. |
-| Rounded visual design | Reaper Studio follows shared Anatidae UI, motion and accessibility contracts. | Design contract. |
+| Rounded visual design | Reaper Studio follows shared Dak UI, motion and accessibility contracts. | Design contract. |
 | Hypergraph instead of text | Semantic Lake Graph is an additional typed graph representation. | Implemented prototype; text/AST/IR remain canonical authoring path. |
 | Names as identity | Node SHA-256 address; label rename preserves identity. | Implemented for graph nodes only. |
 | Habitats / FBIP | Runtime resource accounting and native backend provide groundwork. | Partial; Python allocator is not a region/FBIP guarantee. |
@@ -104,4 +104,4 @@ Use the shared 65/25/10 palette: porcelain white (#FFFFFF / #F4F7FB), cobalt/azu
 
 New: reaper/semantic_graph.py and tests/test_semantic_graph.py.
 
-Existing: reaper/ir.py, src/ir.c, include/reaper/ir.h, src/optimizer.c, language/features.json, tools/validate_features.py, docs/ANATIDAE_CONSTITUTION.md, docs/ENGINEERING_CONSTITUTION_PROFILE.md, docs/MOST_FUNCTION_CONTRACT_REGISTRY.md, docs/MOST_IMPLEMENTATION_STATUS.md and docs/REAPER_UNIFIED_ARCHITECTURE.md.
+Existing: reaper/ir.py, src/ir.c, include/reaper/ir.h, src/optimizer.c, language/features.json, tools/validate_features.py, docs/DAK_CONSTITUTION.md, docs/ENGINEERING_CONSTITUTION_PROFILE.md, docs/MOST_FUNCTION_CONTRACT_REGISTRY.md, docs/MOST_IMPLEMENTATION_STATUS.md and docs/REAPER_UNIFIED_ARCHITECTURE.md.
