@@ -97,6 +97,8 @@ make fault_result := core["execute_bytecode"](state, fault_word[1])
 assert(fault_word[0] and fault_result[0], "fault-period opcode must execute only in test mode")
 assert(fault_result[1][11] == 1, "repeated scenario activation must be idempotent")
 change state := fault_result[1]
+make invalid_active_scenario := core["run_construct"](state, ["SCENARIO", "COMMAND", 9, "INVALID_DUTY", 100, 64])
+assert(not invalid_active_scenario[0], "active scenario must still reject an invalid duty cycle")
 
 make skew_word := core["bytecode_encode"](64, "ROOT", 9, 16, 0)
 make skew_result := core["execute_bytecode"](state, skew_word[1])
