@@ -151,3 +151,19 @@ The bytecode VM now accepts opcodes 66-70 for AP startup, IPI routing, timer pre
 The Linux EDAC adapter contract now has a pure counter-snapshot normalizer. It records a first snapshot as a baseline, computes only monotonic CE/UE deltas, rejects counter resets and cross-boot/resource comparisons, and emits common RAS envelopes. A UE counter without a poisoned page address is deliberately normalized as software-suspected/supporting evidence, not as a confirmed page-level MCA record.
 
 The Apple Swift contract accepts a versioned OS-diagnostics record and maps its explicit source severity/confidence into the shared RAS envelope. The Rust contract validates a DABI64 packet sequence and requires an attached read-only adapter before ingestion. These are executable Reaper ABI checks and normalizers; the actual sysfs/tracefs reader, Swift system API client and Rust FFI binary remain separate native deliverables.
+
+
+## Requested subsystem status matrix
+
+| Subsystem | Reaper implementation | Native platform status |
+|---|---|---|
+| Real AP startup and SMP | Startup state machine, BSP readiness, topology generation and admission contracts | INIT/SIPI/AP trampoline and live SMP still require DuckOS kernel work |
+| APIC, IPI and timer preemption | Route, vector, endpoint, mask, quantum and adapter-authority policies | APIC MMIO, interrupt entry, IPI delivery and context switch are not invoked by Reaper |
+| Kernel MCA handler and MCA MSR | Event normalizer, context-corrupt policy, MCG_CAP-bounded read allowlist | RDMSR and #MC handler require privileged x86 kernel code |
+| Automatic OS page recovery | Poison evidence, resource-scope matching, pin/refcount, verified-copy and rollback gates | Page offlining, replacement, reverse-map update and TLB shootdown require memory-manager code |
+| Linux EDAC/MCE provider | Counter-snapshot baseline/delta normalizer and common RAS envelope | Linux sysfs/tracefs reader remains unattached |
+| Apple Swift provider | Swift ABI descriptor and diagnostics normalizer | Swift system API adapter remains unattached |
+| Rust native RAS adapter | DABI64 packet validation and read-only ingest contract | Rust FFI implementation remains unattached |
+| TypeScript diagnostics interface | Versioned read-only packet validation/export | TypeScript client transport remains unattached |
+| Physical copper/silicon repair | Explicit impossibility classification and isolate/inspect/replace recommendation | Requires physical laboratory process or component replacement; no software repair |
+
