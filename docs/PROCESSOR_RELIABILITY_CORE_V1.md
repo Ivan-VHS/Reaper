@@ -19,6 +19,8 @@ The module composes six bounded subsystems:
 
 The source uses the currently supported Reaper grammar and positional list records. It does not introduce unsupported parser-level struct, enum, MMIO or IRQ syntax.
 
+This package currently targets Reaper's reference interpreter/VM. The present native AOT compiler does not yet lower list operations, imports/exports or dynamic module dispatch used here, so this fixture is not advertised as an AOT-native binary. A later AOT port must first implement those language features and pass reference/native conformance tests.
+
 ## State and records
 
 `new_state(capacity, low_watermark, mode, local_reserves, initial_phase_error_ps)` returns `[ok, state, diagnostic]`.
