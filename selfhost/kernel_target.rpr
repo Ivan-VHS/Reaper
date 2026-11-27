@@ -48,12 +48,6 @@ export craft kernel_target_valid(target) {
     yield false
 }
 
-export craft kernel_target_has_capability(target, capability) {
-    when not kernel_target_valid(target) { yield ["ERR", "processor target profile is invalid"] }
-    when size(capability) == 0 { yield ["ERR", "capability name is empty"] }
-    yield kernel_target_list_has(target[10], capability)
-}
-
 craft kernel_target_list_has(values, requested) {
     vary index := 0
     loop while index < size(values) {
@@ -61,4 +55,10 @@ craft kernel_target_list_has(values, requested) {
         change index := index + 1
     }
     yield ["OK", false]
+}
+
+export craft kernel_target_has_capability(target, capability) {
+    when not kernel_target_valid(target) { yield ["ERR", "processor target profile is invalid"] }
+    when size(capability) == 0 { yield ["ERR", "capability name is empty"] }
+    yield kernel_target_list_has(target[10], capability)
 }
