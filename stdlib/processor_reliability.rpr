@@ -743,6 +743,9 @@ export craft bytecode_encode(opcode, domain_type, operand_a, operand_b, flags) {
     when not bytecode_opcode_valid(opcode) or domain_code == 0 {
         yield [false, [], "RPR-BC-0001: unknown opcode or domain"]
     }
+    when opcode == 65 and domain_type != "RULE" {
+        yield [false, [], "RPR-BC-0003: RAS classify opcode requires RULE domain"]
+    }
     when not valid_integer(operand_a, 0, 65535) or
          not valid_integer(operand_b, 0, 65535) or
          not valid_integer(flags, 0, 65535) {
