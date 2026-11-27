@@ -94,6 +94,18 @@ The sample is a host x86-64 project and is expected to reject a non-matching hos
 
 The scalar probe verifies only the current Reaper scalar host AOT path. The Pytyliki report describes only the machine that generated the report. A target-specific build must remain blocked until its compiler, ABI, linker, ISA and runtime contracts are implemented and qualified.
 
+## Composition with the existing processor work
+
+PEP is the project/build/evidence workflow, not a replacement for the processor subsystems already being developed in the ecosystem:
+
+- [Processor Intelligence](https://github.com/Ivan-VHS/Reaper/pull/405) supplies deterministic processor-state, trace and reporting models.
+- [Processor Control Plane](https://github.com/Ivan-VHS/Reaper/pull/406) defines processor topology, lifecycle, scheduling policy, verification and capability-gated adapter contracts.
+- [Processor Reliability Core](https://github.com/Ivan-VHS/Reaper/pull/409) covers bounded reliability, correction, recovery and repeatable evidence models.
+- [Platform Evidence Contract](https://github.com/Ivan-VHS/Reaper/pull/412) defines normalized hardware evidence boundaries.
+- [Pytyliki Processor Policy and Native C11 Engine](https://github.com/Ivan-VHS/Pytyliki/pull/282) is the companion processor policy/native-engine direction.
+- [Pytyliki Processor Intelligence integration](https://github.com/Ivan-VHS/Pytyliki/pull/281) connects Reaper source orchestration to the native C11 workstation.
+
+These changes are separate open review streams. PEP consumes their published contracts where they are available; it does not assume unmerged code is present on `main`, nor does it claim that a Reaper project manifest itself schedules threads or controls a processor.
 ## Development roadmap
 
 | Stage | Capability | Acceptance gate |
