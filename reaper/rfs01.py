@@ -17,6 +17,7 @@ from typing import Any, Iterable
 
 MAX_SOURCE_BYTES = 1 * 1024 * 1024
 MAX_TOKENS = 262144
+MAX_NUMERIC_LITERAL_BYTES = 324
 MAX_NODES = 4096
 MAX_LINKS = 16384
 MAX_PHASES = 4096
@@ -270,7 +271,7 @@ class _Parser:
             return self.take().value
         if token.kind == "NUMBER":
             raw = self.take().value
-            if len(raw) > 128:
+            if len(raw) > MAX_NUMERIC_LITERAL_BYTES:
                 raise RFS01Error("numeric literal exceeds the v1.0 scalar width", "RFS-E101", token.span)
             try:
                 return float(raw) if "." in raw else int(raw)
