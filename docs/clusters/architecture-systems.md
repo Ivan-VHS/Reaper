@@ -21,6 +21,7 @@ This hub groups related specifications and implementation references. The linked
 - [REAPER 813 FEATURE ARCHITECTURE](../REAPER_813_FEATURE_ARCHITECTURE.md)
 - [REAPER UNIFIED ARCHITECTURE](../REAPER_UNIFIED_ARCHITECTURE.md)
 - [TRANSACTIONAL RUNTIME](../TRANSACTIONAL_RUNTIME.md)
+- [SYSTEM FUNCTIONS](../SYSTEM_FUNCTIONS.md) — bounded Reaper runtime APIs, revision guards, local telemetry and rollback preflight.
 - [UNIFIED PROJECT CONTRACT](../UNIFIED_PROJECT_CONTRACT.md)
 
 ## Navigation rules

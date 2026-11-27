@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:reaper:schema:rforge.archetype-catalog.v1",
+  "title": "RForge proposed product archetype catalogue",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "title",
+    "status",
+    "composition_policy",
+    "pairs",
+    "entries"
+  ],
+  "properties": {
+    "schema": {
+      "const": "reaper.rforge.archetype-catalog.v1"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160
+    },
+    "status": {
+      "const": "proposal_catalog"
+    },
+    "composition_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "preserve_profile_token_order",
+        "reversed_profiles_are_distinct_candidates",
+        "infer_product_family_from_name",
+        "require_semantic_contract_before_generation",
+        "require_verified_components_before_executable_claims"
+      ],
+      "properties": {
+        "preserve_profile_token_order": {
+          "const": true
+        },
+        "reversed_profiles_are_distinct_candidates": {
+          "const": true
+        },
+        "infer_product_family_from_name": {
+          "const": false
+        },
+        "require_semantic_contract_before_generation": {
+          "const": true
+        },
+        "require_verified_components_before_executable_claims": {
+          "const": true
+        }
+      }
+    },
+    "pairs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "pair_id",
+          "forward_id",
+          "reverse_id",
+          "relation"
+        ],
+        "properties": {
+          "pair_id": {
+            "type": "string",
+            "pattern": "^pair-[0-9]{2}$"
+          },
+          "forward_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "reverse_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "relation": {
+            "const": "ordered_token_reversal"
+          }
+        }
+      }
+    },
+    "entries": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 128,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "pair_id",
+          "variant",
+          "profile_tokens",
+          "profile_expression",
+          "mirror_of",
+          "mirrored_by",
+          "family_assignment",
+          "semantic_contract",
+          "maturity",
+          "generator_status",
+          "executable_capabilities"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 96
+          },
+          "pair_id": {
+            "type": "string",
+            "pattern": "^pair-[0-9]{2}$"
+          },
+          "variant": {
+            "enum": [
+              "forward",
+              "reverse"
+            ]
+          },
+          "profile_tokens": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          },
+          "profile_expression": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 140
+          },
+          "mirror_of": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "mirrored_by": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "family_assignment": {
+            "const": "pending"
+          },
+          "semantic_contract": {
+            "const": "pending"
+          },
+          "maturity": {
+            "const": "proposal"
+          },
+          "generator_status": {
+            "const": "not_generated"
+          },
+          "executable_capabilities": {
+            "type": "array",
+            "maxItems": 0
+          }
+        }
+      }
+    }
+  }
+}
