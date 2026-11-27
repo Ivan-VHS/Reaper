@@ -390,7 +390,7 @@ def _validate_cross_constraints(function_id: str, arguments: Mapping[str, Any]) 
             require(len(assignment) == variables, "assignment length must equal variables")
             require(all(value in (0, 1) for value in assignment), "assignment values must be Boolean bytes")
 
-    if function_id.startswith("navier_stokes."):
+    if function_id in {"navier_stokes.grid_divergence", "navier_stokes.grid_vorticity"}:
         nx, ny, nz = arguments["nx"], arguments["ny"], arguments["nz"]
         cells = nx * ny * nz
         require(cells <= 1_000_000, "grid exceeds the one-million-cell contract limit")
