@@ -134,6 +134,7 @@ class ProcessorFabricTypedIRTests(unittest.TestCase):
         source, report, semantic, resources = valid_input()
         report["fabric"]["nodes"][2]["kind"] = "dma-buffer"
         report["fabric"]["nodes"][2]["semantic_ref"] = "dma0"
+        report["resource_contract"]["dma_buffers"] = [{"id": "dma0", "generation": 7}]
         resources[3] = ProcessorResourceBinding(
             ppf_node_id=3, semantic_ref="dma0", kind="dma-buffer",
             value_type="DmaBuffer", effects=("dma.read",), owner="shared",
