@@ -4,7 +4,7 @@
 
 **Scope:** a typed, content-addressed dataflow graph beside the existing Reaper text, AST, stack IR, Python reference runtime and native C17 toolchain.
 
-The uploaded Constitution of the Ducks / AETHER-ANAS manifesto is the architectural source. This document traces its ten renunciations, twelve commandments, 66 engineering laws, twelve formula models and 666-rule catalogue into this repository. It separates shipped behavior from roadmap.
+The uploaded Constitution of the Ducks / AETHER-ANAS manifesto is the architectural source. This document traces its ten renunciations, twelve commandments, 66 engineering laws, twelve formula models and engineering rule catalogue into this repository. It separates shipped behavior from roadmap.
 
 ## 1. Why a sidecar graph
 
@@ -82,7 +82,7 @@ Trauman, Baus–Bayes, Gause, Strauss, Bergmann, Dilman, Tilman, Spillman, Besse
 | 445–555 | Flock / collective concurrency | Flow graph representation; worker scheduling, bounded concurrent execution and backpressure remain executor work. |
 | 556–666 | Anti-angularity / freedom / creator | Multilingual aliases, editor configuration, readable docs, deterministic interchange and versioned schemas. License remains Apache-2.0; no automatic CC0 change. |
 
-The 666 catalogue is a specification corpus, not a count of implemented functions. Status remains explicit: planned, specified, implemented, verified or deprecated.
+The engineering constitution is a specification corpus, not a count of implemented functions. Status remains explicit: planned, specified, implemented, verified or deprecated.
 
 ## 8. Type-system and maxim-compendium crosswalk
 
@@ -104,4 +104,4 @@ Use the shared 65/25/10 palette: porcelain white (#FFFFFF / #F4F7FB), cobalt/azu
 
 New: reaper/semantic_graph.py and tests/test_semantic_graph.py.
 
-Existing: reaper/ir.py, src/ir.c, include/reaper/ir.h, src/optimizer.c, language/features.json, tools/validate_features.py, docs/ANATIDAE_CONSTITUTION.md, docs/CONSTITUTION_666_PROFILE.md, docs/MOST_FUNCTIONS_666.md, docs/MOST_IMPLEMENTATION_STATUS.md and docs/REAPER_UNIFIED_ARCHITECTURE.md.
+Existing: reaper/ir.py, src/ir.c, include/reaper/ir.h, src/optimizer.c, language/features.json, tools/validate_features.py, docs/ANATIDAE_CONSTITUTION.md, docs/ENGINEERING_CONSTITUTION_PROFILE.md, docs/MOST_FUNCTION_CONTRACT_REGISTRY.md, docs/MOST_IMPLEMENTATION_STATUS.md and docs/REAPER_UNIFIED_ARCHITECTURE.md.

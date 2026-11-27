@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Ivan-VHS/DAK/blob/main/schemas/hardware-inventory.v1.schema.json",
+  "title": "DAK read-only hardware inventory v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "captured_utc", "source", "summary", "devices", "snapshot_sha256"],
+  "properties": {
+    "schema": {"const": "dak.hardware-inventory.v1"},
+    "captured_utc": {"type": "string", "format": "date-time"},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "mode", "platform", "architecture"],
+      "properties": {
+        "provider": {"const": "dak-host-inventory"},
+        "mode": {"const": "read_only"},
+        "platform": {"enum": ["linux", "windows"]},
+        "architecture": {"type": "string", "minLength": 1, "maxLength": 64}
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total_devices", "driver_bound", "driver_missing", "device_problem"],
+      "properties": {
+        "total_devices": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "driver_bound": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "driver_missing": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "device_problem": {"type": "integer", "minimum": 0, "maximum": 10000}
+      }
+    },
+    "devices": {
+      "type": "array",
+      "maxItems": 10000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["identity_sha256", "bus", "vendor_id", "device_id", "device_class", "friendly_name", "driver", "status"],
+        "properties": {
+          "identity_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "bus": {"enum": ["pci", "usb", "pnp"]},
+          "vendor_id": {"type": ["string", "null"], "pattern": "^0x[0-9a-f]{4}$"},
+          "device_id": {"type": ["string", "null"], "pattern": "^0x[0-9a-f]{4}$"},
+          "device_class": {"type": "string", "minLength": 1, "maxLength": 128},
+          "friendly_name": {"type": "string", "minLength": 1, "maxLength": 256},
+          "driver": {"type": ["string", "null"], "maxLength": 128},
+          "status": {"enum": ["driver_bound", "driver_missing", "device_problem"]}
+        }
+      }
+    },
+    "snapshot_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}

@@ -1,0 +1,218 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:reaper:schema:rforge.request.v1",
+  "title": "Reaper RForge product assembly request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "product_kind",
+    "product_name",
+    "components",
+    "target"
+  ],
+  "properties": {
+    "schema": {
+      "const": "reaper.rforge.request.v1"
+    },
+    "product_kind": {
+      "enum": [
+        "framework",
+        "multitool",
+        "multiapp",
+        "framework_bundle",
+        "multiframe",
+        "multiwork",
+        "frame_app_tool_suite"
+      ]
+    },
+    "product_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 96
+    },
+    "components": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 24,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$",
+            "maxLength": 128
+          },
+          "kind": {
+            "enum": [
+              "framework",
+              "tool",
+              "application",
+              "frame",
+              "workflow",
+              "adapter",
+              "asset"
+            ]
+          },
+          "version": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "features": {
+            "type": "array",
+            "uniqueItems": true,
+            "maxItems": 64,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        }
+      }
+    },
+    "locales": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 1,
+      "maxItems": 8,
+      "items": {
+        "enum": [
+          "en",
+          "ru",
+          "uk",
+          "most"
+        ]
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_language",
+        "runtime",
+        "deployment"
+      ],
+      "properties": {
+        "source_language": {
+          "const": "reaper"
+        },
+        "runtime": {
+          "enum": [
+            "reaper_reference",
+            "reaper_native",
+            "dom"
+          ]
+        },
+        "deployment": {
+          "enum": [
+            "host",
+            "dak",
+            "portable"
+          ]
+        }
+      }
+    },
+    "objective": {
+      "enum": [
+        "balanced",
+        "low_latency",
+        "modularity",
+        "extensibility",
+        "minimal_complexity"
+      ]
+    },
+    "topologies": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 6,
+      "items": {
+        "enum": [
+          "layered",
+          "pipeline",
+          "hub_spoke",
+          "plugin_mesh",
+          "event_driven",
+          "hybrid"
+        ]
+      }
+    },
+    "autonomy": {
+      "enum": [
+        "plan_only",
+        "generate_missing",
+        "generate_and_verify"
+      ]
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 128,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "optional": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 128,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        }
+      }
+    },
+    "permissions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "filesystem": {
+          "enum": [
+            "none",
+            "project_read",
+            "project_write"
+          ]
+        },
+        "network": {
+          "enum": [
+            "deny",
+            "explicit_allowlist"
+          ]
+        },
+        "devices": {
+          "enum": [
+            "none",
+            "explicit_grant"
+          ]
+        },
+        "processes": {
+          "enum": [
+            "none",
+            "isolated_child"
+          ]
+        }
+      }
+    },
+    "seed": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 2147483647
+    }
+  }
+}

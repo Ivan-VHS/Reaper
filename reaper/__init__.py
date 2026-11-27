@@ -18,6 +18,7 @@ from .ir import CanonicalIR, IRVerificationError, lower as lower_to_ir
 from .vm import BytecodeProgram, VirtualMachine, assemble as assemble_bytecode
 from .modules import ModuleCycleError, ModuleError, ModuleLoader
 from .memory import MemoryManager, HeapLimitError, RegionError
+from .system_functions import OverrideAuthority, SystemFunctionError, WorkerBudgetExceeded
 from .resources import ResourceManager, ResourceHandle
 from .ffi import CAbiLibrary, NativeFunction, PytylikiBridge, FfiError
 from .debugger import RuntimeDebugger, DebugSnapshot, DebuggerStopped
@@ -36,6 +37,9 @@ __all__ = [
     "accumulate", "aggregate", "amplify", "cartesianize", "combine", "compute",
     "compound", "convolve", "couple", "cross_multiply", "expand", "exponentiate",
     "factor", "fuse", "multiply", "pair", "product", "scale",
+    "Candy", "CandyLine", "GiftPlan", "GreetingEdge", "allocate_equal",
+    "allocate_weighted", "build_candy_basket", "build_greeting_graph",
+    "combination_count", "percent_of", "plan_gift",
     "compose", "concat", "concat_text", "merge_mappings", "pipe",
     "Interpreter", "LexError", "ParseError", "ReaperError", "ReaperRuntimeError",
     "decompose_sequence", "distribute_weighted", "divide_fraction",
@@ -44,6 +48,7 @@ __all__ = [
     "CanonicalIR", "IRVerificationError", "lower_to_ir", "BytecodeProgram",
     "VirtualMachine", "assemble_bytecode", "ModuleCycleError", "ModuleError",
     "ModuleLoader", "MemoryManager", "HeapLimitError", "RegionError",
+    "OverrideAuthority", "SystemFunctionError", "WorkerBudgetExceeded",
     "ResourceManager", "ResourceHandle", "CAbiLibrary", "NativeFunction",
     "PytylikiBridge", "FfiError", "RuntimeDebugger", "DebugSnapshot",
     "DebuggerStopped", "EmbeddedError", "McuProfile", "RegisterBank",
@@ -51,3 +56,17 @@ __all__ = [
     "SyntaxProfileError", "available_syntax_profiles", "get_syntax_profile",
     "register_syntax_profile", "resolve_syntax_profile", "__version__",
 ]
+
+
+_GIFT_PLANNER_EXPORTS = {
+    "Candy", "CandyLine", "GiftPlan", "GreetingEdge", "allocate_equal",
+    "allocate_weighted", "build_candy_basket", "build_greeting_graph",
+    "combination_count", "percent_of", "plan_gift",
+}
+
+
+def __getattr__(name: str):
+    if name in _GIFT_PLANNER_EXPORTS:
+        from . import gift_planner
+        return getattr(gift_planner, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
