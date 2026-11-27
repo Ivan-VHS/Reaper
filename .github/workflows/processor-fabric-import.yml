@@ -14,6 +14,18 @@ on:
       - "project-contract.json"
       - "language/features.json"
       - "CMakeLists.txt"
+      - "include/reaper/processor_backends.h"
+      - "src/processor_backend_*.c"
+      - "src/processor_rv32_*.c"
+      - "src/processor_logic_net.c"
+      - "tests/test_processor_assembler.c"
+      - "tests/test_processor_linker.c"
+      - "tests/test_processor_emulator.c"
+      - "tests/test_processor_rtl.c"
+      - "tests/test_processor_formal.c"
+      - "schemas/reaper.processor-backend-registry.v1.schema.json"
+      - "examples/processor-backends/**"
+      - "docs/PROCESSOR_BACKENDS_V1.md"
       - ".github/workflows/processor-fabric-import.yml"
   workflow_dispatch:
 
@@ -39,3 +51,15 @@ jobs:
         run: node --test tests/test_processor_fabric_import.mjs
       - name: Test Reaper typed SemanticGraph adapter
         run: python -m unittest discover -s tests -p test_processor_fabric.py
+      - name: Configure native processor backends
+        run: cmake -S . -B build-processor-backends -DCMAKE_BUILD_TYPE=Release
+      - name: Build independent processor backend targets
+        run: >-
+          cmake --build build-processor-backends --parallel --target
+          reaper-processor-assembler-tests reaper-processor-linker-tests
+          reaper-processor-emulator-tests reaper-processor-rtl-tests
+          reaper-processor-formal-tests
+      - name: Run processor backend conformance tests
+        run: >-
+          ctest --test-dir build-processor-backends --output-on-failure
+          -R "processor-(native-assembler-rv32i|native-linker-flat-image|bounded-rv32i-emulator|systemverilog-rtl-emitter|bounded-formal-equivalence)"
