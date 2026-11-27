@@ -82,6 +82,9 @@ class SelfHostingBootstrapTests(unittest.TestCase):
     def test_reaper_written_hardware_contract_runs_on_the_reference_runtime(self) -> None:
         self._run_selfhost_program("selfhost/hardware_contract.rpr", "SELFHOST_HARDWARE_CONTRACT_OK")
 
+    def test_reaper_written_processor_kernel_contract_runs_on_the_reference_runtime(self) -> None:
+        self._run_selfhost_program("selfhost/processor_kernel.rpr", "SELFHOST_PROCESSOR_KERNEL_OK")
+
     def test_reaper_written_lsp_positions_run_on_the_reference_runtime(self) -> None:
         self._run_selfhost_program("selfhost/lsp_positions.rpr", "SELFHOST_LSP_POSITIONS_OK")
 
