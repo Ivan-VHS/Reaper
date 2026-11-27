@@ -211,7 +211,7 @@ int reaper_seadlow_transform_popcount(
 ) {
     if (population_count == NULL) {
         clear_report(report);
-        if (error != NULL) error->message[0] = '\\0';
+        if (error != NULL) error->message[0] = '\0';
         return fail(error, "population count output is mandatory");
     }
     return transform_impl(operation, output, lhs, rhs, bit_count,
