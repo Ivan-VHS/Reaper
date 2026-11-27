@@ -1024,6 +1024,26 @@ export craft run_load_test(initial_state, steps, repair_cost, period_cycles) {
     yield [replay[0], state, records, checksum[1], replay[1]]
 }
 
+export craft replay_load_test(initial_state, steps, repair_cost, period_cycles, expected_checksum, expected_records) {
+    when kind(expected_records) != "list" or size(expected_records) > 100000 {
+        yield [false, initial_state, 0, "RPR-PYT-0022: expected replay trace is invalid"]
+    }
+    when not valid_integer(expected_checksum, 0, 2147483646) {
+        yield [false, initial_state, 0, "RPR-PYT-0023: expected replay checksum is invalid"]
+    }
+    make replayed := run_load_test(initial_state, steps, repair_cost, period_cycles)
+    when not replayed[0] {
+        yield [false, initial_state, 0, replayed[4]]
+    }
+    when replayed[3] != expected_checksum {
+        yield [false, initial_state, 0, "RPR-PYT-0024: replay checksum differs from original"]
+    }
+    when replayed[2] != expected_records {
+        yield [false, initial_state, 0, "RPR-PYT-0025: replay trace differs from original"]
+    }
+    yield [true, replayed[1], replayed[3], ""]
+}
+
 export craft pytyliki_report(state, records, checksum) {
     when not state_valid(state) or kind(records) != "list" or
          not valid_integer(checksum, 0, 2147483646) {
