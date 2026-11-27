@@ -96,6 +96,9 @@ Each Markdown page is linked here and from its topic hub, giving readers more th
 
 ### Quality, validation and evidence
 
+- [PSYCHOPORTER 666](PSYCHOPORTER_666.md) — normative Reaper code-style doctrine and review principles.
+- [CONSTITUTION 666 PROFILE](CONSTITUTION_666_PROFILE.md) — adoption status and evidence requirements for the numbered doctrine.
+
 - [CHINESE PROVERBS 100 ENGINEERING CROSSWALK](CHINESE_PROVERBS_100_ENGINEERING_CROSSWALK.md)
 - [DOCUMENTATION CONTROL](DOCUMENTATION_CONTROL.md)
 - [ENGINEERING EVOLUTION FRAMEWORK](ENGINEERING_EVOLUTION_FRAMEWORK.md)

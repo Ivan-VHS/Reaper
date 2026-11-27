@@ -8,6 +8,9 @@ This hub groups related specifications and implementation references. The linked
 
 ## Documents
 
+- [PSYCHOPORTER 666](../PSYCHOPORTER_666.md) — normative style doctrine and 666 review principles.
+- [CONSTITUTION 666 PROFILE](../CONSTITUTION_666_PROFILE.md) — rule ranges, maturity states and CI evidence.
+
 - [CHINESE PROVERBS 100 ENGINEERING CROSSWALK](../CHINESE_PROVERBS_100_ENGINEERING_CROSSWALK.md)
 - [DOCUMENTATION CONTROL](../DOCUMENTATION_CONTROL.md)
 - [ENGINEERING EVOLUTION FRAMEWORK](../ENGINEERING_EVOLUTION_FRAMEWORK.md)

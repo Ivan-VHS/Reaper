@@ -15,6 +15,8 @@ The short rule is:
 
 > Think broadly. Change narrowly. Verify completely.
 
+For Reaper-specific language rules and the 666-item authorial doctrine, use the [Psychoporter 666 constitution](PSYCHOPORTER_666.md). This cross-repository style guide remains the practical baseline; the Reaper constitution refines it for .rpr, compiler, runtime and host boundaries. If a general style preference conflicts with the actual grammar, ABI, repository convention or a verified safety contract, the project-specific contract wins.
+
 ## 1. The working sequence
 
 Use four roles in order:

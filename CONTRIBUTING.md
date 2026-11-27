@@ -23,6 +23,21 @@ If native components change, also configure and run the repository's CMake test 
 
 Explain grammar and compatibility impact, resource bounds, diagnostics and test coverage. Include a short source example when syntax changes. Do not use issue-closing keywords in PR descriptions; maintainers close issues after review.
 
+## Psychoporter 666 review gate
+
+Use [Psychoporter 666](docs/PSYCHOPORTER_666.md) as Reaper's normative code-style and engineering doctrine.
+
+For each change:
+1. Select only the rules that apply to the changed language layer, target and risk.
+2. Check current grammar and feature maturity before using proposed syntax or claiming compiler support.
+3. Review naming, data contracts, source spans, resource bounds, effects/capabilities, failure paths and tests.
+4. Keep the PR focused; record justified exceptions and compatibility impact.
+5. Run python tools/validate_psychoporter.py to verify the constitution/profile structure.
+
+The validator checks document integrity only. A passing result does not certify implementation quality or replace code review, unit/integration tests, native parity checks or hardware qualification. Do not force every rule onto every module.
+
+When principles conflict, use this order: correctness and safety → public contract and compatibility → clarity → aesthetics.
+
 ## Shared report format
 
 To wrap an existing JSON result in the common report metadata contract, run python tools/report_envelope.py --tool reaper --version VERSION < result.json. Keep the tool-specific result unchanged. Tests live in tests/test_report_envelope.py.
