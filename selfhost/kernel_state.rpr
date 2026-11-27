@@ -69,7 +69,7 @@ export craft kernel_state_record_action(state, amount) {
 
 export craft kernel_state_set_active_workers(state, count) {
     when not kernel_state_valid(state) { yield ["ERR", "kernel state invariant failed"] }
-    when state[3] != "online" and state[3] != "draining" { yield ["ERR", "worker count cannot change in this lifecycle state", state[3]] }
+    when state[3] != "online" and state[3] != "draining" and state[3] != "faulted" { yield ["ERR", "worker count cannot change in this lifecycle state", state[3]] }
     when count < 0 { yield ["ERR", "active worker count cannot be negative"] }
     yield ["OK", ["reaper.kernel.state.v1", state[1], state[2], state[3], state[4], state[5], count, state[7]]]
 }
