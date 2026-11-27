@@ -9,7 +9,7 @@ This hub groups related specifications and implementation references. The linked
 ## Documents
 
 - [CONTRIBUTING](../../CONTRIBUTING.md)
-- [DUCK SOVEREIGN CANON](../DUCK_SOVEREIGN_CANON.md)
+- [DAK DESIGN CANON](../DUCK_SOVEREIGN_CANON.md)
 - [EMBEDDED C WORKBENCH](../EMBEDDED_C_WORKBENCH.md)
 - [FEATURES](../FEATURES.md)
 - [HUMAN FIRST GOVERNANCE](../HUMAN_FIRST_GOVERNANCE.md)
