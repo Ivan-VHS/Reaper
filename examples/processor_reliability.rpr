@@ -60,6 +60,12 @@ make exec_result := core["execute_bytecode"](state, exec_word[1])
 assert(exec_word[0] and exec_result[0], "generic execute opcode must dispatch")
 change state := exec_result[1]
 
+make operand_word := core["bytecode_encode"](16, "BOOT", 5, 1, 1)
+make operand_result := core["execute_bytecode"](state, operand_word[1])
+assert(operand_word[0] and operand_result[0], "operand flag must dispatch an OPERAND construct")
+assert(operand_result[2][3] == "OPERAND", "bytecode flags must preserve the operand role")
+change state := operand_result[1]
+
 make service_word := core["bytecode_encode"](18, "ROOT", 2, 0, 0)
 make service_result := core["execute_bytecode"](state, service_word[1])
 assert(service_word[0] and service_result[0], "service invoke opcode must dispatch")
@@ -125,9 +131,15 @@ assert(production_spend[1][16] == "safe-degraded", "low budget must enter safe d
 assert(not production_spend[1][7], "production mode must never enable fault injection")
 make blocked_start := core["run_construct"](production_spend[1], ["START", "COMMAND", 2, "BLOCKED_STREAM", 1, 1024])
 assert(not blocked_start[0], "safe-degraded production state must block new streams")
-make recovery_denied := core["repair_recover"](production_spend[1], 0, 40, false)
-assert(not recovery_denied[0], "recovery without ROOT authorization must be denied")
-make recovery := core["repair_recover"](production_spend[1], 0, 40, true)
+make recovery_denied := core["repair_recover"](production_spend[1], 0, 40, [])
+assert(not recovery_denied[0], "recovery without a ROOT capability must be denied")
+make recovery_capability := core["root_capability_descriptor"](
+    "repair.recover",
+    production_spend[1][14],
+    40,
+    "production"
+)
+make recovery := core["repair_recover"](production_spend[1], 0, 40, recovery_capability)
 assert(recovery[0] and recovery[1][4] == 41 and recovery[1][16] == "ready", "ROOT-authorized local reserve must restore service")
 assert(recovery[1][17][0] == 40, "recovery must debit the supplying local reserve")
 make recovered_start := core["run_construct"](recovery[1], ["START", "COMMAND", 3, "RECOVERED_STREAM", 1, 1024])
