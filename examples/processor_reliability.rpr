@@ -134,6 +134,89 @@ change state := ras_bc_result[1]
 make invalid_ras_bc := core["bytecode_encode"](65, "BOOT", 1, 4, 1)
 assert(not invalid_ras_bc[0], "unknown RAS opcode/domain combinations must be rejected")
 
+
+# Processor control plane: executable policy, startup handshakes and adapter admission.
+make subsystems := core["processor_subsystem_matrix"]()
+assert(size(subsystems) == 9, "all requested processor/RAS subsystems have a Reaper contract")
+assert(core["processor_subsystem_entry"]("ap-smp")[2] == "reaper-policy-implemented", "AP/SMP policy is implemented in Reaper")
+assert(core["processor_subsystem_entry"]("physical-material-repair")[2] == "not-software-solvable", "physical repair is not misrepresented")
+
+make ap_ready := ["reaper.ap-start.v1", "boot-1", 1, 2, "ready-to-start", true, true, true, true, true, true, 7]
+make ap_transition := core["ap_startup_transition"](ap_ready, "startup-sent")
+assert(ap_transition[0] and ap_transition[1][4] == "startup-sent", "AP state machine permits prepared INIT/SIPI handoff")
+assert(core["ap_startup_readiness"](ap_ready, true, 7) == "ready-for-kernel-init-sipi", "AP admission requires all per-CPU startup resources")
+assert(core["ap_startup_readiness"](ap_ready, false, 7) == "reject-bsp-not-online", "AP startup is blocked until BSP is online")
+assert(core["ap_startup_readiness"](ap_ready, true, 8) == "reject-stale-topology-generation", "stale topology generation is rejected")
+make ap_control_adapter := ["reaper.processor-adapter.v1", "duckos-ap-start", "ap-smp", "duckos", "assembly", "dabi64-v1", "kernel-control", true, ["ap-start"]]
+assert(core["ap_startup_admission"](ap_ready, true, 7, ap_control_adapter) == "admit-request-to-native-adapter", "AP startup request is admitted only through a privileged native adapter")
+make smp_topology := ["reaper.processor-control.v1", "boot-1", 7, 0, [1, 2], [0], 8]
+make ap_online := ["reaper.ap-start.v1", "boot-1", 1, 2, "online", true, true, true, true, true, true, 7]
+make smp_admit := core["ap_smp_admit_cpu"](smp_topology, ap_online)
+assert(smp_admit[0] and contains(smp_admit[1][5], 1), "verified AP handshake updates the logical SMP topology")
+
+make apic_route := ["reaper.apic-route.v1", 0, 1, 64, "reschedule", "edge", false, 7]
+make ipi_adapter := ["reaper.processor-adapter.v1", "duckos-apic", "apic-ipi-timer", "duckos", "assembly", "x86-apic-v1", "kernel-control", true, ["ipi-send", "timer-arm"]]
+assert(core["apic_ipi_decision"](apic_route, true, true, 7, ipi_adapter) == "admit-request-to-native-adapter", "IPI route is capability-gated")
+assert(core["apic_ipi_decision"](apic_route, true, false, 7, ipi_adapter) == "reject-offline-ipi-endpoint", "IPI cannot target offline CPU")
+make timer := ["reaper.timer-profile.v1", "tsc-deadline", 2400000000, 1000, true, "oneshot", "lapic-0"]
+assert(core["timer_preemption_decision"](timer, 1000, 1000, true, false) == "request-reschedule-through-kernel-ipi-adapter", "expired quantum requests preemption")
+assert(core["timer_preemption_decision"](timer, 1000, 1000, false, false) == "defer-tick-until-interrupts-enabled", "preemption defers while interrupts are disabled")
+assert(core["timer_preemption_admission"](timer, 1000, 1000, true, false, ipi_adapter) == "admit-request-to-native-adapter", "timer request needs kernel control adapter")
+
+make mca_adapter := ["reaper.processor-adapter.v1", "duckos-mca-msr", "mca-msr", "duckos", "assembly", "x86-msr-read-v1", "kernel-read", true, ["msr-read"]]
+assert(core["mca_msr_read_admission"](377, true, mca_adapter) == "admit-allowlisted-msr-read", "IA32_MCG_CAP is an allowlisted read")
+assert(core["mca_msr_read_admission"](16, true, mca_adapter) == "reject-msr-not-allowlisted", "arbitrary MSR reads are rejected")
+assert(core["mca_msr_read_admission"](377, false, mca_adapter) == "reject-mca-not-advertised", "MCA reads require CPUID capability")
+make mca_event := ["reaper.mca-event.v1", "mca-1", "boot-1", 0, true, true, false, true, "memory-controller-0", 5000, "msr-adapter-1", "confirmed"]
+assert(core["mca_handler_decision"](mca_event, true) == "request-page-recovery-through-memory-manager", "confirmed uncorrected address evidence may request page recovery")
+make mca_corrupt := ["reaper.mca-event.v1", "mca-2", "boot-1", 0, true, true, true, false, "cpu-0", 6000, "msr-adapter-1", "confirmed"]
+assert(core["mca_handler_decision"](mca_corrupt, true) == "safe-stop-context-corrupt-defer-to-kernel-fatal-path", "corrupt processor context is not handled in user policy")
+
+make poisoned_page := ["reaper.page-recovery.v1", "page-17", 65536, "poisoned", false, true, 0, "page-18", true, 7, 9000]
+assert(core["page_recovery_decision"](poisoned_page, mca_event, true) == "admit-transactional-page-quarantine-and-replacement", "verified page replacement can be admitted transactionally")
+assert(core["page_recovery_decision"](["reaper.page-recovery.v1", "page-17", 65536, "poisoned", true, true, 0, "page-18", true, 7, 9000], mca_event, true) == "defer-pinned-or-referenced-page", "pinned pages cannot be offlined")
+make memory_adapter := ["reaper.processor-adapter.v1", "duckos-memory-manager", "page-recovery", "duckos", "c", "duckos-memory-recovery-v1", "kernel-control", true, ["page-quarantine", "page-replace"]]
+assert(core["page_recovery_admission"](poisoned_page, mca_event, true, memory_adapter) == "admit-request-to-native-adapter", "page replacement is owned by the kernel memory manager")
+
+make linux_provider := core["linux_edac_provider_descriptor"]()
+make apple_provider := core["apple_swift_ras_adapter_descriptor"]()
+make rust_adapter := core["rust_native_ras_adapter_descriptor"]()
+make ts_adapter := core["typescript_diagnostics_adapter_descriptor"]()
+assert(core["processor_adapter_valid"](linux_provider) and linux_provider[7] == false, "Linux EDAC provider contract exists but is not falsely marked attached")
+assert(core["processor_adapter_valid"](apple_provider) and apple_provider[4] == "swift", "Apple adapter has a Swift ABI contract")
+assert(core["processor_adapter_valid"](rust_adapter) and rust_adapter[4] == "rust", "Rust native adapter has a DABI64 contract")
+assert(core["processor_adapter_valid"](ts_adapter) and ts_adapter[4] == "typescript", "TypeScript diagnostics has a read-only interface contract")
+make ts_packet := ["reaper.ras-diagnostic.v1", "boot-1", "mca-1", "mca-msr", "error", "confirmed", 5000, "uncorrected memory event", "record-1"]
+make ts_export := core["typescript_diagnostic_export"](ts_packet, ts_adapter)
+assert(ts_export[0] and ts_export[2] == "read-only-export-request", "TypeScript receives a validated read-only diagnostics packet")
+make bad_ts_adapter := ["reaper.processor-adapter.v1", "ts-write", "processor-control", "any", "typescript", "json-rpc-ras-v1", "user-control", true, ["diagnostic-export", "ipi-send"]]
+assert(not core["typescript_diagnostic_export"](ts_packet, bad_ts_adapter)[0], "diagnostics interface cannot acquire hardware-control authority")
+
+make physical_assessment := core["physical_repair_assessment"]("copper", "electromigration", false)
+assert(physical_assessment[0] and physical_assessment[1] == "not-software-repairable", "physical copper damage requires qualified lab inspection or replacement")
+
+# Processor-control bytecode uses verified domain/role dispatch and returns plans, never hardware effects.
+make ap_bc := core["bytecode_encode"](66, "BOOT", 1, 2, 63)
+make ap_bc_exec := core["execute_bytecode"](state, ap_bc[1])
+assert(ap_bc[0] and ap_bc_exec[0] and ap_bc_exec[2][1][1] == "admit-ap-startup-to-kernel-adapter", "AP startup bytecode dispatches to the kernel adapter contract")
+change state := ap_bc_exec[1]
+make ipi_bc := core["bytecode_encode"](67, "START", 0, 1, 64)
+make ipi_bc_exec := core["execute_bytecode"](state, ipi_bc[1])
+assert(ipi_bc[0] and ipi_bc_exec[0] and ipi_bc_exec[2][1][1] == "admit-ipi-route-to-kernel-adapter", "IPI bytecode produces a bounded delivery plan")
+change state := ipi_bc_exec[1]
+make timer_bc := core["bytecode_encode"](68, "START", 1000, 1000, 1)
+make timer_bc_exec := core["execute_bytecode"](state, timer_bc[1])
+assert(timer_bc[0] and timer_bc_exec[0] and timer_bc_exec[2][1][1] == "request-reschedule-through-kernel-timer-adapter", "timer bytecode generates a bounded preemption request")
+change state := timer_bc_exec[1]
+make mca_bc := core["bytecode_encode"](69, "RULE", 0, 0, 5)
+make mca_bc_exec := core["execute_bytecode"](state, mca_bc[1])
+assert(mca_bc[0] and mca_bc_exec[0] and mca_bc_exec[2][1][1] == "request-kernel-machine-check-recovery-policy", "MCA bytecode returns a bounded kernel recovery decision")
+change state := mca_bc_exec[1]
+make page_bc := core["bytecode_encode"](70, "ROOT", 1, 18, 7)
+make page_bc_exec := core["execute_bytecode"](state, page_bc[1])
+assert(page_bc[0] and page_bc_exec[0] and page_bc_exec[2][1][1] == "admit-page-recovery-to-memory-manager", "page recovery bytecode reaches only the memory-manager boundary")
+change state := page_bc_exec[1]
+
 # Register, barrier and stream surfaces are explicit simulated descriptors.
 make registers := core["hardware_register_snapshot"](state)
 assert(registers[0] and size(registers[1]) == 10, "simulated register bank must expose ten registers")
