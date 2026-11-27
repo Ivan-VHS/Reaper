@@ -38,7 +38,6 @@ The state record is versioned and has the following slots:
 | 17 | Local repair-cell reserves |
 | 18 | Injected test-fault count |
 | 19 | Simulated barrier/fence counter |
-| 19 | Simulated barrier/fence counter |
 
 Do not mutate state records outside the module. Every transition returns a replacement record; `state_valid` checks the full shape and bounds.
 
