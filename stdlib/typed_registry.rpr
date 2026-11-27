@@ -1,0 +1,544 @@
+# Reaper Typed Registry v1.
+# Descriptors are ordinary Reaper values; validation and layout are implemented in .rpr.
+# Slot contracts are stable and documented in docs/TYPED_REGISTRY.md.
+
+export make CAPABILITIES := ["io", "mmio.read", "mmio.write", "irq", "dma", "clock", "process", "network", "unsafe"]
+export make EFFECTS := ["pure", "io", "mmio.read", "mmio.write", "irq", "dma", "clock", "process", "network", "unsafe"]
+
+export craft scalar(name, bits, signed, alignment) {
+    yield [name, "scalar", bits, signed, alignment]
+}
+
+export craft pointer(name, target_type, address_space, mutable) {
+    yield [name, "pointer", target_type, address_space, mutable]
+}
+
+export craft array(name, element_type, count) {
+    yield [name, "array", element_type, count]
+}
+
+export craft field(name, type_name, offset, access, capabilities) {
+    # offset = -1 requests ABI-computed placement.
+    yield [name, type_name, offset, access, capabilities]
+}
+
+export craft struct(name, fields, representation, packing, explicit_alignment) {
+    yield [name, "struct", fields, representation, packing, explicit_alignment]
+}
+
+export craft enumeration(name, underlying_type, variants) {
+    yield [name, "enum", underlying_type, variants]
+}
+
+export craft platform(name, triple, architecture, operating_system, abi, pointer_bits, endian, calling_convention, memory_model, features, declared_capabilities) {
+    yield [name, triple, architecture, operating_system, abi, pointer_bits, endian, calling_convention, memory_model, features, declared_capabilities]
+}
+
+export craft binding(name, platform_name, kind_name, input_type, output_type, effects, requested_capabilities) {
+    yield [name, platform_name, kind_name, input_type, output_type, effects, requested_capabilities]
+}
+
+export craft registry(name, version, platforms, types, bindings) {
+    yield [name, version, platforms, types, bindings]
+}
+
+craft find_type(types, wanted) {
+    each item in types {
+        when item[0] == wanted {
+            yield item
+        }
+    }
+    yield nothing
+}
+
+craft find_platform(platforms, wanted) {
+    each item in platforms {
+        when item[0] == wanted {
+            yield item
+        }
+    }
+    yield nothing
+}
+
+craft duplicate_name(items) {
+    vary seen := []
+    each item in items {
+        when contains(seen, item[0]) {
+            yield item[0]
+        }
+        change seen := push(seen, item[0])
+    }
+    yield ""
+}
+
+craft duplicate_value(items) {
+    vary seen := []
+    each item in items {
+        when contains(seen, item) {
+            yield item
+        }
+        change seen := push(seen, item)
+    }
+    yield ""
+}
+
+craft align_up(value, alignment) {
+    yield ((value + alignment - 1) // alignment) * alignment
+}
+
+craft diagnostic(code, subject, message) {
+    yield [code, subject, message]
+}
+
+craft validate_platform(target) {
+    when size(target) != 11 {
+        yield "RPR-REG-PLAT-0001: platform descriptor must contain 11 slots"
+    }
+    when kind(target[0]) != "text" or size(target[0]) == 0 {
+        yield "RPR-REG-PLAT-0002: platform name must be non-empty Text"
+    }
+    when kind(target[1]) != "text" or size(target[1]) == 0 {
+        yield "RPR-REG-PLAT-0003: target triple must be non-empty Text"
+    }
+    when not contains(["x86_64", "aarch64", "riscv64", "wasm32"], target[2]) {
+        yield "RPR-REG-PLAT-0004: unsupported architecture " ++ text(target[2])
+    }
+    when not contains(["dak", "linux", "windows", "macos", "baremetal", "wasm"], target[3]) {
+        yield "RPR-REG-PLAT-0005: unsupported operating system " ++ text(target[3])
+    }
+    when not contains(["DABI64", "SYSV64", "WIN64", "AAPCS64", "RISCV64", "WASM32", "C"], target[4]) {
+        yield "RPR-REG-PLAT-0006: unsupported ABI " ++ text(target[4])
+    }
+    when kind(target[5]) != "number" or not contains([32, 64], target[5]) {
+        yield "RPR-REG-PLAT-0007: pointer width must be 32 or 64 bits"
+    }
+    when not contains(["little", "big"], target[6]) {
+        yield "RPR-REG-PLAT-0008: endian must be little or big"
+    }
+    when not contains(["dabi64", "sysv64", "win64", "aapcs64", "riscv64", "wasm32", "cdecl"], target[7]) {
+        yield "RPR-REG-PLAT-0009: unsupported calling convention " ++ text(target[7])
+    }
+    when not contains(["hosted", "freestanding", "kernel", "embedded", "wasm"], target[8]) {
+        yield "RPR-REG-PLAT-0010: unsupported memory model " ++ text(target[8])
+    }
+    when kind(target[9]) != "list" or kind(target[10]) != "list" {
+        yield "RPR-REG-PLAT-0011: features and capabilities must be lists"
+    }
+    when duplicate_value(target[9]) != "" {
+        yield "RPR-REG-PLAT-0012: duplicate platform feature " ++ text(duplicate_value(target[9]))
+    }
+    when duplicate_value(target[10]) != "" {
+        yield "RPR-REG-PLAT-0013: duplicate platform capability " ++ text(duplicate_value(target[10]))
+    }
+    each capability in target[10] {
+        when not contains(CAPABILITIES, capability) {
+            yield "RPR-REG-PLAT-0014: unknown capability " ++ text(capability)
+        }
+    }
+    when target[2] == "x86_64" and target[5] != 64 {
+        yield "RPR-REG-PLAT-0015: x86_64 requires a 64-bit pointer model"
+    }
+    when target[2] == "aarch64" and target[5] != 64 {
+        yield "RPR-REG-PLAT-0016: aarch64 requires a 64-bit pointer model"
+    }
+    when target[2] == "riscv64" and target[5] != 64 {
+        yield "RPR-REG-PLAT-0017: riscv64 requires a 64-bit pointer model"
+    }
+    when target[2] == "wasm32" and target[5] != 32 {
+        yield "RPR-REG-PLAT-0018: wasm32 requires a 32-bit pointer model"
+    }
+    when target[4] == "DABI64" and (target[3] != "dak" or target[5] != 64 or target[7] != "dabi64") {
+        yield "RPR-REG-PLAT-0019: DABI64 requires DAK, 64-bit pointers and dabi64 calling convention"
+    }
+    when target[4] == "WIN64" and (target[3] != "windows" or target[2] != "x86_64" or target[7] != "win64") {
+        yield "RPR-REG-PLAT-0020: WIN64 requires Windows x86_64 and win64 calling convention"
+    }
+    when target[4] == "SYSV64" and (target[2] != "x86_64" or target[7] != "sysv64") {
+        yield "RPR-REG-PLAT-0021: SYSV64 requires x86_64 and sysv64 calling convention"
+    }
+    when target[4] == "AAPCS64" and (target[2] != "aarch64" or target[7] != "aapcs64") {
+        yield "RPR-REG-PLAT-0022: AAPCS64 requires aarch64 and aapcs64 calling convention"
+    }
+    when target[4] == "RISCV64" and (target[2] != "riscv64" or target[7] != "riscv64") {
+        yield "RPR-REG-PLAT-0023: RISCV64 requires riscv64 calling convention"
+    }
+    when target[4] == "WASM32" and (target[2] != "wasm32" or target[7] != "wasm32") {
+        yield "RPR-REG-PLAT-0024: WASM32 requires wasm32 target and calling convention"
+    }
+    yield ""
+}
+
+craft layout_of(types, target, type_name, stack) {
+    make spec := find_type(types, type_name)
+    when spec == nothing {
+        yield [false, 0, 1, "RPR-REG-TYPE-0001", "unknown type " ++ text(type_name)]
+    }
+    when contains(stack, type_name) {
+        yield [false, 0, 1, "RPR-REG-TYPE-0002", "by-value type cycle reaches " ++ text(type_name)]
+    }
+    make next_stack := push(stack, type_name)
+
+    when size(spec) < 3 {
+        yield [false, 0, 1, "RPR-REG-TYPE-0003", "malformed type descriptor " ++ text(type_name)]
+    }
+
+    when spec[1] == "scalar" {
+        when size(spec) != 5 {
+            yield [false, 0, 1, "RPR-REG-SCALAR-0001", "scalar descriptor must contain 5 slots"]
+        }
+        when not contains([8, 16, 32, 64, 128], spec[2]) {
+            yield [false, 0, 1, "RPR-REG-SCALAR-0002", "scalar width must be 8, 16, 32, 64 or 128 bits"]
+        }
+        when kind(spec[3]) != "boolean" {
+            yield [false, 0, 1, "RPR-REG-SCALAR-0003", "scalar signedness must be Bool"]
+        }
+        when not contains([1, 2, 4, 8, 16], spec[4]) or spec[4] > (spec[2] // 8) {
+            yield [false, 0, 1, "RPR-REG-SCALAR-0004", "scalar alignment is invalid for its width"]
+        }
+        yield [true, spec[2] // 8, spec[4], "", ""]
+    }
+
+    when spec[1] == "pointer" {
+        when size(spec) != 5 {
+            yield [false, 0, 1, "RPR-REG-POINTER-0001", "pointer descriptor must contain 5 slots"]
+        }
+        when find_type(types, spec[2]) == nothing {
+            yield [false, 0, 1, "RPR-REG-POINTER-0002", "pointer target type does not exist: " ++ text(spec[2])]
+        }
+        when not contains(["generic", "stack", "heap", "static", "mmio", "io"], spec[3]) {
+            yield [false, 0, 1, "RPR-REG-POINTER-0003", "unknown pointer address space " ++ text(spec[3])]
+        }
+        when kind(spec[4]) != "boolean" {
+            yield [false, 0, 1, "RPR-REG-POINTER-0004", "pointer mutability must be Bool"]
+        }
+        make pointer_bytes := target[5] // 8
+        yield [true, pointer_bytes, pointer_bytes, "", ""]
+    }
+
+    when spec[1] == "array" {
+        when size(spec) != 4 {
+            yield [false, 0, 1, "RPR-REG-ARRAY-0001", "array descriptor must contain 4 slots"]
+        }
+        when kind(spec[3]) != "number" or spec[3] % 1 != 0 or spec[3] < 1 or spec[3] > 1048576 {
+            yield [false, 0, 1, "RPR-REG-ARRAY-0002", "array length must be in 1..1048576"]
+        }
+        make element := layout_of(types, target, spec[2], next_stack)
+        when not element[0] {
+            yield element
+        }
+        yield [true, element[1] * spec[3], element[2], "", ""]
+    }
+
+    when spec[1] == "struct" {
+        when size(spec) != 6 {
+            yield [false, 0, 1, "RPR-REG-STRUCT-0001", "struct descriptor must contain 6 slots"]
+        }
+        yield layout_struct(types, target, spec, next_stack)
+    }
+
+    when spec[1] == "enum" {
+        when size(spec) != 4 {
+            yield [false, 0, 1, "RPR-REG-ENUM-0001", "enum descriptor must contain 4 slots"]
+        }
+        make underlying := find_type(types, spec[2])
+        when underlying == nothing or underlying[1] != "scalar" {
+            yield [false, 0, 1, "RPR-REG-ENUM-0002", "enum underlying type must name a scalar type"]
+        }
+        yield layout_of(types, target, spec[2], next_stack)
+    }
+
+    yield [false, 0, 1, "RPR-REG-TYPE-0004", "unsupported type kind " ++ text(spec[1])]
+}
+
+craft layout_struct(types, target, spec, stack) {
+    make fields := spec[2]
+    make representation := spec[3]
+    make packing := spec[4]
+    make explicit_alignment := spec[5]
+    when kind(fields) != "list" or size(fields) == 0 {
+        yield [false, 0, 1, "RPR-REG-STRUCT-0002", "struct must contain at least one field"]
+    }
+    when not contains(["native", "c", "packed"], representation) {
+        yield [false, 0, 1, "RPR-REG-STRUCT-0003", "struct representation must be native, c or packed"]
+    }
+    when not contains([0, 1, 2, 4, 8, 16], packing) {
+        yield [false, 0, 1, "RPR-REG-STRUCT-0004", "packing must be 0, 1, 2, 4, 8 or 16"]
+    }
+    when not contains([0, 1, 2, 4, 8, 16], explicit_alignment) {
+        yield [false, 0, 1, "RPR-REG-STRUCT-0005", "explicit alignment must be 0, 1, 2, 4, 8 or 16"]
+    }
+    make effective_packing := packing
+    when representation == "packed" {
+        change effective_packing := 1
+    }
+
+    vary cursor := 0
+    vary maximum_alignment := 1
+    vary placements := []
+    vary names := []
+    each item in fields {
+        when kind(item) != "list" or size(item) != 5 {
+            yield [false, 0, 1, "RPR-REG-FIELD-0001", "field descriptor must be a 5-slot list"]
+        }
+        when kind(item[0]) != "text" or size(item[0]) == 0 {
+            yield [false, 0, 1, "RPR-REG-FIELD-0008", "field name must be non-empty Text"]
+        }
+        when contains(names, item[0]) {
+            yield [false, 0, 1, "RPR-REG-FIELD-0002", "duplicate field " ++ text(item[0])]
+        }
+        change names := push(names, item[0])
+        when not contains(["read_only", "write_only", "read_write", "w1c", "w1s"], item[3]) {
+            yield [false, 0, 1, "RPR-REG-FIELD-0003", "unknown access policy on field " ++ text(item[0])]
+        }
+        when kind(item[4]) != "list" {
+            yield [false, 0, 1, "RPR-REG-FIELD-0004", "field capabilities must be a list"]
+        }
+        when duplicate_value(item[4]) != "" {
+            yield [false, 0, 1, "RPR-REG-FIELD-0009", "field capabilities must be unique"]
+        }
+        each capability in item[4] {
+            when not contains(CAPABILITIES, capability) {
+                yield [false, 0, 1, "RPR-REG-FIELD-0005", "unknown field capability " ++ text(capability)]
+            }
+        }
+        make field_layout := layout_of(types, target, item[1], stack)
+        when not field_layout[0] {
+            yield field_layout
+        }
+        make field_alignment := field_layout[2]
+        when effective_packing > 0 and field_alignment > effective_packing {
+            change field_alignment := effective_packing
+        }
+        make expected_offset := align_up(cursor, field_alignment)
+        make actual_offset := expected_offset
+        when kind(item[2]) != "number" or item[2] % 1 != 0 or item[2] < -1 {
+            yield [false, 0, 1, "RPR-REG-FIELD-0006", "field offset must be -1 (auto) or a non-negative Int"]
+        }
+        when item[2] >= 0 {
+            change actual_offset := item[2]
+        }
+        when actual_offset < cursor or actual_offset % field_alignment != 0 {
+            yield [false, 0, 1, "RPR-REG-FIELD-0007", "field " ++ text(item[0]) ++ " overlaps or violates natural alignment"]
+        }
+        change cursor := actual_offset + field_layout[1]
+        when field_alignment > maximum_alignment {
+            change maximum_alignment := field_alignment
+        }
+        change placements := push(placements, [item[0], actual_offset, field_layout[1], field_alignment])
+    }
+
+    when explicit_alignment > 0 and explicit_alignment < maximum_alignment {
+        yield [false, 0, 1, "RPR-REG-STRUCT-0006", "explicit alignment is weaker than a field alignment"]
+    }
+    when explicit_alignment > 0 {
+        change maximum_alignment := explicit_alignment
+    }
+    yield [true, align_up(cursor, maximum_alignment), maximum_alignment, placements, "", ""]
+}
+
+craft validate_enum(types, spec) {
+    when size(spec) != 4 {
+        yield "RPR-REG-ENUM-0001: enum descriptor must contain 4 slots"
+    }
+    make underlying := find_type(types, spec[2])
+    when underlying == nothing or underlying[1] != "scalar" {
+        yield "RPR-REG-ENUM-0002: enum underlying type must be scalar"
+    }
+    when kind(spec[3]) != "list" or size(spec[3]) == 0 {
+        yield "RPR-REG-ENUM-0003: enum must contain at least one variant"
+    }
+    when not contains([8, 16, 32, 64, 128], underlying[2]) {
+        yield "RPR-REG-ENUM-0007: enum underlying scalar width is invalid"
+    }
+    when kind(underlying[3]) != "boolean" {
+        yield "RPR-REG-ENUM-0009: enum underlying signedness must be Bool"
+    }
+    make bits := underlying[2]
+    make signed := underlying[3]
+    vary minimum := 0
+    vary maximum := (2 ** bits) - 1
+    when signed {
+        change minimum := 0 - (2 ** (bits - 1))
+        change maximum := (2 ** (bits - 1)) - 1
+    }
+    vary names := []
+    vary values := []
+    each item in spec[3] {
+        when kind(item) != "list" or size(item) != 2 {
+            yield "RPR-REG-ENUM-0004: each variant must be a [name, integer] list"
+        }
+        when contains(names, item[0]) or contains(values, item[1]) {
+            yield "RPR-REG-ENUM-0005: enum variant names and values must be unique"
+        }
+        when kind(item[1]) != "number" or item[1] % 1 != 0 or item[1] < minimum or item[1] > maximum {
+            yield "RPR-REG-ENUM-0006: enum value is outside its underlying integer range"
+        }
+        change names := push(names, item[0])
+        change values := push(values, item[1])
+    }
+    yield ""
+}
+
+craft validate_binding(item, platforms, types) {
+    when size(item) != 7 {
+        yield "RPR-REG-BIND-0001: binding descriptor must contain 7 slots"
+    }
+    when not contains(["function", "register", "service", "interrupt"], item[2]) {
+        yield "RPR-REG-BIND-0002: binding kind is invalid"
+    }
+    make target := find_platform(platforms, item[1])
+    when target == nothing {
+        yield "RPR-REG-BIND-0003: binding references unknown platform " ++ text(item[1])
+    }
+    when item[3] != "" and find_type(types, item[3]) == nothing {
+        yield "RPR-REG-BIND-0004: binding input type does not exist: " ++ text(item[3])
+    }
+    when item[4] != "" and find_type(types, item[4]) == nothing {
+        yield "RPR-REG-BIND-0005: binding output type does not exist: " ++ text(item[4])
+    }
+    when kind(item[5]) != "list" or size(item[5]) == 0 {
+        yield "RPR-REG-BIND-0006: binding must declare at least one effect"
+    }
+    when kind(item[6]) != "list" {
+        yield "RPR-REG-BIND-0014: requested capabilities must be a list"
+    }
+    when duplicate_value(item[5]) != "" or duplicate_value(item[6]) != "" {
+        yield "RPR-REG-BIND-0007: binding effects and capabilities must be unique"
+    }
+    when contains(item[5], "pure") and size(item[5]) != 1 {
+        yield "RPR-REG-BIND-0008: pure cannot be combined with impure effects"
+    }
+    each effect in item[5] {
+        when not contains(EFFECTS, effect) {
+            yield "RPR-REG-BIND-0009: unknown effect " ++ text(effect)
+        }
+    }
+    each capability in item[6] {
+        when not contains(CAPABILITIES, capability) {
+            yield "RPR-REG-BIND-0010: unknown capability " ++ text(capability)
+        }
+        when not contains(target[10], capability) {
+            yield "RPR-REG-BIND-0011: platform does not declare requested capability " ++ text(capability)
+        }
+        when not contains(item[5], capability) {
+            yield "RPR-REG-BIND-0012: requested capability must have a matching declared effect " ++ text(capability)
+        }
+    }
+    when item[2] == "register" and not (contains(item[5], "mmio.read") or contains(item[5], "mmio.write")) {
+        yield "RPR-REG-BIND-0013: register binding requires an MMIO read or write effect"
+    }
+    yield ""
+}
+
+export craft find_layout(layouts, platform_name, type_name) {
+    each item in layouts {
+        when item[0] == platform_name and item[1] == type_name {
+            yield item
+        }
+    }
+    yield nothing
+}
+
+export craft has_diagnostic(report, code) {
+    each item in report[1] {
+        when item[0] == code {
+            yield true
+        }
+    }
+    yield false
+}
+
+export craft validate(value) {
+    when kind(value) != "list" or size(value) != 5 {
+        yield [false, [diagnostic("RPR-REG-0001", "registry", "registry descriptor must contain 5 slots")], []]
+    }
+    when kind(value[0]) != "text" or size(value[0]) == 0 {
+        yield [false, [diagnostic("RPR-REG-0008", "registry", "registry name must be non-empty Text")], []]
+    }
+    when kind(value[1]) != "text" or size(value[1]) == 0 {
+        yield [false, [diagnostic("RPR-REG-0009", value[0], "registry version must be non-empty Text")], []]
+    }
+    make platforms := value[2]
+    make types := value[3]
+    make bindings := value[4]
+    when kind(platforms) != "list" or size(platforms) == 0 {
+        yield [false, [diagnostic("RPR-REG-0002", value[0], "registry must declare at least one platform")], []]
+    }
+    when kind(types) != "list" or size(types) == 0 {
+        yield [false, [diagnostic("RPR-REG-0003", value[0], "registry must declare at least one type")], []]
+    }
+    when kind(bindings) != "list" {
+        yield [false, [diagnostic("RPR-REG-0004", value[0], "bindings must be a list")], []]
+    }
+    vary diagnostics := []
+    vary layouts := []
+
+    each target in platforms {
+        when kind(target) != "list" or size(target) != 11 {
+            yield [false, [diagnostic("RPR-REG-0010", "platform", "every platform must use the 11-slot platform() descriptor")], []]
+        }
+    }
+    each item in types {
+        when kind(item) != "list" or size(item) < 2 {
+            yield [false, [diagnostic("RPR-REG-0011", "type", "every type must use a typed_registry descriptor")], []]
+        }
+    }
+    each item in bindings {
+        when kind(item) != "list" or size(item) != 7 {
+            yield [false, [diagnostic("RPR-REG-0012", "binding", "every binding must use the 7-slot binding() descriptor")], []]
+        }
+    }
+
+    make duplicate_platform := duplicate_name(platforms)
+    when duplicate_platform != "" {
+        change diagnostics := push(diagnostics, diagnostic("RPR-REG-0005", duplicate_platform, "duplicate platform name"))
+    }
+    make duplicate_type := duplicate_name(types)
+    when duplicate_type != "" {
+        change diagnostics := push(diagnostics, diagnostic("RPR-REG-0006", duplicate_type, "duplicate type name"))
+    }
+    make duplicate_binding := duplicate_name(bindings)
+    when duplicate_binding != "" {
+        change diagnostics := push(diagnostics, diagnostic("RPR-REG-0007", duplicate_binding, "duplicate binding name"))
+    }
+
+    each item in types {
+        when size(item) < 2 {
+            change diagnostics := push(diagnostics, diagnostic("RPR-REG-TYPE-0003", "type", "malformed type descriptor"))
+        } otherwise {
+            when item[1] == "enum" {
+                make enum_error := validate_enum(types, item)
+                when enum_error != "" {
+                    change diagnostics := push(diagnostics, diagnostic("RPR-REG-ENUM-0008", item[0], enum_error))
+                }
+            }
+        }
+    }
+
+    each target in platforms {
+        make platform_error := validate_platform(target)
+        when platform_error != "" {
+            change diagnostics := push(diagnostics, diagnostic("RPR-REG-PLATFORM", target[0], platform_error))
+        } otherwise {
+            each item in types {
+                when size(item) >= 1 {
+                    make layout := layout_of(types, target, item[0], [])
+                    when layout[0] {
+                        change layouts := push(layouts, [target[0], item[0], layout[1], layout[2], layout[3]])
+                    } otherwise {
+                        change diagnostics := push(diagnostics, diagnostic(layout[3], item[0], layout[4]))
+                    }
+                }
+            }
+        }
+    }
+
+    each item in bindings {
+        make binding_error := validate_binding(item, platforms, types)
+        when binding_error != "" {
+            change diagnostics := push(diagnostics, diagnostic("RPR-REG-BINDING", item[0], binding_error))
+        }
+    }
+
+    yield [size(diagnostics) == 0, diagnostics, layouts]
+}

@@ -1,0 +1,141 @@
+# Reaper-native hardware descriptor and DMA ownership contracts.
+# These functions validate metadata only; they never map physical memory or touch
+# a bus, install a driver, raise an interrupt, or transfer a DMA buffer.
+
+craft mmio_width_bytes(width) {
+    when width == 8 { yield 1 }
+    when width == 16 { yield 2 }
+    when width == 32 { yield 4 }
+    when width == 64 { yield 8 }
+    yield 0
+}
+
+craft mmio_access_valid(access) {
+    yield access == "read_only" or access == "write_only" or access == "read_write" or access == "write_one_to_set" or access == "write_one_to_clear"
+}
+
+craft mmio_region_valid(region) {
+    when size(region) != 7 { yield false }
+    when region[0] != "mmio" or size(region[1]) == 0 { yield false }
+    when region[2] < 0 or region[3] < 1 or region[4] < 1 { yield false }
+    when region[2] % region[4] != 0 { yield false }
+    when size(region[5]) == 0 or size(region[6]) == 0 { yield false }
+
+    vary index := 0
+    loop while index < size(region[6]) {
+        make register := region[6][index]
+        when size(register) != 5 { yield false }
+        when size(register[0]) == 0 { yield false }
+        make width_bytes := mmio_width_bytes(register[2])
+        when width_bytes == 0 { yield false }
+        when not mmio_access_valid(register[3]) { yield false }
+        when register[1] < 0 or register[1] % width_bytes != 0 { yield false }
+        when register[1] + width_bytes > region[3] { yield false }
+        vary previous := 0
+        loop while previous < index {
+            when region[6][previous][0] == register[0] { yield false }
+            when region[6][previous][1] == register[1] { yield false }
+            change previous := previous + 1
+        }
+        change index := index + 1
+    }
+    yield true
+}
+
+craft mmio_register_find(region, register_name) {
+    vary index := 0
+    loop while index < size(region[6]) {
+        when region[6][index][0] == register_name { yield ["OK", index] }
+        change index := index + 1
+    }
+    yield ["ERR", "MMIO register not declared", register_name]
+}
+
+craft mmio_access_allowed(region, register_name, operation, granted_capability) {
+    when not mmio_region_valid(region) { yield ["ERR", "MMIO region descriptor is invalid"] }
+    when granted_capability != region[5] { yield ["ERR", "MMIO capability denied"] }
+    make found := mmio_register_find(region, register_name)
+    when found[0] != "OK" { yield found }
+    make access := region[6][found[1]][3]
+    when operation == "read" {
+        when access == "write_only" { yield ["ERR", "register is not readable", register_name] }
+        yield ["OK", register_name]
+    }
+    when operation == "write" {
+        when access == "read_only" { yield ["ERR", "register is not writable", register_name] }
+        yield ["OK", register_name]
+    }
+    yield ["ERR", "unknown MMIO operation", operation]
+}
+
+craft dma_buffer_make(buffer_id, byte_count, alignment, direction) {
+    when buffer_id < 1 or byte_count < 1 { yield ["ERR", "DMA identity and size must be positive"] }
+    when alignment < 1 or byte_count % alignment != 0 {
+        yield ["ERR", "DMA buffer size must satisfy alignment"]
+    }
+    when direction != "to_device" and direction != "from_device" and direction != "bidirectional" {
+        yield ["ERR", "unsupported DMA direction", direction]
+    }
+    yield ["OK", ["dma", buffer_id, byte_count, alignment, direction, "cpu_owned"]]
+}
+
+craft dma_submit(buffer) {
+    when size(buffer) != 6 or buffer[0] != "dma" { yield ["ERR", "malformed DMA buffer"] }
+    when buffer[5] != "cpu_owned" { yield ["ERR", "DMA buffer is not CPU-owned"] }
+    yield ["OK", ["dma", buffer[1], buffer[2], buffer[3], buffer[4], "device_owned"]]
+}
+
+craft dma_complete(buffer) {
+    when size(buffer) != 6 or buffer[0] != "dma" { yield ["ERR", "malformed DMA buffer"] }
+    when buffer[5] != "device_owned" { yield ["ERR", "DMA buffer was not submitted"] }
+    yield ["OK", ["dma", buffer[1], buffer[2], buffer[3], buffer[4], "completed"]]
+}
+
+craft dma_reclaim(buffer) {
+    when size(buffer) != 6 or buffer[0] != "dma" { yield ["ERR", "malformed DMA buffer"] }
+    when buffer[5] != "completed" { yield ["ERR", "DMA completion not observed"] }
+    yield ["OK", ["dma", buffer[1], buffer[2], buffer[3], buffer[4], "cpu_owned"]]
+}
+
+craft irq_handler_effects_valid(effects, step_budget) {
+    when step_budget < 1 { yield ["ERR", "IRQ step budget must be positive"] }
+    vary index := 0
+    loop while index < size(effects) {
+        when effects[index] != "atomic" and effects[index] != "mmio" and effects[index] != "signal" and effects[index] != "acknowledge" {
+            yield ["ERR", "effect is not permitted in IRQ context", effects[index]]
+        }
+        change index := index + 1
+    }
+    yield ["OK", step_budget]
+}
+
+make gpio := ["mmio", "gpio0", 402653184, 256, 4, "gpio0.control", [
+    ["mode", 0, 32, "read_write", 0],
+    ["input", 16, 32, "read_only", 0],
+    ["output", 20, 32, "write_one_to_set", 0]
+]]
+assert(mmio_region_valid(gpio), "valid MMIO descriptor rejected")
+assert(mmio_access_allowed(gpio, "input", "read", "gpio0.control")[0] == "OK", "read-only register read denied")
+assert(mmio_access_allowed(gpio, "input", "write", "gpio0.control")[0] == "ERR", "write to read-only register allowed")
+assert(mmio_access_allowed(gpio, "output", "write", "gpio0.control")[0] == "OK", "write-one-to-set denied")
+assert(mmio_access_allowed(gpio, "mode", "read", "other.capability")[0] == "ERR", "wrong MMIO capability accepted")
+assert(not mmio_region_valid(["mmio", "bad", 3, 8, 4, "bad.control", [["unaligned", 1, 32, "read_write", 0]]]), "unaligned MMIO register accepted")
+assert(not mmio_region_valid(["mmio", "bad", 0, 4, 1, "bad.control", [["outside", 4, 32, "read_write", 0]]]), "out-of-region register accepted")
+assert(not mmio_region_valid(["mmio", "bad", 0, 8, 1, "bad.control", [["x", 0, 24, "read_write", 0]]]), "unsupported register width accepted")
+
+make dma := dma_buffer_make(7, 4096, 64, "bidirectional")
+assert(dma[0] == "OK", "valid DMA descriptor rejected")
+make submitted := dma_submit(dma[1])
+assert(submitted[0] == "OK", "DMA submit transition failed")
+assert(dma_submit(submitted[1])[0] == "ERR", "double DMA submit accepted")
+assert(dma_reclaim(submitted[1])[0] == "ERR", "DMA reclaimed before completion")
+make completed := dma_complete(submitted[1])
+assert(completed[0] == "OK", "DMA completion transition failed")
+make reclaimed := dma_reclaim(completed[1])
+assert(reclaimed[0] == "OK" and reclaimed[1][5] == "cpu_owned", "DMA reclaim transition failed")
+assert(dma_buffer_make(8, 1024, 0, "to_device")[0] == "ERR", "zero alignment accepted")
+assert(dma_buffer_make(8, 1000, 64, "to_device")[0] == "ERR", "misaligned DMA size accepted")
+assert(irq_handler_effects_valid(["atomic", "mmio", "acknowledge"], 1000)[0] == "OK", "safe IRQ effects rejected")
+assert(irq_handler_effects_valid(["network"], 1000)[0] == "ERR", "blocking IRQ effect accepted")
+
+emit "SELFHOST_HARDWARE_CONTRACT_OK"

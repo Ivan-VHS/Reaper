@@ -1,0 +1,7 @@
+# PePe domain smoke checks. Expected output: four PASS lines.
+import "domain.rpr" as pepe
+
+when pepe["classify_extension"](".png") == "IMAGE" { emit "PASS pepe.image_type" } otherwise { emit "FAIL pepe.image_type" }
+when pepe["classify_extension"](".flac") == "AUDIO" { emit "PASS pepe.audio_type" } otherwise { emit "FAIL pepe.audio_type" }
+when pepe["size_band"](7340032) == "MEDIUM" { emit "PASS pepe.size_band" } otherwise { emit "FAIL pepe.size_band" }
+when pepe["asset_action"](true, false, true, true) == "INSPECT_ONLY" { emit "PASS pepe.read_only_gate" } otherwise { emit "FAIL pepe.read_only_gate" }

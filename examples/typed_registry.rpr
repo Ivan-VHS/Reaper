@@ -1,0 +1,161 @@
+# A runnable Reaper-first typed registry example.
+import "../stdlib/typed_registry.rpr" as typed
+
+make u8 := typed["scalar"]("u8", 8, false, 1)
+make u16 := typed["scalar"]("u16", 16, false, 2)
+make u32 := typed["scalar"]("u32", 32, false, 4)
+make u64 := typed["scalar"]("u64", 64, false, 8)
+make GpioWord := typed["pointer"]("GpioWord", "u32", "mmio", false)
+make ByteWindow := typed["array"]("ByteWindow", "u8", 16)
+
+make Access := typed["enumeration"]("Access", "u8", [
+    ["read_only", 0],
+    ["write_only", 1],
+    ["read_write", 2],
+    ["write_one_to_clear", 3],
+    ["write_one_to_set", 4]
+])
+
+make GpioRegisters := typed["struct"]("GpioRegisters", [
+    typed["field"]("mode", "u32", 0, "read_write", ["mmio.read", "mmio.write"]),
+    typed["field"]("input", "u32", 16, "read_only", ["mmio.read"]),
+    typed["field"]("output", "u32", 20, "write_one_to_set", ["mmio.write"])
+], "c", 0, 0)
+
+make DAK_X86_64 := typed["platform"](
+    "DAK-x86_64",
+    "x86_64-unknown-dak",
+    "x86_64",
+    "dak",
+    "DABI64",
+    64,
+    "little",
+    "dabi64",
+    "kernel",
+    ["sse2", "avx2"],
+    ["mmio.read", "mmio.write", "irq", "dma", "clock", "process"]
+)
+
+make DAK_AARCH64 := typed["platform"](
+    "DAK-aarch64",
+    "aarch64-unknown-dak",
+    "aarch64",
+    "dak",
+    "DABI64",
+    64,
+    "little",
+    "dabi64",
+    "kernel",
+    ["neon"],
+    ["mmio.read", "mmio.write", "irq", "dma", "clock", "process"]
+)
+
+make gpio_read := typed["binding"](
+    "gpio.read",
+    "DAK-x86_64",
+    "register",
+    "",
+    "u32",
+    ["mmio.read"],
+    ["mmio.read"]
+)
+
+make gpio_write := typed["binding"](
+    "gpio.write",
+    "DAK-x86_64",
+    "register",
+    "u32",
+    "",
+    ["mmio.write"],
+    ["mmio.write"]
+)
+
+make system_registry := typed["registry"](
+    "dak.system",
+    "1.0.0",
+    [DAK_X86_64, DAK_AARCH64],
+    [u8, u16, u32, u64, GpioWord, ByteWindow, Access, GpioRegisters],
+    [gpio_read, gpio_write]
+)
+
+make report := typed["validate"](system_registry)
+assert(report[0], "DAK typed registry must pass target-aware validation")
+
+make gpio_layout := typed["find_layout"](report[2], "DAK-x86_64", "GpioRegisters")
+assert(gpio_layout[2] == 24, "GPIO register structure must occupy 24 bytes")
+assert(gpio_layout[3] == 4, "GPIO register structure must align to 4 bytes")
+
+# Overlapping fields are rejected before a layout can be consumed.
+make Overlap := typed["struct"]("Overlap", [
+    typed["field"]("first", "u32", 0, "read_write", []),
+    typed["field"]("second", "u16", 2, "read_only", [])
+], "c", 0, 0)
+make overlap_report := typed["validate"](
+    typed["registry"]("invalid.overlap", "1.0.0", [DAK_X86_64], [u16, u32, Overlap], [])
+)
+assert(not overlap_report[0], "overlapping structure must fail validation")
+assert(typed["has_diagnostic"](overlap_report, "RPR-REG-FIELD-0007"), "overlap diagnostic must be stable")
+
+# A by-value cycle is illegal; pointer indirection remains the escape hatch.
+make CycleA := typed["struct"]("CycleA", [
+    typed["field"]("next", "CycleB", -1, "read_only", [])
+], "native", 0, 0)
+make CycleB := typed["struct"]("CycleB", [
+    typed["field"]("previous", "CycleA", -1, "read_only", [])
+], "native", 0, 0)
+make cycle_report := typed["validate"](
+    typed["registry"]("invalid.cycle", "1.0.0", [DAK_X86_64], [CycleA, CycleB], [])
+)
+assert(not cycle_report[0], "by-value type cycle must fail validation")
+assert(typed["has_diagnostic"](cycle_report, "RPR-REG-TYPE-0002"), "cycle diagnostic must be stable")
+
+# A platform cannot advertise an inconsistent ABI as a valid compilation target.
+make broken_target := typed["platform"](
+    "broken-dak",
+    "x86_64-unknown-linux",
+    "x86_64",
+    "linux",
+    "DABI64",
+    64,
+    "little",
+    "sysv64",
+    "hosted",
+    [],
+    []
+)
+make platform_report := typed["validate"](
+    typed["registry"]("invalid.platform", "1.0.0", [broken_target], [u32], [])
+)
+assert(not platform_report[0], "inconsistent target ABI must fail validation")
+assert(typed["has_diagnostic"](platform_report, "RPR-REG-PLATFORM"), "platform diagnostic must be present")
+
+# Declaring a binding never grants it: the target must list the requested capability.
+make forbidden_write := typed["binding"](
+    "unavailable.write",
+    "linux-x86_64",
+    "register",
+    "u32",
+    "",
+    ["mmio.write"],
+    ["mmio.write"]
+)
+make linux := typed["platform"](
+    "linux-x86_64",
+    "x86_64-unknown-linux-gnu",
+    "x86_64",
+    "linux",
+    "SYSV64",
+    64,
+    "little",
+    "sysv64",
+    "hosted",
+    [],
+    ["io", "clock", "process", "network"]
+)
+make capability_report := typed["validate"](
+    typed["registry"]("invalid.capability", "1.0.0", [linux], [u32], [forbidden_write])
+)
+assert(not capability_report[0], "undeclared platform capability must fail validation")
+assert(typed["has_diagnostic"](capability_report, "RPR-REG-BINDING"), "capability diagnostic must be present")
+
+emit "REAPER_TYPED_REGISTRY_OK"
