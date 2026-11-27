@@ -9,7 +9,10 @@ from .token_catalog import token_is_reserved
 
 
 MAX_SOURCE_CHARS = 4_000_000
+MAX_SOURCE_BYTES = 16 * 1024 * 1024
 MAX_TOKEN_COUNT = 1_000_000
+MAX_IDENTIFIER_CHARS = 4_096
+MAX_NUMERIC_LITERAL_CHARS = 256
 
 
 KEYWORDS = {
@@ -102,10 +105,31 @@ class Lexer:
         self.tokens: list[Token] = []
 
     def tokenize(self) -> list[Token]:
+        if not isinstance(self.source, str):
+            raise LexError(f"{self.filename}: source must be text")
         if len(self.source) > MAX_SOURCE_CHARS:
             raise LexError(
                 f"{self.filename}: source exceeds the {MAX_SOURCE_CHARS}-character limit"
             )
+        try:
+            source_bytes = len(self.source.encode("utf-8", errors="strict"))
+        except UnicodeEncodeError as error:
+            prefix = self.source[:error.start]
+            line = prefix.count("\n") + 1
+            column = len(prefix.rsplit("\n", 1)[-1]) + 1
+            raise LexError(
+                f"{self.filename}:{line}:{column}: source contains an invalid Unicode surrogate"
+            ) from error
+        if source_bytes > MAX_SOURCE_BYTES:
+            raise LexError(
+                f"{self.filename}: source exceeds the {MAX_SOURCE_BYTES}-byte UTF-8 limit"
+            )
+        nul_index = self.source.find("\0")
+        if nul_index >= 0:
+            prefix = self.source[:nul_index]
+            line = prefix.count("\n") + 1
+            column = len(prefix.rsplit("\n", 1)[-1]) + 1
+            raise LexError(f"{self.filename}:{line}:{column}: NUL is not allowed in source text")
         while not self._at_end():
             char = self._peek()
             if char in " \t\r":
@@ -192,6 +216,11 @@ class Lexer:
             self._advance()
             while self._peek().isdigit():
                 self._advance()
+        if self.index - start > MAX_NUMERIC_LITERAL_CHARS:
+            raise LexError(
+                f"{self.filename}:{start_line}:{start_column}: numeric literal exceeds "
+                f"the {MAX_NUMERIC_LITERAL_CHARS}-character limit"
+            )
         self._append_token(Token("NUMBER", self.source[start:self.index], start_line, start_column))
 
     def _identifier(self) -> None:
@@ -199,6 +228,11 @@ class Lexer:
         start_line, start_column = self.line, self.column
         while self._peek().isalnum() or self._peek() == "_":
             self._advance()
+        if self.index - start > MAX_IDENTIFIER_CHARS:
+            raise LexError(
+                f"{self.filename}:{start_line}:{start_column}: identifier exceeds "
+                f"the {MAX_IDENTIFIER_CHARS}-character limit"
+            )
         value = self.source[start:self.index]
         canonical = KEYWORD_ALIASES.get(value)
         kind = canonical.upper() if canonical is not None else (

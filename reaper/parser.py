@@ -9,6 +9,10 @@ from .errors import ParseError
 from .lexer import Token, tokenize
 
 
+MAX_EXPRESSION_DEPTH = 256
+MAX_BLOCK_DEPTH = 128
+
+
 @dataclass(slots=True)
 class Node:
     kind: str
@@ -34,6 +38,8 @@ class Parser:
         self.tokens = tokens
         self.filename = filename
         self.current = 0
+        self._expression_depth = 0
+        self._block_depth = 0
 
     def parse(self) -> Node:
         statements: list[Node] = []
@@ -130,6 +136,15 @@ class Parser:
         return Node("each", token, value=name.value, children=[iterable, body])
 
     def _block(self) -> Node:
+        if self._block_depth >= MAX_BLOCK_DEPTH:
+            raise self._error(self._peek(), f"block nesting limit ({MAX_BLOCK_DEPTH}) exceeded")
+        self._block_depth += 1
+        try:
+            return self._block_inner()
+        finally:
+            self._block_depth -= 1
+
+    def _block_inner(self) -> Node:
         self._consume("{", "expected '{' to start a block")
         statements: list[Node] = []
         self._skip_newlines()
@@ -140,6 +155,17 @@ class Parser:
         return Node("block", self._previous(), children=statements)
 
     def _expression(self, minimum: int = 1) -> Node:
+        if self._expression_depth >= MAX_EXPRESSION_DEPTH:
+            raise self._error(
+                self._peek(), f"expression nesting limit ({MAX_EXPRESSION_DEPTH}) exceeded"
+            )
+        self._expression_depth += 1
+        try:
+            return self._expression_inner(minimum)
+        finally:
+            self._expression_depth -= 1
+
+    def _expression_inner(self, minimum: int = 1) -> Node:
         left = self._prefix()
         while True:
             if self._match("("):
