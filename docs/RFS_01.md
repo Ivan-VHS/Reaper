@@ -97,6 +97,7 @@ The reference runtime is deterministic and single-threaded. Nodes and links are 
 |---|---:|
 | Source bytes | 1 MiB |
 | Tokens | 262,144 |
+| Numeric literal width | 324 bytes |
 | Nodes | 4,096 |
 | Links | 16,384 |
 | Phase gates | 4,096 |
