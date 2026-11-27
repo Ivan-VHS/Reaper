@@ -4,7 +4,7 @@
     "id": "reaper",
     "name": "Reaper",
     "repository": "Ivan-VHS/Reaper",
-    "summary": "Flow-first programming language with a Python reference runtime, developing native C17 core and explicit tooling integrations in a four-project desktop federation.",
+    "summary": "Flow-first programming language with a Python reference runtime, developing native C17 core and explicit tooling integrations in a four-project desktop federation. Reaper and Pytyliki participate in the reciprocal PytyRe development system with a versioned shared architecture contract.",
     "documentation": "docs/UNIFIED_PROJECT_CONTRACT.md"
   },
   "implementation": {
@@ -202,6 +202,28 @@
         "docs/SYSTEM_FUNCTIONS.md",
         "tests/test_system_functions.py"
       ]
+    },
+    {
+      "id": "reaper.c-abi.v1",
+      "format": "Versioned native C17 ABI linked optionally by Pytyliki at build time",
+      "direction": "provides",
+      "status": "implemented",
+      "evidence": [
+        "include/reaper/ffi.h",
+        "src/ffi.c",
+        "tests/test_ffi.c"
+      ]
+    },
+    {
+      "id": "pytyre.reciprocal-development.v1",
+      "format": "Shared versioned JSON architecture, ownership, integration and compatibility contract",
+      "direction": "both",
+      "status": "implemented",
+      "evidence": [
+        "contracts/pytyre.reciprocal.v1.json",
+        "docs/PYTYRE_UNIFIED_ARCHITECTURE.md",
+        "tests/test_pytyre_contract.py"
+      ]
     }
   ],
   "integrations": [
@@ -244,6 +266,14 @@
       "status": "implemented",
       "opt_in": false,
       "summary": "Records membership in the shared four-project OCTA-8 topology without introducing a runtime dependency."
+    },
+    {
+      "project": "pytyliki",
+      "interface": "reaper.c-abi.v1",
+      "mode": "native-build-link",
+      "status": "optional",
+      "opt_in": true,
+      "summary": "Pytyliki can link Reaper's native C17 ABI from an explicitly supplied local source checkout. The exported bridge supports bounded signed-i64 expression evaluation and exact lookup; there is no runtime library search."
     }
   ],
   "safety_boundaries": [
@@ -255,7 +285,8 @@
     "The system-functions v1 worker quota is cooperative in the Python reference runtime; it is not OS-enforced process isolation or a hard process-RSS limit.",
     "The arena-slot API limits tracked reference-runtime allocations and rejects escaped region allocations; it is not a zero-allocation host arena.",
     "Ephemeral comparison overwrites only its owned mutable working buffers and cannot erase caller-owned or immutable copies.",
-    "Contract graph, lease, local-only and rollback checks are runtime preflight functions until the native compiler gains compile-time evaluation, type-level leases and effect-checked module headers."
+    "Contract graph, lease, local-only and rollback checks are runtime preflight functions until the native compiler gains compile-time evaluation, type-level leases and effect-checked module headers.",
+    "PytyRe reciprocal integration does not grant physical MMIO access, driver installation, firmware flashing, process privilege or implicit network access."
   ],
   "extension_points": [
     "Canonical IR and selectable execution engines.",
@@ -264,6 +295,7 @@
     "Native C17 frontend stages with Python reference behavior as the compatibility oracle.",
     "Bounded vertical self-composition for deterministic compiler and data-flow transformation pipelines.",
     "Stable architecture concept IDs, layer metadata and bounded dependency graph validation.",
-    "Explicit stdlib/system.rpr APIs for bounded system operations, revision guards, local telemetry and reversible migration preflight."
+    "Explicit stdlib/system.rpr APIs for bounded system operations, revision guards, local telemetry and reversible migration preflight.",
+    "Shared PytyRe reciprocal architecture contract and paired live native ABI integration tests across Reaper and Pytyliki."
   ]
 }

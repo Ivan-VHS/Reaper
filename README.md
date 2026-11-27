@@ -58,3 +58,6 @@ The .rpr reference runtime, partial native C17 work, developer tools and externa
 - [Shared ecosystem standards](https://github.com/Ivan-VHS/DAK/blob/main/docs/SHARED_STANDARDS.md)
 
 [Contributing](CONTRIBUTING.md) · [Security policy](SECURITY.md) · [Apache-2.0](LICENSE)
+## PytyRe
+
+Reaper and Pytyliki are developed as one reciprocal system: Reaper owns language semantics, canonical IR and compiler/runtime contracts; Pytyliki owns processor engineering, target models and hardware-domain validation. Their shared, versioned integration contract and bidirectional native verification are documented in [PytyRe unified architecture](docs/PYTYRE_UNIFIED_ARCHITECTURE.md).

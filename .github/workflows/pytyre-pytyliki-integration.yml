@@ -1,0 +1,44 @@
+name: PytyRe reciprocal integration
+on:
+  pull_request:
+    paths:
+      - "reaper/native.py"
+      - "tests/test_pytyre_live.py"
+      - ".github/workflows/pytyre-pytyliki-integration.yml"
+      - "contracts/pytyre.reciprocal.v1.json"
+  push:
+    branches: [main]
+    paths:
+      - "reaper/native.py"
+      - "tests/test_pytyre_live.py"
+      - ".github/workflows/pytyre-pytyliki-integration.yml"
+      - "contracts/pytyre.reciprocal.v1.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reaper-consumes-pytyliki:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v7.0.1
+        with:
+          repository: Ivan-VHS/Pytyliki
+          ref: 41edd2bd33fbf554c8a8cbdc1ddd97847e1f9a53
+          path: _deps/Pytyliki
+          persist-credentials: false
+      - uses: actions/setup-python@v7.1.0
+        with:
+          python-version: "3.12"
+      - name: Build the real Pytyliki C ABI v1
+        run: |
+          cmake -S _deps/Pytyliki -B _deps/Pytyliki/build -DCMAKE_BUILD_TYPE=Release
+          cmake --build _deps/Pytyliki/build --parallel --target pytyliki_ffi
+      - name: Exercise Pytyliki through Reaper's real native adapter
+        env:
+          PYTYLIKI_LIBRARY: ${{ github.workspace }}/_deps/Pytyliki/build/libpytyliki_ffi.so
+        run: python -m unittest discover -s tests -p test_pytyre_live.py -v

@@ -1,0 +1,193 @@
+{
+  "schema": "pytyre.reciprocal-development.v1",
+  "version": 1,
+  "system": {
+    "id": "pytyre",
+    "name": "PytyRe",
+    "definition": "Reaper + Pytyliki",
+    "principle": "Development in either component is development of the unified PytyRe system. Every change is reviewed against both sides and their shared contracts."
+  },
+  "repositories": {
+    "reaper": {
+      "full_name": "Ivan-VHS/Reaper",
+      "role": "language-semantics-compiler-ir-runtime-abi",
+      "baseline_commit": "c3d89dd91da880e523867bd8d0724a6edc6b3cf6",
+      "license": "Apache-2.0"
+    },
+    "pytyliki": {
+      "full_name": "Ivan-VHS/Pytyliki",
+      "role": "processor-engineering-hardware-models-processor-tooling",
+      "baseline_commit": "41edd2bd33fbf554c8a8cbdc1ddd97847e1f9a53",
+      "license": "MIT"
+    }
+  },
+  "ownership": [
+    {
+      "domain": "language-syntax-and-semantics",
+      "owner": "reaper",
+      "shared_with": [
+        "pytyliki"
+      ],
+      "status": "partial",
+      "contract": "Reaper is the canonical owner of .rpr syntax and language semantics; Pytyliki consumes versioned language and semantic interfaces rather than maintaining a competing parser."
+    },
+    {
+      "domain": "canonical-typed-ir-source-spans-diagnostics",
+      "owner": "reaper",
+      "shared_with": [
+        "pytyliki"
+      ],
+      "status": "partial",
+      "contract": "Reaper owns canonical typed IR, source locations, diagnostics and compiler-stage contracts; processor-domain operations must lower through versioned Reaper interfaces."
+    },
+    {
+      "domain": "native-compiler-and-runtime",
+      "owner": "reaper",
+      "shared_with": [
+        "pytyliki"
+      ],
+      "status": "partial",
+      "contract": "Reaper owns compiler/runtime semantics and native ABI. Native compiler parity and full self-hosting remain separately tracked."
+    },
+    {
+      "domain": "processor-architecture-isa-and-microarchitecture",
+      "owner": "pytyliki",
+      "shared_with": [
+        "reaper"
+      ],
+      "status": "partial",
+      "contract": "Pytyliki owns processor engineering workflows, architecture models, ISA and microarchitecture tooling, processor evidence and validation."
+    },
+    {
+      "domain": "processor-inventory-metrics-and-target-models",
+      "owner": "pytyliki",
+      "shared_with": [
+        "reaper"
+      ],
+      "status": "implemented",
+      "contract": "Pytyliki owns native processor discovery, bounded measurements, numerical metric services, embedded target profiles and low-level target contracts."
+    },
+    {
+      "domain": "hardware-effects-and-device-access-policy",
+      "owner": "both",
+      "shared_with": [
+        "reaper",
+        "pytyliki"
+      ],
+      "status": "partial",
+      "contract": "Reaper expresses typed/effect-checked intent; Pytyliki validates processor and target constraints. Actual device access remains delegated to an explicitly supplied trusted host backend."
+    }
+  ],
+  "interfaces": [
+    {
+      "id": "pytyliki.c-abi.v1",
+      "provider": "pytyliki",
+      "consumer": "reaper",
+      "direction": "pytyliki-to-reaper",
+      "transport": "explicit-native-ffi",
+      "abi_version": 1,
+      "status": "implemented",
+      "provider_operations": [
+        "pytyliki_v1_dot_f64",
+        "pytyliki_v1_norm_f64",
+        "pytyliki_v1_distance_f64",
+        "pytyliki_v1_orthogonal_f64",
+        "pytyliki_v1_embedded_profile_count",
+        "pytyliki_v1_embedded_profile_at",
+        "pytyliki_v1_embedded_budget_evaluate",
+        "pytyliki_v1_plugin_count",
+        "pytyliki_v1_plugin_at",
+        "pytyliki_v1_plugin_find",
+        "pytyliki_v1_metric_registry_search"
+      ],
+      "consumer_operations": [
+        "pytyliki_v1_dot_f64",
+        "pytyliki_v1_norm_f64",
+        "pytyliki_v1_distance_f64",
+        "pytyliki_v1_orthogonal_f64",
+        "pytyliki_v1_embedded_profile_count",
+        "pytyliki_v1_embedded_profile_at",
+        "pytyliki_v1_embedded_budget_evaluate"
+      ],
+      "activation": "Reaper requires an explicit absolute library path and explicit --allow-native-ffi permission.",
+      "constraints": [
+        "The library is trusted native code and is never discovered implicitly.",
+        "Calls are synchronous, bounded and do not retain caller-owned buffers.",
+        "Metadata discovery does not load or execute plugin code.",
+        "Provider exports do not imply that every operation is currently wrapped by Reaper's high-level adapter."
+      ]
+    },
+    {
+      "id": "reaper.c-abi.v1",
+      "provider": "reaper",
+      "consumer": "pytyliki",
+      "direction": "reaper-to-pytyliki",
+      "transport": "optional-build-time-native-link",
+      "abi_version": 1,
+      "status": "optional",
+      "provider_operations": [
+        "reaper_abi_version",
+        "reaper_v1_eval_i64",
+        "reaper_v1_selfhood_lookup"
+      ],
+      "consumer_adapter_operations": [
+        "pytyliki_v1_reaper_available",
+        "pytyliki_v1_reaper_abi_version",
+        "pytyliki_v1_reaper_eval_i64",
+        "pytyliki_v1_reaper_selfhood_lookup"
+      ],
+      "activation": "A trusted local Reaper checkout is supplied explicitly with -DREAPER_SOURCE_DIR=/absolute/path/to/Reaper.",
+      "constraints": [
+        "The Reaper C17 ABI is linked at build time; there is no runtime library search.",
+        "The bridge exposes the bounded Reaper i64 expression evaluator and exact lookup only.",
+        "A build without REAPER_SOURCE_DIR remains self-contained and reports the backend as unavailable.",
+        "The wrapper forwards Reaper ABI statuses unchanged when the linked ABI is available."
+      ]
+    }
+  ],
+  "build_modes": [
+    {
+      "id": "reaper-consumes-pytyliki",
+      "default": "disabled",
+      "activation": "absolute library path plus --allow-native-ffi",
+      "evidence": [
+        "reaper/native.py",
+        "tests/test_native.py",
+        "tests/test_pytyre_live.py",
+        "docs/REAPER_LANGUAGE_INTEGRATION.md"
+      ]
+    },
+    {
+      "id": "pytyliki-consumes-reaper",
+      "default": "disabled",
+      "activation": "CMake -DREAPER_SOURCE_DIR=<trusted-local-checkout>",
+      "evidence": [
+        "CMakeLists.txt",
+        "src/interop.h",
+        "src/interop.c",
+        "tests/test_interop.c",
+        "docs/REAPER_RUNTIME_INTEGRATION.md"
+      ]
+    }
+  ],
+  "development_policy": {
+    "change_rule": "Every change in Reaper or Pytyliki must include a reciprocal impact review. When a shared contract, ABI, syntax, IR, target model or safety boundary changes, update and test both repositories in coordinated PRs.",
+    "integration_rule": "Keep one canonical implementation for each owned subsystem. Share through typed/versioned contracts and native adapters; do not fork competing parsers, runtimes or processor models.",
+    "synchronization_rule": "Update the shared contract and both pinned integration workflows together when either side changes an exposed ABI.",
+    "release_rule": "A PytyRe release is qualified only when both component revisions and both reciprocal integration test paths are recorded."
+  },
+  "safety_boundaries": [
+    "Native FFI is opt-in and loads only a caller-selected trusted library.",
+    "The Reaper native bridge evaluates a bounded integer expression; it is not a general-purpose execution sandbox.",
+    "The Pytyliki-to-Reaper bridge links only the explicit Reaper C ABI at build time.",
+    "The low-level hardware contract has no default physical backend; no driver installation, firmware flashing, physical MMIO write or privileged operation is implied.",
+    "The existing Pytyliki vendor/reaper_frontend snapshot is an expression-only frontend with retained Apache-2.0 provenance; it is not a copy of the complete Reaper compiler or runtime.",
+    "Component licenses remain distinct. Preserve MIT and Apache-2.0 notices for their respective works and all vendor attribution."
+  ],
+  "known_gaps": [
+    "Reaper native compiler parity and full self-hosting are incomplete.",
+    "The vendored Reaper frontend in Pytyliki handles tokenization and a single expression, not full .rpr program execution.",
+    "Processor physical models and low-level hardware APIs remain capability- and backend-gated; no physical backend is shipped.",
+    "Some Pytyliki ABI provider operations are available to C consumers but are not yet exposed as dedicated high-level Reaper builtins."
+  ]
+}
