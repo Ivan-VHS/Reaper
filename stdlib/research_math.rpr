@@ -5,6 +5,10 @@ export craft catalog() {
     yield research_kernel_catalog()
 }
 
+export craft catalog_area(area_id) {
+    yield research_kernel_catalog(area_id)
+}
+
 export craft kernel_plan(function_id, arguments) {
     yield research_kernel_plan(function_id, arguments)
 }
