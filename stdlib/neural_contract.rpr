@@ -454,13 +454,13 @@ export craft output_accept(contract_value, output_elements, invalid_outputs, con
     when not _ncs_nonnegative_integer(output_elements) or output_elements > contract_value[5][0][4] {
         yield [false, "RPR-NCS-0501: output shape exceeds the declared port"]
     }
-    when not _ncs_nonnegative_integer(invalid_outputs) or invalid_outputs > 1000000 {
+    when not _ncs_nonnegative_integer(invalid_outputs) or invalid_outputs > output_elements or invalid_outputs > 1000000 {
         yield [false, "RPR-NCS-0502: invalid-output count is outside its range"]
     }
     when not _ncs_nonnegative_integer(confidence_ppm) or confidence_ppm > 1000000 {
         yield [false, "RPR-NCS-0503: confidence value is outside parts-per-million range"]
     }
-    when invalid_outputs * 1000000 > contract_value[13][4] * (output_elements + 1) {
+    when output_elements > 0 and invalid_outputs * 1000000 > contract_value[13][4] * output_elements {
         yield [false, "RPR-NCS-0504: invalid-output rate exceeds the contract"]
     }
     when contract_value[13][2] == "required" and confidence_ppm < contract_value[13][3] {
