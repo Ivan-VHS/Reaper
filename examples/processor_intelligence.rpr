@@ -1,0 +1,104 @@
+# Conformance fixture for Reaper Processor Intelligence.
+# All processor actions here are deterministic fixtures, not live telemetry.
+import "../stdlib/processor_intelligence.rpr" as processor
+
+make initial := processor.processor_state_make()
+assert(processor.processor_state_valid(initial), "initial state is invalid")
+
+make first_action := [
+    "processor.action.v1", 1, "decode", "core0",
+    0, 5, 12, "ok", "chunk-001"
+]
+make second_action := [
+    "processor.action.v1", 2, "retire", "core0",
+    5, 4, 7, "err", "chunk-002"
+]
+
+make first := processor.processor_state_append(initial, first_action)
+assert(first[0] == "OK", "first processor action was rejected")
+make second := processor.processor_state_append(first[1], second_action)
+assert(second[0] == "OK", "second processor action was rejected")
+make state := second[1]
+assert(processor.processor_state_valid(state), "appended processor state is invalid")
+assert(processor.processor_action_count(state) == ["OK", 2], "action count mismatch")
+assert(processor.processor_action_counter(state) == ["OK", [1, 1, 2, 50]], "action counter mismatch")
+
+make duplicate := processor.processor_state_append(state, second_action)
+assert(duplicate[0] == "ERR", "duplicate sequence was accepted")
+make backwards := processor.processor_state_append(state, [
+    "processor.action.v1", 3, "fetch", "core0",
+    8, 1, 2, "ok", "chunk-003"
+])
+assert(backwards[0] == "ERR", "backwards processor time was accepted")
+
+make expanded := processor.processor_operation_expand(first_action)
+assert(expanded[0] == "OK" and expanded[1][4] == 5, "operation expansion mismatch")
+
+make slowmo := processor.processor_slowmo_plan(state, 4)
+assert(slowmo[0] == "OK", "slow-motion plan failed")
+assert(slowmo[1][1][1] == 20 and slowmo[1][1][2] == 16, "slow-motion scaling mismatch")
+assert(processor.processor_slowmo_plan(state, 0)[0] == "ERR", "invalid slow-motion factor accepted")
+
+make pulse := processor.processor_pulse_analyze([10, 10.5, 9.5], 10, 0.1)
+assert(pulse[0] == "OK" and pulse[1][3], "stable processor pulse was not recognized")
+make irregular_pulse := processor.processor_pulse_analyze([10, 13], 10, 0.1)
+assert(irregular_pulse[0] == "OK" and not irregular_pulse[1][3], "irregular processor pulse was missed")
+
+make memory := processor.processor_memory_budget(1024, 400, 100)
+assert(memory[0] == "OK" and memory[1][3] == 524, "memory budget mismatch")
+assert(processor.processor_memory_budget(1024, 900, 200)[0] == "ERR", "memory overcommit accepted")
+
+make hardware_read := processor.processor_hardware_policy("read", "read_only", "")
+assert(hardware_read[0] == "OK" and not hardware_read[2], "read-only hardware observation denied")
+assert(processor.processor_hardware_policy("write", "physical", "processor.hardware.write")[0] == "ERR", "physical hardware write was exposed")
+make simulated_write := processor.processor_hardware_policy("write", "simulated", "processor.hardware.simulation.write")
+assert(simulated_write[0] == "OK" and simulated_write[1] == "simulation-plan-only", "simulation write plan denied")
+
+make embedded := processor.processor_embedded_budget(
+    8192, 2048, 512, 256, 4096, 512, 512
+)
+assert(embedded[0] == "OK", "valid embedded memory budget rejected")
+assert(embedded[1][0] == 2816 and embedded[1][3] == 1280, "embedded memory totals mismatch")
+assert(processor.processor_embedded_budget(1024, 900, 200, 0, 1024, 900, 200)[0] == "ERR", "embedded memory overflow accepted")
+
+make source_chunks := [
+    [1, 2, "chunk-a", "mov r0, r1;"],
+    [2, 2, "chunk-b", "ret"]
+]
+make unpacked := processor.processor_source_unpack(source_chunks)
+assert(unpacked[0] == "OK" and unpacked[1] == "mov r0, r1;ret", "source chunk unpack mismatch")
+assert(processor.processor_source_unpack([source_chunks[1], source_chunks[0]])[0] == "ERR", "out-of-order source chunks accepted")
+assert(processor.processor_source_unpack([
+    [1, 2, "chunk-a", "x"],
+    [2, 2, "chunk-a", "y"]
+])[0] == "ERR", "duplicate source chunk identity accepted")
+
+make graph := processor.processor_graph_reduce(4, 5)
+assert(graph[0] == "OK" and graph[1][2] == 1.25, "processor graph reduction mismatch")
+make singleton_graph := processor.processor_graph_reduce(1, 0)
+assert(singleton_graph[0] == "OK" and singleton_graph[1][3] == 0, "single-node graph density must be zero")
+assert(processor.processor_graph_reduce(0, 1)[0] == "ERR", "edges on empty graph were accepted")
+
+make chip := processor.processor_chip_snapshot_valid([1, 8, 16, 1, "x86-64", "simulated"])
+assert(chip, "valid simulated CPU package snapshot rejected")
+assert(not processor.processor_chip_snapshot_valid([1, 8, 4, 1, "x86-64", "simulated"]), "thread count below core count accepted")
+assert(not processor.processor_chip_snapshot_valid([1, 8, 16, 1, "x86-64", "invented"]), "unknown CPU snapshot provenance accepted")
+
+make checkpoint := processor.processor_checkpoint_make(state)
+assert(checkpoint[0] == "OK", "checkpoint creation failed")
+assert(processor.processor_checkpoint_valid(state, checkpoint[1]), "current checkpoint rejected")
+assert(not processor.processor_checkpoint_valid(initial, checkpoint[1]), "stale checkpoint accepted")
+make cache := processor.processor_cache_store([], checkpoint[1], 2)
+assert(cache[0] == "OK" and size(cache[1]) == 1, "state cache insert failed")
+assert(processor.processor_cache_store([], checkpoint[1], 0)[0] == "ERR", "zero-capacity state cache accepted")
+
+make table := processor.processor_table_export(state)
+assert(table[0] == "OK", "processor table export failed")
+assert(size(table[1][0]) == 9 and size(table[1][1]) == 2, "processor table shape mismatch")
+
+make tray := processor.processor_tray_snapshot(state, memory, pulse)
+assert(tray[0] == "OK", "processor tray snapshot failed")
+assert(tray[1][1] == "ATTENTION" and tray[1][2] == "Needs attention", "humanized processor status mismatch")
+assert(processor.processor_humanize_status("UNKNOWN") == "Not measured", "unknown status was not humanized")
+
+emit "REAPER_PROCESSOR_INTELLIGENCE_OK"
