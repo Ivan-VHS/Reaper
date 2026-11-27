@@ -276,7 +276,7 @@
     {
       "project": "pytyliki",
       "interface": "pytyliki.processor-report.v1",
-      "mode": "versioned-json-file",
+      "mode": "json-file",
       "status": "planned",
       "opt_in": true,
       "summary": "Reaper's Processor Engineering Workbench consumes a caller-selected pytyliki.report.v1 file for read-only host CPU/usable-ISA/memory and bounded benchmark evidence. The matching Pytyliki producer contract is proposed separately; this integration is not yet merged or declared delivered."
