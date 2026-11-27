@@ -1,0 +1,310 @@
+# Reaper-native structural type and effect model.
+# Type record: [kind, name, arguments, qualifiers].
+# Unknown is conservative: it may flow to an unknown boundary but cannot prove
+# assignability to a concrete target type.
+
+craft type_primitive(name) {
+    when name == "unit" or name == "bool" or name == "char" or name == "text" or name == "never" or name == "unknown" or name == "i8" or name == "i16" or name == "i32" or name == "i64" or name == "i128" or name == "u8" or name == "u16" or name == "u32" or name == "u64" or name == "u128" or name == "f32" or name == "f64" {
+        yield ["OK", ["primitive", name, [], []]]
+    }
+    yield ["ERR", "unknown primitive type", name]
+}
+
+craft type_compound(name, arguments, qualifiers) {
+    when name != "Array" and name != "Slice" and name != "Option" and name != "Result" and name != "Pointer" and name != "Reference" and name != "Atomic" and name != "Tuple" and name != "Function" {
+        yield ["ERR", "unknown compound type", name]
+    }
+    yield ["OK", ["compound", name, arguments, qualifiers]]
+}
+
+craft type_array(element_type) {
+    yield type_compound("Array", [element_type], [])
+}
+
+craft type_slice(element_type) {
+    yield type_compound("Slice", [element_type], [])
+}
+
+craft type_option(value_type) {
+    yield type_compound("Option", [value_type], [])
+}
+
+craft type_result(value_type, error_type) {
+    yield type_compound("Result", [value_type, error_type], [])
+}
+
+craft type_reference(value_type, mutable) {
+    when mutable { yield type_compound("Reference", [value_type], ["mutable"]) }
+    yield type_compound("Reference", [value_type], ["immutable"])
+}
+
+craft type_pointer(value_type, address_space) {
+    yield type_compound("Pointer", [value_type], [address_space])
+}
+
+craft type_function(parameter_types, return_type, effects) {
+    make arguments := push(parameter_types, return_type)
+    yield type_compound("Function", arguments, effects)
+}
+
+craft type_is_primitive(type_value, name) {
+    when size(type_value) != 4 { yield false }
+    yield type_value[0] == "primitive" and type_value[1] == name
+}
+
+craft type_integer_bits(type_name) {
+    when type_name == "i8" or type_name == "u8" { yield 8 }
+    when type_name == "i16" or type_name == "u16" { yield 16 }
+    when type_name == "i32" or type_name == "u32" { yield 32 }
+    when type_name == "i64" or type_name == "u64" { yield 64 }
+    when type_name == "i128" or type_name == "u128" { yield 128 }
+    yield 0
+}
+
+craft type_is_signed_integer(type_name) {
+    yield type_name == "i8" or type_name == "i16" or type_name == "i32" or type_name == "i64" or type_name == "i128"
+}
+
+craft type_is_unsigned_integer(type_name) {
+    yield type_name == "u8" or type_name == "u16" or type_name == "u32" or type_name == "u64" or type_name == "u128"
+}
+
+craft type_is_float(type_name) {
+    yield type_name == "f32" or type_name == "f64"
+}
+
+craft type_equal(left, right) {
+    when size(left) != 4 or size(right) != 4 { yield false }
+    when left[0] != right[0] or left[1] != right[1] { yield false }
+    when size(left[2]) != size(right[2]) or size(left[3]) != size(right[3]) { yield false }
+
+    vary index := 0
+    loop while index < size(left[2]) {
+        when not type_equal(left[2][index], right[2][index]) { yield false }
+        change index := index + 1
+    }
+    change index := 0
+    loop while index < size(left[3]) {
+        when left[3][index] != right[3][index] { yield false }
+        change index := index + 1
+    }
+    yield true
+}
+
+craft type_validate(type_value) {
+    when size(type_value) != 4 { yield ["ERR", "type record must have four fields"] }
+    when type_value[0] != "primitive" and type_value[0] != "compound" and type_value[0] != "generic" {
+        yield ["ERR", "unknown type record kind", type_value[0]]
+    }
+    when size(type_value[1]) == 0 { yield ["ERR", "type name is empty"] }
+
+    when type_value[0] == "primitive" {
+        make known := type_primitive(type_value[1])
+        when known[0] != "OK" { yield known }
+        when size(type_value[2]) != 0 or size(type_value[3]) != 0 {
+            yield ["ERR", "primitive type cannot have arguments or qualifiers"]
+        }
+    }
+
+    when type_value[0] == "compound" {
+        make known := type_compound(type_value[1], type_value[2], type_value[3])
+        when known[0] != "OK" { yield known }
+        make expected := 0
+        when type_value[1] == "Array" or type_value[1] == "Slice" or type_value[1] == "Option" or type_value[1] == "Pointer" or type_value[1] == "Reference" or type_value[1] == "Atomic" {
+            change expected := 1
+        }
+        when type_value[1] == "Result" { change expected := 2 }
+        when size(type_value[2]) != expected and type_value[1] != "Tuple" and type_value[1] != "Function" {
+            yield ["ERR", "compound type argument count mismatch", type_value[1]]
+        }
+    }
+
+    vary index := 0
+    loop while index < size(type_value[2]) {
+        make nested := type_validate(type_value[2][index])
+        when nested[0] != "OK" { yield ["ERR", "invalid nested type", index, nested] }
+        change index := index + 1
+    }
+    yield ["OK", true]
+}
+
+craft type_assignable(source, target) {
+    when type_equal(source, target) { yield true }
+    when type_is_primitive(target, "unknown") { yield true }
+    when type_is_primitive(source, "unknown") { yield false }
+    when size(source) != 4 or size(target) != 4 { yield false }
+
+    when source[0] == "primitive" and target[0] == "primitive" {
+        make source_bits := type_integer_bits(source[1])
+        make target_bits := type_integer_bits(target[1])
+        when source_bits > 0 and target_bits > 0 {
+            when type_is_signed_integer(source[1]) and type_is_signed_integer(target[1]) {
+                yield source_bits <= target_bits
+            }
+            when type_is_unsigned_integer(source[1]) and type_is_unsigned_integer(target[1]) {
+                yield source_bits <= target_bits
+            }
+            when type_is_unsigned_integer(source[1]) and type_is_signed_integer(target[1]) {
+                yield source_bits < target_bits
+            }
+        }
+        when type_is_float(source[1]) and type_is_float(target[1]) {
+            yield source[1] == "f32" or target[1] == "f64"
+        }
+    }
+
+    when source[0] == "compound" and target[0] == "compound" {
+        when source[1] != target[1] or size(source[2]) != size(target[2]) or size(source[3]) != size(target[3]) {
+            yield false
+        }
+        vary index := 0
+        loop while index < size(source[2]) {
+            when not type_equal(source[2][index], target[2][index]) { yield false }
+            change index := index + 1
+        }
+        change index := 0
+        loop while index < size(source[3]) {
+            when source[3][index] != target[3][index] { yield false }
+            change index := index + 1
+        }
+        yield true
+    }
+    yield false
+}
+
+craft type_join(left, right) {
+    when type_equal(left, right) { yield ["OK", left] }
+    when size(left) != 4 or size(right) != 4 { yield ["ERR", "invalid type record"] }
+    when left[0] != "primitive" or right[0] != "primitive" {
+        yield ["ERR", "no structural join for unlike compound types"]
+    }
+
+    make left_bits := type_integer_bits(left[1])
+    make right_bits := type_integer_bits(right[1])
+    when left_bits > 0 and right_bits > 0 {
+        vary widest := left_bits
+        when right_bits > widest { change widest := right_bits }
+        when type_is_signed_integer(left[1]) and type_is_signed_integer(right[1]) {
+            when widest == 8 { yield type_primitive("i8") }
+            when widest == 16 { yield type_primitive("i16") }
+            when widest == 32 { yield type_primitive("i32") }
+            when widest == 64 { yield type_primitive("i64") }
+            yield type_primitive("i128")
+        }
+        when type_is_unsigned_integer(left[1]) and type_is_unsigned_integer(right[1]) {
+            when widest == 8 { yield type_primitive("u8") }
+            when widest == 16 { yield type_primitive("u16") }
+            when widest == 32 { yield type_primitive("u32") }
+            when widest == 64 { yield type_primitive("u64") }
+            yield type_primitive("u128")
+        }
+        when type_is_signed_integer(left[1]) and type_is_unsigned_integer(right[1]) {
+            when left_bits > right_bits { yield type_primitive(left[1]) }
+        }
+        when type_is_unsigned_integer(left[1]) and type_is_signed_integer(right[1]) {
+            when right_bits > left_bits { yield type_primitive(right[1]) }
+        }
+    }
+
+    when type_is_float(left[1]) and type_is_float(right[1]) {
+        when left[1] == "f64" or right[1] == "f64" { yield type_primitive("f64") }
+        yield type_primitive("f32")
+    }
+    yield ["ERR", "types have no safe common representation", left[1], right[1]]
+}
+
+craft effect_validate(effects) {
+    vary index := 0
+    loop while index < size(effects) {
+        when effects[index] != "io" and effects[index] != "mmio" and effects[index] != "irq" and effects[index] != "dma" and effects[index] != "clock" and effects[index] != "process" and effects[index] != "network" and effects[index] != "unsafe" and effects[index] != "alloc" and effects[index] != "panic" {
+            yield ["ERR", "unknown effect", effects[index]]
+        }
+        vary previous := 0
+        loop while previous < index {
+            when effects[previous] == effects[index] {
+                yield ["ERR", "duplicate effect", effects[index]]
+            }
+            change previous := previous + 1
+        }
+        change index := index + 1
+    }
+    yield ["OK", size(effects)]
+}
+
+craft effect_missing(required, granted) {
+    make valid_required := effect_validate(required)
+    make valid_granted := effect_validate(granted)
+    when valid_required[0] != "OK" { yield valid_required }
+    when valid_granted[0] != "OK" { yield valid_granted }
+
+    vary missing := []
+    vary index := 0
+    loop while index < size(required) {
+        vary found := false
+        vary grant_index := 0
+        loop while grant_index < size(granted) {
+            when required[index] == granted[grant_index] { change found := true }
+            change grant_index := grant_index + 1
+        }
+        when not found { change missing := push(missing, required[index]) }
+        change index := index + 1
+    }
+    yield ["OK", missing]
+}
+
+craft effect_permitted(required, granted) {
+    make missing := effect_missing(required, granted)
+    when missing[0] != "OK" { yield false }
+    yield size(missing[1]) == 0
+}
+
+make i8 := type_primitive("i8")
+make i16 := type_primitive("i16")
+make u8 := type_primitive("u8")
+make u16 := type_primitive("u16")
+make i32 := type_primitive("i32")
+make i64 := type_primitive("i64")
+make u64 := type_primitive("u64")
+make f32 := type_primitive("f32")
+make f64 := type_primitive("f64")
+make text_type := type_primitive("text")
+make unknown_type := type_primitive("unknown")
+
+assert(i8[0] == "OK" and type_validate(i8[1])[0] == "OK", "signed primitive type construction failed")
+assert(type_primitive("i256")[0] == "ERR", "unsupported integer width accepted")
+assert(type_assignable(i8[1], i16[1]), "signed integer widening rejected")
+assert(not type_assignable(i16[1], i8[1]), "narrowing integer conversion accepted")
+assert(type_assignable(u8[1], i16[1]), "safe unsigned-to-signed widening rejected")
+assert(not type_assignable(u16[1], i16[1]), "unsafe unsigned-to-signed widening accepted")
+assert(type_assignable(u8[1], u16[1]), "unsigned widening rejected")
+assert(not type_assignable(unknown_type[1], i64[1]), "unknown type proved a concrete conversion")
+assert(type_assignable(i64[1], unknown_type[1]), "unknown boundary must accept a value")
+assert(type_equal(f32[1], f32[1]), "identical primitive types differ")
+assert(not type_equal(f32[1], f64[1]), "different primitive types compare equal")
+
+make array_i8 := type_array(i8[1])
+make array_i16 := type_array(i16[1])
+make result_type := type_result(i64[1], text_type[1])
+make option_type := type_option(text_type[1])
+make ref_type := type_reference(i32[1], true)
+make fn_type := type_function([i8[1], i16[1]], i64[1], ["io"])
+assert(type_validate(array_i8[1])[0] == "OK", "array type rejected")
+assert(type_validate(result_type[1])[0] == "OK", "Result type rejected")
+assert(type_validate(option_type[1])[0] == "OK", "Option type rejected")
+assert(type_validate(ref_type[1])[0] == "OK", "reference type rejected")
+assert(type_validate(fn_type[1])[0] == "OK", "function type rejected")
+assert(not type_equal(array_i8[1], array_i16[1]), "different array element types compare equal")
+assert(type_assignable(array_i8[1], array_i8[1]), "identical array type conversion rejected")
+assert(type_join(i8[1], i16[1]) == i16, "signed integer join mismatch")
+assert(type_join(u8[1], u16[1]) == u16, "unsigned integer join mismatch")
+assert(type_join(f32[1], f64[1]) == f64, "float join mismatch")
+assert(type_join(i16[1], u16[1])[0] == "ERR", "unsafe signed/unsigned join invented")
+
+assert(effect_validate(["io", "mmio"])[0] == "OK", "known effects rejected")
+assert(effect_validate(["io", "io"])[0] == "ERR", "duplicate effects accepted")
+assert(effect_validate(["quantum"])[0] == "ERR", "unknown effect accepted")
+assert(effect_missing(["io", "mmio"], ["io"]) == ["OK", ["mmio"]], "missing capability calculation mismatch")
+assert(effect_permitted(["io"], ["io", "mmio"]), "granted effect was denied")
+assert(not effect_permitted(["io", "mmio"], ["io"]), "missing effect was permitted")
+
+emit "SELFHOST_TYPE_SYSTEM_OK"

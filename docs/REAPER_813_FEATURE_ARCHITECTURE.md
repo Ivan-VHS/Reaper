@@ -15,4 +15,4 @@ The registry contains proposals and acceptance areas; it does not claim 813 impl
 
 Stable IDs are never reused. Status: proposed → specified → implemented → tested, or deprecated. An implemented status requires source plus positive/negative acceptance tests.
 
-Separate counts: 666 API contracts = 147 specifications + 519 proposals; 666 symbolic token lexemes; these are not the same registry.
+The API contract registry and symbolic-token lexeme catalogue are separate versioned artefacts; they must not be conflated.

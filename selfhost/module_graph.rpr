@@ -1,0 +1,163 @@
+# Reaper-native module dependency graph and source path contracts.
+# Module record: [canonical_name, dependency_names].
+# A valid graph is acyclic and every referenced dependency is declared.
+
+craft module_find(graph, requested_name) {
+    vary index := 0
+    loop while index < size(graph) {
+        when graph[index][0] == requested_name { yield ["OK", index] }
+        change index := index + 1
+    }
+    yield ["ERR", "module not found", requested_name]
+}
+
+craft module_name_valid(name) {
+    when size(name) == 0 { yield false }
+    when not ((name[0] >= "a" and name[0] <= "z") or (name[0] >= "A" and name[0] <= "Z") or name[0] == "_") {
+        yield false
+    }
+    vary index := 1
+    loop while index < size(name) {
+        make char := name[index]
+        when not ((char >= "a" and char <= "z") or (char >= "A" and char <= "Z") or (char >= "0" and char <= "9") or char == "_") {
+            yield false
+        }
+        change index := index + 1
+    }
+    yield true
+}
+
+craft module_graph_validate(graph) {
+    vary index := 0
+    loop while index < size(graph) {
+        when size(graph[index]) != 2 { yield ["ERR", "module record must have two fields", index] }
+        when not module_name_valid(graph[index][0]) { yield ["ERR", "invalid module name", graph[index][0]] }
+        vary previous := 0
+        loop while previous < index {
+            when graph[previous][0] == graph[index][0] {
+                yield ["ERR", "duplicate module name", graph[index][0]]
+            }
+            change previous := previous + 1
+        }
+
+        vary dependency := 0
+        loop while dependency < size(graph[index][1]) {
+            make dependency_name := graph[index][1][dependency]
+            when dependency_name == graph[index][0] {
+                yield ["ERR", "module cannot depend on itself", dependency_name]
+            }
+            make found := module_find(graph, dependency_name)
+            when found[0] != "OK" {
+                yield ["ERR", "module dependency is undeclared", graph[index][0], dependency_name]
+            }
+            vary earlier := 0
+            loop while earlier < dependency {
+                when graph[index][1][earlier] == dependency_name {
+                    yield ["ERR", "duplicate module dependency", dependency_name]
+                }
+                change earlier := earlier + 1
+            }
+            change dependency := dependency + 1
+        }
+        change index := index + 1
+    }
+    yield ["OK", size(graph)]
+}
+
+craft module_resolved_contains(resolved, requested) {
+    vary index := 0
+    loop while index < size(resolved) {
+        when resolved[index] == requested { yield true }
+        change index := index + 1
+    }
+    yield false
+}
+
+craft module_dependencies_resolved(dependencies, resolved) {
+    vary index := 0
+    loop while index < size(dependencies) {
+        when not module_resolved_contains(resolved, dependencies[index]) { yield false }
+        change index := index + 1
+    }
+    yield true
+}
+
+craft module_graph_toposort(graph) {
+    make valid := module_graph_validate(graph)
+    when valid[0] != "OK" { yield valid }
+
+    vary ordered := []
+    loop while size(ordered) < size(graph) {
+        vary progress := false
+        vary index := 0
+        loop while index < size(graph) {
+            make name := graph[index][0]
+            when not module_resolved_contains(ordered, name) and module_dependencies_resolved(graph[index][1], ordered) {
+                change ordered := push(ordered, name)
+                change progress := true
+            }
+            change index := index + 1
+        }
+        when not progress {
+            yield ["ERR", "module dependency cycle detected", ordered]
+        }
+    }
+    yield ["OK", ordered]
+}
+
+craft module_path_valid(path) {
+    when size(path) < 5 { yield false }
+    when path[0] == "/" or path[0] == "\\" { yield false }
+    when path[1] == ":" { yield false }
+
+    vary index := 0
+    vary segment_start := 0
+    loop while index <= size(path) {
+        when index == size(path) or path[index] == "/" {
+            make segment_length := index - segment_start
+            when segment_length == 0 { yield false }
+            when segment_length == 1 and path[segment_start] == "." { yield false }
+            when segment_length == 2 and path[segment_start] == "." and path[segment_start + 1] == "." { yield false }
+            change segment_start := index + 1
+        } otherwise {
+            when path[index] == "\\" or path[index] == ":" { yield false }
+        }
+        change index := index + 1
+    }
+
+    when path[size(path) - 4] != "." or path[size(path) - 3] != "r" or path[size(path) - 2] != "p" or path[size(path) - 1] != "r" {
+        yield false
+    }
+    yield true
+}
+
+make graph := [
+    ["core", []],
+    ["lexer", ["core"]],
+    ["parser", ["lexer", "core"]],
+    ["compiler", ["parser"]]
+]
+assert(module_graph_validate(graph) == ["OK", 4], "valid module graph rejected")
+assert(module_graph_toposort(graph) == ["OK", ["core", "lexer", "parser", "compiler"]], "dependency order mismatch")
+assert(module_find(graph, "parser") == ["OK", 2], "module lookup mismatch")
+assert(module_find(graph, "missing")[0] == "ERR", "missing module lookup accepted")
+
+make duplicate_graph := [["core", []], ["core", []]]
+assert(module_graph_validate(duplicate_graph)[0] == "ERR", "duplicate module names accepted")
+make missing_graph := [["app", ["missing"]]]
+assert(module_graph_validate(missing_graph)[0] == "ERR", "undeclared dependency accepted")
+make self_graph := [["core", ["core"]]]
+assert(module_graph_validate(self_graph)[0] == "ERR", "self dependency accepted")
+make cyclic_graph := [["alpha", ["beta"]], ["beta", ["alpha"]]]
+assert(module_graph_toposort(cyclic_graph)[0] == "ERR", "dependency cycle accepted")
+
+assert(module_path_valid("src/core.rpr"), "relative .rpr path rejected")
+assert(module_path_valid("modules/parser/main.rpr"), "nested .rpr path rejected")
+assert(not module_path_valid("../escape.rpr"), "parent traversal path accepted")
+assert(not module_path_valid("src/./core.rpr"), "dot path component accepted")
+assert(not module_path_valid("/absolute/core.rpr"), "absolute path accepted")
+assert(not module_path_valid("C:/core.rpr"), "drive path accepted")
+assert(not module_path_valid("src\\core.rpr"), "backslash path accepted")
+assert(not module_path_valid("src/core.txt"), "non-Reaper module extension accepted")
+
+emit "SELFHOST_MODULE_GRAPH_OK"

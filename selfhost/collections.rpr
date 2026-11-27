@@ -1,0 +1,187 @@
+# Reaper-native bounded sequence operations.
+# All functions return new arrays and leave caller-owned input unchanged.
+
+craft sequence_contains(values, requested) {
+    vary index := 0
+    loop while index < size(values) {
+        when values[index] == requested { yield true }
+        change index := index + 1
+    }
+    yield false
+}
+
+craft sequence_index_of(values, requested) {
+    vary index := 0
+    loop while index < size(values) {
+        when values[index] == requested { yield ["OK", index] }
+        change index := index + 1
+    }
+    yield ["NONE"]
+}
+
+craft sequence_reverse(values) {
+    vary result := []
+    vary index := size(values) - 1
+    loop while index >= 0 {
+        change result := push(result, values[index])
+        change index := index - 1
+    }
+    yield result
+}
+
+craft sequence_take(values, count) {
+    when count < 0 { yield ["ERR", "take count cannot be negative"] }
+    vary result := []
+    vary index := 0
+    loop while index < size(values) and index < count {
+        change result := push(result, values[index])
+        change index := index + 1
+    }
+    yield ["OK", result]
+}
+
+craft sequence_drop(values, count) {
+    when count < 0 { yield ["ERR", "drop count cannot be negative"] }
+    vary result := []
+    vary index := count
+    when index > size(values) { change index := size(values) }
+    loop while index < size(values) {
+        change result := push(result, values[index])
+        change index := index + 1
+    }
+    yield ["OK", result]
+}
+
+craft sequence_slice(values, start, finish) {
+    when start < 0 or finish < start or finish > size(values) {
+        yield ["ERR", "sequence slice bounds are invalid", start, finish]
+    }
+    vary result := []
+    vary index := start
+    loop while index < finish {
+        change result := push(result, values[index])
+        change index := index + 1
+    }
+    yield ["OK", result]
+}
+
+craft sequence_concat(left, right) {
+    vary result := []
+    vary index := 0
+    loop while index < size(left) {
+        change result := push(result, left[index])
+        change index := index + 1
+    }
+    change index := 0
+    loop while index < size(right) {
+        change result := push(result, right[index])
+        change index := index + 1
+    }
+    yield result
+}
+
+craft sequence_unique(values) {
+    vary result := []
+    vary index := 0
+    loop while index < size(values) {
+        when not sequence_contains(result, values[index]) {
+            change result := push(result, values[index])
+        }
+        change index := index + 1
+    }
+    yield result
+}
+
+craft sequence_zip(left, right) {
+    when size(left) != size(right) {
+        yield ["ERR", "zip requires sequences of equal length", size(left), size(right)]
+    }
+    vary result := []
+    vary index := 0
+    loop while index < size(left) {
+        change result := push(result, [left[index], right[index]])
+        change index := index + 1
+    }
+    yield ["OK", result]
+}
+
+craft sequence_chunk(values, chunk_size) {
+    when chunk_size < 1 { yield ["ERR", "chunk size must be positive"] }
+    vary result := []
+    vary current := []
+    vary index := 0
+    loop while index < size(values) {
+        change current := push(current, values[index])
+        when size(current) == chunk_size {
+            change result := push(result, current)
+            change current := []
+        }
+        change index := index + 1
+    }
+    when size(current) > 0 {
+        change result := push(result, current)
+    }
+    yield ["OK", result]
+}
+
+craft sequence_flatten_one(values) {
+    vary result := []
+    vary outer := 0
+    loop while outer < size(values) {
+        vary inner := 0
+        loop while inner < size(values[outer]) {
+            change result := push(result, values[outer][inner])
+            change inner := inner + 1
+        }
+        change outer := outer + 1
+    }
+    yield result
+}
+
+craft sequence_sum(values) {
+    vary total := 0
+    vary index := 0
+    loop while index < size(values) {
+        change total := total + values[index]
+        change index := index + 1
+    }
+    yield ["OK", total]
+}
+
+craft sequence_min_max(values) {
+    when size(values) == 0 { yield ["ERR", "min/max requires a non-empty sequence"] }
+    vary minimum := values[0]
+    vary maximum := values[0]
+    vary index := 1
+    loop while index < size(values) {
+        when values[index] < minimum { change minimum := values[index] }
+        when values[index] > maximum { change maximum := values[index] }
+        change index := index + 1
+    }
+    yield ["OK", [minimum, maximum]]
+}
+
+make values := [1, 2, 2, 3, 4]
+assert(sequence_contains(values, 3), "sequence contains failed")
+assert(not sequence_contains(values, 8), "sequence contains false positive")
+assert(sequence_index_of(values, 2) == ["OK", 1], "sequence index lookup mismatch")
+assert(sequence_index_of(values, 9) == ["NONE"], "missing sequence value lookup mismatch")
+assert(sequence_reverse(values) == [4, 3, 2, 2, 1], "sequence reverse mismatch")
+assert(sequence_take(values, 3) == ["OK", [1, 2, 2]], "sequence take mismatch")
+assert(sequence_take(values, -1)[0] == "ERR", "negative take accepted")
+assert(sequence_drop(values, 2) == ["OK", [2, 3, 4]], "sequence drop mismatch")
+assert(sequence_drop(values, 99) == ["OK", []], "drop beyond sequence length mismatch")
+assert(sequence_slice(values, 1, 4) == ["OK", [2, 2, 3]], "sequence slice mismatch")
+assert(sequence_slice(values, 3, 2)[0] == "ERR", "reversed slice accepted")
+assert(sequence_concat([1, 2], [3]) == [1, 2, 3], "sequence concat mismatch")
+assert(sequence_unique(values) == [1, 2, 3, 4], "stable uniqueness mismatch")
+assert(sequence_zip([1, 2], ["a", "b"]) == ["OK", [[1, "a"], [2, "b"]]], "sequence zip mismatch")
+assert(sequence_zip([1], [2, 3])[0] == "ERR", "unequal zip accepted")
+assert(sequence_chunk([1, 2, 3, 4, 5], 2) == ["OK", [[1, 2], [3, 4], [5]],], "sequence chunk mismatch")
+assert(sequence_chunk([1], 0)[0] == "ERR", "zero chunk size accepted")
+assert(sequence_flatten_one([[1, 2], [], [3]]) == [1, 2, 3], "single-level flatten mismatch")
+assert(sequence_sum([1, 2, 3, 4]) == ["OK", 10], "sequence sum mismatch")
+assert(sequence_min_max([5, -2, 8, 1]) == ["OK", [-2, 8]], "sequence min/max mismatch")
+assert(sequence_min_max([])[0] == "ERR", "empty min/max accepted")
+
+emit "SELFHOST_COLLECTIONS_OK"

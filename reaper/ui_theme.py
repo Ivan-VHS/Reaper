@@ -30,12 +30,12 @@ PALETTES: dict[str, dict[str, str]] = {
         "selection": "#244F82", "selection_fg": "#FFFFFF", "disabled": "#9BAFC4",
     },
     "mora": {
-        "bg": "#211913", "surface": "#33261D", "elevated": "#493326",
-        "fg": "#FFF3E2", "secondary": "#E7D2B8", "muted": "#C4A98A",
-        "heading": "#FFD9A1", "blue": "#D58B3D", "blue_hover": "#EAA653", "on_blue": "#211913",
-        "red": "#B64A40", "red_hover": "#C85C50", "on_red": "#FFF3E2",
-        "border": "#75543A", "focus": "#F3C16B",
-        "selection": "#60442E", "selection_fg": "#FFF3E2", "disabled": "#B09A83",
+        "bg": "#050505", "surface": "#101010", "elevated": "#181818",
+        "fg": "#FFFFFF", "secondary": "#D8D8D8", "muted": "#A3A3A3",
+        "heading": "#FFFFFF", "blue": "#FFD700", "blue_hover": "#FFE36E", "on_blue": "#070707",
+        "red": "#FF7777", "red_hover": "#FF9A9A", "on_red": "#070707",
+        "border": "#343434", "focus": "#FFD700",
+        "selection": "#3B3000", "selection_fg": "#FFFFFF", "disabled": "#858585",
     },
 }
 
@@ -93,11 +93,11 @@ def _install_semantic_status_tokens() -> None:
     for theme_name, palette in PALETTES.items():
         if theme_name == "mora":
             palette.update({
-                "success": "#9EC39A", "warning": "#F0BE73",
-                "error": "#EF8E7C", "info": "#E8C99F",
-                "brand": "#D58B3D", "brand_hover": "#EAA653",
-                "on_brand": "#211913", "brand_secondary": "#526347",
-                "on_brand_secondary": "#FFF3E2",
+                "success": "#6EDAA3", "warning": "#FFD700",
+                "error": "#FF7777", "info": "#79B8FF",
+                "brand": "#FFD700", "brand_hover": "#FFE36E",
+                "on_brand": "#070707", "brand_secondary": "#79B8FF",
+                "on_brand_secondary": "#070707",
             })
             continue
 
