@@ -188,6 +188,18 @@
         "tests/test_self_hosting.py",
         "docs/SEAM_ARCHITECTURE_V1.md"
       ]
+    },
+    {
+      "id": "language.rfs-01.blockpulse",
+      "status": "partial",
+      "summary": "Reaper-source RFS-01 reference model provides bounded spatial node/link contracts, pressure reinforcement, gate-salvage matching, source-truth signal filtering, phase gates, immutable root recovery, deterministic late-join synchronization and tension balancing. Reference-runtime only; no native C17/self-hosted parity, physical device access, distributed execution, authenticated keys or external telemetry.",
+      "evidence": [
+        "stdlib/rfs01.rpr",
+        "examples/rfs01_blockpulse.rpr",
+        "selfhost/rfs01_conformance.rpr",
+        "tests/test_self_hosting.py",
+        "docs/RFS_01_BLOCKPULSE_ARCHITECTURE.md"
+      ]
     }
   ],
   "interfaces": [
@@ -255,6 +267,17 @@
         "docs/SEAM_ARCHITECTURE_V1.md",
         "selfhost/seam_conformance.rpr"
       ]
+    },
+    {
+      "id": "reaper.rfs-01.blockpulse.v1",
+      "format": "Versioned Reaper .rpr node, link, mesh, signal, frame, phase, pulse and snapshot records",
+      "direction": "provides",
+      "status": "partial",
+      "evidence": [
+        "stdlib/rfs01.rpr",
+        "docs/RFS_01_BLOCKPULSE_ARCHITECTURE.md",
+        "selfhost/rfs01_conformance.rpr"
+      ]
     }
   ],
   "integrations": [
@@ -309,7 +332,8 @@
     "The arena-slot API limits tracked reference-runtime allocations and rejects escaped region allocations; it is not a zero-allocation host arena.",
     "Ephemeral comparison overwrites only its owned mutable working buffers and cannot erase caller-owned or immutable copies.",
     "Contract graph, lease, local-only and rollback checks are runtime preflight functions until the native compiler gains compile-time evaluation, type-level leases and effect-checked module headers.",
-    "SEAM checkpoint checks are structural and do not authenticate snapshot origin or storage integrity; effect preflight consumes caller-supplied grant declarations and does not enforce host authorization or perform host effects."
+    "SEAM checkpoint checks are structural and do not authenticate snapshot origin or storage integrity; effect preflight consumes caller-supplied grant declarations and does not enforce host authorization or perform host effects.",
+    "RFS-01 BlockPulse is a deterministic local data model. Gate salvage keys are structural tuples, not authentication credentials; mesh integrity and signal coherence are model metrics, not cryptographic or hardware proofs; telemetry descriptors are returned as data and are not transmitted."
   ],
   "extension_points": [
     "Canonical IR and selectable execution engines.",
@@ -319,6 +343,7 @@
     "Bounded vertical self-composition for deterministic compiler and data-flow transformation pipelines.",
     "Stable architecture concept IDs, layer metadata and bounded dependency graph validation.",
     "Explicit stdlib/system.rpr APIs for bounded system operations, revision guards, local telemetry and reversible migration preflight.",
-    "SEAM state, contract, bridge, effect and bounded event-folding helpers in stdlib/seam.rpr."
+    "SEAM state, contract, bridge, effect and bounded event-folding helpers in stdlib/seam.rpr.",
+    "RFS-01 BlockPulse node/link/mesh constructors, pressure and phase transitions, signal filtering, root-preserving synchronization and bounded tension balancing in stdlib/rfs01.rpr."
   ]
 }

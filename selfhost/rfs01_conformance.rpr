@@ -1,0 +1,100 @@
+# RFS-01 Reaper-source conformance fixture.
+import "../stdlib/rfs01.rpr" as rfs
+
+make root := rfs["rfs_node_make"](
+    "root", "Basement", 10, 0.40, 0.80,
+    "seed-root", ["history"], true, [], "Dormant"
+)
+make peer := rfs["rfs_node_make"](
+    "peer", "Corridor", 2, 0.70, 0.20,
+    "seed-peer", [], false, [], "Dormant"
+)
+assert(root[0] == "ok" and peer[0] == "ok", "valid nodes must construct")
+
+make invalid_layer := rfs["rfs_node_make"](
+    "bad", "Subspace", 1, 0.5, 0.1,
+    "seed-bad", [], true, [], "Dormant"
+)
+assert(invalid_layer[0] == "err", "unknown spatial layer must be rejected")
+
+make invalid_pressure := rfs["rfs_node_make"](
+    "bad-pressure", "Basement", -1, 0.5, 0.1,
+    "seed-bad", [], true, [], "Dormant"
+)
+assert(invalid_pressure[0] == "err", "negative pressure must be rejected")
+
+make correct_key := ["rfs.key.v1", "seed-root", ["history"]]
+make gate := rfs["rfs_link_make"](
+    "gate", "root", "peer", "Wire", true, 0.80, correct_key
+)
+make locked_gate := rfs["rfs_link_make"](
+    "locked", "root", "peer", "Wire", true, 0.60, ["wrong-key"]
+)
+assert(gate[0] == "ok" and locked_gate[0] == "ok", "valid gate descriptors must construct")
+
+make awakened := rfs["rfs_awaken_grid"](
+    [root[1], peer[1]],
+    [gate[1], locked_gate[1]],
+    5
+)
+assert(awakened[0] == "ok", "valid grid must awaken")
+assert(awakened[1][1][0][4] == 1, "basement integrity must saturate at one")
+assert(awakened[1][1][0][5] < 0.49 and awakened[1][1][0][5] > 0.47,
+    "noise attenuation must remain bounded")
+assert(awakened[1][2][0][4] == "Bridge" and not awakened[1][2][0][5],
+    "correct salvage key must unlock and reroute a gate")
+assert(awakened[1][2][1][5] and awakened[1][2][1][4] == "Wire",
+    "incorrect salvage key must not unlock a gate")
+
+make verified := rfs["rfs_frame_make"](true, false, ["verified"], 0.8)
+make hype := rfs["rfs_frame_make"](true, true, ["hype"], 1.0)
+make unverified := rfs["rfs_frame_make"](false, false, ["noise"], 0.9)
+make filtered := rfs["rfs_filter_static_and_score"](
+    ["rfs.stream.v1", [verified[1], hype[1], unverified[1]]],
+    ["rfs.scoreboard.v1", 100]
+)
+assert(filtered[0] == "ok", "valid stream must filter")
+assert(size(filtered[1][0][1]) == 1, "only verified non-hype frame may pass")
+assert(filtered[1][0][2] == 0.8, "coherence must derive from accepted frames")
+assert(filtered[1][1][1] == 0, "scoreboard must reset")
+
+make phase_open := rfs["rfs_phase_gate"]("PressureToAxis", 9, 5)
+make phase_hold := rfs["rfs_phase_gate"]("PressureToAxis", 2, 5)
+assert(phase_open[0] == "ok" and phase_open[1][4], "phase gate must cross its threshold")
+assert(phase_hold[0] == "ok" and not phase_hold[1][4], "phase gate must remain closed below threshold")
+
+make spark := rfs["rfs_ignite_from_core"](awakened[1])
+assert(spark[0] == "ok" and spark[1][0] == "rfs.spark.v1", "core ignition must return a bounded spark record")
+
+make pressure_result := rfs["rfs_pressure_rule"](awakened[1][1][0], 5)
+assert(pressure_result[0] == "ok" and pressure_result[1][3] == "backbone_holds",
+    "critical load must map to a backbone-hold transition")
+
+make motion := rfs["rfs_run_collective_loop"](awakened[1], filtered[1][0], 108)
+assert(motion[0] == "ok", "bounded collective loop must complete")
+assert(motion[1][1] == "MeshInMotion", "synchronized network state must be visible")
+assert(motion[1][2] == 1, "network synchronization must be bounded and deterministic")
+assert(motion[1][3] == "root", "root identity must survive synchronization")
+assert(motion[1][4][1][10] == "Active", "late joiner must become active")
+assert(contains(motion[1][4][1][9], "root"), "late joiner route must include root")
+
+make rejected_root := rfs["rfs_reclaim_root"](
+    awakened[1], ["rfs.pulse.v1", "other-root", 0.5, []]
+)
+assert(rejected_root[0] == "err", "foreign root pulse must fail closed")
+
+make zero_run := rfs["rfs_run_collective_loop"](awakened[1], filtered[1][0], 0)
+assert(zero_run[0] == "ok" and zero_run[1][1] == "CycleLimit",
+    "explicit zero iteration budget must not run")
+
+make bad_mesh := rfs["rfs_mesh_make"]([root[1], root[1]], [gate[1]], "root")
+assert(bad_mesh[0] == "err", "duplicate node identity must be rejected")
+
+make empty_signal := rfs["rfs_filter_static_and_score"](
+    ["rfs.stream.v1", []],
+    ["rfs.scoreboard.v1", 42]
+)
+assert(empty_signal[0] == "ok" and empty_signal[1][0][2] == 0,
+    "empty verified stream must have zero coherence")
+
+emit "SELFHOST_RFS01_OK"

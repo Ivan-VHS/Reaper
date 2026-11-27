@@ -88,5 +88,8 @@ class SelfHostingBootstrapTests(unittest.TestCase):
     def test_reaper_written_seam_core_runs_on_the_reference_runtime(self) -> None:
         self._run_selfhost_program("selfhost/seam_conformance.rpr", "SELFHOST_SEAM_OK")
 
+    def test_reaper_written_rfs01_blockpulse_runs_on_the_reference_runtime(self) -> None:
+        self._run_selfhost_program("selfhost/rfs01_conformance.rpr", "SELFHOST_RFS01_OK")
+
 if __name__ == "__main__":
     unittest.main()
