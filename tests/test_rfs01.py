@@ -42,7 +42,7 @@ class RFS01Tests(unittest.TestCase):
         self.assertEqual(tree.kind, "program")
 
     def test_pressure_transfer_is_rejected_at_load_limit(self):
-        source = BASE.replace("pressure: 20", "pressure: 200").replace("weight: 0.1", "weight: 0.1")
+        source = BASE.replace("pressure: 20", "pressure: 200").replace("weight: 0.1", "weight: 1.0")
         result = run_source(source)
         self.assertTrue(any(event["kind"] == "pressure-rejected" for event in result["events"]))
         self.assertEqual(result["nodes"][1]["pressure"], 2.0)
