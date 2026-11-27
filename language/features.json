@@ -586,6 +586,45 @@
         "semantic-graph-verification",
         "no-stack-bytecode-claim"
       ]
+    },
+    {
+      "id": "REAPER-PB-001",
+      "name": "bounded RV32I assembler and flat-image linker",
+      "area": "compiler",
+      "status": "partial",
+      "acceptance": [
+        "typed-instruction-encoder-tests",
+        "immediate-register-range-rejection",
+        "symbol-resolution",
+        "checked-jal-and-branch-relocations",
+        "target-and-abi-identity"
+      ]
+    },
+    {
+      "id": "REAPER-PB-002",
+      "name": "bounded RV32I emulator",
+      "area": "verification",
+      "status": "partial",
+      "acceptance": [
+        "bounded-memory",
+        "instruction-subset-validation",
+        "step-limit",
+        "trace-limit",
+        "invalid-address-rejection"
+      ]
+    },
+    {
+      "id": "REAPER-PB-003",
+      "name": "combinational RTL and formal equivalence prototypes",
+      "area": "verification",
+      "status": "partial",
+      "acceptance": [
+        "acyclic-net-validation",
+        "systemverilog-output-tests",
+        "bounded-exhaustive-equivalence",
+        "counterexample-report",
+        "unknown-outside-bound"
+      ]
     }
   ],
   "profile": "МОСТ — exact Russian keyword aliases; no separate parser, semantics, runtime or backend"
