@@ -105,7 +105,8 @@ class ProcessorFabricTypedIRTests(unittest.TestCase):
         self.assertFalse(result["verification"]["stack_vm_bytecode_emitted"])
         self.assertEqual(result["source"]["offset_unit"], "utf8-byte")
         self.assertEqual(result["constructs"][0]["source_span"]["start"], 0)
-        self.assertEqual(result["constructs"][0]["body_span"]["start"], len(b"device sensor "))
+        source, _, _, _ = valid_input()
+        self.assertEqual(result["constructs"][0]["body_span"]["start"], source.index(b"{"))
         self.assertEqual(len(result["semantic_graph"]["nodes"]), 2)
         self.assertEqual(result["semantic_graph"]["edges"][0]["target_port"], 0)
         self.assertEqual(result["control_dependencies"], [{
