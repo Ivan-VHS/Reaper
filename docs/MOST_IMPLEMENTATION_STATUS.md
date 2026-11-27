@@ -1,10 +1,13 @@
-# MOST implementation status
+# МОСТ — состояние реализации
 
-| Surface | Count | State |
+| Поверхность | Количество | Состояние |
 |---|---:|---|
-| Exact aliases | 54 | 21 executable, 33 reserved |
-| Semantic grammar | 1 | Reaper grammar only |
-| Parser/AST/runtime | 1 | shared Reaper implementation |
-| Morphology/synonym resolver | 0 | not supported |
+| Точные русские псевдонимы | 102 | manifest v0.3.0 |
+| Исполняемые псевдонимы | 38 | поддерживаются текущей эталонной грамматикой |
+| Лексически зарезервированные псевдонимы | 64 | только lexer; parser/runtime support не заявлена |
+| Предметные LITHOS-имена | 44 | каталог обычных идентификаторов и имён процедур |
+| Семантическая грамматика | 1 | только общая грамматика Reaper |
+| Parser/AST/runtime | 1 | общая реализация Reaper |
+| Морфология / угадывание синонимов | 0 | не поддерживаются |
 
-Reserved lexemes do not imply parser or runtime behavior.
+Реестр предметных имён не создаёт встроенных функций. Исполняемость LITHOS-примеров обеспечивается пользовательскими процедурами на уже поддерживаемом языке.
