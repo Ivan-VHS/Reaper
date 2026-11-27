@@ -155,7 +155,7 @@ make smp_admit := core["ap_smp_admit_cpu"](smp_topology, ap_online)
 assert(smp_admit[0] and contains(smp_admit[1][5], 1), "verified AP handshake updates the logical SMP topology")
 
 make apic_route := ["reaper.apic-route.v1", 0, 1, 64, "reschedule", "edge", false, 7]
-make ipi_adapter := ["reaper.processor-adapter.v1", "duckos-apic", "apic-ipi-timer", "duckos", "assembly", "x86-apic-v1", "kernel-control", true, ["ipi-send", "timer-arm"]]
+make ipi_adapter := ["reaper.processor-adapter.v1", "duckos-apic", "apic-ipi-timer", "duckos", "assembly", "x86-apic-v1", "kernel-control", true, ["ipi-send", "timer-preempt", "timer-arm"]]
 assert(core["apic_ipi_decision"](apic_route, true, true, 7, ipi_adapter) == "admit-request-to-native-adapter", "IPI route is capability-gated")
 assert(core["apic_ipi_decision"](apic_route, true, false, 7, ipi_adapter) == "reject-offline-ipi-endpoint", "IPI cannot target offline CPU")
 make timer := ["reaper.timer-profile.v1", "tsc-deadline", 2400000000, 1000, true, "oneshot", "lapic-0"]
@@ -164,10 +164,10 @@ assert(core["timer_preemption_decision"](timer, 1000, 1000, false, false) == "de
 assert(core["timer_preemption_admission"](timer, 1000, 1000, true, false, ipi_adapter) == "admit-request-to-native-adapter", "timer request needs kernel control adapter")
 
 make mca_adapter := ["reaper.processor-adapter.v1", "duckos-mca-msr", "mca-msr", "duckos", "assembly", "x86-msr-read-v1", "kernel-read", true, ["msr-read"]]
-assert(core["mca_msr_read_admission"](377, true, mca_adapter) == "admit-allowlisted-msr-read", "IA32_MCG_CAP is an allowlisted read")
-assert(core["mca_msr_read_admission"](16, true, mca_adapter) == "reject-msr-not-allowlisted", "arbitrary MSR reads are rejected")
-assert(core["mca_msr_read_admission"](377, false, mca_adapter) == "reject-mca-not-advertised", "MCA reads require CPUID capability")
-make mca_event := ["reaper.mca-event.v1", "mca-1", "boot-1", 0, true, true, false, true, "memory-controller-0", 5000, "msr-adapter-1", "confirmed"]
+assert(core["mca_msr_read_admission"](377, 4, true, mca_adapter) == "admit-allowlisted-msr-read", "IA32_MCG_CAP is an allowlisted read")
+assert(core["mca_msr_read_admission"](16, 4, true, mca_adapter) == "reject-msr-not-allowlisted", "arbitrary MSR reads are rejected")
+assert(core["mca_msr_read_admission"](377, 4, false, mca_adapter) == "reject-mca-not-advertised", "MCA reads require CPUID capability")
+make mca_event := ["reaper.mca-event.v1", "mca-1", "boot-1", 0, true, true, false, true, "page-17", 5000, "msr-adapter-1", "confirmed"]
 assert(core["mca_handler_decision"](mca_event, true) == "request-page-recovery-through-memory-manager", "confirmed uncorrected address evidence may request page recovery")
 make mca_corrupt := ["reaper.mca-event.v1", "mca-2", "boot-1", 0, true, true, true, false, "cpu-0", 6000, "msr-adapter-1", "confirmed"]
 assert(core["mca_handler_decision"](mca_corrupt, true) == "safe-stop-context-corrupt-defer-to-kernel-fatal-path", "corrupt processor context is not handled in user policy")
