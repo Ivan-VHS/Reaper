@@ -1,12 +1,85 @@
 {
   "scopeName": "source.most",
-  "patterns": [{"include":"#comments"},{"include":"#strings"},{"include":"#numbers"},{"include":"#keywords"},{"include":"#types"},{"include":"#operators"}],
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#numbers"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#types"
+    },
+    {
+      "include": "#operators"
+    }
+  ],
   "repository": {
-    "comments": {"patterns":[{"name":"comment.line.double-slash.most","match":"//.*$"},{"name":"comment.block.most","begin":"/\\*","end":"\\*/"}]},
-    "strings": {"patterns":[{"name":"string.quoted.double.most","begin":"\"","end":"\"","patterns":[{"name":"constant.character.escape.most","match":"\\\\."}]}]},
-    "numbers": {"patterns":[{"name":"constant.numeric.most","match":"\\b[0-9]+(\\.[0-9]+)?\\b"}]},
-    "keywords": {"patterns":[{"name":"keyword.control.most","match":"\\b(make|vary|change|craft|yield|emit|when|otherwise|each|in|loop|while|true|false|nothing|and|or|not|module|import|as|pub|export|fn|struct|enum|trait|impl|type|const|let|mut|return|if|else|match|region|raw|arena|signal|async|await|test|comptime|requires|ensures|unsafe|extern|drop|where|for|break|continue|defer|пусть|переменная|изменить|функция|вернуть|вывести|если|иначе|для|в|цикл|пока|истина|ложь|ничего|и|или|не|импорт|экспорт|как|модуль|публичный|процедура|структура|перечисление|типаж|реализация|тип|константа|связать|изменяемый|возврат|условие|альтернатива|выбор|область|сырой|арена|сигнал|асинхронно|ожидать|тест|вычислить_при_сборке|требует|гарантирует|небезопасно|внешний|где|уничтожить|для_каждого|прервать|продолжить|отложить)\\b"}]},
-    "types": {"patterns":[{"name":"storage.type.most","match":"\\b(i8|i16|i32|i64|u8|u16|u32|u64|f32|f64|bool|string|unit|option|result)\\b"}]},
-    "operators": {"patterns":[{"name":"keyword.operator.most","match":"(::|\\?\\?|\\+%|\\+\\||->|:=|==|!=|<=|>=|&&|\\|\\||[+*/%=<>!-])"}]}
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.most",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.most",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.most",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.most",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.most",
+          "match": "\\b[0-9]+(\\.[0-9]+)?\\b"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.most",
+          "match": "\\\\b(вычислить_при_сборке|для_каждого_элемента|отложенное_действие|следующий_элемент|сигнальный_поток|объявление_типа|внешний_модуль|выйти_из_цикла|необработанный|сопоставление|альтернатива|опубликовать|память_арены|перезаписать|перечисление|асинхронный|гарантирует|для_каждого|небезопасно|ограничение|постусловие|предусловие|асинхронно|вернуть_из|воплощение|изменяемая|изменяемый|напечатать|неизменная|освободить|переменная|под_именем|подключить|продолжить|реализация|уничтожить|otherwise|дождаться|испытание|константа|повторять|присвоить|процедура|публичный|структура|comptime|continue|requires|изменить|контракт|объявить|открытый|отложить|показать|прервать|сборочно|ensures|nothing|вариант|вернуть|внешний|возврат|вывести|неверно|область|ожидать|опасный|связать|создать|требует|условие|функция|экспорт|change|export|extern|import|module|region|return|signal|struct|unsafe|импорт|истина|каждый|каркас|контур|модуль|ничего|ритуал|связка|сигнал|arena|async|await|break|const|craft|defer|false|match|trait|where|while|yield|арена|верно|выбор|иначе|когда|пакет|пусто|пусть|среди|сырой|типаж|drop|each|else|emit|enum|impl|loop|make|test|true|type|vary|when|если|либо|ложь|пока|тест|цикл|and|for|let|mut|not|pub|raw|где|для|или|как|тип|as|fn|if|in|or|не|в|и)\\\\b"
+        }
+      ]
+    },
+    "types": {
+      "patterns": [
+        {
+          "name": "storage.type.most",
+          "match": "\\b(i8|i16|i32|i64|u8|u16|u32|u64|f32|f64|bool|string|unit|option|result)\\b"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.most",
+          "match": "(::|\\?\\?|\\+%|\\+\\||->|:=|==|!=|<=|>=|&&|\\|\\||[+*/%=<>!-])"
+        }
+      ]
+    }
   }
 }
