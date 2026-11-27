@@ -12,7 +12,7 @@ ReaperProcessorBackendStatus reaper_logic_net_validate(const ReaperLogicNet *net
     for (i = 0u; i < net->gate_count; ++i) {
         const ReaperLogicGate *gate = &net->gates[i];
         const uint32_t current_wire = (uint32_t)net->input_count + i;
-        if (gate->operation > REAPER_LOGIC_NOT ||
+        if ((unsigned)gate->operation > (unsigned)REAPER_LOGIC_NOT ||
             gate->input_a >= current_wire)
             return REAPER_BACKEND_INVALID_NET;
         if (gate->operation != REAPER_LOGIC_NOT && gate->input_b >= current_wire)
