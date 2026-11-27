@@ -142,7 +142,7 @@ export craft validate_project(project) {
          not _positive_integer(workload["max_iterations"], 100000000) or
          not _positive_integer(workload["memory_mib"], 64) or
          not _positive_integer(workload["passes"], 32) or
-         not _positive_integer(workload["max_steps"], 100000000) {
+         not _positive_integer(workload["max_steps"], 1000000) {
         yield [false, "RPR-PEW-0022: current workbench admits only bounded scalar-probe workloads"]
     }
     when workload["memory_mib"] > memory["working_set_mib"] {
@@ -233,6 +233,12 @@ export craft validate_host_report(report, project) {
         }
         when run["run"] != expected_run or kind(run["warmup"]) != "boolean" {
             yield [false, "RPR-PEW-0113: benchmark run ordering or warm-up marker is invalid"]
+        }
+        when expected_run <= suite["warmup_runs"] and not run["warmup"] {
+            yield [false, "RPR-PEW-0118: expected warm-up run is not marked as warm-up"]
+        }
+        when expected_run > suite["warmup_runs"] and run["warmup"] {
+            yield [false, "RPR-PEW-0119: measured run is incorrectly marked as warm-up"]
         }
         when run["iterations"] > project["workload"]["max_iterations"] or
              run["memory_mib"] > project["workload"]["memory_mib"] or
