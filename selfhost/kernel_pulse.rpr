@@ -42,6 +42,9 @@ export craft kernel_pulse_record(pulse, kind, amount, logical_tick) {
     when logical_tick < pulse[2] { yield ["ERR", "pulse logical time cannot move backwards"] }
 
     make found := kernel_pulse_kind_find(pulse[8], kind)
+    when found[0] == "NONE" and size(pulse[8]) >= 64 {
+        yield ["ERR", "kernel pulse category limit exceeded", 64]
+    }
     vary rows := []
     when found[0] == "NONE" {
         change rows := push(pulse[8], [kind, amount])
