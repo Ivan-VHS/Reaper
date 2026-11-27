@@ -165,7 +165,6 @@ make ap_online := ap_online_ack[1]
 make smp_admit := core["ap_smp_admit_cpu"](smp_topology, ap_online)
 assert(smp_admit[0] and contains(smp_admit[1][5], 1), "verified AP handshake updates the logical SMP topology")
 assert(smp_admit[1][2] == 8, "AP admission increments topology generation")
-assert(core["apic_ipi_decision"](apic_route, true, true, smp_admit[1][2], ipi_adapter) == "reject-stale-topology-generation", "pre-admission IPI routes become stale after topology change")
 
 make apic_route := ["reaper.apic-route.v1", 0, 1, 64, "reschedule", "edge", false, 7]
 make ipi_adapter := ["reaper.processor-adapter.v1", "duckos-apic", "apic-ipi-timer", "duckos", "assembly", "x86-apic-v1", "kernel-control", true, ["ipi-send", "timer-preempt", "timer-arm"]]
@@ -195,7 +194,7 @@ assert(core["page_recovery_admission"](poisoned_page, mca_event, true, memory_ad
 assert(core["mca_msr_read_admission"](1040, 4, true, mca_adapter) == "reject-msr-not-allowlisted", "MCA reads cannot exceed the discovered bank count")
 assert(core["ap_startup_readiness"](["reaper.ap-start.v1", "boot-1", 1, 2, "ready-to-start", true, true, false, true, true, true, 7], true, 7) == "reject-incomplete-per-cpu-startup-resources", "AP cannot start without its private stack")
 assert(core["apic_ipi_decision"](["reaper.apic-route.v1", 0, 1, 64, "reschedule", "edge", true, 7], true, true, 7, ipi_adapter) == "reject-masked-ipi-route", "masked IPI routes are rejected")
-assert(core["apic_ipi_decision"](apic_route, true, true, 8, ipi_adapter) == "reject-stale-topology-generation", "stale IPI topology generations are rejected")
+assert(core["apic_ipi_decision"](apic_route, true, true, smp_admit[1][2], ipi_adapter) == "reject-stale-topology-generation", "pre-admission IPI routes become stale after topology change")
 assert(core["page_recovery_decision"](poisoned_page, mca_event, false) == "reject-no-rollback-path", "page recovery requires rollback readiness")
 
 
