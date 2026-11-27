@@ -3,7 +3,7 @@ from __future__ import annotations
 import unittest
 from dataclasses import replace
 
-from reaper.rfs01 import MAX_TOKENS, RFS01Error, RFSIRInstruction, compile_ir, compile_source, run_source, verify_ir
+from reaper.rfs01 import MAX_EXECUTION_STEPS, MAX_TOKENS, RFS01Error, RFSIRInstruction, compile_ir, compile_source, run_source, verify_ir
 
 
 BASE = """
@@ -85,6 +85,13 @@ class RFS01Tests(unittest.TestCase):
         with self.assertRaisesRegex(RFS01Error, "RFS-E101"):
             compile_source(source)
 
+
+
+    def test_execution_step_budget_is_enforced_in_typed_ir(self):
+        extra_actions = "  flow a >> b\\n" * 9260
+        source = BASE.replace("  cycles 1", extra_actions + "  cycles 108")
+        with self.assertRaisesRegex(RFS01Error, "RFS-E401"):
+            compile_ir(source)
 
     def test_token_budget_is_enforced(self):
         with self.assertRaisesRegex(RFS01Error, "RFS-E401"):
