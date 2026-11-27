@@ -7,6 +7,7 @@ Start with the [project README](../README.md) for installation, first commands a
 - [Features and maturity](FEATURES.md)
 - [Psychoporter 666 function categories](FUNCTION_CATEGORIES_666.md)
 - [Architecture](ARCHITECTURE.md)
+- [Early Mathematics Semantics v1](EARLY_MATHEMATICS_SEMANTICS_V1.md) — exact quantity, counting, part–whole, rational, measurement, geometry, pattern and time semantics; specified only.
 - [Architecture foundation: 66 concepts](REAPER_ARCHITECTURE_FOUNDATION_66.md) — native C17 registry, nine architectural layers, dependency graph validation and deterministic ordering.
 - [Foundational frameworks 1–5](FOUNDATIONAL_FRAMEWORKS_V1.md) — executable Reaper contracts for Framework frame, Platform, Environment, Infrastructure and Architecture.
 - [Hardware language track](HARDWARE_LANGUAGE.md)
@@ -14,7 +15,7 @@ Start with the [project README](../README.md) for installation, first commands a
 - [DABI64 Desktop Host v1](DABI64_DESKTOP_HOST_V1.md)
 - [Implementation roadmap](IMPLEMENTATION_ROADMAP.md)
 - [Studio and IDE](REAPER_IDE.md)
-- [Mora archive contracts](MORA_ARCHIVE_CONTRACTS.md) — executable `.rpr` validators, record layouts, provenance rules and offline regression fixture.
+- [Mora archive contracts](MORA_ARCHIVE_CONTRACTS.md) — executable .rpr validators, record layouts, provenance rules and offline regression fixture.
 - [NEXUS federation profile](NEXUS_FEDERATION_PROFILE_V1.md) — Reaper ownership, peer contracts and compatibility boundaries.
 
 ## Browse by topic
