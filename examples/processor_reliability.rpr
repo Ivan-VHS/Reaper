@@ -1,0 +1,113 @@
+# End-to-end Reaper Processor Reliability Core conformance fixture.
+# Run from the Reaper repository root:
+#   python -m reaper --check examples/processor_reliability.rpr
+#   python -m reaper examples/processor_reliability.rpr
+# Every physical value in this fixture is deterministic simulated input.
+
+import "../stdlib/processor_reliability.rpr" as core
+
+make coverage := core["validate_matrix_coverage"](core["matrix_fixtures"]())
+assert(coverage[0], "all twenty type/role combinations must be registered")
+assert(coverage[1] == 20, "matrix coverage count must equal 20")
+
+make initial := core["new_state"](
+    4096,
+    512,
+    "test",
+    [16, 16, 16, 16, 16, 16, 16, 16],
+    80
+)
+assert(initial[0], "test kernel state must initialize")
+vary state := initial[1]
+vary matrix_trace := []
+
+each spec in core["matrix_fixtures"]() {
+    make result := core["run_construct"](state, spec)
+    assert(result[0], "every type/role combination must execute")
+    change state := result[1]
+    change matrix_trace := push(matrix_trace, result[2])
+}
+assert(size(matrix_trace) == 20, "twenty constructs must produce twenty trace records")
+assert(state[15] == 5, "one SERVICE invocation per core type must be counted")
+assert(state[14] == 20, "kernel step count must match dispatched constructs")
+
+# Formal core: dimensions, exact conversion, and checked arithmetic.
+make one_ns := core["convert_quantity"](1, "ns", "ps")
+assert(one_ns[0] and one_ns[1] == 1000, "ns to ps conversion must be exact")
+make invalid_dimension := core["convert_quantity"](1, "ns", "um")
+assert(not invalid_dimension[0], "time cannot be converted to length")
+make overflow := core["checked_add"](9007199254740991, 1)
+assert(not overflow[0], "safe integer overflow must be rejected")
+make fraction := core["valid_integer"](1.5, 0, 100)
+assert(not fraction, "fractional cycle counts must be rejected")
+
+# RPR-BC: 64-bit instruction round-trip and strict unknown-opcode rejection.
+make encoded := core["bytecode_encode"](17, "SCENARIO", 77, 512, 0)
+assert(encoded[0], "valid command instruction must encode")
+make decoded := core["bytecode_decode"](encoded[1])
+assert(decoded[0], "encoded instruction must decode")
+assert(decoded[1][0] == 17 and decoded[1][1] == "SCENARIO", "opcode/domain must survive round-trip")
+make invalid_opcode := core["bytecode_decode"]([4278196224, 0])
+assert(not invalid_opcode[0], "unknown opcode must not silently map to RULE")
+make executed := core["execute_bytecode"](state, encoded[1])
+assert(executed[0], "verified bytecode must dispatch through the execution core")
+change state := executed[1]
+
+# Repair core: forecast, local reserve depletion, and safe production degradation.
+make forecast := core["repair_forecast"](state, 50, 10)
+assert(forecast[0] and forecast[1] < state[4], "repair forecast must project future consumption")
+make reserve := core["reserve_spend"]([8, 12, 16], 1, 20)
+assert(reserve[0] and reserve[2] == 12 and reserve[3] == 8, "local reserve shortfall must be explicit")
+
+make production := core["new_state"](100, 20, "production", [8, 8], 0)
+assert(production[0], "production state must initialize")
+make production_spend := core["repair_spend"](production[1], 99, 64, 16)
+assert(production_spend[0], "production budget debit must succeed")
+assert(production_spend[1][16] == "safe-degraded", "low budget must enter safe degradation")
+assert(not production_spend[1][7], "production mode must never enable fault injection")
+make forbidden_injection := core["fault_inject"]("production", true, 1, 0, 64, 16)
+assert(not forbidden_injection[0], "production fault injection must be denied")
+
+# Physical core: silicon thermal guards, copper RC estimate, EM wear, nano repair.
+make domain := core["silicon_domain"](1, 0, 900, 42000, 95000)
+assert(domain[0], "valid silicon domain must be constructed")
+make overheat := core["silicon_advance"](domain[1], 10, 60000)
+assert(not overheat[0], "thermal limit must reject unsafe state transition")
+
+make copper := core["copper_evaluate"](1000, 1000000, 17, 1000)
+assert(copper[0] and copper[1] > 0 and copper[2] > 0, "Cu-Mesh RC metrics must be positive")
+make aged := core["copper_age"](4, 1000, 85000, 100000)
+assert(aged[0] and aged[1] > 4, "electromigration model must increase wear under load")
+
+make cell := core["nano_cell"](3, 16, 900, 12, 0)
+assert(cell[0], "nanochip cell must validate")
+make repaired_cell := core["nano_repair"](cell[1], 20)
+assert(repaired_cell[0] and repaired_cell[1][1] == 0 and repaired_cell[3] == 4, "local repair depletion must expose its shortfall")
+
+# Correction core: signed feedback must reduce residual magnitude without overshoot.
+make positive_fix := core["correction_step"](100, 500, 16)
+make negative_fix := core["correction_step"](-100, 500, 16)
+assert(positive_fix[0] and positive_fix[2] == 84 and positive_fix[3], "positive phase error must converge")
+assert(negative_fix[0] and negative_fix[2] == -84 and negative_fix[3], "negative phase error must converge")
+make exact_fix := core["correction_step"](8, 1000, 64)
+assert(exact_fix[0] and exact_fix[2] == 0 and exact_fix[4], "bounded full-gain correction must reach zero")
+
+# Pytyliki: deterministic load, fault-injection replay and report envelope.
+make load_state := core["new_state"](512, 64, "test", [8, 8, 8, 8], 100)
+assert(load_state[0], "load-test state must initialize")
+make load := core["run_load_test"](load_state[1], 20, 64, 64)
+assert(load[0], "bounded load run must replay deterministically")
+assert(size(load[2]) == 20, "load trace must contain every step")
+assert(load[1][4] == 0, "test load must exhaust the finite repair budget")
+assert(load[1][7], "test-only periodic fault injection must engage at low reserve")
+assert(load[1][18] > 0, "fault windows must be counted in the test environment")
+make report := core["pytyliki_report"](load[1], load[2], load[3])
+assert(report[0], "Pytyliki report must pass trace and checksum validation")
+assert(report[1][0] == "pytyliki.processor-reliability.v1", "report schema must be versioned")
+assert(report[1][1] == 20, "report must retain the executed sample count")
+assert(report[1][8] == "simulated", "report must identify simulated evidence")
+
+emit "REAPER_PROCESSOR_RELIABILITY:PASS"
+emit "TYPE_ROLE_COVERAGE:20/20"
+emit "PYTYLIKI_REPLAY:PASS"
+emit "HARDWARE_EFFECTS:SIMULATED_OR_ADAPTER_GATED"
