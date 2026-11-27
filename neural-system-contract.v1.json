@@ -1,0 +1,149 @@
+{
+  "schema": "ivan-vhs.neural-system-contract.v1",
+  "version": 1,
+  "repository": {
+    "full_name": "Ivan-VHS/Reaper",
+    "project_id": "reaper",
+    "role": "Canonical owner of neural-contract semantics, typed representations and language-facing interfaces",
+    "domain": "Reaper language, canonical typed IR, bytecode/runtime contracts, DABI64 boundaries and ecosystem adapters",
+    "implementation_track": "Reaper is the preferred language for canonical neural-contract declarations and Duck OS-facing examples; native ABI work remains separately versioned and tested"
+  },
+  "catalog": {
+    "source_repository": "Ivan-VHS/DAK",
+    "source_path": "neural-system-catalog.v1.json",
+    "version": 1,
+    "profile_count": 20,
+    "local_snapshot": true
+  },
+  "adoption": {
+    "mode": "planned",
+    "planned_primary_profile_ids": [
+      "nscf-03",
+      "nscf-04",
+      "nscf-11",
+      "nscf-13",
+      "nscf-18",
+      "nscf-20"
+    ],
+    "planned_supporting_profile_ids": [
+      "nscf-01",
+      "nscf-07",
+      "nscf-17",
+      "nscf-19"
+    ],
+    "all_profiles_available": true
+  },
+  "integration": {
+    "responsibilities": [
+      "Own canonical meaning, typed request/response shapes, profile identifiers and language-facing neural-contract declarations.",
+      "Define future typed IR and ABI adapters without coupling the language core to a specific model vendor or training framework.",
+      "Provide deterministic validation and explicit error semantics for neural requests, results and lifecycle transitions.",
+      "Preserve the separation between language semantics, runtime execution, tooling and external adapters."
+    ],
+    "non_goals": [
+      "No lexer, parser, optimizer, canonical IR or DABI64 implementation is changed by this contract-only bootstrap.",
+      "No Python implementation is proposed for Duck OS-native code; Reaper remains the intended native expression language there.",
+      "No model runtime, weights, training loop or inference backend is claimed to exist."
+    ],
+    "proposed_interfaces": [
+      {
+        "id": "reaper.neural-typed-ir.v1",
+        "direction": "provides",
+        "status": "planned",
+        "summary": "Proposed typed IR representation for neural request, result and diagnostic envelopes."
+      },
+      {
+        "id": "reaper.neural-contract-dsl.v1",
+        "direction": "provides",
+        "status": "planned",
+        "summary": "Proposed Reaper-native declaration surface for versioned neural contracts."
+      },
+      {
+        "id": "dak.neural-catalog.v1",
+        "direction": "consumes",
+        "status": "planned",
+        "summary": "Canonical profile names and identifiers owned by DAK."
+      }
+    ]
+  },
+  "runtime": {
+    "state": "not_implemented",
+    "engine": "none",
+    "execution": "disabled",
+    "training": "disabled",
+    "inference": "disabled",
+    "external_data_transfer": "deny_by_default",
+    "telemetry": "disabled",
+    "resource_policy": "explicit_budgets_required_before_execution"
+  },
+  "io_contract": {
+    "input_required_fields": [
+      "contract_id",
+      "contract_version",
+      "request_id",
+      "profile_id",
+      "purpose",
+      "data_origin",
+      "payload_schema",
+      "payload_digest",
+      "created_at",
+      "rights_reference"
+    ],
+    "output_required_fields": [
+      "contract_id",
+      "contract_version",
+      "request_id",
+      "profile_id",
+      "model_id",
+      "model_version",
+      "result",
+      "uncertainty",
+      "evidence_refs",
+      "input_digest",
+      "created_at"
+    ],
+    "failure_codes": [
+      "NSCF-E1001-SCHEMA-INVALID",
+      "NSCF-E1002-PROVENANCE-MISSING",
+      "NSCF-E1003-RIGHTS-NOT-VERIFIED",
+      "NSCF-E1004-PROFILE-UNSUPPORTED",
+      "NSCF-E1005-RUNTIME-DISABLED",
+      "NSCF-E1006-RESOURCE-LIMIT",
+      "NSCF-E1007-REPLAY-MISMATCH"
+    ],
+    "semantic_guarantees": [
+      "Unknown, missing or unavailable measurements remain explicit and are never silently coerced to zero.",
+      "Every request carries a stable request identifier, source provenance and a content digest.",
+      "Every future model result records its profile, model version, input digest, uncertainty and evidence references.",
+      "Determinism is claimed only for execution paths covered by reproducible tests and explicit seed/version controls.",
+      "Model output is advisory; side effects require a separately validated adapter and explicit policy or human approval.",
+      "Raw datasets, secrets and personal data are excluded from diagnostic logs."
+    ]
+  },
+  "governance": {
+    "human_review_required": true,
+    "training_requires_explicit_approval": true,
+    "external_data_export": false,
+    "telemetry": "disabled",
+    "secret_access": "denied",
+    "autonomous_main_branch_writes": false,
+    "rollback_plan_required": true
+  },
+  "quality_gates": [
+    "Validate the local catalogue and repository contract against the versioned JSON Schema.",
+    "Record dataset provenance, licence, consent, purpose limitation, retention and deletion rules before training.",
+    "Separate training, validation and test data by source and prevent leakage across correlated samples.",
+    "Measure a documented non-neural baseline before claiming model benefit.",
+    "Test accuracy, calibration, uncertainty, out-of-domain inputs and failure behavior on representative fixtures.",
+    "Record model identity, training recipe, data snapshot digest, seeds and build/runtime versions for reproducibility.",
+    "Enforce explicit memory, CPU/GPU, queue, timeout and latency budgets before enabling execution.",
+    "Threat-model untrusted inputs, imported model artifacts, deserialization and model-output side effects.",
+    "Require human review, a feature branch, CI evidence and a rollback plan for model or contract changes.",
+    "Keep local/offline execution as the default and verify that no data leaves the repository or host without explicit approval."
+  ],
+  "status": {
+    "architecture": "specified",
+    "implementation": "not_implemented",
+    "validation": "not_run"
+  }
+}
