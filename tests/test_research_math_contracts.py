@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 import unittest
+from pathlib import Path
 
 from reaper.research_math_contracts import (
     EXPECTED_FUNCTIONS,
@@ -17,6 +18,12 @@ from reaper.research_math_contracts import (
 class MathematicalResearchContractTests(unittest.TestCase):
     def setUp(self):
         self.catalog = load_research_math_catalog()
+
+    def test_packaged_catalog_matches_canonical_language_catalog(self):
+        root = Path(__file__).resolve().parents[1]
+        canonical = root / "language" / "mathematical_research.v1.json"
+        packaged = root / "reaper" / "mathematical_research.v1.json"
+        self.assertEqual(canonical.read_bytes(), packaged.read_bytes())
 
     def test_catalog_has_17_domains_and_51_unique_functions(self):
         self.assertEqual(len(self.catalog["areas"]), 17)
@@ -80,6 +87,39 @@ class MathematicalResearchContractTests(unittest.TestCase):
             self.catalog,
         )
         self.assertEqual(plan.evidence, "bounded_exhaustive_search")
+
+    def test_rejects_inconsistent_sat_offsets(self):
+        with self.assertRaises(ResearchContractError):
+            prepare_math_kernel_call(
+                "complexity.sat_find_bounded",
+                {
+                    "variables": 2,
+                    "literals": [1, -2],
+                    "literal_count": 2,
+                    "clause_offsets": [0, 1],
+                    "clause_count": 1,
+                    "assignment_budget": 4,
+                },
+                self.catalog,
+            )
+
+    def test_rejects_grid_shape_mismatch_before_native_dispatch(self):
+        with self.assertRaises(ResearchContractError):
+            prepare_math_kernel_call(
+                "navier_stokes.grid_divergence",
+                {
+                    "u": [0.0] * 7,
+                    "v": [0.0] * 8,
+                    "w": [0.0] * 8,
+                    "nx": 2,
+                    "ny": 2,
+                    "nz": 2,
+                    "dx": 1.0,
+                    "dy": 1.0,
+                    "dz": 1.0,
+                },
+                self.catalog,
+            )
 
     def test_prime_field_contract_rejects_composite_modulus(self):
         with self.assertRaises(ResearchContractError):
