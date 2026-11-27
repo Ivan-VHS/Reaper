@@ -28,7 +28,7 @@ _IRON_RECORDS: tuple[tuple[str, str, str, str, str, int], ...] = (
     ("operation", "} operation P)-", "operation", "P)-", "control", 6),
     ("massive", "?? massive <>", "massive", "<>", "modifier", 7),
     ("start", "< start >?", "start", ">?", "boundary", 8),
-    ("new_work", "grown new-work one", "new-work", ">/", "modifier", 9),
+    ("new_work", "grown new-work >/", "new-work", ">/", "modifier", 9),
     ("concrete", "> concrete //*", "concrete", "//*", "modifier", 10),
     ("utility", "## utility _", "utility", "_", "directive", 11),
     ("unify", "# unify TAB", "unify", "TAB", "directive", 12),
