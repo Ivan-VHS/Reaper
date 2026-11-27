@@ -190,6 +190,27 @@
         "schemas/reaper.processor-fabric-typed-ir.v1.schema.json",
         "docs/PYTYLIKI_PROCESSOR_FABRIC_BRIDGE.md"
       ]
+    },
+    {
+      "id": "processor.backends.prototypes.v1",
+      "status": "partial",
+      "summary": "Five independent bounded C17 processor backend prototypes: structured RV32I instruction encoder, flat-image linker with relocations, subset emulator, combinational SystemVerilog emitter and exhaustive Boolean equivalence checker. None is target- or hardware-qualified.",
+      "evidence": [
+        "include/reaper/processor_backends.h",
+        "src/processor_rv32_assembler.c",
+        "src/processor_rv32_linker.c",
+        "src/processor_rv32_emulator.c",
+        "src/processor_rtl_backend.c",
+        "src/processor_formal_backend.c",
+        "tests/test_processor_assembler.c",
+        "tests/test_processor_linker.c",
+        "tests/test_processor_emulator.c",
+        "tests/test_processor_rtl.c",
+        "tests/test_processor_formal.c",
+        "docs/PROCESSOR_BACKENDS_V1.md",
+        "schemas/reaper.processor-backend-registry.v1.schema.json",
+        "examples/processor-backends/processor-backend-prototypes.v1.json"
+      ]
     }
   ],
   "interfaces": [
