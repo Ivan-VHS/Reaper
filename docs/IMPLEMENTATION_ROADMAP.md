@@ -72,6 +72,9 @@ Never move a row to Delivered because a registry, design, README, schema or gene
 
 **Status: Planned beyond the current checked API contracts.**
 
+- The approved downstream DuckOS integration is tracked as a separate host-call contract in `docs/DUCKOS_SYSTEM_SERVICE_CONTRACTS.md` and `language/duckos_system_services.v1.json`. The manifest is contract-only; it does not make Reaper or DuckOS operations callable.
+- Keep kernel/HAL primitives, user-mode service orchestration, compute runtimes and build tools in separate ownership and privilege domains.
+
 - Define allocator ownership, lifetime, overflow, failure and cleanup semantics before implementing memory arenas.
 - Define a stable host-call ABI and explicit capability/effect declarations.
 - Keep MMIO behind a separate opt-in privileged adapter; the normal interpreter/compiler must not map physical addresses.
@@ -125,7 +128,7 @@ Never move a row to Delivered because a registry, design, README, schema or gene
 
 ## Not a Reaper workstream
 
-A public hosted API, cloud deployment, kernel driver, privileged device manager and production control plane are not current Reaper product targets. They must not be marked Planned as if they were missing parts of the language unless a separately approved product decision establishes ownership and a concrete target.
+A public hosted API, cloud deployment and production hosted control plane are not current Reaper product targets. Kernel drivers, privileged device services and production system orchestration are downstream DuckOS responsibilities under an explicitly approved integration contract; they are not implicit features of the default Reaper runtime.
 
 ## Change protocol
 

@@ -165,3 +165,8 @@ Use three separate labels:
 - **Planned:** a design or roadmap entry without executable support.
 
 A capability enters marketing copy as available only after its contract, implementation, tests and supported-target evidence are published together.
+
+
+## DuckOS system-service boundary
+
+The downstream DuckOS integration is specified separately in [DUCKOS_SYSTEM_SERVICE_CONTRACTS.md](DUCKOS_SYSTEM_SERVICE_CONTRACTS.md), with a machine-readable registry at [language/duckos_system_services.v1.json](../language/duckos_system_services.v1.json). These are host-call contracts only: they do not add callable functions to the current Reaper runtime. DuckOS owns the kernel, HAL, driver and service implementations; Reaper owns versioned types, effects, capabilities and ABI validation. Keep user-mode orchestration separate from privileged kernel adapters, and keep Linux-specific mechanisms behind optional target backends.
