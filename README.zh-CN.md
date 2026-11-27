@@ -15,6 +15,7 @@ Reaper 是一款面向编译器工具、嵌入式软件和硬件相关程序的�
 - Reaper 源语言、词法/语法分析器、参考运行时和诊断。
 - CLI、REPL、Windows Studio 基础、LSP 与 DAP 服务。
 - 实验性 C17 原生实现；当前尚未与参考运行时功能对等。
+- Reaper-native Processor Kernel v1：状态机、受限协作式调度、确定性 replay、action pulse、CPU 目标配置和结构化导出；原生 SMP 与特权硬件执行尚未实现。
 - NOO TAH 将 JavaScript 执行交给官方 Node.js 运行时。
 - Jora 项目脚手架和能力组合；目录中的应用包仍是规范，不是可安装的编辑器。
 
