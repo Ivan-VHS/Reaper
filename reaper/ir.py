@@ -1,10 +1,13 @@
 """Canonical stack IR lowering for the Reaper AST."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+import json
+import math
+from dataclasses import dataclass, field
 from typing import Any
 
 from .parser import Node
+from .source import SourceSpan, span_to_data
 
 
 @dataclass(frozen=True, slots=True)
@@ -12,6 +15,9 @@ class IRInstruction:
     op: str
     argument: Any
     token: Any
+    span: SourceSpan | None = field(default=None)
+    origin_span: SourceSpan | None = field(default=None)
+    expanded_from: tuple[SourceSpan, ...] = field(default=())
 
 
 @dataclass(frozen=True, slots=True)
@@ -19,12 +25,33 @@ class IRFunction:
     name: str
     parameters: tuple[str, ...]
     code: tuple[IRInstruction, ...]
+    span: SourceSpan | None = field(default=None)
 
 
 @dataclass(frozen=True, slots=True)
 class CanonicalIR:
     code: tuple[IRInstruction, ...]
     source_name: str = "<memory>"
+    schema_version: int = 1
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a deterministic, versioned IR projection with its source map."""
+        verify(self)
+        return {
+            "schema": "reaper.canonical-ir/v1",
+            "version": self.schema_version,
+            "source_name": self.source_name,
+            "code": [_instruction_data(item, index) for index, item in enumerate(self.code)],
+            "source_map": _source_map(self.code),
+        }
+
+    def to_json(self, *, indent: int | None = 2) -> str:
+        """Serialize the IR and source map without timestamps or host-dependent data."""
+        return json.dumps(
+            self.as_dict(), ensure_ascii=False, sort_keys=True,
+            indent=indent, allow_nan=False,
+            separators=None if indent is not None else (",", ":"),
+        )
 
 
 class IRVerificationError(ValueError):
@@ -36,12 +63,17 @@ class _Lowerer:
         self.code: list[IRInstruction] = []
 
     def emit(self, op: str, argument: Any, token: Any) -> int:
-        self.code.append(IRInstruction(op, argument, token))
+        span = getattr(token, "span", None)
+        self.code.append(IRInstruction(
+            op, argument, token, span=span, origin_span=span,
+        ))
         return len(self.code) - 1
 
     def patch(self, index: int, argument: Any) -> None:
         old = self.code[index]
-        self.code[index] = IRInstruction(old.op, argument, old.token)
+        self.code[index] = IRInstruction(
+            old.op, argument, old.token, old.span, old.origin_span, old.expanded_from,
+        )
 
     def statements(self, nodes: list[Node] | None) -> None:
         for node in nodes or []:
@@ -75,7 +107,10 @@ class _Lowerer:
             nested.statements(children[0].children)
             nested.emit("CONST", None, node.token)
             nested.emit("RETURN", None, node.token)
-            function = IRFunction(name, tuple(parameters), tuple(nested.code))
+            function = IRFunction(
+                name, tuple(parameters), tuple(nested.code),
+                span=getattr(node.token, "span", None),
+            )
             self.emit("MAKE_FUNCTION", function, node.token)
             self.emit("DEFINE", (name, False), node.token)
         elif node.kind == "when":
@@ -182,6 +217,59 @@ class _Lowerer:
             raise IRVerificationError(f"cannot lower expression kind: {node.kind}")
 
 
+
+def _argument_data(value: Any) -> Any:
+    """Convert IR operands to JSON data without repr()-based unstable fallbacks."""
+    if isinstance(value, IRFunction):
+        return {
+            "kind": "function",
+            "name": value.name,
+            "parameters": list(value.parameters),
+            "span": span_to_data(value.span),
+            "code": [_instruction_data(item, index) for index, item in enumerate(value.code)],
+        }
+    if value is None or type(value) in {str, bool, int}:
+        return value
+    if type(value) is float:
+        if not math.isfinite(value):
+            raise IRVerificationError("IR cannot serialize a non-finite floating-point operand")
+        return value
+    if isinstance(value, tuple):
+        return [_argument_data(item) for item in value]
+    if isinstance(value, list):
+        return [_argument_data(item) for item in value]
+    if isinstance(value, dict):
+        if any(not isinstance(key, str) for key in value):
+            raise IRVerificationError("IR JSON object keys must be strings")
+        return {key: _argument_data(item) for key, item in value.items()}
+    raise IRVerificationError(f"IR operand is not JSON-serializable: {type(value).__name__}")
+
+
+def _instruction_data(instruction: IRInstruction, index: int) -> dict[str, Any]:
+    return {
+        "index": index,
+        "op": instruction.op,
+        "argument": _argument_data(instruction.argument),
+        "span": span_to_data(instruction.span),
+        "origin_span": span_to_data(instruction.origin_span),
+        "expanded_from": [item.to_dict() for item in instruction.expanded_from],
+    }
+
+
+def _source_map(code: tuple[IRInstruction, ...]) -> list[dict[str, Any]]:
+    entries = []
+    for index, instruction in enumerate(code):
+        if instruction.span is None and instruction.origin_span is None and not instruction.expanded_from:
+            continue
+        entries.append({
+            "instruction": index,
+            "span": span_to_data(instruction.span),
+            "origin_span": span_to_data(instruction.origin_span),
+            "expanded_from": [item.to_dict() for item in instruction.expanded_from],
+        })
+    return entries
+
+
 _ALLOWED = {
     "CONST", "LOAD", "DEFINE", "ASSIGN", "EMIT", "RETURN", "MAKE_FUNCTION",
     "JUMP_IF_FALSE", "JUMP", "ENTER_SCOPE", "EXIT_SCOPE", "ITER_INIT",
@@ -206,6 +294,12 @@ def verify(module: CanonicalIR) -> None:
         raise IRVerificationError("module code must be an immutable instruction tuple")
     if not isinstance(module.source_name, str) or not module.source_name:
         raise IRVerificationError("module source_name must be non-empty text")
+    if type(module.schema_version) is not int or module.schema_version != 1:
+        raise IRVerificationError("unsupported canonical IR schema version")
+
+    def validate_span(span: Any, where: str) -> None:
+        if span is not None and not isinstance(span, SourceSpan):
+            raise IRVerificationError(f"{where}: source coordinates must use SourceSpan")
 
     binary_operators = {
         "==", "!=", "<", "<=", ">", ">=", "++",
@@ -226,6 +320,16 @@ def verify(module: CanonicalIR) -> None:
                 raise IRVerificationError(f"{where}: expected an IRInstruction")
             if not isinstance(instruction.op, str) or instruction.op not in _ALLOWED:
                 raise IRVerificationError(f"{where}: unknown IR operation: {instruction.op!r}")
+
+            validate_span(instruction.span, where)
+            validate_span(instruction.origin_span, where)
+            if not isinstance(instruction.expanded_from, tuple):
+                raise IRVerificationError(f"{where}: expanded_from must be an immutable span tuple")
+            for provenance in instruction.expanded_from:
+                validate_span(provenance, where)
+            token_span = getattr(instruction.token, "span", None)
+            if token_span is not None and instruction.span != token_span:
+                raise IRVerificationError(f"{where}: instruction span differs from its source token")
 
             op = instruction.op
             argument = instruction.argument
@@ -260,6 +364,7 @@ def verify(module: CanonicalIR) -> None:
                 function = argument
                 if not isinstance(function, IRFunction):
                     raise IRVerificationError(f"{where}: MAKE_FUNCTION requires an IRFunction")
+                validate_span(function.span, where)
                 require_name(function.name, where)
                 if not isinstance(function.parameters, tuple):
                     raise IRVerificationError(f"{where}: function parameters must be a tuple")

@@ -7,6 +7,7 @@ from typing import Any
 
 from .errors import ParseError
 from .lexer import Token, tokenize
+from .source import SourceSpan
 
 
 @dataclass(slots=True)
@@ -15,6 +16,11 @@ class Node:
     token: Token
     value: Any = None
     children: list["Node"] | None = None
+
+    @property
+    def span(self) -> SourceSpan | None:
+        """Return the originating token span when the lexer supplies one."""
+        return getattr(self.token, "span", None)
 
 
 _PRECEDENCE = {
