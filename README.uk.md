@@ -13,7 +13,7 @@ Reaper — мова системного програмування та лок�
 ## Склад
 
 - Processor Engineering Platform v1: маніфести проєктів і цілей, перевірки Typed Registry, read-only дані CPU/ISA від Pytyliki та поточний host AOT-зріз scalar C17. Генерація коду під конкретні ISA й привілейовані операції з процесором не заявляються.
-- Processor backends v1: five independently tested bounded C17 prototypes — a structured RV32I encoder, flat-image linker, subset emulator, combinational SystemVerilog emitter and Boolean equivalence checker. They are not full target-qualified toolchains.
+- Прототипи процесорних backend-ів v1: п’ять незалежних обмежених реалізацій на C17 — кодер RV32I, flat-image linker, емулятор підмножини ISA, комбінаторний SystemVerilog emitter і перевірка булевої еквівалентності. Кваліфікація для цільового процесора чи реального обладнання не заявлена.
 - Мова Reaper, lexer/parser, еталонне середовище та діагностика.
 - CLI, REPL, основа Windows Studio, служби LSP і DAP.
 - Експериментальна реалізація на C17; вона ще не має повного паритету з еталонним середовищем.
