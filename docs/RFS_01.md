@@ -42,6 +42,18 @@ comparator   = "==" | "!=" | "<" | "<=" | ">" | ">=" ;
 
 The reference parser rejects unknown fields, duplicate declaration IDs, unknown references, unsupported operators, malformed UTF-8, non-finite numbers, and values outside the v1.0 domain. The native C17 lexer recognizes the RFS state, flow, contrast, and recovery operator spellings as operator tokens; it does not yet parse complete RFS modules or lower them to native typed IR.
 
+## Typed intermediate representation
+
+The validated source model lowers to `rfs-01.typed-ir.v1`. Its stable opcode
+set is `FLOW_SIGNAL`, `FLOW_PRESSURE_FORWARD`,
+`FLOW_PRESSURE_REVERSE`, `RECOVER_ROOT`, `RECOVER_CORE`,
+`CONTRAST_COMPLEMENT`, `CONTRAST_DIFFERENTIAL`, and `EMIT`.
+Instructions have a deterministic sequence number, typed operands, and an
+optional source span. The verifier checks opcode/operand shape, instruction
+ordering, node references, and directed-link availability before execution.
+The runtime executes this verified IR rather than dispatching directly from
+source tokens.
+
 ## 3. Typed state model
 
 - `Node`: stable non-empty ID; layer in `Basement | Corridor | Gate | Skyline | Horizon`; finite pressure `>= 0`; finite load limit `> 0`; integrity ratio in `[0,1]`; noise level in `[-160,24]` dBFS; non-empty core seed.
