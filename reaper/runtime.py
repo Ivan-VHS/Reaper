@@ -28,6 +28,7 @@ from .token_catalog import token_catalog, token_info, token_is_reserved
 class Binding:
     value: Any
     mutable: bool
+    register: bool = False
 
 
 class Environment:
@@ -36,10 +37,14 @@ class Environment:
         self.values: dict[str, Binding] = {}
         self.exports: set[str] = set()
 
-    def define(self, name: str, value: Any, mutable: bool = False) -> None:
+    def define(
+        self, name: str, value: Any, mutable: bool = False, register: bool = False
+    ) -> None:
         if name in self.values:
             raise ReaperRuntimeError(f"'{name}' is already defined in this scope")
-        self.values[name] = Binding(value, mutable)
+        if register and (isinstance(value, bool) or not isinstance(value, (int, float))):
+            raise ReaperRuntimeError("'reg' requires a numeric value")
+        self.values[name] = Binding(value, mutable, register)
 
     def get(self, name: str) -> Any:
         if name in self.values:
@@ -48,15 +53,18 @@ class Environment:
             return self.parent.get(name)
         raise ReaperRuntimeError(f"unknown name '{name}'")
 
-    def change(self, name: str, value: Any) -> None:
+    def change(self, name: str, value: Any, token: Token | None = None, filename: str = "<memory>") -> None:
         if name in self.values:
             binding = self.values[name]
             if not binding.mutable:
                 raise ReaperRuntimeError(f"'{name}' was declared with 'make' and cannot be changed; use 'vary'")
+            if binding.register and (isinstance(value, bool) or not isinstance(value, (int, float))):
+                location = f"{filename}:{token.line}:{token.column}: " if token is not None else ""
+                raise ReaperRuntimeError(f"{location}register '{name}' only accepts numeric values")
             binding.value = value
             return
         if self.parent is not None:
-            self.parent.change(name, value)
+            self.parent.change(name, value, token, filename)
             return
         raise ReaperRuntimeError(f"unknown name '{name}'")
 
@@ -80,6 +88,10 @@ class Builtin:
 class _ReturnSignal(Exception):
     def __init__(self, value: Any) -> None:
         self.value = value
+
+
+class _ContinueSignal(Exception):
+    """Internal control-flow signal consumed by the nearest loop."""
 
 
 class Interpreter:
@@ -225,8 +237,15 @@ class Interpreter:
         elif node.kind == "declare":
             name, mutable = node.value
             environment.define(name, self._evaluate(children[0], environment), mutable)
+        elif node.kind == "register":
+            value = self._evaluate(children[0], environment)
+            if not self._is_number(value):
+                raise self._error(node.token, "'reg' requires a numeric value")
+            environment.define(node.value, value, mutable=True, register=True)
         elif node.kind == "change":
-            environment.change(node.value, self._evaluate(children[0], environment))
+            environment.change(node.value, self._evaluate(children[0], environment), node.token, self.filename)
+        elif node.kind == "continue":
+            raise _ContinueSignal()
         elif node.kind == "emit":
             self.output(self._display(self._evaluate(children[0], environment)))
         elif node.kind == "yield":
@@ -250,13 +269,19 @@ class Interpreter:
                 self._tick(node.token)
                 scope = Environment(environment)
                 scope.define(node.value, value)
-                result = self._execute_block(children[1], scope)
+                try:
+                    result = self._execute_block(children[1], scope)
+                except _ContinueSignal:
+                    continue
             return result
         elif node.kind == "while":
             result = None
             while self._truthy(self._evaluate(children[0], environment)):
                 self._tick(node.token)
-                result = self._execute_block(children[1], environment)
+                try:
+                    result = self._execute_block(children[1], environment)
+                except _ContinueSignal:
+                    continue
             return result
         elif node.kind == "expression":
             return self._evaluate(children[0], environment)
@@ -322,6 +347,13 @@ class Interpreter:
         raise self._error(node.token, f"unknown expression kind '{node.kind}'")
 
     def _binary(self, operator: str, left: Any, right: Any, token: Token) -> Any:
+        if operator == "..":
+            if type(left) is not int or type(right) is not int:
+                raise self._error(token, "'...' inclusive ranges require whole-number bounds")
+            item_count = abs(right - left) + 1
+            if item_count > self.max_collection_items:
+                raise self._error(token, f"range item limit ({self.max_collection_items}) exceeded")
+            return range(left, right + 1) if left <= right else range(left, right - 1, -1)
         if operator == "==":
             return self._equal(left, right)
         if operator == "!=":
