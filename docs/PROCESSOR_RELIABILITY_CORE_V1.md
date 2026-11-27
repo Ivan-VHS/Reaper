@@ -12,8 +12,8 @@ The module composes six bounded subsystems:
 |---|---|---|
 | Formal Core | `valid_integer`, `checked_add`, `checked_multiply`, `quantity`, `convert_quantity` | Safe-integer arithmetic, finite bounds, explicit physical dimensions |
 | Execution Core | `type_role_matrix`, `validate_construct`, `run_construct`, `bytecode_encode`, `bytecode_decode`, `execute_bytecode` | Exactly 20 registered type/role pairs; strict opcode/domain validation |
-| Repair Core | `new_state`, `repair_spend`, `repair_forecast`, `reserve_spend` | Finite shared budget, local reserves, explicit exhaustion and safe degradation |
-| Physical Core | `silicon_domain`, `silicon_advance`, `silicon_barrier`, `copper_evaluate`, `copper_age`, `copper_channel`, `nano_cell`, `nano_repair`, `stream_state`, `stream_advance` | Bounded deterministic silicon, stream, copper RC, electromigration and nano-cell models |
+| Repair Core | `new_state`, `repair_spend`, `repair_forecast`, `reserve_spend`, `repair_recover` | Finite shared budget, reserve-backed recovery, explicit exhaustion and safe degradation |
+| Physical Core | `silicon_domain`, `silicon_advance`, `silicon_barrier`, `hardware_register_snapshot`, `copper_evaluate`, `copper_age`, `copper_channel`, `copper_channel_age`, `nano_cell`, `nano_repair`, `stream_state`, `stream_advance` | Bounded deterministic silicon, stream, simulated register/barrier, copper RC, electromigration and nano-cell models |
 | Correction Core | `correction_step`, `apply_correction` | Signed feedback, bounded gain and step, no intentional overshoot, residual-error convergence checks |
 | Pytyliki | `trace_checksum`, `replay_validate`, `run_load_test`, `pytyliki_report` | Deterministic trace, bounded load run, replay verification and versioned report envelope |
 
@@ -37,6 +37,7 @@ The state record is versioned and has the following slots:
 | 16 | Kernel lifecycle/degradation status |
 | 17 | Local repair-cell reserves |
 | 18 | Injected test-fault count |
+| 19 | Simulated barrier/fence counter |
 
 Do not mutate state records outside the module. Every transition returns a replacement record; `state_valid` checks the full shape and bounds.
 
@@ -55,12 +56,13 @@ The copper-tune instruction evaluates a deterministic RC fixture from its operan
 
 ## Repair and fault policy
 
-A repair debit is clamped to the remaining budget. Crossing the low watermark is a one-time state transition while periodic injection is already active.
+A repair debit is clamped to the remaining budget. Crossing the low watermark is a one-time state transition while periodic injection is active. Re-activating an already-active scenario is idempotent and does not increment the activation counter.
 
 - In `production` mode, low reserve moves the state to `safe-degraded`; fault injection is denied.
 - In `test` mode, crossing the watermark may enable bounded periodic fault injection. The injected fault is explicitly synthetic and is counted in the trace.
 - Re-entering a low-budget state does not repeatedly increment the activation counter.
 - The forecast is advisory and never reserves or spends resources.
+- Production `safe-degraded` blocks new `START` constructs. `repair_recover` can restore a production state only with explicit ROOT authorization and a sufficient local reserve; the reserve is debited by exactly the credited amount. Recovery above the low watermark returns the lifecycle to `ready`.
 
 The fault window is `((cycle - phase) % period) < duty`. Period and duty are validated before activation.
 
@@ -107,4 +109,4 @@ CI must require these exact output lines:
 
 ## Hardware boundary
 
-This package does not map physical addresses, write MMIO, program CPU registers, alter scheduling/affinity/voltage/frequency, install firmware or drivers, register real interrupts or repair physical processor faults. The register snapshot and barriers are simulated descriptors. A future real backend must be a separate capability-gated OS/driver adapter with target/ABI validation, real memory-ordering primitives, audit records and hardware-in-the-loop qualification.
+This package does not map physical addresses, write MMIO, program CPU registers, alter scheduling/affinity/voltage/frequency, install firmware or drivers, register real interrupts or repair physical processor faults. The register snapshot and barriers are simulated descriptors. The barrier counter is a logical dispatch/fence accounting field; it is not a CPU memory-fence instruction or a measured hardware cycle counter. A future real backend must be a separate capability-gated OS/driver adapter with target/ABI validation, real memory-ordering primitives, audit records and hardware-in-the-loop qualification.
