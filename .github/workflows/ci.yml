@@ -68,6 +68,7 @@ jobs:
           grep -qx "REAPER_PROCESSOR_RELIABILITY:PASS" processor-reliability.txt
           grep -qx "TYPE_ROLE_COVERAGE:20/20" processor-reliability.txt
           grep -qx "PYTYLIKI_REPLAY:PASS" processor-reliability.txt
+          grep -qx "PROCESSOR_CONTROL:PASS" processor-reliability.txt
       - name: Run Processor Reliability Core through the Reaper bytecode VM
         shell: bash
         run: |
@@ -76,6 +77,7 @@ jobs:
           grep -qx "REAPER_PROCESSOR_RELIABILITY:PASS" processor-reliability-vm.txt
           grep -qx "TYPE_ROLE_COVERAGE:20/20" processor-reliability-vm.txt
           grep -qx "PYTYLIKI_REPLAY:PASS" processor-reliability-vm.txt
+          grep -qx "PROCESSOR_CONTROL:PASS" processor-reliability-vm.txt
       - name: Run Reaper Typed Registry conformance fixtures
         run: python -m reaper examples/typed_registry.rpr
       - name: Validate Mora archive contracts example
