@@ -4,7 +4,7 @@ from __future__ import annotations
 import argparse, json, sys, tempfile
 from pathlib import Path
 from typing import Any
-SCHEMA = "anatidae.quality-repeatability-native.v1"
+SCHEMA = "dak.quality-repeatability-native.v1"
 PILLARS = ("quality", "multiplicity", "native")
 STATES = {"implemented", "planned", "not_applicable"}
 def evidence_file(root: Path, relative: Any) -> bool:
