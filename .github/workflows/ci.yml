@@ -59,6 +59,10 @@ jobs:
         run: python -m reaper examples/mora_archive_contracts.rpr
       - name: Run example
         run: python -m reaper examples/flow.rpr
+      - name: Validate early-math invariant example
+        run: python -m reaper --check examples/early_math.rpr
+      - name: Run early-math invariant example
+        run: python -m reaper examples/early_math.rpr
       - name: Run end-to-end read-only device audit example
         run: |
           python -m reaper examples/device_audit.rpr
