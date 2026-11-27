@@ -1,0 +1,28 @@
+# Energy values are joules; mass is kg and speed is m/s.
+# Efficiency returns [success, percent_or_error].
+craft efficiency(input_j, output_j) {
+    when input_j <= 0 {
+        yield [false, "zero_input_energy"]
+    }
+    when output_j < 0 or output_j > input_j {
+        yield [false, "invalid_output_energy"]
+    }
+    yield [true, output_j / input_j * 100]
+}
+
+craft analyze_run(mass_kg, speed_ms, input_j) {
+    when mass_kg <= 0 {
+        yield ["error", "mass_must_be_positive"]
+    }
+    when speed_ms < 0 {
+        yield ["error", "speed_must_not_be_negative"]
+    }
+    when input_j <= 0 {
+        yield ["error", "input_energy_must_be_positive"]
+    }
+    make kinetic_j := 0.5 * mass_kg * speed_ms * speed_ms
+    yield ["ok", kinetic_j, efficiency(input_j, kinetic_j)]
+}
+
+emit analyze_run(10, 4, 100)
+emit analyze_run(10, 20, 100)

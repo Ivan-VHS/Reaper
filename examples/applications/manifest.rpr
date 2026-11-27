@@ -1,0 +1,25 @@
+# Executable catalogue for the fifteen Reaper application examples.
+craft suite_manifest() {
+    yield [
+        "reaper-application-suite/v1",
+        [
+            ["telemetry_guard", "sensor validation and filtering"],
+            ["log_sieve", "structured log parsing and service error counts"],
+            ["game_tuner", "hardware-aware game profile decisions"],
+            ["table_cleaner", "catalog normalization and SKU de-duplication"],
+            ["api_gateway", "request validation and in-memory idempotency"],
+            ["secret_patrol", "redacted credential-pattern scanning"],
+            ["latency_probe", "nearest-rank p50/p95/p99 metrics"],
+            ["dag_runner", "dependency validation and topological ordering"],
+            ["span_indexer", "line and column indexing of craft declarations"],
+            ["ledger_reconcile", "integer-cent payment reconciliation"],
+            ["driver_manifest", "numeric version comparison and update planning"],
+            ["most_build", "executable Russian keyword aliases"],
+            ["text_shield", "heuristic message moderation"],
+            ["physics_bench", "kinetic energy and efficiency validation"],
+            ["bf_vm", "bounded Brainfuck bytecode interpreter"]
+        ]
+    ]
+}
+
+emit suite_manifest()

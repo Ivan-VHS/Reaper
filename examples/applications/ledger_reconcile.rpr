@@ -1,0 +1,45 @@
+# Payment: [transaction_id, invoice_id, paid_cents].
+# Invoice: [invoice_id, total_cents].
+# All arithmetic stays in integer cents.
+craft find_invoice(invoices, invoice_id) {
+    vary found := []
+    each invoice in invoices {
+        when invoice[0] == invoice_id {
+            change found := invoice
+        }
+    }
+    yield found
+}
+
+craft reconcile(payments, invoices) {
+    vary report := []
+    each payment in payments {
+        make invoice := find_invoice(invoices, payment[1])
+        when size(invoice) == 0 {
+            change report := push(report, [payment[0], "orphan_payment", payment[2]])
+        } otherwise {
+            when invoice[1] == payment[2] {
+                change report := push(report, [payment[0], "matched", 0])
+            } otherwise {
+                change report := push(report, [
+                    payment[0],
+                    "mismatch",
+                    payment[2] - invoice[1]
+                ])
+            }
+        }
+    }
+    yield report
+}
+
+make invoices := [
+    ["INV-100", 12500],
+    ["INV-101", 9900],
+    ["INV-102", 4500]
+]
+make payments := [
+    ["TX-1", "INV-100", 12500],
+    ["TX-2", "INV-101", 9500],
+    ["TX-3", "INV-404", 3000]
+]
+emit reconcile(payments, invoices)

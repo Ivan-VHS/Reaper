@@ -1,0 +1,47 @@
+# Lightweight declaration index for the executable Reaper subset.
+# Span: [symbol_name, one_based_line, one_based_column].
+# This is not a replacement for the compiler's full token/AST source map.
+craft leading_spaces(line) {
+    vary index := 0
+    loop while index < size(line) and line[index] == " " {
+        change index := index + 1
+    }
+    yield index
+}
+
+craft declaration_name(line) {
+    make sections := split(line, "craft ")
+    when size(sections) < 2 {
+        yield ""
+    }
+    make signature := split(sections[1], "(")
+    yield trim(signature[0])
+}
+
+craft extract_symbols(source) {
+    make lines := split(source, "\n")
+    vary symbols := []
+    vary line_index := 0
+    each line in lines {
+        make normalized := trim(line)
+        when starts_with(normalized, "craft ") {
+            make name := declaration_name(normalized)
+            when name != "" {
+                make column := leading_spaces(line) + 7
+                change symbols := push(symbols, [name, line_index + 1, column])
+            }
+        }
+        change line_index := line_index + 1
+    }
+    yield symbols
+}
+
+craft index_file(path) {
+    make handle := file_open(path, "r")
+    make source := file_read(handle)
+    file_close(handle)
+    yield extract_symbols(source)
+}
+
+make sample_source := "craft alpha(value) {\n    yield value\n}\n\n    craft beta(value) {\n        yield value * 2\n}"
+emit extract_symbols(sample_source)

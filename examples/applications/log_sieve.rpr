@@ -1,0 +1,55 @@
+# Input line format: timestamp | service | status_code | message.
+# Parsed records: [valid, timestamp, service, status_code, message].
+craft parse_line(line) {
+    make fields := split(line, " | ")
+    when size(fields) != 4 {
+        yield [false, "malformed_log_line"]
+    }
+    make code := number(trim(fields[2]))
+    yield [true, trim(fields[0]), trim(fields[1]), code, trim(fields[3])]
+}
+
+craft parsed_ok(row) {
+    yield row[0]
+}
+
+craft is_server_error(row) {
+    yield row[3] >= 500 and row[3] <= 599
+}
+
+craft service_name(row) {
+    yield row[2]
+}
+
+craft count_service(rows, service) {
+    vary total := 0
+    each row in rows {
+        when row[2] == service {
+            change total := total + 1
+        }
+    }
+    yield total
+}
+
+craft inspect_logs(lines) {
+    make parsed := lines :: map(parse_line)
+    make valid := parsed :: keep(parsed_ok)
+    make server_errors := valid :: keep(is_server_error)
+    make services := server_errors :: map(service_name) :: unique()
+    vary groups := []
+    each service in services {
+        change groups := push(groups, [service, count_service(server_errors, service)])
+    }
+    yield [groups, size(lines) - size(valid), size(server_errors)]
+}
+
+make sample_logs := [
+    "2026-11-24T00:01:00Z | auth | 503 | upstream unavailable",
+    "2026-11-24T00:01:02Z | shop | 200 | request complete",
+    "2026-11-24T00:01:03Z | auth | 502 | overload",
+    "not a structured log line"
+]
+make report := inspect_logs(sample_logs)
+emit report[0]
+emit "malformed = " ++ text(report[1])
+emit "5xx = " ++ text(report[2])

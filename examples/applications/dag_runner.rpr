@@ -1,0 +1,53 @@
+# Task: [task_id, dependency_ids]. The result is an execution order, not process execution.
+craft task_id(task) {
+    yield task[0]
+}
+
+craft dependencies_met(dependencies, completed) {
+    vary ready := true
+    each dependency in dependencies {
+        when not contains(completed, dependency) {
+            change ready := false
+        }
+    }
+    yield ready
+}
+
+craft resolve_order(tasks) {
+    make ids := tasks :: map(task_id)
+    when size(ids) != size(ids :: unique()) {
+        yield ["error", "duplicate_task_id"]
+    }
+    vary remaining := tasks
+    vary completed := []
+    vary order := []
+    vary made_progress := true
+    loop while size(remaining) > 0 and made_progress {
+        change made_progress := false
+        vary next_round := []
+        each task in remaining {
+            when dependencies_met(task[1], completed) {
+                change completed := push(completed, task[0])
+                change order := push(order, task[0])
+                change made_progress := true
+            } otherwise {
+                change next_round := push(next_round, task)
+            }
+        }
+        change remaining := next_round
+    }
+    when size(remaining) > 0 {
+        yield ["error", "cycle_or_missing_dependency", remaining]
+    }
+    yield ["ok", order]
+}
+
+make build_tasks := [
+    ["release", ["package", "docs"]],
+    ["package", ["test"]],
+    ["test", ["compile"]],
+    ["docs", ["prepare"]],
+    ["compile", ["prepare"]],
+    ["prepare", []]
+]
+emit resolve_order(build_tasks)

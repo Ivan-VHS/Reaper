@@ -1,0 +1,49 @@
+# Catalog row format: [sku, price_text, quantity_text].
+# Output rows: [normalized_sku, price, non_negative_quantity].
+craft clean_row(row) {
+    make sku := upper(trim(row[0]))
+    make price_text := replace(trim(row[1]), ",", ".")
+    make price := number(price_text)
+    vary quantity := number(trim(row[2]))
+    when quantity < 0 {
+        change quantity := 0
+    }
+    yield [sku, price, quantity]
+}
+
+craft sku_seen(rows, sku) {
+    vary found := false
+    each row in rows {
+        when row[0] == sku {
+            change found := true
+        }
+    }
+    yield found
+}
+
+craft sku_key(row) {
+    yield row[0]
+}
+
+craft normalize_catalog(rows) {
+    vary cleaned := []
+    each row in rows {
+        when size(row) == 3 {
+            make item := clean_row(row)
+            when item[0] != "" and item[1] > 0 and not sku_seen(cleaned, item[0]) {
+                change cleaned := push(cleaned, item)
+            }
+        }
+    }
+    yield sort_by(cleaned, sku_key)
+}
+
+make source_rows := [
+    ["b-2", "9,00", "3"],
+    ["a-1", "12,50", "4"],
+    ["A-1", "13.00", "9"],
+    ["bad", "0", "5"],
+    ["c-3", "4,25", "-7"]
+]
+make catalog := normalize_catalog(source_rows)
+emit catalog

@@ -1,0 +1,60 @@
+# Device: [hardware_id, name, enabled, installed_version, latest_version, bus_priority].
+# Versions must be numeric major.minor.patch triples.
+craft version_component(parts, index) {
+    when index >= size(parts) {
+        yield 0
+    }
+    yield number(parts[index])
+}
+
+craft version_shape(version) {
+    yield size(split(version, ".")) == 3
+}
+
+craft version_less(installed, latest) {
+    make left := split(installed, ".")
+    make right := split(latest, ".")
+    make major_left := version_component(left, 0)
+    make major_right := version_component(right, 0)
+    when major_left != major_right {
+        yield major_left < major_right
+    }
+    make minor_left := version_component(left, 1)
+    make minor_right := version_component(right, 1)
+    when minor_left != minor_right {
+        yield minor_left < minor_right
+    }
+    yield version_component(left, 2) < version_component(right, 2)
+}
+
+craft needs_update(device) {
+    when device[3] == "" {
+        yield true
+    }
+    when not version_shape(device[3]) or not version_shape(device[4]) {
+        yield true
+    }
+    yield version_less(device[3], device[4])
+}
+
+craft is_enabled(device) {
+    yield device[2]
+}
+
+craft bus_priority(device) {
+    yield device[5]
+}
+
+craft build_driver_plan(devices) {
+    make enabled := devices :: keep(is_enabled)
+    make outdated := enabled :: keep(needs_update)
+    yield sort_by(outdated, bus_priority)
+}
+
+make devices := [
+    ["PCI\\VEN_1000", "Network adapter", true, "1.4.2", "1.5.0", 1],
+    ["USB\\VID_2000", "Audio interface", true, "2.1.0", "2.1.0", 2],
+    ["PCI\\VEN_3000", "Storage controller", true, "", "3.0.1", 0],
+    ["USB\\VID_4000", "Disabled device", false, "1.0.0", "2.0.0", 3]
+]
+emit build_driver_plan(devices)

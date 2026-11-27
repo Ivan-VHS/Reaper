@@ -1,0 +1,31 @@
+{
+  "schema": "reaper.application-suite/v1",
+  "language": "Reaper",
+  "runtime": "Python reference runtime",
+  "version": "1.0.0",
+  "record_convention": "Fixed-position lists; each application documents field order at the top of its source file.",
+  "applications": [
+    {"id":"telemetry_guard","path":"telemetry_guard.rpr","status":"implemented","input":"[id,temp_c,voltage_v,current_a]","output":"accepted and rejected reading lists"},
+    {"id":"log_sieve","path":"log_sieve.rpr","status":"implemented","input":"timestamp | service | status | message lines","output":"5xx counts per service and malformed-line count"},
+    {"id":"game_tuner","path":"game_tuner.rpr","status":"decision_core","input":"[cpu_load,gpu_load,gpu_temp,vram_free,frame_ms]","output":"tuning decision; host adapter required to apply"},
+    {"id":"table_cleaner","path":"table_cleaner.rpr","status":"implemented","input":"[sku,price_text,quantity_text] rows","output":"normalized, unique, sorted rows"},
+    {"id":"api_gateway","path":"api_gateway.rpr","status":"decision_core","input":"[request_id,route,payload] records","output":"responses and in-memory idempotency cache; transport adapter required"},
+    {"id":"secret_patrol","path":"secret_patrol.rpr","status":"heuristic_scanner","input":"text or readable local file","output":"redacted findings; not a general regex scanner"},
+    {"id":"latency_probe","path":"latency_probe.rpr","status":"implemented","input":"millisecond samples","output":"count, p50, p95, p99 and max"},
+    {"id":"dag_runner","path":"dag_runner.rpr","status":"planner","input":"[task_id,dependency_ids] records","output":"topological order; host executor required"},
+    {"id":"span_indexer","path":"span_indexer.rpr","status":"lightweight_indexer","input":"Reaper source text or local file","output":"function name, one-based line and column"},
+    {"id":"ledger_reconcile","path":"ledger_reconcile.rpr","status":"implemented","input":"integer-cent payment and invoice records","output":"matched, mismatch and orphan payment rows"},
+    {"id":"driver_manifest","path":"driver_manifest.rpr","status":"planner","input":"device and numeric semantic-version records","output":"enabled devices requiring update; installer adapter required"},
+    {"id":"most_build","path":"most_build.rpr","status":"implemented_alias_subset","input":"artifact metadata record","output":"localized artifact validation result"},
+    {"id":"text_shield","path":"text_shield.rpr","status":"heuristic_moderation","input":"[message_text,link_count]","output":"allow, review or block decision"},
+    {"id":"physics_bench","path":"physics_bench.rpr","status":"implemented","input":"mass, speed and input energy","output":"kinetic energy and validated efficiency"},
+    {"id":"bf_vm","path":"bf_vm.rpr","status":"bounded_interpreter","input":"Brainfuck source and numeric input bytes","output":"output byte array or explicit error"}
+  ],
+  "safety": {
+    "filesystem": "Only explicit file_open/file_read/file_write calls perform file I/O.",
+    "network": "No HTTP, IPC socket, or network service is opened by these examples.",
+    "drivers": "The driver example plans updates; it never installs or loads drivers.",
+    "native_code": "No FFI is enabled or invoked.",
+    "resource_limits": "Reaper interpreter step, collection, text, heap and open-resource limits remain active."
+  }
+}

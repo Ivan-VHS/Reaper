@@ -1,0 +1,57 @@
+# Request: [request_id, route, payload].
+# Cache entry: [request_id, response]. Response: [status, body].
+# This is the deterministic gateway core; a host owns HTTP/IPC transport.
+craft find_cached(cache, request_id) {
+    vary found := []
+    each entry in cache {
+        when entry[0] == request_id {
+            change found := entry
+        }
+    }
+    yield found
+}
+
+craft dispatch(request) {
+    when request[1] == "health" {
+        yield ["ok", "alive"]
+    }
+    when request[1] == "echo" {
+        yield ["ok", request[2]]
+    }
+    yield ["error", "route_not_found"]
+}
+
+craft handle_request(request, cache) {
+    when size(request) != 3 {
+        yield [["error", "malformed_request"], cache]
+    }
+    when request[0] == "" {
+        yield [["error", "missing_request_id"], cache]
+    }
+    make cached := find_cached(cache, request[0])
+    when size(cached) > 0 {
+        yield [cached[1], cache]
+    }
+    make response := dispatch(request)
+    yield [response, push(cache, [request[0], response])]
+}
+
+craft process_requests(requests) {
+    vary cache := []
+    vary responses := []
+    each request in requests {
+        make outcome := handle_request(request, cache)
+        change responses := push(responses, outcome[0])
+        change cache := outcome[1]
+    }
+    yield [responses, cache]
+}
+
+make requests := [
+    ["req-001", "health", ""],
+    ["req-002", "echo", "hello"],
+    ["req-001", "echo", "this payload is ignored by idempotency"]
+]
+make result := process_requests(requests)
+emit result[0]
+emit "cached responses = " ++ text(size(result[1]))

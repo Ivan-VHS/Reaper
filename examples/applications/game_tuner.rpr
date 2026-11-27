@@ -1,0 +1,24 @@
+# Hardware sample: [cpu_load_pct, gpu_load_pct, gpu_temp_c, vram_free_mb, frame_ms].
+# Produces a tuning decision. Applying it requires a trusted Duck/host adapter.
+craft compute_profile(sample) {
+    when size(sample) != 5 {
+        yield ["error", "invalid_hardware_sample"]
+    }
+    when sample[2] >= 86 {
+        yield ["thermal_safe", 60, "normal", "reduce_gpu_power"]
+    }
+    when sample[0] >= 80 and sample[3] < 1024 {
+        yield ["balanced_low_vram", 60, "high", "reduce_texture_pressure"]
+    }
+    when sample[0] >= 90 {
+        yield ["cpu_relief", 90, "high", "limit_background_work"]
+    }
+    yield ["low_latency", 144, "normal", "preserve_current_quality"]
+}
+
+make hot_gpu := [55, 88, 91, 2048, 9.2]
+make low_vram := [86, 70, 77, 768, 12.0]
+make balanced := [48, 62, 68, 4096, 7.1]
+emit compute_profile(hot_gpu)
+emit compute_profile(low_vram)
+emit compute_profile(balanced)
