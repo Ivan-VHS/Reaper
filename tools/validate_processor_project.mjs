@@ -70,7 +70,9 @@ function validate(value) {
   requireValue(text(toolchain.compiler) && toolchain.compiler.length <= 64, "toolchain compiler descriptor is invalid");
   requireValue(["gcc","clang","msvc","vendor","unknown"].includes(toolchain.family), "unsupported toolchain family");
   requireValue(toolchain.backend === "scalar-c17" && toolchain.execution_scope === "host-only" && toolchain.target_qualified === false, "this v1 vertical slice only accepts unqualified host scalar-C17 AOT");
-  requireValue(value.output?.kind === "host-executable" && safeRelative(value.output.path), "scalar-C17 output must be a safe relative host-executable path");
+  exactKeys(value.output, ["path","kind"], "output");
+  exactKeys(value.verification, ["benchmark_repetitions","require_integrity","require_source_smoke","deterministic_replay"], "verification");
+  requireValue(value.output.kind === "host-executable" && safeRelative(value.output.path), "scalar-C17 output must be a safe relative host-executable path");
 
   const memory = value.memory;
   exactKeys(memory, ["minimum_available_mib","working_set_mib","stack_bytes","heap_bytes","dma_bytes"], "memory");
@@ -89,8 +91,6 @@ function validate(value) {
 
   requireValue(Array.isArray(value.sources) && value.sources.length > 0 && value.sources.length <= 64, "sources must contain 1..64 entries");
   requireValue(new Set(value.sources).size === value.sources.length && value.sources.every((item) => safeRelative(item) && item.endsWith(".rpr")), "source paths must be unique, relative .rpr paths without traversal");
-  exactKeys(value.output, ["path","kind"], "output");
-  exactKeys(value.verification, ["benchmark_repetitions","require_integrity","require_source_smoke","deterministic_replay"], "verification");
   requireValue(integer(value.verification.benchmark_repetitions,1,100), "benchmark repetitions are invalid");
   for (const field of ["require_integrity","require_source_smoke","deterministic_replay"]) requireValue(typeof value.verification[field] === "boolean", "verification." + field + " must be boolean");
   requireValue(value.verification.deterministic_replay === true, "deterministic replay is mandatory");
