@@ -76,6 +76,44 @@ class MotionTests(unittest.TestCase):
                 else:
                     os.environ["APPDATA"] = old_appdata
 
+    def test_spring_rejects_non_finite_constructor_and_step_parameters(self):
+        for value in (float("nan"), float("inf"), float("-inf")):
+            with self.subTest(value=value):
+                with self.assertRaises(ValueError):
+                    Spring1D(initial=value)
+                with self.assertRaises(ValueError):
+                    Spring1D(stiffness=value)
+                spring = Spring1D()
+                with self.assertRaises(ValueError):
+                    spring.step(1 / 60, damping=value)
+
+    def test_saved_preference_flags_accept_json_booleans_only(self):
+        with tempfile.TemporaryDirectory() as folder:
+            previous = os.environ.get("APPDATA")
+            os.environ["APPDATA"] = folder
+            try:
+                settings_dir = os.path.join(folder, "motion-tests")
+                os.makedirs(settings_dir, exist_ok=True)
+                payload = {
+                    "reduce_motion": "false",
+                    "eco_visuals": 1,
+                    "expressive_motion": True,
+                    "sync_to_bpm": "false",
+                }
+                with open(os.path.join(settings_dir, "ui-motion.json"), "w", encoding="utf-8") as stream:
+                    import json
+                    json.dump(payload, stream)
+                loaded = load_preferences("motion-tests")
+                self.assertFalse(loaded.reduce_motion)
+                self.assertFalse(loaded.eco_visuals)
+                self.assertTrue(loaded.expressive_motion)
+                self.assertFalse(loaded.sync_to_bpm)
+            finally:
+                if previous is None:
+                    os.environ.pop("APPDATA", None)
+                else:
+                    os.environ["APPDATA"] = previous
+
 
 if __name__ == "__main__":
     unittest.main()
