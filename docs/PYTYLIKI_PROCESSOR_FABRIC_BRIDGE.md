@@ -104,6 +104,8 @@ Each backend has an independent maturity record: specified, prototype, implement
 
 ## Current maturity
 
-The existing Reaper PEP v1 consumes Pytyliki host profile/benchmark report v1 and executes only its documented scalar host AOT slice. The Reaper Processor Control Plane models topology and scheduling but does not turn a PPF graph into Canonical Typed IR. No target-specific assembler, object writer, linker, processor emulator, RTL backend or formal-verification backend is claimed by these PRs.
+A local Node importer and a Reaper-side Python reference adapter now implement the first data-to-typed-graph slice. The importer validates local files, source SHA-256/byte length, topology/PPF/resource generations, graph closure/cycles, hardware resource ranges, producer effect-claim denial and UTF-8 byte spans. The Reaper adapter lowers only Reaper-supplied semantic/resource bindings into the existing typed SemanticGraph, verifies exact input-port types and effects, and preserves control dependencies and ownership metadata.
 
-This document is a cross-repository contract proposal. The importer and typed resource semantics remain implementation work. Keep their capability records partial until code, fixtures and CI establish conformance.
+The adapter emits reaper.processor-fabric-typed-ir.v1, not the older stack-machine bytecode IR. It does not yet lower to complete compiler HIR/MIR/LIR, nor does it execute processor effects. The existing Reaper PEP v1 remains the host report consumer plus scalar host AOT slice. No target-specific assembler, ELF/PE object writer, linker, processor emulator, RTL backend or formal-verification backend is claimed by this importer change.
+
+See Processor Fabric Typed IR v1 in docs/PROCESSOR_FABRIC_TYPED_IR.md for its data contract and tests. Keep the capability partial until CI establishes conformance and native compiler integration exists.
