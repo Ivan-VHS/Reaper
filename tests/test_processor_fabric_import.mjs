@@ -33,7 +33,7 @@ function fixtures() {
       online_logical_processor_count: 1,
       logical_processors: [{
         logical_id: 0, os_id: 0, group_id: null, online: true,
-        package_id: null, die_id: null, core_id: null, numa_node_id: null,
+        package_id: null, die_id: null, core_id: null, thread_id: null, numa_node_id: null,
         evidence: "unknown"
       }],
       caches: [],
@@ -44,8 +44,8 @@ function fixtures() {
       vendor: null,
       model: null,
       features: {
-        sse2: { hardware_present: true, os_usable: true, evidence: "cpuid" },
-        avx: { hardware_present: true, os_usable: false, evidence: "os-state" }
+        sse2: { hardware_present: true, os_usable: true, evidence: "cpuid", os_evidence: "cpuid" },
+        avx: { hardware_present: true, os_usable: false, evidence: "cpuid", os_evidence: "os-state" }
       }
     },
     execution_performed: false,
@@ -53,8 +53,8 @@ function fixtures() {
     processor_state_changed: false
   };
   const fabric = {
-    schema: "pytyliki.processor-fabric-graph.v2",
-    abi_major: 2,
+    schema: "pytyliki.processor-fabric-report.v1",
+    abi_major: 1,
     generation: 7,
     node_count: 3,
     edge_count: 1,
