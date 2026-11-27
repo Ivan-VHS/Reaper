@@ -101,7 +101,8 @@ class ProcessorFabricTypedIRTests(unittest.TestCase):
     def test_lowers_to_reaper_typed_semantic_graph_and_preserves_byte_spans(self):
         result = self.lower()
         self.assertEqual(result["schema"], "reaper.processor-fabric-typed-ir.v1")
-        self.assertTrue(result["verification"]["canonical_typed_ir_emitted"])
+        self.assertTrue(result["verification"]["typed_semantic_graph_emitted"])
+        self.assertFalse(result["verification"]["canonical_typed_ir_emitted"])
         self.assertFalse(result["verification"]["stack_vm_bytecode_emitted"])
         self.assertEqual(result["source"]["offset_unit"], "utf8-byte")
         self.assertEqual(result["constructs"][0]["source_span"]["start"], 0)
