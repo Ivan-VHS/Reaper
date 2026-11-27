@@ -1,0 +1,13 @@
+# Judo — read-only permission review and security posture report.
+import "domain.rpr" as judo
+
+make score := 62
+make band := judo["risk_band"](score)
+make permission := judo["permission_decision"](true, true, false, false)
+make finding := judo["finding_label"](false, false)
+
+emit "Judo — permission and security review"
+emit "Open findings: 3 | risk: " ++ text(score) ++ " (" ++ band ++ ")"
+emit "Capability filesystem.read: " ++ permission
+emit "Finding JUDO-CAP-001: " ++ finding
+emit "Judo reports and recommends; it does not grant privileges or remediate silently"

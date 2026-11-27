@@ -9,17 +9,24 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: reaper-ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7.1.0
         with:
           python-version: ${{ matrix.python-version }}
       - name: Compile package and tests
@@ -32,22 +39,37 @@ jobs:
         run: python -m unittest discover -s tests -p "test_markdown_inventory.py" -v
       - name: Validate Duck Sovereign Canon palette
         run: python tools/validate_visual_canon.py reaper/ui_theme.py
-      - name: Validate MOST 666 function registry
+      - name: Validate MOST function contract registry
         run: python tools/validate_most_functions.py
       - name: Validate engineering evolution contract
         run: python tools/validate_engineering_evolution.py
+
+      - name: Test Jora and HARVEST source-pack integration
+        run: python -m unittest tests.test_jora -v
+      - name: Build wheel and verify bundled HARVEST pack
+        run: |
+          python -m pip wheel . --no-deps --wheel-dir dist
+          python -c "import glob, zipfile; wheel=glob.glob('dist/*.whl'); assert len(wheel)==1; z=zipfile.ZipFile(wheel[0]); names=set(z.namelist()); chunks=[f'reaper/harvest_bundle/chunk-{i:03d}.b64' for i in range(1,17)]; missing=[name for name in chunks if name not in names]; assert not missing, f'HARVEST wheel data missing: {missing}'"
       - name: Run unit tests
         run: python -m unittest discover -s tests -v
       - name: Validate example
         run: python -m reaper --check examples/flow.rpr
       - name: Validate federated audit program
         run: python -m reaper --check examples/device_audit.rpr
+      - name: Validate Reaper Typed Registry example
+        run: python -m reaper --check examples/typed_registry.rpr
+      - name: Run Reaper Typed Registry conformance fixtures
+        run: python -m reaper examples/typed_registry.rpr
       - name: Validate Mora archive contracts example
         run: python -m reaper --check examples/mora_archive_contracts.rpr
       - name: Run Mora archive contract regression fixture
         run: python -m reaper examples/mora_archive_contracts.rpr
       - name: Run example
         run: python -m reaper examples/flow.rpr
+      - name: Validate early-math invariant example
+        run: python -m reaper --check examples/early_math.rpr
+      - name: Run early-math invariant example
+        run: python -m reaper examples/early_math.rpr
       - name: Run end-to-end read-only device audit example
         run: |
           python -m reaper examples/device_audit.rpr

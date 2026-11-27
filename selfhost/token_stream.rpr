@@ -1,0 +1,148 @@
+# Canonical token-stream operations for the Reaper bootstrap frontend.
+# Token records retain the compatibility shape [kind, value, line, column].
+# Cursor helpers are immutable: each advance returns a new integer cursor.
+
+craft token_record_valid(token) {
+    when size(token) != 4 { yield false }
+    when size(token[0]) == 0 { yield false }
+    when token[2] < 1 or token[3] < 1 { yield false }
+    yield true
+}
+
+craft token_stream_validate(tokens) {
+    make count := size(tokens)
+    when count == 0 { yield ["ERR", "token stream is empty", 0] }
+
+    vary index := 0
+    vary eof_count := 0
+    vary previous_line := 1
+    vary previous_column := 1
+
+    loop while index < count {
+        make token := tokens[index]
+        when not token_record_valid(token) {
+            yield ["ERR", "malformed token record", index]
+        }
+
+        when token[0] == "EOF" {
+            change eof_count := eof_count + 1
+            when index != count - 1 {
+                yield ["ERR", "EOF token must be final", index]
+            }
+        } otherwise {
+            when token[0] == "NEWLINE" {
+                when token[2] < previous_line {
+                    yield ["ERR", "token line moved backwards", index]
+                }
+            } otherwise {
+                when token[2] < previous_line or (token[2] == previous_line and token[3] < previous_column) {
+                    yield ["ERR", "token position moved backwards", index]
+                }
+            }
+        }
+
+        when index > 0 {
+            when token[2] < previous_line or (token[2] == previous_line and token[3] < previous_column) {
+                yield ["ERR", "token sequence is not monotonic", index]
+            }
+        }
+        change previous_line := token[2]
+        change previous_column := token[3]
+        change index := index + 1
+    }
+
+    when eof_count != 1 {
+        yield ["ERR", "token stream must contain exactly one EOF", eof_count]
+    }
+    yield ["OK", count]
+}
+
+craft token_at(tokens, index) {
+    when index < 0 or index >= size(tokens) {
+        yield ["ERR", "token index outside stream", index]
+    }
+    yield ["OK", tokens[index]]
+}
+
+craft token_peek(tokens, cursor) {
+    when cursor < 0 { yield ["ERR", "token cursor cannot be negative", cursor] }
+    when cursor >= size(tokens) { yield ["ERR", "token cursor passed stream end", cursor] }
+    yield ["OK", tokens[cursor]]
+}
+
+craft token_advance(tokens, cursor) {
+    when cursor < 0 or cursor >= size(tokens) {
+        yield ["ERR", "cannot advance invalid token cursor", cursor]
+    }
+    when tokens[cursor][0] == "EOF" {
+        yield ["OK", cursor, tokens[cursor]]
+    }
+    when cursor + 1 >= size(tokens) {
+        yield ["ERR", "token stream has no EOF sentinel", cursor]
+    }
+    yield ["OK", cursor + 1, tokens[cursor]]
+}
+
+craft token_kind_count(tokens, requested_kind) {
+    vary index := 0
+    vary count := 0
+    loop while index < size(tokens) {
+        when tokens[index][0] == requested_kind {
+            change count := count + 1
+        }
+        change index := index + 1
+    }
+    yield count
+}
+
+craft token_values(tokens, requested_kind) {
+    vary index := 0
+    vary values := []
+    loop while index < size(tokens) {
+        when tokens[index][0] == requested_kind {
+            change values := push(values, tokens[index][1])
+        }
+        change index := index + 1
+    }
+    yield values
+}
+
+craft token_without_newlines(tokens) {
+    vary index := 0
+    vary compact := []
+    loop while index < size(tokens) {
+        when tokens[index][0] != "NEWLINE" {
+            change compact := push(compact, tokens[index])
+        }
+        change index := index + 1
+    }
+    yield compact
+}
+
+make sample_tokens := [
+    ["MAKE", "make", 1, 1],
+    ["IDENT", "total", 1, 6],
+    [":=", ":=", 1, 12],
+    ["NUMBER", "42", 1, 15],
+    ["NEWLINE", "\n", 1, 17],
+    ["EMIT", "emit", 2, 1],
+    ["IDENT", "total", 2, 6],
+    ["EOF", "", 2, 11]
+]
+assert(token_stream_validate(sample_tokens) == ["OK", 8], "valid token stream rejected")
+assert(token_stream_validate([])[0] == "ERR", "empty token stream accepted")
+assert(token_stream_validate([["IDENT", "x", 1]])[0] == "ERR", "malformed token record accepted")
+assert(token_stream_validate([["IDENT", "x", 1, 1]])[0] == "ERR", "stream without EOF accepted")
+assert(token_stream_validate([["EOF", "", 1, 1], ["IDENT", "x", 1, 2]])[0] == "ERR", "tokens after EOF accepted")
+assert(token_stream_validate([["IDENT", "x", 2, 3], ["IDENT", "y", 1, 4], ["EOF", "", 2, 5]])[0] == "ERR", "backwards token positions accepted")
+assert(token_at(sample_tokens, 1) == ["OK", ["IDENT", "total", 1, 6]], "token_at mismatch")
+assert(token_at(sample_tokens, -1)[0] == "ERR", "negative token index accepted")
+assert(token_peek(sample_tokens, 0)[1] == sample_tokens[0], "initial cursor peek mismatch")
+assert(token_peek(sample_tokens, 8)[0] == "ERR", "cursor beyond EOF accepted")
+assert(token_advance(sample_tokens, 0) == ["OK", 1, sample_tokens[0]], "token advance mismatch")
+assert(token_advance(sample_tokens, 7) == ["OK", 7, sample_tokens[7]], "EOF cursor must be stable")
+assert(token_kind_count(sample_tokens, "IDENT") == 2, "token kind count mismatch")
+assert(token_values(sample_tokens, "IDENT") == ["total", "total"], "token value selection mismatch")
+assert(size(token_without_newlines(sample_tokens)) == 7, "newline removal mismatch")
+
+emit "SELFHOST_TOKEN_STREAM_OK"

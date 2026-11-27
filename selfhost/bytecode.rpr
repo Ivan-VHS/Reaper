@@ -1,0 +1,156 @@
+# Reaper-native stack bytecode verifier and bounded scalar execution engine.
+# Program: ["reaper.bytecode.v1", instructions].
+# Instruction: [opcode, operand]. Control-flow opcodes are intentionally rejected
+# until the data-flow verifier can prove equal stack states at every join.
+
+craft bytecode_instruction_effect(instruction) {
+    when size(instruction) != 2 { yield ["ERR", "bytecode instruction must have two fields"] }
+    make opcode := instruction[0]
+    when opcode == "const" { yield ["OK", 1, 0] }
+    when opcode == "add" or opcode == "sub" or opcode == "mul" or opcode == "div" or opcode == "mod" or opcode == "eq" or opcode == "lt" or opcode == "gt" {
+        yield ["OK", -1, 2]
+    }
+    when opcode == "neg" or opcode == "not" { yield ["OK", 0, 1] }
+    when opcode == "dup" { yield ["OK", 1, 1] }
+    when opcode == "drop" or opcode == "emit" { yield ["OK", -1, 1] }
+    when opcode == "halt" { yield ["OK", 0, 0] }
+    yield ["ERR", "unknown or unsupported bytecode opcode", opcode]
+}
+
+craft bytecode_validate(program) {
+    when size(program) != 2 { yield ["ERR", "bytecode program must have two fields"] }
+    when program[0] != "reaper.bytecode.v1" { yield ["ERR", "unsupported bytecode schema"] }
+    when size(program[1]) == 0 { yield ["ERR", "bytecode program is empty"] }
+
+    vary depth := 0
+    vary halts := 0
+    vary index := 0
+    loop while index < size(program[1]) {
+        make instruction := program[1][index]
+        make effect := bytecode_instruction_effect(instruction)
+        when effect[0] != "OK" { yield ["ERR", "invalid bytecode instruction", index, effect] }
+        when depth < effect[2] {
+            yield ["ERR", "bytecode stack underflow", index, depth, effect[2]]
+        }
+        change depth := depth + effect[1]
+        when instruction[0] == "halt" {
+            change halts := halts + 1
+            when index != size(program[1]) - 1 {
+                yield ["ERR", "halt must be the final instruction", index]
+            }
+            when depth != 0 {
+                yield ["ERR", "bytecode stack must be empty at halt", depth]
+            }
+        }
+        change index := index + 1
+    }
+    when halts != 1 { yield ["ERR", "bytecode must contain exactly one halt", halts] }
+    yield ["OK", [size(program[1]), depth]]
+}
+
+craft bytecode_stack_pop(stack) {
+    when size(stack) == 0 { yield ["ERR", "bytecode stack underflow"] }
+    vary shortened := []
+    vary index := 0
+    loop while index < size(stack) - 1 {
+        change shortened := push(shortened, stack[index])
+        change index := index + 1
+    }
+    yield ["OK", shortened, stack[size(stack) - 1]]
+}
+
+craft bytecode_execute(program, step_limit) {
+    make valid := bytecode_validate(program)
+    when valid[0] != "OK" { yield valid }
+    when step_limit < 1 { yield ["ERR", "execution step limit must be positive"] }
+
+    vary stack := []
+    vary output := []
+    vary pc := 0
+    vary steps := 0
+    vary halted := false
+
+    loop while not halted and pc < size(program[1]) {
+        when steps >= step_limit { yield ["ERR", "bytecode execution step limit exceeded", steps] }
+        make instruction := program[1][pc]
+        make opcode := instruction[0]
+        change steps := steps + 1
+
+        when opcode == "const" {
+            change stack := push(stack, instruction[1])
+        } otherwise {
+            when opcode == "add" or opcode == "sub" or opcode == "mul" or opcode == "div" or opcode == "mod" or opcode == "eq" or opcode == "lt" or opcode == "gt" {
+                make right := bytecode_stack_pop(stack)
+                change stack := right[1]
+                make left := bytecode_stack_pop(stack)
+                change stack := left[1]
+                when opcode == "div" and right[2] == 0 { yield ["ERR", "division by zero", pc] }
+                when opcode == "mod" and right[2] == 0 { yield ["ERR", "modulo by zero", pc] }
+                when opcode == "add" { change stack := push(stack, left[2] + right[2]) }
+                when opcode == "sub" { change stack := push(stack, left[2] - right[2]) }
+                when opcode == "mul" { change stack := push(stack, left[2] * right[2]) }
+                when opcode == "div" { change stack := push(stack, left[2] // right[2]) }
+                when opcode == "mod" { change stack := push(stack, left[2] % right[2]) }
+                when opcode == "eq" { change stack := push(stack, left[2] == right[2]) }
+                when opcode == "lt" { change stack := push(stack, left[2] < right[2]) }
+                when opcode == "gt" { change stack := push(stack, left[2] > right[2]) }
+            } otherwise {
+                when opcode == "neg" or opcode == "not" {
+                    make value := bytecode_stack_pop(stack)
+                    change stack := value[1]
+                    when opcode == "neg" { change stack := push(stack, -value[2]) }
+                    when opcode == "not" { change stack := push(stack, not value[2]) }
+                } otherwise {
+                    when opcode == "dup" {
+                        change stack := push(stack, stack[size(stack) - 1])
+                    } otherwise {
+                        when opcode == "drop" {
+                            make ignored := bytecode_stack_pop(stack)
+                            change stack := ignored[1]
+                        } otherwise {
+                            when opcode == "emit" {
+                                make value := bytecode_stack_pop(stack)
+                                change stack := value[1]
+                                change output := push(output, value[2])
+                            } otherwise {
+                                when opcode == "halt" { change halted := true }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        change pc := pc + 1
+    }
+    when not halted { yield ["ERR", "bytecode terminated without halt"] }
+    yield ["OK", output, stack, steps]
+}
+
+make program := ["reaper.bytecode.v1", [
+    ["const", 7],
+    ["const", 9],
+    ["add", nothing],
+    ["emit", nothing],
+    ["halt", nothing]
+]]
+make verified := bytecode_validate(program)
+assert(verified == ["OK", [5, 0]], "valid bytecode verification mismatch")
+make executed := bytecode_execute(program, 20)
+assert(executed[0] == "OK", "valid bytecode execution failed")
+assert(executed[1] == [16], "bytecode arithmetic output mismatch")
+assert(executed[2] == [], "bytecode stack must be empty after execution")
+assert(executed[3] == 5, "bytecode step count mismatch")
+
+make unary_program := ["reaper.bytecode.v1", [["const", 4], ["neg", nothing], ["emit", nothing], ["halt", nothing]]]
+assert(bytecode_execute(unary_program, 10)[1] == [-4], "bytecode unary execution mismatch")
+make bool_program := ["reaper.bytecode.v1", [["const", true], ["not", nothing], ["emit", nothing], ["halt", nothing]]]
+assert(bytecode_execute(bool_program, 10)[1] == [false], "bytecode boolean execution mismatch")
+assert(bytecode_validate(["reaper.bytecode.v1", [["add", nothing], ["halt", nothing]]])[0] == "ERR", "stack underflow accepted")
+assert(bytecode_validate(["reaper.bytecode.v1", [["const", 1]]])[0] == "ERR", "missing halt accepted")
+assert(bytecode_validate(["reaper.bytecode.v1", [["halt", nothing], ["const", 1]]])[0] == "ERR", "instructions after halt accepted")
+assert(bytecode_validate(["reaper.bytecode.v1", [["jump", 2], ["halt", nothing]]])[0] == "ERR", "unsupported control flow accepted")
+assert(bytecode_execute(program, 2)[0] == "ERR", "execution step budget ignored")
+make zero_division := ["reaper.bytecode.v1", [["const", 5], ["const", 0], ["div", nothing], ["emit", nothing], ["halt", nothing]]]
+assert(bytecode_execute(zero_division, 20)[0] == "ERR", "division by zero was not trapped")
+
+emit "SELFHOST_BYTECODE_OK"

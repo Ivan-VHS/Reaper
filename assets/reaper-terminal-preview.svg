@@ -1,18 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1500" height="820" viewBox="0 0 1500 820" role="img" aria-labelledby="t d">
 <title id="t">Reaper command-line example preview</title><desc id="d">An illustrative terminal showing expected output from the checked-in hello example and the parser check command.</desc>
-<defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#13232c"/><stop offset="1" stop-color="#0a141b"/></linearGradient></defs>
-<rect width="1500" height="820" rx="24" fill="#dbe5ed"/><rect x="18" y="18" width="1464" height="784" rx="18" fill="url(#bg)" stroke="#38515b" stroke-width="2"/>
-<path d="M36 18h1428a18 18 0 0 1 18 18v56H18V36a18 18 0 0 1 18-18Z" fill="#1e303a"/><circle cx="58" cy="55" r="9" fill="#fb7185"/><circle cx="88" cy="55" r="9" fill="#fbbf24"/><circle cx="118" cy="55" r="9" fill="#34d399"/><text x="750" y="62" text-anchor="middle" font-family="Segoe UI,Arial" font-size="18" fill="#afc4cb">REAPER · EXAMPLE SESSION</text>
+<defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#050505"/><stop offset="1" stop-color="#070707"/></linearGradient></defs>
+<rect width="1500" height="820" rx="24" fill="#101010"/><rect x="18" y="18" width="1464" height="784" rx="18" fill="url(#bg)" stroke="#343434" stroke-width="2"/>
+<path d="M36 18h1428a18 18 0 0 1 18 18v56H18V36a18 18 0 0 1 18-18Z" fill="#181818"/><circle cx="58" cy="55" r="9" fill="#FF7777"/><circle cx="88" cy="55" r="9" fill="#FFD700"/><circle cx="118" cy="55" r="9" fill="#6EDAA3"/><text x="750" y="62" text-anchor="middle" font-family="Segoe UI,Arial" font-size="18" fill="#D8D8D8">REAPER · EXAMPLE SESSION</text>
 <g font-family="Consolas,Menlo,monospace" font-size="25">
-<text x="68" y="150" fill="#5eead4">$ python -m reaper examples/hello.rpr</text>
-<text x="68" y="205" fill="#e5eef1">Hello from Reaper</text>
-<text x="68" y="250" fill="#e5eef1">square(9) = 81</text>
-<path d="M68 300h1360" stroke="#35515e" stroke-width="2"/>
-<text x="68" y="365" fill="#5eead4">$ python -m reaper --check examples/flow.rpr</text>
-<text x="68" y="420" fill="#e5eef1">Reaper: examples/flow.rpr is valid</text>
-<path d="M68 475h1360" stroke="#35515e" stroke-width="2"/>
-<text x="68" y="548" fill="#92aeb8">0.1 runtime · source-aware parser · no third-party dependencies</text>
-<text x="68" y="592" fill="#92aeb8">Step / call-depth / collection / text quotas stay enabled by default.</text>
+<text x="68" y="150" fill="#FFD700">$ python -m reaper examples/hello.rpr</text>
+<text x="68" y="205" fill="#FFFFFF">Hello from Reaper</text>
+<text x="68" y="250" fill="#FFFFFF">square(9) = 81</text>
+<path d="M68 300h1360" stroke="#343434" stroke-width="2"/>
+<text x="68" y="365" fill="#FFD700">$ python -m reaper --check examples/flow.rpr</text>
+<text x="68" y="420" fill="#FFFFFF">Reaper: examples/flow.rpr is valid</text>
+<path d="M68 475h1360" stroke="#343434" stroke-width="2"/>
+<text x="68" y="548" fill="#A3A3A3">0.1 runtime · source-aware parser · no third-party dependencies</text>
+<text x="68" y="592" fill="#A3A3A3">Step / call-depth / collection / text quotas stay enabled by default.</text>
 </g>
-<rect x="68" y="655" width="1360" height="92" rx="12" fill="#102d32" stroke="#24685f"/><text x="98" y="692" font-family="Segoe UI,Arial" font-size="18" fill="#68e3d3" font-weight="700">EXPECTED EXAMPLE OUTPUT</text><text x="98" y="722" font-family="Segoe UI,Arial" font-size="16" fill="#b2d6d5">Rendered from the committed hello.rpr source and the CLI's check-mode message — not a live terminal capture.</text>
+<rect x="68" y="655" width="1360" height="92" rx="12" fill="#181818" stroke="#343434"/><text x="98" y="692" font-family="Segoe UI,Arial" font-size="18" fill="#FFE36E" font-weight="700">EXPECTED EXAMPLE OUTPUT</text><text x="98" y="722" font-family="Segoe UI,Arial" font-size="16" fill="#D8D8D8">Rendered from the committed hello.rpr source and the CLI's check-mode message — not a live terminal capture.</text>
 </svg>
