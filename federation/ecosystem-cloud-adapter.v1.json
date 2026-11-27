@@ -1,0 +1,41 @@
+{
+  "schema": "ivan-vhs.ecosystem-cloud-adapter.v1",
+  "version": 1,
+  "project": "reaper",
+  "project_key": "reaper",
+  "shared_contract": "ivan-vhs.ecosystem-cloud.v1",
+  "shared_contract_version": 1,
+  "status": "contract-only",
+  "runtime": {
+    "default_network_mode": "disabled",
+    "user_opt_in_required": true,
+    "core_requires_network": false,
+    "supabase_transport": "not-implemented",
+    "secret_source": "external-secret-store-only"
+  },
+  "publish_allowlist": [
+    "published-package-metadata",
+    "versioned-contract-metadata",
+    "user-selected-document-artifacts"
+  ],
+  "denylist": [
+    "private-source-trees",
+    "access-tokens",
+    "service-role-keys",
+    "local-build-outputs",
+    "compiler-cache",
+    "unreleased-source-maps"
+  ],
+  "synchronization": {
+    "local_source_of_truth": true,
+    "upload_requires_user_action": true,
+    "retry": "bounded-idempotent",
+    "idempotency": "actor_id+client_instance_id+event_id",
+    "conflicts": "Reaper-domain-specific"
+  },
+  "compatibility": {
+    "native_language": "Reaper",
+    "sdk_dependency": false,
+    "existing_file_contracts_unchanged": true
+  }
+}
