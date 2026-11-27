@@ -33,6 +33,12 @@ assert(worker_state[1][4] == 4 and worker_state[1][5] == 7 and worker_state[1][6
 make draining_state := state["kernel_state_transition"](worker_state[1], "draining", "")
 assert(draining_state[0] == "OK", "kernel drain transition failed")
 assert(state["kernel_state_transition"](draining_state[1], "halted", "")[0] == "ERR", "kernel halted with active workers")
+make faulted_state := state["kernel_state_fault"](worker_state[1], "worker timeout")
+assert(faulted_state[0] == "OK", "kernel fault transition failed")
+assert(state["kernel_state_transition"](faulted_state[1], "booting", "")[0] == "ERR", "kernel rebooted with unaccounted workers")
+make reconciled_fault := state["kernel_state_set_active_workers"](faulted_state[1], 0)
+make recovered_state := state["kernel_state_transition"](reconciled_fault[1], "booting", "")
+assert(recovered_state[0] == "OK" and recovered_state[1][7] == "", "fault recovery did not clear the fault reason")
 make drained_state := state["kernel_state_set_active_workers"](draining_state[1], 0)
 make halted_state := state["kernel_state_transition"](drained_state[1], "halted", "")
 assert(halted_state[0] == "OK" and halted_state[1][3] == "halted", "kernel did not halt after worker drain")
@@ -82,6 +88,8 @@ make compact_graph := graph["kernel_graph_compact"](dependency_graph)
 assert(compact_graph[0] == "OK", "valid processor dependency graph rejected")
 assert(compact_graph[1][1] == ["frontend", "typed-ir", "verified-ir", "native-lowering"], "topological graph order mismatch")
 assert(compact_graph[2] == [4, 3], "compact graph dimensions mismatch")
+make graph_with_isolated := ["reaper.kernel.graph.v1", ["frontend", "typed-ir", "standalone"], [["frontend", "typed-ir"]]]
+assert(graph["kernel_graph_stats"](graph_with_isolated) == ["OK", [3, 1, 1]], "isolated-node count mismatch")
 make cyclic_graph := ["reaper.kernel.graph.v1", ["a", "b"], [["a", "b"], ["b", "a"]]]
 assert(graph["kernel_graph_topological_order"](cyclic_graph)[0] == "ERR", "cyclic processor graph accepted")
 
