@@ -32,6 +32,9 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Validate automation roadmap contract
+        if: matrix.python-version == '3.12'
+        run: python scripts/validate_automation_roadmap.py --strict
       - name: Compile package and tests
         run: python -m compileall -q reaper tests
       - name: Validate localized README links
