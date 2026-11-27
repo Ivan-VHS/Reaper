@@ -1,0 +1,1578 @@
+{
+  "schema": "reaper.mathematical-research-contracts.v1",
+  "version": "1.0.0",
+  "canonical_owner": "Reaper",
+  "kernel_owner": "Pytyliki",
+  "kernel_abi": "pytyliki-research-math-c11-v1",
+  "problem_policy": {
+    "open_problem_results": "EXPERIMENTAL_EVIDENCE_ONLY",
+    "forbid_claims": [
+      "PROVED",
+      "DISPROVED",
+      "SOLVED"
+    ],
+    "require_bounded_work": true,
+    "require_source_provenance": true
+  },
+  "areas": [
+    {
+      "id": "riemann",
+      "name": "Riemann Hypothesis",
+      "problem_status": "OPEN_CONJECTURE",
+      "claim_boundary": "Finite Dirichlet/eta approximations only; no certified tail bound or zero proof.",
+      "functions": [
+        {
+          "id": "riemann.dirichlet_partial",
+          "api": "pl_math_riemann_dirichlet",
+          "args": [
+            {
+              "name": "sigma",
+              "type": "finite_f64",
+              "min_exclusive": 1
+            },
+            {
+              "name": "t",
+              "type": "finite_f64"
+            },
+            {
+              "name": "terms",
+              "type": "usize",
+              "min": 1,
+              "max": 1000000
+            }
+          ],
+          "returns": "ComplexF64",
+          "effect": "finite_numeric",
+          "evidence": "truncated_series",
+          "backend": "pytyliki.c11",
+          "limits": {
+            "max_terms": 1000000
+          }
+        },
+        {
+          "id": "riemann.eta_partial",
+          "api": "pl_math_riemann_eta",
+          "args": [
+            {
+              "name": "sigma",
+              "type": "finite_f64",
+              "min_exclusive": 0
+            },
+            {
+              "name": "t",
+              "type": "finite_f64"
+            },
+            {
+              "name": "terms",
+              "type": "usize",
+              "min": 1,
+              "max": 1000000
+            }
+          ],
+          "returns": "ComplexF64",
+          "effect": "finite_numeric",
+          "evidence": "truncated_alternating_series",
+          "backend": "pytyliki.c11",
+          "limits": {
+            "max_terms": 1000000
+          }
+        },
+        {
+          "id": "riemann.critical_residual",
+          "api": "pl_math_riemann_critical_residual",
+          "args": [
+            {
+              "name": "t",
+              "type": "finite_f64"
+            },
+            {
+              "name": "terms",
+              "type": "usize",
+              "min": 1,
+              "max": 1000000
+            }
+          ],
+          "returns": "NonNegativeF64",
+          "effect": "finite_numeric",
+          "evidence": "uncertified_zeta_magnitude_approximation",
+          "backend": "pytyliki.c11",
+          "limits": {
+            "max_terms": 1000000
+          }
+        }
+      ]
+    },
+    {
+      "id": "p_vs_np",
+      "name": "P versus NP",
+      "problem_status": "OPEN_PROBLEM",
+      "claim_boundary": "Finite CNF validation and bounded SAT search do not decide asymptotic complexity classes.",
+      "functions": [
+        {
+          "id": "complexity.cnf_validate",
+          "api": "pl_math_cnf_validate",
+          "args": [
+            {
+              "name": "variables",
+              "type": "usize",
+              "min": 1,
+              "max": 24
+            },
+            {
+              "name": "literals",
+              "type": "i32_array",
+              "max_items": 1000000
+            },
+            {
+              "name": "literal_count",
+              "type": "usize"
+            },
+            {
+              "name": "clause_offsets",
+              "type": "usize_array",
+              "max_items": 1000000
+            },
+            {
+              "name": "clause_count",
+              "type": "usize"
+            }
+          ],
+          "returns": "ValidationStatus",
+          "effect": "pure_exact",
+          "evidence": "finite_instance_validation",
+          "backend": "pytyliki.c11",
+          "limits": {
+            "max_variables": 24
+          }
+        },
+        {
+          "id": "complexity.sat_verify",
+          "api": "pl_math_sat_verify_assignment",
+          "args": [
+            {
+              "name": "variables",
+              "type": "usize",
+              "min": 1,
+              "max": 24
+            },
+            {
+              "name": "literals",
+              "type": "i32_array",
+              "max_items": 1000000
+            },
+            {
+              "name": "literal_count",
+              "type": "usize"
+            },
+            {
+              "name": "clause_offsets",
+              "type": "usize_array",
+              "max_items": 1000000
+            },
+            {
+              "name": "clause_count",
+              "type": "usize"
+            },
+            {
+              "name": "assignment",
+              "type": "u8_array",
+              "max_items": 24
+            }
+          ],
+          "returns": "Boolean",
+          "effect": "pure_exact",
+          "evidence": "exact_assignment_check",
+          "backend": "pytyliki.c11",
+          "limits": {
+            "max_variables": 24
+          }
+        },
+        {
+          "id": "complexity.sat_find_bounded",
+          "api": "pl_math_sat_find_model_bounded",
+          "args": [
+            {
+              "name": "variables",
+              "type": "usize",
+              "min": 1,
+              "max": 24
+            },
+            {
+              "name": "literals",
+              "type": "i32_array",
+              "max_items": 1000000
+            },
+            {
+              "name": "literal_count",
+              "type": "usize"
+            },
+            {
+              "name": "clause_offsets",
+              "type": "usize_array",
+              "max_items": 1000000
+            },
+            {
+              "name": "clause_count",
+              "type": "usize"
+            },
+            {
+              "name": "assignment_budget",
+              "type": "u64",
+              "min": 1,
+              "max": 16777216
+            }
+          ],
+          "returns": "SatSearchResult",
+          "effect": "bounded_search",
+          "evidence": "bounded_exhaustive_search",
+          "backend": "pytyliki.c11",
+          "limits": {
+            "max_variables": 24,
+            "max_assignments": 16777216
+          }
+        }
+      ]
+    },
+    {
+      "id": "collatz",
+      "name": "Collatz Conjecture",
+      "problem_status": "OPEN_CONJECTURE",
+      "claim_boundary": "Exact trajectories are restricted to uint64 arithmetic and explicit fuel.",
+      "functions": [
+        {
+          "id": "collatz.step",
+          "api": "pl_math_collatz_step",
+          "args": [
+            {
+              "name": "value",
+              "type": "u64",
+              "min": 1
+            }
+          ],
+          "returns": "UInt64",
+          "effect": "pure_exact",
+          "evidence": "one_exact_transition",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        },
+        {
+          "id": "collatz.trajectory",
+          "api": "pl_math_collatz_trajectory",
+          "args": [
+            {
+              "name": "start",
+              "type": "u64",
+              "min": 1
+            },
+            {
+              "name": "step_budget",
+              "type": "u64"
+            },
+            {
+              "name": "sequence_capacity",
+              "type": "usize",
+              "min": 1,
+              "max": 1000000
+            }
+          ],
+          "returns": "CollatzTrajectory",
+          "effect": "bounded_search",
+          "evidence": "bounded_exact_trajectory",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        },
+        {
+          "id": "collatz.stopping_time",
+          "api": "pl_math_collatz_stopping_time",
+          "args": [
+            {
+              "name": "start",
+              "type": "u64",
+              "min": 1
+            },
+            {
+              "name": "step_budget",
+              "type": "u64"
+            }
+          ],
+          "returns": "UInt64",
+          "effect": "bounded_search",
+          "evidence": "bounded_stopping_time",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        }
+      ]
+    },
+    {
+      "id": "navier_stokes",
+      "name": "Navier–Stokes existence and smoothness",
+      "problem_status": "OPEN_PROBLEM",
+      "claim_boundary": "Finite-grid diagnostics and a time-step estimate do not solve the 3D PDE regularity problem.",
+      "functions": [
+        {
+          "id": "navier_stokes.grid_divergence",
+          "api": "pl_math_grid3d_divergence",
+          "args": [
+            {
+              "name": "u",
+              "type": "f64_array",
+              "max_items": 1000000
+            },
+            {
+              "name": "v",
+              "type": "f64_array",
+              "max_items": 1000000
+            },
+            {
+              "name": "w",
+              "type": "f64_array",
+              "max_items": 1000000
+            },
+            {
+              "name": "nx",
+              "type": "usize",
+              "min": 2
+            },
+            {
+              "name": "ny",
+              "type": "usize",
+              "min": 2
+            },
+            {
+              "name": "nz",
+              "type": "usize",
+              "min": 2
+            },
+            {
+              "name": "dx",
+              "type": "positive_f64"
+            },
+            {
+              "name": "dy",
+              "type": "positive_f64"
+            },
+            {
+              "name": "dz",
+              "type": "positive_f64"
+            }
+          ],
+          "returns": "F64Grid",
+          "effect": "finite_numeric",
+          "evidence": "finite_difference_diagnostic",
+          "backend": "pytyliki.c11",
+          "limits": {
+            "max_cells": 1000000
+          }
+        },
+        {
+          "id": "navier_stokes.grid_vorticity",
+          "api": "pl_math_grid3d_vorticity",
+          "args": [
+            {
+              "name": "u",
+              "type": "f64_array",
+              "max_items": 1000000
+            },
+            {
+              "name": "v",
+              "type": "f64_array",
+              "max_items": 1000000
+            },
+            {
+              "name": "w",
+              "type": "f64_array",
+              "max_items": 1000000
+            },
+            {
+              "name": "nx",
+              "type": "usize",
+              "min": 2
+            },
+            {
+              "name": "ny",
+              "type": "usize",
+              "min": 2
+            },
+            {
+              "name": "nz",
+              "type": "usize",
+              "min": 2
+            },
+            {
+              "name": "dx",
+              "type": "positive_f64"
+            },
+            {
+              "name": "dy",
+              "type": "positive_f64"
+            },
+            {
+              "name": "dz",
+              "type": "positive_f64"
+            }
+          ],
+          "returns": "VorticityGrid",
+          "effect": "finite_numeric",
+          "evidence": "finite_difference_diagnostic",
+          "backend": "pytyliki.c11",
+          "limits": {
+            "max_cells": 1000000
+          }
+        },
+        {
+          "id": "navier_stokes.cfl_dt",
+          "api": "pl_math_navier_stokes_cfl_dt",
+          "args": [
+            {
+              "name": "max_speed",
+              "type": "nonnegative_f64"
+            },
+            {
+              "name": "dx",
+              "type": "positive_f64"
+            },
+            {
+              "name": "dy",
+              "type": "positive_f64"
+            },
+            {
+              "name": "dz",
+              "type": "positive_f64"
+            },
+            {
+              "name": "viscosity",
+              "type": "nonnegative_f64"
+            },
+            {
+              "name": "safety",
+              "type": "positive_f64",
+              "max": 1
+            }
+          ],
+          "returns": "PositiveF64",
+          "effect": "pure_numeric",
+          "evidence": "grid_time_step_estimate",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        }
+      ]
+    },
+    {
+      "id": "bsd",
+      "name": "Birch–Swinnerton-Dyer Conjecture",
+      "problem_status": "OPEN_CONJECTURE",
+      "claim_boundary": "Finite-field point counts and traces are local data, not a rank or L-function proof.",
+      "functions": [
+        {
+          "id": "bsd.curve_nonsingular_mod_prime",
+          "api": "pl_math_elliptic_curve_nonsingular_mod_prime",
+          "args": [
+            {
+              "name": "a",
+              "type": "u32"
+            },
+            {
+              "name": "b",
+              "type": "u32"
+            },
+            {
+              "name": "prime",
+              "type": "prime32",
+              "min": 5,
+              "max": 2147483647
+            }
+          ],
+          "returns": "Boolean",
+          "effect": "pure_exact",
+          "evidence": "finite_field_discriminant_check",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        },
+        {
+          "id": "bsd.curve_point_count_mod_prime",
+          "api": "pl_math_elliptic_curve_point_count_mod_prime",
+          "args": [
+            {
+              "name": "a",
+              "type": "u32"
+            },
+            {
+              "name": "b",
+              "type": "u32"
+            },
+            {
+              "name": "prime",
+              "type": "prime32",
+              "min": 5,
+              "max": 1000003
+            }
+          ],
+          "returns": "UInt32",
+          "effect": "pure_exact",
+          "evidence": "finite_field_point_count",
+          "backend": "pytyliki.c11",
+          "limits": {
+            "max_prime": 1000003
+          }
+        },
+        {
+          "id": "bsd.frobenius_trace_mod_prime",
+          "api": "pl_math_elliptic_curve_frobenius_trace_mod_prime",
+          "args": [
+            {
+              "name": "a",
+              "type": "u32"
+            },
+            {
+              "name": "b",
+              "type": "u32"
+            },
+            {
+              "name": "prime",
+              "type": "prime32",
+              "min": 5,
+              "max": 1000003
+            }
+          ],
+          "returns": "Int64",
+          "effect": "pure_exact",
+          "evidence": "finite_field_frobenius_trace",
+          "backend": "pytyliki.c11",
+          "limits": {
+            "max_prime": 1000003
+          }
+        }
+      ]
+    },
+    {
+      "id": "hodge",
+      "name": "Hodge Conjecture",
+      "problem_status": "OPEN_CONJECTURE",
+      "claim_boundary": "Modular vector-space checks do not construct algebraic cycles on arbitrary complex varieties.",
+      "functions": [
+        {
+          "id": "hodge.type_check",
+          "api": "pl_math_hodge_type_check",
+          "args": [
+            {
+              "name": "cohomology_degree",
+              "type": "u32"
+            },
+            {
+              "name": "p",
+              "type": "u32"
+            },
+            {
+              "name": "q",
+              "type": "u32"
+            }
+          ],
+          "returns": "Boolean",
+          "effect": "pure_exact",
+          "evidence": "hodge_bidegree_condition",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        },
+        {
+          "id": "hodge.cycle_span_rank_mod_prime",
+          "api": "pl_math_hodge_cycle_span_rank_mod_prime",
+          "args": [
+            {
+              "name": "cycles",
+              "type": "u32_array",
+              "max_items": 4096
+            },
+            {
+              "name": "cycle_count",
+              "type": "usize",
+              "max": 64
+            },
+            {
+              "name": "dimension",
+              "type": "usize",
+              "min": 1,
+              "max": 64
+            },
+            {
+              "name": "prime",
+              "type": "prime32"
+            }
+          ],
+          "returns": "Size",
+          "effect": "pure_exact",
+          "evidence": "finite_field_matrix_rank",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        },
+        {
+          "id": "hodge.class_in_cycle_span_mod_prime",
+          "api": "pl_math_hodge_class_in_cycle_span_mod_prime",
+          "args": [
+            {
+              "name": "cycles",
+              "type": "u32_array",
+              "max_items": 4096
+            },
+            {
+              "name": "cycle_count",
+              "type": "usize",
+              "max": 63
+            },
+            {
+              "name": "dimension",
+              "type": "usize",
+              "min": 1,
+              "max": 63
+            },
+            {
+              "name": "candidate",
+              "type": "u32_array",
+              "max_items": 63
+            },
+            {
+              "name": "prime",
+              "type": "prime32"
+            }
+          ],
+          "returns": "Boolean",
+          "effect": "pure_exact",
+          "evidence": "finite_field_span_membership",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        }
+      ]
+    },
+    {
+      "id": "yang_mills",
+      "name": "Yang–Mills existence and mass gap",
+      "problem_status": "OPEN_PROBLEM",
+      "claim_boundary": "U(1) single-plaquette observables are a toy model, not a 4D non-abelian continuum construction.",
+      "functions": [
+        {
+          "id": "yang_mills.u1_plaquette_phase",
+          "api": "pl_math_u1_plaquette_phase",
+          "args": [
+            {
+              "name": "link_angles",
+              "type": "f64_tuple4"
+            },
+            {
+              "name": "orientations",
+              "type": "i8_tuple4"
+            }
+          ],
+          "returns": "PhaseF64",
+          "effect": "finite_numeric",
+          "evidence": "u1_lattice_plaquette",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        },
+        {
+          "id": "yang_mills.u1_wilson_action",
+          "api": "pl_math_u1_wilson_action",
+          "args": [
+            {
+              "name": "beta",
+              "type": "nonnegative_f64"
+            },
+            {
+              "name": "plaquette_phase",
+              "type": "finite_f64"
+            }
+          ],
+          "returns": "NonNegativeF64",
+          "effect": "finite_numeric",
+          "evidence": "u1_wilson_single_plaquette_action",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        },
+        {
+          "id": "yang_mills.correlator_effective_mass",
+          "api": "pl_math_correlator_effective_mass",
+          "args": [
+            {
+              "name": "c_t",
+              "type": "positive_f64"
+            },
+            {
+              "name": "c_t1",
+              "type": "positive_f64"
+            },
+            {
+              "name": "lattice_spacing",
+              "type": "positive_f64"
+            }
+          ],
+          "returns": "PositiveF64",
+          "effect": "finite_numeric",
+          "evidence": "single_step_effective_mass_estimate",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        }
+      ]
+    },
+    {
+      "id": "goldbach",
+      "name": "Goldbach Conjecture",
+      "problem_status": "OPEN_CONJECTURE",
+      "claim_boundary": "Primality and witnesses are exact for individual uint64 inputs; a finite search is not a universal proof.",
+      "functions": [
+        {
+          "id": "goldbach.is_prime_u64",
+          "api": "pl_math_is_prime_u64",
+          "args": [
+            {
+              "name": "value",
+              "type": "u64"
+            }
+          ],
+          "returns": "Boolean",
+          "effect": "pure_exact",
+          "evidence": "deterministic_u64_primality",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        },
+        {
+          "id": "goldbach.verify",
+          "api": "pl_math_goldbach_verify",
+          "args": [
+            {
+              "name": "even_value",
+              "type": "u64",
+              "min": 4
+            },
+            {
+              "name": "prime_a",
+              "type": "u64"
+            }
+          ],
+          "returns": "Boolean",
+          "effect": "pure_exact",
+          "evidence": "exact_finite_goldbach_witness",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        },
+        {
+          "id": "goldbach.find_pair_bounded",
+          "api": "pl_math_goldbach_find_pair_bounded",
+          "args": [
+            {
+              "name": "even_value",
+              "type": "u64",
+              "min": 4
+            },
+            {
+              "name": "candidate_budget",
+              "type": "u64",
+              "min": 1
+            }
+          ],
+          "returns": "PrimePairSearchResult",
+          "effect": "bounded_search",
+          "evidence": "bounded_goldbach_witness_search",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        }
+      ]
+    },
+    {
+      "id": "twin_primes",
+      "name": "Twin Prime Conjecture",
+      "problem_status": "OPEN_CONJECTURE",
+      "claim_boundary": "All results are finite verification or bounded searches; no infinitude result follows.",
+      "functions": [
+        {
+          "id": "twin_primes.verify",
+          "api": "pl_math_twin_prime_verify",
+          "args": [
+            {
+              "name": "lower_prime",
+              "type": "u64"
+            }
+          ],
+          "returns": "Boolean",
+          "effect": "pure_exact",
+          "evidence": "exact_twin_pair_witness",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        },
+        {
+          "id": "twin_primes.next_bounded",
+          "api": "pl_math_twin_prime_next_bounded",
+          "args": [
+            {
+              "name": "lower_bound",
+              "type": "u64"
+            },
+            {
+              "name": "candidate_budget",
+              "type": "u64",
+              "min": 1
+            }
+          ],
+          "returns": "TwinPrimeSearchResult",
+          "effect": "bounded_search",
+          "evidence": "bounded_next_pair_search",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        },
+        {
+          "id": "twin_primes.count_bounded",
+          "api": "pl_math_twin_prime_count_bounded",
+          "args": [
+            {
+              "name": "upper_bound",
+              "type": "u64",
+              "min": 5
+            },
+            {
+              "name": "candidate_budget",
+              "type": "u64",
+              "min": 1
+            }
+          ],
+          "returns": "UInt64",
+          "effect": "bounded_search",
+          "evidence": "finite_pair_count",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        }
+      ]
+    },
+    {
+      "id": "halting",
+      "name": "Halting Problem",
+      "problem_status": "GENERAL_UNDECIDABILITY_PROVEN_RESTRICTED_CASES_OPEN",
+      "claim_boundary": "The bounded abstract machine is not and cannot be a general halting decider.",
+      "functions": [
+        {
+          "id": "halting.vm_step",
+          "api": "pl_math_vm_step",
+          "args": [
+            {
+              "name": "program",
+              "type": "vm_instruction_array",
+              "max_items": 100000
+            },
+            {
+              "name": "before",
+              "type": "vm_state"
+            }
+          ],
+          "returns": "VmState",
+          "effect": "pure_exact",
+          "evidence": "one_abstract_machine_transition",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        },
+        {
+          "id": "halting.vm_run_bounded",
+          "api": "pl_math_vm_run_bounded",
+          "args": [
+            {
+              "name": "program",
+              "type": "vm_instruction_array",
+              "max_items": 100000
+            },
+            {
+              "name": "initial_state",
+              "type": "vm_state"
+            },
+            {
+              "name": "fuel",
+              "type": "u64"
+            }
+          ],
+          "returns": "BoundedVmRun",
+          "effect": "bounded_search",
+          "evidence": "fuel_limited_abstract_execution",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        },
+        {
+          "id": "halting.vm_trace_verify",
+          "api": "pl_math_vm_trace_verify",
+          "args": [
+            {
+              "name": "program",
+              "type": "vm_instruction_array",
+              "max_items": 100000
+            },
+            {
+              "name": "trace",
+              "type": "vm_state_array",
+              "max_items": 100000
+            }
+          ],
+          "returns": "Boolean",
+          "effect": "pure_exact",
+          "evidence": "finite_transition_trace_verification",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        }
+      ]
+    },
+    {
+      "id": "hadwiger_nelson",
+      "name": "Hadwiger–Nelson problem",
+      "problem_status": "OPEN_PROBLEM",
+      "claim_boundary": "Finite unit-distance graph colourings do not determine the chromatic number of the whole plane.",
+      "functions": [
+        {
+          "id": "hadwiger_nelson.unit_graph_build",
+          "api": "pl_math_unit_graph_build",
+          "args": [
+            {
+              "name": "xy",
+              "type": "i64_array",
+              "max_items": 256
+            },
+            {
+              "name": "vertex_count",
+              "type": "usize",
+              "min": 1,
+              "max": 128
+            },
+            {
+              "name": "scale",
+              "type": "u32",
+              "min": 1,
+              "max": 66000000
+            }
+          ],
+          "returns": "UnitDistanceGraph",
+          "effect": "pure_exact",
+          "evidence": "finite_integer_coordinate_graph",
+          "backend": "pytyliki.c11",
+          "limits": {
+            "max_vertices": 128
+          }
+        },
+        {
+          "id": "hadwiger_nelson.coloring_verify",
+          "api": "pl_math_graph_coloring_verify",
+          "args": [
+            {
+              "name": "vertex_count",
+              "type": "usize",
+              "min": 1,
+              "max": 128
+            },
+            {
+              "name": "edges",
+              "type": "edge_array",
+              "max_items": 8128
+            },
+            {
+              "name": "colors",
+              "type": "u8_array",
+              "max_items": 128
+            },
+            {
+              "name": "color_count",
+              "type": "usize",
+              "min": 1,
+              "max": 255
+            }
+          ],
+          "returns": "Boolean",
+          "effect": "pure_exact",
+          "evidence": "finite_graph_coloring_check",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        },
+        {
+          "id": "hadwiger_nelson.coloring_search_bounded",
+          "api": "pl_math_graph_coloring_search_bounded",
+          "args": [
+            {
+              "name": "vertex_count",
+              "type": "usize",
+              "min": 1,
+              "max": 128
+            },
+            {
+              "name": "edges",
+              "type": "edge_array",
+              "max_items": 8128
+            },
+            {
+              "name": "color_count",
+              "type": "u8",
+              "min": 1,
+              "max": 255
+            },
+            {
+              "name": "node_budget",
+              "type": "u64",
+              "min": 1
+            }
+          ],
+          "returns": "ColoringSearchResult",
+          "effect": "bounded_search",
+          "evidence": "bounded_backtracking_coloring",
+          "backend": "pytyliki.c11",
+          "limits": {
+            "max_vertices": 128
+          }
+        }
+      ]
+    },
+    {
+      "id": "inscribed_square",
+      "name": "Inscribed Square Problem",
+      "problem_status": "OPEN_PROBLEM",
+      "claim_boundary": "Sampling only covers a finite polygonal representation; it does not prove the general continuous-curve statement.",
+      "functions": [
+        {
+          "id": "inscribed_square.point_on_polyline",
+          "api": "pl_math_point_on_polyline",
+          "args": [
+            {
+              "name": "curve",
+              "type": "point2_array",
+              "min_items": 2,
+              "max_items": 128
+            },
+            {
+              "name": "point",
+              "type": "point2"
+            },
+            {
+              "name": "tolerance",
+              "type": "nonnegative_f64"
+            }
+          ],
+          "returns": "Boolean",
+          "effect": "finite_numeric",
+          "evidence": "point_to_polyline_distance_check",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        },
+        {
+          "id": "inscribed_square.verify",
+          "api": "pl_math_square_on_polyline_verify",
+          "args": [
+            {
+              "name": "curve",
+              "type": "point2_array",
+              "min_items": 4,
+              "max_items": 128
+            },
+            {
+              "name": "square",
+              "type": "point2_tuple4"
+            },
+            {
+              "name": "tolerance",
+              "type": "nonnegative_f64"
+            }
+          ],
+          "returns": "Boolean",
+          "effect": "finite_numeric",
+          "evidence": "sampled_polygonal_square_verification",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        },
+        {
+          "id": "inscribed_square.search_sampled",
+          "api": "pl_math_inscribed_square_search_sampled",
+          "args": [
+            {
+              "name": "curve",
+              "type": "point2_array",
+              "min_items": 4,
+              "max_items": 128
+            },
+            {
+              "name": "subdivisions",
+              "type": "u32",
+              "min": 1,
+              "max": 8
+            },
+            {
+              "name": "tolerance",
+              "type": "nonnegative_f64"
+            }
+          ],
+          "returns": "SampledSquareSearchResult",
+          "effect": "bounded_search",
+          "evidence": "finite_sample_triple_search",
+          "backend": "pytyliki.c11",
+          "limits": {
+            "max_samples": 128
+          }
+        }
+      ]
+    },
+    {
+      "id": "legendre",
+      "name": "Legendre Conjecture",
+      "problem_status": "OPEN_CONJECTURE",
+      "claim_boundary": "A witness or bounded search result is local to one n and the supported uint64 interval.",
+      "functions": [
+        {
+          "id": "legendre.interval",
+          "api": "pl_math_legendre_interval",
+          "args": [
+            {
+              "name": "n",
+              "type": "u64",
+              "min": 1,
+              "max": 4294967294
+            }
+          ],
+          "returns": "OpenIntegerInterval",
+          "effect": "pure_exact",
+          "evidence": "exact_square_interval",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        },
+        {
+          "id": "legendre.witness_verify",
+          "api": "pl_math_legendre_witness_verify",
+          "args": [
+            {
+              "name": "n",
+              "type": "u64",
+              "min": 1,
+              "max": 4294967294
+            },
+            {
+              "name": "prime_candidate",
+              "type": "u64"
+            }
+          ],
+          "returns": "Boolean",
+          "effect": "pure_exact",
+          "evidence": "exact_finite_prime_witness",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        },
+        {
+          "id": "legendre.find_prime_bounded",
+          "api": "pl_math_legendre_find_prime_bounded",
+          "args": [
+            {
+              "name": "n",
+              "type": "u64",
+              "min": 1,
+              "max": 4294967294
+            },
+            {
+              "name": "candidate_budget",
+              "type": "u64",
+              "min": 1
+            }
+          ],
+          "returns": "PrimeSearchResult",
+          "effect": "bounded_search",
+          "evidence": "bounded_interval_prime_search",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        }
+      ]
+    },
+    {
+      "id": "beal",
+      "name": "Beal Conjecture",
+      "problem_status": "OPEN_CONJECTURE",
+      "claim_boundary": "Power identities are checked only when powers and their sum fit uint64; one candidate is not a theorem.",
+      "functions": [
+        {
+          "id": "beal.power_sum_check",
+          "api": "pl_math_beal_power_sum_check",
+          "args": [
+            {
+              "name": "a",
+              "type": "u64",
+              "min": 1
+            },
+            {
+              "name": "x",
+              "type": "u32",
+              "min": 1
+            },
+            {
+              "name": "b",
+              "type": "u64",
+              "min": 1
+            },
+            {
+              "name": "y",
+              "type": "u32",
+              "min": 1
+            },
+            {
+              "name": "c",
+              "type": "u64",
+              "min": 1
+            },
+            {
+              "name": "z",
+              "type": "u32",
+              "min": 1
+            }
+          ],
+          "returns": "Boolean",
+          "effect": "pure_exact",
+          "evidence": "checked_integer_power_identity",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        },
+        {
+          "id": "beal.common_prime_divisor",
+          "api": "pl_math_beal_common_prime_divisor",
+          "args": [
+            {
+              "name": "a",
+              "type": "u64",
+              "min": 1
+            },
+            {
+              "name": "b",
+              "type": "u64",
+              "min": 1
+            },
+            {
+              "name": "c",
+              "type": "u64",
+              "min": 1
+            }
+          ],
+          "returns": "OptionalPrimeFactor",
+          "effect": "pure_exact",
+          "evidence": "exact_common_prime_factor",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        },
+        {
+          "id": "beal.counterexample_screen",
+          "api": "pl_math_beal_counterexample_screen",
+          "args": [
+            {
+              "name": "a",
+              "type": "u64",
+              "min": 1
+            },
+            {
+              "name": "x",
+              "type": "u32",
+              "min": 3
+            },
+            {
+              "name": "b",
+              "type": "u64",
+              "min": 1
+            },
+            {
+              "name": "y",
+              "type": "u32",
+              "min": 3
+            },
+            {
+              "name": "c",
+              "type": "u64",
+              "min": 1
+            },
+            {
+              "name": "z",
+              "type": "u32",
+              "min": 3
+            }
+          ],
+          "returns": "CandidateScreenResult",
+          "effect": "pure_exact",
+          "evidence": "finite_beal_candidate_screen",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        }
+      ]
+    },
+    {
+      "id": "perfect_cuboid",
+      "name": "Perfect Cuboid Problem",
+      "problem_status": "OPEN_PROBLEM",
+      "claim_boundary": "Exact checks apply to a supplied integer cuboid; bounded search does not prove non-existence.",
+      "functions": [
+        {
+          "id": "perfect_cuboid.verify",
+          "api": "pl_math_perfect_cuboid_verify",
+          "args": [
+            {
+              "name": "a",
+              "type": "u64",
+              "min": 1
+            },
+            {
+              "name": "b",
+              "type": "u64",
+              "min": 1
+            },
+            {
+              "name": "c",
+              "type": "u64",
+              "min": 1
+            }
+          ],
+          "returns": "Boolean",
+          "effect": "pure_exact",
+          "evidence": "exact_integer_cuboid_check",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        },
+        {
+          "id": "perfect_cuboid.face_diagonals",
+          "api": "pl_math_cuboid_face_diagonals",
+          "args": [
+            {
+              "name": "a",
+              "type": "u64",
+              "min": 1
+            },
+            {
+              "name": "b",
+              "type": "u64",
+              "min": 1
+            },
+            {
+              "name": "c",
+              "type": "u64",
+              "min": 1
+            }
+          ],
+          "returns": "FaceDiagonalResult",
+          "effect": "pure_exact",
+          "evidence": "exact_face_diagonal_square_roots",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        },
+        {
+          "id": "perfect_cuboid.search_bounded",
+          "api": "pl_math_perfect_cuboid_search_bounded",
+          "args": [
+            {
+              "name": "max_edge",
+              "type": "u64",
+              "min": 1,
+              "max": 100000
+            },
+            {
+              "name": "node_budget",
+              "type": "u64",
+              "min": 1
+            }
+          ],
+          "returns": "CuboidSearchResult",
+          "effect": "bounded_search",
+          "evidence": "bounded_integer_edge_search",
+          "backend": "pytyliki.c11",
+          "limits": {
+            "max_edge": 100000
+          }
+        }
+      ]
+    },
+    {
+      "id": "tate",
+      "name": "Tate Conjecture",
+      "problem_status": "OPEN_CONJECTURE",
+      "claim_boundary": "Finite matrices over Fp are not étale cohomology or a proof of the algebraic-cycle comparison.",
+      "functions": [
+        {
+          "id": "tate.fixed_vector_verify",
+          "api": "pl_math_tate_fixed_vector_verify",
+          "args": [
+            {
+              "name": "frobenius",
+              "type": "u32_array",
+              "max_items": 4096
+            },
+            {
+              "name": "dimension",
+              "type": "usize",
+              "min": 1,
+              "max": 64
+            },
+            {
+              "name": "vector",
+              "type": "u32_array",
+              "max_items": 64
+            },
+            {
+              "name": "prime",
+              "type": "prime32"
+            }
+          ],
+          "returns": "Boolean",
+          "effect": "pure_exact",
+          "evidence": "finite_field_fixed_vector_check",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        },
+        {
+          "id": "tate.invariant_dimension_mod_prime",
+          "api": "pl_math_tate_invariant_dimension_mod_prime",
+          "args": [
+            {
+              "name": "frobenius",
+              "type": "u32_array",
+              "max_items": 4096
+            },
+            {
+              "name": "dimension",
+              "type": "usize",
+              "min": 1,
+              "max": 64
+            },
+            {
+              "name": "prime",
+              "type": "prime32"
+            }
+          ],
+          "returns": "Size",
+          "effect": "pure_exact",
+          "evidence": "finite_field_invariant_kernel_dimension",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        },
+        {
+          "id": "tate.cycle_span_rank_mod_prime",
+          "api": "pl_math_tate_cycle_span_rank_mod_prime",
+          "args": [
+            {
+              "name": "cycle_vectors",
+              "type": "u32_array",
+              "max_items": 4096
+            },
+            {
+              "name": "cycle_count",
+              "type": "usize",
+              "min": 1,
+              "max": 64
+            },
+            {
+              "name": "dimension",
+              "type": "usize",
+              "min": 1,
+              "max": 64
+            },
+            {
+              "name": "prime",
+              "type": "prime32"
+            }
+          ],
+          "returns": "Size",
+          "effect": "pure_exact",
+          "evidence": "finite_field_cycle_vector_rank",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        }
+      ]
+    },
+    {
+      "id": "matrix_exponent",
+      "name": "Matrix multiplication exponent ω = 2",
+      "problem_status": "OPEN_PROBLEM",
+      "claim_boundary": "A two-size floating-point benchmark estimate is empirical and cannot prove an asymptotic exponent.",
+      "functions": [
+        {
+          "id": "matrix.multiply_f64",
+          "api": "pl_math_matrix_multiply_f64",
+          "args": [
+            {
+              "name": "left",
+              "type": "matrix_f64",
+              "max_items": 16384
+            },
+            {
+              "name": "right",
+              "type": "matrix_f64",
+              "max_items": 16384
+            },
+            {
+              "name": "dimension",
+              "type": "usize",
+              "min": 1,
+              "max": 128
+            }
+          ],
+          "returns": "MatrixF64",
+          "effect": "finite_numeric",
+          "evidence": "dense_matrix_product",
+          "backend": "pytyliki.c11",
+          "limits": {
+            "max_dimension": 128
+          }
+        },
+        {
+          "id": "matrix.product_verify_f64",
+          "api": "pl_math_matrix_product_verify_f64",
+          "args": [
+            {
+              "name": "left",
+              "type": "matrix_f64",
+              "max_items": 16384
+            },
+            {
+              "name": "right",
+              "type": "matrix_f64",
+              "max_items": 16384
+            },
+            {
+              "name": "candidate",
+              "type": "matrix_f64",
+              "max_items": 16384
+            },
+            {
+              "name": "dimension",
+              "type": "usize",
+              "min": 1,
+              "max": 128
+            },
+            {
+              "name": "tolerance",
+              "type": "nonnegative_f64"
+            }
+          ],
+          "returns": "Boolean",
+          "effect": "finite_numeric",
+          "evidence": "approximate_matrix_product_verification",
+          "backend": "pytyliki.c11",
+          "limits": {
+            "max_dimension": 128
+          }
+        },
+        {
+          "id": "matrix.scaling_exponent",
+          "api": "pl_math_matrix_scaling_exponent",
+          "args": [
+            {
+              "name": "n1",
+              "type": "usize",
+              "min": 1
+            },
+            {
+              "name": "seconds1",
+              "type": "positive_f64"
+            },
+            {
+              "name": "n2",
+              "type": "usize",
+              "min": 2
+            },
+            {
+              "name": "seconds2",
+              "type": "positive_f64"
+            }
+          ],
+          "returns": "FiniteF64",
+          "effect": "pure_numeric",
+          "evidence": "empirical_two_point_scaling_estimate",
+          "backend": "pytyliki.c11",
+          "limits": {}
+        }
+      ]
+    }
+  ]
+}
