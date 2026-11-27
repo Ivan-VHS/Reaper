@@ -10,6 +10,8 @@ make peer := rfs["rfs_node_make"](
     "seed-peer", [], false, [], "Dormant"
 )
 assert(root[0] == "ok" and peer[0] == "ok", "valid nodes must construct")
+assert(rfs["rfs_node_validate"](root[1])[0] == "ok",
+    "public node validator must accept a valid record")
 
 make invalid_layer := rfs["rfs_node_make"](
     "bad", "Subspace", 1, 0.5, 0.1,
@@ -31,6 +33,8 @@ make locked_gate := rfs["rfs_link_make"](
     "locked", "root", "peer", "Wire", true, 0.60, ["wrong-key"]
 )
 assert(gate[0] == "ok" and locked_gate[0] == "ok", "valid gate descriptors must construct")
+assert(rfs["rfs_link_validate"](gate[1])[0] == "ok",
+    "public link validator must accept a valid record")
 
 make awakened := rfs["rfs_awaken_grid"](
     [root[1], peer[1]],
@@ -38,6 +42,8 @@ make awakened := rfs["rfs_awaken_grid"](
     5
 )
 assert(awakened[0] == "ok", "valid grid must awaken")
+assert(rfs["rfs_mesh_validate"](awakened[1])[0] == "ok",
+    "public mesh validator must accept an awakened mesh")
 assert(awakened[1][1][0][4] == 1, "basement integrity must saturate at one")
 assert(awakened[1][1][0][5] < 0.49 and awakened[1][1][0][5] > 0.47,
     "noise attenuation must remain bounded")
@@ -54,6 +60,8 @@ make filtered := rfs["rfs_filter_static_and_score"](
     ["rfs.scoreboard.v1", 100]
 )
 assert(filtered[0] == "ok", "valid stream must filter")
+assert(rfs["rfs_signal_validate"](filtered[1][0])[0] == "ok",
+    "public signal validator must accept a filtered signal")
 assert(size(filtered[1][0][1]) == 1, "only verified non-hype frame may pass")
 assert(filtered[1][0][2] == 0.8, "coherence must derive from accepted frames")
 assert(filtered[1][1][1] == 0, "scoreboard must reset")

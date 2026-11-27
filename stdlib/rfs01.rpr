@@ -47,7 +47,7 @@ craft rfs_clamp(value, minimum, maximum) {
     yield value
 }
 
-craft rfs_node_validate(node) {
+export craft rfs_node_validate(node) {
     when kind(node) != "list" or size(node) != 11 {
         yield rfs_error("RPR-RFS-NODE-0001", "node record must contain eleven fields")
     }
@@ -93,7 +93,7 @@ export craft rfs_node_make(id, layer, pressure, integrity, noise, core_seed, his
     yield rfs_ok(candidate)
 }
 
-craft rfs_link_validate(link) {
+export craft rfs_link_validate(link) {
     when kind(link) != "list" or size(link) != 8 {
         yield rfs_error("RPR-RFS-LINK-0001", "link record must contain eight fields")
     }
@@ -136,7 +136,7 @@ craft rfs_node_find(nodes, wanted_id) {
     yield nothing
 }
 
-craft rfs_mesh_validate(mesh) {
+export craft rfs_mesh_validate(mesh) {
     when kind(mesh) != "list" or size(mesh) != 7 {
         yield rfs_error("RPR-RFS-MESH-0001", "mesh record must contain seven fields")
     }
@@ -273,7 +273,7 @@ export craft rfs_awaken_grid(raw_blocks, gates, high_load) {
     yield mesh
 }
 
-craft rfs_frame_validate(frame) {
+export craft rfs_frame_validate(frame) {
     when kind(frame) != "list" or size(frame) != 5 {
         yield rfs_error("RPR-RFS-FRAME-0001", "frame record must contain five fields")
     }
@@ -298,7 +298,7 @@ export craft rfs_frame_make(origin_truth, manufactured_hype, payload, resonance)
     yield rfs_ok(candidate)
 }
 
-craft rfs_signal_validate(signal) {
+export craft rfs_signal_validate(signal) {
     when kind(signal) != "list" or size(signal) != 3 or signal[0] != "rfs.signal.v1" {
         yield rfs_error("RPR-RFS-SIGNAL-0001", "signal record has an unsupported shape or schema")
     }

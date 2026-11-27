@@ -128,11 +128,12 @@ The current reference model normally synchronizes eligible records in one pass. 
 
 | Function | Responsibility |
 |---|---|
-| `rfs_node_make`, `rfs_node_validate` | Node construction and validation |
-| `rfs_link_make` | Link construction and validation |
+| `rfs_node_make`, `rfs_node_validate` | Node construction and public validation |
+| `rfs_link_make`, `rfs_link_validate` | Link construction and public validation |
 | `rfs_mesh_make`, `rfs_mesh_validate` | Mesh identity, endpoint and bound validation |
 | `rfs_awaken_grid` | Basement pressure transformation and gate salvage |
-| `rfs_frame_make` | Signal-frame construction |
+| `rfs_frame_make`, `rfs_frame_validate` | Signal-frame construction and validation |
+| `rfs_signal_validate` | Public clean-signal shape and coherence validation |
 | `rfs_filter_static_and_score` | Noise/hype filtering, coherence and scoreboard reset |
 | `rfs_phase_gate` | Explicit phase threshold evaluation |
 | `rfs_contrast`, `rfs_shift` | Tagged contrast and directed transition values |
