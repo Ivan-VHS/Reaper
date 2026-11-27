@@ -28,6 +28,7 @@ export craft kernel_target_valid(target) {
     when target[4] != "dak" and target[4] != "linux" and target[4] != "windows" { yield false }
     when target[6] != 64 or target[7] != "little" and target[7] != "big" { yield false }
     when target[8] < 1 or target[8] > 256 { yield false }
+    when size(target[9]) > 128 or size(target[10]) > 128 { yield false }
     when not kernel_target_list_valid(target[9]) or not kernel_target_list_valid(target[10]) { yield false }
 
     when target[5] == "DABI64" {
