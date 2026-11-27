@@ -60,10 +60,29 @@ int reaper_ir_fold_constants(
 
     for (size_t i = 0; i < input->length; ++i) {
         ReaperIrNode node = input->nodes[i];
+        if (node.opcode == REAPER_IR_OP_BIT_NOT_I64) {
+            const ReaperIrNode *operand = &output[node.lhs];
+            if (operand->opcode == REAPER_IR_OP_CONST_I64) {
+                uint64_t bits = 0u;
+                int64_t value = 0;
+                memcpy(&bits, &operand->immediate, sizeof bits);
+                bits = ~bits;
+                memcpy(&value, &bits, sizeof value);
+                node.opcode = REAPER_IR_OP_CONST_I64;
+                node.lhs = REAPER_IR_NO_VALUE;
+                node.rhs = REAPER_IR_NO_VALUE;
+                node.immediate = value;
+            }
+        }
         if (node.opcode == REAPER_IR_OP_ADD_I64 ||
             node.opcode == REAPER_IR_OP_SUB_I64 ||
             node.opcode == REAPER_IR_OP_MUL_I64 ||
-            node.opcode == REAPER_IR_OP_DIV_I64) {
+            node.opcode == REAPER_IR_OP_DIV_I64 ||
+            node.opcode == REAPER_IR_OP_BIT_AND_I64 ||
+            node.opcode == REAPER_IR_OP_BIT_OR_I64 ||
+            node.opcode == REAPER_IR_OP_BIT_XOR_I64 ||
+            node.opcode == REAPER_IR_OP_SHL_I64 ||
+            node.opcode == REAPER_IR_OP_SHR_I64) {
             const ReaperIrNode *lhs = &output[node.lhs];
             const ReaperIrNode *rhs = &output[node.rhs];
             if (lhs->opcode == REAPER_IR_OP_CONST_I64 &&
@@ -92,6 +111,29 @@ int reaper_ir_fold_constants(
                         return fail(error, i, "constant division overflows signed i64");
                     value = lhs->immediate / rhs->immediate;
                     break;
+                case REAPER_IR_OP_BIT_AND_I64:
+                case REAPER_IR_OP_BIT_OR_I64:
+                case REAPER_IR_OP_BIT_XOR_I64:
+                case REAPER_IR_OP_SHL_I64:
+                case REAPER_IR_OP_SHR_I64: {
+                    uint64_t left = 0u, right = 0u, bits = 0u;
+                    memcpy(&left, &lhs->immediate, sizeof left);
+                    memcpy(&right, &rhs->immediate, sizeof right);
+                    if ((node.opcode == REAPER_IR_OP_SHL_I64 ||
+                         node.opcode == REAPER_IR_OP_SHR_I64) &&
+                        (rhs->immediate < 0 || rhs->immediate >= 64)) {
+                        return fail(error, i,
+                            "constant bit shift count must be between 0 and 63");
+                    }
+                    if (node.opcode == REAPER_IR_OP_BIT_AND_I64) bits = left & right;
+                    else if (node.opcode == REAPER_IR_OP_BIT_OR_I64) bits = left | right;
+                    else if (node.opcode == REAPER_IR_OP_BIT_XOR_I64) bits = left ^ right;
+                    else if (node.opcode == REAPER_IR_OP_SHL_I64)
+                        bits = left << (unsigned)rhs->immediate;
+                    else bits = left >> (unsigned)rhs->immediate;
+                    memcpy(&value, &bits, sizeof value);
+                    break;
+                }
                 default:
                     return fail(error, i, "unsupported integer arithmetic opcode");
                 }

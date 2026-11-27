@@ -37,6 +37,11 @@ int reaper_ir_verify(const ReaperIrModule *module, ReaperIrError *error) {
         case REAPER_IR_OP_SUB_I64:
         case REAPER_IR_OP_MUL_I64:
         case REAPER_IR_OP_DIV_I64:
+        case REAPER_IR_OP_BIT_AND_I64:
+        case REAPER_IR_OP_BIT_OR_I64:
+        case REAPER_IR_OP_BIT_XOR_I64:
+        case REAPER_IR_OP_SHL_I64:
+        case REAPER_IR_OP_SHR_I64:
             if (node->type != REAPER_IR_TYPE_I64)
                 return reject(error, i, "integer arithmetic must produce i64");
             if (!valid_ref(node->lhs, i) || !valid_ref(node->rhs, i))
@@ -44,6 +49,14 @@ int reaper_ir_verify(const ReaperIrModule *module, ReaperIrError *error) {
             if (module->nodes[node->lhs].type != REAPER_IR_TYPE_I64 ||
                 module->nodes[node->rhs].type != REAPER_IR_TYPE_I64)
                 return reject(error, i, "integer arithmetic operands must both be i64");
+            break;
+        case REAPER_IR_OP_BIT_NOT_I64:
+            if (node->type != REAPER_IR_TYPE_I64)
+                return reject(error, i, "BIT_NOT_I64 must produce i64");
+            if (!valid_ref(node->lhs, i) || node->rhs != REAPER_IR_NO_VALUE)
+                return reject(error, i, "BIT_NOT_I64 requires one earlier i64 operand");
+            if (module->nodes[node->lhs].type != REAPER_IR_TYPE_I64)
+                return reject(error, i, "BIT_NOT_I64 operand must be i64");
             break;
         case REAPER_IR_OP_CONST_U32:
             if (node->type != REAPER_IR_TYPE_U32)
@@ -160,6 +173,41 @@ int reaper_ir_execute_i64(const ReaperIrModule *module, int64_t *values,
                 return execute_error(error, i, "signed i64 division overflow");
             value = values[node->lhs] / values[node->rhs];
             break;
+        case REAPER_IR_OP_BIT_NOT_I64: {
+            uint64_t bits = 0u;
+            memcpy(&bits, &values[node->lhs], sizeof bits);
+            bits = ~bits;
+            memcpy(&value, &bits, sizeof value);
+            break;
+        }
+        case REAPER_IR_OP_BIT_AND_I64:
+        case REAPER_IR_OP_BIT_OR_I64:
+        case REAPER_IR_OP_BIT_XOR_I64:
+        case REAPER_IR_OP_SHL_I64:
+        case REAPER_IR_OP_SHR_I64: {
+            uint64_t left = 0u, right = 0u, bits = 0u;
+            const int64_t shift = values[node->rhs];
+            memcpy(&left, &values[node->lhs], sizeof left);
+            memcpy(&right, &values[node->rhs], sizeof right);
+            switch (node->opcode) {
+            case REAPER_IR_OP_BIT_AND_I64: bits = left & right; break;
+            case REAPER_IR_OP_BIT_OR_I64: bits = left | right; break;
+            case REAPER_IR_OP_BIT_XOR_I64: bits = left ^ right; break;
+            case REAPER_IR_OP_SHL_I64:
+                if (shift < 0 || shift >= 64)
+                    return execute_error(error, i, "bit shift count must be between 0 and 63");
+                bits = left << (unsigned)shift;
+                break;
+            case REAPER_IR_OP_SHR_I64:
+                if (shift < 0 || shift >= 64)
+                    return execute_error(error, i, "bit shift count must be between 0 and 63");
+                bits = left >> (unsigned)shift;
+                break;
+            default: break;
+            }
+            memcpy(&value, &bits, sizeof value);
+            break;
+        }
         case REAPER_IR_OP_RETURN:
             *result = values[node->lhs];
             return 1;
@@ -265,6 +313,12 @@ const char *reaper_ir_opcode_name(ReaperIrOpcode opcode) {
     case REAPER_IR_OP_SUB_U32: return "sub.u32";
     case REAPER_IR_OP_MUL_U32: return "mul.u32";
     case REAPER_IR_OP_DIV_U32: return "div.u32";
+    case REAPER_IR_OP_BIT_AND_I64: return "bit.and.i64";
+    case REAPER_IR_OP_BIT_OR_I64: return "bit.or.i64";
+    case REAPER_IR_OP_BIT_XOR_I64: return "bit.xor.i64";
+    case REAPER_IR_OP_BIT_NOT_I64: return "bit.not.i64";
+    case REAPER_IR_OP_SHL_I64: return "shift.left.i64";
+    case REAPER_IR_OP_SHR_I64: return "shift.right.logical.i64";
     default: return "invalid";
     }
 }
