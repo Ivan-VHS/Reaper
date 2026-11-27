@@ -1,0 +1,226 @@
+# Sealise: project blueprint validation and required-file coverage.
+export craft blueprint_record(name, required_files, layers, version) {
+    yield [name, required_files, layers, version]
+}
+
+export craft blueprint_contains(items, expected) {
+    vary index := 0
+    loop while index < size(items) {
+        when items[index] == expected { yield true }
+        change index := index + 1
+    }
+    yield false
+}
+
+export craft blueprint_missing(required_files, available_files) {
+    vary missing := []
+    vary index := 0
+    loop while index < size(required_files) {
+        make required := required_files[index]
+        when not blueprint_contains(available_files, required) {
+            change missing := push(missing, required)
+        }
+        change index := index + 1
+    }
+    yield missing
+}
+
+export craft blueprint_has_layer(blueprint, layer_name) {
+    when size(blueprint) != 4 { yield false }
+    yield blueprint_contains(blueprint[2], layer_name)
+}
+
+export craft blueprint_validate(blueprint, available_files) {
+    when size(blueprint) != 4 { yield [false, "invalid_blueprint_shape"] }
+    when size(blueprint[0]) == 0 { yield [false, "empty_blueprint_name"] }
+    when size(blueprint[3]) != 3 { yield [false, "invalid_blueprint_version"] }
+    make missing := blueprint_missing(blueprint[1], available_files)
+    when size(missing) > 0 { yield [false, missing] }
+    yield [true, []]
+}
+
+export craft blueprint_add_required(blueprint, file_name) {
+    when size(blueprint) != 4 { yield [false, "invalid_blueprint_shape"] }
+    when size(file_name) == 0 { yield [false, "empty_file_name"] }
+    when blueprint_contains(blueprint[1], file_name) { yield [false, "duplicate_required_file"] }
+    yield [true, [blueprint[0], push(blueprint[1], file_name), blueprint[2], blueprint[3]]]
+}
+
+export craft blueprint_add_layer(blueprint, layer_name) {
+    when size(blueprint) != 4 { yield [false, "invalid_blueprint_shape"] }
+    when size(layer_name) == 0 { yield [false, "empty_layer_name"] }
+    when blueprint_contains(blueprint[2], layer_name) { yield [false, "duplicate_layer"] }
+    yield [true, [blueprint[0], blueprint[1], push(blueprint[2], layer_name), blueprint[3]]]
+}
+
+export craft blueprint_coverage(blueprint, available_files) {
+    when size(blueprint) != 4 { yield [0, 0] }
+    make missing := blueprint_missing(blueprint[1], available_files)
+    yield [size(blueprint[1]) - size(missing), size(blueprint[1])]
+}
+
+
+# Contract compatibility, architecture layering and project migration.
+export craft contract_record(id, version, inputs, outputs, effects, stability) {
+    yield [id, version, inputs, outputs, effects, stability]
+}
+export craft contract_valid(contract) {
+    when size(contract) != 6 { yield [false, "invalid_shape"] }
+    when size(contract[0]) == 0 or size(contract[3]) == 0 { yield [false, "missing_identity_or_output"] }
+    when size(contract[1]) != 3 { yield [false, "invalid_version"] }
+    when contract[5] != "experimental" and contract[5] != "stable" and contract[5] != "deprecated" {
+        yield [false, "invalid_stability"]
+    }
+    yield [true, []]
+}
+export craft contract_compatible(required, provided) {
+    when not contract_valid(required)[0] or not contract_valid(provided)[0] { yield [false, "invalid_contract"] }
+    when required[0] != provided[0] { yield [false, "contract_id_mismatch"] }
+    when required[1][0] != provided[1][0] { yield [false, "major_version_mismatch"] }
+    when required[1][1] > provided[1][1] { yield [false, "provider_too_old"] }
+    when required[2] != provided[2] or required[3] != provided[3] { yield [false, "schema_mismatch"] }
+    yield [true, []]
+}
+export craft blueprint_diff(before, after) {
+    when size(before) != 4 or size(after) != 4 { yield [false, "invalid_blueprint"] }
+    yield [true, blueprint_missing(before[1], after[1]), blueprint_missing(after[1], before[1])]
+}
+export craft architecture_layer_record(name, rank, dependencies) {
+    yield [name, rank, dependencies]
+}
+export craft architecture_layers_validate(layers) {
+    vary index := 0
+    loop while index < size(layers) {
+        when size(layers[index]) != 3 or size(layers[index][0]) == 0 { yield [false, "invalid_layer"] }
+        vary other := index + 1
+        loop while other < size(layers) {
+            when layers[index][0] == layers[other][0] or layers[index][1] == layers[other][1] {
+                yield [false, "duplicate_layer_identity"]
+            }
+            change other := other + 1
+        }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+export craft migration_plan(from_version, to_version, changes) {
+    when size(from_version) != 3 or size(to_version) != 3 { yield [false, "invalid_version"] }
+    when from_version[0] > to_version[0] { yield [false, "downgrade_requires_policy"] }
+    vary plan := []
+    vary index := 0
+    loop while index < size(changes) {
+        when size(changes[index]) != 4 { yield [false, "invalid_migration_step"] }
+        change plan := push(plan, changes[index])
+        change index := index + 1
+    }
+    yield [true, plan]
+}
+
+
+# Project profile resolution, contract-set audits and migration reversibility.
+export craft contract_set_validate(contracts) {
+    vary index := 0
+    loop while index < size(contracts) {
+        make valid := contract_validate(contracts[index])
+        when not valid[0] { yield [false, valid[1]] }
+        vary other := index + 1
+        loop while other < size(contracts) {
+            when contracts[index][0] == contracts[other][0] {
+                yield [false, "duplicate_contract_id"]
+            }
+            change other := other + 1
+        }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+
+export craft contract_diff(required, provided) {
+    when not contract_validate(required)[0] or not contract_validate(provided)[0] {
+        yield [false, "invalid_contract"]
+    }
+    yield [
+        true,
+        required[0] == provided[0],
+        required[1] == provided[1],
+        required[2] == provided[2],
+        required[3] == provided[3],
+        required[4] == provided[4],
+        required[5] == provided[5]
+    ]
+}
+
+export craft contract_set_find(contracts, identifier) {
+    vary index := 0
+    loop while index < size(contracts) {
+        when contracts[index][0] == identifier { yield [true, index, contracts[index]] }
+        change index := index + 1
+    }
+    yield [false, -1, []]
+}
+
+export craft contract_set_compatible(required_set, provided_set) {
+    make valid_required := contract_set_validate(required_set)
+    make valid_provided := contract_set_validate(provided_set)
+    when not valid_required[0] or not valid_provided[0] {
+        yield [false, "invalid_contract_set"]
+    }
+    vary failures := []
+    vary index := 0
+    loop while index < size(required_set) {
+        make found := contract_set_find(provided_set, required_set[index][0])
+        when not found[0] {
+            change failures := push(failures, [required_set[index][0], "missing"])
+        } otherwise {
+            make compatible := contract_compatible(required_set[index], found[2])
+            when not compatible[0] {
+                change failures := push(failures, [required_set[index][0], compatible[1]])
+            }
+        }
+        change index := index + 1
+    }
+    yield [size(failures) == 0, failures]
+}
+
+export craft blueprint_profile(name, required_layers, required_files, version, platform) {
+    yield [name, required_layers, required_files, version, platform]
+}
+
+export craft blueprint_profile_select(profiles, requested_name, requested_platform) {
+    vary index := 0
+    loop while index < size(profiles) {
+        when profiles[index][0] == requested_name and
+             (profiles[index][4] == "any" or profiles[index][4] == requested_platform) {
+            yield [true, profiles[index]]
+        }
+        change index := index + 1
+    }
+    yield [false, "blueprint_profile_not_found"]
+}
+
+export craft migration_step_with_inverse(kind, source, target, reason, inverse) {
+    yield [kind, source, target, reason, inverse]
+}
+
+export craft migration_reversible(steps) {
+    vary index := 0
+    loop while index < size(steps) {
+        when size(steps[index]) != 5 { yield [false, "migration_step_missing_inverse"] }
+        when steps[index][4] == nothing { yield [false, "migration_step_missing_inverse"] }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+
+export craft project_baseline_record(name, revision, source_count, contract_count, test_count) {
+    yield [name, revision, source_count, contract_count, test_count]
+}
+
+export craft project_baseline_validate(baseline) {
+    when size(baseline) != 5 { yield [false, "invalid_baseline"] }
+    when size(baseline[0]) == 0 or size(baseline[1]) == 0 { yield [false, "baseline_identity_missing"] }
+    when baseline[2] < 0 or baseline[3] < 0 or baseline[4] < 0 {
+        yield [false, "negative_baseline_count"]
+    }
+    yield [true, []]
+}

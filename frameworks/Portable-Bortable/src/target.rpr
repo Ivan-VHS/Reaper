@@ -1,0 +1,222 @@
+# Portable Bortable: explicit target profiles and compatibility checks.
+export craft target_record(name, architecture, pointer_bits, endian, abi, features) {
+    yield [name, architecture, pointer_bits, endian, abi, features]
+}
+
+export craft target_valid(target) {
+    when size(target) != 6 { yield false }
+    when size(target[0]) == 0 or size(target[1]) == 0 { yield false }
+    when target[2] != 16 and target[2] != 32 and target[2] != 64 and target[2] != 128 {
+        yield false
+    }
+    when target[3] != "little" and target[3] != "big" { yield false }
+    when size(target[4]) == 0 { yield false }
+    yield true
+}
+
+export craft target_has_feature(target, feature_name) {
+    when not target_valid(target) { yield false }
+    vary index := 0
+    loop while index < size(target[5]) {
+        when target[5][index] == feature_name { yield true }
+        change index := index + 1
+    }
+    yield false
+}
+
+export craft target_compatible(source_profile, target_profile) {
+    when not target_valid(source_profile) or not target_valid(target_profile) {
+        yield [false, "invalid_target_profile"]
+    }
+    when source_profile[1] != "any" and source_profile[1] != target_profile[1] {
+        yield [false, "architecture_mismatch"]
+    }
+    when source_profile[2] != target_profile[2] { yield [false, "pointer_width_mismatch"] }
+    when source_profile[3] != target_profile[3] { yield [false, "endianness_mismatch"] }
+    when source_profile[4] != target_profile[4] { yield [false, "abi_mismatch"] }
+    vary index := 0
+    loop while index < size(source_profile[5]) {
+        when not target_has_feature(target_profile, source_profile[5][index]) {
+            yield [false, "required_feature_missing"]
+        }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+
+export craft target_select(profiles, requested_name) {
+    vary index := 0
+    loop while index < size(profiles) {
+        when profiles[index][0] == requested_name and target_valid(profiles[index]) {
+            yield [true, profiles[index]]
+        }
+        change index := index + 1
+    }
+    yield [false, "target_profile_not_found"]
+}
+
+export craft target_matrix(profiles, requirement) {
+    vary compatible := []
+    vary rejected := []
+    vary index := 0
+    loop while index < size(profiles) {
+        make result := target_compatible(requirement, profiles[index])
+        when result[0] {
+            change compatible := push(compatible, profiles[index][0])
+        } otherwise {
+            change rejected := push(rejected, [profiles[index][0], result[1]])
+        }
+        change index := index + 1
+    }
+    yield [compatible, rejected]
+}
+
+
+# ABI compatibility, target feature intersection and multi-target support.
+export craft abi_record(name, arch, pointer_bits, alignment, convention, endian) {
+    yield [name, arch, pointer_bits, alignment, convention, endian]
+}
+export craft abi_valid(abi) {
+    when size(abi) != 6 { yield false }
+    when abi[2] != 32 and abi[2] != 64 and abi[2] != 128 { yield false }
+    when abi[3] < 1 or abi[3] > 256 { yield false }
+    when abi[4] != "c" and abi[4] != "dabi64.v1" and abi[4] != "reaper-native.v1" { yield false }
+    when abi[5] != "little" and abi[5] != "big" { yield false }
+    yield true
+}
+export craft abi_compatible(required, provided) {
+    when not abi_valid(required) or not abi_valid(provided) { yield [false, "invalid_abi"] }
+    when required[1] != provided[1] or required[2] != provided[2] or required[4] != provided[4] or required[5] != provided[5] {
+        yield [false, "abi_mismatch"]
+    }
+    when required[3] > provided[3] { yield [false, "alignment_not_supported"] }
+    yield [true, []]
+}
+export craft target_feature_intersection(left, right) {
+    when not target_valid(left) or not target_valid(right) { yield [false, "invalid_target"] }
+    when left[1] != right[1] or left[2] != right[2] or left[3] != right[3] { yield [false, "target_domain_mismatch"] }
+    vary common := []
+    vary index := 0
+    loop while index < size(left[5]) {
+        when target_has_feature(right, left[5][index]) { change common := push(common, left[5][index]) }
+        change index := index + 1
+    }
+    yield [true, common]
+}
+export craft target_requirement(arch, bits, endian, abi, features) {
+    yield ["requirement", arch, bits, endian, abi, features]
+}
+export craft target_satisfies(target, requirement) {
+    when not target_valid(target) or size(requirement) != 6 { yield [false, "invalid_target_requirement"] }
+    when requirement[1] != "any" and target[1] != requirement[1] { yield [false, "architecture_mismatch"] }
+    when target[2] != requirement[2] or target[3] != requirement[3] or target[4] != requirement[4] { yield [false, "target_abi_mismatch"] }
+    vary index := 0
+    loop while index < size(requirement[5]) {
+        when not target_has_feature(target, requirement[5][index]) { yield [false, "feature_missing:" ++ requirement[5][index]] }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+export craft target_matrix(profiles, requirement) {
+    vary accepted := []
+    vary rejected := []
+    vary index := 0
+    loop while index < size(profiles) {
+        make test := target_satisfies(profiles[index], requirement)
+        when test[0] { change accepted := push(accepted, profiles[index][0]) }
+        otherwise { change rejected := push(rejected, [profiles[index][0], test[1]]) }
+        change index := index + 1
+    }
+    yield [accepted, rejected]
+}
+
+
+# Target memory-map descriptors and multi-target profile audits.
+export craft memory_region(name, start, length, kind_name, alignment, access) {
+    yield [name, start, length, kind_name, alignment, access]
+}
+
+export craft memory_region_valid(region) {
+    when size(region) != 6 { yield false }
+    when size(region[0]) == 0 or region[1] < 0 or region[2] <= 0 { yield false }
+    when region[4] < 1 { yield false }
+    when region[1] % region[4] != 0 { yield false }
+    when region[5] != "read" and region[5] != "write" and region[5] != "read_write" {
+        yield false
+    }
+    when region[3] != "ram" and region[3] != "rom" and region[3] != "flash" and region[3] != "mmio" {
+        yield false
+    }
+    yield true
+}
+
+export craft memory_region_end(region) {
+    when not memory_region_valid(region) { yield [false, "invalid_memory_region"] }
+    yield [true, region[1] + region[2]]
+}
+
+export craft memory_regions_overlap(left, right) {
+    when not memory_region_valid(left) or not memory_region_valid(right) {
+        yield [false, "invalid_memory_region"]
+    }
+    make left_end := memory_region_end(left)
+    make right_end := memory_region_end(right)
+    yield [true, left[1] < right_end[1] and right[1] < left_end[1]]
+}
+
+export craft target_memory_map_validate(regions) {
+    vary index := 0
+    loop while index < size(regions) {
+        when not memory_region_valid(regions[index]) { yield [false, "invalid_memory_region"] }
+        vary other := index + 1
+        loop while other < size(regions) {
+            make overlap := memory_regions_overlap(regions[index], regions[other])
+            when not overlap[0] { yield overlap }
+            when overlap[1] { yield [false, "memory_region_overlap"] }
+            change other := other + 1
+        }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+
+export craft target_memory_totals(regions) {
+    when not target_memory_map_validate(regions)[0] { yield [false, "invalid_memory_map"] }
+    vary ram := 0
+    vary rom := 0
+    vary flash := 0
+    vary mmio := 0
+    vary index := 0
+    loop while index < size(regions) {
+        when regions[index][3] == "ram" { change ram := ram + regions[index][2] }
+        when regions[index][3] == "rom" { change rom := rom + regions[index][2] }
+        when regions[index][3] == "flash" { change flash := flash + regions[index][2] }
+        when regions[index][3] == "mmio" { change mmio := mmio + regions[index][2] }
+        change index := index + 1
+    }
+    yield [true, [ram, rom, flash, mmio]]
+}
+
+export craft target_memory_contains(regions, address, length, required_kind) {
+    when address < 0 or length <= 0 { yield [false, "invalid_memory_request"] }
+    vary index := 0
+    loop while index < size(regions) {
+        make region := regions[index]
+        when region[3] == required_kind and address >= region[1] and
+             address + length <= region[1] + region[2] {
+            yield [true, region]
+        }
+        change index := index + 1
+    }
+    yield [false, "memory_range_not_mapped"]
+}
+
+export craft target_profile_compare(left, right) {
+    when not target_valid(left) or not target_valid(right) {
+        yield [false, "invalid_target_profile"]
+    }
+    make intersection := target_capability_intersection(left, right)
+    when not intersection[0] { yield intersection }
+    yield [true, intersection[1], size(left[5]) - size(intersection[1]),
+           size(right[5]) - size(intersection[1])]
+}

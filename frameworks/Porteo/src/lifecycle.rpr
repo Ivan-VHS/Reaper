@@ -1,0 +1,236 @@
+# Porteo: component lifecycle state machine and dependency readiness.
+import "../../Shinnn/src/graph.rpr" as graph
+
+export craft component_record(name, dependencies, state, capabilities) {
+    yield [name, dependencies, state, capabilities]
+}
+
+export craft component_find(components, name) {
+    vary index := 0
+    loop while index < size(components) {
+        when components[index][0] == name {
+            yield [true, index, components[index]]
+        }
+        change index := index + 1
+    }
+    yield [false, -1, []]
+}
+
+export craft lifecycle_transition_allowed(current, next) {
+    when current == "declared" and next == "prepared" { yield true }
+    when current == "prepared" and next == "running" { yield true }
+    when current == "running" and next == "stopping" { yield true }
+    when current == "stopping" and next == "stopped" { yield true }
+    when current == "declared" and next == "failed" { yield true }
+    when current == "prepared" and next == "failed" { yield true }
+    when current == "running" and next == "failed" { yield true }
+    when current == "failed" and next == "prepared" { yield true }
+    yield false
+}
+
+export craft lifecycle_transition(component, next_state) {
+    when size(component) != 4 { yield [false, "invalid_component"] }
+    when not lifecycle_transition_allowed(component[2], next_state) {
+        yield [false, "invalid_lifecycle_transition"]
+    }
+    yield [true, [component[0], component[1], next_state, component[3]]]
+}
+
+export craft component_dependencies_ready(component, components) {
+    vary index := 0
+    loop while index < size(component[1]) {
+        make dependency := component_find(components, component[1][index])
+        when not dependency[0] { yield [false, "dependency_not_found"] }
+        when dependency[2][2] != "running" { yield [false, "dependency_not_running"] }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+
+export craft orchestration_validate(components) {
+    vary names := []
+    vary edges := []
+    vary index := 0
+    loop while index < size(components) {
+        change names := push(names, components[index][0])
+        vary dependency_index := 0
+        loop while dependency_index < size(components[index][1]) {
+            change edges := push(edges, [components[index][0], components[index][1][dependency_index]])
+            change dependency_index := dependency_index + 1
+        }
+        change index := index + 1
+    }
+    yield graph["graph_validate"](names, edges)
+}
+
+export craft component_prepare(component, components) {
+    when component[2] != "declared" { yield [false, "component_not_declared"] }
+    make ready := component_dependencies_ready(component, components)
+    when not ready[0] { yield ready }
+    yield lifecycle_transition(component, "prepared")
+}
+
+
+# Health checks, dependency-first launch plans, capability verification and backoff.
+export craft component_health(name, state, error, heartbeat) {
+    yield [name, state, error, heartbeat]
+}
+export craft component_health_valid(item) {
+    when size(item) != 4 { yield false }
+    when item[1] != "healthy" and item[1] != "degraded" and item[1] != "unhealthy" and item[1] != "unknown" { yield false }
+    when item[3] < 0 { yield false }
+    yield true
+}
+export craft component_health_summary(items) {
+    vary healthy := 0
+    vary degraded := 0
+    vary unhealthy := 0
+    vary unknown := 0
+    vary index := 0
+    loop while index < size(items) {
+        when not component_health_valid(items[index]) { yield [false, "invalid_health"] }
+        when items[index][1] == "healthy" { change healthy := healthy + 1 }
+        when items[index][1] == "degraded" { change degraded := degraded + 1 }
+        when items[index][1] == "unhealthy" { change unhealthy := unhealthy + 1 }
+        when items[index][1] == "unknown" { change unknown := unknown + 1 }
+        change index := index + 1
+    }
+    yield [true, [healthy, degraded, unhealthy, unknown]]
+}
+export craft orchestration_start_plan(components) {
+    make valid := orchestration_validate(components)
+    when not valid[0] { yield valid }
+    vary names := []
+    vary edges := []
+    vary index := 0
+    loop while index < size(components) {
+        change names := push(names, components[index][0])
+        vary dep := 0
+        loop while dep < size(components[index][1]) {
+            change edges := push(edges, [components[index][0], components[index][1][dep]])
+            change dep := dep + 1
+        }
+        change index := index + 1
+    }
+    yield graph["graph_topological_order"](names, edges)
+}
+export craft component_capabilities_allowed(component, granted) {
+    vary index := 0
+    loop while index < size(component[3]) {
+        when not contains(granted, component[3][index]) { yield [false, "capability_denied:" ++ component[3][index]] }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+export craft component_prepare_authorized(component, components, granted) {
+    make allowed := component_capabilities_allowed(component, granted)
+    when not allowed[0] { yield allowed }
+    yield component_prepare(component, components)
+}
+export craft restart_policy(max_attempts, base_delay, max_delay, multiplier) {
+    yield [max_attempts, base_delay, max_delay, multiplier]
+}
+export craft restart_delay(policy, attempt) {
+    when size(policy) != 4 or policy[0] < 1 or policy[1] < 0 or policy[2] < policy[1] or policy[3] < 1 {
+        yield [false, "invalid_policy"]
+    }
+    when attempt < 0 or attempt >= policy[0] { yield [false, "retry_budget_exhausted"] }
+    vary delay := policy[1]
+    vary index := 0
+    loop while index < attempt {
+        change delay := delay * policy[3]
+        when delay > policy[2] { change delay := policy[2] }
+        change index := index + 1
+    }
+    when delay > policy[2] { change delay := policy[2] }
+    yield [true, delay]
+}
+export craft orchestration_shutdown_plan(components) {
+    make startup := orchestration_start_plan(components)
+    when not startup[0] { yield startup }
+    yield [true, reverse(startup[1])]
+}
+
+
+# Lifecycle event journal, readiness policy and graceful-shutdown plans.
+export craft component_event(component_name, from_state, to_state, reason, sequence) {
+    yield [component_name, from_state, to_state, reason, sequence]
+}
+
+export craft component_event_valid(event) {
+    when size(event) != 5 { yield false }
+    when size(event[0]) == 0 or event[4] < 0 { yield false }
+    yield true
+}
+
+export craft lifecycle_apply_event(component, event) {
+    when size(component) != 4 or not component_event_valid(event) {
+        yield [false, "invalid_component_or_event"]
+    }
+    when event[0] != component[0] { yield [false, "event_component_mismatch"] }
+    when event[1] != component[2] { yield [false, "event_state_mismatch"] }
+    when not lifecycle_transition_allowed(event[1], event[2]) {
+        yield [false, "event_transition_not_allowed"]
+    }
+    yield lifecycle_transition(component, event[2])
+}
+
+export craft component_event_append(journal, event) {
+    when not component_event_valid(event) { yield [false, "invalid_event"] }
+    when size(journal) > 0 {
+        when event[4] <= journal[size(journal) - 1][4] {
+            yield [false, "event_sequence_not_monotonic"]
+        }
+    }
+    yield [true, push(journal, event)]
+}
+
+export craft component_journal_validate(journal) {
+    vary index := 0
+    loop while index < size(journal) {
+        when not component_event_valid(journal[index]) { yield [false, "invalid_journal_event"] }
+        when index > 0 and journal[index][4] <= journal[index - 1][4] {
+            yield [false, "non_monotonic_journal"]
+        }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+
+export craft component_ready_policy(health, dependency_ready, capabilities_ready) {
+    when not component_health_valid(health) { yield [false, "invalid_health"] }
+    when not dependency_ready { yield [true, "blocked_by_dependency"] }
+    when not capabilities_ready { yield [true, "capability_denied"] }
+    when health[1] == "unhealthy" { yield [true, "unavailable"] }
+    when health[1] == "unknown" { yield [true, "health_unknown"] }
+    when health[1] == "degraded" { yield [true, "ready_degraded"] }
+    yield [true, "ready"]
+}
+
+export craft orchestration_shutdown_groups(components) {
+    make result := orchestration_shutdown_plan(components)
+    when not result[0] { yield result }
+    vary groups := []
+    vary current := []
+    vary index := 0
+    loop while index < size(result[1]) {
+        when size(current) == 0 {
+            change current := [result[1][index]]
+        } otherwise {
+            change current := push(current, result[1][index])
+        }
+        when size(current) == 4 {
+            change groups := push(groups, current)
+            change current := []
+        }
+        change index := index + 1
+    }
+    when size(current) > 0 { change groups := push(groups, current) }
+    yield [true, groups]
+}
+
+export craft component_transition_report(component, next_state) {
+    make result := lifecycle_transition(component, next_state)
+    when not result[0] { yield [false, result[1], component[2]] }
+    yield [true, result[1], component[2], next_state]
+}

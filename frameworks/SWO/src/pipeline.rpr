@@ -1,0 +1,253 @@
+# SWO: deterministic workflow stages and dependency readiness.
+import "../../Shinnn/src/graph.rpr" as graph
+
+export craft workflow_stage(name, dependencies, status, required) {
+    yield [name, dependencies, status, required]
+}
+
+export craft workflow_status_valid(status) {
+    when status == "planned" or status == "ready" or status == "running" or status == "passed" or status == "failed" or status == "skipped" {
+        yield true
+    }
+    yield false
+}
+
+export craft workflow_stage_find(stages, name) {
+    vary index := 0
+    loop while index < size(stages) {
+        when stages[index][0] == name { yield [true, index, stages[index]] }
+        change index := index + 1
+    }
+    yield [false, -1, []]
+}
+
+export craft workflow_dependencies_passed(stage, stages) {
+    vary index := 0
+    loop while index < size(stage[1]) {
+        make dependency := workflow_stage_find(stages, stage[1][index])
+        when not dependency[0] { yield [false, "dependency_not_found"] }
+        when dependency[2][2] != "passed" { yield [false, "dependency_not_passed"] }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+
+export craft workflow_can_start(stage, stages) {
+    when size(stage) != 4 { yield [false, "invalid_stage"] }
+    when not workflow_status_valid(stage[2]) { yield [false, "invalid_status"] }
+    when stage[2] != "planned" and stage[2] != "ready" { yield [false, "stage_not_startable"] }
+    make dependencies := workflow_dependencies_passed(stage, stages)
+    when not dependencies[0] { yield dependencies }
+    yield [true, []]
+}
+
+export craft workflow_validate(stages) {
+    vary names := []
+    vary edges := []
+    vary index := 0
+    loop while index < size(stages) {
+        when not workflow_status_valid(stages[index][2]) {
+            yield [false, "invalid_stage_status"]
+        }
+        change names := push(names, stages[index][0])
+        vary dependency_index := 0
+        loop while dependency_index < size(stages[index][1]) {
+            change edges := push(edges, [stages[index][0], stages[index][1][dependency_index]])
+            change dependency_index := dependency_index + 1
+        }
+        change index := index + 1
+    }
+    yield graph["graph_validate"](names, edges)
+}
+
+export craft workflow_transition(stage, next_status) {
+    when not workflow_status_valid(next_status) { yield [false, "invalid_next_status"] }
+    when stage[2] == "planned" and next_status == "ready" { yield [true, [stage[0], stage[1], next_status, stage[3]]] }
+    when stage[2] == "ready" and next_status == "running" { yield [true, [stage[0], stage[1], next_status, stage[3]]] }
+    when stage[2] == "running" and (next_status == "passed" or next_status == "failed") {
+        yield [true, [stage[0], stage[1], next_status, stage[3]]]
+    }
+    when stage[2] == "planned" and next_status == "skipped" { yield [true, [stage[0], stage[1], next_status, stage[3]]] }
+    yield [false, "invalid_workflow_transition"]
+}
+
+
+# Quality gate aggregation, retry schedules and verified release candidates.
+export craft quality_gate(name, minimum, actual, maximum, status) {
+    yield [name, minimum, actual, maximum, status]
+}
+export craft quality_gate_evaluate(gate) {
+    when size(gate) != 5 or size(gate[0]) == 0 { yield [false, "invalid_gate"] }
+    when gate[4] != "pending" and gate[4] != "passed" and gate[4] != "failed" and gate[4] != "waived" { yield [false, "invalid_status"] }
+    when gate[2] < gate[1] or (gate[3] > 0 and gate[2] > gate[3]) { yield [true, "failed"] }
+    yield [true, "passed"]
+}
+export craft quality_report(gates) {
+    vary passed := 0
+    vary failed := 0
+    vary pending := 0
+    vary waived := 0
+    vary index := 0
+    loop while index < size(gates) {
+        make outcome := quality_gate_evaluate(gates[index])
+        when not outcome[0] { yield outcome }
+        when gates[index][4] == "waived" { change waived := waived + 1 }
+        otherwise {
+            when gates[index][4] == "pending" { change pending := pending + 1 }
+            otherwise {
+                when outcome[1] == "passed" { change passed := passed + 1 }
+                when outcome[1] == "failed" { change failed := failed + 1 }
+            }
+        }
+        change index := index + 1
+    }
+    yield [true, [passed, failed, pending, waived]]
+}
+export craft retry_policy(max_attempts, initial, maximum, multiplier) {
+    yield [max_attempts, initial, maximum, multiplier]
+}
+export craft retry_delay(policy, attempt) {
+    when size(policy) != 4 or policy[0] < 1 or policy[1] < 0 or policy[2] < policy[1] or policy[3] < 1 {
+        yield [false, "invalid_retry_policy"]
+    }
+    when attempt < 0 or attempt >= policy[0] { yield [false, "retry_budget_exhausted"] }
+    vary delay := policy[1]
+    vary index := 0
+    loop while index < attempt {
+        change delay := delay * policy[3]
+        when delay > policy[2] { change delay := policy[2] }
+        change index := index + 1
+    }
+    yield [true, delay]
+}
+export craft workflow_required_passed(stages, names) {
+    vary index := 0
+    loop while index < size(names) {
+        make found := workflow_stage_find(stages, names[index])
+        when not found[0] { yield [false, "required_stage_missing"] }
+        when found[2][2] != "passed" { yield [false, "required_stage_not_passed"] }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+export craft release_candidate(version, revision, stage_names, stages, gates) {
+    when size(version) != 3 or size(revision) == 0 { yield [false, "invalid_release_identity"] }
+    make stage_check := workflow_required_passed(stages, stage_names)
+    when not stage_check[0] { yield stage_check }
+    make gate_check := quality_report(gates)
+    when not gate_check[0] { yield gate_check }
+    when gate_check[1][1] > 0 or gate_check[1][2] > 0 { yield [false, "quality_gates_incomplete"] }
+    yield [true, ["candidate", version, revision, gate_check[1]]]
+}
+export craft artifact_record(name, target, revision, digest, status) {
+    yield [name, target, revision, digest, status]
+}
+export craft artifact_publish(artifact, verified) {
+    when size(artifact) != 5 { yield [false, "invalid_artifact"] }
+    when not verified or artifact[4] != "verified" { yield [false, "verification_required"] }
+    yield [true, [artifact[0], artifact[1], artifact[2], artifact[3], "published"]]
+}
+
+
+# Verification evidence, policy waivers and immutable release manifests.
+export craft evidence_record(gate_name, evidence_kind, reference, observed, status) {
+    yield [gate_name, evidence_kind, reference, observed, status]
+}
+
+export craft evidence_valid(evidence) {
+    when size(evidence) != 5 { yield false }
+    when size(evidence[0]) == 0 or size(evidence[1]) == 0 or size(evidence[2]) == 0 {
+        yield false
+    }
+    when evidence[4] != "present" and evidence[4] != "missing" and evidence[4] != "invalid" {
+        yield false
+    }
+    yield true
+}
+
+export craft evidence_gate_status(gate_name, evidence_list) {
+    vary seen := 0
+    vary missing := 0
+    vary invalid := 0
+    vary index := 0
+    loop while index < size(evidence_list) {
+        make item := evidence_list[index]
+        when not evidence_valid(item) { yield [false, "invalid_evidence_record"] }
+        when item[0] == gate_name {
+            change seen := seen + 1
+            when item[4] == "missing" { change missing := missing + 1 }
+            when item[4] == "invalid" { change invalid := invalid + 1 }
+        }
+        change index := index + 1
+    }
+    when seen == 0 { yield [true, "no_evidence"] }
+    when invalid > 0 { yield [true, "invalid_evidence"] }
+    when missing > 0 { yield [true, "evidence_missing"] }
+    yield [true, "evidence_present"]
+}
+
+export craft evidence_set_validate(evidence_list) {
+    vary index := 0
+    loop while index < size(evidence_list) {
+        when not evidence_valid(evidence_list[index]) { yield [false, "invalid_evidence_record"] }
+        change index := index + 1
+    }
+    yield [true, []]
+}
+
+export craft waiver_record(gate_name, reason, owner, expires_revision) {
+    yield [gate_name, reason, owner, expires_revision]
+}
+
+export craft waiver_valid(waiver) {
+    when size(waiver) != 4 { yield false }
+    when size(waiver[0]) == 0 or size(waiver[1]) == 0 or size(waiver[2]) == 0 {
+        yield false
+    }
+    when size(waiver[3]) == 0 { yield false }
+    yield true
+}
+
+export craft waiver_find(waivers, gate_name) {
+    vary index := 0
+    loop while index < size(waivers) {
+        when waivers[index][0] == gate_name and waiver_valid(waivers[index]) {
+            yield [true, waivers[index]]
+        }
+        change index := index + 1
+    }
+    yield [false, "waiver_not_found"]
+}
+
+export craft release_manifest(version, revision, targets, artifact_ids, evidence_ids) {
+    yield ["reaper.release.v1", version, revision, targets, artifact_ids, evidence_ids]
+}
+
+export craft release_manifest_validate(manifest) {
+    when size(manifest) != 6 or manifest[0] != "reaper.release.v1" {
+        yield [false, "invalid_release_manifest"]
+    }
+    when size(manifest[1]) != 3 or size(manifest[2]) == 0 { yield [false, "release_identity_missing"] }
+    when size(manifest[3]) == 0 or size(manifest[4]) == 0 { yield [false, "release_targets_or_artifacts_missing"] }
+    yield [true, []]
+}
+
+export craft release_gate_summary(gates, evidence_list, waivers) {
+    make quality := quality_report(gates)
+    when not quality[0] { yield quality }
+    make evidence_check := evidence_set_validate(evidence_list)
+    when not evidence_check[0] { yield evidence_check }
+    vary unresolved := []
+    vary index := 0
+    loop while index < size(gates) {
+        when gates[index][4] != "passed" {
+            make evidence_state := evidence_gate_status(gates[index][0], evidence_list)
+            make waiver := waiver_find(waivers, gates[index][0])
+            when evidence_state[1] != "evidence_present" and not waiver[0] {
+                change unresolved := push(unresolved, gates[index][0])
+            }
+        }
+        change index := index + 1
+    }
+    yield [size(unresolved) == 0, quality[1], unresolved]
+}

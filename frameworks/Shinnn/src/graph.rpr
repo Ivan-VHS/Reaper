@@ -1,0 +1,272 @@
+# Shinnn: bounded architecture graph validation and reachability.
+export craft graph_has_node(nodes, expected) {
+    vary index := 0
+    loop while index < size(nodes) {
+        when nodes[index] == expected { yield true }
+        change index := index + 1
+    }
+    yield false
+}
+
+export craft graph_reaches(edges, current, target, remaining) {
+    when current == target { yield true }
+    when remaining <= 0 { yield false }
+    vary index := 0
+    loop while index < size(edges) {
+        make edge := edges[index]
+        when edge[0] == current {
+            when graph_reaches(edges, edge[1], target, remaining - 1) {
+                yield true
+            }
+        }
+        change index := index + 1
+    }
+    yield false
+}
+
+export craft graph_validate(nodes, edges) {
+    when size(nodes) > 256 { yield [false, "node_limit_exceeded"] }
+    when size(edges) > 2048 { yield [false, "edge_limit_exceeded"] }
+    vary node_index := 0
+    loop while node_index < size(nodes) {
+        vary other_index := node_index + 1
+        loop while other_index < size(nodes) {
+            when nodes[node_index] == nodes[other_index] {
+                yield [false, "duplicate_node"]
+            }
+            change other_index := other_index + 1
+        }
+        change node_index := node_index + 1
+    }
+    vary edge_index := 0
+    loop while edge_index < size(edges) {
+        make edge := edges[edge_index]
+        when size(edge) != 2 { yield [false, "invalid_edge_shape"] }
+        when not graph_has_node(nodes, edge[0]) or not graph_has_node(nodes, edge[1]) {
+            yield [false, "edge_endpoint_missing"]
+        }
+        when edge[0] == edge[1] { yield [false, "self_dependency"] }
+        vary other_edge := edge_index + 1
+        loop while other_edge < size(edges) {
+            when edges[other_edge][0] == edge[0] and edges[other_edge][1] == edge[1] {
+                yield [false, "duplicate_edge"]
+            }
+            change other_edge := other_edge + 1
+        }
+        when graph_reaches(edges, edge[1], edge[0], size(nodes)) {
+            yield [false, "dependency_cycle"]
+        }
+        change edge_index := edge_index + 1
+    }
+    yield [true, []]
+}
+
+export craft graph_dependencies_of(edges, node_name) {
+    vary dependencies := []
+    vary index := 0
+    loop while index < size(edges) {
+        when edges[index][0] == node_name {
+            change dependencies := push(dependencies, edges[index][1])
+        }
+        change index := index + 1
+    }
+    yield dependencies
+}
+
+export craft graph_dependents_of(edges, node_name) {
+    vary dependents := []
+    vary index := 0
+    loop while index < size(edges) {
+        when edges[index][1] == node_name {
+            change dependents := push(dependents, edges[index][0])
+        }
+        change index := index + 1
+    }
+    yield dependents
+}
+
+
+# Deterministic topological order, reachability, impact and graph budgets.
+export craft graph_topological_order(nodes, edges) {
+    make valid := graph_validate(nodes, edges)
+    when not valid[0] { yield valid }
+    vary ordered := []
+    vary stalled := false
+    loop while size(ordered) < size(nodes) and not stalled {
+        vary added := false
+        vary index := 0
+        loop while index < size(nodes) {
+            when not graph_has_node(ordered, nodes[index]) {
+                make dependencies := graph_dependencies_of(edges, nodes[index])
+                vary ready := true
+                vary dep := 0
+                loop while dep < size(dependencies) {
+                    when not graph_has_node(ordered, dependencies[dep]) { change ready := false }
+                    change dep := dep + 1
+                }
+                when ready {
+                    change ordered := push(ordered, nodes[index])
+                    change added := true
+                }
+            }
+            change index := index + 1
+        }
+        when not added { change stalled := true }
+    }
+    when stalled { yield [false, "graph_not_acyclic"] }
+    yield [true, ordered]
+}
+export craft graph_dependency_closure(edges, node_name, visited) {
+    when graph_has_node(visited, node_name) { yield [true, visited] }
+    vary next := push(visited, node_name)
+    make dependencies := graph_dependencies_of(edges, node_name)
+    vary index := 0
+    loop while index < size(dependencies) {
+        make found := graph_dependency_closure(edges, dependencies[index], next)
+        when not found[0] { yield found }
+        change next := found[1]
+        change index := index + 1
+    }
+    yield [true, next]
+}
+export craft graph_reachable(nodes, edges, source, target) {
+    when not graph_has_node(nodes, source) or not graph_has_node(nodes, target) { yield [false, "unknown_node"] }
+    make valid := graph_validate(nodes, edges)
+    when not valid[0] { yield valid }
+    make closure := graph_dependency_closure(edges, source, [])
+    yield [true, graph_has_node(closure[1], target)]
+}
+export craft graph_impact_set(edges, changed) {
+    vary result := [changed]
+    vary growing := true
+    loop while growing {
+        change growing := false
+        vary index := 0
+        loop while index < size(edges) {
+            when graph_has_node(result, edges[index][1]) and not graph_has_node(result, edges[index][0]) {
+                change result := push(result, edges[index][0])
+                change growing := true
+            }
+            change index := index + 1
+        }
+    }
+    yield result
+}
+export craft graph_node_degree(edges, name) {
+    yield [size(graph_dependencies_of(edges, name)), size(graph_dependents_of(edges, name))]
+}
+export craft graph_validate_bounded(nodes, edges, max_nodes, max_edges) {
+    when max_nodes < 1 or max_edges < 0 { yield [false, "invalid_budget"] }
+    when size(nodes) > max_nodes { yield [false, "node_budget_exceeded"] }
+    when size(edges) > max_edges { yield [false, "edge_budget_exceeded"] }
+    yield graph_validate(nodes, edges)
+}
+
+
+# Architecture scores, dependency audits and graph projections.
+export craft graph_transitive_dependents(edges, node_name) {
+    yield graph_impact_set(edges, node_name)
+}
+
+export craft graph_dependency_count(edges, node_name) {
+    make closure := graph_dependency_closure(edges, node_name, [])
+    when not closure[0] { yield closure }
+    yield [true, size(closure[1]) - 1]
+}
+
+export craft graph_dependency_audit(nodes, edges) {
+    make valid := graph_validate(nodes, edges)
+    when not valid[0] { yield valid }
+    make ordered := graph_topological_order(nodes, edges)
+    when not ordered[0] { yield ordered }
+    vary reports := []
+    vary index := 0
+    loop while index < size(nodes) {
+        make degree := graph_node_degree(edges, nodes[index])
+        make closure := graph_dependency_closure(edges, nodes[index], [])
+        change reports := push(reports, [
+            nodes[index], degree[0], degree[1], size(closure[1]) - 1
+        ])
+        change index := index + 1
+    }
+    yield [true, ordered[1], reports]
+}
+
+export craft graph_edges_for_node(edges, node_name) {
+    vary incoming := []
+    vary outgoing := []
+    vary index := 0
+    loop while index < size(edges) {
+        when edges[index][0] == node_name { change outgoing := push(outgoing, edges[index]) }
+        when edges[index][1] == node_name { change incoming := push(incoming, edges[index]) }
+        change index := index + 1
+    }
+    yield [incoming, outgoing]
+}
+
+export craft graph_nodes_by_layer(nodes, layer_names, layer_rank) {
+    vary grouped := []
+    vary index := 0
+    loop while index < size(layer_names) {
+        vary members := []
+        vary node_index := 0
+        loop while node_index < size(nodes) {
+            when layer_rank(nodes[node_index]) == index {
+                change members := push(members, nodes[node_index])
+            }
+            change node_index := node_index + 1
+        }
+        change grouped := push(grouped, [layer_names[index], members])
+        change index := index + 1
+    }
+    yield grouped
+}
+
+export craft graph_component_boundary(nodes, edges, component_nodes) {
+    when not graph_validate(nodes, edges)[0] { yield [false, "invalid_graph"] }
+    vary internal := []
+    vary incoming := []
+    vary outgoing := []
+    vary index := 0
+    loop while index < size(edges) {
+        make from_inside := graph_has_node(component_nodes, edges[index][0])
+        make to_inside := graph_has_node(component_nodes, edges[index][1])
+        when from_inside and to_inside { change internal := push(internal, edges[index]) }
+        otherwise {
+            when not from_inside and to_inside { change incoming := push(incoming, edges[index]) }
+            when from_inside and not to_inside { change outgoing := push(outgoing, edges[index]) }
+        }
+        change index := index + 1
+    }
+    yield [true, internal, incoming, outgoing]
+}
+
+export craft graph_dependency_depth(edges, node_name, visited) {
+    when graph_has_node(visited, node_name) { yield [false, "cycle_or_repeated_path"] }
+    make next := push(visited, node_name)
+    make dependencies := graph_dependencies_of(edges, node_name)
+    when size(dependencies) == 0 { yield [true, 0] }
+    vary maximum := 0
+    vary index := 0
+    loop while index < size(dependencies) {
+        make depth := graph_dependency_depth(edges, dependencies[index], next)
+        when not depth[0] { yield depth }
+        when depth[1] + 1 > maximum { change maximum := depth[1] + 1 }
+        change index := index + 1
+    }
+    yield [true, maximum]
+}
+
+export craft graph_budget_report(nodes, edges) {
+    make valid := graph_validate(nodes, edges)
+    when not valid[0] { yield valid }
+    vary isolated := graph_isolated_nodes(nodes, edges)
+    vary index := 0
+    vary roots := []
+    loop while index < size(nodes) {
+        make degree := graph_node_degree(edges, nodes[index])
+        when degree[1] == 0 { change roots := push(roots, nodes[index]) }
+        change index := index + 1
+    }
+    yield [true, [size(nodes), size(edges), size(isolated), roots]]
+}
