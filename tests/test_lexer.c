@@ -389,7 +389,7 @@ static void test_utf8_columns_count_codepoints(void)
 
 static void test_rfs01_operator_lexing(void)
 {
-    const char *source = "node <> State flow a ~> b flow a >> b flow a << b contrast a || b contrast a ^^ b";
+    const char *source = "node <> State flow a ~> b flow a >> b flow a << b contrast a || b contrast a ^^ b recover a <-root recover a ^core";
     ReaperTokenArray tokens = {0};
     ReaperLexError error = {{0}, 0u, 0u};
 
@@ -400,6 +400,8 @@ static void test_rfs01_operator_lexing(void)
     assert(has(&tokens, "<<", REAPER_TOK_OPERATOR));
     assert(has(&tokens, "||", REAPER_TOK_OPERATOR));
     assert(has(&tokens, "^^", REAPER_TOK_OPERATOR));
+    assert(has(&tokens, "<-root", REAPER_TOK_OPERATOR));
+    assert(has(&tokens, "^core", REAPER_TOK_OPERATOR));
     reaper_tokens_free(&tokens);
 }
 
