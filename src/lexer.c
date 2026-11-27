@@ -375,6 +375,24 @@ static int ident_more(unsigned char byte)
     return isalnum(byte) || byte == '_' || byte >= 0x80u;
 }
 
+
+/* RFS recovery operators include a word suffix and must remain one token. */
+static int matches_rfs_word_operator(
+    const char *source,
+    const char *operator_text,
+    size_t operator_length
+)
+{
+    for (size_t index = 0u; index < operator_length; ++index) {
+        if (source[index] == '\0' || source[index] != operator_text[index]) {
+            return 0;
+        }
+    }
+
+    return source[operator_length] == '\0' ||
+           !ident_more((unsigned char)source[operator_length]);
+}
+
 static int one_op(char character)
 {
     return strchr("+-*/%<>(){}[],=:;.!?@|~&^", character) != NULL;
@@ -714,6 +732,26 @@ int reaper_lex(
                 column += 3u;
                 continue;
             }
+        }
+
+        if (matches_rfs_word_operator(cursor, "<-root", 6u) ||
+            matches_rfs_word_operator(cursor, "^core", 5u)) {
+            const size_t operator_length = cursor[0] == '<' ? 6u : 5u;
+
+            if (!append_token(
+                    out,
+                    REAPER_TOK_OPERATOR,
+                    cursor,
+                    operator_length,
+                    line,
+                    operator_column,
+                    &token_limit_exceeded)) {
+                goto out_of_memory;
+            }
+
+            cursor += operator_length;
+            column += operator_length;
+            continue;
         }
 
         if (cursor[1] != '\0' && is_pair_operator(cursor)) {
