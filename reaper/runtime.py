@@ -24,6 +24,14 @@ from .resources import ResourceError, ResourceHandle, ResourceManager
 from .token_catalog import token_catalog, token_info, token_is_reserved
 
 
+def _is_register_number(value: Any) -> bool:
+    return (
+        isinstance(value, (int, float))
+        and not isinstance(value, bool)
+        and (not isinstance(value, float) or math.isfinite(value))
+    )
+
+
 @dataclass(slots=True)
 class Binding:
     value: Any
@@ -42,8 +50,8 @@ class Environment:
     ) -> None:
         if name in self.values:
             raise ReaperRuntimeError(f"'{name}' is already defined in this scope")
-        if register and (isinstance(value, bool) or not isinstance(value, (int, float))):
-            raise ReaperRuntimeError("'reg' requires a numeric value")
+        if register and not _is_register_number(value):
+            raise ReaperRuntimeError("'reg' requires a finite numeric value")
         self.values[name] = Binding(value, mutable, register)
 
     def get(self, name: str) -> Any:
@@ -58,9 +66,9 @@ class Environment:
             binding = self.values[name]
             if not binding.mutable:
                 raise ReaperRuntimeError(f"'{name}' was declared with 'make' and cannot be changed; use 'vary'")
-            if binding.register and (isinstance(value, bool) or not isinstance(value, (int, float))):
+            if binding.register and not _is_register_number(value):
                 location = f"{filename}:{token.line}:{token.column}: " if token is not None else ""
-                raise ReaperRuntimeError(f"{location}register '{name}' only accepts numeric values")
+                raise ReaperRuntimeError(f"{location}register '{name}' only accepts finite numeric values")
             binding.value = value
             return
         if self.parent is not None:
@@ -239,8 +247,8 @@ class Interpreter:
             environment.define(name, self._evaluate(children[0], environment), mutable)
         elif node.kind == "register":
             value = self._evaluate(children[0], environment)
-            if not self._is_number(value):
-                raise self._error(node.token, "'reg' requires a numeric value")
+            if not _is_register_number(value):
+                raise self._error(node.token, "'reg' requires a finite numeric value")
             environment.define(node.value, value, mutable=True, register=True)
         elif node.kind == "change":
             environment.change(node.value, self._evaluate(children[0], environment), node.token, self.filename)
