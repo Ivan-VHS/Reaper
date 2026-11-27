@@ -157,10 +157,16 @@ craft scalar_field_flux(field, quantum_step) {
         when medium[0] > quantum_step {
             change available := medium[0] - quantum_step
         }
-        when available > U64_MAX - medium[2] {
+        when available != 0 {
+            when medium[1] > U64_MAX // available {
+                yield ["err", "density-weighted cell flux exceeds u64"]
+            }
+        }
+        make density_weighted := available * medium[1]
+        when density_weighted > U64_MAX - medium[2] {
             yield ["err", "cell flux exceeds u64"]
         }
-        make cell_flux := available + medium[2]
+        make cell_flux := density_weighted + medium[2]
         when total_flux > U64_MAX - cell_flux {
             yield ["err", "total scalar flux exceeds u64"]
         }
