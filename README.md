@@ -87,7 +87,7 @@ Filesystem, process, network, clock, shell and native-library effects must remai
 - [Runtime limits](docs/RUNTIME_PLATFORM.md) · [Kora helpers](docs/KORA.md)
 - [Studio and IDE](docs/REAPER_IDE.md) · [Jora factory](docs/JORA_APPLICATION_FACTORY.md)
 - [Implementation roadmap](docs/IMPLEMENTATION_ROADMAP.md) · [Documentation index](docs/README.md)
-- [HARVEST Reaper integration](docs/HARVEST_REAPER_INTEGRATION.md)
+- [NOO TAH JavaScript boundary](docs/NOO_TAH.md)
 - [Shared ecosystem standards](https://github.com/Ivan-VHS/DAK/blob/main/docs/SHARED_STANDARDS.md)
 
 ## Contributing and license
