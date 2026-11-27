@@ -1,13 +1,16 @@
-# МОСТ — exact Russian keyword aliases
+# МОСТ — русскоязычный слой языка Reaper
 
-МОСТ is a lexical spelling profile for Reaper, not a second language. Alias normalization must produce the same token stream, AST and runtime behavior.
+МОСТ — русскоязычная поверхность Reaper, а не отдельный язык. Точные русские написания преобразуются в канонические токены до общего парсера; обе формы используют одинаковые AST, семантику и runtime.
 
-| Layer | Count | Status |
+| Слой | Количество | Состояние |
 |---|---:|---|
-| Runtime aliases | 21 | executable in reference subset |
-| Additional aliases | 33 | lexically reserved |
-| Total exact aliases | 54 | no stemming or synonym inference |
+| Точные русские написания | 102 | manifest v0.3.0 |
+| Исполняемые псевдонимы | 38 | текущий reference grammar subset |
+| Дополнительные зарезервированные формы | 64 | лексическое распознавание без заявления о поддержке грамматики |
+| Предметные имена LITHOS | 44 | идентификаторы и имена пользовательских процедур |
 
-Examples: `пусть → make`, `функция → craft`, `вернуть → yield`, `вывести → emit`, `если → when`, `иначе → otherwise`, `для → each`, `пока → while`.
+Примеры: пусть, объявить, переменная, изменить, присвоить, функция, вернуть, если, когда, иначе, каждый, среди, повторять, показать, верно, неверно, пусто.
 
-Reserved words do not imply grammar/runtime support. See [MOST implementation ledger](MOST_IMPLEMENTATION_STATUS.md).
+См. профиль LITHOS::FLOW (MOST_LITHOS_FLOW_PROFILE.md), реестр псевдонимов (language/most_keyword_aliases.json), словарь предметной области (language/most_lithos_vocabulary.v1.json) и журнал реализации (MOST_IMPLEMENTATION_STATUS.md).
+
+Зарезервированные слова не означают наличие parser/runtime поддержки. Нет автоматического склонения, стемминга, угадывания синонимов или изменения смысла по контексту.
