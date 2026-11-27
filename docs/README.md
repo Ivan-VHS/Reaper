@@ -18,6 +18,7 @@ Start with the [project README](../README.md) for installation, first commands a
 - [Processor Engineering Platform v1](PROCESSOR_ENGINEERING_PLATFORM.md) — processor project manifests, Pytyliki host evidence, target/ABI resource admission and the scalar-C17 host AOT workbench boundary.
 - [Pytyliki Processor Fabric bridge v1](PYTYLIKI_PROCESSOR_FABRIC_BRIDGE.md) — PPF/evidence import, source-span preservation, typed resource ownership and separate processor backend gates.
 - [Processor Fabric typed IR v1](PROCESSOR_FABRIC_TYPED_IR.md) — Reaper-owned type/effect/ownership binding and verified SemanticGraph sidecar; distinct from stack VM bytecode.
+- [Processor backend prototypes v1](PROCESSOR_BACKENDS_V1.md) — independent RV32I assembler/linker/emulator, combinational RTL and bounded formal-equivalence prototypes with explicit qualification boundaries.
 - [Processor Fabric typed IR v1](PROCESSOR_FABRIC_TYPED_IR.md) — Reaper-owned type/effect/ownership binding and verified SemanticGraph sidecar; distinct from stack VM bytecode.
 - [Typed Registry v1](TYPED_REGISTRY.md) — Reaper-native type, layout, platform, ABI, effect and capability contracts.
 - [System Runtime ABI v1](SYSTEM_RUNTIME_ABI_V1.md)
