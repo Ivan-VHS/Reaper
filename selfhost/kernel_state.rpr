@@ -1,0 +1,73 @@
+# Reaper processor-kernel lifecycle and monotonic state accounting.
+# State: [schema, version, generation, lifecycle, logical_tick, actions, active_workers, fault_reason].
+# This is a deterministic control-plane state model, not privileged CPU execution.
+
+export craft kernel_state_make(version) {
+    when size(version) != 3 or version[0] < 0 or version[1] < 0 or version[2] < 0 {
+        yield ["ERR", "kernel state requires a valid three-part version"]
+    }
+    yield ["OK", ["reaper.kernel.state.v1", version, 1, "offline", 0, 0, 0, ""]]
+}
+
+export craft kernel_state_valid(state) {
+    when size(state) != 8 { yield false }
+    when state[0] != "reaper.kernel.state.v1" { yield false }
+    when size(state[1]) != 3 or state[1][0] < 0 or state[1][1] < 0 or state[1][2] < 0 { yield false }
+    when state[2] < 1 or state[4] < 0 or state[5] < 0 or state[6] < 0 { yield false }
+    when state[3] != "offline" and state[3] != "booting" and state[3] != "online" and state[3] != "draining" and state[3] != "halted" and state[3] != "faulted" {
+        yield false
+    }
+    when state[3] == "faulted" and size(state[7]) == 0 { yield false }
+    when state[3] != "faulted" and size(state[7]) != 0 { yield false }
+    yield true
+}
+
+export craft kernel_state_transition_allowed(current, next) {
+    yield (current == "offline" and next == "booting") or
+        (current == "booting" and (next == "online" or next == "faulted")) or
+        (current == "online" and (next == "draining" or next == "faulted")) or
+        (current == "draining" and (next == "halted" or next == "faulted")) or
+        (current == "faulted" and (next == "booting" or next == "halted")) or
+        (current == "halted" and next == "booting")
+}
+
+export craft kernel_state_transition(state, next, reason) {
+    when not kernel_state_valid(state) { yield ["ERR", "kernel state invariant failed"] }
+    when not kernel_state_transition_allowed(state[3], next) {
+        yield ["ERR", "kernel lifecycle transition is not allowed", state[3], next]
+    }
+    when next == "faulted" and size(reason) == 0 {
+        yield ["ERR", "fault transition requires a diagnostic reason"]
+    }
+    when next != "faulted" and size(reason) != 0 {
+        yield ["ERR", "only a faulted state may retain a fault reason"]
+    }
+    make fault_reason := ""
+    when next == "faulted" { change fault_reason := reason }
+    yield ["OK", ["reaper.kernel.state.v1", state[1], state[2] + 1, next, state[4], state[5], state[6], fault_reason]]
+}
+
+export craft kernel_state_tick(state, amount) {
+    when not kernel_state_valid(state) { yield ["ERR", "kernel state invariant failed"] }
+    when state[3] != "online" { yield ["ERR", "logical ticks require an online kernel", state[3]] }
+    when amount < 1 { yield ["ERR", "tick increment must be positive"] }
+    yield ["OK", ["reaper.kernel.state.v1", state[1], state[2], state[3], state[4] + amount, state[5], state[6], state[7]]]
+}
+
+export craft kernel_state_record_action(state, amount) {
+    when not kernel_state_valid(state) { yield ["ERR", "kernel state invariant failed"] }
+    when state[3] != "online" { yield ["ERR", "actions require an online kernel", state[3]] }
+    when amount < 1 { yield ["ERR", "action increment must be positive"] }
+    yield ["OK", ["reaper.kernel.state.v1", state[1], state[2], state[3], state[4], state[5] + amount, state[6], state[7]]]
+}
+
+export craft kernel_state_set_active_workers(state, count) {
+    when not kernel_state_valid(state) { yield ["ERR", "kernel state invariant failed"] }
+    when state[3] != "online" and state[3] != "draining" { yield ["ERR", "worker count cannot change in this lifecycle state", state[3]] }
+    when count < 0 { yield ["ERR", "active worker count cannot be negative"] }
+    yield ["OK", ["reaper.kernel.state.v1", state[1], state[2], state[3], state[4], state[5], count, state[7]]]
+}
+
+export craft kernel_state_fault(state, reason) {
+    yield kernel_state_transition(state, "faulted", reason)
+}
