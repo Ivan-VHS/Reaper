@@ -126,6 +126,10 @@ assert(reserve[0] and reserve[2] == 12 and reserve[3] == 8, "local reserve short
 
 make production := core["new_state"](100, 20, "production", [80, 8], 0)
 assert(production[0], "production state must initialize")
+make initially_degraded := core["new_state"](8, 8, "production", [8], 0)
+assert(initially_degraded[0] and initially_degraded[1][16] == "safe-degraded", "production starts below its low watermark in safe degradation")
+make initially_blocked := core["run_construct"](initially_degraded[1], ["START", "COMMAND", 1, "NO_RESERVE_START", 1, 1024])
+assert(not initially_blocked[0], "initial low budget must prevent production stream startup")
 make production_spend := core["repair_spend"](production[1], 99, 64, 16)
 assert(production_spend[0], "production budget debit must succeed")
 assert(production_spend[1][16] == "safe-degraded", "low budget must enter safe degradation")
