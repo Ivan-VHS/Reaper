@@ -127,7 +127,7 @@ Each Markdown page is linked here and from its topic hub, giving readers more th
 ### Planning, governance and reference material
 
 - [CONTRIBUTING](../CONTRIBUTING.md)
-- [DUCK SOVEREIGN CANON](DUCK_SOVEREIGN_CANON.md)
+- [DAK SOVEREIGN CANON](DAK_SOVEREIGN_CANON.md)
 - [EMBEDDED C WORKBENCH](EMBEDDED_C_WORKBENCH.md)
 - [FEATURES](FEATURES.md)
 - [HUMAN FIRST GOVERNANCE](HUMAN_FIRST_GOVERNANCE.md)
