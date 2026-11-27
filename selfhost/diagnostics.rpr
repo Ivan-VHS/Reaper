@@ -1,0 +1,131 @@
+# Structured diagnostic values and stable ordering for Reaper tools.
+# Diagnostic record: [code, severity, message, [start, end]].
+# Ordering is by start offset, end offset, code, then severity.
+
+craft diagnostic_make(code, severity, message, span) {
+    when size(code) == 0 { yield ["ERR", "diagnostic code is empty"] }
+    when size(message) == 0 { yield ["ERR", "diagnostic message is empty"] }
+    when severity != "error" and severity != "warning" and severity != "info" and severity != "hint" {
+        yield ["ERR", "unknown diagnostic severity", severity]
+    }
+    when size(span) != 2 or span[0] < 0 or span[1] < span[0] {
+        yield ["ERR", "diagnostic span is invalid"]
+    }
+    yield ["OK", [code, severity, message, span]]
+}
+
+craft diagnostic_valid(item) {
+    when size(item) != 4 { yield false }
+    when size(item[0]) == 0 or size(item[2]) == 0 { yield false }
+    when item[1] != "error" and item[1] != "warning" and item[1] != "info" and item[1] != "hint" {
+        yield false
+    }
+    when size(item[3]) != 2 or item[3][0] < 0 or item[3][1] < item[3][0] {
+        yield false
+    }
+    yield true
+}
+
+craft diagnostic_compare(left, right) {
+    when left[3][0] < right[3][0] { yield -1 }
+    when left[3][0] > right[3][0] { yield 1 }
+    when left[3][1] < right[3][1] { yield -1 }
+    when left[3][1] > right[3][1] { yield 1 }
+    when left[0] < right[0] { yield -1 }
+    when left[0] > right[0] { yield 1 }
+    when left[1] < right[1] { yield -1 }
+    when left[1] > right[1] { yield 1 }
+    yield 0
+}
+
+craft diagnostic_insert(sorted, item) {
+    vary result := []
+    vary index := 0
+    vary inserted := false
+    loop while index < size(sorted) {
+        when not inserted and diagnostic_compare(item, sorted[index]) < 0 {
+            change result := push(result, item)
+            change inserted := true
+        }
+        change result := push(result, sorted[index])
+        change index := index + 1
+    }
+    when not inserted { change result := push(result, item) }
+    yield result
+}
+
+craft diagnostic_sort(items) {
+    vary sorted := []
+    vary index := 0
+    loop while index < size(items) {
+        when not diagnostic_valid(items[index]) {
+            yield ["ERR", "invalid diagnostic record", index]
+        }
+        change sorted := diagnostic_insert(sorted, items[index])
+        change index := index + 1
+    }
+    yield ["OK", sorted]
+}
+
+craft diagnostic_counts(items) {
+    vary errors := 0
+    vary warnings := 0
+    vary infos := 0
+    vary hints := 0
+    vary index := 0
+    loop while index < size(items) {
+        when not diagnostic_valid(items[index]) {
+            yield ["ERR", "invalid diagnostic record", index]
+        }
+        when items[index][1] == "error" { change errors := errors + 1 }
+        when items[index][1] == "warning" { change warnings := warnings + 1 }
+        when items[index][1] == "info" { change infos := infos + 1 }
+        when items[index][1] == "hint" { change hints := hints + 1 }
+        change index := index + 1
+    }
+    yield ["OK", [errors, warnings, infos, hints]]
+}
+
+craft diagnostic_has_errors(items) {
+    vary index := 0
+    loop while index < size(items) {
+        when items[index][1] == "error" { yield true }
+        change index := index + 1
+    }
+    yield false
+}
+
+craft diagnostic_filter(items, severity) {
+    vary result := []
+    vary index := 0
+    loop while index < size(items) {
+        when items[index][1] == severity {
+            change result := push(result, items[index])
+        }
+        change index := index + 1
+    }
+    yield result
+}
+
+make first := diagnostic_make("RPR-E1001", "error", "missing expression", [8, 8])
+make second := diagnostic_make("RPR-W2001", "warning", "unused binding", [2, 7])
+make third := diagnostic_make("RPR-I3001", "info", "consider simplifying expression", [8, 12])
+assert(first[0] == "OK", "valid error diagnostic rejected")
+assert(diagnostic_make("", "error", "missing code", [0, 1])[0] == "ERR", "empty code accepted")
+assert(diagnostic_make("RPR-E1", "fatal", "bad severity", [0, 1])[0] == "ERR", "unknown severity accepted")
+assert(diagnostic_make("RPR-E1", "error", "bad span", [4, 2])[0] == "ERR", "reversed diagnostic span accepted")
+assert(diagnostic_valid(first[1]), "valid diagnostic record rejected")
+
+make unsorted := [third[1], first[1], second[1]]
+make ordered := diagnostic_sort(unsorted)
+assert(ordered[0] == "OK", "valid diagnostic collection rejected")
+assert(ordered[1][0] == second[1], "diagnostics must sort by start offset")
+assert(ordered[1][1] == first[1], "diagnostics must sort by end offset")
+assert(ordered[1][2] == third[1], "diagnostics with equal starts and ends must sort by code")
+assert(diagnostic_counts(unsorted) == ["OK", [1, 1, 1, 0]], "diagnostic severity counts mismatch")
+assert(diagnostic_has_errors(unsorted), "error diagnostic not detected")
+assert(not diagnostic_has_errors([second[1], third[1]]), "error incorrectly detected")
+assert(size(diagnostic_filter(unsorted, "warning")) == 1, "severity filter mismatch")
+assert(diagnostic_sort([["bad"]])[0] == "ERR", "malformed diagnostic accepted")
+
+emit "SELFHOST_DIAGNOSTICS_OK"

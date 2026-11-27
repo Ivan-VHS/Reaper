@@ -1,0 +1,132 @@
+# Half-open source span primitives.
+# A span is [start, end): start is included and end is excluded.
+# Coordinates are Reaper string-index offsets, not UTF-8 bytes or UTF-16 units.
+
+craft span_make(start, finish, source_length) {
+    when start < 0 or finish < start or finish > source_length {
+        yield ["ERR", "invalid source span", start, finish, source_length]
+    }
+    yield ["OK", [start, finish]]
+}
+
+craft span_valid(span, source_length) {
+    when size(span) != 2 { yield false }
+    when span[0] < 0 or span[1] < span[0] or span[1] > source_length {
+        yield false
+    }
+    yield true
+}
+
+craft span_length(span) {
+    when size(span) != 2 { yield ["ERR", "span must contain start and end"] }
+    when span[0] < 0 or span[1] < span[0] {
+        yield ["ERR", "span boundaries are invalid"]
+    }
+    yield ["OK", span[1] - span[0]]
+}
+
+craft span_is_empty(span) {
+    when size(span) != 2 { yield false }
+    yield span[0] == span[1]
+}
+
+craft span_contains_offset(span, offset) {
+    when size(span) != 2 { yield false }
+    yield offset >= span[0] and offset < span[1]
+}
+
+craft span_contains_span(outer, inner) {
+    when size(outer) != 2 or size(inner) != 2 { yield false }
+    yield inner[0] >= outer[0] and inner[1] <= outer[1]
+}
+
+craft span_overlaps(left, right) {
+    when size(left) != 2 or size(right) != 2 { yield false }
+    yield left[0] < right[1] and right[0] < left[1]
+}
+
+craft span_touches(left, right) {
+    when size(left) != 2 or size(right) != 2 { yield false }
+    yield left[1] == right[0] or right[1] == left[0]
+}
+
+craft span_union(left, right) {
+    when size(left) != 2 or size(right) != 2 {
+        yield ["ERR", "both spans must contain two boundaries"]
+    }
+    when left[0] < 0 or right[0] < 0 or left[1] < left[0] or right[1] < right[0] {
+        yield ["ERR", "span boundaries are invalid"]
+    }
+    when not span_overlaps(left, right) and not span_touches(left, right) {
+        yield ["ERR", "disjoint spans have no contiguous union"]
+    }
+    vary start := left[0]
+    vary finish := left[1]
+    when right[0] < start { change start := right[0] }
+    when right[1] > finish { change finish := right[1] }
+    yield ["OK", [start, finish]]
+}
+
+craft span_intersection(left, right) {
+    when size(left) != 2 or size(right) != 2 {
+        yield ["ERR", "both spans must contain two boundaries"]
+    }
+    vary start := left[0]
+    when right[0] > start { change start := right[0] }
+    vary finish := left[1]
+    when right[1] < finish { change finish := right[1] }
+    when finish < start { yield ["NONE"] }
+    yield ["OK", [start, finish]]
+}
+
+craft span_shift(span, delta, source_length) {
+    when size(span) != 2 { yield ["ERR", "span must contain two boundaries"] }
+    make start := span[0] + delta
+    make finish := span[1] + delta
+    when start < 0 or finish < start or finish > source_length {
+        yield ["ERR", "shifted span leaves source bounds", start, finish]
+    }
+    yield ["OK", [start, finish]]
+}
+
+craft span_clamp(span, source_length) {
+    when size(span) != 2 or source_length < 0 {
+        yield ["ERR", "invalid span or source length"]
+    }
+    vary start := span[0]
+    vary finish := span[1]
+    when start < 0 { change start := 0 }
+    when start > source_length { change start := source_length }
+    when finish < start { change finish := start }
+    when finish > source_length { change finish := source_length }
+    yield ["OK", [start, finish]]
+}
+
+make valid := span_make(2, 7, 10)
+assert(valid == ["OK", [2, 7]], "span construction mismatch")
+assert(span_make(-1, 2, 10)[0] == "ERR", "negative span must fail")
+assert(span_make(5, 4, 10)[0] == "ERR", "reversed span must fail")
+assert(span_make(0, 11, 10)[0] == "ERR", "span beyond source must fail")
+assert(span_valid([1, 3], 3), "valid bounded span rejected")
+assert(not span_valid([1, 4], 3), "out-of-bounds span accepted")
+assert(span_length([3, 9]) == ["OK", 6], "span length mismatch")
+assert(span_length([4, 4]) == ["OK", 0], "empty span length mismatch")
+assert(span_is_empty([8, 8]), "empty span not detected")
+assert(not span_is_empty([8, 9]), "non-empty span marked empty")
+assert(span_contains_offset([3, 8], 3), "span start must be included")
+assert(span_contains_offset([3, 8], 7), "last included offset missing")
+assert(not span_contains_offset([3, 8], 8), "span end must be excluded")
+assert(span_contains_span([1, 9], [3, 7]), "nested span containment failed")
+assert(not span_contains_span([1, 5], [3, 7]), "partial span incorrectly contained")
+assert(span_overlaps([1, 5], [4, 8]), "overlapping spans not detected")
+assert(not span_overlaps([1, 4], [4, 8]), "adjacent spans must not overlap")
+assert(span_touches([1, 4], [4, 8]), "adjacent spans must touch")
+assert(span_union([1, 4], [4, 8]) == ["OK", [1, 8]], "adjacent span union mismatch")
+assert(span_union([1, 3], [5, 8])[0] == "ERR", "disjoint span union must fail")
+assert(span_intersection([1, 6], [4, 8]) == ["OK", [4, 6]], "span intersection mismatch")
+assert(span_intersection([1, 3], [4, 8]) == ["NONE"], "disjoint intersection must be empty")
+assert(span_shift([2, 5], 3, 10) == ["OK", [5, 8]], "positive span shift mismatch")
+assert(span_shift([2, 5], -3, 10)[0] == "ERR", "out-of-bounds negative shift must fail")
+assert(span_clamp([-3, 14], 10) == ["OK", [0, 10]], "span clamp mismatch")
+
+emit "SELFHOST_SPAN_OK"

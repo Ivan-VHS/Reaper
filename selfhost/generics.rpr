@@ -1,0 +1,117 @@
+# Structural type-variable unification and substitution.
+# Type records follow the Reaper structural shape:
+# [primitive|compound|generic, name, arguments, qualifiers].
+# Substitution entries are [generic_name, concrete_type_record].
+
+craft generic_binding_find(substitutions, name) {
+    vary index := 0
+    loop while index < size(substitutions) {
+        when substitutions[index][0] == name { yield ["OK", index] }
+        change index := index + 1
+    }
+    yield ["NONE"]
+}
+
+craft generic_occurs(name, type_value) {
+    when size(type_value) != 4 { yield true }
+    when type_value[0] == "generic" and type_value[1] == name { yield true }
+    vary index := 0
+    loop while index < size(type_value[2]) {
+        when generic_occurs(name, type_value[2][index]) { yield true }
+        change index := index + 1
+    }
+    yield false
+}
+
+craft generic_bind(name, type_value, substitutions) {
+    make existing := generic_binding_find(substitutions, name)
+    when existing[0] == "OK" {
+        yield generic_unify(substitutions[existing[1]][1], type_value, substitutions)
+    }
+    when generic_occurs(name, type_value) {
+        when type_value[0] == "generic" and type_value[1] == name {
+            yield ["OK", substitutions]
+        }
+        yield ["ERR", "generic occurs check failed", name]
+    }
+    yield ["OK", push(substitutions, [name, type_value])]
+}
+
+craft generic_unify(left, right, substitutions) {
+    when size(left) != 4 or size(right) != 4 {
+        yield ["ERR", "malformed structural type"]
+    }
+    when left[0] == "generic" {
+        yield generic_bind(left[1], right, substitutions)
+    }
+    when right[0] == "generic" {
+        yield generic_bind(right[1], left, substitutions)
+    }
+    when left[0] != right[0] or left[1] != right[1] {
+        yield ["ERR", "structural type mismatch", left[1], right[1]]
+    }
+    when size(left[2]) != size(right[2]) or size(left[3]) != size(right[3]) {
+        yield ["ERR", "type arity or qualifier mismatch", left[1]]
+    }
+
+    vary current := substitutions
+    vary index := 0
+    loop while index < size(left[3]) {
+        when left[3][index] != right[3][index] {
+            yield ["ERR", "type qualifier mismatch", left[1], index]
+        }
+        change index := index + 1
+    }
+    change index := 0
+    loop while index < size(left[2]) {
+        make nested := generic_unify(left[2][index], right[2][index], current)
+        when nested[0] != "OK" { yield nested }
+        change current := nested[1]
+        change index := index + 1
+    }
+    yield ["OK", current]
+}
+
+craft generic_apply(type_value, substitutions) {
+    when size(type_value) != 4 { yield ["ERR", "malformed structural type"] }
+    when type_value[0] == "generic" {
+        make found := generic_binding_find(substitutions, type_value[1])
+        when found[0] != "OK" { yield ["OK", type_value] }
+        yield generic_apply(substitutions[found[1]][1], substitutions)
+    }
+
+    vary arguments := []
+    vary index := 0
+    loop while index < size(type_value[2]) {
+        make applied := generic_apply(type_value[2][index], substitutions)
+        when applied[0] != "OK" { yield applied }
+        change arguments := push(arguments, applied[1])
+        change index := index + 1
+    }
+    yield ["OK", [type_value[0], type_value[1], arguments, type_value[3]]]
+}
+
+make generic_t := ["generic", "T", [], []]
+make generic_u := ["generic", "U", [], []]
+make i32 := ["primitive", "i32", [], []]
+make i64 := ["primitive", "i64", [], []]
+make array_t := ["compound", "Array", [generic_t], []]
+make array_i32 := ["compound", "Array", [i32], []]
+make list_pair := ["compound", "Tuple", [generic_t, generic_t], []]
+make tuple_values := ["compound", "Tuple", [i32, i32], []]
+
+make unified := generic_unify(array_t, array_i32, [])
+assert(unified[0] == "OK", "generic Array unification failed")
+assert(unified[1] == [["T", i32]], "generic substitution record mismatch")
+assert(generic_apply(array_t, unified[1]) == ["OK", array_i32], "generic substitution application mismatch")
+make repeated := generic_unify(list_pair, tuple_values, [])
+assert(repeated[0] == "OK", "repeated generic variable unification failed")
+assert(repeated[1] == [["T", i32]], "repeated type variable was rebound inconsistently")
+assert(generic_unify(i32, i64, [])[0] == "ERR", "different primitive types unified")
+assert(generic_unify(["compound", "Array", [i32], []], ["compound", "Slice", [i32], []], [])[0] == "ERR", "different compound types unified")
+assert(generic_unify(["compound", "Array", [generic_t], []], ["compound", "Array", [i64], []], unified[1])[0] == "ERR", "conflicting generic substitution accepted")
+assert(generic_bind("T", ["compound", "Array", [generic_t], []], [])[0] == "ERR", "infinite recursive type accepted")
+assert(generic_apply(generic_u, [])[1] == generic_u, "unbound generic variable changed")
+assert(generic_unify(generic_t, generic_t, [])[0] == "OK", "self-unification failed")
+
+emit "SELFHOST_GENERICS_OK"
