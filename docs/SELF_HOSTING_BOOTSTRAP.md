@@ -20,6 +20,22 @@ The bootstrap assertions cover arithmetic precedence, exponentiation associativi
 
 This is deliberately **not** a complete parser replacement: declarations, function definitions, control-flow statements, block grammar and parity with the Python `Node` AST are not yet implemented. The parser output is a stage-local representation, not the canonical AST contract. The Python parser remains the reference frontend.
 
+## Reaper-native source foundations added in the expansion branch
+
+The expansion branch now contains independently executable Reaper source modules for foundational compiler contracts:
+
+| Module | Responsibility | Current boundary |
+|---|---|---|
+| `selfhost/source_map.rpr` | Dense source-offset to line/column mapping; LF, CRLF, standalone CR and code-point coordinates | Small-buffer reference map; not UTF-8 byte or UTF-16 projection |
+| `selfhost/line_index.rpr` | Sparse line-start index, binary-search offset lookup, line extraction and line/column-to-offset conversion | Code-point offsets; no editor-specific UTF-16 conversion |
+| `selfhost/span.rpr` | Half-open span construction, containment, overlap, adjacency, union, intersection, shift and clamp | Single-source offsets; cross-file span identity is not yet modeled |
+| `selfhost/token_stream.rpr` | Token record validation, monotonic stream validation, EOF checks, cursor access, filtering and counting | Uses the current four-field bootstrap token record |
+| `selfhost/diagnostics.rpr` | Structured diagnostic records, severity validation, stable insertion ordering, counts and filters | Uses integer source offsets; related-information and fix-it records remain future work |
+| `selfhost/operator_table.rpr` | Shared precedence, associativity, binding-power and operator-category metadata | Current executable expression operator set; reserved catalogue syntax remains non-executable |
+| `selfhost/ast.rpr` | Canonical array-form AST records, source-bounded spans, recursive validation, child lookup, node count and depth | Initial AST contract; full statement parser and parity with the reference AST remain pending |
+
+Each module contains Reaper-level assertions and is invoked by the existing bootstrap test orchestration. Passing those checks establishes behavior on the reference runtime, not native self-hosting or native compiler parity.
+
 ## Bootstrap stages
 
 | Stage | Reaper-written component | Acceptance gate |

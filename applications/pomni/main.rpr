@@ -1,0 +1,14 @@
+# Pomni — local-first planner demonstration.
+import "domain.rpr" as pomni
+
+make title := "Prepare DAK release notes"
+make state := pomni["task_state"](false, false)
+make remaining := pomni["remaining_effort"](90, 25)
+make progress := pomni["progress_percent"](3, 5)
+make reminder := pomni["reminder_decision"](true, false, false, false)
+
+emit "Pomni — notes, tasks and knowledge"
+emit "[" ++ state ++ "] " ++ title
+emit "Remaining effort: " ++ text(remaining) ++ " minutes"
+emit "Project progress: " ++ text(progress) ++ "%"
+emit "Reminder: " ++ reminder

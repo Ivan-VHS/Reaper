@@ -1,0 +1,92 @@
+# DABI64 Desktop Host v1 decoded-record validation.
+# Request record fields mirror the fixed 40-byte header:
+# [struct_size, version, operation, flags, payload_size, request_id, handle, sequence].
+# Response record fields mirror the fixed 32-byte header:
+# [struct_size, version, status, flags, payload_size, request_id, handle].
+# This validator does not encode bytes, authenticate senders, or deliver IPC.
+
+craft dabi64_request_valid(request) {
+    when size(request) != 8 { yield ["ERR", "DABI64 request header must have eight fields"] }
+    when request[0] != 40 { yield ["ERR", "DABI64 request header size mismatch"] }
+    when request[1] != 1 { yield ["ERR", "unsupported DABI64 request version", request[1]] }
+    when request[2] < 1 { yield ["ERR", "DABI64 operation id must be positive"] }
+    when request[3] != 0 { yield ["ERR", "reserved request flags must be zero"] }
+    when request[4] < 0 or request[4] > 65536 { yield ["ERR", "DABI64 request payload exceeds limit", request[4]] }
+    when request[5] < 1 { yield ["ERR", "DABI64 request id must be non-zero"] }
+    when request[6] < 0 { yield ["ERR", "DABI64 object handle cannot be negative"] }
+    when request[7] < 1 { yield ["ERR", "DABI64 request sequence must be non-zero"] }
+    yield ["OK", 40 + request[4]]
+}
+
+craft dabi64_response_valid(response) {
+    when size(response) != 7 { yield ["ERR", "DABI64 response header must have seven fields"] }
+    when response[0] != 32 { yield ["ERR", "DABI64 response header size mismatch"] }
+    when response[1] != 1 { yield ["ERR", "unsupported DABI64 response version", response[1]] }
+    when response[2] < 0 or response[2] > 5 { yield ["ERR", "unknown DABI64 response status", response[2]] }
+    when response[3] != 0 { yield ["ERR", "reserved response flags must be zero"] }
+    when response[4] < 0 or response[4] > 65536 { yield ["ERR", "DABI64 response payload exceeds limit", response[4]] }
+    when response[5] < 1 { yield ["ERR", "DABI64 response id must be non-zero"] }
+    when response[6] < 0 { yield ["ERR", "DABI64 response handle cannot be negative"] }
+    yield ["OK", 32 + response[4]]
+}
+
+craft dabi64_pair_valid(request, response) {
+    make request_check := dabi64_request_valid(request)
+    make response_check := dabi64_response_valid(response)
+    when request_check[0] != "OK" { yield request_check }
+    when response_check[0] != "OK" { yield response_check }
+    when request[5] != response[5] {
+        yield ["ERR", "DABI64 response request id mismatch", request[5], response[5]]
+    }
+    yield ["OK", [request_check[1], response_check[1]]]
+}
+
+craft dabi64_operation_allowed(operation, granted_operations) {
+    vary index := 0
+    loop while index < size(granted_operations) {
+        when granted_operations[index] == operation { yield true }
+        change index := index + 1
+    }
+    yield false
+}
+
+craft dabi64_authorize_request(request, granted_operations) {
+    make valid := dabi64_request_valid(request)
+    when valid[0] != "OK" { yield valid }
+    when not dabi64_operation_allowed(request[2], granted_operations) {
+        yield ["ERR", "DABI64 operation capability denied", request[2]]
+    }
+    yield ["OK", request[2]]
+}
+
+craft dabi64_frame_length(header_size, payload_size, actual_size) {
+    when header_size != 40 and header_size != 32 {
+        yield ["ERR", "unknown DABI64 header size", header_size]
+    }
+    when payload_size < 0 or payload_size > 65536 {
+        yield ["ERR", "DABI64 payload size outside limit", payload_size]
+    }
+    when actual_size != header_size + payload_size {
+        yield ["ERR", "DABI64 frame length mismatch", actual_size, header_size + payload_size]
+    }
+    yield ["OK", actual_size]
+}
+
+make request := [40, 1, 7, 0, 12, 99, 0, 1]
+make response := [32, 1, 0, 0, 4, 99, 0]
+assert(dabi64_request_valid(request) == ["OK", 52], "valid DABI64 request rejected")
+assert(dabi64_response_valid(response) == ["OK", 36], "valid DABI64 response rejected")
+assert(dabi64_pair_valid(request, response) == ["OK", [52, 36]], "valid request/response pair rejected")
+assert(dabi64_pair_valid(request, [32, 1, 0, 0, 0, 100, 0])[0] == "ERR", "mismatched request id accepted")
+assert(dabi64_request_valid([39, 1, 7, 0, 0, 1, 0, 1])[0] == "ERR", "bad request header size accepted")
+assert(dabi64_request_valid([40, 2, 7, 0, 0, 1, 0, 1])[0] == "ERR", "unknown ABI version accepted")
+assert(dabi64_request_valid([40, 1, 7, 1, 0, 1, 0, 1])[0] == "ERR", "reserved request flags accepted")
+assert(dabi64_request_valid([40, 1, 7, 0, 65537, 1, 0, 1])[0] == "ERR", "oversized request accepted")
+assert(dabi64_request_valid([40, 1, 7, 0, 0, 1, 0, 0])[0] == "ERR", "zero request sequence accepted")
+assert(dabi64_response_valid([32, 1, 9, 0, 0, 1, 0])[0] == "ERR", "unknown response status accepted")
+assert(dabi64_authorize_request(request, [1, 2])[0] == "ERR", "ungranted operation authorized")
+assert(dabi64_authorize_request(request, [7])[0] == "OK", "granted operation denied")
+assert(dabi64_frame_length(40, 12, 52) == ["OK", 52], "valid request frame length rejected")
+assert(dabi64_frame_length(32, 12, 40)[0] == "ERR", "truncated response frame accepted")
+
+emit "SELFHOST_DABI64_OK"

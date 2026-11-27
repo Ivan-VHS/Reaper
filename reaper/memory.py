@@ -36,6 +36,7 @@ class MemoryManager:
         self.allocations: dict[int, Allocation] = {}
         self.regions: list[int] = [0]
         self._next_region = 1
+        self.region_limits: dict[int, int] = {}
 
     @property
     def used_bytes(self) -> int:
@@ -57,6 +58,14 @@ class MemoryManager:
                 raise HeapLimitError(
                     f"Reaper heap limit ({self.max_heap_bytes} bytes) exceeded"
                 )
+            region = self.regions[-1]
+            region_limit = self.region_limits.get(region)
+            if region_limit is not None:
+                region_used = sum(item.size for item in self.allocations.values() if item.region == region)
+                if region_used + size > region_limit:
+                    raise HeapLimitError(
+                        f"Reaper region {region} memory limit ({region_limit} bytes) exceeded"
+                    )
             self.allocations[identity] = Allocation(current, size, self.regions[-1])
             if isinstance(current, dict):
                 pending.extend(current.keys())
@@ -65,10 +74,16 @@ class MemoryManager:
                 pending.extend(current)
         return value
 
-    def begin_region(self) -> int:
+    def begin_region(self, max_bytes: int | None = None) -> int:
+        if max_bytes is not None and (
+            isinstance(max_bytes, bool) or not isinstance(max_bytes, int) or max_bytes < 1
+        ):
+            raise ValueError("region max_bytes must be a positive whole number")
         token = self._next_region
         self._next_region += 1
         self.regions.append(token)
+        if max_bytes is not None:
+            self.region_limits[token] = max_bytes
         return token
 
     def end_region(self, token: int, roots: Iterable[Any]) -> int:
@@ -85,7 +100,22 @@ class MemoryManager:
         for identity in doomed:
             self.allocations.pop(identity, None)
         self.regions.pop()
+        self.region_limits.pop(token, None)
         return len(doomed)
+
+    def promote_region(self, token: int) -> int:
+        """Close a region while keeping its allocations accounted by the parent."""
+        if len(self.regions) == 1 or self.regions[-1] != token:
+            raise RegionError("regions must be closed in last-in, first-out order")
+        parent = self.regions[-2]
+        promoted = 0
+        for allocation in self.allocations.values():
+            if allocation.region == token:
+                allocation.region = parent
+                promoted += 1
+        self.regions.pop()
+        self.region_limits.pop(token, None)
+        return promoted
 
     def collect(self, roots: Iterable[Any]) -> int:
         reachable = self._reachable_ids(roots)
