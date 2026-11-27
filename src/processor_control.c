@@ -162,7 +162,7 @@ ReaperProcessorStatus reaper_processor_context_frame_validate(
     if (stack_base > UINTPTR_MAX - stack_size)
         return REAPER_PROCESSOR_INVALID_ARGUMENT;
     const uintptr_t stack_end = stack_base + stack_size;
-    if ((saved_stack_pointer & (uintptr_t)0x0fU) != 0U ||
+    if ((saved_stack_pointer & (uintptr_t)0x07U) != 0U ||
         saved_stack_pointer < stack_base ||
         saved_stack_pointer > stack_end - 128U)
         return REAPER_PROCESSOR_INVALID_TOPOLOGY;
@@ -226,6 +226,142 @@ ReaperProcessorStatus reaper_processor_debug_session_validate(
     return REAPER_PROCESSOR_OK;
 }
 
+ReaperProcessorStatus reaper_processor_apply_frequency_cap(
+    const ReaperProcessorPlatformOps *ops,
+    uint32_t cpu_id, uint32_t minimum_khz, uint32_t target_khz,
+    uint32_t maximum_khz, uint32_t topology_generation
+) {
+    if (ops == NULL || cpu_id >= REAPER_PROCESSOR_MAX_LOGICAL_CPUS ||
+        topology_generation == 0U || minimum_khz == 0U ||
+        minimum_khz > target_khz || target_khz > maximum_khz)
+        return REAPER_PROCESSOR_INVALID_ARGUMENT;
+    if ((ops->capabilities & REAPER_PROCESSOR_CAP_POWER_CONTROL) == 0U ||
+        ops->set_frequency_cap == NULL)
+        return REAPER_PROCESSOR_ACCESS_DENIED;
+    return ops->set_frequency_cap(ops->context, cpu_id, minimum_khz,
+                                  target_khz, maximum_khz,
+                                  topology_generation);
+}
+
+ReaperProcessorStatus reaper_processor_debug_capture(
+    const ReaperProcessorPlatformOps *ops,
+    const ReaperProcessorDebugSession *session,
+    uint32_t logical_cpu_count, uint8_t *buffer,
+    size_t buffer_capacity, size_t *bytes_written
+) {
+    if (bytes_written == NULL || buffer == NULL || buffer_capacity == 0U)
+        return REAPER_PROCESSOR_INVALID_ARGUMENT;
+    *bytes_written = 0U;
+    ReaperProcessorStatus status =
+        reaper_processor_debug_session_validate(session, logical_cpu_count);
+    if (status != REAPER_PROCESSOR_OK) return status;
+    if (buffer_capacity > REAPER_PROCESSOR_MAX_DEBUG_BYTES ||
+        session->capture_limit > buffer_capacity)
+        return REAPER_PROCESSOR_OUTPUT_TOO_LARGE;
+    if (ops == NULL ||
+        (ops->capabilities & REAPER_PROCESSOR_CAP_DEBUG_CAPTURE) == 0U ||
+        ops->debug_capture == NULL)
+        return REAPER_PROCESSOR_ACCESS_DENIED;
+
+    uint32_t flags = 0U;
+    if (session->trace_enabled != 0U) flags |= UINT32_C(1);
+    if (session->single_step_enabled != 0U) flags |= UINT32_C(2);
+    size_t produced = 0U;
+    status = ops->debug_capture(
+        ops->context, session->cpu_id, flags, session->timeout_ms,
+        buffer, session->capture_limit, &produced
+    );
+    if (status != REAPER_PROCESSOR_OK) return status;
+    if (produced > session->capture_limit || produced > buffer_capacity)
+        return REAPER_PROCESSOR_ADAPTER_FAILURE;
+    *bytes_written = produced;
+    return REAPER_PROCESSOR_OK;
+}
+
+ReaperProcessorStatus reaper_processor_stage_patch(
+    const ReaperProcessorPlatformOps *ops,
+    const ReaperProcessorRevision *active,
+    const ReaperProcessorRevision *candidate,
+    const ReaperProcessorEvidence *evidence,
+    const uint8_t *image, size_t image_size,
+    const uint8_t *signature, size_t signature_size,
+    int abi_compatible, int safe_point, int quiescent,
+    int rollback_ready, ReaperProcessorPatchTicket *ticket
+) {
+    if (ticket == NULL || image == NULL || image_size == 0U ||
+        image_size > REAPER_PROCESSOR_MAX_PATCH_BYTES ||
+        signature == NULL || signature_size == 0U ||
+        signature_size > 4096U || candidate == NULL)
+        return REAPER_PROCESSOR_INVALID_ARGUMENT;
+    ticket->token = 0U;
+    ticket->generation = 0U;
+    ticket->abi_major = 0U;
+    memset(ticket->digest, 0, sizeof(ticket->digest));
+
+    ReaperProcessorStatus status = reaper_processor_live_update_validate(
+        active, candidate, evidence, 0, abi_compatible,
+        safe_point, quiescent, rollback_ready
+    );
+    if (status != REAPER_PROCESSOR_ACCESS_DENIED) return status;
+
+    if (ops == NULL ||
+        (ops->capabilities & REAPER_PROCESSOR_CAP_PATCH_STAGE) == 0U ||
+        ops->verify_artifact == NULL || ops->stage_patch == NULL)
+        return REAPER_PROCESSOR_ACCESS_DENIED;
+
+    status = ops->verify_artifact(
+        ops->context, candidate->source_digest, signature, signature_size
+    );
+    if (status != REAPER_PROCESSOR_OK) return status;
+
+    uint64_t adapter_ticket = 0U;
+    status = ops->stage_patch(
+        ops->context, candidate->generation, candidate->source_digest,
+        image, image_size, &adapter_ticket
+    );
+    if (status != REAPER_PROCESSOR_OK) return status;
+    if (adapter_ticket == 0U) return REAPER_PROCESSOR_ADAPTER_FAILURE;
+
+    ticket->token = adapter_ticket;
+    ticket->generation = candidate->generation;
+    ticket->abi_major = candidate->abi_major;
+    memcpy(ticket->digest, candidate->source_digest, sizeof(ticket->digest));
+    return REAPER_PROCESSOR_OK;
+}
+
+ReaperProcessorStatus reaper_processor_activate_patch(
+    const ReaperProcessorPlatformOps *ops,
+    const ReaperProcessorPatchTicket *ticket,
+    int safe_point, int quiescent
+) {
+    if (ticket == NULL || ticket->token == 0U || ticket->generation == 0U)
+        return REAPER_PROCESSOR_INVALID_ARGUMENT;
+    if (!safe_point || !quiescent) return REAPER_PROCESSOR_NOT_QUIESCENT;
+    if (ops == NULL ||
+        (ops->capabilities & REAPER_PROCESSOR_CAP_PATCH_ACTIVATE) == 0U ||
+        ops->activate_patch == NULL)
+        return REAPER_PROCESSOR_ACCESS_DENIED;
+    return ops->activate_patch(ops->context, ticket->token,
+                               ticket->generation);
+}
+
+ReaperProcessorStatus reaper_processor_rollback_patch(
+    const ReaperProcessorPlatformOps *ops,
+    const ReaperProcessorPatchTicket *ticket,
+    uint64_t known_good_generation
+) {
+    if (ticket == NULL || ticket->token == 0U ||
+        ticket->generation == 0U || known_good_generation == 0U ||
+        known_good_generation >= ticket->generation)
+        return REAPER_PROCESSOR_INVALID_ARGUMENT;
+    if (ops == NULL ||
+        (ops->capabilities & REAPER_PROCESSOR_CAP_PATCH_ROLLBACK) == 0U ||
+        ops->rollback_patch == NULL)
+        return REAPER_PROCESSOR_ACCESS_DENIED;
+    return ops->rollback_patch(ops->context, ticket->token,
+                               known_good_generation);
+}
+
 const char *reaper_processor_status_name(ReaperProcessorStatus status) {
     switch (status) {
     case REAPER_PROCESSOR_OK: return "ok";
@@ -239,6 +375,8 @@ const char *reaper_processor_status_name(ReaperProcessorStatus status) {
     case REAPER_PROCESSOR_INCOMPATIBLE_ABI: return "incompatible-abi";
     case REAPER_PROCESSOR_INVALID_EVIDENCE: return "invalid-evidence";
     case REAPER_PROCESSOR_UNSUPPORTED: return "unsupported";
+    case REAPER_PROCESSOR_ADAPTER_FAILURE: return "adapter-failure";
+    case REAPER_PROCESSOR_OUTPUT_TOO_LARGE: return "output-too-large";
     }
     return "unknown";
 }
