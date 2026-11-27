@@ -3,6 +3,7 @@
 Start with the [project README](../README.md) for installation, first commands and current implementation status. The [documentation map](INFORMATION_ARCHITECTURE.md) links every topic area.
 
 ## Key pages
+- [NEXUS system-service boundaries](NEXUS_SYSTEM_SERVICE_BOUNDARIES_V1.md) — service ownership and evidence limits.
 
 - [Features and maturity](FEATURES.md)
 - [Psychoporter 666 function categories](FUNCTION_CATEGORIES_666.md)
