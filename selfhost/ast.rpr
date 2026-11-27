@@ -1,0 +1,105 @@
+# Canonical array-form AST contract for the Reaper bootstrap compiler.
+# Node record: [kind, start_offset, end_offset, value, children].
+# Offsets use codepoint indices; a node span is half-open.
+
+craft ast_kind_supported(kind) {
+    yield kind == "program" or kind == "block" or kind == "declare" or kind == "change" or kind == "emit" or kind == "yield" or kind == "function" or kind == "when" or kind == "each" or kind == "while" or kind == "import" or kind == "export" or kind == "expression" or kind == "literal" or kind == "name" or kind == "unary" or kind == "binary" or kind == "call" or kind == "index" or kind == "list"
+}
+
+craft ast_make_node(kind, start, finish, value, children, source_length) {
+    when not ast_kind_supported(kind) {
+        yield ["ERR", "unsupported AST node kind", kind]
+    }
+    when start < 0 or finish < start or finish > source_length {
+        yield ["ERR", "AST node span outside source", start, finish]
+    }
+    yield ["OK", [kind, start, finish, value, children]]
+}
+
+craft ast_node_valid_shape(node, source_length) {
+    when size(node) != 5 { yield false }
+    when not ast_kind_supported(node[0]) { yield false }
+    when node[1] < 0 or node[2] < node[1] or node[2] > source_length { yield false }
+    yield true
+}
+
+craft ast_validate_tree(node, source_length) {
+    when not ast_node_valid_shape(node, source_length) {
+        yield ["ERR", "invalid AST node shape or span"]
+    }
+
+    vary index := 0
+    loop while index < size(node[4]) {
+        make child := node[4][index]
+        when not ast_node_valid_shape(child, source_length) {
+            yield ["ERR", "invalid AST child node", index]
+        }
+        when child[1] < node[1] or child[2] > node[2] {
+            yield ["ERR", "child span escapes parent node", index]
+        }
+        make nested := ast_validate_tree(child, source_length)
+        when nested[0] != "OK" {
+            yield ["ERR", "invalid nested AST node", index, nested]
+        }
+        change index := index + 1
+    }
+    yield ["OK", node[0]]
+}
+
+craft ast_child_at(node, index) {
+    when size(node) != 5 { yield ["ERR", "invalid AST node"] }
+    when index < 0 or index >= size(node[4]) {
+        yield ["ERR", "AST child index outside node", index]
+    }
+    yield ["OK", node[4][index]]
+}
+
+craft ast_count_nodes(node) {
+    when size(node) != 5 { yield ["ERR", "invalid AST node"] }
+    vary count := 1
+    vary index := 0
+    loop while index < size(node[4]) {
+        make nested := ast_count_nodes(node[4][index])
+        when nested[0] != "OK" { yield nested }
+        change count := count + nested[1]
+        change index := index + 1
+    }
+    yield ["OK", count]
+}
+
+craft ast_max_depth(node) {
+    when size(node) != 5 { yield ["ERR", "invalid AST node"] }
+    vary maximum := 1
+    vary index := 0
+    loop while index < size(node[4]) {
+        make nested := ast_max_depth(node[4][index])
+        when nested[0] != "OK" { yield nested }
+        when nested[1] + 1 > maximum {
+            change maximum := nested[1] + 1
+        }
+        change index := index + 1
+    }
+    yield ["OK", maximum]
+}
+
+make left := ast_make_node("literal", 4, 5, 7, [], 20)
+make right := ast_make_node("literal", 8, 9, 9, [], 20)
+make expression := ast_make_node("binary", 4, 9, "+", [left[1], right[1]], 20)
+make root := ast_make_node("program", 0, 20, nothing, [expression[1]], 20)
+assert(left[0] == "OK", "literal node construction failed")
+assert(ast_make_node("unknown", 0, 1, nothing, [], 20)[0] == "ERR", "unknown AST kind accepted")
+assert(ast_make_node("name", -1, 1, "x", [], 20)[0] == "ERR", "negative AST span accepted")
+assert(ast_make_node("name", 3, 2, "x", [], 20)[0] == "ERR", "reversed AST span accepted")
+assert(ast_validate_tree(root[1], 20) == ["OK", "program"], "valid AST tree rejected")
+assert(ast_count_nodes(root[1]) == ["OK", 4], "AST node count mismatch")
+assert(ast_max_depth(root[1]) == ["OK", 3], "AST depth mismatch")
+assert(ast_child_at(root[1], 0) == ["OK", expression[1]], "AST child lookup mismatch")
+assert(ast_child_at(root[1], 1)[0] == "ERR", "AST child out-of-range lookup accepted")
+
+make escaped_child := ast_make_node("literal", 3, 6, 1, [], 20)
+make invalid_parent := ast_make_node("binary", 4, 9, "+", [escaped_child[1]], 20)
+assert(ast_validate_tree(invalid_parent[1], 20)[0] == "ERR", "child span outside parent accepted")
+assert(ast_node_valid_shape(["binary", 0, 1, "+", []], 1), "valid AST shape rejected")
+assert(not ast_node_valid_shape(["broken", 0, 1, nothing, []], 1), "unknown AST shape accepted")
+
+emit "SELFHOST_AST_OK"
