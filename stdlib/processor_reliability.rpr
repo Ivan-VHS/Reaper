@@ -821,6 +821,10 @@ export craft execute_bytecode(state, word) {
     when opcode == 65 and (instruction[2] < 1 or instruction[2] > 4 or instruction[4] > 7) {
         yield [false, state, [], "RPR-BC-0027: RAS bytecode fields are outside bounds"]
     }
+    when opcode >= 66 and opcode <= 70 {
+        make decision := processor_control_bytecode_decision(opcode, instruction[2], instruction[3], instruction[4])
+        yield processor_control_service_dispatch(state, instruction, decision)
+    }
     make label := "RPR_BC_" ++ text(opcode)
     make magnitude := instruction[3]
     make auxiliary := instruction[4]
@@ -836,11 +840,6 @@ export craft execute_bytecode(state, word) {
         make decision := ras_bytecode_decision(instruction[2], instruction[3], instruction[4])
         yield [true, executed[1], [executed[2], ["RAS_DECISION", decision]], ""]
     }
-    when opcode >= 66 and opcode <= 70 {
-        make decision := processor_control_bytecode_decision(opcode, instruction[2], instruction[3], instruction[4])
-        yield [true, executed[1], [executed[2], ["PROCESSOR_CONTROL", decision]], ""]
-    }
-
     when opcode == 48 {
         make length_um := instruction[2] + 1
         make capacitance_ff := instruction[3] + 1
@@ -1623,4 +1622,31 @@ export craft processor_control_bytecode_decision(opcode, operand_a, operand_b, f
         yield "admit-page-recovery-to-memory-manager"
     }
     yield "reject-unknown-processor-control-opcode"
+}
+
+
+export craft processor_control_service_dispatch(state, instruction, decision) {
+    when not state_valid(state) or kind(instruction) != "list" or size(instruction) != 5 {
+        yield [false, state, [], "RPR-BC-0040: processor service dispatch input is invalid"]
+    }
+    make next_cycle := checked_add(state[2], 1)
+    make next_step := checked_add(state[14], 1)
+    make next_service := checked_add(state[15], 1)
+    make next_fence := checked_add(state[19], 1)
+    when not next_cycle[0] or not next_step[0] or not next_service[0] or not next_fence[0] {
+        yield [false, state, [], "RPR-BC-0041: processor service audit counter overflow"]
+    }
+    make next := state_put(state, 2, next_cycle[1])
+    change next := state_put(next, 14, next_step[1])
+    change next := state_put(next, 15, next_service[1])
+    change next := state_put(next, 19, next_fence[1])
+    yield [true, next, [
+        "PROCESSOR_CONTROL",
+        instruction[0],
+        instruction[1],
+        instruction[2],
+        instruction[3],
+        instruction[4],
+        decision
+    ], ""]
 }
