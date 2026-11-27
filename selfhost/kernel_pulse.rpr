@@ -20,6 +20,7 @@ export craft kernel_pulse_valid(pulse) {
     when size(pulse) != 9 or pulse[0] != "reaper.kernel.pulse.v1" { yield false }
     when pulse[1] < 0 or pulse[2] < pulse[1] { yield false }
     when pulse[3] < 0 or pulse[4] < 0 or pulse[5] < 0 or pulse[6] < 0 or pulse[7] < pulse[6] { yield false }
+    when size(pulse[8]) > 64 { yield false }
     vary total := 0
     vary index := 0
     loop while index < size(pulse[8]) {
