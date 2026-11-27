@@ -1,5 +1,4 @@
 #include "reaper/processor_backends.h"
-#include "processor_backend_internal.h"
 
 static uint8_t evaluate_net(const ReaperLogicNet *net, uint32_t input_value) {
     uint8_t wires[REAPER_LOGIC_MAX_WIRES] = {0};
