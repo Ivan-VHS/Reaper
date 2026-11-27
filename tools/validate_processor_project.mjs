@@ -21,6 +21,16 @@ const integer = (value, min, max) => Number.isInteger(value) && value >= min && 
 const safeRelative = (value) => text(value) && !value.startsWith("/") && !value.includes("\\") &&
   !value.split("/").includes("..") && !value.split("/").includes("");
 
+
+const exactKeys = (value, expected, label) => {
+  requireValue(object(value), label + " must be an object");
+  requireValue(
+    Object.keys(value).length === expected.length &&
+      expected.every((key) => Object.hasOwn(value, key)),
+    label + " keys do not match the v1 contract"
+  );
+};
+
 function validate(value) {
   requireValue(object(value), "manifest must be an object");
   const rootKeys = ["schema","version","project","target","toolchain","memory","workload","sources","output","verification"];
