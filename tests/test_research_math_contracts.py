@@ -112,7 +112,7 @@ class MathematicalResearchContractTests(unittest.TestCase):
         with self.assertRaises(ResearchContractError):
             validate_catalog_document(altered)
 
-    def test_pyтиliki_manifest_matches_the_canonical_registry(self):
+    def test_pytyliki_manifest_matches_the_canonical_registry(self):
         manifest = {
             "schema": "pytyliki.mathematical-research-kernels.v1",
             "version": "1.0.0",
