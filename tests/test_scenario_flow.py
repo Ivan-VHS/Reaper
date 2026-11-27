@@ -53,6 +53,14 @@ each item in 2..0 {
         with self.assertRaisesRegex(ReaperRuntimeError, "only accepts finite numeric values"):
             Interpreter(output=lambda _line: None).run('reg count := 1\nchange count := "one"')
 
+    def test_numeric_registers_accept_integer_and_float_assignments(self) -> None:
+        source = "reg ratio := 1; change ratio := 1.5; emit ratio"
+        for engine in ("treewalk", "vm"):
+            output: list[str] = []
+            Interpreter(output=output.append).run(source, engine=engine)
+            self.assertEqual(output, ["1.5"])
+        self.assertTrue(check_source(source).ok)
+
     def test_register_and_range_types_are_checked(self) -> None:
         valid = check_source("""
 scenario total() {
