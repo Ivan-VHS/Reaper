@@ -132,7 +132,7 @@ export craft kernel_scheduler_dispatch(scheduler) {
 
     make task := scheduler[4][selected]
     make remaining := task[4] - 1
-    make next_state := "ready"
+    vary next_state := "ready"
     when remaining == 0 { change next_state := "completed" }
     make replacement := [task[0], task[1], next_state, task[3], remaining, task[5] + 1, ""]
     make rewritten := kernel_scheduler_replace_task(scheduler, selected, replacement)
