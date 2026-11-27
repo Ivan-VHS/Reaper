@@ -166,6 +166,9 @@ craft dot(left, right) {
             yield ["ERR", "RPR-NN-MATH-0002: dot-product input is invalid"]
         }
         change total := total + left[index] * right[index]
+        when not valid_number(total) {
+            yield ["ERR", "RPR-NN-MATH-0003: dot-product result exceeds the numeric bound"]
+        }
         change index := index + 1
     }
     yield ["OK", total]
@@ -196,7 +199,13 @@ export craft forward_trace(model, input_vector) {
                 yield ["ERR", product[1]]
             }
             make pre_activation := product[1] + model[3][layer_index][neuron_index]
+            when not valid_number(pre_activation) {
+                yield ["ERR", "RPR-NN-MATH-0004: pre-activation exceeds the numeric bound"]
+            }
             make output_value := apply_activation(pre_activation, model[4][layer_index])
+            when not valid_number(output_value) {
+                yield ["ERR", "RPR-NN-MATH-0005: activation result exceeds the numeric bound"]
+            }
             change next_pre_activations := push(next_pre_activations, pre_activation)
             change next_values := push(next_values, output_value)
             change neuron_index := neuron_index + 1
@@ -241,7 +250,7 @@ export craft train_step(model, input_vector, target_vector) {
                 change delta := output_error * activation_derivative(
                     trace[3][layer_index][neuron_index],
                     model[4][layer_index]
-                )
+                ) / size(target_vector)
             }
             when layer_index < last_layer {
                 make next_weights := model[2][layer_index + 1]
@@ -281,12 +290,18 @@ export craft train_step(model, input_vector, target_vector) {
             loop while weight_index < size(old_layer[neuron_index]) {
                 make new_weight := old_layer[neuron_index][weight_index] -
                     model[5] * layer_deltas[neuron_index] * previous_values[weight_index]
+                when not valid_number(new_weight) {
+                    yield ["ERR", "RPR-NN-TRAIN-0005: updated weight exceeds the numeric bound"]
+                }
                 change new_neuron_weights := push(new_neuron_weights, new_weight)
                 change weight_index := weight_index + 1
             }
             change new_layer := push(new_layer, new_neuron_weights)
             make new_bias := model[3][layer_index][neuron_index] -
                 model[5] * layer_deltas[neuron_index]
+            when not valid_number(new_bias) {
+                yield ["ERR", "RPR-NN-TRAIN-0006: updated bias exceeds the numeric bound"]
+            }
             change new_bias_layer := push(new_bias_layer, new_bias)
             change neuron_index := neuron_index + 1
         }
@@ -303,6 +318,9 @@ export craft train_step(model, input_vector, target_vector) {
         change output_index := output_index + 1
     }
     change loss := loss / size(target_vector)
+    when not valid_number(loss) {
+        yield ["ERR", "RPR-NN-TRAIN-0007: loss exceeds the numeric bound"]
+    }
     make updated_model := [
         model[0],
         model[1],
@@ -410,6 +428,31 @@ export craft validate_contract(contract) {
         yield "RPR-NN-CONTRACT-0010: step budget is invalid"
     }
     yield ""
+}
+
+export craft profile_catalog() {
+    yield [
+        ["Искусственная нейронная сеть", "Нейросетевой контракт", "Системное проектирование"],
+        ["Нейронная сеть", "Нейросетевое соглашение", "Системное конструирование"],
+        ["ИНС", "Сетевой нейродоговор", "Системное программирование"],
+        ["Нейронная модель", "Нейронный контракт", "Комплексная разработка"],
+        ["Искусственный интеллект", "Цифровой нейроконтракт", "Архитектурная разработка"],
+        ["Интеллектуальная система", "Интеллектуальный контракт", "Инженерная разработка"],
+        ["Машинная модель", "Когнитивный контракт", "Комплексное проектирование"],
+        ["Вычислительная сеть", "Искусственно-интеллектуальный контракт", "Разработка систем"],
+        ["Когнитивная система", "Автономный нейроконтракт", "Создание систем"],
+        ["Интеллектуальная модель", "Распределённый нейроконтракт", "Системная инженерия"],
+        ["Обучаемая система", "Децентрализованный нейроконтракт", "Архитектурное проектирование"],
+        ["Самообучающаяся модель", "Машинный нейроконтракт", "Технологическая разработка"],
+        ["Алгоритмическая сеть", "Нейросетевой договор", "Интеграционная разработка"],
+        ["Цифровой интеллект", "Интеллектуальное соглашение", "Модульная разработка"],
+        ["Машинный интеллект", "Цифровой нейродоговор", "Многоуровневая разработка"],
+        ["Генеративная модель", "Нейросетевое обязательство", "Платформенная разработка"],
+        ["Нейрокомпьютерная система", "Сетевой интеллектуальный договор", "Инфраструктурная разработка"],
+        ["Программный интеллект", "Автономное нейросетевое соглашение", "Системное моделирование"],
+        ["Адаптивная модель", "Распределённое нейросетевое соглашение", "Проектирование архитектуры"],
+        ["Искусственный разум", "Программируемый нейроконтракт", "Комплексная системная инженерия"]
+    ]
 }
 
 export craft validate_profile_catalog(profiles) {
