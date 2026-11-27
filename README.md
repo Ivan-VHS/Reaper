@@ -18,6 +18,7 @@ HARVEST adds sixteen versioned Reaper capability modules for voice-feature profi
 
 - Processor Engineering Platform v1: project/target manifests, Typed Registry checks, read-only Pytyliki CPU/ISA evidence and the current scalar-C17 host AOT workbench slice. Target-specific code generation and privileged processor operations are not claimed.
 - Processor Fabric import v1: local-only Pytyliki evidence import with digest/generation/byte-span checks and a Reaper-verified typed SemanticGraph sidecar. This does not emit legacy stack VM bytecode or perform hardware effects.
+- Processor backends v1: five independently tested bounded C17 prototypes — a structured RV32I encoder, flat-image linker, subset emulator, combinational SystemVerilog emitter and Boolean equivalence checker. They are not full target-qualified toolchains.
 - Reaper source language, lexer/parser, reference runtime and diagnostics.
 - CLI, REPL, Windows Studio foundation, LSP and DAP services.
 - Experimental native C17 implementation; it is not yet feature-equivalent to the reference runtime.
