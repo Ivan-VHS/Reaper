@@ -17,32 +17,27 @@ Reaper — мова системного програмування та лок�
 - Експериментальна реалізація на C17; вона ще не має повного паритету з еталонним середовищем.
 - NOO TAH делегує виконання JavaScript офіційному Node.js.
 - Генерація каркасів Jora та композиція можливостей; пакети каталогу поки є специфікаціями, а не встановлюваними редакторами.
+- Фундамент PLAGUE 1.0.0: реєстр із десяти компонентів на Reaper, політика дій із забороною за замовчуванням, обмежене оцінювання пропозицій, детермінований вибір за ризиком і користю, версійовані контракти та CI smoke-тести. Він поки не змінює репозиторії автономно.
 
-Документи: [Можливості](docs/FEATURES.md) · [Архітектура](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Фабрика Jora](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md).
+Документи: [Можливості](docs/FEATURES.md) · [Архітектура](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Фабрика Jora](docs/JORA_APPLICATION_FACTORY.md) · [PLAGUE](docs/PLAGUE.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md).
 
 ## Швидкий старт
 
 Вимоги: Python 3.10–3.12 для еталонного середовища; Node.js 22/24 для необов’язкових compatibility-тестів; Tkinter для Windows Studio; CMake 3.16+ і компілятор C17 для нативної гілки.
 
-```sh
-python -m venv .venv
-python -m pip install -e .
-python -m reaper --check examples/flow.rpr
-python -m reaper examples/flow.rpr
-```
+    python -m venv .venv
+    python -m pip install -e .
+    python -m reaper --check examples/flow.rpr
+    python -m reaper examples/flow.rpr
 
 Studio та REPL:
 
-```sh
-python reaper_desktop.py
-python -m reaper --repl
-```
+    python reaper_desktop.py
+    python -m reaper --repl
 
 Тести еталонного середовища:
 
-```sh
-python -m unittest discover -s tests -v
-```
+    python -m unittest discover -s tests -v
 
 ## Архітектура та стан
 
