@@ -159,6 +159,19 @@
         "tests/test_system_functions.py",
         "docs/SYSTEM_FUNCTIONS.md"
       ]
+    },
+    {
+      "id": "intelligence.neural-contract-system.v1",
+      "status": "partial",
+      "summary": "Versioned Reaper-source policy contracts cover model identity, typed data ports, inference admission, supervised learning, peer/federation policy, bounded resources, provenance and cognitive output constraints. They run as reference-runtime policy checks only; model artifact loading, neural inference/training engines, network transport and native C17 parity are not implemented.",
+      "evidence": [
+        "schemas/neural-contract.v1.schema.json",
+        "examples/neural/neural-contract.v1.json",
+        "stdlib/neural_contract.rpr",
+        "examples/neural_contract_system.rpr",
+        "docs/NEURAL_CONTRACT_SYSTEM.md",
+        "tools/validate_neural_contract.mjs"
+      ]
     }
   ],
   "interfaces": [
@@ -201,6 +214,17 @@
         "stdlib/system.rpr",
         "docs/SYSTEM_FUNCTIONS.md",
         "tests/test_system_functions.py"
+      ]
+    },
+    {
+      "id": "reaper.neural-contract.v1",
+      "format": "JSON Schema 2020-12 manifest plus fixed-layout Reaper policy record",
+      "direction": "provides",
+      "status": "implemented",
+      "evidence": [
+        "schemas/neural-contract.v1.schema.json",
+        "stdlib/neural_contract.rpr",
+        "docs/NEURAL_CONTRACT_SYSTEM.md"
       ]
     }
   ],
@@ -255,7 +279,10 @@
     "The system-functions v1 worker quota is cooperative in the Python reference runtime; it is not OS-enforced process isolation or a hard process-RSS limit.",
     "The arena-slot API limits tracked reference-runtime allocations and rejects escaped region allocations; it is not a zero-allocation host arena.",
     "Ephemeral comparison overwrites only its owned mutable working buffers and cannot erase caller-owned or immutable copies.",
-    "Contract graph, lease, local-only and rollback checks are runtime preflight functions until the native compiler gains compile-time evaluation, type-level leases and effect-checked module headers."
+    "Contract graph, lease, local-only and rollback checks are runtime preflight functions until the native compiler gains compile-time evaluation, type-level leases and effect-checked module headers.",
+    "The Neural Contract System is a policy and contract layer; it does not load model artifacts, perform inference, train weights, open network connections or authenticate peers by itself.",
+    "Online learning is denied; offline/federated training requires declared datasets, host-verified consent and explicit operator approval.",
+    "Model updates are manual-only and require a trusted signature, operator approval and verified rollback target; these checks are admission policy, not artifact activation."
   ],
   "extension_points": [
     "Canonical IR and selectable execution engines.",
@@ -264,6 +291,7 @@
     "Native C17 frontend stages with Python reference behavior as the compatibility oracle.",
     "Bounded vertical self-composition for deterministic compiler and data-flow transformation pipelines.",
     "Stable architecture concept IDs, layer metadata and bounded dependency graph validation.",
-    "Explicit stdlib/system.rpr APIs for bounded system operations, revision guards, local telemetry and reversible migration preflight."
+    "Explicit stdlib/system.rpr APIs for bounded system operations, revision guards, local telemetry and reversible migration preflight.",
+    "Versioned Neural Contract System v1 schemas and Reaper-source policy records; host model adapters, Duck runtime enforcement and Pytyliki accelerator evidence remain separate opt-in integrations."
   ]
 }
