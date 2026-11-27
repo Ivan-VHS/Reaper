@@ -189,7 +189,8 @@ static void test_fused_transform_popcount(void) {
     enum { BUFFER_BYTES = 4126 };
     static const size_t bit_counts[] = {
         0u, 1u, 7u, 8u, 9u, 63u, 64u, 65u,
-        16383u, 16384u, 16385u, 33001u
+        16383u, 16384u, 16385u, 16447u, 16448u, 16449u,
+        32767u, 32768u, 32769u, 33001u
     };
     uint8_t left[BUFFER_BYTES], right[BUFFER_BYTES];
     uint8_t fused[BUFFER_BYTES], separate[BUFFER_BYTES];
