@@ -1,147 +1,100 @@
-# ⚙️ Reaper — системный язык и рабочая среда
+# Reaper — системный язык и рабочая среда
 
-<p align="center">[English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)</p>
+[English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
 [![CI](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/ci.yml?branch=main&label=CI)](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml) [![Native C17](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/native-c.yml?branch=main&label=Native%20C17)](https://github.com/Ivan-VHS/Reaper/actions/workflows/native-c.yml) [![Apache-2.0](https://img.shields.io/github/license/Ivan-VHS/Reaper)](LICENSE)
 
-> **Явные контракты. Типизированные потоки. Диагностика с привязкой к исходникам.**
+> **Flow-first-синтаксис. Явные контракты. Диагностика с сохранением контекста исходника.**
 
-**Состояние:** Alpha · эталонная среда доступна · нативная ветка C17 частичная · **Версия:** Python package 0.1.0 · Native CMake track 0.2.0 · **License:** [Apache-2.0](LICENSE) · **Стандарт README:** Psychoporter 666 v1.0 · **Дата проверки:** 2026-11-25 · UTC · **Source:** [Ivan-VHS/Reaper](https://github.com/Ivan-VHS/Reaper)
+**Сведения о проекте:** Alpha · доступна эталонная среда Python · нативная ветка компилятора C17 частичная · Python package 0.1.0 · CMake track 0.2.0 · Apache-2.0 · **Документация проверена:** 2026-11-27 UTC
 
-<p align="center"><img src="assets/reaper-hero.svg" alt="Reaper — системный язык и рабочая среда — project overview" width="100%"></p>
-<p align="center"><a href="assets/screenshots/reaper-studio.png"><img src="assets/screenshots/reaper-studio.png" alt="Reaper — системный язык и рабочая среда — application screenshot" width="100%"></a></p>
-
-## Быстрая навигация
-
-[🚀 Demo: Studio screenshot](assets/screenshots/reaper-studio.png) · [Documentation](docs/README.md) · [Source repository](https://github.com/Ivan-VHS/Reaper) · [Issues](https://github.com/Ivan-VHS/Reaper/issues)
+<p align="center"><img src="assets/reaper-hero.svg" alt="Обзор системного языка и рабочей среды Reaper" width="100%"></p>
+<p align="center"><a href="assets/screenshots/reaper-studio.png"><img src="assets/screenshots/reaper-studio.png" alt="Снимок Reaper Studio" width="100%"></a></p>
 
 ## Назначение и границы
 
-Reaper — язык системного программирования и локальная среда разработки. Эталонная среда Python, CLI/REPL, службы LSP/DAP и основа Windows Studio отделены от экспериментальной нативной ветки компилятора C17. Паритет нативной реализации и привилегированные аппаратные службы ещё не завершены.
+Reaper — язык системного программирования и локальная среда разработки. Текущая реализация разделена на два самостоятельных направления: эталонная среда Python и экспериментальная нативная реализация C17. Нативная ветка пока не обладает полным паритетом с эталонной средой. Windows Studio, службы LSP/DAP и внешние адаптеры являются отдельными инструментальными компонентами.
 
-## Возможности
+## Пример языка
 
-- Исходный язык .rpr, lexer/parser, эталонный интерпретатор и структурированная диагностика.
-- CLI, REPL, основа Windows Studio и службы LSP/DAP через stdio.
-- Статические проверки и лимиты ресурсов в эталонной среде; режим проверки не исполняет исходный код.
-- Нативная ветка C17: lexer, parser, owned AST, проверяемый IR, свёртка констант и ограниченный lowering.
-- Проверяемые MMIO-дескрипторы и ABI-контракты — это интерфейсы, а не физический mapper или драйвер.
-- Каркасы Jora, помощники Kora и необязательные интеграции с явными границами доверия.
+Язык `.rpr` использует flow-first-выражения и оператор `::`: значение слева передаётся первым аргументом функции справа.
 
-## Архитектура и поток данных
+~~~reaper
+craft double(value) {
+    yield value * 2
+}
 
-~~~mermaid
-flowchart TB
-  S[".rpr source"] --> P["Lexer / parser"]
-  P --> V["Reference runtime"]
-  V --> C["CLI / REPL"]
-  V --> L["stdio LSP / DAP"]
-  S --> N["Native C17 track — partial"]
-  N --> I["Checked IR / limited lowering"]
-  H["Hardware contracts"] --> A["Checked ABI descriptors"]
-  A -.-> X["No implicit device access"]
+make values := [1, 2, 3]
+make result := values :: map(double) :: sum()
+emit "result = " ++ text(result)
 ~~~
 
-Исходный код, схемы, конфигурация сборки, тесты и CI подтверждают реализованное поведение. Дорожная карта и каталоги описывают планы и перечни, а не поставляемые функции.
-
-## Требования
-
-Python 3.10+ для эталонной среды и пакетных инструментов; CMake 3.16+ и компилятор C17 для нативной ветки; Node.js 22/24 для необязательных compatibility-проверок; Tkinter для Windows Studio.
-
-## Сборка
+После установки эталонной среды запустите пример из репозитория:
 
 ~~~sh
 python -m venv .venv
-. .venv/bin/activate
 python -m pip install -e .
 python -m reaper --check examples/flow.rpr
 python -m reaper examples/flow.rpr
 ~~~
 
-### Нативная ветка C17
+## Реализованные компоненты
+
+- **Эталонная среда языка:** lexer, parser, AST-интерпретатор, CLI/REPL, структурированная диагностика и ограниченное выполнение.
+- **Canonical IR и VM:** выбираемая Python bytecode VM поверх Canonical IR; обход дерева остаётся режимом совместимости по умолчанию.
+- **Модули:** версионированные импорты/экспорты `.rpr`, изолированные области видимости, кэш экспортов, граф зависимостей и диагностика циклов.
+- **Статический анализ:** консервативный вывод типов для поддерживаемых конструкций AST. Неизвестные значения на границах модулей и хоста остаются `Any`; это ещё не полная sound type system.
+- **Учёт ресурсов:** квоты heap и открытых файлов, лимиты выполнения и детерминированная очистка. Это ограничения среды выполнения, а не security sandbox для недоверенных программ.
+- **Нативная ветка C17:** частичные lexer/parser, собственный AST, проверяемый IR, оптимизатор и ограниченное lowering. Scalar AOT-подмножество генерирует C17 для установленного toolchain GCC/Clang; полного паритета с reference runtime нет.
+- **Реестр архитектуры:** 66 стабильных архитектурных концепций в девяти слоях, точный поиск и ограниченная проверка графа зависимостей.
+- **Инструменты разработчика:** основа Windows Studio, службы LSP/DAP через stdio, помощники Kora и необязательная интеграция NOO TAH. NOO TAH передаёт выполнение JavaScript официальной среде Node.js.
+- **Композиция продуктов:** эталонная среда предоставляет 18 внутрипроцессных продуктовых сервисов. Записи каталога Jora и описания framework не становятся автоматически устанавливаемыми приложениями.
+
+Embedded workbench создаёт и проверяет справочные MCU-проекты и может вызывать установленные пользователем toolchain. Встроенной прошивки устройств и live hardware debugging нет. MMIO-дескрипторы проверяются через bus, предоставленный хостом; физическая память не отображается.
+
+## Сборка и тесты
+
+Требования: Python 3.10+ для эталонной среды; CMake 3.16+ и компилятор C17 для нативной ветки; Node.js 22/24 для необязательных compatibility-проверок; Tkinter для Windows Studio.
 
 ~~~sh
-cmake -S . -B build -DREAPER_BUILD_TESTS=ON
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DREAPER_BUILD_TESTS=ON
 cmake --build build --parallel
 ctest --test-dir build --output-on-failure
 ~~~
 
-Эталонная среда Python и нативная ветка C17 — отдельные направления разработки. Успешные тесты одного направления не подтверждают функциональный паритет другого.
+CTest запускает нативные тесты C и, если найден интерпретатор Python, дополнительные проверки эталонной среды и репозитория.
 
-## Первые проверки
+Запуск REPL или установленной Studio:
 
 ~~~sh
-python -m reaper --check examples/flow.rpr
 python -m reaper --repl
+reaper-studio
 ~~~
 
-Команда --check выполняет статическую проверку до запуска. В Windows PowerShell активируйте окружение через .venv\Scripts\Activate.ps1.
+## Интеграции и границы доверия
 
-## Запуск
+- Снимки устройств OPlague импортируются как версионированный JSON и сравниваются offline.
+- Вызовы C ABI Pytyliki требуют явного включения и выбора доверенной ABI-совместимой библиотеки вызывающей стороной.
+- Обмен с VentuSample основан на manifest: Reaper читает объявленные метаданные и не изменяет WAV-файлы.
+- Федерация OCTA-8 фиксирует peer-контракты; она не создаёт центральную среду выполнения и не выдаёт привилегии.
 
-После установки пакет предоставляет сценарий графического интерфейса `reaper-studio`, если установлен Tkinter; языковая служба и отладчик запускаются отдельными процессами через stdio.
+Эффекты файловой системы, процессов, сети, часов, shell и native-библиотек должны оставаться явными или opt-in. Native FFI выполняет код внутри процесса и должен загружать только доверенные библиотеки.
 
-## Интерфейсы
+## Документация
 
-| Интерфейс | Контракт / точка входа | Границы |
-|---|---|---|
-| CLI / REPL | `reaper` | Проверка исходного кода, выполнение и интерактивный режим. |
-| Языковая служба | `reaper-lsp / stdio` | Диагностика документа, автодополнение и поддерживаемая навигация. |
-| Отладчик | `reaper-dap / stdio` | Реализованная часть точек останова и пошагового выполнения. |
-| Native ABI | `reaper_ffi / reaper_system / reaper_dabi64_desktop` | Версионированные интерфейсы C; паритет нативного компилятора пока неполный. |
+- [Возможности](docs/FEATURES.md) · [Архитектура](docs/ARCHITECTURE.md)
+- [Нативный компилятор](docs/NATIVE_COMPILER.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md)
+- [Лимиты runtime](docs/RUNTIME_PLATFORM.md) · [Библиотека Kora](docs/KORA.md)
+- [Studio и IDE](docs/REAPER_IDE.md) · [Фабрика Jora](docs/JORA_APPLICATION_FACTORY.md)
+- [План реализации](docs/IMPLEMENTATION_ROADMAP.md) · [Индекс документации](docs/README.md)
+- [Интеграция HARVEST и Reaper](docs/HARVEST_REAPER_INTEGRATION.md)
+- [Общие стандарты экосистемы](https://github.com/Ivan-VHS/DAK/blob/main/docs/SHARED_STANDARDS.md)
 
-REST/GraphQL, WebSocket, OAuth, облачный deployment и cookie-механизмы не описываются как возможности, если в репозитории нет версионированной реализации и тестов.
+## Участие и лицензия
 
-## Безопасность и границы доверия
+Перед изменением семантики языка, стадий компилятора или публичных контрактов прочитайте [CONTRIBUTING.md](CONTRIBUTING.md). Сохраняйте изменения проверяемыми и добавляйте детерминированные тесты. Информация о безопасности — в [SECURITY.md](SECURITY.md).
 
-Эталонная среда применяет лимиты ресурсов и явные capability-контракты. MMIO API проверяет дескрипторы и политику доступа, но не отображает физические устройства. LSP/DAP используют локальный stdio; размещённый REST-сервис, OAuth-провайдер или облачная плоскость управления не входят в документированную среду.
-
-Политика безопасности: [SECURITY.md](SECURITY.md). Не публикуйте секреты, идентификаторы устройств и приватные журналы в открытых задачах.
-
-## Проверка качества
-
-~~~sh
-python -m unittest discover -s tests -v
-
-cmake -S . -B build -DREAPER_BUILD_TESTS=ON
-cmake --build build --parallel
-ctest --test-dir build --output-on-failure
-~~~
-
-Состав тестов определяется зарегистрированными CTest/unittest целями и workflow. Процент покрытия, fuzz-результат и нагрузочный отчёт не заявляются без опубликованного артефакта.
-
-## Доказательства производительности
-
-Для эталонной среды и частичной нативной ветки не опубликованы стабильные межмашинные показатели задержки или потребления памяти. Сравнивайте воспроизводимые прогоны с фиксацией компилятора, цели, режима сборки и входных данных.
-
-## Совместимость
-
-Эталонный пакет поддерживает Python 3.10+; нативная ветка C17 использует CMake и системный компилятор C17. Windows Studio требует Tkinter. Паритет платформ и компиляторов проверяется для каждой цели отдельно.
-
-## Документация и экосистема
-
-- [Возможности и зрелость](docs/FEATURES.md)
-- [Архитектура](docs/ARCHITECTURE.md)
-- [Язык аппаратных контрактов](docs/HARDWARE_LANGUAGE.md)
-- [План реализации](docs/IMPLEMENTATION_ROADMAP.md)
-- [Studio и IDE](docs/REAPER_IDE.md)
-- [Psychoporter 666](docs/PSYCHOPORTER_666.md)
-- [Индекс документации](docs/README.md)
-
-Матрица возможностей и план реализации отделяют готовое поведение эталонной среды от частичной нативной работы и будущих аппаратных возможностей.
-
-Интеграции между проектами используют документированные версионированные интерфейсы и явные адаптеры. Необязательный адаптер не предоставляет другому проекту привилегий среды выполнения или доступа к оборудованию.
-
-## Участие в разработке
-
-Изучите [CONTRIBUTING.md](CONTRIBUTING.md) перед изменением кода или контрактов. Сохраняйте изменения небольшими и проверяемыми, добавляйте детерминированные тесты, используйте Conventional Commits, если это требуется руководством.
-
-## Лицензия и правовые условия
-
-Распространяется по лицензии [Apache-2.0](LICENSE). Программное обеспечение предоставляется «КАК ЕСТЬ» в пределах условий лицензии. Названия сторонних проектов и товарные знаки принадлежат их правообладателям.
-
-Репозиторий описывает локальные программные интерфейсы. Условия облачного сервиса, согласие на cookies, OAuth и CORS не относятся к указанным компонентам, пока отдельно не будет внедрён и документирован сетевой сервис.
+Лицензия проекта — [Apache-2.0](LICENSE). Названия внешних проектов и товарные знаки принадлежат их правообладателям.
 
 ---
-
-<p align="center"><sub>Psychoporter 666 README Standard v1.0 · Ivan-VHS · 2026-11-25 · UTC</sub></p>
+<p align="center"><sub>Reaper · проверка README 2026-11-27 UTC</sub></p>
