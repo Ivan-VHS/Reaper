@@ -109,6 +109,7 @@ change state := skew_result[1]
 make registers := core["hardware_register_snapshot"](state)
 assert(registers[0] and size(registers[1]) == 10, "simulated register bank must expose ten registers")
 assert(registers[1][5] == 15, "active test injection must expose all fault-control flags")
+assert(registers[1][6] == 7 and registers[1][7] == 241, "active profile must expose simulated Cu-Mesh and nano-array commands")
 make barrier := core["silicon_barrier"](0, 0, 8)
 assert(barrier[0] and barrier[1] == 8 and barrier[2] == 1, "barrier model must advance cycle and fence counters")
 make stream := core["stream_state"](2, 4096, -100)
