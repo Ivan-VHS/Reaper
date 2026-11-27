@@ -1650,3 +1650,138 @@ export craft processor_control_service_dispatch(state, instruction, decision) {
         decision
     ], ""]
 }
+
+
+export craft linux_edac_counter_valid(snapshot) {
+    # [schema, boot_id, provider_id, mc_id, dimm_id, ce_count, ue_count, monotonic_ns, source_ref]
+    when kind(snapshot) != "list" or size(snapshot) != 9 { yield false }
+    when snapshot[0] != "linux.edac.counter.v1" { yield false }
+    each index in [1, 2, 3, 4, 8] {
+        when kind(snapshot[index]) != "text" or size(snapshot[index]) == 0 { yield false }
+    }
+    when not valid_integer(snapshot[5], 0, SAFE_INTEGER_MAX) or
+         not valid_integer(snapshot[6], 0, SAFE_INTEGER_MAX) or
+         not valid_integer(snapshot[7], 0, SAFE_INTEGER_MAX) { yield false }
+    yield true
+}
+
+export craft linux_edac_counter_delta(previous, current) {
+    when not linux_edac_counter_valid(previous) or not linux_edac_counter_valid(current) {
+        yield [false, 0, 0, "RPR-LINUX-0001: invalid EDAC counter snapshot"]
+    }
+    when previous[1] != current[1] or previous[2] != current[2] or
+         previous[3] != current[3] or previous[4] != current[4] {
+        yield [false, 0, 0, "RPR-LINUX-0002: snapshots belong to different boot/provider/memory resources"]
+    }
+    when current[7] <= previous[7] {
+        yield [false, 0, 0, "RPR-LINUX-0003: monotonic sample time did not advance"]
+    }
+    when current[5] < previous[5] or current[6] < previous[6] {
+        yield [false, 0, 0, "RPR-LINUX-0004: EDAC counter reset requires a new baseline"]
+    }
+    yield [true, current[5] - previous[5], current[6] - previous[6], ""]
+}
+
+export craft linux_edac_snapshot_to_ras_events(previous, current) {
+    when not linux_edac_counter_valid(current) {
+        yield [false, [], "RPR-LINUX-0010: invalid current EDAC snapshot"]
+    }
+    when previous == nothing {
+        yield [true, [], "baseline-only"]
+    }
+    make delta := linux_edac_counter_delta(previous, current)
+    when not delta[0] { yield [false, [], delta[3]] }
+    vary events := []
+    make scope := current[3] ++ "/" ++ current[4]
+    when delta[1] > 0 {
+        make corrected := [
+            RAS_EVENT_SCHEMA,
+            current[2] ++ ":ce:" ++ text(current[5]),
+            current[1],
+            current[2],
+            scope,
+            "corrected",
+            "warning",
+            "confirmed",
+            current[7],
+            current[8]
+        ]
+        when not ras_event_valid(corrected) { yield [false, [], "RPR-LINUX-0011: corrected EDAC event normalization failed"] }
+        change events := push(events, corrected)
+    }
+    when delta[2] > 0 {
+        # EDAC UE counters do not identify a poisoned physical page by themselves.
+        # Preserve the evidence as software_suspected; never invent an address.
+        make uncorrected := [
+            RAS_EVENT_SCHEMA,
+            current[2] ++ ":ue:" ++ text(current[6]),
+            current[1],
+            current[2],
+            scope,
+            "software_suspected",
+            "high",
+            "supported",
+            current[7],
+            current[8]
+        ]
+        when not ras_event_valid(uncorrected) { yield [false, [], "RPR-LINUX-0012: uncorrected EDAC event normalization failed"] }
+        change events := push(events, uncorrected)
+    }
+    yield [true, events, ""]
+}
+
+export craft apple_swift_record_valid(record) {
+    # [schema, boot_id, diagnostic_id, subsystem, event_kind, severity, confidence, monotonic_ns, source_ref]
+    when kind(record) != "list" or size(record) != 9 { yield false }
+    when record[0] != "apple.swift.ras.v1" { yield false }
+    each index in [1, 2, 3, 8] {
+        when kind(record[index]) != "text" or size(record[index]) == 0 { yield false }
+    }
+    when not contains(["corrected", "uncorrected_recoverable", "uncorrected_fatal", "info", "thermal", "bus_link", "memory_poison", "software_suspected"], record[4]) { yield false }
+    when not contains(["info", "low", "warning", "high", "fatal"], record[5]) { yield false }
+    when not contains(["confirmed", "supported", "indicative", "unknown", "conflicted"], record[6]) { yield false }
+    when not valid_integer(record[7], 0, SAFE_INTEGER_MAX) { yield false }
+    yield true
+}
+
+export craft apple_swift_record_to_ras_event(record) {
+    when not apple_swift_record_valid(record) { yield [false, [], "RPR-APPLE-0001: invalid Swift diagnostics record"] }
+    make event := [
+        RAS_EVENT_SCHEMA,
+        record[2],
+        record[1],
+        "apple-swift-ras",
+        record[3],
+        record[4],
+        record[5],
+        record[6],
+        record[7],
+        record[8]
+    ]
+    when not ras_event_valid(event) { yield [false, [], "RPR-APPLE-0002: normalized RAS envelope failed validation"] }
+    yield [true, event, ""]
+}
+
+export craft rust_native_ras_packet_valid(packet) {
+    # [schema, abi, sequence, provider, event]
+    when kind(packet) != "list" or size(packet) != 5 { yield false }
+    when packet[0] != "rust.native.ras.v1" or packet[1] != "dabi64-ras-v1" { yield false }
+    when not valid_integer(packet[2], 1, SAFE_INTEGER_MAX) { yield false }
+    when kind(packet[3]) != "text" or size(packet[3]) == 0 { yield false }
+    when not ras_event_valid(packet[4]) or packet[4][3] != packet[3] { yield false }
+    yield true
+}
+
+export craft rust_native_ras_ingest(packet, adapter) {
+    when not rust_native_ras_packet_valid(packet) {
+        yield [false, [], "RPR-RUST-0001: invalid native RAS ABI packet"]
+    }
+    when not processor_adapter_valid(adapter) or adapter[4] != "rust" or adapter[5] != "dabi64-ras-v1" {
+        yield [false, [], "RPR-RUST-0002: Rust adapter ABI mismatch"]
+    }
+    when adapter[6] != "read-only" or not contains(adapter[8], "event-query") {
+        yield [false, [], "RPR-RUST-0003: Rust ingestion must be read-only"]
+    }
+    when not adapter[7] { yield [false, [], "RPR-RUST-0004: Rust adapter is not attached"] }
+    yield [true, packet[4], ""]
+}
