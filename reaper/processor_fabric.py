@@ -389,7 +389,8 @@ def lower_processor_fabric(
             "effects_verified": True,
             "ownership_verified": True,
             "semantic_graph_verified": True,
-            "canonical_typed_ir_emitted": True,
+            "typed_semantic_graph_emitted": True,
+            "canonical_typed_ir_emitted": False,
             "stack_vm_bytecode_emitted": False,
             "execution_performed": False,
             "hardware_access_performed": False
