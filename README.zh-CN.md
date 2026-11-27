@@ -12,7 +12,7 @@ Reaper 是一款面向编译器工具、嵌入式软件和硬件相关程序的�
 
 ## 组件
 
-- Reaper 源语言、词法/语法分析器、参考运行时和诊断。
+- Reaper 源语言、词法/语法分析器、参考运行时和诊断，包括 Scenario Flow v1（场景函数、数值寄存器、循环继续和闭区间整数范围）。
 - CLI、REPL、Windows Studio 基础、LSP 与 DAP 服务。
 - 实验性 C17 原生实现；当前尚未与参考运行时功能对等。
 - NOO TAH 将 JavaScript 执行交给官方 Node.js 运行时。
