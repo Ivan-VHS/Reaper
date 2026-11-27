@@ -85,5 +85,11 @@ class SelfHostingBootstrapTests(unittest.TestCase):
     def test_reaper_written_lsp_positions_run_on_the_reference_runtime(self) -> None:
         self._run_selfhost_program("selfhost/lsp_positions.rpr", "SELFHOST_LSP_POSITIONS_OK")
 
+    def test_processor_intelligence_runs_as_reaper_source(self) -> None:
+        self._run_selfhost_program(
+            "examples/processor_intelligence.rpr",
+            "REAPER_PROCESSOR_INTELLIGENCE_OK",
+        )
+
 if __name__ == "__main__":
     unittest.main()
