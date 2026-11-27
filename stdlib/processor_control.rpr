@@ -185,3 +185,86 @@ export craft power_request_admission(request) {
 export craft instruction_feature_usable(hardware_present, os_state_enabled, policy_allowed) {
     yield hardware_present and os_state_enabled and policy_allowed
 }
+
+export craft thread_transition_valid(current, next) {
+    when current == "created" and next == "ready" { yield true }
+    when current == "ready" and (next == "running" or next == "zombie") { yield true }
+    when current == "running" and (next == "ready" or next == "blocked" or next == "sleeping" or next == "zombie") { yield true }
+    when (current == "blocked" or current == "sleeping") and (next == "ready" or next == "zombie") { yield true }
+    yield false
+}
+
+export craft scheduler_pick(threads, cpu_id, after_tid) {
+    vary found := false
+    vary best_priority := -2147483648
+    vary best_deadline := 9223372036854775807
+    vary after_id := 9223372036854775807
+    vary wrap_id := 9223372036854775807
+
+    each thread in threads {
+        when size(thread) == 8 and thread[0] > 0 and thread[5] == "ready" and contains(thread[6], cpu_id) {
+            vary deadline := thread[3]
+            when deadline == 0 { change deadline := 9223372036854775807 }
+            when not found or thread[2] > best_priority or (thread[2] == best_priority and deadline < best_deadline) {
+                change found := true
+                change best_priority := thread[2]
+                change best_deadline := deadline
+                change after_id := 9223372036854775807
+                change wrap_id := 9223372036854775807
+            }
+            when thread[2] == best_priority and deadline == best_deadline {
+                when thread[0] > after_tid and thread[0] < after_id {
+                    change after_id := thread[0]
+                }
+                when thread[0] <= after_tid and thread[0] < wrap_id {
+                    change wrap_id := thread[0]
+                }
+            }
+        }
+    }
+    when not found { yield 0 }
+    when after_id != 9223372036854775807 { yield after_id }
+    yield wrap_id
+}
+
+export craft context_frame_valid(frame) {
+    # [stack_base, stack_bytes, saved_rsp, required_alignment, frame_bytes]
+    when kind(frame) != "list" or size(frame) != 5 { yield false }
+    when frame[0] <= 0 or frame[1] < 256 or frame[2] < frame[0] { yield false }
+    when frame[3] != 16 or frame[4] < 64 { yield false }
+    when frame[0] + frame[1] < frame[0] { yield false }
+    when frame[2] > frame[0] + frame[1] - 128 { yield false }
+    when frame[2] % frame[3] != 0 { yield false }
+    yield true
+}
+
+export craft ap_startup_admission(bootstrap_ready, local_controller_ready, stack_ready, gdt_ready, idt_ready, per_cpu_ready, trampoline_ready) {
+    when not bootstrap_ready { yield "reject-bootstrap" }
+    when not local_controller_ready { yield "reject-local-controller" }
+    when not stack_ready or not gdt_ready or not idt_ready or not per_cpu_ready or not trampoline_ready {
+        yield "reject-per-cpu-state"
+    }
+    yield "admit-native-ap-startup"
+}
+
+export craft cpu_offline_admission(state, runnable_threads, active_interrupts, held_locks, dma_leases, preempt_depth) {
+    when state != "draining" { yield "reject-not-draining" }
+    when runnable_threads != 0 or active_interrupts != 0 or held_locks != 0 or dma_leases != 0 or preempt_depth != 0 {
+        yield "defer-until-quiescent"
+    }
+    yield "admit-offline"
+}
+
+export craft native_backend_surfaces() {
+    yield [
+        "reaper_processor_topology_validate",
+        "reaper_processor_select_next",
+        "reaper_processor_thread_transition_valid",
+        "reaper_processor_core_offline_allowed",
+        "reaper_processor_ap_startup_validate",
+        "reaper_processor_context_frame_validate",
+        "reaper_processor_live_update_validate",
+        "reaper_processor_power_request_validate",
+        "reaper_processor_debug_session_validate"
+    ]
+}
