@@ -13,12 +13,13 @@ Reaper — язык системного программирования и л�
 ## Состав
 
 - Исходный язык Reaper, lexer/parser, эталонная среда и диагностика.
+- Neural Contract System v1: версионируемые контракты модели, портов данных, инференса, обучения, федерации, безопасности, происхождения данных и поведения выходов. Реализована модель политик эталонной среды; выполнение/обучение нейросети и паритет C17 не заявляются.
 - CLI, REPL, основа Windows Studio, службы LSP и DAP.
 - Экспериментальная реализация на C17; она пока не равна по возможностям эталонной среде.
 - NOO TAH передаёт выполнение JavaScript официальному Node.js.
 - Генерация каркасов Jora и композиция возможностей; пакеты каталога пока являются спецификациями, а не устанавливаемыми редакторами.
 
-Документы: [Возможности](docs/FEATURES.md) · [Архитектура](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Фабрика Jora](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md).
+Документы: [Neural Contract System](docs/NEURAL_CONTRACT_SYSTEM.md) · [Возможности](docs/FEATURES.md) · [Архитектура](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Фабрика Jora](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md).
 
 ## Быстрый старт
 
