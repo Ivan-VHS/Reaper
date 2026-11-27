@@ -48,7 +48,7 @@ each item in 2..0 {
             self.assertEqual(output, expected)
 
     def test_registers_are_numeric_at_runtime(self) -> None:
-        with self.assertRaisesRegex(ReaperRuntimeError, "'reg' requires a numeric value"):
+        with self.assertRaisesRegex(ReaperRuntimeError, "'reg' requires a finite numeric value"):
             Interpreter(output=lambda _line: None).run('reg status := "ready"')
         with self.assertRaisesRegex(ReaperRuntimeError, "only accepts finite numeric values"):
             Interpreter(output=lambda _line: None).run('reg count := 1\nchange count := "one"')
@@ -69,6 +69,50 @@ emit total()
         invalid = check_source('reg label := "not numeric"')
         self.assertFalse(invalid.ok)
         self.assertEqual(invalid.diagnostics[0].code, "RPR-T0004")
+
+    def test_semicolon_separates_statements_and_list_items(self) -> None:
+        source = "reg total := 1; change total := total + 2; emit [total; 4; 5]"
+        for engine in ("treewalk", "vm"):
+            output: list[str] = []
+            Interpreter(output=output.append).run(source, engine=engine)
+            self.assertEqual(output, ["[3, 4, 5]"])
+
+    def test_continue_targets_nearest_nested_loop_and_works_in_while(self) -> None:
+        source = """
+reg total := 0
+each outer in 1...2 {
+    each inner in 1...3 {
+        when inner == 2 {
+            continue
+        }
+        change total := total + outer * 10 + inner
+    }
+}
+reg index := 0
+loop while index < 4 {
+    change index := index + 1
+    when index == 2 {
+        continue
+    }
+    change total := total + index
+}
+emit total
+"""
+        for engine in ("treewalk", "vm"):
+            output: list[str] = []
+            Interpreter(output=output.append).run(source, engine=engine)
+            self.assertEqual(output, ["76"])
+
+    def test_inclusive_ranges_enforce_integer_bounds_and_collection_quota(self) -> None:
+        for engine in ("treewalk", "vm"):
+            with self.subTest(engine=engine, case="float-bound"):
+                with self.assertRaisesRegex(ReaperRuntimeError, "whole-number bounds"):
+                    Interpreter(output=lambda _line: None).run("emit 0.5...2", engine=engine)
+            with self.subTest(engine=engine, case="quota"):
+                with self.assertRaisesRegex(ReaperRuntimeError, "range item limit"):
+                    Interpreter(output=lambda _line: None, max_collection_items=2).run(
+                        "emit 0...2", engine=engine
+                    )
 
     def test_continue_outside_a_loop_is_rejected(self) -> None:
         with self.assertRaisesRegex(ParseError, "only be used inside a loop"):
