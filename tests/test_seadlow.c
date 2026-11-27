@@ -118,8 +118,9 @@ static void test_bulk_transform_and_popcount(void) {
 
     ReaperSeadlowReport report;
     ReaperSeadlowError error;
-    assert(reaper_seadlow_transform(REAPER_SEADLOW_XOR, output, left, right,
-        bit_count, &report, &error));
+    size_t fused_count = 0u;
+    assert(reaper_seadlow_transform_popcount(REAPER_SEADLOW_XOR, output, left, right,
+        bit_count, &fused_count, &report, &error));
     assert(report.bits_processed == bit_count);
     assert(report.words_processed == bit_count / 64u);
     assert(report.tiles_processed == 3u);
@@ -132,7 +133,6 @@ static void test_bulk_transform_and_popcount(void) {
     }
 
     size_t count = 0u;
-    assert(reaper_seadlow_popcount(output, bit_count, &count, &report, &error));
     size_t expected = 0u;
     for (size_t i = 0u; i < byte_count; ++i) {
         uint8_t value = output[i];
@@ -141,6 +141,8 @@ static void test_bulk_transform_and_popcount(void) {
             expected += (size_t)((value >> bit) & 1u);
         }
     }
+    assert(fused_count == expected);
+    assert(reaper_seadlow_popcount(output, bit_count, &count, &report, &error));
     assert(count == expected);
     assert(report.bits_processed == bit_count);
     assert(report.tiles_processed == 3u);
@@ -163,14 +165,17 @@ static void test_exact_in_place_and_unaligned_buffers(void) {
 
     ReaperSeadlowReport report;
     ReaperSeadlowError error;
-    assert(reaper_seadlow_transform(REAPER_SEADLOW_AND, storage + 1,
-        storage + 1, rhs, 18u, &report, &error));
+    size_t set_bits = 0u;
+    assert(reaper_seadlow_transform_popcount(REAPER_SEADLOW_AND, storage + 1,
+        storage + 1, rhs, 18u, &set_bits, &report, &error));
+    assert(set_bits == 5u);
     assert(storage[1] == 0xA0u);
     assert(storage[2] == 0x05u);
     assert(storage[3] == 0x02u);
 
-    assert(reaper_seadlow_transform(REAPER_SEADLOW_NOT, storage + 1,
-        storage + 1, NULL, 18u, &report, &error));
+    assert(reaper_seadlow_transform_popcount(REAPER_SEADLOW_NOT, storage + 1,
+        storage + 1, NULL, 18u, &set_bits, &report, &error));
+    assert(set_bits == 13u);
     assert(storage[3] == 0x01u);
 }
 

@@ -34,9 +34,10 @@ Precedence is ordered as logical operators, comparison operators, bitwise OR, XO
 - rejection of partial output/input overlap;
 - deterministic clearing of unused high bits in a final partial byte;
 - popcount over the requested bit range;
+- fused transform-plus-popcount in one pass, without rereading the output buffer;
 - counters for processed bits, words, tail bytes/bits and tiles.
 
-The API does not spawn worker threads or assume SIMD support. The fixed-size word loop gives optimizing compilers a simple vectorization target while retaining a portable C17 implementation. Actual SIMD, multicore scheduling and device offload require target-specific implementations and benchmark evidence.
+The transform kernel handles four independent words per unrolled inner step and can optionally count the produced bits in the same pass. The fused operation avoids rereading the output buffer when a caller needs both transformed data and a population count. The implementation remains portable C17 and does not assume SIMD support; compilers may vectorize suitable loops, but no instruction set or speedup is promised. Actual SIMD, multicore scheduling and device offload require target-specific implementations and benchmark evidence.
 
 ## Example
 

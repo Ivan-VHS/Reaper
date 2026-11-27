@@ -50,12 +50,23 @@ static uint64_t apply_word(
     }
 }
 
-int reaper_seadlow_transform(
+static size_t popcount_word(uint64_t value) {
+    value -= (value >> 1u) & UINT64_C(0x5555555555555555);
+    value = (value & UINT64_C(0x3333333333333333)) +
+        ((value >> 2u) & UINT64_C(0x3333333333333333));
+    value = (value + (value >> 4u)) & UINT64_C(0x0F0F0F0F0F0F0F0F);
+    value *= UINT64_C(0x0101010101010101);
+    return (size_t)(value >> 56u);
+}
+
+
+static int transform_internal(
     ReaperSeadlowOp operation,
     uint8_t *output,
     const uint8_t *lhs,
     const uint8_t *rhs,
     size_t bit_count,
+    size_t *set_bit_count,
     ReaperSeadlowReport *report,
     ReaperSeadlowError *error
 ) {
@@ -64,7 +75,10 @@ int reaper_seadlow_transform(
     if (!valid_operation(operation)) {
         return fail(error, "unknown Seadlow bitwise operation");
     }
-    if (bit_count == 0u) return 1;
+    if (bit_count == 0u) {
+        if (set_bit_count != NULL) *set_bit_count = 0u;
+        return 1;
+    }
     if (output == NULL || lhs == NULL ||
         (operation != REAPER_SEADLOW_NOT && rhs == NULL)) {
         return fail(error, "output and required input buffers are mandatory");
@@ -90,6 +104,7 @@ int reaper_seadlow_transform(
         }
     }
 
+    size_t total = 0u;
     const size_t word_count = bit_count / 64u;
     size_t word_index = 0u;
     while (word_index < word_count) {
@@ -97,6 +112,35 @@ int reaper_seadlow_transform(
         if (tile_end < word_index || tile_end > word_count) {
             tile_end = word_count;
         }
+
+        /* Four independent words expose instruction-level parallelism while
+         * retaining the portable memcpy path for unaligned storage. Load all
+         * lanes before storing so exact in-place transforms remain safe. */
+        while (tile_end - word_index >= 4u) {
+            uint64_t left_words[4] = {0u, 0u, 0u, 0u};
+            uint64_t right_words[4] = {0u, 0u, 0u, 0u};
+            uint64_t values[4] = {0u, 0u, 0u, 0u};
+            const size_t base = word_index * sizeof(uint64_t);
+
+            for (size_t lane = 0u; lane < 4u; ++lane) {
+                const size_t offset = base + lane * sizeof(uint64_t);
+                memcpy(&left_words[lane], lhs + offset, sizeof(uint64_t));
+                if (operation != REAPER_SEADLOW_NOT) {
+                    memcpy(&right_words[lane], rhs + offset, sizeof(uint64_t));
+                }
+            }
+            for (size_t lane = 0u; lane < 4u; ++lane) {
+                values[lane] = apply_word(operation,
+                    left_words[lane], right_words[lane]);
+                if (set_bit_count != NULL) total += popcount_word(values[lane]);
+            }
+            for (size_t lane = 0u; lane < 4u; ++lane) {
+                const size_t offset = base + lane * sizeof(uint64_t);
+                memcpy(output + offset, &values[lane], sizeof(uint64_t));
+            }
+            word_index += 4u;
+        }
+
         for (; word_index < tile_end; ++word_index) {
             const size_t offset = word_index * sizeof(uint64_t);
             uint64_t left = 0u, right = 0u;
@@ -105,6 +149,7 @@ int reaper_seadlow_transform(
                 memcpy(&right, rhs + offset, sizeof right);
             }
             const uint64_t value = apply_word(operation, left, right);
+            if (set_bit_count != NULL) total += popcount_word(value);
             memcpy(output + offset, &value, sizeof value);
         }
         if (report != NULL) ++report->tiles_processed;
@@ -116,7 +161,9 @@ int reaper_seadlow_transform(
         const uint8_t left = lhs[offset];
         uint8_t right = 0u;
         if (operation != REAPER_SEADLOW_NOT) right = rhs[offset];
-        output[offset] = (uint8_t)apply_word(operation, left, right);
+        const uint8_t value = (uint8_t)apply_word(operation, left, right);
+        if (set_bit_count != NULL) total += popcount_word((uint64_t)value);
+        output[offset] = value;
         if (report != NULL) ++report->tail_bytes_processed;
     }
 
@@ -126,14 +173,17 @@ int reaper_seadlow_transform(
         const uint8_t left = lhs[full_bytes];
         uint8_t right = 0u;
         if (operation != REAPER_SEADLOW_NOT) right = rhs[full_bytes];
-        output[full_bytes] =
+        const uint8_t value =
             (uint8_t)(apply_word(operation, left, right) & mask);
+        if (set_bit_count != NULL) total += popcount_word((uint64_t)value);
+        output[full_bytes] = value;
         if (report != NULL) {
             ++report->tail_bytes_processed;
             report->tail_bits_processed = tail_bits;
         }
     }
 
+    if (set_bit_count != NULL) *set_bit_count = total;
     if (report != NULL) {
         report->bits_processed = bit_count;
         report->words_processed = word_count;
@@ -141,13 +191,36 @@ int reaper_seadlow_transform(
     return 1;
 }
 
-static size_t popcount_word(uint64_t value) {
-    value -= (value >> 1u) & UINT64_C(0x5555555555555555);
-    value = (value & UINT64_C(0x3333333333333333)) +
-        ((value >> 2u) & UINT64_C(0x3333333333333333));
-    value = (value + (value >> 4u)) & UINT64_C(0x0F0F0F0F0F0F0F0F);
-    value *= UINT64_C(0x0101010101010101);
-    return (size_t)(value >> 56u);
+int reaper_seadlow_transform(
+    ReaperSeadlowOp operation,
+    uint8_t *output,
+    const uint8_t *lhs,
+    const uint8_t *rhs,
+    size_t bit_count,
+    ReaperSeadlowReport *report,
+    ReaperSeadlowError *error
+) {
+    return transform_internal(operation, output, lhs, rhs, bit_count,
+        NULL, report, error);
+}
+
+int reaper_seadlow_transform_popcount(
+    ReaperSeadlowOp operation,
+    uint8_t *output,
+    const uint8_t *lhs,
+    const uint8_t *rhs,
+    size_t bit_count,
+    size_t *set_bit_count,
+    ReaperSeadlowReport *report,
+    ReaperSeadlowError *error
+) {
+    if (set_bit_count == NULL) {
+        clear_report(report);
+        if (error != NULL) error->message[0] = '\0';
+        return fail(error, "set-bit count output is mandatory");
+    }
+    return transform_internal(operation, output, lhs, rhs, bit_count,
+        set_bit_count, report, error);
 }
 
 int reaper_seadlow_popcount(

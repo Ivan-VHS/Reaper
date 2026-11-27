@@ -42,6 +42,20 @@ int reaper_seadlow_transform(
     ReaperSeadlowError *error
 );
 
+/* Transform exactly bit_count bits and count set bits in the result in the same pass.
+ * set_bit_count is mandatory; unused high bits in a partial final byte are
+ * excluded from the count. Exact in-place operation is supported. */
+int reaper_seadlow_transform_popcount(
+    ReaperSeadlowOp operation,
+    uint8_t *output,
+    const uint8_t *lhs,
+    const uint8_t *rhs,
+    size_t bit_count,
+    size_t *set_bit_count,
+    ReaperSeadlowReport *report,
+    ReaperSeadlowError *error
+);
+
 /* Count set bits in exactly bit_count bits. */
 int reaper_seadlow_popcount(
     const uint8_t *input,
