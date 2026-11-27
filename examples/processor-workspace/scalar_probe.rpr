@@ -1,0 +1,13 @@
+# Current Reaper native AOT smoke program for the processor workbench.
+# This is scalar host C17 output, not an ISA-specific processor backend.
+
+craft multiply_accumulate(a, b, c) {
+    yield a * b + c
+}
+
+make result := multiply_accumulate(17, 19, 23)
+when result == 346 {
+    emit "REAPER_PROCESSOR_SCALAR_AOT_OK"
+} otherwise {
+    emit "REAPER_PROCESSOR_SCALAR_AOT_FAILED"
+}

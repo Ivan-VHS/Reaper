@@ -1,0 +1,319 @@
+# Reaper Processor Engineering Workbench v1.
+# Reaper owns target declarations, typed contracts and build orchestration.
+# Pytyliki supplies read-only host CPU/ISA and bounded benchmark evidence.
+# This initial workbench deliberately admits only the current scalar-C17 host AOT slice.
+
+export make PROCESSOR_PROJECT_SCHEMA := "reaper.processor-project/v1"
+export make PROCESSOR_REPORT_SCHEMA := "reaper.processor-workbench-report.v1"
+export make SUPPORTED_ISA := ["sse2", "sse4_2", "avx", "avx2", "avx512f", "aes", "fma", "neon", "sve", "rvv"]
+
+craft _positive_integer(value, maximum) {
+    yield kind(value) == "number" and value % 1 == 0 and value >= 1 and value <= maximum
+}
+
+craft _nonnegative_integer(value, maximum) {
+    yield kind(value) == "number" and value % 1 == 0 and value >= 0 and value <= maximum
+}
+
+craft _nonempty_text(value, maximum) {
+    yield kind(value) == "text" and size(value) >= 1 and size(value) <= maximum
+}
+
+craft _unique_text_list(values, maximum_items) {
+    when kind(values) != "list" or size(values) > maximum_items {
+        yield false
+    }
+    vary seen := []
+    each value in values {
+        when not _nonempty_text(value, 64) or contains(seen, value) {
+            yield false
+        }
+        change seen := push(seen, value)
+    }
+    yield true
+}
+
+craft _isa_available(profile, feature) {
+    make isa := profile["isa"]
+    when feature == "sse2" { yield isa["sse2"] }
+    when feature == "sse4_2" { yield isa["sse4_2"] }
+    when feature == "avx" { yield isa["avx_usable"] }
+    when feature == "avx2" { yield isa["avx2_usable"] }
+    when feature == "avx512f" { yield isa["avx512f_usable"] }
+    when feature == "aes" { yield isa["aes"] }
+    when feature == "fma" { yield isa["fma_usable"] }
+    # Pytyliki report v1 does not publish these non-x86 vector flags yet.
+    yield false
+}
+
+export craft validate_project(project) {
+    when kind(project) != "map" {
+        yield [false, "RPR-PEW-0001: processor project must be a JSON object"]
+    }
+    when project["schema"] != PROCESSOR_PROJECT_SCHEMA or project["version"] != 1 {
+        yield [false, "RPR-PEW-0002: unsupported processor project schema"]
+    }
+    when kind(project["project"]) != "map" or
+         not _nonempty_text(project["project"]["id"], 64) or
+         not _nonempty_text(project["project"]["name"], 96) {
+        yield [false, "RPR-PEW-0003: project identity is invalid"]
+    }
+
+    make target := project["target"]
+    when kind(target) != "map" {
+        yield [false, "RPR-PEW-0004: target descriptor is missing"]
+    }
+    when not contains(["x86-64", "x86", "ARM64", "ARM", "riscv64", "e2k", "wasm32"], target["architecture"]) {
+        yield [false, "RPR-PEW-0005: unsupported target architecture"]
+    }
+    when not _nonempty_text(target["triple"], 128) {
+        yield [false, "RPR-PEW-0006: target triple is required"]
+    }
+    when not contains(["SYSV64", "WIN64", "AAPCS64", "RISCV64", "DABI64", "WASM32", "C"], target["abi"]) {
+        yield [false, "RPR-PEW-0007: target ABI is unsupported"]
+    }
+    when not contains([32, 64], target["address_bits"]) or
+         not contains(["little", "big"], target["endianness"]) {
+        yield [false, "RPR-PEW-0008: target address width or endianness is invalid"]
+    }
+    when target["architecture"] == "x86-64" and target["address_bits"] != 64 {
+        yield [false, "RPR-PEW-0009: x86-64 requires a 64-bit address model"]
+    }
+    when target["architecture"] == "x86" and target["address_bits"] != 32 {
+        yield [false, "RPR-PEW-0010: x86 requires a 32-bit address model"]
+    }
+    when target["architecture"] == "riscv64" and target["address_bits"] != 64 {
+        yield [false, "RPR-PEW-0011: riscv64 requires a 64-bit address model"]
+    }
+    when not _unique_text_list(target["required_isa"], 32) {
+        yield [false, "RPR-PEW-0012: required ISA list is malformed or contains duplicates"]
+    }
+    each feature in target["required_isa"] {
+        when not contains(SUPPORTED_ISA, feature) {
+            yield [false, "RPR-PEW-0013: unknown ISA feature " ++ feature]
+        }
+    }
+    when not _positive_integer(target["minimum_logical_processors"], 4096) {
+        yield [false, "RPR-PEW-0014: minimum logical processor count is invalid"]
+    }
+
+    make toolchain := project["toolchain"]
+    when kind(toolchain) != "map" or
+         not _nonempty_text(toolchain["compiler"], 64) {
+        yield [false, "RPR-PEW-0015: compiler descriptor is invalid"]
+    }
+    # The current Reaper AOT implementation is a scalar host-C17 slice.
+    when toolchain["backend"] != "scalar-c17" or
+         toolchain["execution_scope"] != "host-only" or
+         toolchain["target_qualified"] != false {
+        yield [false, "RPR-PEW-0016: requested compiler backend is not implemented or qualified"]
+    }
+    when toolchain["family"] != "gcc" and toolchain["family"] != "clang" and
+         toolchain["family"] != "unknown" {
+        yield [false, "RPR-PEW-0017: current host compiler family must be GCC, Clang or unknown"]
+    }
+    when kind(project["output"]) != "map" or
+         kind(project["verification"]) != "map" or
+         kind(project["sources"]) != "list" {
+        yield [false, "RPR-PEW-0018: output, source or verification descriptor is missing"]
+    }
+    when project["output"]["kind"] != "host-executable" {
+        yield [false, "RPR-PEW-0029: current scalar AOT output must be a host executable"]
+    }
+    make memory := project["memory"]
+    when kind(memory) != "map" or
+         not _positive_integer(memory["minimum_available_mib"], 1048576) or
+         not _positive_integer(memory["working_set_mib"], 65536) or
+         not _positive_integer(memory["stack_bytes"], 1073741824) or
+         not _nonnegative_integer(memory["heap_bytes"], 1073741824) or
+         not _nonnegative_integer(memory["dma_bytes"], 1073741824) {
+        yield [false, "RPR-PEW-0019: memory budget is malformed or out of bounds"]
+    }
+    when memory["working_set_mib"] > memory["minimum_available_mib"] {
+        yield [false, "RPR-PEW-0020: working set exceeds the declared minimum available memory"]
+    }
+    when memory["dma_bytes"] != 0 {
+        yield [false, "RPR-PEW-0021: DMA is not part of the current host scalar AOT profile"]
+    }
+
+    make workload := project["workload"]
+    when kind(workload) != "map" or workload["kind"] != "scalar-probe" or
+         not _nonempty_text(workload["entry"], 64) or
+         not _positive_integer(workload["max_iterations"], 100000000) or
+         not _positive_integer(workload["memory_mib"], 64) or
+         not _positive_integer(workload["passes"], 32) or
+         not _positive_integer(workload["max_steps"], 1000000) {
+        yield [false, "RPR-PEW-0022: current workbench admits only bounded scalar-probe workloads"]
+    }
+    when workload["memory_mib"] > memory["working_set_mib"] {
+        yield [false, "RPR-PEW-0023: workload memory exceeds the project working-set budget"]
+    }
+
+    when kind(project["sources"]) != "list" or size(project["sources"]) < 1 or size(project["sources"]) > 64 {
+        yield [false, "RPR-PEW-0024: source list must contain 1..64 files"]
+    }
+    each source in project["sources"] {
+        when not _nonempty_text(source, 256) or contains(source, "..") or
+             starts_with(source, "/") or not ends_with(source, ".rpr") {
+            yield [false, "RPR-PEW-0025: source paths must be relative .rpr paths without traversal"]
+        }
+    }
+    when not _nonempty_text(project["output"]["path"], 256) or
+         contains(project["output"]["path"], "..") or
+         starts_with(project["output"]["path"], "/") {
+        yield [false, "RPR-PEW-0026: output path must be relative and traversal-free"]
+    }
+
+    make verification := project["verification"]
+    when kind(verification) != "map" or
+         not _positive_integer(verification["benchmark_repetitions"], 100) or
+         kind(verification["require_integrity"]) != "boolean" or
+         kind(verification["require_source_smoke"]) != "boolean" or
+         kind(verification["deterministic_replay"]) != "boolean" {
+        yield [false, "RPR-PEW-0027: verification policy is invalid"]
+    }
+    when verification["deterministic_replay"] != true {
+        yield [false, "RPR-PEW-0028: processor workbench projects must retain deterministic replay"]
+    }
+    yield [true, "RPR-PEW-OK"]
+}
+
+export craft validate_host_report(report, project) {
+    make project_check := validate_project(project)
+    when not project_check[0] {
+        yield [false, project_check[1]]
+    }
+    when kind(report) != "map" or report["schema"] != "pytyliki.report.v1" {
+        yield [false, "RPR-PEW-0101: expected a pytyliki.report.v1 host evidence report"]
+    }
+    when kind(report["program"]) != "map" or report["program"]["name"] != "Pytyliki" {
+        yield [false, "RPR-PEW-0102: evidence producer identity is not Pytyliki"]
+    }
+
+    make profile := report["profile"]
+    when kind(profile) != "map" or kind(profile["isa"]) != "map" {
+        yield [false, "RPR-PEW-0103: CPU profile or ISA evidence is missing"]
+    }
+    when profile["architecture"] != project["target"]["architecture"] {
+        yield [false, "RPR-PEW-0104: host architecture does not match the project target"]
+    }
+    when not _positive_integer(profile["logical_processors"], 4096) or
+         profile["logical_processors"] < project["target"]["minimum_logical_processors"] {
+        yield [false, "RPR-PEW-0105: host logical processor capacity is insufficient"]
+    }
+    when not _nonnegative_integer(profile["available_memory_mib"], 1048576) or
+         profile["available_memory_mib"] < project["memory"]["minimum_available_mib"] {
+        yield [false, "RPR-PEW-0106: host available memory is below the project minimum"]
+    }
+    each feature in project["target"]["required_isa"] {
+        when not _isa_available(profile, feature) {
+            yield [false, "RPR-PEW-0107: required ISA feature is not reported usable: " ++ feature]
+        }
+    }
+
+    make suite := report["suite"]
+    when kind(suite) != "map" or suite["schema"] != "pytyliki.suite.v1" {
+        yield [false, "RPR-PEW-0108: benchmark suite evidence is missing"]
+    }
+    when suite["repeat"] != project["verification"]["benchmark_repetitions"] or
+         suite["measured_runs"] < 1 or
+         suite["measured_runs"] != suite["repeat"] - suite["warmup_runs"] {
+        yield [false, "RPR-PEW-0109: benchmark run counts do not match the project contract"]
+    }
+    when kind(suite["runs"]) != "list" or size(suite["runs"]) != suite["repeat"] {
+        yield [false, "RPR-PEW-0110: benchmark run list is incomplete"]
+    }
+    vary expected_run := 1
+    each run in suite["runs"] {
+        when kind(run) != "map" or kind(run["integrity_ok"]) != "boolean" {
+            yield [false, "RPR-PEW-0111: benchmark run is malformed"]
+        }
+        when project["verification"]["require_integrity"] and not run["integrity_ok"] {
+            yield [false, "RPR-PEW-0112: Pytyliki benchmark integrity check failed"]
+        }
+        when run["run"] != expected_run or kind(run["warmup"]) != "boolean" {
+            yield [false, "RPR-PEW-0113: benchmark run ordering or warm-up marker is invalid"]
+        }
+        when expected_run <= suite["warmup_runs"] and not run["warmup"] {
+            yield [false, "RPR-PEW-0118: expected warm-up run is not marked as warm-up"]
+        }
+        when expected_run > suite["warmup_runs"] and run["warmup"] {
+            yield [false, "RPR-PEW-0119: measured run is incorrectly marked as warm-up"]
+        }
+        when run["iterations"] > project["workload"]["max_iterations"] or
+             run["memory_mib"] > project["workload"]["memory_mib"] or
+             run["passes"] > project["workload"]["passes"] {
+            yield [false, "RPR-PEW-0114: Pytyliki benchmark exceeded the project workload envelope"]
+        }
+        when kind(run["integer_ms"]) != "number" or kind(run["memory_ms"]) != "number" or
+             kind(run["matrix_ms"]) != "number" or run["integer_ms"] < 0 or
+             run["memory_ms"] < 0 or run["matrix_ms"] < 0 {
+            yield [false, "RPR-PEW-0115: benchmark timing values must be finite non-negative numbers"]
+        }
+        change expected_run := expected_run + 1
+    }
+    when kind(suite["statistics"]) != "map" or
+         kind(suite["statistics"]["integer_ms"]) != "map" or
+         kind(suite["statistics"]["memory_ms"]) != "map" or
+         kind(suite["statistics"]["matrix_ms"]) != "map" {
+        yield [false, "RPR-PEW-0116: benchmark statistics are missing"]
+    }
+    when kind(suite["timing_note"]) != "text" or size(suite["timing_note"]) == 0 {
+        yield [false, "RPR-PEW-0117: timing provenance note is required"]
+    }
+    yield [true, "RPR-PEW-OK"]
+}
+
+export craft make_workspace_report(project, report) {
+    make gate := validate_host_report(report, project)
+    when not gate[0] {
+        yield [false, gate[1]]
+    }
+    make profile := report["profile"]
+    make suite := report["suite"]
+    vary integrity_passed := true
+    each run in suite["runs"] {
+        when not run["integrity_ok"] {
+            change integrity_passed := false
+        }
+    }
+    yield [true, {
+        "schema": PROCESSOR_REPORT_SCHEMA,
+        "project_id": project["project"]["id"],
+        "project_name": project["project"]["name"],
+        "target": project["target"],
+        "host": {
+            "architecture": profile["architecture"],
+            "cpu": profile["cpu"],
+            "vendor": profile["vendor"],
+            "logical_processors": profile["logical_processors"],
+            "available_memory_mib": profile["available_memory_mib"],
+            "usable_isa": profile["isa"]
+        },
+        "benchmark": {
+            "producer": "Pytyliki",
+            "schema": suite["schema"],
+            "repeat": suite["repeat"],
+            "warmup_runs": suite["warmup_runs"],
+            "measured_runs": suite["measured_runs"],
+            "statistics": suite["statistics"],
+            "timing_note": suite["timing_note"],
+            "all_integrity_checks_passed": integrity_passed
+        },
+        "compiler": {
+            "source_language": "Reaper",
+            "backend": project["toolchain"]["backend"],
+            "execution_scope": project["toolchain"]["execution_scope"],
+            "target_qualified": false,
+            "cross_compilation": false
+        },
+        "hardware_effects": {
+            "processor_settings_changed": false,
+            "affinity_changed": false,
+            "device_registers_written": false,
+            "firmware_or_microcode_written": false,
+            "drivers_changed": false
+        },
+        "maturity": "host-scalar-aot-and-read-only-pytyliki-evidence"
+    }]
+}

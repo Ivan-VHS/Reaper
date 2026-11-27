@@ -1,0 +1,318 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Ivan-VHS/Reaper/blob/main/schemas/processor-project.v1.schema.json",
+  "title": "Reaper Processor Project v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "project",
+    "target",
+    "toolchain",
+    "memory",
+    "workload",
+    "sources",
+    "output",
+    "verification"
+  ],
+  "properties": {
+    "schema": {
+      "const": "reaper.processor-project/v1"
+    },
+    "version": {
+      "const": 1
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "purpose"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]{2,63}$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 96
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 256
+        }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "architecture",
+        "triple",
+        "abi",
+        "address_bits",
+        "endianness",
+        "required_isa",
+        "minimum_logical_processors"
+      ],
+      "properties": {
+        "architecture": {
+          "enum": [
+            "x86-64",
+            "x86",
+            "ARM64",
+            "ARM",
+            "riscv64",
+            "e2k",
+            "wasm32"
+          ]
+        },
+        "triple": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 128
+        },
+        "abi": {
+          "enum": [
+            "SYSV64",
+            "WIN64",
+            "AAPCS64",
+            "RISCV64",
+            "DABI64",
+            "WASM32",
+            "C"
+          ]
+        },
+        "address_bits": {
+          "enum": [
+            32,
+            64
+          ]
+        },
+        "endianness": {
+          "enum": [
+            "little",
+            "big"
+          ]
+        },
+        "required_isa": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 32,
+          "items": {
+            "enum": [
+              "sse2",
+              "sse4_2",
+              "avx",
+              "avx2",
+              "avx512f",
+              "aes",
+              "fma",
+              "neon",
+              "sve",
+              "rvv"
+            ]
+          }
+        },
+        "minimum_logical_processors": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        }
+      }
+    },
+    "toolchain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "compiler",
+        "family",
+        "backend",
+        "execution_scope",
+        "target_qualified"
+      ],
+      "properties": {
+        "compiler": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "family": {
+          "enum": [
+            "gcc",
+            "clang",
+            "msvc",
+            "vendor",
+            "unknown"
+          ]
+        },
+        "backend": {
+          "enum": [
+            "scalar-c17",
+            "native-object",
+            "vendor-assembler"
+          ]
+        },
+        "execution_scope": {
+          "enum": [
+            "host-only",
+            "cross-target"
+          ]
+        },
+        "target_qualified": {
+          "type": "boolean"
+        }
+      }
+    },
+    "memory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "minimum_available_mib",
+        "working_set_mib",
+        "stack_bytes",
+        "heap_bytes",
+        "dma_bytes"
+      ],
+      "properties": {
+        "minimum_available_mib": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576
+        },
+        "working_set_mib": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        "stack_bytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 1073741824
+        },
+        "heap_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1073741824
+        },
+        "dma_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1073741824
+        }
+      }
+    },
+    "workload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "entry",
+        "max_iterations",
+        "memory_mib",
+        "passes",
+        "max_steps"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "scalar-probe",
+            "integer-kernel",
+            "memory-kernel",
+            "matrix-kernel"
+          ]
+        },
+        "entry": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,63}$"
+        },
+        "max_iterations": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000000
+        },
+        "memory_mib": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        },
+        "passes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32
+        },
+        "max_steps": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256,
+        "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+\\.rpr$"
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "kind"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$"
+        },
+        "kind": {
+          "enum": [
+            "host-executable",
+            "object-file",
+            "firmware-image"
+          ]
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "benchmark_repetitions",
+        "require_integrity",
+        "require_source_smoke",
+        "deterministic_replay"
+      ],
+      "properties": {
+        "benchmark_repetitions": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "require_integrity": {
+          "type": "boolean"
+        },
+        "require_source_smoke": {
+          "type": "boolean"
+        },
+        "deterministic_replay": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

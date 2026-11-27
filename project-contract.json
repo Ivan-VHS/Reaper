@@ -159,6 +159,23 @@
         "tests/test_system_functions.py",
         "docs/SYSTEM_FUNCTIONS.md"
       ]
+    },
+    {
+      "id": "processor-engineering.platform.v1",
+      "status": "partial",
+      "summary": "First host-oriented processor workbench slice: versioned processor project manifests, target/ABI and ISA policy, Pytyliki read-only host report admission, bounded memory/workload reconciliation and a Reaper scalar C17 AOT smoke/report. Target-specific ISA code generation, object/linker backends, simulation, hardware debug and privileged CPU control are not implemented by this slice.",
+      "evidence": [
+        "schemas/processor-project.v1.schema.json",
+        "schemas/processor-workbench-report.v1.schema.json",
+        "stdlib/processor_workbench.rpr",
+        "examples/processor-workspace/x86_64-linux.project.json",
+        "examples/processor-workspace/processor_workbench.rpr",
+        "examples/processor-workspace/scalar_probe.rpr",
+        "tools/validate_processor_project.mjs",
+        "tools/validate_processor_workbench_report.mjs",
+        "docs/PROCESSOR_ENGINEERING_PLATFORM.md",
+        ".github/workflows/processor-engineering.yml"
+      ]
     }
   ],
   "interfaces": [
@@ -202,6 +219,17 @@
         "docs/SYSTEM_FUNCTIONS.md",
         "tests/test_system_functions.py"
       ]
+    },
+    {
+      "id": "reaper.processor-workbench-report.v1",
+      "format": "Versioned JSON report for target intent, Pytyliki host CPU/ISA evidence, bounded benchmark metadata, host scalar-AOT maturity and hardware-effect flags",
+      "direction": "provides",
+      "status": "partial",
+      "evidence": [
+        "schemas/processor-workbench-report.v1.schema.json",
+        "stdlib/processor_workbench.rpr",
+        "tools/validate_processor_workbench_report.mjs"
+      ]
     }
   ],
   "integrations": [
@@ -244,6 +272,14 @@
       "status": "implemented",
       "opt_in": false,
       "summary": "Records membership in the shared four-project OCTA-8 topology without introducing a runtime dependency."
+    },
+    {
+      "project": "pytyliki",
+      "interface": "pytyliki.processor-report.v1",
+      "mode": "json-file",
+      "status": "planned",
+      "opt_in": true,
+      "summary": "Reaper's Processor Engineering Workbench consumes a caller-selected pytyliki.report.v1 file for read-only host CPU/usable-ISA/memory and bounded benchmark evidence. The matching Pytyliki producer contract is proposed separately; this integration is not yet merged or declared delivered."
     }
   ],
   "safety_boundaries": [
@@ -255,7 +291,10 @@
     "The system-functions v1 worker quota is cooperative in the Python reference runtime; it is not OS-enforced process isolation or a hard process-RSS limit.",
     "The arena-slot API limits tracked reference-runtime allocations and rejects escaped region allocations; it is not a zero-allocation host arena.",
     "Ephemeral comparison overwrites only its owned mutable working buffers and cannot erase caller-owned or immutable copies.",
-    "Contract graph, lease, local-only and rollback checks are runtime preflight functions until the native compiler gains compile-time evaluation, type-level leases and effect-checked module headers."
+    "Contract graph, lease, local-only and rollback checks are runtime preflight functions until the native compiler gains compile-time evaluation, type-level leases and effect-checked module headers.",
+    "Processor Engineering Workbench v1 consumes a caller-selected Pytyliki report as host evidence only; it cannot certify a different target processor or substitute for a target toolchain.",
+    "The current processor workbench AOT stage is the scalar host-C17 subset. Target-specific instruction selection, assembly/object emission, linking, cross-compilation, simulator execution and hardware debugging are not implemented by this stage.",
+    "Processor project manifests and reports do not authorize CPU affinity, frequency, voltage, firmware, microcode, MMIO, interrupt, DMA or driver operations."
   ],
   "extension_points": [
     "Canonical IR and selectable execution engines.",
@@ -264,6 +303,7 @@
     "Native C17 frontend stages with Python reference behavior as the compatibility oracle.",
     "Bounded vertical self-composition for deterministic compiler and data-flow transformation pipelines.",
     "Stable architecture concept IDs, layer metadata and bounded dependency graph validation.",
-    "Explicit stdlib/system.rpr APIs for bounded system operations, revision guards, local telemetry and reversible migration preflight."
+    "Explicit stdlib/system.rpr APIs for bounded system operations, revision guards, local telemetry and reversible migration preflight.",
+    "Processor project manifests, Pytyliki host evidence ingestion, target/ABI resource admission, scalar host AOT validation and versioned processor workbench reports; future ISA-specific native backends remain separate contracts."
   ]
 }

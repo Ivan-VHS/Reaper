@@ -16,13 +16,14 @@ HARVEST adds sixteen versioned Reaper capability modules for voice-feature profi
 
 ## What is included
 
+- Processor Engineering Platform v1: project/target manifests, Typed Registry checks, read-only Pytyliki CPU/ISA evidence and the current scalar-C17 host AOT workbench slice. Target-specific code generation and privileged processor operations are not claimed.
 - Reaper source language, lexer/parser, reference runtime and diagnostics.
 - CLI, REPL, Windows Studio foundation, LSP and DAP services.
 - Experimental native C17 implementation; it is not yet feature-equivalent to the reference runtime.
 - NOO TAH delegates JavaScript execution to the official Node.js runtime.
 - Jora application scaffolding and capability composition; catalog packs remain specifications, not installable editors.
 
-See [Features](docs/FEATURES.md), [Architecture](docs/ARCHITECTURE.md), [Hardware Language](docs/HARDWARE_LANGUAGE.md), [Jora factory](docs/JORA_APPLICATION_FACTORY.md), [Studio and IDE](docs/REAPER_IDE.md) and [NOO TAH](docs/NOO_TAH.md).
+See [Processor Engineering Platform](docs/PROCESSOR_ENGINEERING_PLATFORM.md), [Features](docs/FEATURES.md), [Architecture](docs/ARCHITECTURE.md), [Hardware Language](docs/HARDWARE_LANGUAGE.md), [Jora factory](docs/JORA_APPLICATION_FACTORY.md), [Studio and IDE](docs/REAPER_IDE.md) and [NOO TAH](docs/NOO_TAH.md).
 
 ## Quick start
 

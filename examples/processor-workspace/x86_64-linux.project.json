@@ -1,0 +1,55 @@
+{
+  "schema": "reaper.processor-project/v1",
+  "version": 1,
+  "project": {
+    "id": "processor.scalar-host-lab",
+    "name": "Processor Scalar Host Lab",
+    "purpose": "Validate a Reaper scalar AOT workload against read-only Pytyliki host CPU and benchmark evidence."
+  },
+  "target": {
+    "architecture": "x86-64",
+    "triple": "x86_64-unknown-linux-gnu",
+    "abi": "SYSV64",
+    "address_bits": 64,
+    "endianness": "little",
+    "required_isa": [
+      "sse2"
+    ],
+    "minimum_logical_processors": 1
+  },
+  "toolchain": {
+    "compiler": "cc",
+    "family": "unknown",
+    "backend": "scalar-c17",
+    "execution_scope": "host-only",
+    "target_qualified": false
+  },
+  "memory": {
+    "minimum_available_mib": 256,
+    "working_set_mib": 64,
+    "stack_bytes": 65536,
+    "heap_bytes": 1048576,
+    "dma_bytes": 0
+  },
+  "workload": {
+    "kind": "scalar-probe",
+    "entry": "multiply_accumulate",
+    "max_iterations": 12000000,
+    "memory_mib": 8,
+    "passes": 4,
+    "max_steps": 1000000
+  },
+  "sources": [
+    "scalar_probe.rpr"
+  ],
+  "output": {
+    "path": "build/processor-scalar-probe",
+    "kind": "host-executable"
+  },
+  "verification": {
+    "benchmark_repetitions": 3,
+    "require_integrity": true,
+    "require_source_smoke": true,
+    "deterministic_replay": true
+  }
+}
