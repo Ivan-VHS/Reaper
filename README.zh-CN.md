@@ -13,7 +13,7 @@ Reaper 是一款面向编译器工具、嵌入式软件和硬件相关程序的�
 ## 组件
 
 - Processor Engineering Platform v1：项目/目标清单、Typed Registry 校验、Pytyliki 只读 CPU/ISA 证据，以及当前 scalar C17 主机 AOT 工作流切片。不宣称已实现特定 ISA 代码生成或特权处理器操作。
-- Processor backends v1: five independently tested bounded C17 prototypes — a structured RV32I encoder, flat-image linker, subset emulator, combinational SystemVerilog emitter and Boolean equivalence checker. They are not full target-qualified toolchains.
+- 处理器后端原型 v1：五个相互独立、受限的 C17 实现——RV32I 指令编码器、flat-image 链接器、ISA 子集模拟器、组合逻辑 SystemVerilog 发射器和布尔等价性检查器。尚未声明目标处理器或真实硬件资格。
 - Reaper 源语言、词法/语法分析器、参考运行时和诊断。
 - CLI、REPL、Windows Studio 基础、LSP 与 DAP 服务。
 - 实验性 C17 原生实现；当前尚未与参考运行时功能对等。
