@@ -14,6 +14,7 @@ Start with the [project README](../README.md) for installation, first commands a
 - [Snapshot integrity ADR](ADR_SNAPSHOT_INTEGRITY.md) — implementation scope and language-integration boundary.
 - [Architecture foundation: 66 concepts](REAPER_ARCHITECTURE_FOUNDATION_66.md) — native C17 registry, nine architectural layers, dependency graph validation and deterministic ordering.
 - [Foundational frameworks 1–5](FOUNDATIONAL_FRAMEWORKS_V1.md) — executable Reaper contracts for Framework frame, Platform, Environment, Infrastructure and Architecture.
+- [Pytyliki Hardware IR v1](PYTYLIKI_HARDWARE_IR_V1.md) — strict producer/consumer interchange, typed metadata preservation, pure CanonicalIR lowering and effect isolation.
 - [Hardware language track](HARDWARE_LANGUAGE.md)
 - [Typed Registry v1](TYPED_REGISTRY.md) — Reaper-native type, layout, platform, ABI, effect and capability contracts.
 - [System Runtime ABI v1](SYSTEM_RUNTIME_ABI_V1.md)

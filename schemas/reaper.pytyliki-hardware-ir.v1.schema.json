@@ -1,0 +1,321 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Ivan-VHS/Reaper/blob/main/schemas/reaper.pytyliki-hardware-ir.v1.schema.json",
+  "title": "Reaper consumer contract for Pytyliki typed Hardware IR v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "producer",
+    "module",
+    "source_name",
+    "target",
+    "source_bytes",
+    "type_system",
+    "result_value",
+    "effects",
+    "types",
+    "values",
+    "symbols"
+  ],
+  "properties": {
+    "schema": {
+      "const": "reaper.typed-hardware-ir.v1"
+    },
+    "producer": {
+      "const": "pytyliki"
+    },
+    "module": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 47
+    },
+    "source_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 47
+    },
+    "target": {
+      "enum": [
+        "host",
+        "sim",
+        "riscv64",
+        "x86_64"
+      ]
+    },
+    "source_bytes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65536
+    },
+    "type_system": {
+      "const": "pytyliki.dimension-vector.v1"
+    },
+    "result_value": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 511
+        }
+      ]
+    },
+    "effects": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allowed",
+        "inferred"
+      ],
+      "properties": {
+        "allowed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "inferred": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        }
+      }
+    },
+    "types": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "width",
+          "dimensions"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 63
+          },
+          "kind": {
+            "enum": [
+              "i64",
+              "u32",
+              "u64",
+              "f64",
+              "bool",
+              "unit",
+              "quantity"
+            ]
+          },
+          "width": {
+            "type": "integer",
+            "enum": [
+              0,
+              32,
+              64
+            ]
+          },
+          "dimensions": {
+            "type": "array",
+            "minItems": 8,
+            "maxItems": 8,
+            "items": {
+              "type": "integer",
+              "minimum": -16,
+              "maximum": 16
+            }
+          }
+        }
+      }
+    },
+    "values": {
+      "type": "array",
+      "maxItems": 512,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "op",
+          "type",
+          "lhs",
+          "rhs",
+          "symbol",
+          "immediate",
+          "effect",
+          "span"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 511
+          },
+          "op": {
+            "enum": [
+              "const.f64",
+              "input",
+              "add",
+              "sub",
+              "mul",
+              "div",
+              "neg",
+              "mmio.read",
+              "mmio.write"
+            ]
+          },
+          "type": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 63
+          },
+          "lhs": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 511
+              }
+            ]
+          },
+          "rhs": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 511
+              }
+            ]
+          },
+          "symbol": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 191
+              }
+            ]
+          },
+          "immediate": {
+            "type": "number"
+          },
+          "effect": {
+            "enum": [
+              "pure",
+              "mmio.read",
+              "mmio.write"
+            ]
+          },
+          "span": {
+            "$ref": "#/$defs/span"
+          }
+        }
+      }
+    },
+    "symbols": {
+      "type": "array",
+      "maxItems": 192,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "kind",
+          "type",
+          "access",
+          "value",
+          "span"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 47
+          },
+          "kind": {
+            "enum": [
+              "input",
+              "derive",
+              "register",
+              "operation"
+            ]
+          },
+          "type": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 63
+          },
+          "access": {
+            "enum": [
+              "none",
+              "read_only",
+              "write_only",
+              "read_write"
+            ]
+          },
+          "value": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 511
+              }
+            ]
+          },
+          "span": {
+            "$ref": "#/$defs/span"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "span": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end",
+        "line",
+        "column"
+      ],
+      "properties": {
+        "start": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65536
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65536
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "column": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}
