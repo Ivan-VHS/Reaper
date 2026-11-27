@@ -1,0 +1,135 @@
+{
+  "schema": "reaper.system-features.v1",
+  "language": "REAPER",
+  "abi_version": 1,
+  "status": {
+    "native_core": "implemented_in_change_set",
+    "language_syntax": "pending",
+    "compiler_pipeline_binding": "pending",
+    "reference_runtime_binding": "pending",
+    "native_backend_parity": "pending",
+    "host_adapters": "explicit_opt_in_only"
+  },
+  "features": [
+    {
+      "id": "REAPER-SYS-001",
+      "name": "comptime_contract_graph",
+      "api": [
+        "reaper_contract_graph_validate",
+        "reaper_contract_graph_order"
+      ],
+      "contract": "Validate bounded contract schemas, dependency versions and required fields; emit dependency-first lexical topological order; reject cycles before a compiler backend emits code.",
+      "limits": {
+        "contracts": 256,
+        "fields_per_contract": 64,
+        "edges": 1024
+      }
+    },
+    {
+      "id": "REAPER-SYS-002",
+      "name": "arena_slot",
+      "api": [
+        "reaper_arena_slot_begin",
+        "reaper_arena_slot_alloc",
+        "reaper_arena_slot_end"
+      ],
+      "contract": "Allocate from caller-owned fixed storage with checked power-of-two alignment; reset at frame end and optionally zeroize the used range.",
+      "limits": {
+        "max_alignment": 4096
+      },
+      "allocation": "none"
+    },
+    {
+      "id": "REAPER-SYS-003",
+      "name": "budget_worker",
+      "api": [
+        "reaper_worker_budget_begin",
+        "reaper_worker_budget_checkpoint",
+        "reaper_worker_budget_dump"
+      ],
+      "contract": "Cooperatively check monotonic CPU time and accounted memory at explicit checkpoints; halt further checkpoints and expose a bounded state dump on overrun.",
+      "execution": "cooperative; hard preemption is delegated to a host process/scheduler"
+    },
+    {
+      "id": "REAPER-SYS-004",
+      "name": "diff_reconcile_plan",
+      "api": [
+        "reaper_reconcile_plan_build"
+      ],
+      "contract": "Build a deterministic aggregate-only plan with noop, upsert and drop entries after invariant preflight. The API never applies the plan or connects to persistence.",
+      "limits": {
+        "items": 65536
+      },
+      "side_effects": "none"
+    },
+    {
+      "id": "REAPER-SYS-005",
+      "name": "ephemeral_match",
+      "api": [
+        "reaper_ephemeral_scope_begin",
+        "reaper_ephemeral_match",
+        "reaper_ephemeral_scope_end"
+      ],
+      "contract": "Compare fixed-size digests in caller-owned transient scope memory and wipe the entire scope buffer on close.",
+      "digest_bytes": 32,
+      "persistence": "forbidden"
+    },
+    {
+      "id": "REAPER-SYS-006",
+      "name": "mutation_authorization",
+      "api": [
+        "reaper_mutation_authorize"
+      ],
+      "contract": "Require a passing validator for automatic mode, or a host-validated opaque grant tied to the current revision for manual mode; return revision metadata only.",
+      "side_effects": "no commit; no journal I/O"
+    },
+    {
+      "id": "REAPER-SYS-007",
+      "name": "lease_window",
+      "api": [
+        "reaper_lease_window_open",
+        "reaper_lease_window_check"
+      ],
+      "contract": "Represent a UTC-day validity interval as a typed value, enforce a 1..120 day literal bound and report warning/expiry states.",
+      "limits": {
+        "max_days": 120
+      }
+    },
+    {
+      "id": "REAPER-SYS-008",
+      "name": "latency_profiler",
+      "api": [
+        "reaper_latency_profiler_init",
+        "reaper_latency_record",
+        "reaper_latency_summary"
+      ],
+      "contract": "Collect fixed-size phase histograms and return approximate bucketed p95/p99 summaries without allocation or background agents.",
+      "limits": {
+        "phases": 16,
+        "buckets": 28
+      },
+      "concurrency": "caller-thread-confined"
+    },
+    {
+      "id": "REAPER-SYS-009",
+      "name": "local_only_effect_boundary",
+      "api": [
+        "reaper_module_effects_validate"
+      ],
+      "contract": "Reject network and remote-I/O effects in local-only modules, including transitively imported effects aggregated by the compiler.",
+      "forbidden_effects": [
+        "network",
+        "remote_io"
+      ]
+    },
+    {
+      "id": "REAPER-SYS-010",
+      "name": "rollback_plan",
+      "api": [
+        "reaper_rollback_plan_validate"
+      ],
+      "contract": "Require monotonic schema versions and distinct forward/reverse step identifiers, with passing tests for both directions.",
+      "side_effects": "validation_only"
+    }
+  ]
+}

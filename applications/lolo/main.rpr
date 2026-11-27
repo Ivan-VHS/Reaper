@@ -1,0 +1,12 @@
+# LoLo — local conversation and outbound-queue demonstration.
+import "domain.rpr" as lolo
+
+make queue_open := lolo["queue_has_room"](2, 8)
+make message := lolo["message_state"](false, true)
+make decision := lolo["outbound_decision"](true, true, true, false, queue_open)
+
+emit "LoLo — local communication"
+emit "Conversation: Local contact | unread: 3"
+emit "Message state: " ++ message
+emit "Delivery decision: " ++ decision
+emit "Network sends require a separate approved host adapter"

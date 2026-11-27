@@ -39,6 +39,13 @@ from reaper.ui_motion import MotionController, MotionPreferences, fade_in_window
 from reaper.ui_theme import apply_theme, apply_ui_theme, set_dpi_awareness, toggle_theme
 
 APP_TITLE = "Reaper Studio · Ivan-VHS"
+EDITOR_FONT_MIN = 9
+EDITOR_FONT_MAX = 24
+
+
+def bounded_editor_font_size(current: int, delta: int) -> int:
+    """Keep editor zoom predictable across high-DPI displays."""
+    return max(EDITOR_FONT_MIN, min(EDITOR_FONT_MAX, int(current) + int(delta)))
 STARTER = """craft double(value) {
     yield value * 2
 }
@@ -55,6 +62,8 @@ class ReaperStudio(tk.Tk):
         self.geometry("1320x860")
         self.minsize(920, 640)
         self._theme_name = apply_theme(self, "reaper-studio")
+        self._editor_font_size = 11
+        self._editor_font = tkfont.Font(self, family="Cascadia Code", size=self._editor_font_size)
         self.plugin_manager = PluginManager()
         self._theme_mode = tk.StringVar(value=self._theme_name)
         self.current_file: Path | None = None
@@ -77,9 +86,11 @@ class ReaperStudio(tk.Tk):
         self._completion_prefix = ""
 
         self._configure_styles()
+        self._build_brand_strip()
         self._build_menu()
         self._build_toolbar()
         self._build_workspace()
+        self._apply_editor_visuals()
         self._build_statusbar()
         self._motion = MotionController(self, app_key="reaper-studio")
         self._motion.fade_in()
@@ -96,7 +107,7 @@ class ReaperStudio(tk.Tk):
             style.theme_use("clam")
         except tk.TclError:
             pass
-        style.configure("Treeview", rowheight=24)
+        style.configure("Treeview", rowheight=42)
         try:
             installed = {family.casefold(): family for family in tkfont.families(self)}
         except tk.TclError:
@@ -106,7 +117,17 @@ class ReaperStudio(tk.Tk):
             "Segoe UI Semibold",
         )
         style.configure("PaneTitle.TLabel", font=(heading_font, 12))
-        style.configure("Toolbar.TButton", padding=(9, 5))
+        style.configure("Toolbar.TButton", padding=(12, 9), focusthickness=3)
+
+    def _build_brand_strip(self) -> None:
+        """Paint the shared white-blue-red identity without changing editor layout."""
+        strip = tk.Frame(self, height=5, bd=0, highlightthickness=0)
+        strip.pack(fill="x")
+        strip.pack_propagate(False)
+        for color in ("#0039A6", "#FFFFFF", "#D52B1E"):
+            tk.Frame(strip, background=color, bd=0, highlightthickness=0).pack(
+                side="left", fill="both", expand=True
+            )
 
     def _build_menu(self) -> None:
         menu = tk.Menu(self)
@@ -171,6 +192,10 @@ class ReaperStudio(tk.Tk):
         ):
             view_menu.add_radiobutton(label=label, variable=self._theme_mode, value=mode, command=self.apply_visual_theme)
         view_menu.add_separator()
+        view_menu.add_command(label="Увеличить текст редактора", command=lambda: self.adjust_editor_font(1), accelerator="Ctrl++")
+        view_menu.add_command(label="Уменьшить текст редактора", command=lambda: self.adjust_editor_font(-1), accelerator="Ctrl+-")
+        view_menu.add_command(label="Сбросить размер текста", command=self.reset_editor_font, accelerator="Ctrl+0")
+        view_menu.add_separator()
         view_menu.add_command(label="Настройки движения…", command=self.show_motion_settings)
         view_menu.add_separator()
         view_menu.add_command(label="CODEX-66 — каталог возможностей…", command=self.show_codex66, accelerator="Ctrl+Alt+K")
@@ -211,6 +236,9 @@ class ReaperStudio(tk.Tk):
             ("Проверить исходный код", self.check_source),
             ("Запустить программу", self.run_source),
             ("Запустить отладку", self.debug_source),
+            ("Увеличить текст редактора", lambda: self.adjust_editor_font(1)),
+            ("Уменьшить текст редактора", lambda: self.adjust_editor_font(-1)),
+            ("Сбросить размер текста", self.reset_editor_font),
             ("Системный язык и MMIO", self.show_hardware_overview),
             ("Создать embedded-проект", self.embedded_new_project),
             ("Проверить профиль MCU", self.embedded_inspect_project),
@@ -665,7 +693,7 @@ class ReaperStudio(tk.Tk):
         ttk.Button(bar, text="Атмосфера", command=self.toggle_ui_theme, style="Toolbar.TButton").pack(side="left", padx=3)
         ttk.Button(bar, text="CODEX-66", command=self.show_codex66, style="Toolbar.TButton").pack(side="left", padx=(7, 3))
         self.file_label = tk.StringVar(value="Untitled.rpr")
-        ttk.Label(bar, textvariable=self.file_label, foreground="#64748b").pack(side="right", padx=8)
+        ttk.Label(bar, textvariable=self.file_label, style="Muted.TLabel").pack(side="right", padx=8)
 
     def _build_workspace(self) -> None:
         outer = ttk.Panedwindow(self, orient="horizontal")
@@ -695,9 +723,11 @@ class ReaperStudio(tk.Tk):
         self.line_numbers.pack(side="left", fill="y")
         self.editor = ScrolledText(
             editor_shell, wrap="none", undo=True, maxundo=-1,
-            font=("Cascadia Code", 11), tabs=("4c",), padx=10, pady=8,
+            font=self._editor_font, tabs=("4c",), padx=10, pady=10,
         )
         self.editor.pack(side="left", fill="both", expand=True)
+        self.editor.configure(takefocus=True, highlightthickness=2, highlightbackground="#3A3A3A",
+                              highlightcolor="#FFE45C", insertwidth=2)
         self.editor.tag_configure("keyword", foreground="#7c3aed")
         self.editor.tag_configure("string", foreground="#0f766e")
         self.editor.tag_configure("number", foreground="#b45309")
@@ -709,6 +739,13 @@ class ReaperStudio(tk.Tk):
         self.editor.bind("<ButtonRelease-1>", self._update_cursor_status)
         self.editor.bind("<Configure>", self._redraw_line_numbers)
         self.editor.bind("<Control-space>", self._completion_shortcut)
+        self.editor.bind("<Control-plus>", lambda _event: (self.adjust_editor_font(1), "break")[1])
+        self.editor.bind("<Control-equal>", lambda _event: (self.adjust_editor_font(1), "break")[1])
+        self.editor.bind("<Control-minus>", lambda _event: (self.adjust_editor_font(-1), "break")[1])
+        self.editor.bind("<Control-0>", lambda _event: (self.reset_editor_font(), "break")[1])
+        self.editor.bind("<Control-MouseWheel>", self._editor_zoom_wheel)
+        self.editor.bind("<Control-Button-4>", lambda _event: (self.adjust_editor_font(1), "break")[1])
+        self.editor.bind("<Control-Button-5>", lambda _event: (self.adjust_editor_font(-1), "break")[1])
 
         header = ttk.Frame(output_frame)
         header.pack(fill="x")
@@ -766,6 +803,25 @@ class ReaperStudio(tk.Tk):
         ttk.Label(bar, textvariable=self.status, anchor="w").pack(side="left", fill="x", expand=True)
         ttk.Label(bar, textvariable=self.cursor_status, anchor="e").pack(side="right")
 
+    def _editor_zoom_wheel(self, event: tk.Event) -> str:
+        if getattr(event, "delta", 0) == 0:
+            return "break"
+        self.adjust_editor_font(1 if event.delta > 0 else -1)
+        return "break"
+
+    def adjust_editor_font(self, delta: int) -> None:
+        """Adjust code readability without changing source or panel geometry."""
+        self._editor_font_size = bounded_editor_font_size(self._editor_font_size, delta)
+        self._editor_font.configure(size=self._editor_font_size)
+        self.status.set(f"Размер текста редактора: {self._editor_font_size} pt")
+        self._redraw_line_numbers()
+
+    def reset_editor_font(self) -> None:
+        self._editor_font_size = 11
+        self._editor_font.configure(size=self._editor_font_size)
+        self.status.set("Размер текста редактора сброшен: 11 pt")
+        self._redraw_line_numbers()
+
     def _bind_shortcuts(self) -> None:
         bindings = {
             "<Control-n>": self.new_file, "<Control-o>": self.open_file,
@@ -775,6 +831,11 @@ class ReaperStudio(tk.Tk):
             "<F9>": self.toggle_breakpoint, "<F12>": self.go_to_definition,
             "<Control-Shift-R>": self.rename_symbol,
             "<Control-Alt-k>": self.show_codex66,
+            "<Control-plus>": lambda: self.adjust_editor_font(1),
+            "<Control-equal>": lambda: self.adjust_editor_font(1),
+            "<Control-minus>": lambda: self.adjust_editor_font(-1),
+            "<Control-0>": self.reset_editor_font,
+            "<Control-comma>": self.show_motion_settings,
         }
         for sequence, callback in bindings.items():
             self.bind_all(sequence, lambda _event, fn=callback: (fn(), "break")[1])
@@ -794,10 +855,62 @@ class ReaperStudio(tk.Tk):
             self._theme_name = colors["mode"]
         else:
             self._theme_name = apply_theme(self, "reaper-studio", mode)
+        self._apply_editor_visuals()
+
+    def _apply_editor_visuals(self) -> None:
+        """Keep the code editor, syntax colors and line gutter in the active theme."""
+        palette = getattr(self, "_anatidae_palette", {})
+        theme_name = getattr(self, "_anatidae_theme", self._theme_name)
+        dark = theme_name in {"dark", "night"}
+
+        editor_bg = palette.get("surface", "#0F2A45" if dark else "#FFFFFF")
+        editor_fg = palette.get("fg", "#E8EDF2" if dark else "#122C45")
+        gutter_bg = palette.get("elevated", "#173A5E" if dark else "#EAF1FA")
+        border = palette.get("border", "#31516F" if dark else "#CAD8E8")
+        focus = palette.get("focus", palette.get("blue", "#70A5FF" if dark else "#004E98"))
+        selection = palette.get("selection", "#244F82" if dark else "#D9E8FF")
+        selection_fg = palette.get("selection_fg", editor_fg)
+
+        self.editor.configure(
+            background=editor_bg,
+            foreground=editor_fg,
+            insertbackground=editor_fg,
+            selectbackground=selection,
+            selectforeground=selection_fg,
+            highlightbackground=border,
+            highlightcolor=focus,
+            highlightthickness=1,
+            borderwidth=0,
+        )
+        self.line_numbers.configure(
+            background=gutter_bg,
+            highlightbackground=border,
+            highlightcolor=focus,
+            highlightthickness=1,
+        )
+
+        syntax = (
+            {"keyword": "#C4B5FD", "string": "#5EEAD4",
+             "number": "#FCD34D", "comment": "#A7B4C7"}
+            if dark else
+            {"keyword": "#6D28D9", "string": "#0F766E",
+             "number": "#92400E", "comment": "#64748B"}
+        )
+        for token, color in syntax.items():
+            self.editor.tag_configure(token, foreground=color)
+        self.editor.tag_configure(
+            "comment", foreground=syntax["comment"],
+            font=("Cascadia Code", 10, "italic")
+        )
+        self.editor.tag_configure(
+            "reference", background=selection, foreground=selection_fg
+        )
+        self._redraw_line_numbers()
 
     def toggle_ui_theme(self) -> None:
         self._theme_name = toggle_theme(self, "reaper-studio")
         self._theme_mode.set(self._theme_name)
+        self._apply_editor_visuals()
 
     def _source_name(self) -> str:
         return str(self.current_file) if self.current_file else "<editor>"
@@ -1343,6 +1456,8 @@ class ReaperStudio(tk.Tk):
     def _redraw_line_numbers(self, _event: tk.Event | None = None) -> None:
         if not hasattr(self, "line_numbers"):
             return
+        palette = getattr(self, "_anatidae_palette", {})
+        line_number_color = palette.get("muted", "#94a3b8")
         self.line_numbers.delete("all")
         try:
             index = self.editor.index("@0,0")
@@ -1350,7 +1465,14 @@ class ReaperStudio(tk.Tk):
                 info = self.editor.dlineinfo(index)
                 if info is None:
                     break
-                self.line_numbers.create_text(40, info[1], anchor="ne", text=index.split(".")[0], fill="#94a3b8", font=("Cascadia Code", 9))
+                self.line_numbers.create_text(
+                    40,
+                    info[1],
+                    anchor="ne",
+                    text=index.split(".")[0],
+                    fill=line_number_color,
+                    font=("Cascadia Code", 9),
+                )
                 index = self.editor.index(f"{index}+1line")
                 if self.editor.compare(index, ">", "end-1c"):
                     break

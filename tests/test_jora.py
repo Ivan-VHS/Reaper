@@ -267,22 +267,81 @@ class JoraCompositionTests(unittest.TestCase):
 
     def test_catalog_is_closed_and_first_party(self):
         items = list_components()
-        self.assertEqual(len(items), 21)
-        self.assertEqual(
-            {item["id"] for item in items},
-            {
-                "text.editor", "audio.editor", "translation.workspace",
-                "subtitle.editor", "notes.workspace", "task.board", "calendar.scheduler",
-                "speech.synthesis", "speech.recognition", "code.editor", "spreadsheet.editor",
-                "image.editor", "video.editor", "presentation.editor", "file.manager",
-                "api.client", "automation.engine", "data.visualizer", "database.manager",
-                "archive.manager", "knowledge.graph",
-            },
-        )
+        legacy_ids = {
+            "text.editor", "audio.editor", "translation.workspace",
+            "subtitle.editor", "notes.workspace", "task.board", "calendar.scheduler",
+            "speech.synthesis", "speech.recognition", "code.editor", "spreadsheet.editor",
+            "image.editor", "video.editor", "presentation.editor", "file.manager",
+            "api.client", "automation.engine", "data.visualizer", "database.manager",
+            "archive.manager", "knowledge.graph",
+        }
+        harvest_ids = {
+            "harvest.voxtrace", "harvest.cycleforge", "harvest.chronos",
+            "harvest.lexigraph", "harvest.clashgraph", "harvest.resurgence",
+            "harvest.culturefield", "harvest.narrativeforge", "harvest.factseal",
+            "harvest.beatforge", "harvest.flowmetric", "harvest.rhymecore",
+            "harvest.albumarch", "harvest.scenemap", "harvest.legacygraph",
+            "harvest.engine",
+        }
+        self.assertEqual(len(items), 37)
+        self.assertEqual({item["id"] for item in items}, legacy_ids | harvest_ids)
 
+
+    def test_catalog_contains_sixteen_harvest_framework_contracts(self):
+        items = [item for item in list_components() if item["id"].startswith("harvest.")]
+        self.assertEqual(len(items), 16)
+        self.assertTrue(all(item["source_status"] == "authored_unverified" for item in items))
+        self.assertTrue(all(item["source_module"].endswith(".rpr") for item in items))
+        self.assertTrue(all(item["input_schema"] and item["ir_schema"] and item["output_schema"] for item in items))
+
+    def test_harvest_source_bundle_manifest_matches_versioned_schema(self):
+        root = Path(__file__).resolve().parents[1]
+        schema = json.loads((root / "schemas/reaper.jora.harvest-source-bundle.v1.schema.json").read_text(encoding="utf-8"))
+        self.assertEqual(schema["$schema"], "https://json-schema.org/draft/2020-12/schema")
+        self.assertEqual(schema["properties"]["schema"]["const"], "harvest.jora.source-bundle.v1")
+        result = compose_application(self.request(components=["harvest.engine"]))
+        bundle = result["source_bundle"]
+        self.assertEqual(bundle["archive_sha256"], "64d8b6738f27a4d03ba9e10537effc28d781c1c9efb9390004451bba40ae520a")
+        self.assertTrue(set(schema["required"]).issubset(bundle))
+
+    def test_harvest_engine_resolves_every_framework_dependency(self):
+        result = compose_application(self.request(components=["harvest.engine"]))
+        bundle = result["source_bundle"]
+        self.assertEqual(bundle["schema"], "harvest.jora.source-bundle.v1")
+        self.assertEqual(bundle["status"], "authored_unverified")
+        self.assertEqual(len(bundle["framework_ids"]), 16)
+        self.assertEqual(bundle["framework_ids"][-1], "harvest.engine")
+        self.assertIn("harvest.runtime", result["dependency_order"])
+        self.assertIn("harvest.voxtrace", result["dependency_order"])
+        self.assertIn("harvest.legacygraph", result["dependency_order"])
+        self.assertEqual(result["implementation"]["canonical_language"], "reaper")
+        self.assertFalse(result["installable"])
+
+    def test_harvest_build_bundles_real_reaper_sources_and_schemas(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "chronicle"
+            result = build_application(self.request(
+                components=["harvest.engine"],
+                name="Chronicle Atlas",
+            ), output)
+            manifest = json.loads((output / "jora.app.json").read_text(encoding="utf-8"))
+            main_source = (output / "src" / "main.rpr").read_text(encoding="utf-8")
+            self.assertTrue((output / "src/harvest/core/storage.rpr").is_file())
+            self.assertTrue((output / "src/harvest/frameworks/harvest_engine.rpr").is_file())
+            self.assertTrue((output / "src/harvest/frameworks/voxtrace.rpr").is_file())
+            self.assertTrue((output / "src/harvest/schemas/engine.ir.v1.schema.json").is_file())
+            self.assertTrue((output / "src/harvest/registry/harvest.registry.v1.json").is_file())
+            self.assertIn('import "harvest/core/jora_adapter.rpr" as harvest_app', main_source)
+            self.assertIn('import "harvest/frameworks/harvest_engine.rpr" as harvest_harvest_engine', main_source)
+            self.assertIn('make framework_ids := ["harvest.engine"]', main_source)
+            self.assertEqual(manifest["source_bundle"]["status"], "authored_unverified")
+            self.assertEqual(manifest["source_bundle"]["files_copied"], result["source_bundle"]["files_copied"])
+            self.assertFalse(result["installable"])
+            self.assertFalse(result["source_executed"])
+            self.assertGreater(result["validation"]["files_checked"], 16)
 
     def test_catalog_contains_twenty_one_canonical_capability_packs(self):
-        items = list_components()
+        items = [item for item in list_components() if not item["id"].startswith("harvest.")]
         self.assertEqual(len(items), 21)
         ids = {item["id"] for item in items}
         self.assertTrue({
@@ -317,7 +376,7 @@ class JoraCompositionTests(unittest.TestCase):
         self.assertTrue(all(graph["metrics"]["edge_count"] <= 512 for graph in result["graphs"]["variants"]))
 
     def test_all_twenty_one_components_compose_with_bounded_graph_budget(self):
-        component_ids = [item["id"] for item in list_components()]
+        component_ids = [item["id"] for item in list_components() if not item["id"].startswith("harvest.")]
         result = compose_application(self.request(
             components=component_ids,
             language_targets="auto",
