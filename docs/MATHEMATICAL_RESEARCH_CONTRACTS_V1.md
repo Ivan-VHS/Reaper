@@ -61,7 +61,13 @@ A call plan has:
 - normalized, immutable arguments;
 - the result type, effect class and evidence class.
 
-The planner refuses missing or extra arguments, Boolean values masquerading as integers, NaN/infinite numeric values, invalid primes, malformed vector/matrix shapes, invalid SAT offsets, grid-size mismatches, out-of-range graph edges and invalid abstract-VM instruction references.
+The planner refuses missing or extra arguments, Boolean values masquerading as integers, NaN/infinite numeric values, invalid primes, malformed vector/matrix shapes, invalid SAT offsets, grid-size mismatches, out-of-range graph edges and invalid abstract-VM instruction references. The Reaper runtime exposes the safe planning boundary through the `research_kernel_catalog()` and `research_kernel_plan()` built-ins.
+
+## Reaper language facade
+
+`stdlib/research_math.rpr` exports 51 named wrappers, one for each catalog function, plus `catalog()` and `kernel_plan()`. The wrapper names are namespaced by mathematical area, for example `riemann_dirichlet_partial`, `complexity_sat_find_bounded`, `navier_stokes_grid_divergence`, `bsd_curve_point_count_mod_prime`, `goldbach_find_pair_bounded`, `halting_vm_run_bounded`, and `matrix_scaling_exponent`.
+
+Each wrapper accepts its declared positional arguments and returns a Reaper call-plan map. `examples/mathematical_research.rpr` imports the module and demonstrates Riemann and SAT plans. It asserts that the catalog contains 17 domains and that the plan remains marked as not executed. This language surface does not bypass the Python contract validator or call native code.
 
 ## Effect and evidence classes
 
@@ -135,7 +141,7 @@ The caller must still supply valid storage for every C pointer and out-parameter
 
 ## Tests and build
 
-The dedicated tests are in `tests/test_research_math_contracts.py`. Reaper CI compiles the package and runs the full unittest discovery suite. The focused cases cover:
+The dedicated tests are in `tests/test_research_math_contracts.py`. They also execute `examples/mathematical_research.rpr` through the Reaper interpreter. Reaper CI compiles the package and runs the full unittest discovery suite. The focused cases cover:
 
 - exactly 17 areas and 51 unique functions;
 - package catalog equality with the canonical language catalog;
