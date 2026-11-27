@@ -48,6 +48,10 @@ class SemanticNode:
             raise ValueError("operation must be non-empty text")
         if not isinstance(output_type,str) or not output_type.strip():
             raise ValueError("output_type must be non-empty text")
+        if isinstance(input_types, (str, bytes)):
+            raise TypeError("input_types must be an iterable of type names, not text")
+        if isinstance(effects, (str, bytes)):
+            raise TypeError("effects must be an iterable of effect names, not text")
         inputs=tuple(input_types); effect_set=tuple(effects)
         if any(not isinstance(x,str) or not x.strip() for x in inputs):
             raise ValueError("input types must be non-empty strings")
@@ -63,8 +67,16 @@ class SemanticNode:
                    effect_set,value,label)
 
     def verify_address(self) -> bool:
-        return self.content_id == semantic_digest(
-            _semantic_payload(self.operation,self.input_types,self.output_type,self.effects,self.literal))
+        try:
+            expected = semantic_digest(
+                _semantic_payload(
+                    self.operation, self.input_types, self.output_type,
+                    self.effects, self.literal
+                )
+            )
+        except (TypeError, ValueError, OverflowError):
+            return False
+        return self.content_id == expected
 
     def rename(self, label: str) -> "SemanticNode":
         if not isinstance(label,str):
@@ -111,6 +123,23 @@ class SemanticGraph:
     def validate(self, *, require_complete: bool = False) -> None:
         by_id={}
         for node in self.nodes:
+            if not isinstance(node, SemanticNode):
+                raise ValueError("graph nodes must be SemanticNode instances")
+            if (
+                not isinstance(node.operation, str) or not node.operation.strip()
+                or not isinstance(node.output_type, str) or not node.output_type.strip()
+                or not isinstance(node.input_types, tuple)
+                or any(not isinstance(item, str) or not item.strip() for item in node.input_types)
+                or not isinstance(node.effects, tuple)
+                or any(not isinstance(item, str) or not item.strip() for item in node.effects)
+                or len(set(node.effects)) != len(node.effects)
+                or not isinstance(node.label, str)
+            ):
+                raise ValueError("semantic node fields violate the immutable signature contract")
+            try:
+                _literal_value(node.literal)
+            except TypeError as error:
+                raise ValueError("semantic node literal is invalid") from error
             if not node.verify_address():
                 raise ValueError(f"semantic address mismatch: {node.content_id}")
             if node.content_id in by_id:
@@ -120,10 +149,20 @@ class SemanticGraph:
         outgoing={node_id:[] for node_id in by_id}
         indegree={node_id:0 for node_id in by_id}
         for edge in self.edges:
+            if not isinstance(edge, SemanticEdge):
+                raise ValueError("graph edges must be SemanticEdge instances")
+            if (
+                not isinstance(edge.source_id, str)
+                or not isinstance(edge.target_id, str)
+                or isinstance(edge.target_port, bool)
+                or not isinstance(edge.target_port, int)
+                or edge.target_port < 0
+            ):
+                raise ValueError("edge fields must use node IDs and a non-negative integer port")
             if edge.source_id not in by_id or edge.target_id not in by_id:
                 raise ValueError("edge references a node outside the graph")
             target=by_id[edge.target_id]
-            if edge.target_port < 0 or edge.target_port >= len(target.input_types):
+            if edge.target_port >= len(target.input_types):
                 raise ValueError("edge target port is invalid")
             key=(edge.target_id,edge.target_port)
             if key in incoming:
