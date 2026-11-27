@@ -1,0 +1,162 @@
+# Reaper-native processor/kernel control contracts v1.
+# These functions are deterministic policy models. They do not switch contexts,
+# program CPU registers, map physical memory, execute IRQ handlers or patch code.
+
+craft kernel_state_valid(state) {
+    yield state == "boot" or state == "idle" or state == "active" or state == "diagnostic" or state == "degraded" or state == "halted"
+}
+
+craft kernel_transition_valid(current, next, healthy, faulted) {
+    when not kernel_state_valid(current) or not kernel_state_valid(next) { yield false }
+    when current == "halted" { yield false }
+    when next == "halted" { yield true }
+    when next == "degraded" { yield faulted }
+    when current == "boot" and next == "idle" { yield healthy and not faulted }
+    when current == "idle" and next == "active" { yield healthy and not faulted }
+    when current == "active" and next == "idle" { yield healthy and not faulted }
+    when current == "degraded" and next == "idle" { yield healthy and not faulted }
+    when current == "idle" and next == "diagnostic" { yield true }
+    when current == "diagnostic" and next == "idle" { yield true }
+    yield false
+}
+
+craft kernel_saturating_add(value, delta, limit) {
+    when value < 0 or delta < 0 or limit < 0 or value > limit {
+        yield ["ERR", "invalid counter range"]
+    }
+    when delta > limit - value {
+        yield ["OK", limit, true]
+    }
+    yield ["OK", value + delta, false]
+}
+
+craft kernel_tick_valid(tick) {
+    yield tick >= 0 and tick <= 4294967295
+}
+
+craft kernel_elapsed_u32(now, previous) {
+    when not kernel_tick_valid(now) or not kernel_tick_valid(previous) {
+        yield ["ERR", "tick is outside the u32 range"]
+    }
+    when now >= previous {
+        yield ["OK", now - previous]
+    }
+    yield ["OK", 4294967296 - previous + now]
+}
+
+craft kernel_elapsed_unambiguous(elapsed) {
+    yield elapsed >= 0 and elapsed <= 2147483647
+}
+
+craft kernel_jitter(actual, expected) {
+    when actual < 0 or expected < 0 { yield ["ERR", "duration must be non-negative"] }
+    when actual >= expected { yield ["OK", actual - expected] }
+    yield ["OK", expected - actual]
+}
+
+craft kernel_pain_action(pain, hard_fault) {
+    when pain < 0 { yield "invalid" }
+    when hard_fault { yield "request-safe-stop" }
+    when pain >= 320 { yield "request-safe-stop" }
+    when pain >= 240 { yield "enter-degraded-and-shed-noncritical-work" }
+    when pain >= 120 { yield "throttle-diagnostics-only" }
+    when pain >= 60 { yield "record-pressure-and-observe" }
+    yield "nominal"
+}
+
+craft kernel_quota_advance(spent, budget, breath) {
+    when spent < 0 or budget <= 0 or spent > budget or breath < 0 {
+        yield ["ERR", "invalid quota descriptor"]
+    }
+    when breath > 0 {
+        yield ["breathe", spent, breath - 1]
+    }
+    when spent >= budget {
+        yield ["yield", 0, 2]
+    }
+    yield ["run", spent + 1, 0]
+}
+
+craft kernel_range_valid(base, bytes, limit, alignment) {
+    when base < 0 or bytes <= 0 or limit < 0 or alignment <= 0 { yield false }
+    when base > limit or base % alignment != 0 { yield false }
+    yield bytes <= limit - base
+}
+
+craft kernel_trace_append(entries, capacity, entry, dropped) {
+    when capacity <= 0 or dropped < 0 { yield ["ERR", entries, dropped] }
+    when size(entry) != 4 { yield ["ERR", entries, dropped] }
+    when size(entries) < capacity {
+        yield ["OK", push(entries, entry), dropped]
+    }
+    vary retained := []
+    vary index := 1
+    loop while index < size(entries) {
+        change retained := push(retained, entries[index])
+        change index := index + 1
+    }
+    yield ["OK", push(retained, entry), dropped + 1]
+}
+
+craft kernel_patch_decision(patch_id, payload_bytes, checksum_valid, signature_valid, abi_compatible, safe_point, irq_depth, device_owned_buffers) {
+    when patch_id < 1 or payload_bytes <= 0 or irq_depth < 0 or device_owned_buffers < 0 {
+        yield "reject-invalid-descriptor"
+    }
+    when not checksum_valid { yield "reject-checksum" }
+    when not signature_valid { yield "reject-signature" }
+    when not abi_compatible { yield "reject-abi" }
+    when not safe_point or irq_depth != 0 or device_owned_buffers != 0 {
+        yield "defer-until-quiescent"
+    }
+    yield "commit-verified-inactive-bank-policy-only"
+}
+
+assert(kernel_state_valid("active"), "known core state rejected")
+assert(not kernel_state_valid("running"), "unknown core state accepted")
+assert(kernel_transition_valid("boot", "idle", true, false), "healthy boot transition rejected")
+assert(not kernel_transition_valid("boot", "active", true, false), "boot skipped idle")
+assert(kernel_transition_valid("active", "degraded", false, true), "fault transition to degraded rejected")
+assert(not kernel_transition_valid("active", "degraded", true, false), "degraded transition without a fault accepted")
+assert(not kernel_transition_valid("halted", "idle", true, false), "halted core restarted")
+assert(kernel_transition_valid("idle", "halted", false, true), "safe halt was rejected")
+
+assert(kernel_saturating_add(10, 5, 20) == ["OK", 15, false], "ordinary counter addition failed")
+assert(kernel_saturating_add(18, 9, 20) == ["OK", 20, true], "counter did not saturate")
+assert(kernel_saturating_add(-1, 1, 20)[0] == "ERR", "negative counter accepted")
+
+make wrapped := kernel_elapsed_u32(3, 4294967294)
+assert(wrapped == ["OK", 5], "u32 timer wrap was not handled")
+assert(kernel_elapsed_unambiguous(wrapped[1]), "small wrapped interval marked ambiguous")
+assert(not kernel_elapsed_unambiguous(2147483648), "ambiguous half-range interval accepted")
+assert(kernel_jitter(95, 100) == ["OK", 5], "negative jitter delta was not made absolute")
+assert(kernel_jitter(105, 100) == ["OK", 5], "positive jitter delta was not measured")
+
+assert(kernel_pain_action(20, false) == "nominal", "nominal pressure misclassified")
+assert(kernel_pain_action(80, false) == "record-pressure-and-observe", "moderate pressure misclassified")
+assert(kernel_pain_action(160, false) == "throttle-diagnostics-only", "diagnostic pressure misclassified")
+assert(kernel_pain_action(260, false) == "enter-degraded-and-shed-noncritical-work", "degraded pressure misclassified")
+assert(kernel_pain_action(10, true) == "request-safe-stop", "hard fault did not dominate pain score")
+
+assert(kernel_quota_advance(0, 4, 2) == ["breathe", 0, 1], "breath tick was not consumed")
+assert(kernel_quota_advance(4, 4, 0) == ["yield", 0, 2], "exhausted task did not yield")
+assert(kernel_quota_advance(3, 4, 0) == ["run", 4, 0], "available quota was not granted")
+assert(kernel_quota_advance(0, 0, 0)[0] == "ERR", "zero quota accepted")
+
+assert(kernel_range_valid(4096, 64, 8192, 64), "aligned region rejected")
+assert(not kernel_range_valid(4097, 64, 8192, 64), "misaligned region accepted")
+assert(not kernel_range_valid(8190, 8, 8192, 1), "out-of-range memory span accepted")
+
+make trace_one := kernel_trace_append([], 2, [1, "irq", 4, 0], 0)
+make trace_two := kernel_trace_append(trace_one[1], 2, [2, "tick", 0, 0], trace_one[2])
+make trace_three := kernel_trace_append(trace_two[1], 2, [3, "fault", 1, 7], trace_two[2])
+assert(trace_three[0] == "OK" and size(trace_three[1]) == 2, "trace ring capacity was not enforced")
+assert(trace_three[1][0][0] == 2 and trace_three[1][1][0] == 3, "trace ring did not discard the oldest entry")
+assert(trace_three[2] == 1, "trace drop counter was not incremented")
+
+assert(kernel_patch_decision(1, 4096, true, true, true, false, 0, 0) == "defer-until-quiescent", "patch ignored safe-point requirement")
+assert(kernel_patch_decision(1, 4096, true, true, true, true, 1, 0) == "defer-until-quiescent", "patch allowed an active IRQ")
+assert(kernel_patch_decision(1, 4096, true, true, true, true, 0, 1) == "defer-until-quiescent", "patch allowed a device-owned DMA buffer")
+assert(kernel_patch_decision(1, 4096, true, true, true, true, 0, 0) == "commit-verified-inactive-bank-policy-only", "verified safe-point update was rejected")
+assert(kernel_patch_decision(1, 4096, true, false, true, true, 0, 0) == "reject-signature", "unsigned update accepted")
+
+emit "SELFHOST_PROCESSOR_KERNEL_OK"
