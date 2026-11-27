@@ -367,6 +367,104 @@ def find_math_kernel(function_id: str, catalog: Mapping[str, Any] | None = None)
     raise ResearchContractError(f"unknown mathematical research function: {function_id}")
 
 
+def _validate_cross_constraints(function_id: str, arguments: Mapping[str, Any]) -> None:
+    def require(condition: bool, message: str) -> None:
+        if not condition:
+            raise ResearchContractError(f"{function_id}: {message}")
+
+    if function_id.startswith("complexity."):
+        variables = arguments["variables"]
+        literals = arguments["literals"]
+        offsets = arguments["clause_offsets"]
+        clause_count = arguments["clause_count"]
+        require(arguments["literal_count"] == len(literals), "literal_count must match literals length")
+        require(len(offsets) == clause_count + 1, "clause_offsets length must equal clause_count + 1")
+        require(bool(offsets) and offsets[0] == 0 and offsets[-1] == len(literals),
+                "clause_offsets must span the complete literal array")
+        require(all(left <= right for left, right in zip(offsets, offsets[1:])),
+                "clause_offsets must be nondecreasing")
+        for literal in literals:
+            require(literal != 0 and abs(literal) <= variables, "CNF literal is outside the variable range")
+        if function_id == "complexity.sat_verify":
+            assignment = arguments["assignment"]
+            require(len(assignment) == variables, "assignment length must equal variables")
+            require(all(value in (0, 1) for value in assignment), "assignment values must be Boolean bytes")
+
+    if function_id.startswith("navier_stokes."):
+        nx, ny, nz = arguments["nx"], arguments["ny"], arguments["nz"]
+        cells = nx * ny * nz
+        require(cells <= 1_000_000, "grid exceeds the one-million-cell contract limit")
+        for field in ("u", "v", "w"):
+            require(len(arguments[field]) == cells, f"{field} length must equal nx * ny * nz")
+
+    if function_id.startswith("hodge.") and function_id != "hodge.type_check":
+        count, dimension = arguments["cycle_count"], arguments["dimension"]
+        require(len(arguments["cycles"]) == count * dimension,
+                "cycle matrix shape does not match count and dimension")
+        if function_id == "hodge.class_in_cycle_span_mod_prime":
+            require(len(arguments["candidate"]) == dimension, "candidate vector length must equal dimension")
+
+    if function_id.startswith("tate."):
+        dimension = arguments["dimension"]
+        if function_id == "tate.fixed_vector_verify":
+            require(len(arguments["frobenius"]) == dimension * dimension, "Frobenius matrix must be square")
+            require(len(arguments["vector"]) == dimension, "fixed vector length must equal dimension")
+        elif function_id == "tate.invariant_dimension_mod_prime":
+            require(len(arguments["frobenius"]) == dimension * dimension, "Frobenius matrix must be square")
+        else:
+            require(len(arguments["cycle_vectors"]) == arguments["cycle_count"] * dimension,
+                    "cycle-vector matrix shape does not match count and dimension")
+
+    if function_id in {"goldbach.verify", "goldbach.find_pair_bounded"}:
+        number = arguments["even_value"]
+        require(number > 2 and number % 2 == 0, "even_value must be an even integer greater than two")
+        if function_id == "goldbach.verify":
+            require(arguments["prime_a"] <= number, "prime_a must not exceed even_value")
+
+    if function_id == "hadwiger_nelson.unit_graph_build":
+        require(len(arguments["xy"]) == 2 * arguments["vertex_count"],
+                "xy must contain one integer coordinate pair per vertex")
+    elif function_id == "hadwiger_nelson.coloring_verify":
+        vertices = arguments["vertex_count"]
+        require(len(arguments["colors"]) == vertices, "colors length must equal vertex_count")
+        for edge in arguments["edges"]:
+            require(edge[0] < vertices and edge[1] < vertices, "edge endpoint is outside vertex_count")
+
+    if function_id.startswith("inscribed_square."):
+        curve = arguments["curve"]
+        if function_id == "inscribed_square.verify":
+            require(len(arguments["square"]) == 4, "square must contain exactly four points")
+        if function_id == "inscribed_square.search_sampled":
+            sample_count = (len(curve) - 1) * arguments["subdivisions"] + 1
+            require(sample_count <= 128, "sampled curve exceeds the fixed 128-point search buffer")
+
+    if function_id.startswith("halting."):
+        program = arguments["program"]
+        require(len(program) > 0, "program cannot be empty")
+        for index, instruction in enumerate(program):
+            opcode, register, target = instruction["opcode"], instruction["reg"], instruction["target"]
+            require(opcode in (0, 1, 2, 3), f"program[{index}] has an unknown opcode")
+            if opcode in (1, 2):
+                require(register in (0, 1), f"program[{index}] register must be 0 or 1")
+            if opcode in (2, 3):
+                require(target < len(program), f"program[{index}] jump target is outside the program")
+        if function_id == "halting.vm_run_bounded":
+            state = arguments["initial_state"]
+            require(state["halted"] or state["pc"] < len(program), "initial PC is outside the program")
+        if function_id == "halting.vm_trace_verify":
+            require(len(arguments["trace"]) > 0, "trace cannot be empty")
+
+    if function_id.startswith("matrix."):
+        dimension = arguments["dimension"] if "dimension" in arguments else None
+        if dimension is not None:
+            for name in ("left", "right"):
+                require(len(arguments[name]) == dimension * dimension,
+                        f"{name} matrix length must equal dimension squared")
+            if function_id == "matrix.product_verify_f64":
+                require(len(arguments["candidate"]) == dimension * dimension,
+                        "candidate matrix length must equal dimension squared")
+
+
 def prepare_math_kernel_call(
     function_id: str,
     arguments: Mapping[str, Any],
@@ -400,6 +498,8 @@ def prepare_math_kernel_call(
             if "max_exclusive" in spec and numeric >= spec["max_exclusive"]:
                 raise ResearchContractError(f"{name} must be less than {spec['max_exclusive']}")
         validated.append((name, _freeze(value)))
+
+    _validate_cross_constraints(function_id, arguments)
 
     return KernelCallPlan(
         function_id=function["id"],
