@@ -802,6 +802,8 @@ class RFSRuntime:
         for frame in program.signals:
             if frame.trusted and not frame.manufactured:
                 self.clean_signal_counts[frame.origin] = self.clean_signal_counts.get(frame.origin, 0) + 1
+        self._revisions = {node.id: 0 for node in program.nodes}
+        self._phase_cache: dict[str, tuple[int, bool]] = {}
         self.events: list[dict[str, Any]] = []
         self.dropped_events = 0
         self._event_sequence = 0
@@ -817,13 +819,23 @@ class RFSRuntime:
             ">=": left >= right,
         }[operator]
 
+    def _bump_revision(self, node_id: str) -> None:
+        self._revisions[node_id] += 1
+
     def _phase_open(self, node_id: str) -> bool:
+        revision = self._revisions[node_id]
+        cached = self._phase_cache.get(node_id)
+        if cached is not None and cached[0] == revision:
+            return cached[1]
+
         node = self.nodes[node_id]
-        return all(
+        result = all(
             self._compare(float(getattr(node, check.metric)), check.operator, check.value)
             for phase in self.phases.get(node_id, ())
             for check in (phase.first, phase.second)
         )
+        self._phase_cache[node_id] = (revision, result)
+        return result
 
     def _record(self, cycle: int, kind: str, **details: Any) -> None:
         self._event_sequence += 1
@@ -851,6 +863,7 @@ class RFSRuntime:
             attenuation_db = 20.0 * math.log10(NOISE_ATTENUATION)
             noise = max(NOISE_FLOOR_DB, target.noise_db + attenuation_db)
             self.nodes[target_id] = replace(target, noise_db=noise, active=True)
+            self._bump_revision(target_id)
             self._record(cycle, "signal-forwarded", origin=origin_id, target=target_id, frames=frame_count, noise_db=noise)
             return
         delta = source.pressure * link.weight
@@ -862,6 +875,7 @@ class RFSRuntime:
             self._record(cycle, "pressure-rejected", origin=origin_id, target=target_id, attempted=delta, reason="load-limit")
             return
         self.nodes[target_id] = replace(target, pressure=next_pressure, active=True)
+        self._bump_revision(target_id)
         self._record(cycle, "pressure-forwarded", origin=origin_id, target=target_id, amount=delta, pressure=next_pressure)
 
     def _recover(self, recovery: Recovery, cycle: int) -> None:
@@ -869,9 +883,11 @@ class RFSRuntime:
         original = self._root[recovery.node]
         if recovery.operator == "<-root":
             self.nodes[recovery.node] = original
+            self._bump_revision(recovery.node)
             self._record(cycle, "root-restored", node=recovery.node)
         else:
             self.nodes[recovery.node] = replace(current, core_seed=original.core_seed)
+            self._bump_revision(recovery.node)
             self._record(cycle, "core-restored", node=recovery.node)
 
     @staticmethod
