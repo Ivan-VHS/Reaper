@@ -51,6 +51,6 @@ python -m unittest discover -s tests -v
 - [План реализации](docs/IMPLEMENTATION_ROADMAP.md)
 - [Библиотека Kora](docs/KORA.md)
 - [Индекс документации](docs/README.md)
-- [Общие стандарты экосистемы](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/SHARED_STANDARDS.md)
+- [Общие стандарты экосистемы](https://github.com/Ivan-VHS/DAK/blob/main/docs/SHARED_STANDARDS.md)
 
 [Вклад в проект](CONTRIBUTING.md) · [Безопасность](SECURITY.md) · [Apache-2.0](LICENSE)
