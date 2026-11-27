@@ -231,7 +231,7 @@ export craft context_frame_valid(frame) {
     # [stack_base, stack_bytes, saved_rsp, required_alignment, frame_bytes]
     when kind(frame) != "list" or size(frame) != 5 { yield false }
     when frame[0] <= 0 or frame[1] < 256 or frame[2] < frame[0] { yield false }
-    when frame[3] != 16 or frame[4] < 64 { yield false }
+    when frame[3] != 8 or frame[4] < 64 { yield false }
     when frame[0] + frame[1] < frame[0] { yield false }
     when frame[2] > frame[0] + frame[1] - 128 { yield false }
     when frame[2] % frame[3] != 0 { yield false }
