@@ -452,6 +452,108 @@ export craft nano_repair(cell, requested_cells) {
     yield [true, next, spent, shortfall]
 }
 
+export craft silicon_barrier(cycle, fence_count, elapsed_cycles) {
+    when not valid_integer(cycle, 0, SAFE_INTEGER_MAX) or
+         not valid_integer(fence_count, 0, SAFE_INTEGER_MAX) or
+         not valid_integer(elapsed_cycles, 1, 1000000) {
+        yield [false, cycle, fence_count, "RPR-PHYS-0014: barrier counters are outside bounds"]
+    }
+    make next_cycle := checked_add(cycle, elapsed_cycles)
+    make next_fence := checked_add(fence_count, 1)
+    when not next_cycle[0] or not next_fence[0] {
+        yield [false, cycle, fence_count, "RPR-PHYS-0015: barrier counter overflow"]
+    }
+    yield [true, next_cycle[1], next_fence[1], "simulated-ordering-only"]
+}
+
+export craft stream_state(stream_id, program_counter, phase_error_ps) {
+    when not valid_integer(stream_id, 0, 65535) or
+         not valid_integer(program_counter, 0, 4294967295) or
+         not valid_integer(phase_error_ps, -1000000000, 1000000000) {
+        yield [false, [], "RPR-EXEC-0040: stream descriptor is outside bounds"]
+    }
+    yield [true, [stream_id, program_counter, phase_error_ps, 0, 0], ""]
+}
+
+export craft stream_advance(stream, repair_spent, correction_gain_permille, maximum_step_ps, injected_fault) {
+    when kind(stream) != "list" or size(stream) != 5 {
+        yield [false, stream, [], "RPR-EXEC-0041: malformed stream descriptor"]
+    }
+    when not valid_integer(repair_spent, 0, 1000000000) or
+         kind(injected_fault) != "boolean" {
+        yield [false, stream, [], "RPR-EXEC-0042: stream update parameters are invalid"]
+    }
+    make pc := checked_add(stream[1], 4)
+    when not pc[0] or pc[1] > 4294967295 {
+        yield [false, stream, [], "RPR-EXEC-0043: 32-bit program counter overflow"]
+    }
+    make error := stream[2]
+    make fault_hits := stream[4]
+    when injected_fault {
+        make noisy := checked_add(error, 1)
+        make hit_count := checked_add(fault_hits, 1)
+        when not noisy[0] or not hit_count[0] {
+            yield [false, stream, [], "RPR-EXEC-0044: stream fault counter overflow"]
+        }
+        change error := noisy[1]
+        change fault_hits := hit_count[1]
+    }
+    make correction := correction_step(error, correction_gain_permille, maximum_step_ps)
+    when not correction[0] { yield [false, stream, [], correction[5]] }
+    make repairs := checked_add(stream[3], repair_spent)
+    when not repairs[0] { yield [false, stream, [], repairs[2]] }
+    make next := [stream[0], pc[1], correction[2], repairs[1], fault_hits]
+    yield [true, next, [error, correction[1], correction[2], correction[3], correction[4]], ""]
+}
+
+export craft copper_channel(channel_id, length_um, area_nm2, resistivity_n_ohm_m, capacitance_ff, density_milli_ma_um2, temperature_mc) {
+    when not valid_integer(channel_id, 0, 65535) or
+         not valid_integer(density_milli_ma_um2, 0, 5000) or
+         not valid_integer(temperature_mc, -40000, 125000) {
+        yield [false, [], "RPR-PHYS-0040: copper channel metadata is invalid"]
+    }
+    make electrical := copper_evaluate(length_um, area_nm2, resistivity_n_ohm_m, capacitance_ff)
+    when not electrical[0] { yield [false, [], electrical[3]] }
+    yield [true, [
+        channel_id, length_um, area_nm2, resistivity_n_ohm_m, capacitance_ff,
+        density_milli_ma_um2, 0, electrical[1], electrical[2], temperature_mc
+    ], ""]
+}
+
+export craft copper_channel_age(channel, elapsed_cycles) {
+    when kind(channel) != "list" or size(channel) != 10 {
+        yield [false, channel, "RPR-PHYS-0041: malformed copper channel"]
+    }
+    make aged := copper_age(channel[6], channel[5], channel[9], elapsed_cycles)
+    when not aged[0] { yield [false, channel, aged[2]] }
+    make next := [
+        channel[0], channel[1], channel[2], channel[3], channel[4],
+        channel[5], aged[1], channel[7], channel[8], channel[9]
+    ]
+    yield [true, next, ""]
+}
+
+export craft hardware_register_snapshot(state) {
+    when not state_valid(state) {
+        yield [false, [], "RPR-HW-0001: invalid state for register snapshot"]
+    }
+    make fault_ctrl := 0
+    when state[7] { change fault_ctrl := 15 }
+    make copper_control := 0
+    make nano_command := 0
+    when state[16] != "cold" {
+        change copper_control := 7
+        change nano_command := 165
+    }
+    when state[7] {
+        change nano_command := 241
+    }
+    yield [true, [
+        state[2], state[4], state[5], state[8], state[9],
+        fault_ctrl, copper_control, nano_command, state[13], state[14]
+    ], "simulated-register-bank"]
+}
+
 export craft fault_window_open(enabled, cycle, phase, period_cycles, duty_cycles) {
     when kind(enabled) != "boolean" or not enabled { yield false }
     when not valid_integer(cycle, 0, SAFE_INTEGER_MAX) or
@@ -591,26 +693,52 @@ export craft execute_bytecode(state, word) {
     make decoded := bytecode_decode(word)
     when not decoded[0] { yield [false, state, [], decoded[2]] }
     make instruction := decoded[1]
-    make role := opcode_role(instruction[0])
+    make opcode := instruction[0]
+    make role := opcode_role(opcode)
     when role == "" { yield [false, state, [], "RPR-BC-0020: opcode has no execution role"] }
-    when instruction[0] == 32 and instruction[1] != "START" {
+    when opcode == 32 and instruction[1] != "START" {
         yield [false, state, [], "RPR-BC-0021: repair-spend opcode requires START domain"]
     }
-    when instruction[0] == 33 and instruction[1] != "SCENARIO" {
+    when opcode == 33 and instruction[1] != "SCENARIO" {
         yield [false, state, [], "RPR-BC-0022: fault-period opcode requires SCENARIO domain"]
     }
-    when instruction[0] == 48 and instruction[1] != "BOOT" {
+    when opcode == 48 and instruction[1] != "BOOT" {
         yield [false, state, [], "RPR-BC-0023: copper-tune opcode requires BOOT domain"]
     }
-    when instruction[0] == 49 and instruction[1] != "START" {
+    when opcode == 49 and instruction[1] != "START" {
         yield [false, state, [], "RPR-BC-0024: nano-pulse opcode requires START domain"]
     }
-    when instruction[0] == 64 and instruction[1] != "ROOT" {
+    when opcode == 64 and instruction[1] != "ROOT" {
         yield [false, state, [], "RPR-BC-0025: corrective-skew opcode requires ROOT domain"]
     }
-    make label := "RPR_BC_" ++ text(instruction[0])
-    make spec := [instruction[1], role, instruction[2], label, instruction[3], instruction[4]]
-    yield run_construct(state, spec)
+    make label := "RPR_BC_" ++ text(opcode)
+    make magnitude := instruction[3]
+    make auxiliary := instruction[4]
+    when opcode == 33 {
+        change magnitude := 0
+        change auxiliary := instruction[3]
+    }
+    make spec := [instruction[1], role, instruction[2], label, magnitude, auxiliary]
+    make executed := run_construct(state, spec)
+    when not executed[0] { yield executed }
+
+    when opcode == 48 {
+        make length_um := instruction[2] + 1
+        make capacitance_ff := instruction[3] + 1
+        make copper := copper_evaluate(length_um, 1000000, 17, capacitance_ff)
+        when not copper[0] { yield [false, state, [], copper[3]] }
+        yield [true, executed[1], [executed[2], ["CU_MESH_RC", copper[1], copper[2]]], ""]
+    }
+    when opcode == 49 {
+        make cell := nano_cell(instruction[2], 16, 1000, 0, 0)
+        when not cell[0] { yield [false, state, [], cell[2]] }
+        make requested := instruction[3]
+        when requested == 0 { change requested := 1 }
+        make pulse := nano_repair(cell[1], requested)
+        when not pulse[0] { yield [false, state, [], pulse[3]] }
+        yield [true, executed[1], [executed[2], ["NANO_PULSE", pulse[2], pulse[3], pulse[1][2]]], ""]
+    }
+    yield executed
 }
 
 export craft run_construct(state, spec) {
