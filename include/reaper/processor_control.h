@@ -10,6 +10,16 @@ extern "C" {
 
 #define REAPER_PROCESSOR_MAX_LOGICAL_CPUS 64U
 #define REAPER_PROCESSOR_DIGEST_BYTES 32U
+#define REAPER_PROCESSOR_MAX_PATCH_BYTES (16U * 1024U * 1024U)
+#define REAPER_PROCESSOR_MAX_DEBUG_BYTES (64U * 1024U)
+
+enum {
+    REAPER_PROCESSOR_CAP_POWER_CONTROL = UINT32_C(1) << 0,
+    REAPER_PROCESSOR_CAP_DEBUG_CAPTURE = UINT32_C(1) << 1,
+    REAPER_PROCESSOR_CAP_PATCH_STAGE = UINT32_C(1) << 2,
+    REAPER_PROCESSOR_CAP_PATCH_ACTIVATE = UINT32_C(1) << 3,
+    REAPER_PROCESSOR_CAP_PATCH_ROLLBACK = UINT32_C(1) << 4
+};
 
 typedef enum {
     REAPER_PROCESSOR_OK = 0,
@@ -22,7 +32,9 @@ typedef enum {
     REAPER_PROCESSOR_ACCESS_DENIED,
     REAPER_PROCESSOR_INCOMPATIBLE_ABI,
     REAPER_PROCESSOR_INVALID_EVIDENCE,
-    REAPER_PROCESSOR_UNSUPPORTED
+    REAPER_PROCESSOR_UNSUPPORTED,
+    REAPER_PROCESSOR_ADAPTER_FAILURE,
+    REAPER_PROCESSOR_OUTPUT_TOO_LARGE
 } ReaperProcessorStatus;
 
 typedef enum {
@@ -146,6 +158,42 @@ ReaperProcessorStatus reaper_processor_power_request_validate(
 ReaperProcessorStatus reaper_processor_debug_session_validate(
     const ReaperProcessorDebugSession *session,
     uint32_t logical_cpu_count
+);
+
+ReaperProcessorStatus reaper_processor_apply_frequency_cap(
+    const ReaperProcessorPlatformOps *ops,
+    uint32_t cpu_id, uint32_t minimum_khz, uint32_t target_khz,
+    uint32_t maximum_khz, uint32_t topology_generation
+);
+
+ReaperProcessorStatus reaper_processor_debug_capture(
+    const ReaperProcessorPlatformOps *ops,
+    const ReaperProcessorDebugSession *session,
+    uint32_t logical_cpu_count, uint8_t *buffer,
+    size_t buffer_capacity, size_t *bytes_written
+);
+
+ReaperProcessorStatus reaper_processor_stage_patch(
+    const ReaperProcessorPlatformOps *ops,
+    const ReaperProcessorRevision *active,
+    const ReaperProcessorRevision *candidate,
+    const ReaperProcessorEvidence *evidence,
+    const uint8_t *image, size_t image_size,
+    const uint8_t *signature, size_t signature_size,
+    int abi_compatible, int safe_point, int quiescent,
+    int rollback_ready, ReaperProcessorPatchTicket *ticket
+);
+
+ReaperProcessorStatus reaper_processor_activate_patch(
+    const ReaperProcessorPlatformOps *ops,
+    const ReaperProcessorPatchTicket *ticket,
+    int safe_point, int quiescent
+);
+
+ReaperProcessorStatus reaper_processor_rollback_patch(
+    const ReaperProcessorPlatformOps *ops,
+    const ReaperProcessorPatchTicket *ticket,
+    uint64_t known_good_generation
 );
 
 const char *reaper_processor_status_name(ReaperProcessorStatus status);
