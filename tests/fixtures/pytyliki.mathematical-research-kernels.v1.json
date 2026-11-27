@@ -1,0 +1,213 @@
+{
+  "schema": "pytyliki.mathematical-research-kernels.v1",
+  "version": "1.0.0",
+  "owner": "Pytyliki",
+  "contract_schema": "reaper.mathematical-research-contracts.v1",
+  "execution_performed": false,
+  "functions": [
+    {
+      "id": "riemann.dirichlet_partial",
+      "api": "pl_math_riemann_dirichlet"
+    },
+    {
+      "id": "riemann.eta_partial",
+      "api": "pl_math_riemann_eta"
+    },
+    {
+      "id": "riemann.critical_residual",
+      "api": "pl_math_riemann_critical_residual"
+    },
+    {
+      "id": "complexity.cnf_validate",
+      "api": "pl_math_cnf_validate"
+    },
+    {
+      "id": "complexity.sat_verify",
+      "api": "pl_math_sat_verify_assignment"
+    },
+    {
+      "id": "complexity.sat_find_bounded",
+      "api": "pl_math_sat_find_model_bounded"
+    },
+    {
+      "id": "collatz.step",
+      "api": "pl_math_collatz_step"
+    },
+    {
+      "id": "collatz.trajectory",
+      "api": "pl_math_collatz_trajectory"
+    },
+    {
+      "id": "collatz.stopping_time",
+      "api": "pl_math_collatz_stopping_time"
+    },
+    {
+      "id": "navier_stokes.grid_divergence",
+      "api": "pl_math_grid3d_divergence"
+    },
+    {
+      "id": "navier_stokes.grid_vorticity",
+      "api": "pl_math_grid3d_vorticity"
+    },
+    {
+      "id": "navier_stokes.cfl_dt",
+      "api": "pl_math_navier_stokes_cfl_dt"
+    },
+    {
+      "id": "bsd.curve_nonsingular_mod_prime",
+      "api": "pl_math_elliptic_curve_nonsingular_mod_prime"
+    },
+    {
+      "id": "bsd.curve_point_count_mod_prime",
+      "api": "pl_math_elliptic_curve_point_count_mod_prime"
+    },
+    {
+      "id": "bsd.frobenius_trace_mod_prime",
+      "api": "pl_math_elliptic_curve_frobenius_trace_mod_prime"
+    },
+    {
+      "id": "hodge.type_check",
+      "api": "pl_math_hodge_type_check"
+    },
+    {
+      "id": "hodge.cycle_span_rank_mod_prime",
+      "api": "pl_math_hodge_cycle_span_rank_mod_prime"
+    },
+    {
+      "id": "hodge.class_in_cycle_span_mod_prime",
+      "api": "pl_math_hodge_class_in_cycle_span_mod_prime"
+    },
+    {
+      "id": "yang_mills.u1_plaquette_phase",
+      "api": "pl_math_u1_plaquette_phase"
+    },
+    {
+      "id": "yang_mills.u1_wilson_action",
+      "api": "pl_math_u1_wilson_action"
+    },
+    {
+      "id": "yang_mills.correlator_effective_mass",
+      "api": "pl_math_correlator_effective_mass"
+    },
+    {
+      "id": "goldbach.is_prime_u64",
+      "api": "pl_math_is_prime_u64"
+    },
+    {
+      "id": "goldbach.verify",
+      "api": "pl_math_goldbach_verify"
+    },
+    {
+      "id": "goldbach.find_pair_bounded",
+      "api": "pl_math_goldbach_find_pair_bounded"
+    },
+    {
+      "id": "twin_primes.verify",
+      "api": "pl_math_twin_prime_verify"
+    },
+    {
+      "id": "twin_primes.next_bounded",
+      "api": "pl_math_twin_prime_next_bounded"
+    },
+    {
+      "id": "twin_primes.count_bounded",
+      "api": "pl_math_twin_prime_count_bounded"
+    },
+    {
+      "id": "halting.vm_step",
+      "api": "pl_math_vm_step"
+    },
+    {
+      "id": "halting.vm_run_bounded",
+      "api": "pl_math_vm_run_bounded"
+    },
+    {
+      "id": "halting.vm_trace_verify",
+      "api": "pl_math_vm_trace_verify"
+    },
+    {
+      "id": "hadwiger_nelson.unit_graph_build",
+      "api": "pl_math_unit_graph_build"
+    },
+    {
+      "id": "hadwiger_nelson.coloring_verify",
+      "api": "pl_math_graph_coloring_verify"
+    },
+    {
+      "id": "hadwiger_nelson.coloring_search_bounded",
+      "api": "pl_math_graph_coloring_search_bounded"
+    },
+    {
+      "id": "inscribed_square.point_on_polyline",
+      "api": "pl_math_point_on_polyline"
+    },
+    {
+      "id": "inscribed_square.verify",
+      "api": "pl_math_square_on_polyline_verify"
+    },
+    {
+      "id": "inscribed_square.search_sampled",
+      "api": "pl_math_inscribed_square_search_sampled"
+    },
+    {
+      "id": "legendre.interval",
+      "api": "pl_math_legendre_interval"
+    },
+    {
+      "id": "legendre.witness_verify",
+      "api": "pl_math_legendre_witness_verify"
+    },
+    {
+      "id": "legendre.find_prime_bounded",
+      "api": "pl_math_legendre_find_prime_bounded"
+    },
+    {
+      "id": "beal.power_sum_check",
+      "api": "pl_math_beal_power_sum_check"
+    },
+    {
+      "id": "beal.common_prime_divisor",
+      "api": "pl_math_beal_common_prime_divisor"
+    },
+    {
+      "id": "beal.counterexample_screen",
+      "api": "pl_math_beal_counterexample_screen"
+    },
+    {
+      "id": "perfect_cuboid.verify",
+      "api": "pl_math_perfect_cuboid_verify"
+    },
+    {
+      "id": "perfect_cuboid.face_diagonals",
+      "api": "pl_math_cuboid_face_diagonals"
+    },
+    {
+      "id": "perfect_cuboid.search_bounded",
+      "api": "pl_math_perfect_cuboid_search_bounded"
+    },
+    {
+      "id": "tate.fixed_vector_verify",
+      "api": "pl_math_tate_fixed_vector_verify"
+    },
+    {
+      "id": "tate.invariant_dimension_mod_prime",
+      "api": "pl_math_tate_invariant_dimension_mod_prime"
+    },
+    {
+      "id": "tate.cycle_span_rank_mod_prime",
+      "api": "pl_math_tate_cycle_span_rank_mod_prime"
+    },
+    {
+      "id": "matrix.multiply_f64",
+      "api": "pl_math_matrix_multiply_f64"
+    },
+    {
+      "id": "matrix.product_verify_f64",
+      "api": "pl_math_matrix_product_verify_f64"
+    },
+    {
+      "id": "matrix.scaling_exponent",
+      "api": "pl_math_matrix_scaling_exponent"
+    }
+  ]
+}

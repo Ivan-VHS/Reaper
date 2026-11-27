@@ -28,6 +28,6 @@ reaper-studio = "reaper.desktop:main"
 [tool.setuptools]
 packages = ["reaper", "reaper.kora", "reaper.harvest_bundle"]
 [tool.setuptools.package-data]
-"reaper" = ["systems_architectures.json", "systems_languages.json", "token_catalog.json", "atomic_quantum_catalogue.v1.json"]
+"reaper" = ["systems_architectures.json", "systems_languages.json", "token_catalog.json", "atomic_quantum_catalogue.v1.json", "mathematical_research.v1.json"]
 "reaper.kora" = ["manifest.json"]
 "reaper.harvest_bundle" = ["chunk-*.b64"]

@@ -159,6 +159,22 @@
         "tests/test_system_functions.py",
         "docs/SYSTEM_FUNCTIONS.md"
       ]
+    },
+    {
+      "id": "math.research-contracts.v1",
+      "status": "partial",
+      "summary": "Defines canonical typed contracts and strict bounded call-plan validation for 51 Pytyliki mathematical research kernels across 17 problem domains; the plan does not invoke native kernels or claim proofs of open conjectures.",
+      "evidence": [
+        "language/mathematical_research.v1.json",
+        "schemas/mathematical-research-contracts.v1.schema.json",
+        "reaper/research_math_contracts.py",
+        "reaper/mathematical_research.v1.json",
+        "tests/test_research_math_contracts.py",
+        "docs/MATHEMATICAL_RESEARCH_CONTRACTS_V1.md",
+        "reaper/runtime.py",
+        "stdlib/research_math.rpr",
+        "examples/mathematical_research.rpr"
+      ]
     }
   ],
   "interfaces": [
@@ -244,6 +260,14 @@
       "status": "implemented",
       "opt_in": false,
       "summary": "Records membership in the shared four-project OCTA-8 topology without introducing a runtime dependency."
+    },
+    {
+      "project": "pytyliki",
+      "interface": "pytyliki.mathematical-research-kernels.v1",
+      "mode": "versioned-json-contract",
+      "status": "partial",
+      "opt_in": true,
+      "summary": "Validates Pytyliki's versioned 51-symbol kernel manifest against Reaper's canonical typed catalog and prepares bounded call plans; direct C ABI dispatch remains a separate integration step."
     }
   ],
   "safety_boundaries": [

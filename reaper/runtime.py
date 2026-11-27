@@ -598,6 +598,67 @@ class Interpreter:
         register("token_info", token_info, 1, 1)
         register("token_is_reserved", token_is_reserved, 1, 1)
 
+        def research_kernel_catalog(area_id: Any = None) -> list[dict[str, Any]]:
+            from .research_math_contracts import load_research_math_catalog
+
+            if area_id is not None and not isinstance(area_id, str):
+                raise TypeError("research_kernel_catalog area id must be text")
+            catalog = load_research_math_catalog()
+            result: list[dict[str, Any]] = []
+            for area in catalog["areas"]:
+                if area_id is not None and area["id"] != area_id:
+                    continue
+                result.append({
+                    "id": area["id"],
+                    "name": area["name"],
+                    "problem_status": area["problem_status"],
+                    "claim_boundary": area["claim_boundary"],
+                    "functions": [
+                        {
+                            "id": function["id"],
+                            "api": function["api"],
+                            "arguments": function["args"],
+                            "returns": function["returns"],
+                            "effect": function["effect"],
+                            "evidence": function["evidence"],
+                        }
+                        for function in area["functions"]
+                    ],
+                })
+            return result
+
+        def research_kernel_plan(function_id: Any, arguments: Any) -> dict[str, Any]:
+            from .research_math_contracts import (
+                ResearchContractError,
+                find_math_kernel,
+                prepare_math_kernel_call,
+            )
+
+            if not isinstance(function_id, str):
+                raise TypeError("research_kernel_plan function id must be text")
+            if isinstance(arguments, dict):
+                normalized = arguments
+            elif isinstance(arguments, (list, tuple)):
+                function = find_math_kernel(function_id)
+                specs = function["args"]
+                if len(arguments) != len(specs):
+                    raise ValueError(
+                        f"{function_id} expects {len(specs)} positional argument(s), got {len(arguments)}"
+                    )
+                normalized = {
+                    spec["name"]: value for spec, value in zip(specs, arguments)
+                }
+            else:
+                raise TypeError("research_kernel_plan arguments must be a map or positional list")
+
+            try:
+                return prepare_math_kernel_call(function_id, normalized).to_payload()
+            except ResearchContractError:
+                raise
+
+        register("research_kernel_catalog", research_kernel_catalog, 0, 1)
+        register("research_kernel_plan", research_kernel_plan, 2, 2)
+
         register("_contract_graph_check", self.system_functions.contract_graph_check, 1, 1)
         register("_arena_slot", self.system_functions.arena_slot, 2, 2)
         register("_worker_budget", self.system_functions.worker_budget, 5, 5)
