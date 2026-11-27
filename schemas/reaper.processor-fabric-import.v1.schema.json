@@ -1,0 +1,408 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://reaper.dev/schemas/reaper.processor-fabric-import.v1.schema.json",
+  "title": "Reaper Processor Fabric Import Envelope v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "producer",
+    "source",
+    "host_evidence",
+    "fabric",
+    "constructs",
+    "resources",
+    "semantic_admission"
+  ],
+  "properties": {
+    "schema": {
+      "const": "reaper.processor-fabric-import.v1"
+    },
+    "version": {
+      "const": 1
+    },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version",
+        "interface"
+      ],
+      "properties": {
+        "name": {
+          "const": "Pytyliki"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "interface": {
+          "const": "pytyliki.processor-fabric.v2"
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "unit_id",
+        "sha256",
+        "byte_length",
+        "offset_unit"
+      ],
+      "properties": {
+        "unit_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "byte_length": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576
+        },
+        "offset_unit": {
+          "const": "utf8-byte"
+        }
+      }
+    },
+    "host_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "generation",
+        "sha256",
+        "completeness"
+      ],
+      "properties": {
+        "schema": {
+          "const": "pytyliki.processor-topology-evidence.v2"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "completeness": {
+          "enum": [
+            "complete",
+            "partial",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "fabric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "abi_major",
+        "generation",
+        "node_count",
+        "edge_count",
+        "nodes",
+        "edges"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "abi_major": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "node_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "edge_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16384
+        },
+        "nodes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "kind",
+              "state",
+              "semantic_ref"
+            ],
+            "properties": {
+              "id": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "kind": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 48
+              },
+              "state": {
+                "enum": [
+                  "declared",
+                  "verified",
+                  "ready",
+                  "available",
+                  "blocked",
+                  "completed",
+                  "failed",
+                  "disabled",
+                  "retired"
+                ]
+              },
+              "parent_id": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 1
+              },
+              "semantic_ref": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 128
+              }
+            }
+          }
+        },
+        "edges": {
+          "type": "array",
+          "maxItems": 16384,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "from_id",
+              "to_id",
+              "kind"
+            ],
+            "properties": {
+              "from_id": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "to_id": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "kind": {
+                "enum": [
+                  "depends-on",
+                  "maps-to",
+                  "uses",
+                  "produces"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "constructs": {
+      "type": "array",
+      "maxItems": 4096,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "process_id",
+          "semantic_id",
+          "kind",
+          "name",
+          "source_span",
+          "body_span",
+          "typing_status",
+          "effect_status"
+        ],
+        "properties": {
+          "process_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "semantic_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "kind": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 48
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 96
+          },
+          "source_span": {
+            "$ref": "#/$defs/span"
+          },
+          "body_span": {
+            "$ref": "#/$defs/span"
+          },
+          "typing_status": {
+            "enum": [
+              "pending",
+              "verified",
+              "rejected"
+            ]
+          },
+          "effect_status": {
+            "enum": [
+              "pending",
+              "verified",
+              "rejected"
+            ]
+          }
+        }
+      }
+    },
+    "resources": {
+      "type": "array",
+      "maxItems": 8192,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "resource_id",
+          "kind",
+          "contract_ref",
+          "ownership_status"
+        ],
+        "properties": {
+          "resource_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "kind": {
+            "enum": [
+              "address-space",
+              "memory-region",
+              "register-bank",
+              "register",
+              "device",
+              "dma-buffer"
+            ]
+          },
+          "contract_ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "ownership_status": {
+            "enum": [
+              "pending",
+              "verified",
+              "rejected"
+            ]
+          }
+        }
+      }
+    },
+    "semantic_admission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name_resolution",
+        "types",
+        "effects",
+        "ownership",
+        "capabilities",
+        "canonical_ir_emitted"
+      ],
+      "properties": {
+        "name_resolution": {
+          "enum": [
+            "pending",
+            "verified",
+            "rejected"
+          ]
+        },
+        "types": {
+          "enum": [
+            "pending",
+            "verified",
+            "rejected"
+          ]
+        },
+        "effects": {
+          "enum": [
+            "pending",
+            "verified",
+            "rejected"
+          ]
+        },
+        "ownership": {
+          "enum": [
+            "pending",
+            "verified",
+            "rejected"
+          ]
+        },
+        "capabilities": {
+          "enum": [
+            "pending",
+            "verified",
+            "rejected"
+          ]
+        },
+        "canonical_ir_emitted": {
+          "const": false
+        }
+      }
+    },
+    "execution_performed": {
+      "const": false
+    },
+    "hardware_access_performed": {
+      "const": false
+    }
+  },
+  "$defs": {
+    "span": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "length"
+      ],
+      "properties": {
+        "start": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}
