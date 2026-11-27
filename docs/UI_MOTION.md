@@ -56,3 +56,10 @@ The shared token, accessibility and documentation source is [Motion Constitution
 ### Product-specific maturity
 
 Reaper Studio has native Tk spring presentation, persisted Reduce Motion/Eco/Expressive preferences, editor/debugger and local LSP/DAP tooling. CODEX-66 and the language service are local; they are not a cloud AI agent or streamed AI Diff. AST fold and diff timeline states must be exposed only where the corresponding editor model exists. No motion may delay runtime execution, debugging or language-service work.
+
+
+## Mora Drapery Motion
+
+A restrained amber drapery accent is rendered only in the product masthead, above the editor and output panes. It uses irregular vertical fold spacing, dark valleys and narrow warm highlights; the small UI-thread wave is bounded to 1 px in Normal and 2.2 px in Expressive Motion. The phase advances at 110 ms intervals, so the texture reads as heavy cloth rather than a fast waveform.
+
+Reduce Motion, Eco Visuals, the operating-system preference and \`UI_REDUCED_MOTION\` freeze the cloth in its neutral shape. The banner is deliberately not placed behind the code editor, debugger, diagnostics, terminal or project tree. No cloth timer is allowed to affect source execution, language-service work or debug pauses.

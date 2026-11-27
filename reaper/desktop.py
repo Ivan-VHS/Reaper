@@ -35,7 +35,7 @@ from reaper.ide_support import SOURCE_EXTENSIONS, highlight_spans, iter_project_
 from reaper.language_service import LanguageService
 from reaper.codex66 import export_json as export_codex66_json
 from reaper.codex66_ui import Codex66Window
-from reaper.ui_motion import MotionController, MotionPreferences, fade_in_window
+from reaper.ui_motion import DraperyAccent, MotionController, MotionPreferences, fade_in_window
 from reaper.ui_theme import apply_theme, apply_ui_theme, set_dpi_awareness, toggle_theme
 
 APP_TITLE = "Reaper Studio · Ivan-VHS"
@@ -548,7 +548,9 @@ class ReaperStudio(tk.Tk):
         buttons = ttk.Frame(frame)
         buttons.pack(fill="x")
         def apply() -> None:
-            self._motion.update_preferences(MotionPreferences(reduce_var.get(), eco_var.get(), False, expressive_var.get()))
+            preferences = MotionPreferences(reduce_var.get(), eco_var.get(), False, expressive_var.get())
+            self._motion.update_preferences(preferences)
+            self._drapery_accent.set_preferences(preferences)
             window.destroy()
         ttk.Button(buttons, text="Сохранить", style="Primary.TButton", command=apply).pack(side="right")
         ttk.Button(buttons, text="Отмена", command=window.destroy).pack(side="right", padx=(0, 8))
@@ -666,6 +668,8 @@ class ReaperStudio(tk.Tk):
         ttk.Button(bar, text="CODEX-66", command=self.show_codex66, style="Toolbar.TButton").pack(side="left", padx=(7, 3))
         self.file_label = tk.StringVar(value="Untitled.rpr")
         ttk.Label(bar, textvariable=self.file_label, foreground="#64748b").pack(side="right", padx=8)
+        self._drapery_accent = DraperyAccent(self, app_key="reaper-studio", height=34)
+        self._drapery_accent.pack(fill="x", padx=10, pady=(0, 6))
 
     def _build_workspace(self) -> None:
         outer = ttk.Panedwindow(self, orient="horizontal")
