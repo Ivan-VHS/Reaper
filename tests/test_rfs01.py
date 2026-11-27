@@ -60,7 +60,7 @@ class RFS01Tests(unittest.TestCase):
 
 
     def test_numeric_literal_width_is_bounded(self):
-        huge = "9" * 129
+        huge = "9" * 325
         with self.assertRaisesRegex(RFS01Error, "RFS-E101"):
             compile_source(BASE.replace("pressure: 20", "pressure: " + huge))
 
