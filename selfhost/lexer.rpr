@@ -1,6 +1,6 @@
 # Stage-0 frontend code: this tokenizer is written in Reaper itself.
-# The first bootstrap slice intentionally covers ASCII identifiers. Unicode
-# identifier parity is tracked in docs/SELF_HOSTING_BOOTSTRAP.md.
+# The bootstrap slice supports ASCII and explicit Unicode script ranges.
+# Full Unicode XID conformance remains tracked in docs/SELF_HOSTING_BOOTSTRAP.md.
 
 craft is_ascii_letter(char) {
     yield (char >= "a" and char <= "z") or (char >= "A" and char <= "Z")
@@ -24,10 +24,6 @@ craft is_identifier_continue(char) {
 
 craft is_ascii_digit(char) {
     yield char >= "0" and char <= "9"
-}
-
-craft is_identifier_continue(char) {
-    yield is_ascii_letter(char) or is_ascii_digit(char) or char == "_"
 }
 
 craft keyword_kind(word) {
@@ -267,6 +263,11 @@ assert(unicode_tokens[2] == ["IDENT", "名", 1, 8], "CJK identifier recognition 
 
 make combining_tokens := tokenize("emit á")
 assert(combining_tokens[1] == ["IDENT", "á", 1, 6], "combining marks must continue identifiers")
+
+make cyrillic_tokens := tokenize("emit Привет_мир42")
+assert(cyrillic_tokens[1] == ["IDENT", "Привет_мир42", 1, 6], "Cyrillic letters, underscore and digits must continue identifiers")
+assert(cyrillic_tokens[size(cyrillic_tokens) - 1][0] == "EOF", "Unicode identifier scan must make progress and reach EOF")
+
 
 make russian_keyword_tokens := tokenize("пусть x := 1")
 assert(russian_keyword_tokens[0] == ["MAKE", "пусть", 1, 1], "Russian keyword alias mismatch")
