@@ -41,6 +41,8 @@ The state record is versioned and has the following slots:
 
 Do not mutate state records outside the module. Every transition returns a replacement record; `state_valid` checks the full shape and bounds.
 
+The simulated register snapshot contains ten positional values in this order: `CYCLE_CNT`, `REPAIR_BUDGET`, `REPAIR_LOW_WATERMARK`, `FAULT_PERIOD`, `FAULT_DUTY`, `FAULT_CTRL`, `CU_BUS_CTRL`, `NANO_ARRAY_CMD`, `SKEW_CORRECT_PS` and `BARRIER_FENCE_COUNT`. The fault-control mask is `EN=0x01 | MONUMENTAL=0x02 | INSTANT=0x04 | PERIODIC_ACTIVE=0x08`; the active snapshot is `0x0F`. Copper and nano command values are simulated profile values only.
+
 ## Execution and bytecode
 
 The type/role matrix contains four roles for each of `RULE`, `BOOT`, `START`, `ROOT` and `SCENARIO`. `validate_matrix_coverage` rejects missing combinations and non-20 fixture sets.
