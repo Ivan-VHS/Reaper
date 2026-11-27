@@ -1,0 +1,58 @@
+# Deterministic kernel event journal.
+# Event: [sequence, kind, subject, canonical_payload, logical_tick].
+# Payloads must be immutable, deterministic Reaper values supplied by the caller.
+# This ledger does not read a wall clock, generate entropy or hash arbitrary values.
+
+export craft kernel_trace_make() {
+    yield ["OK", ["reaper.kernel.trace.v1", 1, []]]
+}
+
+export craft kernel_trace_valid(trace) {
+    when size(trace) != 3 or trace[0] != "reaper.kernel.trace.v1" { yield false }
+    when trace[1] < 1 or size(trace[2]) > 100000 { yield false }
+    when trace[1] != size(trace[2]) + 1 { yield false }
+
+    vary index := 0
+    vary previous_tick := 0
+    loop while index < size(trace[2]) {
+        make event := trace[2][index]
+        when size(event) != 5 { yield false }
+        when event[0] != index + 1 or size(event[1]) == 0 or size(event[2]) == 0 { yield false }
+        when event[4] < previous_tick { yield false }
+        change previous_tick := event[4]
+        change index := index + 1
+    }
+    yield true
+}
+
+export craft kernel_trace_append(trace, kind, subject, payload, logical_tick) {
+    when not kernel_trace_valid(trace) { yield ["ERR", "kernel trace invariant failed"] }
+    when size(kind) == 0 or size(subject) == 0 { yield ["ERR", "trace event kind and subject are required"] }
+    when logical_tick < 0 { yield ["ERR", "logical tick cannot be negative"] }
+    when size(trace[2]) > 0 and logical_tick < trace[2][size(trace[2]) - 1][4] {
+        yield ["ERR", "trace logical time cannot move backwards"]
+    }
+    make event := [trace[1], kind, subject, payload, logical_tick]
+    make updated := ["reaper.kernel.trace.v1", trace[1] + 1, push(trace[2], event)]
+    yield ["OK", updated, event]
+}
+
+export craft kernel_trace_replay_matches(trace, expected) {
+    when not kernel_trace_valid(trace) { yield ["ERR", "kernel trace invariant failed"] }
+    when size(expected) != size(trace[2]) { yield ["ERR", "replay event count mismatch", size(trace[2]), size(expected)] }
+    vary index := 0
+    loop while index < size(expected) {
+        when size(expected[index]) != 4 { yield ["ERR", "replay expectation is malformed", index] }
+        make event := trace[2][index]
+        when event[1] != expected[index][0] or event[2] != expected[index][1] or event[3] != expected[index][2] or event[4] != expected[index][3] {
+            yield ["ERR", "deterministic replay mismatch", index, event, expected[index]]
+        }
+        change index := index + 1
+    }
+    yield ["OK", size(expected)]
+}
+
+export craft kernel_trace_events(trace) {
+    when not kernel_trace_valid(trace) { yield ["ERR", "kernel trace invariant failed"] }
+    yield ["OK", trace[2]]
+}
