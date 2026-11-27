@@ -159,6 +159,17 @@
         "tests/test_system_functions.py",
         "docs/SYSTEM_FUNCTIONS.md"
       ]
+    },
+    {
+      "id": "processor.intelligence.rpr-state-model",
+      "status": "implemented",
+      "summary": "Reaper .rpr reference-runtime module for versioned processor action/state ledgers, deterministic checkpoints, bounded pulse and memory summaries, logical replay scaling, source chunk validation, graph reduction and structured exports. Hardware effects are policy-only; native compiler lowering and live hardware acquisition are not claimed.",
+      "evidence": [
+        "stdlib/processor_intelligence.rpr",
+        "examples/processor_intelligence.rpr",
+        "tests/test_self_hosting.py",
+        "docs/PROCESSOR_INTELLIGENCE.md"
+      ]
     }
   ],
   "interfaces": [
@@ -202,6 +213,16 @@
         "docs/SYSTEM_FUNCTIONS.md",
         "tests/test_system_functions.py"
       ]
+    },
+    {
+      "id": "reaper.processor-intelligence.v1",
+      "format": "Exported Reaper .rpr module API with processor.state.v1 and processor.action.v1 records",
+      "direction": "provides",
+      "status": "implemented",
+      "evidence": [
+        "stdlib/processor_intelligence.rpr",
+        "docs/PROCESSOR_INTELLIGENCE.md"
+      ]
     }
   ],
   "integrations": [
@@ -244,6 +265,14 @@
       "status": "implemented",
       "opt_in": false,
       "summary": "Records membership in the shared four-project OCTA-8 topology without introducing a runtime dependency."
+    },
+    {
+      "project": "pytyliki",
+      "interface": "reaper.processor-intelligence.v1",
+      "mode": "pinned-reaper-source-import",
+      "status": "optional",
+      "opt_in": true,
+      "summary": "Pytyliki CI imports the version-pinned Reaper module for fixture-based processor action modeling and reporting. Native CPU discovery and measurements remain owned by Pytyliki C11."
     }
   ],
   "safety_boundaries": [
@@ -255,7 +284,8 @@
     "The system-functions v1 worker quota is cooperative in the Python reference runtime; it is not OS-enforced process isolation or a hard process-RSS limit.",
     "The arena-slot API limits tracked reference-runtime allocations and rejects escaped region allocations; it is not a zero-allocation host arena.",
     "Ephemeral comparison overwrites only its owned mutable working buffers and cannot erase caller-owned or immutable copies.",
-    "Contract graph, lease, local-only and rollback checks are runtime preflight functions until the native compiler gains compile-time evaluation, type-level leases and effect-checked module headers."
+    "Contract graph, lease, local-only and rollback checks are runtime preflight functions until the native compiler gains compile-time evaluation, type-level leases and effect-checked module headers.",
+    "Reaper Processor Intelligence is a reference-language state and reporting model. Slow-motion scales logical replay ticks, system-tray output is a host-renderable status record, and hardware write requests are simulation-plan-only; no physical CPU or device settings are changed."
   ],
   "extension_points": [
     "Canonical IR and selectable execution engines.",
@@ -264,6 +294,7 @@
     "Native C17 frontend stages with Python reference behavior as the compatibility oracle.",
     "Bounded vertical self-composition for deterministic compiler and data-flow transformation pipelines.",
     "Stable architecture concept IDs, layer metadata and bounded dependency graph validation.",
-    "Explicit stdlib/system.rpr APIs for bounded system operations, revision guards, local telemetry and reversible migration preflight."
+    "Explicit stdlib/system.rpr APIs for bounded system operations, revision guards, local telemetry and reversible migration preflight.",
+    "Versioned processor.state.v1/action.v1 records for deterministic processor trace analysis and optional Pytyliki report orchestration."
   ]
 }
