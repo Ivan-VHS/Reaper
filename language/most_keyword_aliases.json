@@ -2,8 +2,8 @@
   "schema": "most-keyword-aliases/v1",
   "language": "МОСТ",
   "canonical_language": "REAPER",
-  "version": "0.2.0",
-  "normalization": "exact-match; no stemming, inflection guessing, transliteration or synonym resolution",
+  "version": "0.3.0",
+  "normalization": "curated exact-match spellings; no stemming, inflection guessing, transliteration or synonym inference",
   "aliases": [
     {
       "source": "пусть",
@@ -272,6 +272,246 @@
     },
     {
       "source": "отложить",
+      "canonical": "defer",
+      "support": "lexical_reserved"
+    },
+    {
+      "source": "объявить",
+      "canonical": "make",
+      "support": "runtime"
+    },
+    {
+      "source": "создать",
+      "canonical": "make",
+      "support": "runtime"
+    },
+    {
+      "source": "присвоить",
+      "canonical": "change",
+      "support": "runtime"
+    },
+    {
+      "source": "перезаписать",
+      "canonical": "change",
+      "support": "runtime"
+    },
+    {
+      "source": "напечатать",
+      "canonical": "emit",
+      "support": "runtime"
+    },
+    {
+      "source": "показать",
+      "canonical": "emit",
+      "support": "runtime"
+    },
+    {
+      "source": "когда",
+      "canonical": "when",
+      "support": "runtime"
+    },
+    {
+      "source": "каждый",
+      "canonical": "each",
+      "support": "runtime"
+    },
+    {
+      "source": "среди",
+      "canonical": "in",
+      "support": "runtime"
+    },
+    {
+      "source": "повторять",
+      "canonical": "loop",
+      "support": "runtime"
+    },
+    {
+      "source": "верно",
+      "canonical": "true",
+      "support": "runtime"
+    },
+    {
+      "source": "неверно",
+      "canonical": "false",
+      "support": "runtime"
+    },
+    {
+      "source": "пусто",
+      "canonical": "nothing",
+      "support": "runtime"
+    },
+    {
+      "source": "либо",
+      "canonical": "or",
+      "support": "runtime"
+    },
+    {
+      "source": "подключить",
+      "canonical": "import",
+      "support": "runtime"
+    },
+    {
+      "source": "опубликовать",
+      "canonical": "export",
+      "support": "runtime"
+    },
+    {
+      "source": "под_именем",
+      "canonical": "as",
+      "support": "runtime"
+    },
+    {
+      "source": "пакет",
+      "canonical": "module",
+      "support": "lexical_reserved"
+    },
+    {
+      "source": "открытый",
+      "canonical": "pub",
+      "support": "lexical_reserved"
+    },
+    {
+      "source": "ритуал",
+      "canonical": "fn",
+      "support": "lexical_reserved"
+    },
+    {
+      "source": "каркас",
+      "canonical": "struct",
+      "support": "lexical_reserved"
+    },
+    {
+      "source": "вариант",
+      "canonical": "enum",
+      "support": "lexical_reserved"
+    },
+    {
+      "source": "контракт",
+      "canonical": "trait",
+      "support": "lexical_reserved"
+    },
+    {
+      "source": "воплощение",
+      "canonical": "impl",
+      "support": "lexical_reserved"
+    },
+    {
+      "source": "объявление_типа",
+      "canonical": "type",
+      "support": "lexical_reserved"
+    },
+    {
+      "source": "неизменная",
+      "canonical": "const",
+      "support": "lexical_reserved"
+    },
+    {
+      "source": "связка",
+      "canonical": "let",
+      "support": "lexical_reserved"
+    },
+    {
+      "source": "изменяемая",
+      "canonical": "mut",
+      "support": "lexical_reserved"
+    },
+    {
+      "source": "вернуть_из",
+      "canonical": "return",
+      "support": "lexical_reserved"
+    },
+    {
+      "source": "сопоставление",
+      "canonical": "match",
+      "support": "lexical_reserved"
+    },
+    {
+      "source": "контур",
+      "canonical": "region",
+      "support": "lexical_reserved"
+    },
+    {
+      "source": "необработанный",
+      "canonical": "raw",
+      "support": "lexical_reserved"
+    },
+    {
+      "source": "память_арены",
+      "canonical": "arena",
+      "support": "lexical_reserved"
+    },
+    {
+      "source": "сигнальный_поток",
+      "canonical": "signal",
+      "support": "lexical_reserved"
+    },
+    {
+      "source": "асинхронный",
+      "canonical": "async",
+      "support": "lexical_reserved"
+    },
+    {
+      "source": "дождаться",
+      "canonical": "await",
+      "support": "lexical_reserved"
+    },
+    {
+      "source": "испытание",
+      "canonical": "test",
+      "support": "lexical_reserved"
+    },
+    {
+      "source": "сборочно",
+      "canonical": "comptime",
+      "support": "lexical_reserved"
+    },
+    {
+      "source": "предусловие",
+      "canonical": "requires",
+      "support": "lexical_reserved"
+    },
+    {
+      "source": "постусловие",
+      "canonical": "ensures",
+      "support": "lexical_reserved"
+    },
+    {
+      "source": "опасный",
+      "canonical": "unsafe",
+      "support": "lexical_reserved"
+    },
+    {
+      "source": "внешний_модуль",
+      "canonical": "extern",
+      "support": "lexical_reserved"
+    },
+    {
+      "source": "ограничение",
+      "canonical": "where",
+      "support": "lexical_reserved"
+    },
+    {
+      "source": "освободить",
+      "canonical": "drop",
+      "support": "lexical_reserved"
+    },
+    {
+      "source": "для_каждого_элемента",
+      "canonical": "for",
+      "support": "lexical_reserved"
+    },
+    {
+      "source": "выйти_из_цикла",
+      "canonical": "break",
+      "support": "lexical_reserved"
+    },
+    {
+      "source": "следующий_элемент",
+      "canonical": "continue",
+      "support": "lexical_reserved"
+    },
+    {
+      "source": "отложенное_действие",
       "canonical": "defer",
       "support": "lexical_reserved"
     }
