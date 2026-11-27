@@ -19,6 +19,10 @@ make total := [1, 2, 3] :: map(double) :: sum()
 emit "total = " ++ text(total)
 ```
 
+## Expressive syntax contract
+
+Reaper favors concise composition without hidden semantics. The current `::` first-argument flow form remains the canonical pipeline operator; reusable patterns belong in named `craft` functions and standard-library combinators. Localized keyword aliases are explicit exact mappings, not fuzzy spelling rules. Every new syntax form must be specified and tested across the canonical frontend, runtime/VM, diagnostics and editor services before it is described as available. See [Expressive Precision: Syntax Design Rules v1](docs/EXPRESSIVE_PRECISION_SYNTAX_V1.md).
+
 Rules: explicit effects; no implicit file/network/clock access in ordinary expressions; no silent coercion; bounded steps, call depth and collections. See [runtime limits](docs/RUNTIME_PLATFORM.md).\n\n## Static type analysis\n\nThe optional `reaper typecheck program.rpr` command runs conservative type inference over the existing AST. It checks supported numeric and text operators, collection indexes and iteration, mutable bindings, and known call arity. Unknown values at module and host boundaries remain `Any`. This is a first semantic-analysis slice, not yet a complete sound type system with source annotations, user generics, null-flow refinement or exhaustive pattern matching. See [Polyglot capability layer](docs/POLYGLOT_CAPABILITY_LAYER.md) for the capability map and implementation status.
 
 ## Integrated product layer
