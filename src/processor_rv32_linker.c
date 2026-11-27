@@ -93,15 +93,30 @@ ReaperProcessorBackendStatus reaper_rv32_link(
             for (k = 0u; k < output->symbol_count; ++k)
                 if (output->symbols[k].symbol_id == symbol->symbol_id)
                     return REAPER_BACKEND_DUPLICATE_SYMBOL;
-            output->symbols[output->symbol_count].symbol_id = symbol->symbol_id;
-            output->symbols[output->symbol_count].address =
-                base_address + object_base[i] * 4u + symbol->value_offset;
             ++output->symbol_count;
         }
     }
     output->byte_count = total_words * 4u;
-    if ((uint64_t)base_address + output->byte_count > (uint64_t)UINT32_MAX + 1u)
+    if ((uint64_t)base_address + output->byte_count > UINT32_MAX)
         return REAPER_BACKEND_RELOCATION_RANGE;
+
+    /* Symbol addresses are calculated only after the full image range is bounded. */
+    {
+        uint32_t symbol_index = 0u;
+        for (i = 0u; i < object_count; ++i) {
+            const ReaperRv32Object *object = &objects[i];
+            for (j = 0u; j < object->symbol_count; ++j) {
+                const ReaperRv32Symbol *symbol = &object->symbols[j];
+                const uint64_t address = (uint64_t)base_address +
+                    (uint64_t)object_base[i] * 4u + symbol->value_offset;
+                if ((symbol->value_offset & 3u) != 0u || address > UINT32_MAX)
+                    return REAPER_BACKEND_RELOCATION_RANGE;
+                output->symbols[symbol_index].symbol_id = symbol->symbol_id;
+                output->symbols[symbol_index].address = (uint32_t)address;
+                ++symbol_index;
+            }
+        }
+    }
 
     for (i = 0u; i < object_count; ++i) {
         const ReaperRv32Object *object = &objects[i];
