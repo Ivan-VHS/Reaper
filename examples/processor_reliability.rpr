@@ -105,6 +105,35 @@ make skew_result := core["execute_bytecode"](state, skew_word[1])
 assert(skew_word[0] and skew_result[0], "corrective-skew opcode must dispatch through ROOT")
 change state := skew_result[1]
 
+
+# RAS event evidence and periodicity. These samples are deterministic fixtures.
+make ras_provider := ["windows-whea", "windows", "windows-whea.v1", true, true, true, "user", true, ["event-query", "persisted-record-read"]]
+assert(core["ras_provider_valid"](ras_provider), "read-only WHEA provider descriptor must validate")
+assert(not core["ras_provider_valid"](["windows-whea", "windows", "windows-whea.v1", true, true, false, "user", true, ["event-query"]]), "a provider with write authority must be rejected")
+make ras_event_1 := ["pytyliki.ras.event.v1", "event-1", "boot-1", "windows-whea", "package-0", "corrected", "low", "confirmed", 1000000000, "record-1"]
+make ras_event_2 := ["pytyliki.ras.event.v1", "event-2", "boot-1", "windows-whea", "package-0", "corrected", "low", "confirmed", 2000000000, "record-2"]
+make ras_event_3 := ["pytyliki.ras.event.v1", "event-3", "boot-1", "windows-whea", "package-0", "corrected", "low", "confirmed", 3000000000, "record-3"]
+make ras_event_4 := ["pytyliki.ras.event.v1", "event-4", "boot-1", "windows-whea", "package-0", "corrected", "low", "confirmed", 4000000000, "record-4"]
+make ras_series_1 := core["ras_series_new"](ras_event_1)
+make ras_series_2 := core["ras_series_record"](ras_series_1[1], ras_event_2)
+make ras_series_3 := core["ras_series_record"](ras_series_2[1], ras_event_3)
+make ras_series_4 := core["ras_series_record"](ras_series_3[1], ras_event_4)
+assert(ras_series_1[0] and ras_series_2[0] and ras_series_3[0] and ras_series_4[0], "RAS observations must append to a boot/provider/resource series")
+make ras_period := core["ras_periodicity_analyze"](ras_series_4[1][5])
+assert(ras_period[0] and ras_period[1] == 3 and ras_period[2] == 1000000000 and ras_period[4] == "periodic", "regular corrected hardware events must expose a periodic interval")
+assert(core["ras_recovery_action"](ras_event_4, ras_period, 4, false, false) == "warn-and-collect", "periodic corrected errors warn but do not trigger hardware writes")
+make ras_uncorrected := ["pytyliki.ras.event.v1", "event-5", "boot-1", "windows-whea", "page-17", "uncorrected_recoverable", "high", "confirmed", 5000000000, "record-5"]
+assert(core["ras_recovery_action"](ras_uncorrected, ras_period, 1, false, true) == "request-operator-and-os-review", "uncorrected errors require explicit OS capability")
+assert(core["ras_recovery_action"](ras_uncorrected, ras_period, 1, true, true) == "request-os-recovery", "a confirmed recoverable record may request an authorized OS path")
+make ras_fatal := ["pytyliki.ras.event.v1", "event-6", "boot-1", "windows-whea", "package-0", "uncorrected_fatal", "fatal", "confirmed", 6000000000, "record-6"]
+assert(core["ras_recovery_action"](ras_fatal, ras_period, 1, true, true) == "safe-stop-and-defer-to-kernel", "fatal events never enter a user-level retry loop")
+make ras_bc := core["bytecode_encode"](65, "RULE", 1, 4, 1)
+make ras_bc_result := core["execute_bytecode"](state, ras_bc[1])
+assert(ras_bc[0] and ras_bc_result[0] and ras_bc_result[2][1][0] == "RAS_DECISION" and ras_bc_result[2][1][1] == "warn-and-collect", "verified RAS bytecode must return a bounded periodic-warning decision")
+change state := ras_bc_result[1]
+make invalid_ras_bc := core["bytecode_encode"](65, "BOOT", 1, 4, 1)
+assert(not invalid_ras_bc[0], "unknown RAS opcode/domain combinations must be rejected")
+
 # Register, barrier and stream surfaces are explicit simulated descriptors.
 make registers := core["hardware_register_snapshot"](state)
 assert(registers[0] and size(registers[1]) == 10, "simulated register bank must expose ten registers")
