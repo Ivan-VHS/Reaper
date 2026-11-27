@@ -735,7 +735,7 @@ export craft bytecode_domain_name(code) {
 }
 
 export craft bytecode_opcode_valid(opcode) {
-    yield contains([16, 17, 18, 32, 33, 48, 49, 64, 65], opcode)
+    yield contains([16, 17, 18, 32, 33, 48, 49, 64, 65, 66, 67, 68, 69, 70], opcode)
 }
 
 export craft bytecode_encode(opcode, domain_type, operand_a, operand_b, flags) {
@@ -780,6 +780,7 @@ export craft opcode_role(opcode) {
     when opcode == 17 or opcode == 33 { yield "COMMAND" }
     when opcode == 18 { yield "SERVICE" }
     when opcode == 65 { yield "SERVICE" }
+    when contains([66, 67, 68, 69, 70], opcode) { yield "SERVICE" }
     when contains([16, 32, 48, 49, 64], opcode) { yield "OPERATION" }
     yield ""
 }
@@ -812,6 +813,11 @@ export craft execute_bytecode(state, word) {
     when opcode == 65 and instruction[1] != "RULE" {
         yield [false, state, [], "RPR-BC-0026: RAS classify opcode requires RULE domain"]
     }
+    when opcode == 66 and instruction[1] != "BOOT" { yield [false, state, [], "RPR-BC-0028: AP startup opcode requires BOOT domain"] }
+    when opcode == 67 and instruction[1] != "START" { yield [false, state, [], "RPR-BC-0029: APIC IPI opcode requires START domain"] }
+    when opcode == 68 and instruction[1] != "START" { yield [false, state, [], "RPR-BC-0030: timer preemption opcode requires START domain"] }
+    when opcode == 69 and instruction[1] != "RULE" { yield [false, state, [], "RPR-BC-0031: MCA handler opcode requires RULE domain"] }
+    when opcode == 70 and instruction[1] != "ROOT" { yield [false, state, [], "RPR-BC-0032: page recovery opcode requires ROOT domain"] }
     when opcode == 65 and (instruction[2] < 1 or instruction[2] > 4 or instruction[4] > 7) {
         yield [false, state, [], "RPR-BC-0027: RAS bytecode fields are outside bounds"]
     }
@@ -829,6 +835,10 @@ export craft execute_bytecode(state, word) {
     when opcode == 65 {
         make decision := ras_bytecode_decision(instruction[2], instruction[3], instruction[4])
         yield [true, executed[1], [executed[2], ["RAS_DECISION", decision]], ""]
+    }
+    when opcode >= 66 and opcode <= 70 {
+        make decision := processor_control_bytecode_decision(opcode, instruction[2], instruction[3], instruction[4])
+        yield [true, executed[1], [executed[2], ["PROCESSOR_CONTROL", decision]], ""]
     }
 
     when opcode == 48 {
@@ -1260,4 +1270,355 @@ export craft ras_bytecode_decision(kind_code, repeated_count, flags) {
     when kind_code == 3 { yield "safe-stop-and-defer-to-kernel" }
     when kind_code == 4 { yield "observe-and-correlate" }
     yield "reject-unknown-fault-kind"
+}
+
+
+# Processor control and platform adapter contracts.
+# Reaper computes verified plans. Privileged effects belong to a native kernel adapter.
+export make PROCESSOR_CONTROL_SCHEMA := "reaper.processor-control.v1"
+export make PROCESSOR_ADAPTER_SCHEMA := "reaper.processor-adapter.v1"
+export make AP_START_SCHEMA := "reaper.ap-start.v1"
+export make APIC_ROUTE_SCHEMA := "reaper.apic-route.v1"
+export make TIMER_PROFILE_SCHEMA := "reaper.timer-profile.v1"
+export make MCA_EVENT_SCHEMA := "reaper.mca-event.v1"
+export make PAGE_RECOVERY_SCHEMA := "reaper.page-recovery.v1"
+export make TS_DIAGNOSTIC_SCHEMA := "reaper.ras-diagnostic.v1"
+
+export craft processor_subsystem_matrix() {
+    yield [
+        ["ap-smp", "AP startup and SMP admission", "reaper-policy-implemented", "duckos-kernel-adapter-required", "init-sipi-admission"],
+        ["apic-ipi-timer", "APIC routing, IPI delivery and timer preemption", "reaper-policy-implemented", "duckos-kernel-adapter-required", "route-and-reschedule-plan"],
+        ["mca-msr", "MCA event handling and MSR reads", "reaper-policy-implemented", "privileged-x86-adapter-required", "allowlisted-read-only-msr"],
+        ["page-recovery", "OS page quarantine and verified replacement", "reaper-policy-implemented", "memory-manager-adapter-required", "transactional-page-recovery"],
+        ["linux-edac-mce", "Linux EDAC/MCE event provider", "provider-contract-implemented", "linux-provider-not-attached", "sysfs-tracefs-event-query"],
+        ["apple-swift", "Apple Swift hardware-event adapter", "abi-contract-implemented", "swift-adapter-not-attached", "read-only-os-diagnostics"],
+        ["rust-native-ras", "Rust native RAS adapter", "abi-contract-implemented", "rust-adapter-not-attached", "versioned-native-abi"],
+        ["typescript-diagnostics", "TypeScript diagnostics interface", "schema-contract-implemented", "typescript-client-not-attached", "read-only-diagnostic-envelope"],
+        ["physical-material-repair", "Physical copper/interconnect/silicon repair", "not-software-solvable", "external-lab-or-component-replacement", "no-software-repair-command"]
+    ]
+}
+
+export craft processor_subsystem_entry(subsystem_id) {
+    each item in processor_subsystem_matrix() {
+        when item[0] == subsystem_id { yield item }
+    }
+    yield nothing
+}
+
+export craft processor_adapter_valid(adapter) {
+    # [schema, id, subsystem, platform, language, abi, authority, available, operations]
+    when kind(adapter) != "list" or size(adapter) != 9 { yield false }
+    when adapter[0] != PROCESSOR_ADAPTER_SCHEMA { yield false }
+    each index in [1, 2, 3, 4, 5] {
+        when kind(adapter[index]) != "text" or size(adapter[index]) == 0 { yield false }
+    }
+    when not contains(["duckos", "linux", "windows", "macos", "any"], adapter[3]) { yield false }
+    when not contains(["c", "assembly", "rust", "swift", "typescript", "reaper"], adapter[4]) { yield false }
+    when not contains(["read-only", "kernel-read", "kernel-control", "user-control"], adapter[6]) { yield false }
+    when kind(adapter[7]) != "boolean" or kind(adapter[8]) != "list" { yield false }
+    each operation in adapter[8] {
+        when not contains(["event-query", "counter-read", "persisted-record-read", "msr-read", "ap-start", "ipi-send", "timer-arm", "page-quarantine", "page-replace", "diagnostic-export"], operation) {
+            yield false
+        }
+    }
+    yield true
+}
+
+export craft processor_adapter_admits(adapter, subsystem_id, platform, operation, authority) {
+    when not processor_adapter_valid(adapter) { yield "reject-adapter-schema" }
+    when adapter[2] != subsystem_id and adapter[2] != "processor-control" { yield "reject-adapter-subsystem" }
+    when adapter[3] != platform and adapter[3] != "any" { yield "reject-platform-mismatch" }
+    when adapter[6] != authority { yield "reject-insufficient-authority" }
+    when not adapter[7] { yield "adapter-not-attached" }
+    when not contains(adapter[8], operation) { yield "reject-unsupported-operation" }
+    yield "admit-request-to-native-adapter"
+}
+
+export craft ap_startup_valid(ap) {
+    # [schema, boot_id, cpu_id, apic_id, phase, gdt, idt, stack, per_cpu, lapic, trampoline, generation]
+    when kind(ap) != "list" or size(ap) != 12 { yield false }
+    when ap[0] != AP_START_SCHEMA { yield false }
+    when kind(ap[1]) != "text" or size(ap[1]) == 0 { yield false }
+    when not valid_integer(ap[2], 1, 4095) or not valid_integer(ap[3], 1, 4294967295) { yield false }
+    when not contains(["discovered", "prepared", "ready-to-start", "startup-sent", "online", "failed", "quarantined"], ap[4]) { yield false }
+    each index in [5, 6, 7, 8, 9, 10] {
+        when kind(ap[index]) != "boolean" { yield false }
+    }
+    when not valid_integer(ap[11], 0, SAFE_INTEGER_MAX) { yield false }
+    yield true
+}
+
+export craft ap_startup_readiness(ap, bsp_online, expected_generation) {
+    when not ap_startup_valid(ap) { yield "reject-invalid-ap-record" }
+    when kind(bsp_online) != "boolean" or not bsp_online { yield "reject-bsp-not-online" }
+    when ap[11] != expected_generation { yield "reject-stale-topology-generation" }
+    when ap[4] != "ready-to-start" { yield "reject-ap-not-prepared" }
+    when not ap[5] or not ap[6] or not ap[7] or not ap[8] or not ap[9] or not ap[10] {
+        yield "reject-incomplete-per-cpu-startup-resources"
+    }
+    yield "ready-for-kernel-init-sipi"
+}
+
+export craft ap_startup_admission(ap, bsp_online, expected_generation, adapter) {
+    make readiness := ap_startup_readiness(ap, bsp_online, expected_generation)
+    when readiness != "ready-for-kernel-init-sipi" { yield readiness }
+    yield processor_adapter_admits(adapter, "ap-smp", "duckos", "ap-start", "kernel-control")
+}
+
+export craft ap_startup_transition(ap, next_phase) {
+    when not ap_startup_valid(ap) { yield [false, ap, "RPR-AP-0001: invalid AP startup record"] }
+    when not contains(["prepared", "ready-to-start", "startup-sent", "online", "failed", "quarantined"], next_phase) {
+        yield [false, ap, "RPR-AP-0002: unknown AP phase"]
+    }
+    when ap[4] == "discovered" and next_phase != "prepared" { yield [false, ap, "RPR-AP-0003: AP must be prepared first"] }
+    when ap[4] == "prepared" and next_phase != "ready-to-start" and next_phase != "failed" { yield [false, ap, "RPR-AP-0004: AP resources must pass readiness before start"] }
+    when ap[4] == "ready-to-start" and next_phase != "startup-sent" and next_phase != "failed" { yield [false, ap, "RPR-AP-0005: INIT/SIPI must be sent by the kernel adapter"] }
+    when ap[4] == "startup-sent" and next_phase != "online" and next_phase != "failed" { yield [false, ap, "RPR-AP-0006: AP must report online or fail"] }
+    when ap[4] == "online" and next_phase != "quarantined" { yield [false, ap, "RPR-AP-0007: online AP requires a drain protocol before release"] }
+    yield [true, [ap[0], ap[1], ap[2], ap[3], next_phase, ap[5], ap[6], ap[7], ap[8], ap[9], ap[10], ap[11]], ""]
+}
+
+export craft ap_smp_topology_valid(topology) {
+    # [schema, boot_id, generation, bsp_id, discovered_ap_ids, online_cpu_ids, maximum_online]
+    when kind(topology) != "list" or size(topology) != 7 { yield false }
+    when topology[0] != PROCESSOR_CONTROL_SCHEMA { yield false }
+    when kind(topology[1]) != "text" or size(topology[1]) == 0 { yield false }
+    when not valid_integer(topology[2], 0, SAFE_INTEGER_MAX) or not valid_integer(topology[3], 0, 4095) { yield false }
+    when kind(topology[4]) != "list" or kind(topology[5]) != "list" { yield false }
+    when not valid_integer(topology[6], 1, 4096) or size(topology[5]) > topology[6] { yield false }
+    when not contains(topology[5], topology[3]) { yield false }
+    each cpu_id in topology[4] {
+        when not valid_integer(cpu_id, 1, 4095) or cpu_id == topology[3] { yield false }
+    }
+    each cpu_id in topology[5] {
+        when not valid_integer(cpu_id, 0, 4095) { yield false }
+    }
+    yield true
+}
+
+export craft ap_smp_admit_cpu(topology, ap) {
+    when not ap_smp_topology_valid(topology) or not ap_startup_valid(ap) {
+        yield [false, topology, "RPR-SMP-0001: topology or AP record is invalid"]
+    }
+    when ap[1] != topology[1] or ap[11] != topology[2] { yield [false, topology, "RPR-SMP-0002: AP boot identity or topology generation is stale"] }
+    when not contains(topology[4], ap[2]) { yield [false, topology, "RPR-SMP-0003: AP is absent from discovered topology"] }
+    when contains(topology[5], ap[2]) { yield [false, topology, "RPR-SMP-0004: AP is already online"] }
+    when size(topology[5]) >= topology[6] { yield [false, topology, "RPR-SMP-0005: online CPU capacity is exhausted"] }
+    when ap[4] != "online" { yield [false, topology, "RPR-SMP-0006: AP has not completed startup handshake"] }
+    make online := push(topology[5], ap[2])
+    yield [true, [topology[0], topology[1], topology[2], topology[3], topology[4], online, topology[6]], ""]
+}
+
+export craft apic_route_valid(route) {
+    # [schema, source_cpu, destination_cpu, vector, delivery, trigger, masked, topology_generation]
+    when kind(route) != "list" or size(route) != 8 { yield false }
+    when route[0] != APIC_ROUTE_SCHEMA { yield false }
+    when not valid_integer(route[1], 0, 4095) or not valid_integer(route[2], 0, 4095) { yield false }
+    when route[1] == route[2] or not valid_integer(route[3], 32, 255) { yield false }
+    when not contains(["fixed", "nmi", "reschedule", "tlb-shootdown"], route[4]) { yield false }
+    when not contains(["edge", "level"], route[5]) or kind(route[6]) != "boolean" { yield false }
+    when not valid_integer(route[7], 0, SAFE_INTEGER_MAX) { yield false }
+    yield true
+}
+
+export craft apic_ipi_decision(route, source_online, destination_online, current_generation, adapter) {
+    when not apic_route_valid(route) { yield "reject-invalid-apic-route" }
+    when kind(source_online) != "boolean" or kind(destination_online) != "boolean" { yield "reject-cpu-state-type" }
+    when not source_online or not destination_online { yield "reject-offline-ipi-endpoint" }
+    when route[7] != current_generation { yield "reject-stale-topology-generation" }
+    when route[6] { yield "reject-masked-ipi-route" }
+    yield processor_adapter_admits(adapter, "apic-ipi-timer", "duckos", "ipi-send", "kernel-control")
+}
+
+export craft timer_profile_valid(timer) {
+    # [schema, clock_source, frequency_hz, quantum_ticks, enabled, mode, adapter_id]
+    when kind(timer) != "list" or size(timer) != 7 { yield false }
+    when timer[0] != TIMER_PROFILE_SCHEMA { yield false }
+    when not contains(["tsc-deadline", "lapic-countdown", "hpet", "pit"], timer[1]) { yield false }
+    when not valid_integer(timer[2], 1, 10000000000) or not valid_integer(timer[3], 1, 1000000) { yield false }
+    when kind(timer[4]) != "boolean" or not contains(["oneshot", "periodic"], timer[5]) { yield false }
+    when kind(timer[6]) != "text" or size(timer[6]) == 0 { yield false }
+    yield true
+}
+
+export craft timer_preemption_decision(timer, elapsed_ticks, remaining_quantum, interrupts_enabled, reschedule_pending) {
+    when not timer_profile_valid(timer) { yield "reject-invalid-timer-profile" }
+    when not timer[4] { yield "timer-disabled" }
+    when not valid_integer(elapsed_ticks, 0, SAFE_INTEGER_MAX) or not valid_integer(remaining_quantum, 0, SAFE_INTEGER_MAX) { yield "reject-invalid-tick-accounting" }
+    when kind(interrupts_enabled) != "boolean" or kind(reschedule_pending) != "boolean" { yield "reject-invalid-interrupt-state" }
+    when not interrupts_enabled { yield "defer-tick-until-interrupts-enabled" }
+    when reschedule_pending { yield "coalesce-existing-reschedule-request" }
+    when elapsed_ticks < remaining_quantum { yield "account-quantum-without-preemption" }
+    yield "request-reschedule-through-kernel-ipi-adapter"
+}
+
+export craft timer_preemption_admission(timer, elapsed_ticks, remaining_quantum, interrupts_enabled, reschedule_pending, adapter) {
+    make decision := timer_preemption_decision(timer, elapsed_ticks, remaining_quantum, interrupts_enabled, reschedule_pending)
+    when decision != "request-reschedule-through-kernel-ipi-adapter" { yield decision }
+    yield processor_adapter_admits(adapter, "apic-ipi-timer", "duckos", "timer-arm", "kernel-control")
+}
+
+export craft mca_msr_allowlisted(msr) {
+    when not valid_integer(msr, 0, 4095) { yield false }
+    when contains([377, 378], msr) { yield true }
+    when msr >= 1024 and msr <= 1279 { yield true }
+    yield false
+}
+
+export craft mca_msr_read_admission(msr, cpuid_mca, adapter) {
+    when kind(cpuid_mca) != "boolean" or not cpuid_mca { yield "reject-mca-not-advertised" }
+    when not mca_msr_allowlisted(msr) { yield "reject-msr-not-allowlisted" }
+    when not processor_adapter_valid(adapter) { yield "reject-adapter-schema" }
+    when adapter[2] != "mca-msr" and adapter[2] != "processor-control" { yield "reject-adapter-subsystem" }
+    when adapter[3] != "duckos" and adapter[3] != "any" { yield "reject-platform-mismatch" }
+    when adapter[6] != "kernel-read" { yield "reject-msr-read-requires-kernel-privilege" }
+    when not adapter[7] { yield "adapter-not-attached" }
+    when not contains(adapter[8], "msr-read") { yield "reject-msr-read-not-declared" }
+    yield "admit-allowlisted-msr-read"
+}
+
+export craft mca_event_valid(event) {
+    # [schema, event_id, boot_id, bank, status_valid, uncorrected, context_corrupt, address_valid, scope, timestamp_ns, provider_ref, confidence]
+    when kind(event) != "list" or size(event) != 12 { yield false }
+    when event[0] != MCA_EVENT_SCHEMA { yield false }
+    when kind(event[1]) != "text" or size(event[1]) == 0 or kind(event[2]) != "text" or size(event[2]) == 0 { yield false }
+    when not valid_integer(event[3], 0, 255) { yield false }
+    each index in [4, 5, 6, 7] {
+        when kind(event[index]) != "boolean" { yield false }
+    }
+    when kind(event[8]) != "text" or size(event[8]) == 0 or not valid_integer(event[9], 0, SAFE_INTEGER_MAX) { yield false }
+    when kind(event[10]) != "text" or size(event[10]) == 0 { yield false }
+    when not contains(["confirmed", "supported", "indicative", "unknown", "conflicted"], event[11]) { yield false }
+    yield true
+}
+
+export craft mca_handler_decision(event, page_recovery_supported) {
+    when not mca_event_valid(event) { yield "reject-invalid-mca-record" }
+    when not event[4] { yield "ignore-invalid-mca-status" }
+    when event[6] { yield "safe-stop-context-corrupt-defer-to-kernel-fatal-path" }
+    when event[5] and event[11] != "confirmed" { yield "quarantine-evidence-and-request-operator-review" }
+    when event[5] and event[7] and page_recovery_supported { yield "request-page-recovery-through-memory-manager" }
+    when event[5] { yield "request-kernel-machine-check-recovery-policy" }
+    yield "record-corrected-machine-check-and-monitor"
+}
+
+export craft mca_handler_admission(event, page_recovery_supported, adapter) {
+    make decision := mca_handler_decision(event, page_recovery_supported)
+    when decision == "reject-invalid-mca-record" or decision == "ignore-invalid-mca-status" { yield decision }
+    yield processor_adapter_admits(adapter, "mca-msr", "duckos", "msr-read", "kernel-read")
+}
+
+export craft page_recovery_plan_valid(plan) {
+    # [schema, page_ref, source_frame, state, pinned, dirty, refcount, replacement_ref, copy_verified, generation, deadline_ns]
+    when kind(plan) != "list" or size(plan) != 11 { yield false }
+    when plan[0] != PAGE_RECOVERY_SCHEMA { yield false }
+    when kind(plan[1]) != "text" or size(plan[1]) == 0 or kind(plan[7]) != "text" or size(plan[7]) == 0 { yield false }
+    when not valid_integer(plan[2], 0, SAFE_INTEGER_MAX) or not contains(["present", "poisoned", "quarantined", "offline", "replaced"], plan[3]) { yield false }
+    each index in [4, 5, 8] {
+        when kind(plan[index]) != "boolean" { yield false }
+    }
+    when not valid_integer(plan[6], 0, 1000000) or not valid_integer(plan[9], 0, SAFE_INTEGER_MAX) or not valid_integer(plan[10], 1, SAFE_INTEGER_MAX) { yield false }
+    yield true
+}
+
+export craft page_recovery_decision(plan, event, rollback_ready) {
+    when not page_recovery_plan_valid(plan) or not mca_event_valid(event) { yield "reject-invalid-page-or-mca-evidence" }
+    when not event[4] or not event[5] or not event[7] { yield "reject-page-recovery-without-valid-uncorrected-address" }
+    when event[11] != "confirmed" { yield "defer-page-recovery-low-confidence" }
+    when plan[3] != "poisoned" and plan[3] != "quarantined" { yield "reject-page-not-poisoned" }
+    when plan[4] or plan[6] > 0 { yield "defer-pinned-or-referenced-page" }
+    when plan[5] and not plan[8] { yield "require-copy-verify-before-replacement" }
+    when kind(rollback_ready) != "boolean" or not rollback_ready { yield "reject-no-rollback-path" }
+    yield "admit-transactional-page-quarantine-and-replacement"
+}
+
+export craft page_recovery_admission(plan, event, rollback_ready, adapter) {
+    make decision := page_recovery_decision(plan, event, rollback_ready)
+    when decision != "admit-transactional-page-quarantine-and-replacement" { yield decision }
+    yield processor_adapter_admits(adapter, "page-recovery", "duckos", "page-replace", "kernel-control")
+}
+
+export craft linux_edac_provider_descriptor() {
+    yield [PROCESSOR_ADAPTER_SCHEMA, "linux-edac-mce", "linux-edac-mce", "linux", "c", "sysfs-tracefs-ras-v1", "read-only", false, ["event-query", "counter-read", "persisted-record-read"]]
+}
+
+export craft apple_swift_ras_adapter_descriptor() {
+    yield [PROCESSOR_ADAPTER_SCHEMA, "apple-swift-ras", "apple-ras", "macos", "swift", "swift-cabi-ras-v1", "read-only", false, ["event-query", "persisted-record-read", "diagnostic-export"]]
+}
+
+export craft rust_native_ras_adapter_descriptor() {
+    yield [PROCESSOR_ADAPTER_SCHEMA, "rust-native-ras", "processor-control", "any", "rust", "dabi64-ras-v1", "read-only", false, ["event-query", "counter-read", "persisted-record-read", "diagnostic-export"]]
+}
+
+export craft typescript_diagnostics_adapter_descriptor() {
+    yield [PROCESSOR_ADAPTER_SCHEMA, "typescript-ras-diagnostics", "processor-control", "any", "typescript", "json-rpc-ras-v1", "read-only", false, ["event-query", "diagnostic-export"]]
+}
+
+export craft typescript_diagnostic_valid(packet) {
+    # [schema, boot_id, event_id, subsystem, severity, confidence, timestamp_ns, message, source_ref]
+    when kind(packet) != "list" or size(packet) != 9 { yield false }
+    when packet[0] != TS_DIAGNOSTIC_SCHEMA { yield false }
+    each index in [1, 2, 3, 7, 8] {
+        when kind(packet[index]) != "text" or size(packet[index]) == 0 { yield false }
+    }
+    when not contains(["info", "warning", "error", "fatal"], packet[4]) { yield false }
+    when not contains(["confirmed", "supported", "indicative", "unknown", "conflicted"], packet[5]) { yield false }
+    when not valid_integer(packet[6], 0, SAFE_INTEGER_MAX) { yield false }
+    yield true
+}
+
+export craft typescript_diagnostic_export(packet, adapter) {
+    when not typescript_diagnostic_valid(packet) { yield [false, [], "RPR-TS-0001: invalid diagnostics packet"] }
+    when not processor_adapter_valid(adapter) or adapter[4] != "typescript" or adapter[5] != "json-rpc-ras-v1" {
+        yield [false, [], "RPR-TS-0002: TypeScript diagnostics adapter ABI mismatch"]
+    }
+    when adapter[6] != "read-only" or not contains(adapter[8], "diagnostic-export") {
+        yield [false, [], "RPR-TS-0003: diagnostics interface must be read-only"]
+    }
+    yield [true, packet, "read-only-export-request"]
+}
+
+export craft physical_repair_assessment(material, damage_kind, software_authority) {
+    when not contains(["copper", "silicon", "package-substrate", "bond-wire"], material) {
+        yield [false, "unknown-material", "RPR-PHYSICAL-0001: material is not registered"]
+    }
+    when not contains(["open-circuit", "short-circuit", "delamination", "electromigration", "crack", "thermal-damage"], damage_kind) {
+        yield [false, "unknown-damage", "RPR-PHYSICAL-0002: damage kind is not registered"]
+    }
+    when kind(software_authority) != "boolean" { yield [false, "invalid-authority", "RPR-PHYSICAL-0003: authority flag must be boolean"] }
+    yield [true, "not-software-repairable", "isolate-affected-resource-and-request-qualified-lab-inspection-or-component-replacement"]
+}
+
+export craft processor_control_bytecode_decision(opcode, operand_a, operand_b, flags) {
+    when not valid_integer(opcode, 66, 70) or not valid_integer(operand_a, 0, 65535) or
+         not valid_integer(operand_b, 0, 65535) or not valid_integer(flags, 0, 65535) {
+        yield "reject-invalid-processor-control-instruction"
+    }
+    when opcode == 66 {
+        when flags % 64 != 63 or operand_a == 0 or operand_b == 0 { yield "reject-ap-startup-readiness-bitmap" }
+        yield "admit-ap-startup-to-kernel-adapter"
+    }
+    when opcode == 67 {
+        when operand_a == operand_b or operand_a > 4095 or operand_b > 4095 { yield "reject-invalid-ipi-endpoints" }
+        when flags < 32 or flags > 255 { yield "reject-invalid-ipi-vector" }
+        yield "admit-ipi-route-to-kernel-adapter"
+    }
+    when opcode == 68 {
+        when operand_b == 0 or operand_a < operand_b { yield "account-timer-tick-without-preemption" }
+        when flags % 2 == 0 { yield "defer-preemption-interrupts-disabled" }
+        yield "request-reschedule-through-kernel-timer-adapter"
+    }
+    when opcode == 69 {
+        when operand_a > 255 { yield "reject-invalid-mca-bank" }
+        when flags % 2 == 0 { yield "ignore-invalid-mca-status" }
+        when (flags // 2) % 2 == 1 { yield "safe-stop-context-corrupt" }
+        when (flags // 4) % 2 == 1 { yield "request-kernel-machine-check-recovery-policy" }
+        yield "record-corrected-machine-check"
+    }
+    when opcode == 70 {
+        when operand_a == 0 or operand_b == 0 { yield "reject-invalid-page-recovery-reference" }
+        when flags % 8 != 7 { yield "reject-page-recovery-preconditions" }
+        yield "admit-page-recovery-to-memory-manager"
+    }
+    yield "reject-unknown-processor-control-opcode"
 }
