@@ -91,7 +91,7 @@ Noise attenuation uses an amplitude ratio `r` and the standard dB relation `20 Ã
 
 ## 5. Execution and safety limits
 
-The reference runtime is deterministic and single-threaded. Nodes and links are processed in declaration order; signal frames are filtered by provenance; all iteration is bounded.
+The reference runtime is deterministic and single-threaded. Nodes and links are processed in declaration order; signal frames are filtered by provenance; all iteration is bounded. Phase-gate results are cached by node-state revision, with a global comparison budget to bound worst-case re-evaluation.
 
 | Resource | v1.0 limit |
 |---|---:|
@@ -101,6 +101,8 @@ The reference runtime is deterministic and single-threaded. Nodes and links are 
 | Nodes | 4,096 |
 | Links | 16,384 |
 | Phase gates | 4,096 |
+| Executed flow/recovery steps | 1,000,000 |
+| Evaluated phase comparisons | 1,048,576 |
 | Contrasts | 16,384 |
 | Signal frames | 65,536 |
 | Signal payload | 4 KiB |
