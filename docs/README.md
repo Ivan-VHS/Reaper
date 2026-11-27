@@ -16,6 +16,7 @@ Start with the [project README](../README.md) for installation, first commands a
 - [Foundational frameworks 1–5](FOUNDATIONAL_FRAMEWORKS_V1.md) — executable Reaper contracts for Framework frame, Platform, Environment, Infrastructure and Architecture.
 - [Hardware language track](HARDWARE_LANGUAGE.md)
 - [Typed Registry v1](TYPED_REGISTRY.md) — Reaper-native type, layout, platform, ABI, effect and capability contracts.
+- [Neural Systems Contract v1](NEURAL_SYSTEMS_CONTRACT_V1.md) — bounded dense neural inference/training, deterministic contracts and the twenty-profile architecture catalog.
 - [System Runtime ABI v1](SYSTEM_RUNTIME_ABI_V1.md)
 - [DABI64 Desktop Host v1](DABI64_DESKTOP_HOST_V1.md)
 - [Implementation roadmap](IMPLEMENTATION_ROADMAP.md)

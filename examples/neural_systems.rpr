@@ -1,0 +1,107 @@
+# Reaper Neural Systems v1 conformance fixture.
+import "../stdlib/neural_systems.rpr" as neural
+
+make profiles := neural["profile_catalog"]()
+
+make catalog_status := neural["validate_profile_catalog"](profiles)
+assert(size(profiles) == 20, "canonical Reaper profile catalog must contain twenty entries")
+assert(catalog_status == "", "the twenty-profile catalog must be unique and complete")
+
+make seed_model := neural["network"](
+    [1, 1],
+    [[[0.0]]],
+    [[0.0]],
+    ["linear"],
+    0.1,
+    100
+)
+assert(neural["validate_network"](seed_model) == "", "valid seed model must pass")
+
+make before := neural["predict"](seed_model, [2.0])
+assert(before[0] == "OK" and before[1][0] == 0.0, "initial prediction must be zero")
+
+make trained_once := neural["train_step"](seed_model, [2.0], [4.0])
+assert(trained_once[0] == "OK", "one bounded SGD step must succeed")
+assert(trained_once[1][2][0][0][0] == 0.8, "SGD must update the weight deterministically")
+assert(trained_once[1][3][0][0] == 0.4, "SGD must update the bias deterministically")
+
+make after := neural["predict"](trained_once[1], [2.0])
+assert(after[0] == "OK" and after[1][0] > before[1][0], "training must improve this sample prediction")
+
+make hidden_model := neural["network"](
+    [2, 2, 1],
+    [
+        [[0.5, -0.25], [0.1, 0.3]],
+        [[0.8, -0.5]]
+    ],
+    [[0.0, 0.1], [0.0]],
+    ["relu", "linear"],
+    0.01,
+    100
+)
+assert(neural["validate_network"](hidden_model) == "", "two-layer model must pass")
+make hidden_prediction := neural["predict"](hidden_model, [1.0, 2.0])
+assert(hidden_prediction[0] == "OK" and size(hidden_prediction[1]) == 1, "hidden-layer inference must return one output")
+
+make batch_a := neural["train_batch"](seed_model, [[[2.0], [4.0]], [[1.0], [2.0]]], 4)
+make batch_b := neural["train_batch"](seed_model, [[[2.0], [4.0]], [[1.0], [2.0]]], 4)
+assert(batch_a[0] == "OK" and batch_b[0] == "OK", "bounded batch training must complete")
+assert(batch_a[1] == batch_b[1], "fixed-order training must be reproducible")
+assert(size(batch_a[2]) == 4, "one mean loss value must be produced per epoch")
+
+make bad_width := neural["predict"](seed_model, [1.0, 2.0])
+assert(bad_width[0] == "ERR", "wrong input width must fail closed")
+
+make too_many_epochs := neural["train_batch"](seed_model, [[[2.0], [4.0]]], 101)
+assert(too_many_epochs[0] == "ERR", "work beyond the declared step budget must fail")
+
+make contract_result := neural["make_contract"](
+    profiles[0],
+    seed_model,
+    "offline_batch",
+    64,
+    100
+)
+assert(contract_result[0] == "OK", "valid neural contract must be created")
+assert(neural["validate_contract"](contract_result[1]) == "", "local deterministic contract must pass")
+
+make invalid_mode := neural["make_contract"](
+    profiles[0],
+    seed_model,
+    "remote_autonomous",
+    64,
+    100
+)
+assert(invalid_mode[0] == "ERR", "unlisted execution modes must fail")
+
+make source_contract := contract_result[1]
+make invalid_external := [
+    source_contract[0],
+    source_contract[1],
+    source_contract[2],
+    source_contract[3],
+    source_contract[4],
+    source_contract[5],
+    source_contract[6],
+    "external_upload",
+    source_contract[8],
+    source_contract[9],
+    source_contract[10]
+]
+assert(neural["validate_contract"](invalid_external) != "", "external data export must not be implicit")
+
+make oversized_model := neural["network"](
+    [513, 1],
+    [[]],
+    [[]],
+    ["linear"],
+    0.1,
+    10
+)
+assert(neural["validate_network"](oversized_model) != "", "oversized model must fail before execution")
+
+make unbounded_model := neural["network"]([1, 1], [[[1000000.0]]], [[0.0]], ["linear"], 0.1, 10)
+make unbounded_prediction := neural["predict"](unbounded_model, [1000000.0])
+assert(unbounded_prediction[0] == "ERR", "intermediate arithmetic beyond the numeric bound must fail closed")
+
+emit "REAPER_NEURAL_SYSTEMS:PASS"

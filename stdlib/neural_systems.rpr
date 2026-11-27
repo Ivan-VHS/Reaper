@@ -1,0 +1,486 @@
+# Reaper Neural Systems Contract v1.
+# Deterministic, bounded dense networks for local reference-runtime execution.
+# No ambient filesystem, network, clock, device, GPU or privileged effects.
+
+export make NEURAL_SCHEMA := "reaper.neural-network.v1"
+export make CONTRACT_SCHEMA := "reaper.neural-contract.v1"
+export make MAX_LAYERS := 8
+export make MAX_UNITS := 512
+export make MAX_PARAMETERS := 65536
+export make MAX_VALUE := 1000000
+export make MAX_TRAINING_STEPS := 1000000
+
+export craft network(layer_sizes, weights, biases, activations, learning_rate, max_training_steps) {
+    yield [NEURAL_SCHEMA, layer_sizes, weights, biases, activations, learning_rate, max_training_steps]
+}
+
+export craft valid_number(value) {
+    yield kind(value) == "number" and
+        value == value and
+        value >= -MAX_VALUE and
+        value <= MAX_VALUE
+}
+
+export craft validate_vector(values, expected_size, label) {
+    when kind(values) != "list" {
+        yield "RPR-NN-VEC-0001: " ++ label ++ " must be a list"
+    }
+    when size(values) != expected_size {
+        yield "RPR-NN-VEC-0002: " ++ label ++ " width does not match the model"
+    }
+    vary index := 0
+    loop while index < size(values) {
+        when not valid_number(values[index]) {
+            yield "RPR-NN-VEC-0003: " ++ label ++ " contains a non-finite or out-of-range number"
+        }
+        change index := index + 1
+    }
+    yield ""
+}
+
+export craft validate_network(model) {
+    when kind(model) != "list" {
+        yield "RPR-NN-MODEL-0001: model descriptor must be a list"
+    }
+    when size(model) != 7 {
+        yield "RPR-NN-MODEL-0002: model descriptor must contain 7 fields"
+    }
+    when model[0] != NEURAL_SCHEMA {
+        yield "RPR-NN-MODEL-0003: unsupported neural model schema"
+    }
+    when kind(model[1]) != "list" {
+        yield "RPR-NN-MODEL-0004: layer sizes must be a list"
+    }
+    when size(model[1]) < 2 or size(model[1]) > MAX_LAYERS + 1 {
+        yield "RPR-NN-MODEL-0005: model must have 1..8 dense layers"
+    }
+    when kind(model[2]) != "list" or kind(model[3]) != "list" or kind(model[4]) != "list" {
+        yield "RPR-NN-MODEL-0006: weights, biases and activations must be lists"
+    }
+    make layer_count := size(model[1]) - 1
+    when size(model[2]) != layer_count or size(model[3]) != layer_count or size(model[4]) != layer_count {
+        yield "RPR-NN-MODEL-0007: layer, weight, bias and activation counts differ"
+    }
+
+    vary index := 0
+    vary parameter_count := 0
+    loop while index < size(model[1]) {
+        make width := model[1][index]
+        when kind(width) != "number" or width % 1 != 0 {
+            yield "RPR-NN-MODEL-0008: layer widths must be whole numbers"
+        }
+        when width < 1 or width > MAX_UNITS {
+            yield "RPR-NN-MODEL-0009: layer width is outside 1..512"
+        }
+        change index := index + 1
+    }
+
+    change index := 0
+    loop while index < layer_count {
+        make input_width := model[1][index]
+        make output_width := model[1][index + 1]
+        make weight_layer := model[2][index]
+        make bias_layer := model[3][index]
+        when kind(weight_layer) != "list" or kind(bias_layer) != "list" {
+            yield "RPR-NN-LAYER-0001: layer weights and biases must be lists"
+        }
+        when size(weight_layer) != output_width or size(bias_layer) != output_width {
+            yield "RPR-NN-LAYER-0002: output neuron, weight row and bias counts differ"
+        }
+        when not contains(["linear", "relu", "leaky_relu"], model[4][index]) {
+            yield "RPR-NN-LAYER-0003: activation must be linear, relu or leaky_relu"
+        }
+        change parameter_count := parameter_count + input_width * output_width + output_width
+        when parameter_count > MAX_PARAMETERS {
+            yield "RPR-NN-LIMIT-0001: trainable parameter limit exceeded"
+        }
+
+        vary neuron_index := 0
+        loop while neuron_index < output_width {
+            make neuron_weights := weight_layer[neuron_index]
+            when kind(neuron_weights) != "list" or size(neuron_weights) != input_width {
+                yield "RPR-NN-LAYER-0004: neuron weight vector has an invalid width"
+            }
+            when not valid_number(bias_layer[neuron_index]) {
+                yield "RPR-NN-LAYER-0005: bias is out of range"
+            }
+            vary weight_index := 0
+            loop while weight_index < input_width {
+                when not valid_number(neuron_weights[weight_index]) {
+                    yield "RPR-NN-LAYER-0006: weight is out of range"
+                }
+                change weight_index := weight_index + 1
+            }
+            change neuron_index := neuron_index + 1
+        }
+        change index := index + 1
+    }
+
+    when kind(model[5]) != "number" or model[5] <= 0 or model[5] > 1 {
+        yield "RPR-NN-OPT-0001: learning rate must be in (0, 1]"
+    }
+    when kind(model[6]) != "number" or model[6] % 1 != 0 or model[6] < 1 or model[6] > MAX_TRAINING_STEPS {
+        yield "RPR-NN-LIMIT-0002: training-step budget must be in 1..1000000"
+    }
+    yield ""
+}
+
+craft apply_activation(value, activation_name) {
+    when activation_name == "linear" {
+        yield value
+    }
+    when activation_name == "relu" {
+        when value > 0 { yield value }
+        yield 0
+    }
+    when activation_name == "leaky_relu" {
+        when value >= 0 { yield value }
+        yield value * 0.01
+    }
+    yield nothing
+}
+
+craft activation_derivative(pre_activation, activation_name) {
+    when activation_name == "linear" {
+        yield 1
+    }
+    when activation_name == "relu" {
+        when pre_activation > 0 { yield 1 }
+        yield 0
+    }
+    when activation_name == "leaky_relu" {
+        when pre_activation >= 0 { yield 1 }
+        yield 0.01
+    }
+    yield 0
+}
+
+craft dot(left, right) {
+    when kind(left) != "list" or kind(right) != "list" or size(left) != size(right) {
+        yield ["ERR", "RPR-NN-MATH-0001: dot-product dimensions differ"]
+    }
+    vary total := 0
+    vary index := 0
+    loop while index < size(left) {
+        when not valid_number(left[index]) or not valid_number(right[index]) {
+            yield ["ERR", "RPR-NN-MATH-0002: dot-product input is invalid"]
+        }
+        change total := total + left[index] * right[index]
+        when not valid_number(total) {
+            yield ["ERR", "RPR-NN-MATH-0003: dot-product result exceeds the numeric bound"]
+        }
+        change index := index + 1
+    }
+    yield ["OK", total]
+}
+
+export craft forward_trace(model, input_vector) {
+    make model_error := validate_network(model)
+    when model_error != "" {
+        yield ["ERR", model_error]
+    }
+    make input_error := validate_vector(input_vector, model[1][0], "input")
+    when input_error != "" {
+        yield ["ERR", input_error]
+    }
+
+    vary current := input_vector
+    vary activation_cache := [input_vector]
+    vary preactivation_cache := []
+    vary layer_index := 0
+    make layer_count := size(model[2])
+    loop while layer_index < layer_count {
+        vary next_values := []
+        vary next_pre_activations := []
+        vary neuron_index := 0
+        loop while neuron_index < size(model[2][layer_index]) {
+            make product := dot(model[2][layer_index][neuron_index], current)
+            when product[0] != "OK" {
+                yield ["ERR", product[1]]
+            }
+            make pre_activation := product[1] + model[3][layer_index][neuron_index]
+            when not valid_number(pre_activation) {
+                yield ["ERR", "RPR-NN-MATH-0004: pre-activation exceeds the numeric bound"]
+            }
+            make output_value := apply_activation(pre_activation, model[4][layer_index])
+            when not valid_number(output_value) {
+                yield ["ERR", "RPR-NN-MATH-0005: activation result exceeds the numeric bound"]
+            }
+            change next_pre_activations := push(next_pre_activations, pre_activation)
+            change next_values := push(next_values, output_value)
+            change neuron_index := neuron_index + 1
+        }
+        change preactivation_cache := push(preactivation_cache, next_pre_activations)
+        change activation_cache := push(activation_cache, next_values)
+        change current := next_values
+        change layer_index := layer_index + 1
+    }
+    yield ["OK", current, activation_cache, preactivation_cache]
+}
+
+export craft predict(model, input_vector) {
+    make trace := forward_trace(model, input_vector)
+    when trace[0] != "OK" {
+        yield ["ERR", trace[1]]
+    }
+    yield ["OK", trace[1]]
+}
+
+export craft train_step(model, input_vector, target_vector) {
+    make trace := forward_trace(model, input_vector)
+    when trace[0] != "OK" {
+        yield ["ERR", trace[1]]
+    }
+    make target_error := validate_vector(target_vector, model[1][size(model[1]) - 1], "target")
+    when target_error != "" {
+        yield ["ERR", target_error]
+    }
+
+    make layer_count := size(model[2])
+    make last_layer := layer_count - 1
+    vary reversed_deltas := []
+    vary layer_index := last_layer
+    loop while layer_index >= 0 {
+        vary layer_deltas := []
+        vary neuron_index := 0
+        loop while neuron_index < model[1][layer_index + 1] {
+            vary delta := 0
+            when layer_index == last_layer {
+                make output_error := trace[1][neuron_index] - target_vector[neuron_index]
+                change delta := output_error * activation_derivative(
+                    trace[3][layer_index][neuron_index],
+                    model[4][layer_index]
+                ) / size(target_vector)
+            }
+            when layer_index < last_layer {
+                make next_weights := model[2][layer_index + 1]
+                make next_deltas := reversed_deltas[size(reversed_deltas) - 1]
+                vary propagated_error := 0
+                vary next_neuron := 0
+                loop while next_neuron < size(next_deltas) {
+                    change propagated_error := propagated_error +
+                        next_weights[next_neuron][neuron_index] * next_deltas[next_neuron]
+                    change next_neuron := next_neuron + 1
+                }
+                change delta := propagated_error * activation_derivative(
+                    trace[3][layer_index][neuron_index],
+                    model[4][layer_index]
+                )
+            }
+            change layer_deltas := push(layer_deltas, delta)
+            change neuron_index := neuron_index + 1
+        }
+        change reversed_deltas := push(reversed_deltas, layer_deltas)
+        change layer_index := layer_index - 1
+    }
+
+    vary updated_weights := []
+    vary updated_biases := []
+    vary layer_index := 0
+    loop while layer_index < layer_count {
+        make layer_deltas := reversed_deltas[last_layer - layer_index]
+        make previous_values := trace[2][layer_index]
+        make old_layer := model[2][layer_index]
+        vary new_layer := []
+        vary new_bias_layer := []
+        vary neuron_index := 0
+        loop while neuron_index < size(old_layer) {
+            vary new_neuron_weights := []
+            vary weight_index := 0
+            loop while weight_index < size(old_layer[neuron_index]) {
+                make new_weight := old_layer[neuron_index][weight_index] -
+                    model[5] * layer_deltas[neuron_index] * previous_values[weight_index]
+                when not valid_number(new_weight) {
+                    yield ["ERR", "RPR-NN-TRAIN-0005: updated weight exceeds the numeric bound"]
+                }
+                change new_neuron_weights := push(new_neuron_weights, new_weight)
+                change weight_index := weight_index + 1
+            }
+            change new_layer := push(new_layer, new_neuron_weights)
+            make new_bias := model[3][layer_index][neuron_index] -
+                model[5] * layer_deltas[neuron_index]
+            when not valid_number(new_bias) {
+                yield ["ERR", "RPR-NN-TRAIN-0006: updated bias exceeds the numeric bound"]
+            }
+            change new_bias_layer := push(new_bias_layer, new_bias)
+            change neuron_index := neuron_index + 1
+        }
+        change updated_weights := push(updated_weights, new_layer)
+        change updated_biases := push(updated_biases, new_bias_layer)
+        change layer_index := layer_index + 1
+    }
+
+    vary loss := 0
+    vary output_index := 0
+    loop while output_index < size(target_vector) {
+        make difference := trace[1][output_index] - target_vector[output_index]
+        change loss := loss + difference * difference * 0.5
+        change output_index := output_index + 1
+    }
+    change loss := loss / size(target_vector)
+    when not valid_number(loss) {
+        yield ["ERR", "RPR-NN-TRAIN-0007: loss exceeds the numeric bound"]
+    }
+    make updated_model := [
+        model[0],
+        model[1],
+        updated_weights,
+        updated_biases,
+        model[4],
+        model[5],
+        model[6]
+    ]
+    yield ["OK", updated_model, loss]
+}
+
+export craft train_batch(model, samples, epochs) {
+    make model_error := validate_network(model)
+    when model_error != "" {
+        yield ["ERR", model_error]
+    }
+    when kind(samples) != "list" or size(samples) < 1 or size(samples) > 1024 {
+        yield ["ERR", "RPR-NN-TRAIN-0001: sample count must be in 1..1024"]
+    }
+    when kind(epochs) != "number" or epochs % 1 != 0 or epochs < 1 or epochs > 1000 {
+        yield ["ERR", "RPR-NN-TRAIN-0002: epoch count must be in 1..1000"]
+    }
+    when size(samples) * epochs > model[6] {
+        yield ["ERR", "RPR-NN-TRAIN-0003: requested work exceeds the model training-step budget"]
+    }
+
+    vary current_model := model
+    vary epoch_losses := []
+    vary epoch_index := 0
+    loop while epoch_index < epochs {
+        vary total_loss := 0
+        vary sample_index := 0
+        loop while sample_index < size(samples) {
+            when kind(samples[sample_index]) != "list" or size(samples[sample_index]) != 2 {
+                yield ["ERR", "RPR-NN-TRAIN-0004: each sample must contain input and target vectors"]
+            }
+            make step_result := train_step(
+                current_model,
+                samples[sample_index][0],
+                samples[sample_index][1]
+            )
+            when step_result[0] != "OK" {
+                yield ["ERR", step_result[1]]
+            }
+            change current_model := step_result[1]
+            change total_loss := total_loss + step_result[2]
+            change sample_index := sample_index + 1
+        }
+        change epoch_losses := push(epoch_losses, total_loss / size(samples))
+        change epoch_index := epoch_index + 1
+    }
+    yield ["OK", current_model, epoch_losses]
+}
+
+export craft make_contract(profile, model, training_mode, max_samples, step_budget) {
+    when kind(profile) != "list" or size(profile) != 3 {
+        yield ["ERR", "RPR-NN-CONTRACT-0001: profile must contain model, contract and engineering labels"]
+    }
+    make model_error := validate_network(model)
+    when model_error != "" {
+        yield ["ERR", model_error]
+    }
+    when not contains(["inference", "online_sgd", "offline_batch"], training_mode) {
+        yield ["ERR", "RPR-NN-CONTRACT-0002: unsupported training mode"]
+    }
+    when kind(max_samples) != "number" or max_samples % 1 != 0 or max_samples < 1 or max_samples > 1024 {
+        yield ["ERR", "RPR-NN-CONTRACT-0003: sample limit must be in 1..1024"]
+    }
+    when kind(step_budget) != "number" or step_budget % 1 != 0 or step_budget < 1 or step_budget > model[6] {
+        yield ["ERR", "RPR-NN-CONTRACT-0004: step budget is outside the model limit"]
+    }
+    yield ["OK", [
+        CONTRACT_SCHEMA,
+        profile[0],
+        profile[1],
+        profile[2],
+        NEURAL_SCHEMA,
+        training_mode,
+        true,
+        "local_only",
+        max_samples,
+        step_budget,
+        false
+    ]]
+}
+
+export craft validate_contract(contract) {
+    when kind(contract) != "list" or size(contract) != 11 {
+        yield "RPR-NN-CONTRACT-0005: contract must contain 11 fields"
+    }
+    when contract[0] != CONTRACT_SCHEMA or contract[4] != NEURAL_SCHEMA {
+        yield "RPR-NN-CONTRACT-0006: contract schema does not match"
+    }
+    when not contains(["inference", "online_sgd", "offline_batch"], contract[5]) {
+        yield "RPR-NN-CONTRACT-0007: invalid execution mode"
+    }
+    when contract[6] != true or contract[7] != "local_only" or contract[10] != false {
+        yield "RPR-NN-CONTRACT-0008: deterministic local-only execution is mandatory"
+    }
+    when kind(contract[8]) != "number" or contract[8] < 1 or contract[8] > 1024 {
+        yield "RPR-NN-CONTRACT-0009: sample limit is invalid"
+    }
+    when kind(contract[9]) != "number" or contract[9] < 1 or contract[9] > MAX_TRAINING_STEPS {
+        yield "RPR-NN-CONTRACT-0010: step budget is invalid"
+    }
+    yield ""
+}
+
+export craft profile_catalog() {
+    yield [
+        ["Искусственная нейронная сеть", "Нейросетевой контракт", "Системное проектирование"],
+        ["Нейронная сеть", "Нейросетевое соглашение", "Системное конструирование"],
+        ["ИНС", "Сетевой нейродоговор", "Системное программирование"],
+        ["Нейронная модель", "Нейронный контракт", "Комплексная разработка"],
+        ["Искусственный интеллект", "Цифровой нейроконтракт", "Архитектурная разработка"],
+        ["Интеллектуальная система", "Интеллектуальный контракт", "Инженерная разработка"],
+        ["Машинная модель", "Когнитивный контракт", "Комплексное проектирование"],
+        ["Вычислительная сеть", "Искусственно-интеллектуальный контракт", "Разработка систем"],
+        ["Когнитивная система", "Автономный нейроконтракт", "Создание систем"],
+        ["Интеллектуальная модель", "Распределённый нейроконтракт", "Системная инженерия"],
+        ["Обучаемая система", "Децентрализованный нейроконтракт", "Архитектурное проектирование"],
+        ["Самообучающаяся модель", "Машинный нейроконтракт", "Технологическая разработка"],
+        ["Алгоритмическая сеть", "Нейросетевой договор", "Интеграционная разработка"],
+        ["Цифровой интеллект", "Интеллектуальное соглашение", "Модульная разработка"],
+        ["Машинный интеллект", "Цифровой нейродоговор", "Многоуровневая разработка"],
+        ["Генеративная модель", "Нейросетевое обязательство", "Платформенная разработка"],
+        ["Нейрокомпьютерная система", "Сетевой интеллектуальный договор", "Инфраструктурная разработка"],
+        ["Программный интеллект", "Автономное нейросетевое соглашение", "Системное моделирование"],
+        ["Адаптивная модель", "Распределённое нейросетевое соглашение", "Проектирование архитектуры"],
+        ["Искусственный разум", "Программируемый нейроконтракт", "Комплексная системная инженерия"]
+    ]
+}
+
+export craft validate_profile_catalog(profiles) {
+    when kind(profiles) != "list" or size(profiles) != 20 {
+        yield "RPR-NN-CATALOG-0001: v1 catalog must contain exactly 20 profiles"
+    }
+    vary index := 0
+    loop while index < size(profiles) {
+        when kind(profiles[index]) != "list" or size(profiles[index]) != 3 {
+            yield "RPR-NN-CATALOG-0002: each profile must contain exactly three labels"
+        }
+        vary field_index := 0
+        loop while field_index < 3 {
+            when kind(profiles[index][field_index]) != "text" or size(profiles[index][field_index]) == 0 {
+                yield "RPR-NN-CATALOG-0003: profile labels must be non-empty text"
+            }
+            change field_index := field_index + 1
+        }
+        vary other := index + 1
+        loop while other < size(profiles) {
+            when profiles[index][0] == profiles[other][0] or
+                profiles[index][1] == profiles[other][1] or
+                profiles[index][2] == profiles[other][2] {
+                yield "RPR-NN-CATALOG-0004: v1 profile labels must be unique within each column"
+            }
+            change other := other + 1
+        }
+        change index := index + 1
+    }
+    yield ""
+}
