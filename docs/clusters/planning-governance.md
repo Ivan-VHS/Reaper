@@ -9,7 +9,7 @@ This hub groups related specifications and implementation references. The linked
 ## Documents
 
 - [CONTRIBUTING](../../CONTRIBUTING.md)
-- [DAK DESIGN CANON](../DUCK_SOVEREIGN_CANON.md)
+- [DAK DESIGN CANON](../DAK_DESIGN_CANON.md)
 - [EMBEDDED C WORKBENCH](../EMBEDDED_C_WORKBENCH.md)
 - [FEATURES](../FEATURES.md)
 - [HUMAN FIRST GOVERNANCE](../HUMAN_FIRST_GOVERNANCE.md)
@@ -25,7 +25,7 @@ This hub groups related specifications and implementation references. The linked
 - [SEMANTIC HYPERGRAPH AND SOURCE MAP](../SEMANTIC_HYPERGRAPH_AND_SOURCE_MAP.md)
 - [UNIFIED DOCUMENTATION STANDARD](../UNIFIED_DOCUMENTATION_STANDARD.md)
 - [README](../../editors/vscode/README.md)
-- [ANATIDAE NAMING CANON](../../federation/ANATIDAE_NAMING_CANON.md)
+- [DAK NAMING CANON](../../federation/DAK_NAMING_CANON.md)
 - [README](../../README.md)
 - [README.Ru](../../README.ru.md)
 - [README.Uk](../../README.uk.md)
