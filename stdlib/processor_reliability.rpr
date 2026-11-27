@@ -1000,7 +1000,7 @@ export craft run_load_test(initial_state, steps, repair_cost, period_cycles) {
     when not state_valid(initial_state) or initial_state[6] != "test" {
         yield [false, initial_state, [], 0, "RPR-PYT-0020: load tests require a valid test-mode state"]
     }
-    when not valid_integer(steps, 1, 100000) or
+    when not valid_integer(steps, 1, 5000) or
          not valid_integer(repair_cost, 0, 1000000000) or
          not valid_integer(period_cycles, 64, 1000000) {
         yield [false, initial_state, [], 0, "RPR-PYT-0021: load-test parameters are outside bounds"]
@@ -1025,7 +1025,7 @@ export craft run_load_test(initial_state, steps, repair_cost, period_cycles) {
 }
 
 export craft replay_load_test(initial_state, steps, repair_cost, period_cycles, expected_checksum, expected_records) {
-    when kind(expected_records) != "list" or size(expected_records) > 100000 {
+    when kind(expected_records) != "list" or size(expected_records) > 5000 {
         yield [false, initial_state, 0, "RPR-PYT-0022: expected replay trace is invalid"]
     }
     when not valid_integer(expected_checksum, 0, 2147483646) {
