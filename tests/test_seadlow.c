@@ -163,15 +163,178 @@ static void test_exact_in_place_and_unaligned_buffers(void) {
 
     ReaperSeadlowReport report;
     ReaperSeadlowError error;
-    assert(reaper_seadlow_transform(REAPER_SEADLOW_AND, storage + 1,
-        storage + 1, rhs, 18u, &report, &error));
+    size_t population = 0u;
+    assert(reaper_seadlow_transform_popcount(REAPER_SEADLOW_AND,
+        storage + 1, storage + 1, rhs, 18u, &population, &report, &error));
+    assert(population == 5u);
     assert(storage[1] == 0xA0u);
     assert(storage[2] == 0x05u);
     assert(storage[3] == 0x02u);
 
-    assert(reaper_seadlow_transform(REAPER_SEADLOW_NOT, storage + 1,
-        storage + 1, NULL, 18u, &report, &error));
+    assert(reaper_seadlow_transform_popcount(REAPER_SEADLOW_NOT,
+        storage + 1, storage + 1, NULL, 18u, &population, &report, &error));
+    assert(population == 13u);
     assert(storage[3] == 0x01u);
+}
+
+static size_t expected_popcount(const uint8_t *bytes, size_t bit_count) {
+    size_t total = 0u;
+    for (size_t bit = 0u; bit < bit_count; ++bit) {
+        total += (size_t)((bytes[bit / 8u] >> (bit % 8u)) & 1u);
+    }
+    return total;
+}
+
+static void test_fused_transform_popcount(void) {
+    enum { BUFFER_BYTES = 4126 };
+    static const size_t bit_counts[] = {
+        0u, 1u, 7u, 8u, 9u, 63u, 64u, 65u,
+        16383u, 16384u, 16385u, 33001u
+    };
+    uint8_t left[BUFFER_BYTES], right[BUFFER_BYTES];
+    uint8_t fused[BUFFER_BYTES], separate[BUFFER_BYTES];
+
+    for (size_t i = 0u; i < BUFFER_BYTES; ++i) {
+        left[i] = (uint8_t)(i * 73u + 29u);
+        right[i] = (uint8_t)(i * 41u + 17u);
+    }
+
+    ReaperSeadlowReport report;
+    ReaperSeadlowError error;
+    for (int raw_operation = (int)REAPER_SEADLOW_AND;
+         raw_operation <= (int)REAPER_SEADLOW_NOT; ++raw_operation) {
+        const ReaperSeadlowOp operation = (ReaperSeadlowOp)raw_operation;
+        for (size_t case_index = 0u;
+             case_index < sizeof bit_counts / sizeof bit_counts[0];
+             ++case_index) {
+            const size_t bit_count = bit_counts[case_index];
+            const size_t byte_count = bit_count / 8u +
+                (bit_count % 8u != 0u ? 1u : 0u);
+            size_t fused_count = SIZE_MAX;
+            size_t separate_count = SIZE_MAX;
+            const uint8_t *right_input =
+                operation == REAPER_SEADLOW_NOT ? NULL : right;
+
+            assert(reaper_seadlow_transform_popcount(
+                operation,
+                bit_count == 0u ? NULL : fused,
+                bit_count == 0u ? NULL : left,
+                bit_count == 0u ? NULL : right_input,
+                bit_count,
+                &fused_count,
+                &report,
+                &error
+            ));
+            assert(reaper_seadlow_transform(
+                operation,
+                bit_count == 0u ? NULL : separate,
+                bit_count == 0u ? NULL : left,
+                bit_count == 0u ? NULL : right_input,
+                bit_count,
+                NULL,
+                &error
+            ));
+            assert(reaper_seadlow_popcount(
+                bit_count == 0u ? NULL : separate,
+                bit_count,
+                &separate_count,
+                NULL,
+                &error
+            ));
+
+            assert(fused_count == separate_count);
+            assert(fused_count == (bit_count == 0u
+                ? 0u : expected_popcount(separate, bit_count)));
+            assert(memcmp(fused, separate, byte_count) == 0);
+            assert(report.bits_processed == bit_count);
+            assert(report.words_processed == bit_count / 64u);
+            const size_t words = bit_count / 64u;
+            const size_t expected_tiles = words / REAPER_SEADLOW_TILE_WORDS +
+                (words % REAPER_SEADLOW_TILE_WORDS != 0u ? 1u : 0u);
+            assert(report.tiles_processed == expected_tiles);
+        }
+    }
+}
+
+static void test_exhaustive_byte_algebra(void) {
+    ReaperSeadlowReport report;
+    ReaperSeadlowError error;
+    uint8_t left = 0u, right = 0u, output = 0u;
+    size_t population = 0u;
+
+    for (unsigned x = 0u; x <= UINT8_MAX; ++x) {
+        left = (uint8_t)x;
+        assert(reaper_seadlow_transform_popcount(
+            REAPER_SEADLOW_NOT, &output, &left, NULL, 8u,
+            &population, &report, &error
+        ));
+        assert(output == (uint8_t)~left);
+        assert(population == expected_popcount(&output, 8u));
+        assert(population + expected_popcount(&left, 8u) == 8u);
+
+        for (unsigned y = 0u; y <= UINT8_MAX; ++y) {
+            right = (uint8_t)y;
+            const ReaperSeadlowOp operations[] = {
+                REAPER_SEADLOW_AND,
+                REAPER_SEADLOW_OR,
+                REAPER_SEADLOW_XOR
+            };
+            for (size_t op = 0u;
+                 op < sizeof operations / sizeof operations[0];
+                 ++op) {
+                const ReaperSeadlowOp operation = operations[op];
+                const uint8_t expected = expected_byte(
+                    operation, left, right
+                );
+                assert(reaper_seadlow_transform_popcount(
+                    operation, &output, &left, &right, 8u,
+                    &population, &report, &error
+                ));
+                assert(output == expected);
+                assert(population == expected_popcount(&output, 8u));
+            }
+
+            /* Exhaustive finite-domain check of De Morgan's identity. */
+            const uint8_t not_and = (uint8_t)~(uint8_t)(left & right);
+            const uint8_t not_left_or_not_right =
+                (uint8_t)((uint8_t)~left | (uint8_t)~right);
+            assert(not_and == not_left_or_not_right);
+        }
+    }
+}
+
+static void test_fused_count_failures_are_non_committing(void) {
+    uint8_t storage[8] = {0x11u, 0x22u, 0x33u, 0x44u};
+    uint8_t rhs[4] = {0xFFu, 0xFFu, 0xFFu, 0xFFu};
+    uint8_t before[sizeof storage];
+    memcpy(before, storage, sizeof storage);
+
+    ReaperSeadlowReport report;
+    ReaperSeadlowError error;
+    size_t population = 73u;
+    assert(!reaper_seadlow_transform_popcount(
+        REAPER_SEADLOW_OR, storage + 1, storage, rhs, 16u,
+        &population, &report, &error
+    ));
+    assert(population == 73u);
+    assert(memcmp(storage, before, sizeof storage) == 0);
+
+    union CountOverlap {
+        size_t count;
+        uint8_t bytes[sizeof(size_t) + 8u];
+    } overlap;
+    overlap.count = 91u;
+    assert(!reaper_seadlow_transform_popcount(
+        REAPER_SEADLOW_NOT, overlap.bytes, overlap.bytes, NULL, 8u,
+        &overlap.count, &report, &error
+    ));
+    assert(overlap.count == 91u);
+
+    assert(!reaper_seadlow_transform_popcount(
+        (ReaperSeadlowOp)99, storage, storage, rhs, 8u,
+        &population, &report, &error
+    ));
+    assert(population == 73u);
 }
 
 static void test_partial_overlap_and_empty_input(void) {
@@ -201,6 +364,9 @@ int main(void) {
     test_bulk_transform_and_popcount();
     test_exact_in_place_and_unaligned_buffers();
     test_partial_overlap_and_empty_input();
-    puts("native Seadlow tests: 5 groups passed");
+    test_fused_transform_popcount();
+    test_exhaustive_byte_algebra();
+    test_fused_count_failures_are_non_committing();
+    puts("native Seadlow tests: 8 groups passed");
     return 0;
 }
