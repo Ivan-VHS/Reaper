@@ -79,7 +79,10 @@ emit total()
         self.assertEqual(invalid.diagnostics[0].code, "RPR-T0004")
 
     def test_semicolon_separates_statements_and_list_items(self) -> None:
-        source = "reg total := 1; change total := total + 2; emit [total; 4; 5]"
+        source = """
+scenario noop() { yield; }
+noop(); reg total := 1; change total := total + 2; emit [total; 4; 5]
+"""
         for engine in ("treewalk", "vm"):
             output: list[str] = []
             Interpreter(output=output.append).run(source, engine=engine)
