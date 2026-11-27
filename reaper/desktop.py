@@ -77,9 +77,11 @@ class ReaperStudio(tk.Tk):
         self._completion_prefix = ""
 
         self._configure_styles()
+        self._build_brand_strip()
         self._build_menu()
         self._build_toolbar()
         self._build_workspace()
+        self._apply_editor_visuals()
         self._build_statusbar()
         self._motion = MotionController(self, app_key="reaper-studio")
         self._motion.fade_in()
@@ -107,6 +109,16 @@ class ReaperStudio(tk.Tk):
         )
         style.configure("PaneTitle.TLabel", font=(heading_font, 12))
         style.configure("Toolbar.TButton", padding=(9, 5))
+
+    def _build_brand_strip(self) -> None:
+        """Paint the shared white-blue-red identity without changing editor layout."""
+        strip = tk.Frame(self, height=5, bd=0, highlightthickness=0)
+        strip.pack(fill="x")
+        strip.pack_propagate(False)
+        for color in ("#0039A6", "#FFFFFF", "#D52B1E"):
+            tk.Frame(strip, background=color, bd=0, highlightthickness=0).pack(
+                side="left", fill="both", expand=True
+            )
 
     def _build_menu(self) -> None:
         menu = tk.Menu(self)
@@ -665,7 +677,7 @@ class ReaperStudio(tk.Tk):
         ttk.Button(bar, text="Атмосфера", command=self.toggle_ui_theme, style="Toolbar.TButton").pack(side="left", padx=3)
         ttk.Button(bar, text="CODEX-66", command=self.show_codex66, style="Toolbar.TButton").pack(side="left", padx=(7, 3))
         self.file_label = tk.StringVar(value="Untitled.rpr")
-        ttk.Label(bar, textvariable=self.file_label, foreground="#64748b").pack(side="right", padx=8)
+        ttk.Label(bar, textvariable=self.file_label, style="Muted.TLabel").pack(side="right", padx=8)
 
     def _build_workspace(self) -> None:
         outer = ttk.Panedwindow(self, orient="horizontal")
@@ -794,10 +806,62 @@ class ReaperStudio(tk.Tk):
             self._theme_name = colors["mode"]
         else:
             self._theme_name = apply_theme(self, "reaper-studio", mode)
+        self._apply_editor_visuals()
+
+    def _apply_editor_visuals(self) -> None:
+        """Keep the code editor, syntax colors and line gutter in the active theme."""
+        palette = getattr(self, "_anatidae_palette", {})
+        theme_name = getattr(self, "_anatidae_theme", self._theme_name)
+        dark = theme_name in {"dark", "night"}
+
+        editor_bg = palette.get("surface", "#0F2A45" if dark else "#FFFFFF")
+        editor_fg = palette.get("fg", "#E8EDF2" if dark else "#122C45")
+        gutter_bg = palette.get("elevated", "#173A5E" if dark else "#EAF1FA")
+        border = palette.get("border", "#31516F" if dark else "#CAD8E8")
+        focus = palette.get("focus", palette.get("blue", "#70A5FF" if dark else "#004E98"))
+        selection = palette.get("selection", "#244F82" if dark else "#D9E8FF")
+        selection_fg = palette.get("selection_fg", editor_fg)
+
+        self.editor.configure(
+            background=editor_bg,
+            foreground=editor_fg,
+            insertbackground=editor_fg,
+            selectbackground=selection,
+            selectforeground=selection_fg,
+            highlightbackground=border,
+            highlightcolor=focus,
+            highlightthickness=1,
+            borderwidth=0,
+        )
+        self.line_numbers.configure(
+            background=gutter_bg,
+            highlightbackground=border,
+            highlightcolor=focus,
+            highlightthickness=1,
+        )
+
+        syntax = (
+            {"keyword": "#C4B5FD", "string": "#5EEAD4",
+             "number": "#FCD34D", "comment": "#A7B4C7"}
+            if dark else
+            {"keyword": "#6D28D9", "string": "#0F766E",
+             "number": "#92400E", "comment": "#64748B"}
+        )
+        for token, color in syntax.items():
+            self.editor.tag_configure(token, foreground=color)
+        self.editor.tag_configure(
+            "comment", foreground=syntax["comment"],
+            font=("Cascadia Code", 10, "italic")
+        )
+        self.editor.tag_configure(
+            "reference", background=selection, foreground=selection_fg
+        )
+        self._redraw_line_numbers()
 
     def toggle_ui_theme(self) -> None:
         self._theme_name = toggle_theme(self, "reaper-studio")
         self._theme_mode.set(self._theme_name)
+        self._apply_editor_visuals()
 
     def _source_name(self) -> str:
         return str(self.current_file) if self.current_file else "<editor>"
@@ -1343,6 +1407,8 @@ class ReaperStudio(tk.Tk):
     def _redraw_line_numbers(self, _event: tk.Event | None = None) -> None:
         if not hasattr(self, "line_numbers"):
             return
+        palette = getattr(self, "_anatidae_palette", {})
+        line_number_color = palette.get("muted", "#94a3b8")
         self.line_numbers.delete("all")
         try:
             index = self.editor.index("@0,0")
@@ -1350,7 +1416,14 @@ class ReaperStudio(tk.Tk):
                 info = self.editor.dlineinfo(index)
                 if info is None:
                     break
-                self.line_numbers.create_text(40, info[1], anchor="ne", text=index.split(".")[0], fill="#94a3b8", font=("Cascadia Code", 9))
+                self.line_numbers.create_text(
+                    40,
+                    info[1],
+                    anchor="ne",
+                    text=index.split(".")[0],
+                    fill=line_number_color,
+                    font=("Cascadia Code", 9),
+                )
                 index = self.editor.index(f"{index}+1line")
                 if self.editor.compare(index, ">", "end-1c"):
                     break
