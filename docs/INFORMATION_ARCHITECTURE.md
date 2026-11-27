@@ -112,6 +112,7 @@ Each Markdown page is linked here and from its topic hub, giving readers more th
 
 ### Integrations and project federation
 
+- [MAZA — LIVE FOUNDATION FEDERATION](MAZA.md)
 - [FEDERATED INTEGRATION](FEDERATED_INTEGRATION.md)
 - [INTERNAL PRODUCT ECOSYSTEM](INTERNAL_PRODUCT_ECOSYSTEM.md)
 - [INTERNAL PRODUCTS](INTERNAL_PRODUCTS.md)

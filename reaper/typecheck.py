@@ -41,6 +41,8 @@ BUILTIN_ARITY: dict[str, tuple[int, int | None]] = {
     "heap_stats": (0, 0), "heap_collect": (0, 0), "region_begin": (0, 0),
     "region_end": (1, 1), "ffi_open": (1, 1), "ffi_bind": (3, 4),
     "ffi_close": (1, 1), "pytyliki_open": (1, 1),
+    "maza_status": (1, 1), "maza_links": (0, 0),
+    "maza_refresh": (1, 1), "maza_detach": (1, 1),
 }
 
 BUILTIN_RETURN: dict[str, str] = {
@@ -64,6 +66,8 @@ BUILTIN_RETURN: dict[str, str] = {
     "resource_stats": "Map", "heap_stats": "Map", "heap_collect": "Int",
     "region_begin": "Region", "region_end": "Nothing", "ffi_open": "Library",
     "ffi_bind": "Function", "ffi_close": "Nothing", "pytyliki_open": "Bridge",
+    "maza_status": "Map", "maza_links": "List[Any]",
+    "maza_refresh": "Map", "maza_detach": "Bool",
 }
 
 
@@ -195,6 +199,10 @@ class TypeChecker:
                 self._statement(children[0])
             return
         if node.kind == "import":
+            return
+        if node.kind == "maza":
+            _specifier, alias = node.value
+            self.scopes[-1][alias] = Binding("Map", False)
             return
         if node.kind == "when":
             self._expression(children[0])

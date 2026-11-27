@@ -44,6 +44,12 @@ class Parser:
         return Node("program", self._peek(), children=statements)
 
     def _statement(self) -> Node:
+        if self._match("MAZA"):
+            token = self._previous()
+            specifier = self._consume("STRING", "expected a quoted .rpr foundation path after 'maza'")
+            self._consume("AS", "MAZA requires an explicit namespace alias after 'as'")
+            alias = self._consume("IDENT", "expected a namespace alias after 'as'")
+            return Node("maza", token, value=(specifier.value, alias.value))
         if self._match("IMPORT"):
             token = self._previous()
             specifier = self._consume("STRING", "expected a quoted .rpr path after 'import'")

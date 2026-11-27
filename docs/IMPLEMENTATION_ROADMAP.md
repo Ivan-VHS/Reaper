@@ -1,6 +1,6 @@
 # Reaper implementation roadmap
 
-**Reviewed:** 2026-11-24  
+**Reviewed:** 2026-11-26  
 **Authority:** source code, tests, build configuration and required CI checks.  
 **Product boundary:** Reaper is an executable Python reference language and local developer workbench with a partial native C17 track. It is not currently a complete native compiler, kernel runtime or unrestricted hardware execution environment.
 
@@ -21,6 +21,7 @@ Never move a row to Delivered because a registry, design, README, schema or gene
 |---|---|---|
 | Python language | Delivered compatibility baseline: lexer, parser, interpreter, modules, CLI and REPL | `reaper/`, `tests/`, `examples/` |
 | Resource controls | Delivered reference-runtime quotas and explicit audit/effect boundaries | Runtime source and quota/security regression tests |
+| MAZA live foundations | Partial: local `.rpr` attachment, hot-refresh and foreground supervisor are implemented in the reference runtime/VM; native AOT excluded; pending required CI evidence | `reaper/maza.py`, `tests/test_maza.py`, `docs/MAZA.md` |
 | Static analysis | Partial conservative type and call diagnostics | `reaper --check`, Studio and LSP tests |
 | Studio | Delivered Windows editor/debugger foundation | `reaper_desktop.py`, desktop workflow |
 | LSP/DAP | Delivered stdio protocol subsets with documented limits | Protocol modules and protocol tests |
@@ -108,9 +109,10 @@ Never move a row to Delivered because a registry, design, README, schema or gene
 - Pin peer interfaces to versioned manifests and explicit trust boundaries.
 - Treat incoming manifests, binaries, media and reports as untrusted bounded data.
 - Keep OPlague inspection read-only, VentuSample DSP offline, and Pytyliki ABI loading explicitly selected by the caller.
+- MAZA provides live attachment of explicitly selected local Reaper `.rpr` foundations, with source fingerprints, last-known-good export retention and a foreground supervisor. Other languages and external projects still join through dedicated versioned adapters; MAZA does not turn arbitrary peer binaries into Reaper modules.
 - Add schema compatibility, negative fixtures and cross-project contract tests for every interface change.
 
-**Acceptance:** all federation schemas validate; version mismatch and malformed payloads fail closed; optional peers can be absent without breaking the core language runtime.
+**Acceptance:** all federation schemas validate; version mismatch and malformed payloads fail closed; optional peers can be absent without breaking the core language runtime. MAZA tree-walk/VM parity, failed-update recovery, graph scanning, detach semantics and supervisor lifecycle pass regression tests and required CI.
 
 ### R8 — Release and maintenance
 

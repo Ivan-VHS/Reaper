@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 import re
 from .errors import ExecutionLimitError, LexError, ParseError, ReaperError, ReaperRuntimeError
+from .maza import MazaError
 
 _DEFINITIONS = {
     "RPR-E0000": {"code":"RPR-E0000","severity":"error","title":"Unclassified Reaper error","summary":"Reaper stopped because an operation failed without a more specific diagnostic category.","causes":"A new error type may not yet have a dedicated diagnostic entry.","help":"Read the original message and report the missing classification so the registry can be extended."},
@@ -11,6 +12,7 @@ _DEFINITIONS = {
     "RPR-E0014": {"code":"RPR-E0014","severity":"error","title":"Unexpected closing delimiter","summary":"A closing parenthesis, bracket, or brace has no matching opener at this location.","causes":"An extra closing delimiter or an earlier opener closed in the wrong order.","help":"Match each closing delimiter to the most recent compatible opener; remove the extra closer or correct the nesting."},
     "RPR-E0100": {"code":"RPR-E0100","severity":"error","title":"Runtime operation rejected","summary":"The interpreter rejected an operation while evaluating the program.","causes":"Invalid operand types, division by zero, an unavailable value, or a violated runtime contract.","help":"Check the reported operation and its input values. Handle absent or invalid values explicitly before retrying."},
     "RPR-E0101": {"code":"RPR-E0101","severity":"error","title":"Execution budget exceeded","summary":"The program exceeded a configured instruction or resource limit.","causes":"An unexpectedly large workload, a non-terminating loop, or a limit that is too low for the intended input.","help":"Reduce the input or simplify the loop. Increase the specific budget only after reviewing the resource cost."},
+    "RPR-E0110": {"code":"RPR-E0110","severity":"error","title":"MAZA foundation operation failed","summary":"A live foundation could not be attached, resolved, refreshed or detached safely.","causes":"The local source is missing, invalid, exceeds a boundary, conflicts with an alias, or fails while being refreshed.","help":"Check the .rpr source path and export contract. A failed refresh preserves the last known-good namespace; inspect maza_status() and repair the source before retrying."},
     "RPR-W0001": {"code":"RPR-W0001","severity":"warning","title":"Incomplete delimiter","summary":"The document contains an opening delimiter without a matching closer.","causes":"The user may still be typing, or the closing delimiter may have been omitted.","help":"Add the matching closing delimiter. This warning is intentionally non-fatal while editing an incomplete document."},
 }
 _LOCATION = re.compile(r"^(?P<file>.+?):(?P<line>[0-9]+):(?P<column>[0-9]+):\s*(?P<message>.*)$")
@@ -44,6 +46,8 @@ def diagnose_exception(error: ReaperError, fallback_file: str | None = None) -> 
         code = "RPR-E0013"
     elif isinstance(error, ExecutionLimitError):
         code = "RPR-E0101"
+    elif isinstance(error, MazaError):
+        code = "RPR-E0110"
     elif isinstance(error, ReaperRuntimeError):
         code = "RPR-E0100"
     else:

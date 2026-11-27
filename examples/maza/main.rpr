@@ -1,0 +1,6 @@
+# Attach and use another local Reaper foundation.
+maza "foundation.rpr" as shared
+
+emit shared["foundation_name"]
+emit shared["add"](20, 22)
+emit maza_status("shared")["state"]

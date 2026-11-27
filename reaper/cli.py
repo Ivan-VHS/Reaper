@@ -22,6 +22,7 @@ from .systems_architectures import main as systems_architectures_main
 from .token_catalog import CATALOG_GROUPS, catalog_summary, token_catalog, token_info
 from .products import ProductError, get_product, list_products
 from .plugins import PluginError, PluginManager
+from .maza import MazaError
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -47,6 +48,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--optimization", choices=("0", "1", "2", "3", "s"), default="2", help="native build optimization level (default: 2)")
 
     parser.add_argument("--module-graph", action="store_true", help="print the transitive .rpr dependency graph as JSON without executing code")
+    parser.add_argument("--maza-supervise", action="store_true", help="keep the foreground process alive and refresh attached MAZA foundations until interrupted")
     parser.add_argument("--heap-bytes", type=int, default=64 * 1024 * 1024, help="managed heap ceiling in bytes")
     parser.add_argument("--open-resources", type=int, default=64, help="maximum simultaneously open managed files")
     parser.add_argument("--systems", action="store_true", help="list the 20 engineering system contracts")
@@ -395,6 +397,11 @@ def main(argv: list[str] | None = None) -> int:
         )
         try:
             interpreter.run(source, str(path), engine=args.engine)
+            if args.maza_supervise:
+                if not interpreter.maza.links():
+                    raise MazaError("--maza-supervise requires at least one active MAZA foundation")
+                print("Reaper MAZA supervisor active; press Ctrl+C to stop.", file=sys.stderr)
+                interpreter.maza.serve()
             profile_data = {
                 "elapsed_seconds": round(time.perf_counter() - started, 9),
                 "steps": interpreter.steps,

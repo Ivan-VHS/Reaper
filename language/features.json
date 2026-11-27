@@ -301,6 +301,27 @@
         "partition-conservation",
         "proportional-conservation"
       ]
+    },
+    {
+      "id": "MAZA-LIVE-001",
+      "name": "Live foundation federation and hot refresh",
+      "area": "modules",
+      "status": "implemented",
+      "depends_on": [
+        "MOST-SYN-001"
+      ],
+      "acceptance": [
+        "maza-keyword-and-alias",
+        "explicit-namespace-parser",
+        "treewalk-attachment",
+        "vm-ir-parity",
+        "bounded-local-source",
+        "stable-namespace-refresh",
+        "last-good-on-invalid-update",
+        "dependency-graph-edge",
+        "foreground-24x7-supervisor",
+        "runtime-regression"
+      ]
     }
   ],
   "profile": "МОСТ — exact Russian keyword aliases; no separate parser, semantics, runtime or backend"

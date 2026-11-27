@@ -15,7 +15,7 @@ DECLARATIONS = {"make","vary","craft","fn","let","const","struct","enum","type"}
 DECL_ALIASES = {alias for alias, canonical in KEYWORD_ALIASES.items() if canonical in DECLARATIONS}
 DECL = re.compile(r"\b(" + "|".join(map(re.escape, sorted(DECLARATIONS | DECL_ALIASES))) + r")\s+([\w]+)")
 KEYWORDS = {"make","vary","change","craft","yield","emit","when","otherwise","each","in","loop","while","true","false","nothing","and","or","not","import","export","as"} | set(KEYWORD_ALIASES) | set(KEYWORD_ALIASES.values())
-BUILTINS = {"text","number","length","range","map","keep","fold","sum","min","max","sort","reverse","unique","join","split"}
+BUILTINS = {"text","number","length","range","map","keep","fold","sum","min","max","sort","reverse","unique","join","split","maza_status","maza_links","maza_refresh","maza_detach"}
 
 @dataclass(frozen=True, slots=True)
 class Span:

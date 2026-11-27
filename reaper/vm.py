@@ -16,7 +16,7 @@ _OPCODES = {
         "CONST", "LOAD", "DEFINE", "ASSIGN", "EMIT", "RETURN", "MAKE_FUNCTION",
         "JUMP_IF_FALSE", "JUMP", "ENTER_SCOPE", "EXIT_SCOPE", "ITER_INIT",
         "ITER_NEXT", "ITER_END", "POP", "BUILD_LIST", "INDEX", "UNARY",
-        "CALL", "PIPE_CALL", "BINARY", "AND_JUMP", "OR_JUMP", "IMPORT", "EXPORT",
+        "CALL", "PIPE_CALL", "BINARY", "AND_JUMP", "OR_JUMP", "IMPORT", "EXPORT", "MAZA",
     ), start=1)
 }
 _OPCODE_NAMES = {value: key for key, value in _OPCODES.items()}
@@ -102,7 +102,7 @@ class VirtualMachine:
             self.interpreter._tick(token)
 
             if self.interpreter.debugger is not None and name in {
-                "DEFINE", "ASSIGN", "EMIT", "RETURN", "MAKE_FUNCTION", "IMPORT", "EXPORT", "ITER_NEXT",
+                "DEFINE", "ASSIGN", "EMIT", "RETURN", "MAKE_FUNCTION", "IMPORT", "MAZA", "EXPORT", "ITER_NEXT",
             }:
                 self.interpreter.debugger.before_statement(
                     token, environment, self.interpreter.call_stack, self.interpreter.filename
@@ -229,6 +229,9 @@ class VirtualMachine:
                 else:
                     for symbol, value in exports.items():
                         environment.define(symbol, value)
+            elif name == "MAZA":
+                specifier, alias = instruction.argument
+                self.interpreter.maza.attach(specifier, alias, self.interpreter.filename, environment)
             elif name == "EXPORT":
                 symbol = instruction.argument
                 if symbol not in environment.values:

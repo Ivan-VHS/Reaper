@@ -10,6 +10,7 @@ The CLI and language server share stable `RPR-` diagnostic codes. Codes identify
 | RPR-E0014 | error | Unexpected closing delimiter |
 | RPR-E0100 | error | Runtime operation rejected |
 | RPR-E0101 | error | Execution budget exceeded |
+| RPR-E0110 | error | MAZA foundation operation failed |
 | RPR-W0001 | warning | Incomplete delimiter while editing |
 
 Run `python -m reaper --explain RPR-E0013` for causes and repair guidance. CLI JSON errors include the code, file, one-character source range and suggested next step. The language server publishes the same code and includes the suggestion in diagnostic `data.help`.
