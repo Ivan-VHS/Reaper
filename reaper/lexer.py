@@ -13,8 +13,8 @@ MAX_TOKEN_COUNT = 1_000_000
 
 
 KEYWORDS = {
-    "make", "vary", "change", "craft", "yield", "emit", "when",
-    "otherwise", "each", "in", "loop", "while", "true", "false",
+    "make", "vary", "reg", "change", "craft", "scenario", "yield", "emit", "when",
+    "otherwise", "each", "in", "loop", "while", "continue", "true", "false",
     "nothing", "and", "or", "not", "import", "export", "as",
 }
 
@@ -76,6 +76,9 @@ KEYWORD_ALIASES = {
     "прервать": "break",
     "продолжить": "continue",
     "отложить": "defer",
+    "сценарий": "scenario",
+    "регистр": "reg",
+    "регистрировать": "reg",
 }
 
 
@@ -90,8 +93,8 @@ class Token:
 class Lexer:
     """Convert source text into a position-aware token stream."""
 
-    _TWO_CHAR = {":=", "==", "!=", "<=", ">=", "//", "**", "++", "::"}
-    _ONE_CHAR = set("+-*/%<>(){}[],")
+    _TWO_CHAR = {":=", "==", "!=", "<=", ">=", "//", "**", "++", "::", ".."}
+    _ONE_CHAR = set("+-*/%<>(){}[],;")
 
     def __init__(self, source: str, filename: str = "<memory>") -> None:
         self.source = source
@@ -209,6 +212,11 @@ class Lexer:
     def _operator_or_punctuation(self) -> None:
         start_line, start_column = self.line, self.column
         triplet = self.source[self.index:self.index + 3]
+        if triplet == "...":
+            for _ in range(3):
+                self._advance()
+            self._append_token(Token("..", "...", start_line, start_column))
+            return
         if token_is_reserved(triplet):
             for _ in range(3):
                 self._advance()
