@@ -11,7 +11,7 @@ from .lexer import KEYWORD_ALIASES
 from .parser import parse
 
 IDENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*|[^\W\d]\w*", re.UNICODE)
-DECLARATIONS = {"make","vary","craft","fn","let","const","struct","enum","type"}
+DECLARATIONS = {"make","vary","reg","craft","scenario","fn","let","const","struct","enum","type"}
 DECL_ALIASES = {alias for alias, canonical in KEYWORD_ALIASES.items() if canonical in DECLARATIONS}
 DECL = re.compile(r"\b(" + "|".join(map(re.escape, sorted(DECLARATIONS | DECL_ALIASES))) + r")\s+([\w]+)")
 KEYWORDS = {"make","vary","change","craft","yield","emit","when","otherwise","each","in","loop","while","true","false","nothing","and","or","not","import","export","as"} | set(KEYWORD_ALIASES) | set(KEYWORD_ALIASES.values())
@@ -86,7 +86,7 @@ def _scan(snapshot):
             identifiers.append((match.group(), Span(row, match.start(), match.end())))
         for match in DECL.finditer(clean):
             name = match.group(2)
-            symbols.append(Symbol(name, "function" if match.group(1) in {"craft","fn","функция","процедура"} else "variable",
+            symbols.append(Symbol(name, "function" if match.group(1) in {"craft","scenario","fn","функция","процедура","сценарий","сценарій"} else "variable",
                                   snapshot.uri, Span(row, match.start(2), match.end(2))))
         for col, char in enumerate(clean):
             if char in "([{": stack.append((char, row, col))
