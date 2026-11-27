@@ -267,10 +267,11 @@
         "effects_verified",
         "ownership_verified",
         "semantic_graph_verified",
-        "canonical_typed_ir_emitted",
         "stack_vm_bytecode_emitted",
         "execution_performed",
-        "hardware_access_performed"
+        "hardware_access_performed",
+        "typed_semantic_graph_emitted",
+        "canonical_typed_ir_emitted"
       ],
       "properties": {
         "source_digest_verified": {
@@ -295,7 +296,7 @@
           "const": true
         },
         "canonical_typed_ir_emitted": {
-          "const": true
+          "const": false
         },
         "stack_vm_bytecode_emitted": {
           "const": false
@@ -305,6 +306,9 @@
         },
         "hardware_access_performed": {
           "const": false
+        },
+        "typed_semantic_graph_emitted": {
+          "const": true
         }
       }
     }
