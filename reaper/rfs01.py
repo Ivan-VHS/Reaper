@@ -626,6 +626,7 @@ class RFSRuntime:
 
     def __init__(self, program: RFSProgram):
         self.program = program
+        self.ir = lower_to_ir(program)
         self._root = {
             node.id: RuntimeNode(node.id, node.layer, node.pressure, node.load_limit, node.integrity, node.noise_db, node.core_seed, node.active)
             for node in program.nodes
@@ -711,19 +712,36 @@ class RFSRuntime:
         return node.integrity * (1.0 - load_ratio)
 
     def run(self) -> dict[str, Any]:
-        for cycle in range(1, self.program.cycles + 1):
-            for action in self.program.actions:
-                if isinstance(action, Flow):
-                    self._flow(action, cycle)
-                else:
-                    self._recover(action, cycle)
+        for cycle in range(1, self.ir.cycles + 1):
+            for instruction in self.ir.instructions:
+                args = instruction.operands
+                if instruction.opcode in {"FLOW_SIGNAL", "FLOW_PRESSURE_FORWARD", "FLOW_PRESSURE_REVERSE"}:
+                    operator = {
+                        "FLOW_SIGNAL": "~>",
+                        "FLOW_PRESSURE_FORWARD": ">>",
+                        "FLOW_PRESSURE_REVERSE": "<<",
+                    }[instruction.opcode]
+                    self._flow(Flow(args[0], operator, args[1], instruction.span or Span(1, 1)), cycle)
+                elif instruction.opcode == "RECOVER_ROOT":
+                    self._recover(Recovery(args[0], "<-root", instruction.span or Span(1, 1)), cycle)
+                elif instruction.opcode == "RECOVER_CORE":
+                    self._recover(Recovery(args[0], "^core", instruction.span or Span(1, 1)), cycle)
 
         contrasts = []
-        for contrast in self.program.contrasts:
-            left = self.reserve(self.nodes[contrast.left])
-            right = self.reserve(self.nodes[contrast.right])
-            score = 1.0 - abs(left - right) if contrast.operator == "||" else abs(left - right)
-            contrasts.append({"left": contrast.left, "operator": contrast.operator, "right": contrast.right, "score": score})
+        for instruction in self.ir.instructions:
+            if instruction.opcode not in {"CONTRAST_COMPLEMENT", "CONTRAST_DIFFERENTIAL"}:
+                continue
+            left_id, right_id = instruction.operands
+            left = self.reserve(self.nodes[left_id])
+            right = self.reserve(self.nodes[right_id])
+            operator = "||" if instruction.opcode == "CONTRAST_COMPLEMENT" else "^^"
+            score = 1.0 - abs(left - right) if operator == "||" else abs(left - right)
+            contrasts.append({"left": left_id, "operator": operator, "right": right_id, "score": score})
+        messages = [
+            instruction.operands[0]
+            for instruction in self.ir.instructions
+            if instruction.opcode == "EMIT"
+        ]
 
         node_rows = [
             {
@@ -743,13 +761,15 @@ class RFSRuntime:
             "schema": "rfs-01.runtime-result.v1",
             "module": self.program.name,
             "version": self.program.version,
+            "ir_schema": self.ir.schema,
+            "ir_instruction_count": len(self.ir.instructions),
             "status": "MeshInMotion" if any(node["active"] for node in node_rows) else "MeshIdle",
-            "cycles": self.program.cycles,
+            "cycles": self.ir.cycles,
             "nodes": node_rows,
             "clean_signal_frames": len(self.clean_signals),
             "rejected_signal_frames": len(self.program.signals) - len(self.clean_signals),
             "contrasts": contrasts,
-            "messages": list(self.program.messages),
+            "messages": messages,
             "events": self.events,
             "dropped_events": self.dropped_events,
         }
