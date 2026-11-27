@@ -1,0 +1,84 @@
+name: Reaper Processor Engineering Platform
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "stdlib/processor_workbench.rpr"
+      - "examples/processor-workspace/**"
+      - "schemas/processor-project.v1.schema.json"
+      - "schemas/processor-workbench-report.v1.schema.json"
+      - "tools/validate_processor_project.mjs"
+      - "tools/validate_processor_workbench_report.mjs"
+      - "docs/PROCESSOR_ENGINEERING_PLATFORM.md"
+      - "language/features.json"
+      - "project-contract.json"
+      - ".github/workflows/processor-engineering.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  processor-workbench:
+    name: Validate Reaper processor project against Pytyliki host evidence
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout Reaper
+        uses: actions/checkout@v7
+      - name: Set up Reaper reference runtime
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Install Reaper reference package
+        run: python -m pip install -e .
+      - name: Set up Node.js contract validators
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Checkout Pytyliki report producer
+        uses: actions/checkout@v7
+        with:
+          repository: Ivan-VHS/Pytyliki
+          ref: fa84f8d8d6babf24bebcfa9a35ca3d55e1a9f296
+          path: _deps/Pytyliki
+      - name: Validate processor project manifest
+        run: node tools/validate_processor_project.mjs examples/processor-workspace/x86_64-linux.project.json schemas/processor-project.v1.schema.json
+      - name: Build Pytyliki C11 workstation
+        run: |
+          cmake -S _deps/Pytyliki -B _deps/Pytyliki/build -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build _deps/Pytyliki/build --parallel --target pytyliki
+      - name: Collect real read-only host CPU and benchmark evidence
+        run: |
+          mkdir -p build
+          ./_deps/Pytyliki/build/pytyliki --profile --suite --repeat 3 --json > build/pytyliki-processor-report.json
+          node _deps/Pytyliki/tools/validate_processor_report.mjs build/pytyliki-processor-report.json
+      - name: Validate Reaper processor workbench program
+        run: python -m reaper --check examples/processor-workspace/processor_workbench.rpr
+      - name: Run Reaper processor workbench policy and report
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m reaper examples/processor-workspace/processor_workbench.rpr | tee processor-workbench.txt
+          grep -qx "REAPER_PROCESSOR_WORKBENCH:PASS" processor-workbench.txt
+      - name: Validate generated processor workbench report
+        run: node tools/validate_processor_workbench_report.mjs build/processor-workbench-report.json schemas/processor-workbench-report.v1.schema.json
+      - name: Build Reaper scalar C17 host AOT probe
+        run: python -m reaper examples/processor-workspace/scalar_probe.rpr --native build/processor-scalar-probe
+      - name: Execute scalar AOT smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./build/processor-scalar-probe | tee scalar-probe.txt
+          grep -qx "REAPER_PROCESSOR_SCALAR_AOT_OK" scalar-probe.txt
+      - name: Write evidence summary
+        if: always()
+        run: |
+          {
+            echo "## Reaper Processor Engineering Platform"
+            echo "- Reaper policy module: reference-runtime validation"
+            echo "- Pytyliki source: pinned read-only host evidence producer"
+            echo "- Native backend: scalar C17 host AOT only"
+            echo "- Cross-target code generation and privileged CPU/device operations: not claimed"
+          } >> "$GITHUB_STEP_SUMMARY"
