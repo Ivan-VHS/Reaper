@@ -117,7 +117,7 @@ assert(forecast[0] and forecast[1] < state[4], "repair forecast must project fut
 make reserve := core["reserve_spend"]([8, 12, 16], 1, 20)
 assert(reserve[0] and reserve[2] == 12 and reserve[3] == 8, "local reserve shortfall must be explicit")
 
-make production := core["new_state"](100, 20, "production", [8, 8], 0)
+make production := core["new_state"](100, 20, "production", [80, 8], 0)
 assert(production[0], "production state must initialize")
 make production_spend := core["repair_spend"](production[1], 99, 64, 16)
 assert(production_spend[0], "production budget debit must succeed")
