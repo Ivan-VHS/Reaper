@@ -53,6 +53,44 @@ make executed := core["execute_bytecode"](state, encoded[1])
 assert(executed[0], "verified bytecode must dispatch through the execution core")
 change state := executed[1]
 
+# Every specialized physical opcode has an explicit, checked handler.
+make cu_word := core["bytecode_encode"](48, "BOOT", 1000, 1000, 0)
+make cu_result := core["execute_bytecode"](state, cu_word[1])
+assert(cu_word[0] and cu_result[0], "Cu-Mesh tune opcode must execute")
+assert(cu_result[2][1][0] == "CU_MESH_RC", "Cu-Mesh opcode must return an RC estimate")
+change state := cu_result[1]
+
+make nano_word := core["bytecode_encode"](49, "START", 7, 8, 0)
+make nano_result := core["execute_bytecode"](state, nano_word[1])
+assert(nano_word[0] and nano_result[0], "nano pulse opcode must execute")
+assert(nano_result[2][1][0] == "NANO_PULSE", "nano opcode must expose local cell consumption")
+change state := nano_result[1]
+
+make fault_word := core["bytecode_encode"](33, "SCENARIO", 8, 256, 0)
+make fault_result := core["execute_bytecode"](state, fault_word[1])
+assert(fault_word[0] and fault_result[0], "fault-period opcode must execute only in test mode")
+change state := fault_result[1]
+
+make skew_word := core["bytecode_encode"](64, "ROOT", 9, 16, 0)
+make skew_result := core["execute_bytecode"](state, skew_word[1])
+assert(skew_word[0] and skew_result[0], "corrective-skew opcode must dispatch through ROOT")
+change state := skew_result[1]
+
+# Register, barrier and stream surfaces are explicit simulated descriptors.
+make registers := core["hardware_register_snapshot"](state)
+assert(registers[0] and size(registers[1]) == 10, "simulated register bank must expose ten registers")
+assert(registers[1][5] == 15, "active test injection must expose all fault-control flags")
+make barrier := core["silicon_barrier"](0, 0, 8)
+assert(barrier[0] and barrier[1] == 8 and barrier[2] == 1, "barrier model must advance cycle and fence counters")
+make stream := core["stream_state"](2, 4096, -100)
+assert(stream[0], "processor stream must validate")
+make stream_tick := core["stream_advance"](stream[1], 12, 500, 16, true)
+assert(stream_tick[0] and stream_tick[1][2] == -83 and stream_tick[3] == "", "stream correction must reduce signed residual error")
+make channel := core["copper_channel"](1, 1000, 1000000, 17, 1000, 1000, 85000)
+assert(channel[0], "copper channel must validate")
+make channel_aged := core["copper_channel_age"](channel[1], 100000)
+assert(channel_aged[0] and channel_aged[1][6] > 0, "channel age must update its wear counter")
+
 # Repair core: forecast, local reserve depletion, and safe production degradation.
 make forecast := core["repair_forecast"](state, 50, 10)
 assert(forecast[0] and forecast[1] < state[4], "repair forecast must project future consumption")
