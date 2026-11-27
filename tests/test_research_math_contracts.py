@@ -197,6 +197,17 @@ class MathematicalResearchContractTests(unittest.TestCase):
         runtime.run(example_path.read_text(encoding="utf-8"), filename=str(example_path))
         self.assertIn("MATHEMATICAL_RESEARCH_PLAN:PASS", output)
 
+    def test_language_facade_exports_all_51_domain_functions(self):
+        module_path = Path(__file__).resolve().parents[1] / "stdlib" / "research_math.rpr"
+        source = module_path.read_text(encoding="utf-8")
+        exported = [
+            line for line in source.splitlines()
+            if line.startswith("export craft ")
+            and not line.startswith("export craft catalog")
+            and not line.startswith("export craft kernel_plan")
+        ]
+        self.assertEqual(len(exported), EXPECTED_FUNCTIONS)
+
     def test_pytyliki_manifest_matches_the_canonical_registry(self):
         fixture_path = Path(__file__).resolve().parent / "fixtures" / (
             "pytyliki.mathematical-research-kernels.v1.json"
