@@ -16,6 +16,7 @@ Start with the [project README](../README.md) for installation, first commands a
 - [Foundational frameworks 1–5](FOUNDATIONAL_FRAMEWORKS_V1.md) — executable Reaper contracts for Framework frame, Platform, Environment, Infrastructure and Architecture.
 - [Hardware language track](HARDWARE_LANGUAGE.md)
 - [Processor Engineering Platform v1](PROCESSOR_ENGINEERING_PLATFORM.md) — processor project manifests, Pytyliki host evidence, target/ABI resource admission and the scalar-C17 host AOT workbench boundary.
+- [Pytyliki Processor Fabric bridge v1](PYTYLIKI_PROCESSOR_FABRIC_BRIDGE.md) — PPF/evidence import, source-span preservation, typed resource ownership and separate processor backend gates.
 - [Typed Registry v1](TYPED_REGISTRY.md) — Reaper-native type, layout, platform, ABI, effect and capability contracts.
 - [System Runtime ABI v1](SYSTEM_RUNTIME_ABI_V1.md)
 - [DABI64 Desktop Host v1](DABI64_DESKTOP_HOST_V1.md)
