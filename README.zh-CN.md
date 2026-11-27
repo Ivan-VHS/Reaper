@@ -12,13 +12,14 @@ Reaper 是一款面向编译器工具、嵌入式软件和硬件相关程序的�
 
 ## 组件
 
+- Processor Engineering Platform v1：项目/目标清单、Typed Registry 校验、Pytyliki 只读 CPU/ISA 证据，以及当前 scalar C17 主机 AOT 工作流切片。不宣称已实现特定 ISA 代码生成或特权处理器操作。
 - Reaper 源语言、词法/语法分析器、参考运行时和诊断。
 - CLI、REPL、Windows Studio 基础、LSP 与 DAP 服务。
 - 实验性 C17 原生实现；当前尚未与参考运行时功能对等。
 - NOO TAH 将 JavaScript 执行交给官方 Node.js 运行时。
 - Jora 项目脚手架和能力组合；目录中的应用包仍是规范，不是可安装的编辑器。
 
-文档：[功能](docs/FEATURES.md) · [架构](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Jora 工厂](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md)。
+文档：[Processor Engineering Platform](docs/PROCESSOR_ENGINEERING_PLATFORM.md) · [功能](docs/FEATURES.md) · [架构](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Jora 工厂](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md)。
 
 ## 快速开始
 
