@@ -7,13 +7,13 @@ const schema = JSON.parse(readFileSync(resolve(root, "schemas/neural-contract.v1
 const contractPath = resolve(root, "examples/neural/neural-contract.v1.json");
 const contract = JSON.parse(readFileSync(contractPath, "utf8"));
 
-function fail(message) {
+function abort(message) {
   console.error("Neural Contract validation failed: " + message);
   process.exit(1);
 }
 
 function requireValue(condition, message) {
-  if (!condition) fail(message);
+  if (!condition) throw new Error(message);
 }
 
 function validate(value) {
@@ -133,9 +133,13 @@ function validate(value) {
   return true;
 }
 
-requireValue(schema.$schema === "https://json-schema.org/draft/2020-12/schema", "schema must use JSON Schema 2020-12");
-requireValue(schema.properties?.schema?.const === "reaper.neural-contract/v1", "schema identity mismatch");
-validate(contract);
+try {
+  requireValue(schema.$schema === "https://json-schema.org/draft/2020-12/schema", "schema must use JSON Schema 2020-12");
+  requireValue(schema.properties?.schema?.const === "reaper.neural-contract/v1", "schema identity mismatch");
+  validate(contract);
+} catch (error) {
+  abort(error.message);
+}
 
 // Guardrail regression cases: the validator must reject unsafe mutations.
 const rejectionCases = [
@@ -150,7 +154,7 @@ for (const [name, mutate] of rejectionCases) {
   mutate(copy);
   let rejected = false;
   try { validate(copy); } catch { rejected = true; }
-  requireValue(rejected, "negative fixture was not rejected: " + name);
+  if (!rejected) abort("negative fixture was not rejected: " + name);
 }
 
 console.log("REAPER_NEURAL_CONTRACT_SCHEMA_OK");
