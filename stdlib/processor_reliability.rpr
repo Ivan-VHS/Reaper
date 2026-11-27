@@ -360,6 +360,44 @@ export craft reserve_spend(reserves, reserve_index, cost) {
     yield [true, updated[1], spent, cost - spent, ""]
 }
 
+export craft repair_recover(state, reserve_index, amount, root_authorized) {
+    when not state_valid(state) {
+        yield [false, state, 0, "RPR-REPAIR-0040: invalid state"]
+    }
+    when kind(root_authorized) != "boolean" or not root_authorized {
+        yield [false, state, 0, "RPR-REPAIR-0041: recovery requires an explicit ROOT authorization"]
+    }
+    when state[6] != "production" or state[16] != "safe-degraded" {
+        yield [false, state, 0, "RPR-REPAIR-0042: recovery is allowed only from production safe-degraded state"]
+    }
+    when not valid_integer(amount, 1, 1000000000) {
+        yield [false, state, 0, "RPR-REPAIR-0043: recovery amount is outside bounds"]
+    }
+    make room := state[3] - state[4]
+    make credited := amount
+    when credited > room { change credited := room }
+    when credited == 0 {
+        yield [false, state, 0, "RPR-REPAIR-0044: repair budget is already at capacity"]
+    }
+    make reserve := reserve_spend(state[17], reserve_index, credited)
+    when not reserve[0] {
+        yield [false, state, 0, reserve[4]]
+    }
+    when reserve[3] != 0 {
+        yield [false, state, 0, "RPR-REPAIR-0045: local recovery reserve is insufficient"]
+    }
+    make restored := checked_add(state[4], credited)
+    when not restored[0] {
+        yield [false, state, 0, restored[2]]
+    }
+    make next := state_put(state, 4, restored[1])
+    change next := state_put(next, 17, reserve[1])
+    when restored[1] > state[5] {
+        change next := state_put(next, 16, "ready")
+    }
+    yield [true, next, credited, ""]
+}
+
 export craft silicon_domain(domain_id, cycle, voltage_mv, temperature_mc, maximum_temperature_mc) {
     when not valid_integer(domain_id, 0, 65535) or
          not valid_integer(cycle, 0, SAFE_INTEGER_MAX) or
@@ -763,6 +801,9 @@ export craft run_construct(state, spec) {
     }
     make checked := validate_construct(spec)
     when not checked[0] { yield [false, state, [], checked[1]] }
+    when state[6] == "production" and state[16] == "safe-degraded" and spec[0] == "START" {
+        yield [false, state, [], "RPR-REPAIR-0046: safe-degraded state blocks new production streams"]
+    }
     make next_cycle := checked_add(state[2], 1)
     make next_step := checked_add(state[14], 1)
     make next_fence := checked_add(state[19], 1)
