@@ -859,8 +859,8 @@ class ReaperStudio(tk.Tk):
 
     def _apply_editor_visuals(self) -> None:
         """Keep the code editor, syntax colors and line gutter in the active theme."""
-        palette = getattr(self, "_anatidae_palette", {})
-        theme_name = getattr(self, "_anatidae_theme", self._theme_name)
+        palette = getattr(self, "_dak_palette", {})
+        theme_name = getattr(self, "_dak_theme", self._theme_name)
         dark = theme_name in {"dark", "night"}
 
         editor_bg = palette.get("surface", "#0F2A45" if dark else "#FFFFFF")
@@ -1456,7 +1456,7 @@ class ReaperStudio(tk.Tk):
     def _redraw_line_numbers(self, _event: tk.Event | None = None) -> None:
         if not hasattr(self, "line_numbers"):
             return
-        palette = getattr(self, "_anatidae_palette", {})
+        palette = getattr(self, "_dak_palette", {})
         line_number_color = palette.get("muted", "#94a3b8")
         self.line_numbers.delete("all")
         try:
