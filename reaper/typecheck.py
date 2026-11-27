@@ -172,7 +172,8 @@ class TypeChecker:
             value_type = self._expression(children[0])
             if value_type not in {"Int", "Float", "Number", ANY}:
                 self._report(node, "RPR-T0004", f"'reg' requires a numeric value, not {value_type}")
-            self.scopes[-1][node.value] = Binding(value_type, True)
+            register_type = "Number" if value_type in {"Int", "Float", "Number"} else value_type
+            self.scopes[-1][node.value] = Binding(register_type, True)
             return
         if node.kind == "change":
             actual = self._expression(children[0])
@@ -288,7 +289,7 @@ class TypeChecker:
                 if not self._numeric(left) or not self._numeric(right):
                     self._report(node, "RPR-T0004", f"operator '{operator}' requires numeric operands, got {left} and {right}")
                     return ANY
-                if ANY in {left, right}:
+                if ANY in {left, right} or "Number" in {left, right}:
                     return "Number"
                 return "Float" if "Float" in {left, right} or operator == "/" else "Int"
             if operator == "++":
