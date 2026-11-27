@@ -15,6 +15,7 @@ A capability is considered implemented only when its source contract, runtime/co
 
 | Capability family | Inspiration | Reaper status | Integration boundary |
 |---|---|---|---|
+| Aggregate snapshot integrity audit | Reaper-owned deterministic systems API | **Native C17 core implemented; .rpr binding pending** | Validates bounded snapshot manifests and diffs aggregate shard metadata only. No record-level linkage, personal-data hydration, external connectors or writes. The language-level feature remains specified until typed runtime/IR parity exists. |
 | Static type inference and diagnostics | C#, Java, Kotlin, Swift, TypeScript, F#, OCaml | **Partial — integrated into the reference toolchain** | `reaper --check` runs the same AST type pass by default; `reaper typecheck` provides focused diagnostics, and Studio/LSP use the same checker. It infers primitive/list types and checks supported expressions, mutability, indexes and function arity. Unknown module/FFI values stay `Any`. |
 | Nullability and explicit absence | Kotlin, Swift, Rust, OCaml | **Partial** | `nothing` is represented by the current runtime. The checker can preserve an inferred optional union, but there are no source annotations, flow-sensitive null refinement or exhaustive optional handling yet. |
 | Generics and parametric collections | Java, Kotlin, TypeScript, C++, Rust, Scala, D | **Partial** | Generic collection shape is inferred for list expressions and selected built-ins. User-declared generic functions, constraints and monomorphization are not implemented. |
@@ -54,6 +55,14 @@ python -m reaper --check --syntax-only path/to/program.rpr
 ```
 
 `--check` now runs syntax parsing and the conservative type pass by default. Use `--syntax-only` only when a parser-only check is needed for compatibility. Normal program execution, tree-walk runtime and VM semantics remain unchanged; static diagnostics never execute the selected source. The checker is not yet a complete sound type system: parameters have no source-level annotations, generic user declarations are absent, and type inference across external module boundaries remains intentionally unknown.
+
+## Reaper System Features v1
+
+The C17 systems ABI now implements native contracts for ten system capability groups. The feature registry keeps each at specified for .rpr because syntax, type-checker, canonical IR, reference-runtime and backend bindings are not complete. Cooperative budgets are not hard preemption; local-only validation depends on compiler-provided transitive effect sets; mutation authorization and reconciliation planning do not themselves write data. See [System Features v1](REAPER_SYSTEM_FEATURES_V1.md).
+
+## Snapshot integrity audit increment
+
+The native C17 core in include/reaper/snapshot_audit.h validates bounded manifests and compares sorted shard aggregates. It also offers a fixed-length transient comparison primitive that does not allocate, copy, log or retain its input. The core is offline and read-only. It does not provide row-level joins, personal-data processing, external I/O or mutation APIs. The .rpr standard-library facade and typed IR/runtime parity have not yet been implemented; see [the capability contract](SNAPSHOT_INTEGRITY_CAPABILITY.md).
 
 ## Implementation order
 
