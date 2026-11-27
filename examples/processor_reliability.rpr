@@ -152,6 +152,8 @@ make ap_ready := ["reaper.ap-start.v1", "boot-1", 1, 2, "ready-to-start", true, 
 make ap_transition := core["ap_startup_acknowledge"](ap_ready, "init-sipi-sent", "startup-sent")
 assert(not core["ap_startup_transition"](ap_ready, "startup-sent")[0], "local policy cannot forge an INIT/SIPI acknowledgement")
 assert(not core["ap_startup_acknowledge"](ap_ready, "missing-ack", "startup-sent")[0], "AP startup cannot advance without native adapter acknowledgement")
+make ap_online_ack := core["ap_startup_acknowledge"](ap_transition[1], "ap-online-confirmed", "online")
+assert(ap_online_ack[0] and ap_online_ack[1][4] == "online", "AP admission requires a native online acknowledgement")
 assert(ap_transition[0] and ap_transition[1][4] == "startup-sent", "AP state machine permits prepared INIT/SIPI handoff")
 assert(core["ap_startup_readiness"](ap_ready, true, 7) == "ready-for-kernel-init-sipi", "AP admission requires all per-CPU startup resources")
 assert(core["ap_startup_readiness"](ap_ready, false, 7) == "reject-bsp-not-online", "AP startup is blocked until BSP is online")
@@ -159,7 +161,7 @@ assert(core["ap_startup_readiness"](ap_ready, true, 8) == "reject-stale-topology
 make ap_control_adapter := ["reaper.processor-adapter.v1", "duckos-ap-start", "ap-smp", "duckos", "assembly", "dabi64-v1", "kernel-control", true, ["ap-start"]]
 assert(core["ap_startup_admission"](ap_ready, true, 7, ap_control_adapter) == "admit-request-to-native-adapter", "AP startup request is admitted only through a privileged native adapter")
 make smp_topology := ["reaper.processor-control.v1", "boot-1", 7, 0, [1, 2], [0], 8]
-make ap_online := ["reaper.ap-start.v1", "boot-1", 1, 2, "online", true, true, true, true, true, true, 7]
+make ap_online := ap_online_ack[1]
 make smp_admit := core["ap_smp_admit_cpu"](smp_topology, ap_online)
 assert(smp_admit[0] and contains(smp_admit[1][5], 1), "verified AP handshake updates the logical SMP topology")
 
