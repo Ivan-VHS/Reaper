@@ -51,6 +51,23 @@
       ]
     },
     {
+      "id": "language.scenario-flow.v1",
+      "status": "partial",
+      "summary": "Scenario declarations, numeric registers, inclusive integer ranges and loop continuation are implemented in the reference lexer/parser, static checker, tree-walk runtime, Canonical IR and bytecode VM, with LSP symbol support; native C17 and Reaper self-hosted frontend parity remain incomplete. Scenario declarations do not grant or widen host capabilities.",
+      "evidence": [
+        "reaper/lexer.py",
+        "reaper/parser.py",
+        "reaper/typecheck.py",
+        "reaper/runtime.py",
+        "reaper/ir.py",
+        "reaper/vm.py",
+        "reaper/language_service.py",
+        "tests/test_scenario_flow.py",
+        "tests/test_language_service.py",
+        "docs/SCENARIO_FLOW_V1.md"
+      ]
+    },
+    {
       "id": "runtime.canonical-ir-vm",
       "status": "implemented",
       "summary": "Selectable Python bytecode VM over Canonical IR while tree-walk execution remains the compatibility default.",
@@ -201,6 +218,19 @@
         "stdlib/system.rpr",
         "docs/SYSTEM_FUNCTIONS.md",
         "tests/test_system_functions.py"
+      ]
+    },
+    {
+      "id": "language.scenario-flow.v1",
+      "format": "Reaper .rpr scenario-flow grammar and Canonical IR / bytecode VM semantics",
+      "direction": "provides",
+      "status": "partial",
+      "evidence": [
+        "docs/SCENARIO_FLOW_V1.md",
+        "reaper/parser.py",
+        "reaper/ir.py",
+        "reaper/vm.py",
+        "tests/test_scenario_flow.py"
       ]
     }
   ],
