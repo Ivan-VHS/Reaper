@@ -19,6 +19,9 @@ class SelfHostingBootstrapTests(unittest.TestCase):
     def test_reaper_written_parser_runs_on_the_reference_runtime(self) -> None:
         self._run_selfhost_program("selfhost/parser.rpr", "SELFHOST_PARSER_OK")
 
+    def test_scalar_medium_and_stack_synthesis_run_as_reaper(self) -> None:
+        self._run_selfhost_program("selfhost/scalar_stack.rpr", "SELFHOST_SCALAR_STACK_OK")
+
 
 if __name__ == "__main__":
     unittest.main()
