@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Anatidae Quality Remediation Profile v1",
+  "title": "Dak Quality Remediation Profile v1",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -11,7 +11,7 @@
   ],
   "properties": {
     "schema": {
-      "const": "anatidae.quality-remediation.v1"
+      "const": "dak.quality-remediation.v1"
     },
     "project": {
       "type": "object",

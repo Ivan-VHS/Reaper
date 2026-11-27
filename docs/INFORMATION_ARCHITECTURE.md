@@ -62,7 +62,7 @@ Each Markdown page is linked here and from its topic hub, giving readers more th
 
 ### Studio, IDE and user experience
 
-- [ANATIDAE MOTION CONSTITUTION](ANATIDAE_MOTION_CONSTITUTION.md)
+- [DAK MOTION CONSTITUTION](DAK_MOTION_CONSTITUTION.md)
 - [CODEX 66 SHOWCASE](CODEX_66_SHOWCASE.md)
 - [REAPER STUDIO IMPLEMENTATION PROFILE](IDE_666_IMPLEMENTATION.md)
 - [MOTION CONSTITUTION V2026](MOTION_CONSTITUTION_V2026.md)
@@ -127,7 +127,7 @@ Each Markdown page is linked here and from its topic hub, giving readers more th
 ### Planning, governance and reference material
 
 - [CONTRIBUTING](../CONTRIBUTING.md)
-- [DUCK SOVEREIGN CANON](DUCK_SOVEREIGN_CANON.md)
+- [DAK DESIGN CANON](DAK_DESIGN_CANON.md)
 - [EMBEDDED C WORKBENCH](EMBEDDED_C_WORKBENCH.md)
 - [FEATURES](FEATURES.md)
 - [HUMAN FIRST GOVERNANCE](HUMAN_FIRST_GOVERNANCE.md)
@@ -143,7 +143,7 @@ Each Markdown page is linked here and from its topic hub, giving readers more th
 - [SEMANTIC HYPERGRAPH AND SOURCE MAP](SEMANTIC_HYPERGRAPH_AND_SOURCE_MAP.md)
 - [UNIFIED DOCUMENTATION STANDARD](UNIFIED_DOCUMENTATION_STANDARD.md)
 - [README](../editors/vscode/README.md)
-- [ANATIDAE NAMING CANON](../federation/ANATIDAE_NAMING_CANON.md)
+- [DAK NAMING CANON](../federation/DAK_NAMING_CANON.md)
 - [README](../README.md)
 - [README.Ru](../README.ru.md)
 - [README.Uk](../README.uk.md)

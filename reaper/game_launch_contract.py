@@ -1,8 +1,8 @@
-"""Reaper adapter for DuckOS game-launch manifests.
+"""Reaper adapter for Dak game-launch manifests.
 
 A task is data, not permission to execute. Reaper validates the launch contract
 and returns an argv/cwd/environment description for a trusted host such as
-DuckOS; this module never creates a process or invokes a shell.
+Dak; this module never creates a process or invokes a shell.
 """
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-PROFILE_SCHEMA = "duckos.game-launch-profile.v1"
+PROFILE_SCHEMA = "dakos.game-launch-profile.v1"
 TASK_SCHEMA = "reaper.game-launch-task.v1"
 MAX_PROFILE_BYTES = 1024 * 1024
 MAX_ARGUMENTS = 256
@@ -137,7 +137,7 @@ def load_game_launch_task(path: str | Path) -> dict[str, Any]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="reaper-game-contract", description="Validate a DuckOS game profile and emit a non-executing Reaper task.")
+    parser = argparse.ArgumentParser(prog="reaper-game-contract", description="Validate a Dak game profile and emit a non-executing Reaper task.")
     parser.add_argument("profile", type=Path)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args(argv)

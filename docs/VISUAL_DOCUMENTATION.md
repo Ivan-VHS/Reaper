@@ -41,7 +41,7 @@ Follow the [UI/UX 2026 convergence contract](UI_UX_2026_CONVERGENCE.md): AETHER-
 
 ### Motion and effects
 
-README and architecture graphics remain static. The desktop UI follows [UI_MOTION.md](UI_MOTION.md) and the [Anatidae motion constitution](ANATIDAE_MOTION_CONSTITUTION.md). Reduced Motion and Eco override Expressive Motion. Do not move editor content, animate syntax or use parallax/particles behind precision panes. Never claim 60/120 FPS or zero jitter without reproducible measurements.
+README and architecture graphics remain static. The desktop UI follows [UI_MOTION.md](UI_MOTION.md) and the [Dak motion constitution](DAK_MOTION_CONSTITUTION.md). Reduced Motion and Eco override Expressive Motion. Do not move editor content, animate syntax or use parallax/particles behind precision panes. Never claim 60/120 FPS or zero jitter without reproducible measurements.
 
 ## Diagram, docs and publishing formats
 

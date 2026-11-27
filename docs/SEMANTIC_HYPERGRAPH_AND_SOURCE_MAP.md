@@ -4,7 +4,7 @@
 
 **Scope:** a typed, content-addressed dataflow graph beside the existing Reaper text, AST, stack IR, Python reference runtime and native C17 toolchain.
 
-The uploaded Constitution of the Ducks / AETHER-ANAS manifesto is the architectural source. This document traces its ten renunciations, twelve commandments, 66 engineering laws, twelve formula models and engineering rule catalogue into this repository. It separates shipped behavior from roadmap.
+The uploaded Constitution of the Daks / AETHER-ANAS manifesto is the architectural source. This document traces its ten renunciations, twelve commandments, 66 engineering laws, twelve formula models and engineering rule catalogue into this repository. It separates shipped behavior from roadmap.
 
 ## 1. Why a sidecar graph
 
@@ -32,10 +32,10 @@ This module does not execute graphs, schedule CPU/GPU/remote workers, prove arbi
 |---|---|---|
 | Three-medium existence | Graph is medium-independent; existing flow operator, runtime/VM and platform abstractions remain execution foundations. | Unified CPU/GPU/remote executor is roadmap. |
 | Hydrodynamic calm | Readable .rpr, flow-first pipelines, deterministic projection, friendly diagnostics and source spans. | Partial and incremental. |
-| Ontological duck typing | Structural graph-port types plus current AST/IR verification and feature contracts. | Partial; not a complete static type checker. |
+| Ontological structural typing | Structural graph-port types plus current AST/IR verification and feature contracts. | Partial; not a complete static type checker. |
 | Feather-oil / effects | Runtime limits, governance/consent adapters and effect-aware contracts. | Partial; not a complete algebraic-effects runtime. |
 | Flock concurrency | Graph can inform dataflow scheduling. | Scheduler, bounded worker queues and backpressure remain executor work. |
-| Rounded visual design | Reaper Studio follows shared Anatidae UI, motion and accessibility contracts. | Design contract. |
+| Rounded visual design | Reaper Studio follows shared Dak UI, motion and accessibility contracts. | Design contract. |
 | Hypergraph instead of text | Semantic Lake Graph is an additional typed graph representation. | Implemented prototype; text/AST/IR remain canonical authoring path. |
 | Names as identity | Node SHA-256 address; label rename preserves identity. | Implemented for graph nodes only. |
 | Habitats / FBIP | Runtime resource accounting and native backend provide groundwork. | Partial; Python allocator is not a region/FBIP guarantee. |
@@ -77,7 +77,7 @@ Trauman, Baus–Bayes, Gause, Strauss, Bergmann, Dilman, Tilman, Spillman, Besse
 |---|---|---|
 | 1–111 | Three-medium existence / computation ontology | Flow-first language, canonical IR, platform profiles and the Semantic Lake Graph identity/edge layer; cross-device execution remains staged. |
 | 112–222 | Hydrodynamic calm / transparency | .rpr syntax, source spans, friendly diagnostics, deterministic graph projection, runtime audit and tool feedback. |
-| 223–333 | Duck typing / type system | IR type validation, typed graph ports, explicit effects and feature registry; full ADT/refinement checking remains roadmap. |
+| 223–333 | Structural typing / type system | IR type validation, typed graph ports, explicit effects and feature registry; full ADT/refinement checking remains roadmap. |
 | 334–444 | Feather-oil / effects / immune barrier | Runtime quotas, resource tracking, governance, consent, FFI boundaries and validated inputs; full affine/effect typing is not claimed. |
 | 445–555 | Flock / collective concurrency | Flow graph representation; worker scheduling, bounded concurrent execution and backpressure remain executor work. |
 | 556–666 | Anti-angularity / freedom / creator | Multilingual aliases, editor configuration, readable docs, deterministic interchange and versioned schemas. License remains Apache-2.0; no automatic CC0 change. |
@@ -88,7 +88,7 @@ The engineering constitution is a specification corpus, not a count of implement
 
 The source's strong/weak typing discussion maps to AST/IR contracts, explicit numeric operations, unambiguous conversions and graph-port compatibility. The maxim compendium's epistemology, systems, strategy, social and prevention themes become review heuristics: verify evidence, avoid local-optimum tuning, contain cascades, keep feedback actionable, distribute responsibility and prevent defects at boundaries. Heuristics never override tests or source evidence.
 
-## 9. Tri-Color Duck UI
+## 9. Tri-Color Dak UI
 
 Use the shared 65/25/10 palette: porcelain white (#FFFFFF / #F4F7FB), cobalt/azure (#0052CC / #0A1F44) and signal red (#E62E2D / #FF4D4F). Maintain contrast, keyboard navigation, visible focus, localization and reduced-motion support. Motion never replaces a textual status.
 
@@ -104,4 +104,4 @@ Use the shared 65/25/10 palette: porcelain white (#FFFFFF / #F4F7FB), cobalt/azu
 
 New: reaper/semantic_graph.py and tests/test_semantic_graph.py.
 
-Existing: reaper/ir.py, src/ir.c, include/reaper/ir.h, src/optimizer.c, language/features.json, tools/validate_features.py, docs/ANATIDAE_CONSTITUTION.md, docs/ENGINEERING_CONSTITUTION_PROFILE.md, docs/MOST_FUNCTION_CONTRACT_REGISTRY.md, docs/MOST_IMPLEMENTATION_STATUS.md and docs/REAPER_UNIFIED_ARCHITECTURE.md.
+Existing: reaper/ir.py, src/ir.c, include/reaper/ir.h, src/optimizer.c, language/features.json, tools/validate_features.py, docs/DAK_CONSTITUTION.md, docs/ENGINEERING_CONSTITUTION_PROFILE.md, docs/MOST_FUNCTION_CONTRACT_REGISTRY.md, docs/MOST_IMPLEMENTATION_STATUS.md and docs/REAPER_UNIFIED_ARCHITECTURE.md.

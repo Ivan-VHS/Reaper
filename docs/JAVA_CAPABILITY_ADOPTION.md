@@ -19,7 +19,7 @@ Reaper keeps its own language identity and contracts:
 - Existing reference-runtime behavior remains the compatibility oracle until differential tests prove parity for a construct on another engine.
 - No feature is considered implemented merely because it appears in a registry, syntax highlighter, document, generated catalogue or roadmap.
 
-**Non-goal:** reproducing the entire Java SE API, Java class-file format, HotSpot, garbage collector internals, class-loader model or enterprise framework catalogue. These are independent implementations with different trade-offs and licensing constraints. Reaper should adopt the capabilities and engineering lessons that solve Reaper/Duck OS problems.
+**Non-goal:** reproducing the entire Java SE API, Java class-file format, HotSpot, garbage collector internals, class-loader model or enterprise framework catalogue. These are independent implementations with different trade-offs and licensing constraints. Reaper should adopt the capabilities and engineering lessons that solve Reaper/Dak OS problems.
 
 ## 2. Evidence-based baseline
 
@@ -195,7 +195,7 @@ Create a Reaper-native package model with:
 - install/uninstall/upgrade transactions with rollback and integrity checks;
 - opt-in package repositories; no hidden network access or implicit dependency installation.
 
-Package management must preserve the ability to build Duck OS and core Reaper components in an offline environment.
+Package management must preserve the ability to build Dak OS and core Reaper components in an offline environment.
 
 ### 4.7 Developer tooling and observability
 
@@ -245,7 +245,7 @@ Review frameworks and tools by capability rather than importing whole frameworks
 - testing, mocking boundaries, contract tests and benchmark practice;
 - data-processing pipelines and batch execution.
 
-A candidate from Spring, Jakarta EE, Micronaut, Quarkus, Vert.x, Netty, Kafka, Hadoop, JUnit, Maven or Gradle is a reference for a specific Reaper problem. It is not automatically a dependency or a requirement to reproduce an entire ecosystem. Evaluate maintenance, security, license, footprint, offline behavior and value to Duck OS before accepting a capability.
+A candidate from Spring, Jakarta EE, Micronaut, Quarkus, Vert.x, Netty, Kafka, Hadoop, JUnit, Maven or Gradle is a reference for a specific Reaper problem. It is not automatically a dependency or a requirement to reproduce an entire ecosystem. Evaluate maintenance, security, license, footprint, offline behavior and value to Dak OS before accepting a capability.
 
 ### 4.10 Java interoperability as an optional adapter
 
@@ -261,21 +261,21 @@ Existing Java applications and libraries may remain useful during migration, but
 
 For application-layer productivity, evaluate the useful ideas from dependency injection, inversion of control, configuration profiles, lifecycle hooks, routing, middleware, declarative validation, service discovery and observability. Reaper should express these as small composable packages with explicit effects and typed contracts. They must remain optional and must not enter kernel/firmware builds by default.
 
-## 5. Mapping to Reaper and Duck OS
+## 5. Mapping to Reaper and Dak OS
 
-| Java capability | Reaper-owned implementation direction | Duck OS boundary |
+| Java capability | Reaper-owned implementation direction | Dak OS boundary |
 |---|---|---|
 | Generics, records, sealed types, pattern matching | typed AST/HIR, generic constraints, enum/record lowering, exhaustive diagnostics | app and service code; kernel subset only where bounded |
-| Modules and service loading | signed Reaper package/module manifest and provider registry | Jora packages and Duck service manager |
+| Modules and service loading | signed Reaper package/module manifest and provider registry | Jora packages and Dak service manager |
 | Virtual threads / structured concurrency | lightweight tasks, scoped task groups, cancellation and bounded scheduler | user-space services only; no implicit kernel scheduler |
-| NIO/channels and HTTP client | Reaper I/O contracts and explicit OS adapters | Duck networking/filesystem services |
-| FFM / JNI principles | safe C ABI plus Reaper-owned DABI64, typed handles and explicit unsafe FFI | Duck ABI, MMIO/DMA/IRQ adapters with capability gates |
+| NIO/channels and HTTP client | Reaper I/O contracts and explicit OS adapters | Dak networking/filesystem services |
+| FFM / JNI principles | safe C ABI plus Reaper-owned DABI64, typed handles and explicit unsafe FFI | Dak ABI, MMIO/DMA/IRQ adapters with capability gates |
 | JIT/AOT, GC optimization | native AOT, IR optimizer, optional managed app runtime | native system apps; optional managed application profile |
-| JFR/JMX observability | local event recorder, metrics, traces and profiler | Reaper Studio and Duck diagnostics |
-| Maven/Gradle/JLink/JPackage ideas | offline package/build graph, lockfiles and minimal runtime bundles | Jora store and Duck package manager |
+| JFR/JMX observability | local event recorder, metrics, traces and profiler | Reaper Studio and Dak diagnostics |
+| Maven/Gradle/JLink/JPackage ideas | offline package/build graph, lockfiles and minimal runtime bundles | Jora store and Dak package manager |
 | Java crypto and trust APIs | vetted providers, TLS policy, signing and algorithm agility | BAV and OS trust services through versioned contracts |
 
-Every row is an integration boundary, not a claim that the Duck-side subsystem already exists. Reaper must expose versioned contracts and test adapters before claiming cross-repository integration.
+Every row is an integration boundary, not a claim that the Dak-side subsystem already exists. Reaper must expose versioned contracts and test adapters before claiming cross-repository integration.
 
 ## 6. Clean-room and licensing policy
 
@@ -367,10 +367,10 @@ Implement small, reviewable slices. Do not launch a rewrite of the whole runtime
 
 **Gate:** clean offline builds, deterministic dependency graphs, diagnosable package failures and install/rollback tests.
 
-### Phase 7 — Duck OS integration
+### Phase 7 — Dak OS integration
 
-- Publish stable contracts for Duck services, process/task management, memory, filesystem, networking and security.
-- Integrate one adapter at a time with Duck OS and the relevant repositories.
+- Publish stable contracts for Dak services, process/task management, memory, filesystem, networking and security.
+- Integrate one adapter at a time with Dak OS and the relevant repositories.
 - Keep kernel/firmware profiles deterministic and allocation-bounded.
 - Qualify privileged paths only on supported hardware or an explicitly identified emulator/simulator.
 
@@ -406,6 +406,6 @@ The Java capability programme is not complete when Reaper merely looks more like
 6. source mapping, diagnostics and editor/tooling integration;
 7. license/provenance records and compatible dependencies;
 8. documentation and machine-readable maturity status;
-9. an explicit Duck OS integration decision.
+9. an explicit Dak OS integration decision.
 
 The result should be a Reaper-native systems language and development platform that benefits from Java's decades of engineering while remaining smaller where that is an advantage, stricter where systems safety requires it, and independent in source, runtime, ABI and identity.

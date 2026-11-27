@@ -4,17 +4,17 @@
 **NEXUS role:** BuildToolchain, deterministic policy and explicit adapters  
 **Status:** additive federation contract
 
-Reaper remains the systems-programming language and toolchain repository. This profile does not rename Reaper to KernelCore, transfer kernel ownership, alter source syntax or claim that the six DuckOS services are implemented.
+Reaper remains the systems-programming language and toolchain repository. This profile does not rename Reaper to KernelCore, transfer kernel ownership, alter source syntax or claim that the six Dak services are implemented.
 
 ## Ownership
 
 - Reaper owns grammar, language semantics, canonical IR, source diagnostics, compiler/toolchain behavior, reference runtime and the separately tracked native implementation.
-- DuckOS owns privileged kernel operations, process lifecycle, service supervision, syscalls, native IPC, drivers and kernel-enforced authorization.
-- BuildToolchain is the NEXUS component role for Reaper. BUILD_VANGUARD is a proposed DuckOS-owned user-space consumer of explicit build contracts, not a Reaper runtime daemon.
+- Dak owns privileged kernel operations, process lifecycle, service supervision, syscalls, native IPC, drivers and kernel-enforced authorization.
+- BuildToolchain is the NEXUS component role for Reaper. BUILD_VANGUARD is a proposed Dak-owned user-space consumer of explicit build contracts, not a Reaper runtime daemon.
 
 ## Service relationships
 
-| DuckOS service | Reaper relationship | Boundary |
+| Dak service | Reaper relationship | Boundary |
 |---|---|---|
 | KERNEL_SENTINEL | May consume deterministic policy results and versioned integrity evidence descriptors | A policy result is not a kernel measurement source, signature verifier, scanner or enforcement hook |
 | MEMORY_FORGE | May consume validated allocation-policy inputs or exported diagnostics | No privileged page inspection, allocator replacement, swap manager or VRAM access is provided |
@@ -26,7 +26,7 @@ Reaper remains the systems-programming language and toolchain repository. This p
 ## Integration invariants
 
 1. Implement Reaper-specific policies and examples in Reaper. Do not substitute foreign-language pseudocode for a native Reaper implementation.
-2. Keep the current reference runtime, native compiler track and privileged DuckOS backend as separate maturity levels.
+2. Keep the current reference runtime, native compiler track and privileged Dak backend as separate maturity levels.
 3. Reuse existing report schemas and C ABI v1 where appropriate. A new ABI requires a separately versioned proposal and conformance tests.
 4. FFI loads only a caller-selected trusted library with an explicit path and verified ABI version.
 5. A missing, malformed, stale or incompatible peer produces a typed error and no partial privileged action.
@@ -38,6 +38,6 @@ Reaper remains the systems-programming language and toolchain repository. This p
 - Source and tests for each used Reaper policy contract.
 - Explicit schema/version and payload-size validation at the consumer boundary.
 - Negative tests for malformed, unknown, stale and unavailable providers.
-- A separate native DuckOS implementation and target-backed evidence before any claim of privileged enforcement.
+- A separate native Dak implementation and target-backed evidence before any claim of privileged enforcement.
 
 This profile defines ownership and integration limits. It does not add a runnable service or change Reaper language behavior.

@@ -1,5 +1,5 @@
 {
-  "schema": "anatidae.quality-commercial.v1",
+  "schema": "dak.quality-commercial.v1",
   "project": {
     "id": "reaper",
     "name": "Reaper",

@@ -4,7 +4,7 @@ import argparse, json, math, sys
 from pathlib import Path, PurePosixPath
 from typing import Any, Mapping
 
-SCHEMA = "anatidae.quality-commercial.v1"
+SCHEMA = "dak.quality-commercial.v1"
 AXES = ("quality", "execution", "commercial")
 POINTS = {"implemented": 1.0, "planned": 0.25, "not_assessed": 0.0, "not_applicable": None}
 
@@ -168,7 +168,7 @@ def assess_profile(source: str | Path | Mapping[str, Any], *, root: str | Path |
     open_items = [{"field": k, "status": v} for k, v in operations.items()
                   if k != "boundary" and v in {"not_assessed", "not_set", "manual_required", "planned"}]
     scores = [item["maturity_percent"] for item in axes.values() if item["maturity_percent"] is not None]
-    return {"schema": "anatidae.quality-commercial-report.v1", "project": project, "criteria_count": len(rows),
+    return {"schema": "dak.quality-commercial-report.v1", "project": project, "criteria_count": len(rows),
             "evidence": {"references": refs, "files_found": found, "files_missing": refs-found,
                          "coverage_percent": round(100*found/refs, 1) if refs else 100.0},
             "axes": axes, "overall_declared_maturity_percent": round(sum(scores)/len(scores), 1) if scores else None,

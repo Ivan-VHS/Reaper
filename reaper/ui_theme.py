@@ -1,4 +1,4 @@
-"""Anatidae white-blue-red theme primitives for Reaper Studio."""
+"""Dak white-blue-red theme primitives for Reaper Studio."""
 from __future__ import annotations
 
 import ctypes
@@ -265,11 +265,11 @@ def _paint_native_widgets(root: tk.Misc, palette: dict[str, str]) -> None:
 def apply_theme(root: tk.Misc, app_key: str, theme: str | None = None) -> str:
     """Apply and persist light/dark semantic tokens across all Studio surfaces."""
     selected = theme if theme in PALETTES else (
-        getattr(root, "_anatidae_theme", None) or _load_theme(app_key)
+        getattr(root, "_dak_theme", None) or _load_theme(app_key)
     )
     palette = PALETTES[selected]
-    root._anatidae_theme = selected  # type: ignore[attr-defined]
-    root._anatidae_palette = dict(palette)  # type: ignore[attr-defined]
+    root._dak_theme = selected  # type: ignore[attr-defined]
+    root._dak_palette = dict(palette)  # type: ignore[attr-defined]
     try:
         root.configure(background=palette["bg"])
         root.option_add("*Font", ("Segoe UI", 10))
@@ -363,7 +363,7 @@ def apply_theme(root: tk.Misc, app_key: str, theme: str | None = None) -> str:
 
 
 def toggle_theme(root: tk.Misc, app_key: str) -> str:
-    current = getattr(root, "_anatidae_theme", _load_theme(app_key))
+    current = getattr(root, "_dak_theme", _load_theme(app_key))
     order = ("mora", "dawn", "sunset", "night")
     if current in {"light", "dark"}:
         current = "night" if current == "dark" else "dawn"

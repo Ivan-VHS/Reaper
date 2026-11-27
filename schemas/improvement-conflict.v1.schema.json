@@ -13,7 +13,7 @@
   ],
   "properties": {
     "schema": {
-      "const": "anatidae.improvement-conflict.v1"
+      "const": "dak.improvement-conflict.v1"
     },
     "version": {
       "const": "1.0.0"
