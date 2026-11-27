@@ -1,0 +1,120 @@
+# Bounded dependency graph for processor stages and kernel service ordering.
+# Graph: [schema, node_names, directed_edges].
+# Compact form preserves every edge while imposing deterministic topological order.
+
+craft kernel_graph_contains(values, requested) {
+    vary index := 0
+    loop while index < size(values) {
+        when values[index] == requested { yield true }
+        change index := index + 1
+    }
+    yield false
+}
+
+craft kernel_graph_edge_exists(edges, source, target) {
+    vary index := 0
+    loop while index < size(edges) {
+        when edges[index][0] == source and edges[index][1] == target { yield true }
+        change index := index + 1
+    }
+    yield false
+}
+
+export craft kernel_graph_valid(graph) {
+    when size(graph) != 3 or graph[0] != "reaper.kernel.graph.v1" { yield false }
+    when size(graph[1]) > 64 or size(graph[2]) > 256 { yield false }
+
+    vary index := 0
+    loop while index < size(graph[1]) {
+        when size(graph[1][index]) == 0 { yield false }
+        vary previous := 0
+        loop while previous < index {
+            when graph[1][previous] == graph[1][index] { yield false }
+            change previous := previous + 1
+        }
+        change index := index + 1
+    }
+
+    change index := 0
+    loop while index < size(graph[2]) {
+        make edge := graph[2][index]
+        when size(edge) != 2 or edge[0] == edge[1] { yield false }
+        when not kernel_graph_contains(graph[1], edge[0]) or not kernel_graph_contains(graph[1], edge[1]) { yield false }
+        vary previous := 0
+        loop while previous < index {
+            when graph[2][previous][0] == edge[0] and graph[2][previous][1] == edge[1] { yield false }
+            change previous := previous + 1
+        }
+        change index := index + 1
+    }
+    yield true
+}
+
+craft kernel_graph_remaining_indegree(graph, remaining, requested) {
+    vary count := 0
+    vary index := 0
+    loop while index < size(graph[2]) {
+        when graph[2][index][1] == requested and kernel_graph_contains(remaining, graph[2][index][0]) {
+            change count := count + 1
+        }
+        change index := index + 1
+    }
+    yield count
+}
+
+craft kernel_graph_remove_node(values, requested) {
+    vary result := []
+    vary index := 0
+    loop while index < size(values) {
+        when values[index] != requested { change result := push(result, values[index]) }
+        change index := index + 1
+    }
+    yield result
+}
+
+export craft kernel_graph_topological_order(graph) {
+    when not kernel_graph_valid(graph) { yield ["ERR", "processor dependency graph is invalid"] }
+    vary remaining := graph[1]
+    vary ordered := []
+    loop while size(remaining) > 0 {
+        vary selected := ""
+        vary index := 0
+        loop while index < size(remaining) {
+            when size(selected) == 0 and kernel_graph_remaining_indegree(graph, remaining, remaining[index]) == 0 {
+                change selected := remaining[index]
+            }
+            change index := index + 1
+        }
+        when size(selected) == 0 {
+            yield ["ERR", "processor dependency cycle detected", remaining]
+        }
+        change ordered := push(ordered, selected)
+        change remaining := kernel_graph_remove_node(remaining, selected)
+    }
+    yield ["OK", ordered]
+}
+
+export craft kernel_graph_compact(graph) {
+    make ordered := kernel_graph_topological_order(graph)
+    when ordered[0] != "OK" { yield ordered }
+    vary edges := []
+    vary source_index := 0
+    loop while source_index < size(ordered[1]) {
+        vary target_index := 0
+        loop while target_index < size(ordered[1]) {
+            when kernel_graph_edge_exists(graph[2], ordered[1][source_index], ordered[1][target_index]) {
+                change edges := push(edges, [ordered[1][source_index], ordered[1][target_index]])
+            }
+            change target_index := target_index + 1
+        }
+        change source_index := source_index + 1
+    }
+    yield ["OK", ["reaper.kernel.graph.v1", ordered[1], edges], [size(ordered[1]), size(edges)]]
+}
+
+export craft kernel_graph_stats(graph) {
+    when not kernel_graph_valid(graph) { yield ["ERR", "processor dependency graph is invalid"] }
+    make ordered := kernel_graph_topological_order(graph)
+    when ordered[0] != "OK" { yield ordered }
+    yield ["OK", [size(graph[1]), size(graph[2]), size(graph[1]) - size(graph[2])]]
+}
