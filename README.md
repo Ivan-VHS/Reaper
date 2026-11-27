@@ -1,177 +1,100 @@
-# ⚙️ Reaper — Systems Language & Workbench
+# Reaper — Systems Language & Workbench
 
-<p align="center">[English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)</p>
+[English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
 [![CI](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/ci.yml?branch=main&label=CI)](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml) [![Native C17](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/native-c.yml?branch=main&label=Native%20C17)](https://github.com/Ivan-VHS/Reaper/actions/workflows/native-c.yml) [![Apache-2.0](https://img.shields.io/github/license/Ivan-VHS/Reaper)](LICENSE)
 
-> **Explicit contracts. Typed flows. Diagnostics with source provenance.**
+> **Flow-first syntax. Explicit contracts. Diagnostics that retain source context.**
 
-**State:** Alpha · reference runtime available · native C17 partial · **Version:** Python package 0.1.0 · Native CMake track 0.2.0 · **License:** [Apache-2.0](LICENSE) · **README standard:** Psychoporter 666 v1.0 · **Last reviewed:** 2026-11-25 · UTC · **Source:** [Ivan-VHS/Reaper](https://github.com/Ivan-VHS/Reaper)
+**Project record:** Alpha · Python reference runtime available · native C17 compiler track partial · Python package 0.1.0 · CMake track 0.2.0 · Apache-2.0 · **Documentation reviewed:** 2026-11-27 UTC
 
-<p align="center"><img src="assets/reaper-hero.svg" alt="Reaper — Systems Language & Workbench — project overview" width="100%"></p>
-<p align="center"><a href="assets/screenshots/reaper-studio.png"><img src="assets/screenshots/reaper-studio.png" alt="Reaper — Systems Language & Workbench — application screenshot" width="100%"></a></p>
+<p align="center"><img src="assets/reaper-hero.svg" alt="Reaper systems language and workbench overview" width="100%"></p>
+<p align="center"><a href="assets/screenshots/reaper-studio.png"><img src="assets/screenshots/reaper-studio.png" alt="Reaper Studio screenshot" width="100%"></a></p>
 
-## Quick navigation
+## Purpose and scope
 
-[🚀 Demo: Studio screenshot](assets/screenshots/reaper-studio.png) · [Documentation](docs/README.md) · [Source repository](https://github.com/Ivan-VHS/Reaper) · [Issues](https://github.com/Ivan-VHS/Reaper/issues)
+Reaper is a systems-programming language and local development workbench. Its current implementation has two distinct compiler/runtime tracks: the Python reference runtime and an experimental native C17 implementation. The native track is not yet feature-equivalent to the reference runtime. Windows Studio, LSP/DAP services and external adapters are separate tooling surfaces.
 
-## Mission & scope
+## Language example
 
-Reaper is a systems-programming language and local development workbench. The Python reference runtime, CLI/REPL, LSP/DAP services and Windows Studio foundation are distinct from the experimental native C17 compiler track. Native parity and privileged hardware services are not complete.
+The `.rpr` language uses flow-first expressions and the `::` operator to pass the left-hand value as the first argument:
 
-## Capabilities
-
-- .rpr source language, lexer/parser, reference interpreter and structured diagnostics.
-- CLI, REPL, Windows Studio foundation, and stdio-based LSP/DAP services.
-- Static checks and resource quotas in the reference runtime; check-only mode does not execute source.
-- Native C17 track: lexer, parser, owned AST, checked IR, constant folding and limited lowering.
-- Checked MMIO descriptors and ABI contracts are interfaces, not a physical device mapper or driver.
-- Jora scaffolding, Kora helpers and optional peer integrations with explicit trust boundaries.
-
-## Architecture & data flow
-
-~~~mermaid
-flowchart TB
-  S[".rpr source"] --> P["Lexer / parser"]
-  P --> V["Reference runtime"]
-  V --> C["CLI / REPL"]
-  V --> L["stdio LSP / DAP"]
-  S --> N["Native C17 track — partial"]
-  N --> I["Checked IR / limited lowering"]
-  H["Hardware contracts"] --> A["Checked ABI descriptors"]
-  A -.-> X["No implicit device access"]
-~~~
-
-Source code, schemas, build files, tests and CI are the evidence for implemented behavior. Roadmap entries and catalogue records describe plans or inventories, not shipped functionality.
-
-## Flow-first example
-
-The checked-in `examples/flow.rpr` demonstrates the `::` operator, named `craft` functions, collection transforms and a bounded loop:
-
-```reaper
+~~~reaper
 craft double(value) {
     yield value * 2
 }
 
-craft is_large(value) {
-    yield value >= 6
-}
+make values := [1, 2, 3]
+make result := values :: map(double) :: sum()
+emit "result = " ++ text(result)
+~~~
 
-craft add(total, value) {
-    yield total + value
-}
-
-make values := [1, 2, 3, 4, 5]
-make result := values :: map(double) :: keep(is_large) :: fold(0, add)
-emit "flow result = " ++ text(result)
-
-vary counter := 0
-each item in range(1, 4) {
-    change counter := counter + item
-}
-emit "loop result = " ++ text(counter)
-```
-
-Run the repository example with `python -m reaper examples/flow.rpr` after installing the reference package. The native C17 track remains a separate, partial implementation.
-
-## Requirements
-
-Python 3.10+ for the reference runtime and package tools; CMake 3.16+ plus a C17 compiler for the native track; Node.js 22/24 for optional compatibility checks; Tkinter for the Windows Studio GUI.
-
-## Build
+Run a checked-in example with the reference runtime after installation:
 
 ~~~sh
 python -m venv .venv
-. .venv/bin/activate
 python -m pip install -e .
 python -m reaper --check examples/flow.rpr
 python -m reaper examples/flow.rpr
 ~~~
 
-### Native C17 track
+## What is implemented
+
+- **Reference language runtime:** lexer, parser, AST interpreter, CLI/REPL, structured diagnostics and bounded execution.
+- **Canonical IR and VM:** selectable Python bytecode VM over Canonical IR; tree-walk execution remains the compatibility default.
+- **Modules:** versioned `.rpr` imports/exports, isolated scopes, cached exports, dependency graph checks and cycle diagnostics.
+- **Static analysis:** conservative type inference for supported AST constructs. Unknown module/host boundary values remain `Any`; this is not a complete sound type system.
+- **Resource accounting:** heap/open-file quotas, execution bounds and deterministic cleanup. These are runtime guardrails, not a security sandbox for hostile programs.
+- **Native C17 track:** a partial lexer/parser, owned AST, checked IR, optimizer and limited lowering. The scalar AOT subset emits C17 for a host GCC/Clang-compatible toolchain; it does not provide reference-runtime parity.
+- **Architecture registry:** 66 stable architecture concepts across nine layers, with exact lookup and bounded dependency-graph validation.
+- **Developer tools:** Windows Studio foundation, stdio LSP/DAP services, Kora helpers and optional NOO TAH integration. NOO TAH delegates JavaScript execution to the official Node.js runtime.
+- **Product composition:** 18 in-process product services are exposed by the reference runtime. Jora catalogue packs and framework descriptions are not automatically installable applications.
+
+The embedded workbench creates and inspects reference MCU projects and can invoke user-installed toolchains. It does not include built-in firmware flashing or live hardware debugging. MMIO descriptors are validated through a host-supplied bus; they do not map physical memory.
+
+## Build and test
+
+Requirements: Python 3.10+ for the reference runtime; CMake 3.16+ and a C17 compiler for the native track; Node.js 22/24 for optional compatibility checks; Tkinter for the Windows Studio GUI.
 
 ~~~sh
-cmake -S . -B build -DREAPER_BUILD_TESTS=ON
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DREAPER_BUILD_TESTS=ON
 cmake --build build --parallel
 ctest --test-dir build --output-on-failure
 ~~~
 
-The Python reference runtime and native C17 track are separate implementation tracks; passing tests in one does not establish feature parity in the other.
+The CMake test suite runs native C tests and, when a Python interpreter is found, additional reference-runtime and repository validation tests.
 
-## First checks
+Launch the REPL or installed Studio entry point:
 
 ~~~sh
-python -m reaper --check examples/flow.rpr
 python -m reaper --repl
+reaper-studio
 ~~~
 
-The --check command performs static validation before execution. On Windows PowerShell, activate with .venv\Scripts\Activate.ps1.
+## Integrations and trust boundaries
 
-## Run
+- OPlague device snapshots are imported as versioned JSON and compared offline.
+- Pytyliki C ABI calls require an explicit opt-in and a caller-selected trusted, ABI-compatible library.
+- VentuSample pack exchange is manifest-based; Reaper reads declared metadata and does not alter WAV assets.
+- The OCTA-8 federation records peer contracts; it does not create a central runtime or grant privileges.
 
-After installation, the package exposes the reaper-studio GUI script when Tkinter is installed; language and debug services are separate stdio processes.
+Filesystem, process, network, clock, shell and native-library effects must remain explicit or opt-in. Native FFI executes in-process code and must only load trusted libraries.
 
-## Interfaces
+## Documentation
 
-| Surface | Contract / entry point | Boundary |
-|---|---|---|
-| CLI / REPL | `reaper` | Source checking, execution and interactive mode. |
-| Language service | `reaper-lsp / stdio` | Document-local diagnostics, completion and navigation subset. |
-| Debug adapter | `reaper-dap / stdio` | Implemented breakpoint and step subset. |
-| Native ABI | `reaper_ffi / reaper_system / reaper_dabi64_desktop` | Versioned C interfaces; native compiler parity remains partial. |
+- [Features](docs/FEATURES.md) · [Architecture](docs/ARCHITECTURE.md)
+- [Native compiler](docs/NATIVE_COMPILER.md) · [Hardware language](docs/HARDWARE_LANGUAGE.md)
+- [Runtime limits](docs/RUNTIME_PLATFORM.md) · [Kora helpers](docs/KORA.md)
+- [Studio and IDE](docs/REAPER_IDE.md) · [Jora factory](docs/JORA_APPLICATION_FACTORY.md)
+- [Implementation roadmap](docs/IMPLEMENTATION_ROADMAP.md) · [Documentation index](docs/README.md)
+- [HARVEST Reaper integration](docs/HARVEST_REAPER_INTEGRATION.md)
+- [Shared ecosystem standards](https://github.com/Ivan-VHS/DAK/blob/main/docs/SHARED_STANDARDS.md)
 
-REST/GraphQL, WebSocket, OAuth, cloud deployment and cookie mechanisms are not advertised without a versioned implementation and tests.
+## Contributing and license
 
-## Security & trust boundaries
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before changing language semantics, compiler stages or public contracts. Keep changes reviewable and add deterministic tests. Security reports belong under [SECURITY.md](SECURITY.md).
 
-The reference runtime applies bounded resource controls and explicit capability contracts. MMIO APIs validate descriptors and access policy but do not map physical devices. LSP/DAP use local stdio transports; a hosted REST service, OAuth provider or cloud control plane is not part of the documented runtime.
-
-Security reporting: [SECURITY.md](SECURITY.md). Do not publish secrets, device identifiers or private logs in public issues.
-
-## Verification
-
-~~~sh
-python -m unittest discover -s tests -v
-
-cmake -S . -B build -DREAPER_BUILD_TESTS=ON
-cmake --build build --parallel
-ctest --test-dir build --output-on-failure
-~~~
-
-The checked-in CTest/unittest targets and workflows define the test scope. No coverage percentage, fuzz result or load-test report is claimed without a published artifact.
-
-## Performance evidence
-
-No stable cross-machine latency or memory-footprint claim is published for the reference runtime or partial native track. Compare reproducible runs with compiler, target, build mode and input recorded.
-
-## Compatibility
-
-The reference package supports Python 3.10+; the native C17 track uses CMake and a host C17 compiler. Windows Studio requires Tkinter. Platform and compiler parity must be checked per target.
-
-## Documentation & ecosystem
-
-- [Features and maturity](docs/FEATURES.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Hardware language](docs/HARDWARE_LANGUAGE.md)
-- [Implementation roadmap](docs/IMPLEMENTATION_ROADMAP.md)
-- [Studio and IDE](docs/REAPER_IDE.md)
-- [Psychoporter 666](docs/PSYCHOPORTER_666.md)
-- [Documentation index](docs/README.md)
-
-The feature matrix and implementation roadmap separate reference-runtime behavior from partial native work and future hardware capabilities.
-
-Cross-project integrations use documented versioned interfaces and explicit adapters. An optional adapter does not grant another project runtime or hardware privileges.
-
-## Contributing
-
-Read [CONTRIBUTING.md](CONTRIBUTING.md) before changing code or contracts. Keep changes reviewable, add deterministic tests and use Conventional Commits where required by the repository guide.
-
-## License & legal
-
-Distributed under [Apache-2.0](LICENSE). The software is provided “AS IS” under the license terms. Third-party project names and trademarks remain with their respective owners.
-
-This repository documents local software interfaces. Hosted-service terms, cookie consent, OAuth and CORS are not applicable to the runtime surfaces described above unless a separate hosted component is introduced and documented.
+Licensed under [Apache-2.0](LICENSE). External project names and trademarks remain with their respective owners.
 
 ---
-
-<p align="center"><sub>Psychoporter 666 README Standard v1.0 · Ivan-VHS · 2026-11-25 · UTC</sub></p>
+<p align="center"><sub>Reaper · README review 2026-11-27 UTC</sub></p>
