@@ -170,7 +170,10 @@
         "reaper/research_math_contracts.py",
         "reaper/mathematical_research.v1.json",
         "tests/test_research_math_contracts.py",
-        "docs/MATHEMATICAL_RESEARCH_CONTRACTS_V1.md"
+        "docs/MATHEMATICAL_RESEARCH_CONTRACTS_V1.md",
+        "reaper/runtime.py",
+        "stdlib/research_math.rpr",
+        "examples/mathematical_research.rpr"
       ]
     }
   ],
