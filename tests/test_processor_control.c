@@ -58,7 +58,9 @@ static void test_ap_startup_context_and_debug(void) {
     uintptr_t base = (uintptr_t)stack;
     uintptr_t aligned = (base + 15U) & ~(uintptr_t)15U;
     assert(reaper_processor_context_frame_validate(aligned, sizeof(stack) - (size_t)(aligned - base), aligned) == REAPER_PROCESSOR_OK);
+    assert(reaper_processor_context_frame_validate(aligned, sizeof(stack) - (size_t)(aligned - base), aligned + 8U) == REAPER_PROCESSOR_OK);
     assert(reaper_processor_context_frame_validate(aligned, 64U, aligned) == REAPER_PROCESSOR_INVALID_TOPOLOGY);
+    assert(reaper_processor_context_frame_validate(aligned, sizeof(stack), aligned + 1U) == REAPER_PROCESSOR_INVALID_TOPOLOGY);
 
     ReaperProcessorDebugSession session = {1U, 5000U, 4096U, 0U, 1U, 0U};
     assert(reaper_processor_debug_session_validate(&session, 4U) == REAPER_PROCESSOR_ACCESS_DENIED);
