@@ -1,6 +1,6 @@
 # RFS-01 — Rhythm-Field Syntax
 
-**Status:** reference-runtime v1.0; native C frontend lexical parity is a follow-up gate  
+**Status:** reference compiler/runtime v1.0 implemented; native C17 lexer recognizes RFS-01 operators; full native C parser and typed-IR lowering remain a follow-up gate  
 **Canonical owner:** Reaper  
 **Consumers:** Duck OS and Pytyliki  
 **Contract family:** `rfs-01.*.v1`
@@ -19,10 +19,11 @@ The v1.0 reference grammar is line-insensitive; commas separate fields.
 
 ```ebnf
 program      = "module", identifier, "version", string, "{", { statement }, "}" ;
-statement    = node | state | link | phase | flow | contrast | recover | cycles | emit ;
+statement    = node | state | link | signal | phase | flow | contrast | recover | cycles | emit ;
 node         = "node", identifier, "::", "Node", fields ;
 state        = "state", identifier, "<>", "State", fields ;
 link         = "link", identifier, "::", "Link", fields ;
+signal       = "signal", identifier, "::", "Signal", fields ;
 fields       = "{", [ field, { ",", field }, [ "," ] ], "}" ;
 field        = identifier, ":", scalar ;
 phase        = "phase", identifier, "on", identifier, "[",
@@ -39,7 +40,7 @@ metric       = "pressure" | "integrity" | "noise_db" ;
 comparator   = "==" | "!=" | "<" | "<=" | ">" | ">=" ;
 ```
 
-The parser rejects unknown fields, duplicate IDs, unknown references, unsupported operators, malformed UTF-8, non-finite numbers, and values outside the v1.0 domain.
+The reference parser rejects unknown fields, duplicate declaration IDs, unknown references, unsupported operators, malformed UTF-8, non-finite numbers, and values outside the v1.0 domain. The native C17 lexer recognizes the RFS state, flow, contrast, and recovery operator spellings as operator tokens; it does not yet parse complete RFS modules or lower them to native typed IR.
 
 ## 3. Typed state model
 
@@ -110,3 +111,18 @@ Diagnostics carry source line and column where applicable. Runtime events have s
 - **Pytyliki** consumes versioned state/signal records and provides read-only C11 validation and reserve metrics. Its adapter never changes scheduling, affinity, voltage, firmware, device registers, or process state.
 
 The cross-repository ABI is opt-in and versioned. No consumer may infer that a documented or catalogued operation is implemented unless its source, test, and CI evidence are present.
+
+## 8. Current implementation boundary
+
+The reference implementation is available as `reaper.rfs01`:
+
+```sh
+python -m reaper.rfs01 examples/block-pulse.rfs
+python -m unittest discover -s tests -p test_rfs01.py
+python -m unittest discover -s tests -p test_rfs01_ffi.py
+```
+
+The optional Pytyliki adapter is exposed to the Reaper host through
+`reaper.rfs01_ffi.PytylikiRFS01Bridge`. It requires an explicit absolute path
+to a trusted Pytyliki shared library and checks the RFS-01 extension version.
+The bridge is not auto-loaded by ordinary Reaper programs.
