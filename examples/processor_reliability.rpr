@@ -30,6 +30,8 @@ each spec in core["matrix_fixtures"]() {
 assert(size(matrix_trace) == 20, "twenty constructs must produce twenty trace records")
 assert(state[15] == 5, "one SERVICE invocation per core type must be counted")
 assert(state[14] == 20, "kernel step count must match dispatched constructs")
+make matrix_registers := core["hardware_register_snapshot"](state)
+assert(matrix_registers[0] and matrix_registers[1][9] == 20, "simulated barrier counter must track all matrix dispatches")
 
 # Formal core: dimensions, exact conversion, and checked arithmetic.
 make one_ns := core["convert_quantity"](1, "ns", "ps")
@@ -53,6 +55,23 @@ make executed := core["execute_bytecode"](state, encoded[1])
 assert(executed[0], "verified bytecode must dispatch through the execution core")
 change state := executed[1]
 
+make exec_word := core["bytecode_encode"](16, "RULE", 1, 4, 0)
+make exec_result := core["execute_bytecode"](state, exec_word[1])
+assert(exec_word[0] and exec_result[0], "generic execute opcode must dispatch")
+change state := exec_result[1]
+
+make service_word := core["bytecode_encode"](18, "ROOT", 2, 0, 0)
+make service_result := core["execute_bytecode"](state, service_word[1])
+assert(service_word[0] and service_result[0], "service invoke opcode must dispatch")
+assert(service_result[1][15] == 6, "bytecode service invocation must be counted")
+change state := service_result[1]
+
+make repair_word := core["bytecode_encode"](32, "START", 3, 25, 0)
+make repair_result := core["execute_bytecode"](state, repair_word[1])
+assert(repair_word[0] and repair_result[0], "repair-spend opcode must dispatch")
+assert(repair_result[1][4] == state[4] - 25, "repair opcode must debit the finite budget")
+change state := repair_result[1]
+
 # Every specialized physical opcode has an explicit, checked handler.
 make cu_word := core["bytecode_encode"](48, "BOOT", 1000, 1000, 0)
 make cu_result := core["execute_bytecode"](state, cu_word[1])
@@ -69,6 +88,7 @@ change state := nano_result[1]
 make fault_word := core["bytecode_encode"](33, "SCENARIO", 8, 256, 0)
 make fault_result := core["execute_bytecode"](state, fault_word[1])
 assert(fault_word[0] and fault_result[0], "fault-period opcode must execute only in test mode")
+assert(fault_result[1][11] == 1, "repeated scenario activation must be idempotent")
 change state := fault_result[1]
 
 make skew_word := core["bytecode_encode"](64, "ROOT", 9, 16, 0)
@@ -103,6 +123,15 @@ make production_spend := core["repair_spend"](production[1], 99, 64, 16)
 assert(production_spend[0], "production budget debit must succeed")
 assert(production_spend[1][16] == "safe-degraded", "low budget must enter safe degradation")
 assert(not production_spend[1][7], "production mode must never enable fault injection")
+make blocked_start := core["run_construct"](production_spend[1], ["START", "COMMAND", 2, "BLOCKED_STREAM", 1, 1024])
+assert(not blocked_start[0], "safe-degraded production state must block new streams")
+make recovery_denied := core["repair_recover"](production_spend[1], 0, 40, false)
+assert(not recovery_denied[0], "recovery without ROOT authorization must be denied")
+make recovery := core["repair_recover"](production_spend[1], 0, 40, true)
+assert(recovery[0] and recovery[1][4] == 41 and recovery[1][16] == "ready", "ROOT-authorized local reserve must restore service")
+assert(recovery[1][17][0] == 40, "recovery must debit the supplying local reserve")
+make recovered_start := core["run_construct"](recovery[1], ["START", "COMMAND", 3, "RECOVERED_STREAM", 1, 1024])
+assert(recovered_start[0], "production stream may start after verified recovery")
 make forbidden_injection := core["fault_inject"]("production", true, 1, 0, 64, 16)
 assert(not forbidden_injection[0], "production fault injection must be denied")
 
