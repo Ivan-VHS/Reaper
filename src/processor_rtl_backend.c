@@ -1,5 +1,4 @@
 #include "reaper/processor_backends.h"
-#include "processor_backend_internal.h"
 
 #include <stdarg.h>
 #include <stdio.h>
