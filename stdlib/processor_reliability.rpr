@@ -1445,7 +1445,11 @@ export craft ap_smp_admit_cpu(topology, ap) {
         yield [false, topology, "RPR-SMP-0007: AP-online record lacks complete startup evidence"]
     }
     make online := push(topology[5], ap[2])
-    yield [true, [topology[0], topology[1], topology[2], topology[3], topology[4], online, topology[6]], ""]
+    make next_generation := checked_add(topology[2], 1)
+    when not next_generation[0] {
+        yield [false, topology, "RPR-SMP-0008: topology generation overflow"]
+    }
+    yield [true, [topology[0], topology[1], next_generation[1], topology[3], topology[4], online, topology[6]], ""]
 }
 
 export craft apic_route_valid(route) {
@@ -1462,6 +1466,7 @@ export craft apic_route_valid(route) {
 
 export craft apic_ipi_decision(route, source_online, destination_online, current_generation, adapter) {
     when not apic_route_valid(route) { yield "reject-invalid-apic-route" }
+    when not valid_integer(current_generation, 0, SAFE_INTEGER_MAX) { yield "reject-invalid-current-topology-generation" }
     when kind(source_online) != "boolean" or kind(destination_online) != "boolean" { yield "reject-cpu-state-type" }
     when not source_online or not destination_online { yield "reject-offline-ipi-endpoint" }
     when route[7] != current_generation { yield "reject-stale-topology-generation" }
@@ -1532,6 +1537,7 @@ export craft mca_event_valid(event) {
 }
 
 export craft mca_handler_decision(event, page_recovery_supported) {
+    when kind(page_recovery_supported) != "boolean" { yield "reject-invalid-page-recovery-capability" }
     when not mca_event_valid(event) { yield "reject-invalid-mca-record" }
     when not event[4] { yield "ignore-invalid-mca-status" }
     when event[6] { yield "safe-stop-context-corrupt-defer-to-kernel-fatal-path" }
