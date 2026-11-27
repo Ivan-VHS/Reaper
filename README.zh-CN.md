@@ -52,5 +52,6 @@ python -m unittest discover -s tests -v
 - [Kora 标准库助手](docs/KORA.md)
 - [文档索引](docs/README.md)
 - [生态共享标准](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/SHARED_STANDARDS.md)
+- [项目演进阶梯](docs/PROJECT_LADDER.md) · [当前等级记录](.github/project-ladder.v1.json)
 
 [贡献指南](CONTRIBUTING.md) · [安全策略](SECURITY.md) · [Apache-2.0 许可证](LICENSE)

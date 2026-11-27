@@ -52,5 +52,6 @@ python -m unittest discover -s tests -v
 - [Библиотека Kora](docs/KORA.md)
 - [Индекс документации](docs/README.md)
 - [Общие стандарты экосистемы](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/SHARED_STANDARDS.md)
+- [Лестница эволюции проекта](docs/PROJECT_LADDER.md) · [Текущий уровень](.github/project-ladder.v1.json)
 
 [Вклад в проект](CONTRIBUTING.md) · [Безопасность](SECURITY.md) · [Apache-2.0](LICENSE)
