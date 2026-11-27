@@ -58,6 +58,24 @@ class RFS01Tests(unittest.TestCase):
         with self.assertRaisesRegex(RFS01Error, "RFS-E501"):
             verify_ir(malformed_domain)
 
+
+    def test_numeric_literal_width_is_bounded(self):
+        huge = "9" * 129
+        with self.assertRaisesRegex(RFS01Error, "RFS-E101"):
+            compile_source(BASE.replace("pressure: 20", "pressure: " + huge))
+
+    def test_overflowing_pressure_product_is_rejected_without_non_json_values(self):
+        huge = "9" * 308
+        source = BASE.replace("pressure: 20", "pressure: " + huge)
+        source = source.replace("weight: 0.1", "weight: " + huge)
+        result = run_source(source)
+        self.assertTrue(any(
+            event["kind"] == "pressure-rejected" and event["reason"] == "non-finite-transfer"
+            for event in result["events"]
+        ))
+        import json
+        json.dumps(result, allow_nan=False)
+
     def test_empty_signal_payload_is_allowed(self):
         result = run_source(BASE.replace('payload: "trusted"', 'payload: ""'))
         self.assertEqual(result["clean_signal_frames"], 1)
