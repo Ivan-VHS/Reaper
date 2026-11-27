@@ -45,6 +45,9 @@ export craft kernel_state_transition(state, next, reason) {
     when next == "halted" and state[6] != 0 {
         yield ["ERR", "kernel cannot halt while workers remain active", state[6]]
     }
+    when next == "booting" and state[6] != 0 {
+        yield ["ERR", "kernel cannot boot while worker slots remain active", state[6]]
+    }
     make fault_reason := ""
     when next == "faulted" { change fault_reason := reason }
     yield ["OK", ["reaper.kernel.state.v1", state[1], state[2] + 1, next, state[4], state[5], state[6], fault_reason]]
