@@ -245,7 +245,7 @@ function validateFabric(fabric, topology) {
         fail("RPR-PFI-0215", "maps-to must connect a memory region to an address space");
     } else if (kind === "uses") {
       const allowedTargets = ["logical-processor", "execution-unit", "register-bank",
-        "isa-profile", "address-space", "memory-region", "device"];
+        "isa-profile", "address-space", "memory-region", "device", "dma-buffer"];
       if (a.kind !== "process" || !allowedTargets.includes(b.kind))
         fail("RPR-PFI-0216", "uses must connect a process to a typed worker or resource");
     } else if (kind === "produces") {
