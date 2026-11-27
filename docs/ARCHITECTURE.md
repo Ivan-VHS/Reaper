@@ -5,7 +5,7 @@
 | CLI / Studio | source input, run/check/debug, reports |
 | Lexer | deterministic tokens and source spans |
 | Python parser/runtime | reference semantics, scopes, values, quotas |
-| Native C17 | token stream, expression AST, checked IR, limited lowering |
+| Native C17 | token stream, expression AST, checked IR, limited lowering, read-only aggregate snapshot audit |
 | MOST | exact keyword canonicalization before the same parser |
 | QCS | independent hardware-domain syntax validation |
 | Adapters | versioned JSON and explicitly selected native ABI |
@@ -13,6 +13,14 @@
 | Tests | syntax, semantics, bounds, negative cases and integrations |
 
 Reaper source → tokens → AST → bounded reference runtime → explicit output. The C17 track is separate until full language conformance. Studio is Windows-only.
+
+## Reaper System Features v1
+
+The native C17 systems ABI provides ten bounded contracts: compile-time contract graph validation, zero-allocation arena slots, cooperative worker budgets, aggregate reconcile planning, ephemeral scope wiping, revision-bound mutation authorization, UTC lease windows, fixed-bucket latency summaries, local-only effect validation and paired rollback plans. The .rpr syntax and compiler/runtime bindings remain pending; see [System Features v1](REAPER_SYSTEM_FEATURES_V1.md) and [its ADR](ADR_SYSTEM_FEATURES_V1.md).
+
+## Snapshot integrity audit
+
+The native core exposes a bounded, read-only aggregate snapshot audit through include/reaper/snapshot_audit.h. It validates snapshot manifests and compares sorted logical shard metadata; it does not inspect individual records, connect to services or persist changes. Direct .rpr standard-library bindings remain pending. See [Snapshot integrity audit capability](SNAPSHOT_INTEGRITY_CAPABILITY.md) and [its ADR](ADR_SNAPSHOT_INTEGRITY.md).
 
 ## Integrated product layer
 
