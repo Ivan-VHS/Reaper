@@ -1,6 +1,6 @@
 # Reaper implementation roadmap
 
-**Reviewed:** 2026-11-24  
+**Reviewed:** 2026-11-27  
 **Authority:** source code, tests, build configuration and required CI checks.  
 **Product boundary:** Reaper is an executable Python reference language and local developer workbench with a partial native C17 track. It is not currently a complete native compiler, kernel runtime or unrestricted hardware execution environment.
 
