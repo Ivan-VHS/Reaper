@@ -361,14 +361,23 @@ export craft reserve_spend(reserves, reserve_index, cost) {
 }
 
 export craft root_capability_descriptor(scope, revision, maximum_amount, target_mode) {
-    yield ["ROOTCAP", 1, scope, revision, maximum_amount, target_mode]
+    when scope != "repair.recover" or not valid_integer(revision, 0, SAFE_INTEGER_MAX) {
+        yield [false, [], "RPR-ROOT-0010: invalid capability scope or revision"]
+    }
+    when not valid_integer(maximum_amount, 1, 1000000000) or target_mode != "production" {
+        yield [false, [], "RPR-ROOT-0011: invalid capability quota or target mode"]
+    }
+    yield [true, ["ROOTCAP", 1, scope, revision, maximum_amount, target_mode], ""]
 }
 
 export craft root_capability_valid(capability, state, amount) {
     when kind(capability) != "list" or size(capability) != 6 { yield false }
+    when not valid_integer(amount, 1, 1000000000) { yield false }
     when capability[0] != "ROOTCAP" or capability[1] != 1 { yield false }
-    when capability[2] != "repair.recover" or capability[3] != state[14] { yield false }
-    when capability[5] != state[6] { yield false }
+    when capability[2] != "repair.recover" or
+         not valid_integer(capability[3], 0, SAFE_INTEGER_MAX) or
+         capability[3] != state[14] { yield false }
+    when capability[5] != "production" or capability[5] != state[6] { yield false }
     when not valid_integer(capability[4], 1, 1000000000) or amount > capability[4] { yield false }
     yield true
 }
