@@ -87,8 +87,8 @@ reaper-studio
 - [运行时限制](docs/RUNTIME_PLATFORM.md) · [Kora 辅助库](docs/KORA.md)
 - [Studio 与 IDE](docs/REAPER_IDE.md) · [Jora 工厂](docs/JORA_APPLICATION_FACTORY.md)
 - [实现路线图](docs/IMPLEMENTATION_ROADMAP.md) · [文档索引](docs/README.md)
-- [HARVEST Reaper 集成](docs/HARVEST_REAPER_INTEGRATION.md)
-- [生态共享标准](https://github.com/Ivan-VHS/DAK/blob/main/docs/SHARED_STANDARDS.md)
+- [NOO TAH JavaScript boundary](docs/NOO_TAH.md)
+- [Shared ecosystem standards](https://github.com/Ivan-VHS/DAK/blob/main/docs/UNIFIED_DOCUMENTATION_STANDARD.md)
 
 ## 贡献与许可证
 
