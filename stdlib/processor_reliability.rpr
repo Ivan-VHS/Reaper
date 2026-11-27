@@ -1,0 +1,802 @@
+# Reaper Processor Reliability Core v1.
+# Executable Reaper source. All hardware effects are modeled or adapter-gated.
+# Public records are positional lists so they work with the current .rpr grammar.
+
+export make CORE_SCHEMA := "reaper.processor-core.v1"
+export make SAFE_INTEGER_MAX := 9007199254740991
+export make CORE_TYPES := ["RULE", "BOOT", "START", "ROOT", "SCENARIO"]
+export make CORE_ROLES := ["OPERAND", "OPERATION", "COMMAND", "SERVICE"]
+
+export craft abs_value(value) {
+    when value < 0 { yield 0 - value }
+    yield value
+}
+
+export craft valid_number(value, minimum, maximum) {
+    when kind(value) != "number" { yield false }
+    when value != value { yield false }
+    when value < minimum or value > maximum { yield false }
+    yield true
+}
+
+export craft valid_integer(value, minimum, maximum) {
+    when not valid_number(value, minimum, maximum) { yield false }
+    yield value % 1 == 0
+}
+
+export craft checked_add(left, right) {
+    when not valid_integer(left, 0 - SAFE_INTEGER_MAX, SAFE_INTEGER_MAX) {
+        yield [false, 0, "RPR-FORMAL-0001: left operand is not a safe integer"]
+    }
+    when not valid_integer(right, 0 - SAFE_INTEGER_MAX, SAFE_INTEGER_MAX) {
+        yield [false, 0, "RPR-FORMAL-0002: right operand is not a safe integer"]
+    }
+    when right > 0 and left > SAFE_INTEGER_MAX - right {
+        yield [false, 0, "RPR-FORMAL-0003: integer addition overflow"]
+    }
+    when right < 0 and left < (0 - SAFE_INTEGER_MAX) - right {
+        yield [false, 0, "RPR-FORMAL-0004: integer addition underflow"]
+    }
+    yield [true, left + right, ""]
+}
+
+export craft checked_multiply(left, right) {
+    when not valid_integer(left, 0 - SAFE_INTEGER_MAX, SAFE_INTEGER_MAX) or
+         not valid_integer(right, 0 - SAFE_INTEGER_MAX, SAFE_INTEGER_MAX) {
+        yield [false, 0, "RPR-FORMAL-0005: multiplication requires safe integers"]
+    }
+    when left != 0 and abs_value(right) > SAFE_INTEGER_MAX // abs_value(left) {
+        yield [false, 0, "RPR-FORMAL-0006: integer multiplication overflow"]
+    }
+    yield [true, left * right, ""]
+}
+
+export craft unit_descriptor(unit) {
+    each item in [
+        ["ps", "time", 1],
+        ["ns", "time", 1000],
+        ["us", "time", 1000000],
+        ["cycle", "cycle", 1],
+        ["um", "length", 1000],
+        ["nm", "length", 1],
+        ["fF", "capacitance", 1],
+        ["pF", "capacitance", 1000],
+        ["mA", "current", 1],
+        ["mA_per_um2_x1000", "current_density", 1],
+        ["permille", "ratio", 1],
+        ["mV", "voltage", 1],
+        ["mC", "temperature", 1],
+        ["byte", "size", 1]
+    ] {
+        when item[0] == unit { yield item }
+    }
+    yield nothing
+}
+
+export craft quantity(value, unit) {
+    when not valid_number(value, 0 - SAFE_INTEGER_MAX, SAFE_INTEGER_MAX) {
+        yield [false, 0, unit, "", "RPR-FORMAL-0010: quantity is not a finite safe number"]
+    }
+    make descriptor := unit_descriptor(unit)
+    when descriptor == nothing {
+        yield [false, 0, unit, "", "RPR-FORMAL-0011: unknown unit " ++ text(unit)]
+    }
+    make scaled := checked_multiply(value, descriptor[2])
+    when not scaled[0] {
+        yield [false, 0, unit, descriptor[1], scaled[2]]
+    }
+    yield [true, value, unit, descriptor[1], scaled[1]]
+}
+
+export craft convert_quantity(value, from_unit, to_unit) {
+    make source := unit_descriptor(from_unit)
+    make target := unit_descriptor(to_unit)
+    when source == nothing or target == nothing {
+        yield [false, 0, to_unit, "RPR-FORMAL-0012: conversion uses an unknown unit"]
+    }
+    when source[1] != target[1] {
+        yield [false, 0, to_unit, "RPR-FORMAL-0013: incompatible physical dimensions"]
+    }
+    when not valid_integer(value, 0 - SAFE_INTEGER_MAX, SAFE_INTEGER_MAX) {
+        yield [false, 0, to_unit, "RPR-FORMAL-0014: conversion value must be a safe integer"]
+    }
+    make base := checked_multiply(value, source[2])
+    when not base[0] { yield [false, 0, to_unit, base[2]] }
+    when base[1] % target[2] != 0 {
+        yield [false, 0, to_unit, "RPR-FORMAL-0015: conversion is not an exact integer"]
+    }
+    yield [true, base[1] // target[2], to_unit, ""]
+}
+
+export craft diagnostic(code, message, subject) {
+    yield [code, message, subject]
+}
+
+export craft type_role_matrix() {
+    yield [
+        ["RULE", "OPERAND", "OP_RULE_REF"],
+        ["RULE", "OPERATION", "OPR_RULE_EVAL"],
+        ["RULE", "COMMAND", "CMD_RULE_BIND"],
+        ["RULE", "SERVICE", "SVC_RULE_ENGINE"],
+        ["BOOT", "OPERAND", "OP_BOOT_IMAGE"],
+        ["BOOT", "OPERATION", "OPR_BOOT_STAGE"],
+        ["BOOT", "COMMAND", "CMD_BOOT_LATCH"],
+        ["BOOT", "SERVICE", "SVC_BOOT_FABRIC"],
+        ["START", "OPERAND", "OP_START_VECTOR"],
+        ["START", "OPERATION", "OPR_START_PULSE"],
+        ["START", "COMMAND", "CMD_START_FLOW"],
+        ["START", "SERVICE", "SVC_START_DISPATCH"],
+        ["ROOT", "OPERAND", "OP_ROOT_CAPABILITY"],
+        ["ROOT", "OPERATION", "OPR_ROOT_SEAL"],
+        ["ROOT", "COMMAND", "CMD_ROOT_VERIFY"],
+        ["ROOT", "SERVICE", "SVC_ROOT_GUARD"],
+        ["SCENARIO", "OPERAND", "OP_SCENARIO_PROFILE"],
+        ["SCENARIO", "OPERATION", "OPR_SCENARIO_MORPH"],
+        ["SCENARIO", "COMMAND", "CMD_SCENARIO_ACTIVATE"],
+        ["SCENARIO", "SERVICE", "SVC_SCENARIO_ORCHESTRATOR"]
+    ]
+}
+
+export craft matrix_entry(type_name, role_name) {
+    each item in type_role_matrix() {
+        when item[0] == type_name and item[1] == role_name {
+            yield item
+        }
+    }
+    yield nothing
+}
+
+export craft matrix_fixtures() {
+    vary fixtures := []
+    vary index := 0
+    each item in type_role_matrix() {
+        change fixtures := push(fixtures, [item[0], item[1], index + 1, item[2], 0, 0])
+        change index := index + 1
+    }
+    yield fixtures
+}
+
+export craft validate_matrix_coverage(fixtures) {
+    when kind(fixtures) != "list" { yield [false, 0, ["RPR-EXEC-0001: fixture set must be a list"]] }
+    vary missing := []
+    each required in type_role_matrix() {
+        vary found := false
+        each candidate in fixtures {
+            when kind(candidate) == "list" and size(candidate) == 6 and
+                 candidate[0] == required[0] and candidate[1] == required[1] {
+                change found := true
+            }
+        }
+        when not found {
+            change missing := push(missing, [required[0], required[1]])
+        }
+    }
+    yield [size(missing) == 0 and size(fixtures) == 20, 20 - size(missing), missing]
+}
+
+export craft validate_construct(spec) {
+    when kind(spec) != "list" or size(spec) != 6 {
+        yield [false, "RPR-EXEC-0010: construct must have six fields"]
+    }
+    when not contains(CORE_TYPES, spec[0]) {
+        yield [false, "RPR-EXEC-0011: unknown core type " ++ text(spec[0])]
+    }
+    when not contains(CORE_ROLES, spec[1]) {
+        yield [false, "RPR-EXEC-0012: unknown construct role " ++ text(spec[1])]
+    }
+    when matrix_entry(spec[0], spec[1]) == nothing {
+        yield [false, "RPR-EXEC-0013: type/role pair is not registered"]
+    }
+    when not valid_integer(spec[2], 0, 65535) {
+        yield [false, "RPR-EXEC-0014: construct id must fit u16"]
+    }
+    when kind(spec[3]) != "text" or size(spec[3]) == 0 or size(spec[3]) > 128 {
+        yield [false, "RPR-EXEC-0015: label must contain 1..128 characters"]
+    }
+    when not valid_integer(spec[4], 0, 1000000000) {
+        yield [false, "RPR-EXEC-0016: magnitude must be a bounded non-negative integer"]
+    }
+    when not valid_integer(spec[5], 0, 1000000) {
+        yield [false, "RPR-EXEC-0017: auxiliary parameter must be a bounded integer"]
+    }
+    yield [true, ""]
+}
+
+export craft list_replace(items, index, replacement) {
+    when kind(items) != "list" or not valid_integer(index, 0, 1000000) or index >= size(items) {
+        yield [false, [], "RPR-FORMAL-0020: list replacement index is invalid"]
+    }
+    vary result := []
+    vary cursor := 0
+    each item in items {
+        when cursor == index {
+            change result := push(result, replacement)
+        } otherwise {
+            change result := push(result, item)
+        }
+        change cursor := cursor + 1
+    }
+    yield [true, result, ""]
+}
+
+export craft state_put(state, index, value) {
+    make changed := list_replace(state, index, value)
+    when not changed[0] { yield state }
+    yield changed[1]
+}
+
+export craft state_valid(state) {
+    when kind(state) != "list" or size(state) != 19 { yield false }
+    when state[0] != "RPC" or state[1] != 1 { yield false }
+    when not contains(["production", "test"], state[6]) { yield false }
+    when not valid_integer(state[2], 0, SAFE_INTEGER_MAX) { yield false }
+    when not valid_integer(state[3], 0, 1000000000000) { yield false }
+    when not valid_integer(state[4], 0, state[3]) { yield false }
+    when not valid_integer(state[5], 0, state[3]) { yield false }
+    when kind(state[7]) != "boolean" { yield false }
+    when not valid_integer(state[8], 0, 1000000) or
+         not valid_integer(state[9], 0, 500000) or
+         not valid_integer(state[10], 0, SAFE_INTEGER_MAX) { yield false }
+    when not valid_integer(state[11], 0, SAFE_INTEGER_MAX) { yield false }
+    when not valid_integer(state[12], 0 - 1000000000, 1000000000) { yield false }
+    when not valid_integer(state[13], 0, SAFE_INTEGER_MAX) { yield false }
+    when not valid_integer(state[14], 0, SAFE_INTEGER_MAX) or
+         not valid_integer(state[15], 0, SAFE_INTEGER_MAX) { yield false }
+    when kind(state[16]) != "text" or kind(state[17]) != "list" { yield false }
+    when not valid_integer(state[18], 0, SAFE_INTEGER_MAX) { yield false }
+    each reserve in state[17] {
+        when not valid_integer(reserve, 0, 1000000) { yield false }
+    }
+    yield true
+}
+
+export craft new_state(capacity, low_watermark, mode, local_reserves, initial_phase_error_ps) {
+    when not valid_integer(capacity, 0, 1000000000000) {
+        yield [false, [], "RPR-REPAIR-0001: capacity must be within 0..10^12"]
+    }
+    when not valid_integer(low_watermark, 0, capacity) {
+        yield [false, [], "RPR-REPAIR-0002: low watermark must be within the capacity"]
+    }
+    when not contains(["production", "test"], mode) {
+        yield [false, [], "RPR-REPAIR-0003: mode must be production or test"]
+    }
+    when kind(local_reserves) != "list" or size(local_reserves) == 0 or size(local_reserves) > 256 {
+        yield [false, [], "RPR-REPAIR-0004: one to 256 local reserves are required"]
+    }
+    each reserve in local_reserves {
+        when not valid_integer(reserve, 0, 1000000) {
+            yield [false, [], "RPR-REPAIR-0005: local reserve is outside its bound"]
+        }
+    }
+    when not valid_integer(initial_phase_error_ps, 0 - 1000000000, 1000000000) {
+        yield [false, [], "RPR-CORRECT-0001: initial phase error must be a bounded integer"]
+    }
+    yield [true, [
+        "RPC", 1, 0, capacity, capacity, low_watermark, mode,
+        false, 0, 0, 0, 0, initial_phase_error_ps, 0, 0, 0,
+        "cold", local_reserves, 0
+    ], ""]
+}
+
+export craft repair_spend(state, cost, period_cycles, duty_cycles) {
+    when not state_valid(state) {
+        yield [false, state, 0, false, false, "RPR-REPAIR-0010: invalid kernel state"]
+    }
+    when not valid_integer(cost, 0, 1000000000) {
+        yield [false, state, 0, false, false, "RPR-REPAIR-0011: repair cost is invalid"]
+    }
+    when not valid_integer(period_cycles, 64, 1000000) or
+         not valid_integer(duty_cycles, 1, period_cycles // 2) {
+        yield [false, state, 0, false, false, "RPR-FAULT-0010: period/duty is outside safe bounds"]
+    }
+    make spent := cost
+    when spent > state[4] { change spent := state[4] }
+    make remaining := state[4] - spent
+    make next := state_put(state, 4, remaining)
+    make triggered := false
+    make exhausted := remaining == 0
+    when remaining <= state[5] {
+        when state[6] == "test" and not state[7] {
+            change next := state_put(next, 7, true)
+            change next := state_put(next, 8, period_cycles)
+            change next := state_put(next, 9, duty_cycles)
+            change next := state_put(next, 10, 0)
+            change next := state_put(next, 11, state[11] + 1)
+            change next := state_put(next, 16, "fault-injection-active")
+            change triggered := true
+        } otherwise {
+            when state[6] == "production" {
+                change next := state_put(next, 16, "safe-degraded")
+            }
+        }
+    }
+    yield [true, next, spent, triggered, exhausted, next[16]]
+}
+
+export craft repair_forecast(state, cost_per_step, horizon_steps) {
+    when not state_valid(state) { yield [false, 0, 0, "RPR-REPAIR-0020: invalid state"] }
+    when not valid_integer(cost_per_step, 0, 1000000000) or
+         not valid_integer(horizon_steps, 1, 1000000) {
+        yield [false, 0, 0, "RPR-REPAIR-0021: forecast inputs are outside bounds"]
+    }
+    when cost_per_step == 0 {
+        yield [true, state[4], SAFE_INTEGER_MAX, ""]
+    }
+    make product := checked_multiply(cost_per_step, horizon_steps)
+    when not product[0] { yield [false, 0, 0, product[2]] }
+    make projected := state[4] - product[1]
+    when projected < 0 { change projected := 0 }
+    make exhaustion_step := state[4] // cost_per_step
+    yield [true, projected, exhaustion_step, ""]
+}
+
+export craft reserve_spend(reserves, reserve_index, cost) {
+    when kind(reserves) != "list" or size(reserves) == 0 {
+        yield [false, reserves, 0, cost, "RPR-REPAIR-0030: reserve list is empty"]
+    }
+    when not valid_integer(reserve_index, 0, size(reserves) - 1) or
+         not valid_integer(cost, 0, 1000000) {
+        yield [false, reserves, 0, cost, "RPR-REPAIR-0031: reserve index or cost is invalid"]
+    }
+    make available := reserves[reserve_index]
+    when not valid_integer(available, 0, 1000000) {
+        yield [false, reserves, 0, cost, "RPR-REPAIR-0032: selected reserve is invalid"]
+    }
+    make spent := cost
+    when spent > available { change spent := available }
+    make remaining := available - spent
+    make updated := list_replace(reserves, reserve_index, remaining)
+    yield [true, updated[1], spent, cost - spent, ""]
+}
+
+export craft silicon_domain(domain_id, cycle, voltage_mv, temperature_mc, maximum_temperature_mc) {
+    when not valid_integer(domain_id, 0, 65535) or
+         not valid_integer(cycle, 0, SAFE_INTEGER_MAX) or
+         not valid_integer(voltage_mv, 0, 2000) or
+         not valid_integer(temperature_mc, -40000, 150000) or
+         not valid_integer(maximum_temperature_mc, -40000, 150000) {
+        yield [false, [], "RPR-PHYS-0001: silicon domain fields are outside bounds"]
+    }
+    when maximum_temperature_mc <= 0 or temperature_mc > maximum_temperature_mc {
+        yield [false, [], "RPR-PHYS-0002: silicon domain exceeds its thermal limit"]
+    }
+    yield [true, [domain_id, cycle, voltage_mv, temperature_mc, maximum_temperature_mc, "simulated"], ""]
+}
+
+export craft silicon_advance(domain, elapsed_cycles, temperature_delta_mc) {
+    when kind(domain) != "list" or size(domain) != 6 {
+        yield [false, domain, "RPR-PHYS-0010: malformed silicon domain"]
+    }
+    when not valid_integer(elapsed_cycles, 0, 1000000000) or
+         not valid_integer(temperature_delta_mc, -100000, 100000) {
+        yield [false, domain, "RPR-PHYS-0011: cycle or temperature delta is invalid"]
+    }
+    make cycle := checked_add(domain[1], elapsed_cycles)
+    make temperature := checked_add(domain[3], temperature_delta_mc)
+    when not cycle[0] or not temperature[0] {
+        yield [false, domain, "RPR-PHYS-0012: silicon counter or temperature overflow"]
+    }
+    when temperature[1] > domain[4] {
+        yield [false, domain, "RPR-PHYS-0013: thermal guard rejected the transition"]
+    }
+    make next := [domain[0], cycle[1], domain[2], temperature[1], domain[4], domain[5]]
+    yield [true, next, ""]
+}
+
+export craft copper_evaluate(length_um, area_nm2, resistivity_n_ohm_m, capacitance_ff) {
+    when not valid_integer(length_um, 1, 1000000) or
+         not valid_integer(area_nm2, 1000, 1000000000) or
+         not valid_integer(resistivity_n_ohm_m, 1, 1000) or
+         not valid_integer(capacitance_ff, 1, 1000000) {
+        yield [false, 0, 0, "RPR-PHYS-0020: copper geometry/material values are outside bounds"]
+    }
+    make numerator := checked_multiply(resistivity_n_ohm_m, length_um)
+    when not numerator[0] { yield [false, 0, 0, numerator[2]] }
+    make scaled := checked_multiply(numerator[1], 1000000)
+    when not scaled[0] { yield [false, 0, 0, scaled[2]] }
+    make resistance_mohm := scaled[1] // area_nm2
+    make delay_product := checked_multiply(resistance_mohm, capacitance_ff)
+    when not delay_product[0] { yield [false, 0, 0, delay_product[2]] }
+    make delay_ps := delay_product[1] // 1000000
+    yield [true, resistance_mohm, delay_ps, ""]
+}
+
+export craft copper_age(wear_permille, density_milli_ma_um2, temperature_mc, elapsed_cycles) {
+    when not valid_integer(wear_permille, 0, 1000) or
+         not valid_integer(density_milli_ma_um2, 0, 5000) or
+         not valid_integer(temperature_mc, -40000, 125000) or
+         not valid_integer(elapsed_cycles, 0, 100000) {
+        yield [false, wear_permille, "RPR-PHYS-0021: electromigration inputs are outside bounds"]
+    }
+    make density_squared := checked_multiply(density_milli_ma_um2, density_milli_ma_um2)
+    when not density_squared[0] { yield [false, wear_permille, density_squared[2]] }
+    make thermal_factor := 1000
+    when temperature_mc > 25000 {
+        change thermal_factor := thermal_factor + ((temperature_mc - 25000) // 100)
+    }
+    make load := checked_multiply(density_squared[1], elapsed_cycles)
+    when not load[0] { yield [false, wear_permille, load[2]] }
+    make thermal_load := checked_multiply(load[1], thermal_factor)
+    when not thermal_load[0] { yield [false, wear_permille, thermal_load[2]] }
+    make delta := thermal_load[1] // 1000000000000
+    make next_wear := wear_permille + delta
+    when next_wear > 1000 { change next_wear := 1000 }
+    yield [true, next_wear, ""]
+}
+
+export craft nano_cell(chip_id, local_repair_cells, health_permille, phase_error_ps, fault_latches) {
+    when not valid_integer(chip_id, 0, 65535) or
+         not valid_integer(local_repair_cells, 0, 1000000) or
+         not valid_integer(health_permille, 0, 1000) or
+         not valid_integer(phase_error_ps, -1000000, 1000000) or
+         not valid_integer(fault_latches, 0, SAFE_INTEGER_MAX) {
+        yield [false, [], "RPR-PHYS-0030: nanochip cell fields are outside bounds"]
+    }
+    yield [true, [chip_id, local_repair_cells, health_permille, phase_error_ps, fault_latches], ""]
+}
+
+export craft nano_repair(cell, requested_cells) {
+    when kind(cell) != "list" or size(cell) != 5 {
+        yield [false, cell, 0, "RPR-PHYS-0031: malformed nanochip cell"]
+    }
+    when not valid_integer(requested_cells, 0, 1000000) {
+        yield [false, cell, 0, "RPR-PHYS-0032: requested local repair is invalid"]
+    }
+    make spent := requested_cells
+    when spent > cell[1] { change spent := cell[1] }
+    make shortfall := requested_cells - spent
+    make health := cell[2] + spent - shortfall
+    when health > 1000 { change health := 1000 }
+    when health < 0 { change health := 0 }
+    make next := [cell[0], cell[1] - spent, health, cell[3], cell[4]]
+    yield [true, next, spent, shortfall]
+}
+
+export craft fault_window_open(enabled, cycle, phase, period_cycles, duty_cycles) {
+    when kind(enabled) != "boolean" or not enabled { yield false }
+    when not valid_integer(cycle, 0, SAFE_INTEGER_MAX) or
+         not valid_integer(phase, 0, SAFE_INTEGER_MAX) or
+         not valid_integer(period_cycles, 1, 1000000) or
+         not valid_integer(duty_cycles, 1, period_cycles) { yield false }
+    when cycle < phase { yield false }
+    yield ((cycle - phase) % period_cycles) < duty_cycles
+}
+
+export craft fault_inject(mode, enabled, cycle, phase, period_cycles, duty_cycles) {
+    when mode != "test" {
+        yield [false, false, "RPR-FAULT-0020: fault injection is test-mode only"]
+    }
+    yield [true, fault_window_open(enabled, cycle, phase, period_cycles, duty_cycles), ""]
+}
+
+export craft scenario_enable(state, period_cycles, duty_cycles) {
+    when not state_valid(state) { yield [false, state, "RPR-FAULT-0030: invalid kernel state"] }
+    when state[6] != "test" {
+        yield [false, state, "RPR-FAULT-0031: scenarios cannot inject faults in production mode"]
+    }
+    when not valid_integer(period_cycles, 64, 1000000) or
+         not valid_integer(duty_cycles, 1, period_cycles // 2) {
+        yield [false, state, "RPR-FAULT-0032: scenario period/duty is outside bounds"]
+    }
+    make next := state_put(state, 7, true)
+    change next := state_put(next, 8, period_cycles)
+    change next := state_put(next, 9, duty_cycles)
+    change next := state_put(next, 10, 0)
+    change next := state_put(next, 11, state[11] + 1)
+    change next := state_put(next, 16, "fault-injection-active")
+    yield [true, next, ""]
+}
+
+export craft correction_step(error_ps, gain_permille, maximum_step_ps) {
+    when not valid_integer(error_ps, -1000000000, 1000000000) or
+         not valid_integer(gain_permille, 1, 1000) or
+         not valid_integer(maximum_step_ps, 1, 1000000) {
+        yield [false, 0, error_ps, false, false, "RPR-CORRECT-0010: correction input is outside bounds"]
+    }
+    make magnitude := abs_value(error_ps)
+    when magnitude == 0 {
+        yield [true, 0, 0, true, true, ""]
+    }
+    make scaled := checked_multiply(magnitude, gain_permille)
+    when not scaled[0] {
+        yield [false, 0, error_ps, false, false, scaled[2]]
+    }
+    make step := scaled[1] // 1000
+    when step == 0 { change step := 1 }
+    when step > maximum_step_ps { change step := maximum_step_ps }
+    when step > magnitude { change step := magnitude }
+    make applied := step
+    when error_ps > 0 { change applied := 0 - step }
+    make residual := error_ps + applied
+    make monotonic := abs_value(residual) <= magnitude
+    yield [true, applied, residual, monotonic, residual == 0, ""]
+}
+
+export craft apply_correction(state, gain_permille, maximum_step_ps) {
+    when not state_valid(state) { yield [false, state, [], "RPR-CORRECT-0020: invalid kernel state"] }
+    make result := correction_step(state[12], gain_permille, maximum_step_ps)
+    when not result[0] { yield [false, state, result, result[5]] }
+    make total := checked_add(state[13], abs_value(result[1]))
+    when not total[0] { yield [false, state, result, total[2]] }
+    make next := state_put(state, 12, result[2])
+    change next := state_put(next, 13, total[1])
+    yield [true, next, result, ""]
+}
+
+export craft bytecode_domain_code(domain_type) {
+    when domain_type == "RULE" { yield 1 }
+    when domain_type == "BOOT" { yield 2 }
+    when domain_type == "START" { yield 3 }
+    when domain_type == "ROOT" { yield 4 }
+    when domain_type == "SCENARIO" { yield 5 }
+    yield 0
+}
+
+export craft bytecode_domain_name(code) {
+    when code == 1 { yield "RULE" }
+    when code == 2 { yield "BOOT" }
+    when code == 3 { yield "START" }
+    when code == 4 { yield "ROOT" }
+    when code == 5 { yield "SCENARIO" }
+    yield ""
+}
+
+export craft bytecode_opcode_valid(opcode) {
+    yield contains([16, 17, 18, 32, 33, 48, 49, 64], opcode)
+}
+
+export craft bytecode_encode(opcode, domain_type, operand_a, operand_b, flags) {
+    make domain_code := bytecode_domain_code(domain_type)
+    when not bytecode_opcode_valid(opcode) or domain_code == 0 {
+        yield [false, [], "RPR-BC-0001: unknown opcode or domain"]
+    }
+    when not valid_integer(operand_a, 0, 65535) or
+         not valid_integer(operand_b, 0, 65535) or
+         not valid_integer(flags, 0, 65535) {
+        yield [false, [], "RPR-BC-0002: bytecode operands and flags must fit u16"]
+    }
+    make high32 := opcode * 16777216 + domain_code * 65536 + operand_a
+    make low32 := operand_b * 65536 + flags
+    yield [true, [high32, low32], ""]
+}
+
+export craft bytecode_decode(word) {
+    when kind(word) != "list" or size(word) != 2 {
+        yield [false, [], "RPR-BC-0010: bytecode word must be a [high32, low32] pair"]
+    }
+    when not valid_integer(word[0], 0, 4294967295) or
+         not valid_integer(word[1], 0, 4294967295) {
+        yield [false, [], "RPR-BC-0011: 32-bit word is outside u32"]
+    }
+    make opcode := word[0] // 16777216
+    make domain_code := (word[0] // 65536) % 256
+    make operand_a := word[0] % 65536
+    make operand_b := word[1] // 65536
+    make flags := word[1] % 65536
+    make domain_type := bytecode_domain_name(domain_code)
+    when not bytecode_opcode_valid(opcode) or domain_type == "" {
+        yield [false, [], "RPR-BC-0012: unsupported opcode or domain code"]
+    }
+    yield [true, [opcode, domain_type, operand_a, operand_b, flags], ""]
+}
+
+export craft opcode_role(opcode) {
+    when opcode == 17 or opcode == 33 { yield "COMMAND" }
+    when opcode == 18 { yield "SERVICE" }
+    when contains([16, 32, 48, 49, 64], opcode) { yield "OPERATION" }
+    yield ""
+}
+
+export craft execute_bytecode(state, word) {
+    make decoded := bytecode_decode(word)
+    when not decoded[0] { yield [false, state, [], decoded[2]] }
+    make instruction := decoded[1]
+    make role := opcode_role(instruction[0])
+    when role == "" { yield [false, state, [], "RPR-BC-0020: opcode has no execution role"] }
+    when instruction[0] == 32 and instruction[1] != "START" {
+        yield [false, state, [], "RPR-BC-0021: repair-spend opcode requires START domain"]
+    }
+    when instruction[0] == 33 and instruction[1] != "SCENARIO" {
+        yield [false, state, [], "RPR-BC-0022: fault-period opcode requires SCENARIO domain"]
+    }
+    when instruction[0] == 48 and instruction[1] != "BOOT" {
+        yield [false, state, [], "RPR-BC-0023: copper-tune opcode requires BOOT domain"]
+    }
+    when instruction[0] == 49 and instruction[1] != "START" {
+        yield [false, state, [], "RPR-BC-0024: nano-pulse opcode requires START domain"]
+    }
+    when instruction[0] == 64 and instruction[1] != "ROOT" {
+        yield [false, state, [], "RPR-BC-0025: corrective-skew opcode requires ROOT domain"]
+    }
+    make label := "RPR_BC_" ++ text(instruction[0])
+    make spec := [instruction[1], role, instruction[2], label, instruction[3], instruction[4]]
+    yield run_construct(state, spec)
+}
+
+export craft run_construct(state, spec) {
+    when not state_valid(state) {
+        yield [false, state, [], "RPR-EXEC-0030: invalid kernel state"]
+    }
+    make checked := validate_construct(spec)
+    when not checked[0] { yield [false, state, [], checked[1]] }
+    make next_cycle := checked_add(state[2], 1)
+    when not next_cycle[0] { yield [false, state, [], next_cycle[2]] }
+    make next := state_put(state, 2, next_cycle[1])
+    change next := state_put(next, 14, state[14] + 1)
+    when spec[1] == "SERVICE" {
+        change next := state_put(next, 15, state[15] + 1)
+    }
+    make spent := 0
+    make triggered := false
+
+    when spec[0] == "BOOT" {
+        change next := state_put(next, 16, "ready")
+    }
+    when spec[0] == "RULE" {
+        when next[4] <= next[5] and next[6] == "production" {
+            change next := state_put(next, 16, "safe-degraded")
+        } otherwise {
+            when next[16] == "cold" { change next := state_put(next, 16, "ready") }
+        }
+    }
+    when spec[0] == "START" {
+        make period := spec[5]
+        when period < 64 { change period := 1024 }
+        make duty := period // 4
+        when duty < 16 { change duty := 16 }
+        make repair := repair_spend(next, spec[4], period, duty)
+        when not repair[0] { yield [false, state, [], repair[5]] }
+        change next := repair[1]
+        change spent := repair[2]
+        change triggered := repair[3]
+    }
+    when spec[0] == "SCENARIO" {
+        when next[6] != "test" {
+            yield [false, state, [], "RPR-EXEC-0031: scenario fault controls are test-mode only"]
+        }
+        make period := spec[5]
+        when period < 64 { change period := 1024 }
+        make duty := period // 4
+        when duty < 16 { change duty := 16 }
+        make scenario := scenario_enable(next, period, duty)
+        when not scenario[0] and not next[7] { yield [false, state, [], scenario[2]] }
+        when scenario[0] { change next := scenario[1] }
+        change next := state_put(next, 16, "fault-injection-active")
+    }
+    when spec[0] == "ROOT" {
+        when next[0] != "RPC" or next[1] != 1 {
+            yield [false, state, [], "RPR-ROOT-0001: root invariant seal failed"]
+        }
+        when next[16] == "cold" { change next := state_put(next, 16, "ready") }
+    }
+
+    make injection := fault_inject(
+        next[6], next[7], next[2], next[10], next[8], next[9]
+    )
+    make injected_now := false
+    when injection[0] and injection[1] {
+        make injected_count := checked_add(next[18], 1)
+        make noisy_error := checked_add(next[12], 1)
+        when not injected_count[0] or not noisy_error[0] {
+            yield [false, state, [], "RPR-FAULT-0040: injection counter or synthetic error overflow"]
+        }
+        change next := state_put(next, 18, injected_count[1])
+        change next := state_put(next, 12, noisy_error[1])
+        change injected_now := true
+    }
+
+    make before_error := next[12]
+    make corrected := apply_correction(next, 500, 16)
+    when not corrected[0] { yield [false, state, [], corrected[3]] }
+    change next := corrected[1]
+    make correction := corrected[2]
+    make record := [
+        next[14], next[2], spec[0], spec[1], next[4], spent,
+        before_error, correction[2], correction[1], triggered,
+        injected_now, next[16]
+    ]
+    yield [true, next, record, ""]
+}
+
+export craft trace_checksum(records) {
+    when kind(records) != "list" { yield [false, 0, "RPR-PYT-0001: trace must be a list"] }
+    vary checksum := 216613626
+    vary count := 0
+    each record in records {
+        when kind(record) != "list" or size(record) != 12 {
+            yield [false, checksum, "RPR-PYT-0002: malformed trace record"]
+        }
+        make step_mix := checked_add(checksum * 31, record[0])
+        when not step_mix[0] { yield [false, checksum, step_mix[2]] }
+        make cycle_mix := checked_add(step_mix[1], record[1] % 2147483647)
+        when not cycle_mix[0] { yield [false, checksum, cycle_mix[2]] }
+        make budget_mix := checked_add(cycle_mix[1], record[4] % 2147483647)
+        when not budget_mix[0] { yield [false, checksum, budget_mix[2]] }
+        make error_mix := checked_add(budget_mix[1], abs_value(record[7]) % 2147483647)
+        when not error_mix[0] { yield [false, checksum, error_mix[2]] }
+        change checksum := error_mix[1] % 2147483647
+        change count := count + 1
+    }
+    yield [true, checksum, count]
+}
+
+export craft replay_validate(records, expected_checksum) {
+    when kind(records) != "list" or not valid_integer(expected_checksum, 0, 2147483646) {
+        yield [false, "RPR-PYT-0010: invalid replay input"]
+    }
+    vary index := 0
+    vary previous_cycle := -1
+    each record in records {
+        when kind(record) != "list" or size(record) != 12 {
+            yield [false, "RPR-PYT-0011: malformed replay record"]
+        }
+        when record[0] != index + 1 or record[1] <= previous_cycle {
+            yield [false, "RPR-PYT-0012: trace order or cycle monotonicity failed"]
+        }
+        when not valid_integer(record[4], 0, 1000000000000) or
+             not valid_integer(record[5], 0, 1000000000) or
+             not valid_integer(record[6], -1000000000, 1000000000) or
+             not valid_integer(record[7], -1000000000, 1000000000) {
+            yield [false, "RPR-PYT-0013: trace measurement is outside bounds"]
+        }
+        when abs_value(record[7]) > abs_value(record[6]) {
+            yield [false, "RPR-PYT-0014: correction step did not converge"]
+        }
+        change previous_cycle := record[1]
+        change index := index + 1
+    }
+    make checksum := trace_checksum(records)
+    when not checksum[0] or checksum[1] != expected_checksum {
+        yield [false, "RPR-PYT-0015: deterministic replay checksum mismatch"]
+    }
+    yield [true, ""]
+}
+
+export craft run_load_test(initial_state, steps, repair_cost, period_cycles) {
+    when not state_valid(initial_state) or initial_state[6] != "test" {
+        yield [false, initial_state, [], 0, "RPR-PYT-0020: load tests require a valid test-mode state"]
+    }
+    when not valid_integer(steps, 1, 100000) or
+         not valid_integer(repair_cost, 0, 1000000000) or
+         not valid_integer(period_cycles, 64, 1000000) {
+        yield [false, initial_state, [], 0, "RPR-PYT-0021: load-test parameters are outside bounds"]
+    }
+    vary state := initial_state
+    vary records := []
+    vary index := 0
+    loop while index < steps {
+        make spec := ["START", "COMMAND", index % 65536, "PYTYLIKI_LOAD", repair_cost, period_cycles]
+        make result := run_construct(state, spec)
+        when not result[0] {
+            yield [false, initial_state, records, 0, result[3]]
+        }
+        change state := result[1]
+        change records := push(records, result[2])
+        change index := index + 1
+    }
+    make checksum := trace_checksum(records)
+    when not checksum[0] { yield [false, initial_state, records, 0, checksum[2]] }
+    make replay := replay_validate(records, checksum[1])
+    yield [replay[0], state, records, checksum[1], replay[1]]
+}
+
+export craft pytyliki_report(state, records, checksum) {
+    when not state_valid(state) or kind(records) != "list" or
+         not valid_integer(checksum, 0, 2147483646) {
+        yield [false, [], "RPR-PYT-0030: report inputs are invalid"]
+    }
+    make replay := replay_validate(records, checksum)
+    when not replay[0] { yield [false, [], replay[1]] }
+    yield [true, [
+        "pytyliki.processor-reliability.v1",
+        size(records),
+        checksum,
+        state[4],
+        state[18],
+        state[11],
+        abs_value(state[12]),
+        state[16],
+        "simulated",
+        "no hardware writes; no scheduler or voltage changes"
+    ], ""]
+}
