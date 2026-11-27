@@ -1,0 +1,52 @@
+name: Reaper Neural Contract System
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "stdlib/neural_contract.rpr"
+      - "examples/neural/**"
+      - "examples/neural_contract_system.rpr"
+      - "schemas/neural-contract.v1.schema.json"
+      - "tools/validate_neural_contract.mjs"
+      - "docs/NEURAL_CONTRACT_SYSTEM.md"
+      - "language/features.json"
+      - "project-contract.json"
+      - ".github/workflows/neural-contract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  neural-contract:
+    name: Validate model contracts and Reaper policy semantics
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate JSON contract and safety invariants
+        run: node tools/validate_neural_contract.mjs
+      - name: Set up Python reference-runtime host
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Check Reaper neural-contract fixture
+        run: python -m reaper --check examples/neural_contract_system.rpr
+      - name: Execute Reaper neural-contract fixture
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m reaper examples/neural_contract_system.rpr | tee neural-contract-treewalk.txt
+          grep -qx "REAPER_NEURAL_CONTRACT_OK" neural-contract-treewalk.txt
+      - name: Execute Reaper neural-contract fixture through the bytecode VM
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m reaper --engine vm examples/neural_contract_system.rpr | tee neural-contract-vm.txt
+          grep -qx "REAPER_NEURAL_CONTRACT_OK" neural-contract-vm.txt
