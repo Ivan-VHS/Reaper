@@ -1,0 +1,470 @@
+# Reaper Neural Contract System v1.
+# This module validates policy descriptors and admission decisions only.
+# It does not load weights, train models, open sockets or invoke accelerators.
+
+export make NCS_MAGIC := "reaper.neural-contract"
+export make NCS_VERSION := 1
+export make NCS_FAMILIES := ["dense", "convolutional", "recurrent", "transformer", "graph", "hybrid"]
+export make NCS_PORT_TYPES := ["bool", "i8", "u8", "i16", "u16", "i32", "u32", "i64", "u64", "f16", "f32", "f64", "token"]
+export make NCS_TOPOLOGIES := ["isolated", "mesh", "federated"]
+export make NCS_LEARNING_MODES := ["disabled", "offline", "federated"]
+
+export craft port(id, direction, data_type, shape, max_elements) {
+    yield [id, direction, data_type, shape, max_elements]
+}
+
+export craft peer(id, authenticated, encrypted, allowlisted, max_payload_bytes) {
+    yield [id, authenticated, encrypted, allowlisted, max_payload_bytes]
+}
+
+export craft contract(model_id, family, inputs, outputs, resources, security, learning, topology, runtime, provenance, lifecycle, behavior) {
+    yield [
+        NCS_MAGIC, NCS_VERSION, model_id, family, inputs, outputs,
+        resources, security, learning, topology, runtime, provenance,
+        lifecycle, behavior
+    ]
+}
+
+craft _ncs_text(value) {
+    yield kind(value) == "text" and size(value) > 0 and size(value) <= 128
+}
+
+craft _ncs_integer(value) {
+    yield kind(value) == "number" and value % 1 == 0
+}
+
+craft _ncs_positive_integer(value) {
+    yield _ncs_integer(value) and value > 0
+}
+
+craft _ncs_nonnegative_integer(value) {
+    yield _ncs_integer(value) and value >= 0
+}
+
+craft _ncs_unique_slot(records, slot) {
+    when kind(records) != "list" { yield false }
+    vary seen := []
+    each record in records {
+        when kind(record) != "list" or size(record) <= slot { yield false }
+        when contains(seen, record[slot]) { yield false }
+        change seen := push(seen, record[slot])
+    }
+    yield true
+}
+
+craft _ncs_unique_text(values) {
+    when kind(values) != "list" { yield false }
+    vary seen := []
+    each value in values {
+        when not _ncs_text(value) { yield false }
+        when contains(seen, value) { yield false }
+        change seen := push(seen, value)
+    }
+    yield true
+}
+
+craft _ncs_shape_valid(shape, maximum) {
+    when kind(shape) != "list" or size(shape) < 1 or size(shape) > 8 {
+        yield false
+    }
+    when not _ncs_positive_integer(maximum) or maximum > 16777216 {
+        yield false
+    }
+    vary elements := 1
+    each dimension in shape {
+        when not _ncs_positive_integer(dimension) or dimension > 65536 {
+            yield false
+        }
+        change elements := elements * dimension
+        when elements > maximum or elements > 16777216 {
+            yield false
+        }
+    }
+    yield true
+}
+
+craft _ncs_port_valid(item, direction) {
+    when kind(item) != "list" or size(item) != 5 {
+        yield false
+    }
+    when not _ncs_text(item[0]) or item[1] != direction {
+        yield false
+    }
+    when not contains(NCS_PORT_TYPES, item[2]) {
+        yield false
+    }
+    when not _ncs_shape_valid(item[3], item[4]) {
+        yield false
+    }
+    yield true
+}
+
+craft _ncs_ports_valid(items, direction) {
+    when kind(items) != "list" or size(items) < 1 or size(items) > 64 {
+        yield false
+    }
+    when not _ncs_unique_slot(items, 0) {
+        yield false
+    }
+    each item in items {
+        when not _ncs_port_valid(item, direction) {
+            yield false
+        }
+    }
+    yield true
+}
+
+craft _ncs_resources_valid(resources) {
+    when kind(resources) != "list" or size(resources) != 5 {
+        yield false
+    }
+    when not _ncs_positive_integer(resources[0]) or resources[0] > 65536 {
+        yield false
+    }
+    when not _ncs_positive_integer(resources[1]) or resources[1] > 64 {
+        yield false
+    }
+    when not _ncs_nonnegative_integer(resources[2]) or resources[2] > 65536 {
+        yield false
+    }
+    when not _ncs_positive_integer(resources[3]) or resources[3] > 600000 {
+        yield false
+    }
+    when not _ncs_positive_integer(resources[4]) or resources[4] > 4096 {
+        yield false
+    }
+    yield true
+}
+
+craft _ncs_security_valid(security) {
+    when kind(security) != "list" or size(security) != 5 {
+        yield false
+    }
+    when kind(security[0]) != "boolean" or kind(security[1]) != "boolean" or kind(security[2]) != "boolean" {
+        yield false
+    }
+    when security[1] or security[2] {
+        yield false
+    }
+    when not contains(["none", "model-read-only"], security[3]) {
+        yield false
+    }
+    when not contains(["none", "allowlisted"], security[4]) {
+        yield false
+    }
+    when security[0] and security[4] != "allowlisted" {
+        yield false
+    }
+    yield true
+}
+
+craft _ncs_peer_valid(item) {
+    when kind(item) != "list" or size(item) != 5 {
+        yield false
+    }
+    when not _ncs_text(item[0]) {
+        yield false
+    }
+    when kind(item[1]) != "boolean" or kind(item[2]) != "boolean" or kind(item[3]) != "boolean" {
+        yield false
+    }
+    when not item[1] or not item[2] or not item[3] {
+        yield false
+    }
+    when not _ncs_positive_integer(item[4]) or item[4] > 1048576 {
+        yield false
+    }
+    yield true
+}
+
+craft _ncs_peers_valid(peers) {
+    when kind(peers) != "list" or size(peers) > 64 {
+        yield false
+    }
+    when not _ncs_unique_slot(peers, 0) {
+        yield false
+    }
+    each item in peers {
+        when not _ncs_peer_valid(item) {
+            yield false
+        }
+    }
+    yield true
+}
+
+craft _ncs_topology_valid(topology, security, runtime) {
+    when kind(topology) != "list" or size(topology) != 2 {
+        yield false
+    }
+    when not contains(NCS_TOPOLOGIES, topology[0]) or not _ncs_peers_valid(topology[1]) {
+        yield false
+    }
+    when topology[0] == "isolated" {
+        yield size(topology[1]) == 0 and security[4] == "none" and not security[0] and runtime[4]
+    }
+    when topology[0] == "mesh" or topology[0] == "federated" {
+        yield size(topology[1]) > 0 and security[4] == "allowlisted" and not runtime[4]
+    }
+    yield false
+}
+
+craft _ncs_learning_valid(learning, topology) {
+    when kind(learning) != "list" or size(learning) != 6 {
+        yield false
+    }
+    when not contains(NCS_LEARNING_MODES, learning[0]) {
+        yield false
+    }
+    when kind(learning[1]) != "boolean" or learning[1] {
+        yield false
+    }
+    when kind(learning[2]) != "boolean" or not learning[2] {
+        yield false
+    }
+    when not _ncs_nonnegative_integer(learning[3]) or learning[3] > 10000000 {
+        yield false
+    }
+    when not _ncs_unique_text(learning[4]) {
+        yield false
+    }
+    when kind(learning[5]) != "text" {
+        yield false
+    }
+    when learning[0] == "disabled" {
+        yield learning[3] == 0 and size(learning[4]) == 0 and learning[5] == ""
+    }
+    when learning[0] == "offline" {
+        yield learning[3] > 0 and size(learning[4]) > 0 and size(learning[5]) > 0
+    }
+    when learning[0] == "federated" {
+        yield learning[3] > 0 and size(learning[4]) > 0 and size(learning[5]) > 0 and topology[0] == "federated"
+    }
+    yield false
+}
+
+craft _ncs_runtime_valid(runtime) {
+    when kind(runtime) != "list" or size(runtime) != 5 {
+        yield false
+    }
+    when not _ncs_text(runtime[0]) or not _ncs_text(runtime[1]) {
+        yield false
+    }
+    when not contains(["reference", "local", "trusted-host", "accelerator"], runtime[2]) {
+        yield false
+    }
+    when kind(runtime[3]) != "boolean" or kind(runtime[4]) != "boolean" {
+        yield false
+    }
+    when runtime[2] == "reference" and not runtime[4] {
+        yield false
+    }
+    yield true
+}
+
+craft _ncs_provenance_valid(provenance) {
+    when kind(provenance) != "list" or size(provenance) != 5 {
+        yield false
+    }
+    when not contains(["unbound", "bound"], provenance[0]) {
+        yield false
+    }
+    when kind(provenance[1]) != "text" or kind(provenance[2]) != "text" or kind(provenance[3]) != "text" {
+        yield false
+    }
+    when not _ncs_text(provenance[4]) {
+        yield false
+    }
+    when provenance[0] == "unbound" {
+        yield provenance[1] == "" and provenance[2] == "" and provenance[3] == ""
+    }
+    yield size(provenance[1]) > 0 and size(provenance[2]) == 64 and size(provenance[3]) == 64
+}
+
+craft _ncs_lifecycle_valid(lifecycle) {
+    when kind(lifecycle) != "list" or size(lifecycle) != 4 {
+        yield false
+    }
+    when not contains(["contract_only", "validated", "bound", "disabled"], lifecycle[0]) {
+        yield false
+    }
+    when not _ncs_nonnegative_integer(lifecycle[1]) {
+        yield false
+    }
+    when lifecycle[2] != "manual_only" or kind(lifecycle[3]) != "boolean" or not lifecycle[3] {
+        yield false
+    }
+    yield true
+}
+
+craft _ncs_behavior_valid(behavior) {
+    when kind(behavior) != "list" or size(behavior) != 5 {
+        yield false
+    }
+    when not _ncs_text(behavior[0]) or not _ncs_text(behavior[1]) {
+        yield false
+    }
+    when not contains(["required", "allowed", "disabled"], behavior[2]) {
+        yield false
+    }
+    when not _ncs_nonnegative_integer(behavior[3]) or behavior[3] > 1000000 {
+        yield false
+    }
+    when not _ncs_nonnegative_integer(behavior[4]) or behavior[4] > 1000000 {
+        yield false
+    }
+    yield true
+}
+
+export craft validate(contract_value) {
+    when kind(contract_value) != "list" or size(contract_value) != 14 {
+        yield [false, "RPR-NCS-0001: contract must contain 14 canonical slots"]
+    }
+    when contract_value[0] != NCS_MAGIC or contract_value[1] != NCS_VERSION {
+        yield [false, "RPR-NCS-0002: unsupported contract identity or version"]
+    }
+    when not _ncs_text(contract_value[2]) or not contains(NCS_FAMILIES, contract_value[3]) {
+        yield [false, "RPR-NCS-0003: model identity or family is invalid"]
+    }
+    when not _ncs_ports_valid(contract_value[4], "input") {
+        yield [false, "RPR-NCS-0004: input port contract is invalid"]
+    }
+    when not _ncs_ports_valid(contract_value[5], "output") {
+        yield [false, "RPR-NCS-0005: output port contract is invalid"]
+    }
+    when not _ncs_resources_valid(contract_value[6]) {
+        yield [false, "RPR-NCS-0006: resource envelope is invalid"]
+    }
+    when not _ncs_security_valid(contract_value[7]) {
+        yield [false, "RPR-NCS-0007: security policy is invalid"]
+    }
+    when not _ncs_runtime_valid(contract_value[10]) {
+        yield [false, "RPR-NCS-0008: runtime adapter descriptor is invalid"]
+    }
+    when not _ncs_topology_valid(contract_value[9], contract_value[7], contract_value[10]) {
+        yield [false, "RPR-NCS-0009: topology is inconsistent with runtime and security policy"]
+    }
+    when not _ncs_learning_valid(contract_value[8], contract_value[9]) {
+        yield [false, "RPR-NCS-0010: learning policy requires explicit datasets, consent and approval"]
+    }
+    when not _ncs_provenance_valid(contract_value[11]) {
+        yield [false, "RPR-NCS-0011: model provenance or artifact binding is invalid"]
+    }
+    when not _ncs_lifecycle_valid(contract_value[12]) {
+        yield [false, "RPR-NCS-0012: lifecycle must require manual update and rollback"]
+    }
+    when not _ncs_behavior_valid(contract_value[13]) {
+        yield [false, "RPR-NCS-0013: cognitive/output contract is invalid"]
+    }
+    yield [true, "RPR-NCS-OK"]
+}
+
+export craft inference_admit(contract_value, batch_items, deadline_ms, external_transfer_requested) {
+    make report := validate(contract_value)
+    when not report[0] {
+        yield ["deny", report[1]]
+    }
+    when contract_value[12][0] == "disabled" {
+        yield ["deny", "RPR-NCS-0101: model lifecycle is disabled"]
+    }
+    when not _ncs_positive_integer(batch_items) or batch_items > contract_value[6][4] {
+        yield ["deny", "RPR-NCS-0102: batch exceeds the declared item budget"]
+    }
+    when not _ncs_positive_integer(deadline_ms) or deadline_ms > contract_value[6][3] {
+        yield ["deny", "RPR-NCS-0103: requested deadline exceeds the contract"]
+    }
+    when kind(external_transfer_requested) != "boolean" {
+        yield ["deny", "RPR-NCS-0104: transfer request must be Bool"]
+    }
+    when external_transfer_requested and not contract_value[7][0] {
+        yield ["deny", "RPR-NCS-0105: external transfer is denied by default"]
+    }
+    yield ["admit", "policy-only; no model execution is performed", batch_items, deadline_ms]
+}
+
+export craft training_admit(contract_value, dataset_id, consent_ref, steps, operator_approved, consent_verified) {
+    make report := validate(contract_value)
+    when not report[0] {
+        yield ["deny", report[1]]
+    }
+    when contract_value[8][0] == "disabled" {
+        yield ["deny", "RPR-NCS-0201: learning is disabled"]
+    }
+    when not _ncs_text(dataset_id) or not contains(contract_value[8][4], dataset_id) {
+        yield ["deny", "RPR-NCS-0202: dataset is not declared by the contract"]
+    }
+    when not _ncs_text(consent_ref) or consent_ref != contract_value[8][5] or not consent_verified {
+        yield ["deny", "RPR-NCS-0203: dataset consent is absent or unverified"]
+    }
+    when kind(operator_approved) != "boolean" or not operator_approved {
+        yield ["deny", "RPR-NCS-0204: human approval is required"]
+    }
+    when not _ncs_positive_integer(steps) or steps > contract_value[8][3] {
+        yield ["deny", "RPR-NCS-0205: training steps exceed the declared budget"]
+    }
+    yield ["admit", "policy-only; no training is performed", dataset_id, steps]
+}
+
+export craft peer_exchange_admit(contract_value, peer_id, payload_bytes) {
+    make report := validate(contract_value)
+    when not report[0] {
+        yield ["deny", report[1]]
+    }
+    when contract_value[9][0] == "isolated" or contract_value[7][4] != "allowlisted" or not contract_value[7][0] {
+        yield ["deny", "RPR-NCS-0301: network exchange is not authorized"]
+    }
+    when not _ncs_positive_integer(payload_bytes) {
+        yield ["deny", "RPR-NCS-0302: payload size must be positive"]
+    }
+    each target in contract_value[9][1] {
+        when target[0] == peer_id and payload_bytes <= target[4] {
+            yield ["admit", "policy-only; no network connection is opened", peer_id, payload_bytes]
+        }
+    }
+    yield ["deny", "RPR-NCS-0303: peer is not allowlisted or payload exceeds its limit"]
+}
+
+export craft update_admit(contract_value, candidate_digest, signature_verified, operator_approved, rollback_ready) {
+    make report := validate(contract_value)
+    when not report[0] {
+        yield ["deny", report[1]]
+    }
+    when contract_value[12][0] != "bound" or contract_value[12][2] != "manual_only" {
+        yield ["deny", "RPR-NCS-0401: only a bound model with manual updates may be replaced"]
+    }
+    when kind(candidate_digest) != "text" or size(candidate_digest) != 64 {
+        yield ["deny", "RPR-NCS-0402: candidate digest must be a SHA-256 hex string"]
+    }
+    when kind(signature_verified) != "boolean" or not signature_verified {
+        yield ["deny", "RPR-NCS-0403: trusted signature verification is required"]
+    }
+    when kind(operator_approved) != "boolean" or not operator_approved {
+        yield ["deny", "RPR-NCS-0404: operator approval is required"]
+    }
+    when kind(rollback_ready) != "boolean" or not rollback_ready {
+        yield ["deny", "RPR-NCS-0405: a verified rollback target is required"]
+    }
+    yield ["admit", "policy-only; artifact activation is not performed", candidate_digest]
+}
+
+export craft output_accept(contract_value, output_elements, invalid_outputs, confidence_ppm) {
+    make report := validate(contract_value)
+    when not report[0] {
+        yield [false, report[1]]
+    }
+    when not _ncs_nonnegative_integer(output_elements) or output_elements > contract_value[5][0][4] {
+        yield [false, "RPR-NCS-0501: output shape exceeds the declared port"]
+    }
+    when not _ncs_nonnegative_integer(invalid_outputs) or invalid_outputs > 1000000 {
+        yield [false, "RPR-NCS-0502: invalid-output count is outside its range"]
+    }
+    when not _ncs_nonnegative_integer(confidence_ppm) or confidence_ppm > 1000000 {
+        yield [false, "RPR-NCS-0503: confidence value is outside parts-per-million range"]
+    }
+    when invalid_outputs * 1000000 > contract_value[13][4] * (output_elements + 1) {
+        yield [false, "RPR-NCS-0504: invalid-output rate exceeds the contract"]
+    }
+    when contract_value[13][2] == "required" and confidence_ppm < contract_value[13][3] {
+        yield [false, "RPR-NCS-0505: output must abstain below the confidence floor"]
+    }
+    yield [true, "RPR-NCS-OK"]
+}
