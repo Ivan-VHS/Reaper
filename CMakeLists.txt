@@ -13,6 +13,10 @@ endif()
 add_library(reaper_core STATIC src/lexer.c src/ir.c src/parser.c src/ast_json.c src/optimizer.c src/lower.c src/evolution.c src/token_catalog.c src/division.c src/capability_suite.c src/hardware.c src/command_palette.c src/lineage.c src/architecture.c src/snapshot_audit.c src/system_features.c)
 target_include_directories(reaper_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
+# The static core is also linked into the optional shared ABI bridge.
+set_target_properties(reaper_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+
 add_library(reaper_system STATIC src/system.c)
 target_include_directories(reaper_system PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 if(MSVC)
@@ -37,6 +41,20 @@ if(MSVC)
  target_compile_options(reaper_ffi PRIVATE /W4)
 else()
  target_compile_options(reaper_ffi PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
+
+# Shared ABI for opt-in host bridges such as OPlague's explicit-path ctypes adapter.
+add_library(reaper_ffi_shared SHARED src/ffi.c)
+target_include_directories(reaper_ffi_shared PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(reaper_ffi_shared PRIVATE reaper_core)
+set_target_properties(reaper_ffi_shared PROPERTIES
+ OUTPUT_NAME reaper_ffi
+ WINDOWS_EXPORT_ALL_SYMBOLS ON
+)
+if(MSVC)
+ target_compile_options(reaper_ffi_shared PRIVATE /W4)
+else()
+ target_compile_options(reaper_ffi_shared PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
 endif()
 if(MSVC)
  target_compile_options(reaper_core PRIVATE /W4)
@@ -131,6 +149,11 @@ if(REAPER_BUILD_TESTS)
 endif()
 install(TARGETS reaper-c RUNTIME DESTINATION bin)
 install(TARGETS reaper_ffi ARCHIVE DESTINATION lib)
+install(TARGETS reaper_ffi_shared
+ LIBRARY DESTINATION lib
+ RUNTIME DESTINATION bin
+ ARCHIVE DESTINATION lib
+)
 install(TARGETS reaper_system ARCHIVE DESTINATION lib)
 install(TARGETS reaper_dabi64_desktop ARCHIVE DESTINATION lib)
 install(FILES include/reaper/ffi.h include/reaper/system.h include/reaper/dabi64_desktop.h include/reaper/architecture.h include/reaper/snapshot_audit.h include/reaper/system_features.h DESTINATION include/reaper)
