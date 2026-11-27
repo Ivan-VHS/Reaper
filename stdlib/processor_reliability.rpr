@@ -1595,7 +1595,7 @@ export craft processor_control_bytecode_decision(opcode, operand_a, operand_b, f
         yield "reject-invalid-processor-control-instruction"
     }
     when opcode == 66 {
-        when flags % 64 != 63 or operand_a == 0 or operand_b == 0 { yield "reject-ap-startup-readiness-bitmap" }
+        when flags != 63 or operand_a == 0 or operand_b == 0 { yield "reject-ap-startup-readiness-bitmap" }
         yield "admit-ap-startup-to-kernel-adapter"
     }
     when opcode == 67 {
@@ -1604,12 +1604,13 @@ export craft processor_control_bytecode_decision(opcode, operand_a, operand_b, f
         yield "admit-ipi-route-to-kernel-adapter"
     }
     when opcode == 68 {
+        when flags > 1 { yield "reject-invalid-timer-flags" }
         when operand_b == 0 or operand_a < operand_b { yield "account-timer-tick-without-preemption" }
-        when flags % 2 == 0 { yield "defer-preemption-interrupts-disabled" }
+        when flags == 0 { yield "defer-preemption-interrupts-disabled" }
         yield "request-reschedule-through-kernel-timer-adapter"
     }
     when opcode == 69 {
-        when operand_a > 255 { yield "reject-invalid-mca-bank" }
+        when operand_a > 255 or flags > 7 { yield "reject-invalid-mca-bank-or-flags" }
         when flags % 2 == 0 { yield "ignore-invalid-mca-status" }
         when (flags // 2) % 2 == 1 { yield "safe-stop-context-corrupt" }
         when (flags // 4) % 2 == 1 { yield "request-kernel-machine-check-recovery-policy" }
