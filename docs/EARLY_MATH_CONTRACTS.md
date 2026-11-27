@@ -18,13 +18,10 @@ The Reaper runtime already provides bounded `size`, `partition`, `distribute`, `
 
 The balanced-distribution invariant is:
 
-[
-\sum_{i=1}^{k} s_i = n
-\qquad
-\max(s_i) - \min(s_i) \leq 1
-]
+- sum(shares) equals the original number of objects;
+- max(shares) minus min(shares) is at most one.
 
-where (n) is the number of indivisible objects and (k) is a positive group count.
+Here, n is the number of indivisible objects and k is a positive group count.
 
 ## Scope and safety
 
