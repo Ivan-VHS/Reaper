@@ -101,4 +101,4 @@ Seadlow does not change memory permissions, access physical addresses, install d
 
 ## Acceptance evidence
 
-The native Seadlow test target covers source-to-IR evaluation, unary and binary bitwise operations, shift bounds, multi-tile transforms, non-byte-aligned tails, popcount, unaligned buffers, exact in-place writes, partial-overlap rejection and zero-length behavior. CI results are the release evidence; no speedup ratio is claimed without a reproducible benchmark suite on named hardware.
+The native Seadlow test target covers source-to-IR evaluation, unary and binary bitwise operations, shift bounds, multi-tile transforms, non-byte-aligned tails, fused transform/popcount equivalence, exhaustive 8-bit algebraic identities, tile-boundary transitions, unaligned buffers, exact in-place writes, partial-overlap rejection, non-committing failures and zero-length behavior. CI results are the release evidence; no speedup ratio is claimed without a reproducible benchmark suite on named hardware.
