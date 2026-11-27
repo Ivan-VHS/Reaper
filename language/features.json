@@ -519,7 +519,7 @@
       "id": "REAPER-PEW-003",
       "name": "Reaper scalar host AOT processor workbench smoke",
       "area": "compiler",
-      "status": "partial",
+      "status": "implemented",
       "depends_on": [
         "REAPER-PEW-001",
         "REAPER-PEW-002"
