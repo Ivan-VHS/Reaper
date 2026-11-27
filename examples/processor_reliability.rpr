@@ -198,23 +198,23 @@ assert(physical_assessment[0] and physical_assessment[1] == "not-software-repair
 # Processor-control bytecode uses verified domain/role dispatch and returns plans, never hardware effects.
 make ap_bc := core["bytecode_encode"](66, "BOOT", 1, 2, 63)
 make ap_bc_exec := core["execute_bytecode"](state, ap_bc[1])
-assert(ap_bc[0] and ap_bc_exec[0] and ap_bc_exec[2][1][1] == "admit-ap-startup-to-kernel-adapter", "AP startup bytecode dispatches to the kernel adapter contract")
+assert(ap_bc[0] and ap_bc_exec[0] and ap_bc_exec[2][6] == "admit-ap-startup-to-kernel-adapter", "AP startup bytecode dispatches to the kernel adapter contract")
 change state := ap_bc_exec[1]
 make ipi_bc := core["bytecode_encode"](67, "START", 0, 1, 64)
 make ipi_bc_exec := core["execute_bytecode"](state, ipi_bc[1])
-assert(ipi_bc[0] and ipi_bc_exec[0] and ipi_bc_exec[2][1][1] == "admit-ipi-route-to-kernel-adapter", "IPI bytecode produces a bounded delivery plan")
+assert(ipi_bc[0] and ipi_bc_exec[0] and ipi_bc_exec[2][6] == "admit-ipi-route-to-kernel-adapter", "IPI bytecode produces a bounded delivery plan")
 change state := ipi_bc_exec[1]
 make timer_bc := core["bytecode_encode"](68, "START", 1000, 1000, 1)
 make timer_bc_exec := core["execute_bytecode"](state, timer_bc[1])
-assert(timer_bc[0] and timer_bc_exec[0] and timer_bc_exec[2][1][1] == "request-reschedule-through-kernel-timer-adapter", "timer bytecode generates a bounded preemption request")
+assert(timer_bc[0] and timer_bc_exec[0] and timer_bc_exec[2][6] == "request-reschedule-through-kernel-timer-adapter", "timer bytecode generates a bounded preemption request")
 change state := timer_bc_exec[1]
 make mca_bc := core["bytecode_encode"](69, "RULE", 0, 0, 5)
 make mca_bc_exec := core["execute_bytecode"](state, mca_bc[1])
-assert(mca_bc[0] and mca_bc_exec[0] and mca_bc_exec[2][1][1] == "request-kernel-machine-check-recovery-policy", "MCA bytecode returns a bounded kernel recovery decision")
+assert(mca_bc[0] and mca_bc_exec[0] and mca_bc_exec[2][6] == "request-kernel-machine-check-recovery-policy", "MCA bytecode returns a bounded kernel recovery decision")
 change state := mca_bc_exec[1]
 make page_bc := core["bytecode_encode"](70, "ROOT", 1, 18, 7)
 make page_bc_exec := core["execute_bytecode"](state, page_bc[1])
-assert(page_bc[0] and page_bc_exec[0] and page_bc_exec[2][1][1] == "admit-page-recovery-to-memory-manager", "page recovery bytecode reaches only the memory-manager boundary")
+assert(page_bc[0] and page_bc_exec[0] and page_bc_exec[2][6] == "admit-page-recovery-to-memory-manager", "page recovery bytecode reaches only the memory-manager boundary")
 change state := page_bc_exec[1]
 
 # Register, barrier and stream surfaces are explicit simulated descriptors.
