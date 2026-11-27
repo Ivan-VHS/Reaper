@@ -735,7 +735,7 @@ export craft bytecode_domain_name(code) {
 }
 
 export craft bytecode_opcode_valid(opcode) {
-    yield contains([16, 17, 18, 32, 33, 48, 49, 64], opcode)
+    yield contains([16, 17, 18, 32, 33, 48, 49, 64, 65], opcode)
 }
 
 export craft bytecode_encode(opcode, domain_type, operand_a, operand_b, flags) {
@@ -776,6 +776,7 @@ export craft bytecode_decode(word) {
 export craft opcode_role(opcode) {
     when opcode == 17 or opcode == 33 { yield "COMMAND" }
     when opcode == 18 { yield "SERVICE" }
+    when opcode == 65 { yield "SERVICE" }
     when contains([16, 32, 48, 49, 64], opcode) { yield "OPERATION" }
     yield ""
 }
@@ -805,6 +806,12 @@ export craft execute_bytecode(state, word) {
     when opcode == 64 and instruction[1] != "ROOT" {
         yield [false, state, [], "RPR-BC-0025: corrective-skew opcode requires ROOT domain"]
     }
+    when opcode == 65 and instruction[1] != "RULE" {
+        yield [false, state, [], "RPR-BC-0026: RAS classify opcode requires RULE domain"]
+    }
+    when opcode == 65 and (instruction[2] < 1 or instruction[2] > 4 or instruction[4] > 7) {
+        yield [false, state, [], "RPR-BC-0027: RAS bytecode fields are outside bounds"]
+    }
     make label := "RPR_BC_" ++ text(opcode)
     make magnitude := instruction[3]
     make auxiliary := instruction[4]
@@ -815,6 +822,11 @@ export craft execute_bytecode(state, word) {
     make spec := [instruction[1], role, instruction[2], label, magnitude, auxiliary]
     make executed := run_construct(state, spec)
     when not executed[0] { yield executed }
+
+    when opcode == 65 {
+        make decision := ras_bytecode_decision(instruction[2], instruction[3], instruction[4])
+        yield [true, executed[1], [executed[2], ["RAS_DECISION", decision]], ""]
+    }
 
     when opcode == 48 {
         make length_um := instruction[2] + 1
@@ -1063,4 +1075,186 @@ export craft pytyliki_report(state, records, checksum) {
         "simulated",
         "no hardware writes; no scheduler or voltage changes"
     ], ""]
+}
+
+
+# RAS event model. Timestamps are monotonic nanoseconds in one boot clock.
+# Hardware/provider records are evidence, not inferred CPU-worker attribution.
+export make RAS_EVENT_SCHEMA := "pytyliki.ras.event.v1"
+export make RAS_SERIES_SCHEMA := "reaper.ras.series.v1"
+
+export craft ras_provider_valid(provider) {
+    # [provider_id, platform, schema, mce_supported, mca_supported, read_only, privilege, available, operations]
+    when kind(provider) != "list" or size(provider) != 9 { yield false }
+    when kind(provider[0]) != "text" or size(provider[0]) == 0 { yield false }
+    when not contains(["windows", "linux", "apple", "simulator"], provider[1]) { yield false }
+    when kind(provider[2]) != "text" or size(provider[2]) == 0 { yield false }
+    when kind(provider[3]) != "boolean" or kind(provider[4]) != "boolean" { yield false }
+    when kind(provider[5]) != "boolean" or not provider[5] { yield false }
+    when provider[6] != "user" and provider[6] != "kernel" { yield false }
+    when kind(provider[7]) != "boolean" or kind(provider[8]) != "list" { yield false }
+    each operation in provider[8] {
+        when not contains(["event-query", "counter-read", "persisted-record-read", "simulator-input"], operation) {
+            yield false
+        }
+    }
+    yield true
+}
+
+export craft ras_event_valid(event) {
+    # [schema, event_id, boot_id, provider_id, resource_scope, kind, severity, confidence, monotonic_ns, raw_record_ref]
+    when kind(event) != "list" or size(event) != 10 { yield false }
+    when event[0] != RAS_EVENT_SCHEMA { yield false }
+    each index in [1, 2, 3, 4, 9] {
+        when kind(event[index]) != "text" or size(event[index]) == 0 { yield false }
+    }
+    when not contains(["corrected", "uncorrected_recoverable", "uncorrected_fatal", "info", "thermal", "bus_link", "memory_poison", "software_suspected"], event[5]) { yield false }
+    when not contains(["info", "low", "warning", "high", "fatal"], event[6]) { yield false }
+    when not contains(["confirmed", "supported", "indicative", "unknown", "conflicted"], event[7]) { yield false }
+    when not valid_integer(event[8], 0, SAFE_INTEGER_MAX) { yield false }
+    yield true
+}
+
+export craft ras_series_valid(series) {
+    # [schema, boot_id, provider_id, resource_scope, kind, timestamps_ns, dropped]
+    when kind(series) != "list" or size(series) != 7 { yield false }
+    when series[0] != RAS_SERIES_SCHEMA { yield false }
+    each index in [1, 2, 3, 4] {
+        when kind(series[index]) != "text" or size(series[index]) == 0 { yield false }
+    }
+    when kind(series[5]) != "list" or size(series[5]) == 0 or size(series[5]) > 8 { yield false }
+    when not valid_integer(series[6], 0, SAFE_INTEGER_MAX) { yield false }
+    make previous := -1
+    each timestamp in series[5] {
+        when not valid_integer(timestamp, 0, SAFE_INTEGER_MAX) or timestamp <= previous { yield false }
+        change previous := timestamp
+    }
+    yield true
+}
+
+export craft ras_series_new(event) {
+    when not ras_event_valid(event) { yield [false, [], "RPR-RAS-0001: invalid event envelope"] }
+    yield [true, [RAS_SERIES_SCHEMA, event[2], event[3], event[4], event[5], [event[8]], 0], ""]
+}
+
+export craft ras_series_record(series, event) {
+    when not ras_series_valid(series) or not ras_event_valid(event) {
+        yield [false, series, "RPR-RAS-0010: invalid event series or envelope"]
+    }
+    when series[1] != event[2] or series[2] != event[3] or
+         series[3] != event[4] or series[4] != event[5] {
+        yield [false, series, "RPR-RAS-0011: event belongs to another boot/provider/resource series"]
+    }
+    make timestamps := series[5]
+    make dropped := series[6]
+    when event[8] <= timestamps[size(timestamps) - 1] {
+        yield [false, series, "RPR-RAS-0012: monotonic timestamp did not advance"]
+    }
+    when size(timestamps) == 8 {
+        vary retained := []
+        vary index := 0
+        each timestamp in timestamps {
+            when index > 0 { change retained := push(retained, timestamp) }
+            change index := index + 1
+        }
+        change timestamps := retained
+        make next_dropped := checked_add(dropped, 1)
+        when not next_dropped[0] { yield [false, series, "RPR-RAS-0013: dropped-record counter overflow"] }
+        change dropped := next_dropped[1]
+    }
+    change timestamps := push(timestamps, event[8])
+    make updated := [series[0], series[1], series[2], series[3], series[4], timestamps, dropped]
+    yield [ras_series_valid(updated), updated, ""]
+}
+
+export craft ras_periodicity_analyze(timestamps) {
+    when kind(timestamps) != "list" or size(timestamps) < 3 or size(timestamps) > 8 {
+        yield [false, 0, 0, 0, "insufficient-samples", "RPR-RAS-0020: three to eight timestamps are required"]
+    }
+    make previous := -1
+    make minimum := SAFE_INTEGER_MAX
+    make maximum := 0
+    make interval_sum := 0
+    make interval_count := size(timestamps) - 1
+    each timestamp in timestamps {
+        when not valid_integer(timestamp, 0, SAFE_INTEGER_MAX) or timestamp <= previous {
+            yield [false, interval_count, 0, 0, "invalid-order", "RPR-RAS-0021: timestamps must be strictly increasing safe integers"]
+        }
+        when previous >= 0 {
+            make interval := timestamp - previous
+            when interval > 1000000000000 {
+                yield [false, interval_count, 0, 0, "interval-out-of-range", "RPR-RAS-0022: interval exceeds the 1000-second analysis bound"]
+            }
+            when interval < minimum { change minimum := interval }
+            when interval > maximum { change maximum := interval }
+            make summed := checked_add(interval_sum, interval)
+            when not summed[0] { yield [false, interval_count, 0, 0, "overflow", summed[2]] }
+            change interval_sum := summed[1]
+        }
+        change previous := timestamp
+    }
+    make mean := interval_sum // interval_count
+    when mean == 0 { yield [false, interval_count, 0, 0, "zero-period", "RPR-RAS-0023: mean interval is zero"] }
+    make spread := maximum - minimum
+    make scaled_spread := checked_multiply(spread, 1000)
+    when not scaled_spread[0] { yield [false, interval_count, mean, 0, "overflow", scaled_spread[2]] }
+    make jitter_permille := scaled_spread[1] // mean
+    make classification := "irregular"
+    when jitter_permille <= 10 { change classification := "periodic" }
+    when jitter_permille > 10 and jitter_permille <= 100 { change classification := "drifting" }
+    yield [true, interval_count, mean, jitter_permille, classification, ""]
+}
+
+export craft ras_recovery_action(event, analysis, repeated_count, os_recovery_capability, rollback_ready) {
+    when not ras_event_valid(event) or kind(analysis) != "list" or size(analysis) != 6 {
+        yield "reject-invalid-evidence"
+    }
+    when not valid_integer(repeated_count, 0, SAFE_INTEGER_MAX) { yield "reject-repeat-count" }
+    when kind(os_recovery_capability) != "boolean" or kind(rollback_ready) != "boolean" {
+        yield "reject-capability-shape"
+    }
+    when event[5] == "uncorrected_fatal" or event[6] == "fatal" {
+        yield "safe-stop-and-defer-to-kernel"
+    }
+    when event[5] == "uncorrected_recoverable" {
+        when event[7] != "confirmed" { yield "advisory-only-insufficient-confidence" }
+        when not os_recovery_capability or not rollback_ready { yield "request-operator-and-os-review" }
+        yield "request-os-recovery"
+    }
+    when event[5] == "memory_poison" and event[7] == "confirmed" {
+        when os_recovery_capability and rollback_ready { yield "request-os-page-recovery" }
+        yield "request-operator-and-os-review"
+    }
+    when event[5] == "corrected" {
+        when repeated_count >= 4 and analysis[0] and analysis[4] == "periodic" {
+            yield "warn-and-collect"
+        }
+        yield "observe"
+    }
+    when event[5] == "thermal" or event[5] == "bus_link" { yield "observe-and-correlate" }
+    yield "advisory-only"
+}
+
+export craft ras_bytecode_decision(kind_code, repeated_count, flags) {
+    # flags: bit 0 confirmed, bit 1 authorized OS recovery, bit 2 rollback ready.
+    when not valid_integer(kind_code, 1, 4) or
+         not valid_integer(repeated_count, 0, 65535) or
+         not valid_integer(flags, 0, 7) {
+        yield "reject-invalid-bytecode-operands"
+    }
+    make confirmed := flags % 2 == 1
+    make os_capability := (flags // 2) % 2 == 1
+    make rollback := (flags // 4) % 2 == 1
+    when kind_code == 1 {
+        when confirmed and repeated_count >= 4 { yield "warn-and-collect" }
+        yield "observe"
+    }
+    when kind_code == 2 {
+        when not confirmed { yield "advisory-only-insufficient-confidence" }
+        when not os_capability or not rollback { yield "request-operator-and-os-review" }
+        yield "request-os-recovery"
+    }
+    when kind_code == 3 { yield "safe-stop-and-defer-to-kernel" }
+    when kind_code == 4 { yield "observe-and-correlate" }
+    yield "reject-unknown-fault-kind"
 }
