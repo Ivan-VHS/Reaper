@@ -1,0 +1,110 @@
+from __future__ import annotations
+
+import unittest
+
+from reaper.rfs01 import RFS01Error, compile_source, run_source
+
+
+BASE = """
+module TestMesh version "1.0" {
+  node a :: Node { layer: Basement, pressure: 20, load_limit: 100, integrity: 0.9, noise_db: -10, core_seed: "root-a" }
+  state b <> State { layer: Corridor, pressure: 2, load_limit: 100, integrity: 0.8, noise_db: -10, core_seed: "root-b" }
+  link ab :: Link { origin: a, target: b, channel: Bridge, weight: 0.1 }
+  signal s1 :: Signal { sequence: 1, origin: a, payload: "trusted", trusted: true, manufactured: false }
+  signal s2 :: Signal { sequence: 2, origin: a, payload: "noise", trusted: false, manufactured: true }
+  phase p1 on a [pressure >= 0 : integrity > 0]
+  flow a >> b
+  flow a ~> b
+  contrast a || b
+  contrast a ^^ b
+  cycles 1
+  emit "ok"
+}
+"""
+
+
+class RFS01Tests(unittest.TestCase):
+    def test_compile_and_execute_typed_mesh(self):
+        result = run_source(BASE)
+        self.assertEqual(result["schema"], "rfs-01.runtime-result.v1")
+        self.assertEqual(result["clean_signal_frames"], 1)
+        self.assertEqual(result["rejected_signal_frames"], 1)
+        self.assertEqual(result["nodes"][1]["pressure"], 4.0)
+        self.assertEqual(result["nodes"][1]["active"], True)
+        self.assertLess(result["nodes"][1]["noise_db"], -10.0)
+        self.assertEqual(len(result["contrasts"]), 2)
+        self.assertEqual(result["messages"], ["ok"])
+
+    def test_legacy_reaper_parser_is_not_redefined(self):
+        from reaper.parser import parse
+
+        tree = parse("make value := 9\nemit value\n")
+        self.assertEqual(tree.kind, "program")
+
+    def test_pressure_transfer_is_rejected_at_load_limit(self):
+        source = BASE.replace("pressure: 20", "pressure: 200").replace("weight: 0.1", "weight: 0.1")
+        result = run_source(source)
+        self.assertTrue(any(event["kind"] == "pressure-rejected" for event in result["events"]))
+        self.assertEqual(result["nodes"][1]["pressure"], 2.0)
+
+    def test_phase_gate_blocks_forwarding(self):
+        source = BASE.replace("pressure >= 0", "pressure < 0")
+        result = run_source(source)
+        self.assertTrue(any(event["kind"] == "phase-blocked" for event in result["events"]))
+        self.assertEqual(result["nodes"][1]["pressure"], 2.0)
+
+    def test_blocked_link_never_forwards(self):
+        source = BASE.replace("channel: Bridge, weight: 0.1", "channel: Bridge, weight: 0.1, blocked: true")
+        result = run_source(source)
+        self.assertTrue(any(event["kind"] == "link-blocked" for event in result["events"]))
+
+    def test_root_and_core_recovery_have_distinct_scope(self):
+        source = BASE.replace(
+            'flow a >> b',
+            'recover b ^core\n  recover b <-root\n  flow a >> b',
+        )
+        result = run_source(source)
+        self.assertTrue(any(event["kind"] == "core-restored" for event in result["events"]))
+        self.assertTrue(any(event["kind"] == "root-restored" for event in result["events"]))
+        self.assertEqual(result["nodes"][1]["pressure"], 2.0)
+        self.assertEqual(result["nodes"][1]["core_seed"], "root-b")
+
+    def test_reverse_flow_uses_reverse_link(self):
+        source = BASE.replace(
+            'flow a >> b',
+            'link ba :: Link { origin: b, target: a, channel: Wire, weight: 0.5 }\n  flow a << b',
+        )
+        result = run_source(source)
+        self.assertEqual(result["nodes"][0]["pressure"], 21.0)
+
+    def test_cycle_limit_is_enforced(self):
+        with self.assertRaisesRegex(RFS01Error, "RFS-E101"):
+            compile_source(BASE.replace("cycles 1", "cycles 109"))
+
+    def test_unknown_reference_is_rejected(self):
+        with self.assertRaisesRegex(RFS01Error, "RFS-E201"):
+            compile_source(BASE.replace("flow a >> b", "flow a >> ghost"))
+
+    def test_unknown_field_is_rejected(self):
+        with self.assertRaisesRegex(RFS01Error, "RFS-E101"):
+            compile_source(BASE.replace("pressure: 20", "pressure: 20, magical: true"))
+
+    def test_duplicate_declaration_is_rejected(self):
+        duplicated = BASE.replace(
+            'state b <> State',
+            'node a :: Node { layer: Gate, pressure: 0, load_limit: 1, integrity: 1, noise_db: -20, core_seed: "x" }\n  state b <> State',
+        )
+        with self.assertRaisesRegex(RFS01Error, "RFS-E101"):
+            compile_source(duplicated)
+
+    def test_non_finite_threshold_is_rejected_by_lexer(self):
+        with self.assertRaises(RFS01Error):
+            compile_source(BASE.replace("pressure >= 0", "pressure >= nan"))
+
+    def test_wrong_version_is_rejected(self):
+        with self.assertRaisesRegex(RFS01Error, "RFS-E101"):
+            compile_source(BASE.replace('"1.0"', '"2.0"'))
+
+
+if __name__ == "__main__":
+    unittest.main()
