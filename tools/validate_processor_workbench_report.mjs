@@ -24,8 +24,13 @@ try {
   for (const key of ['processor_settings_changed','affinity_changed','device_registers_written','firmware_or_microcode_written','drivers_changed']) check(report.hardware_effects[key] === false, 'hardware effect flag must remain false: ' + key);
   check(report.benchmark.producer === 'Pytyliki' && report.benchmark.schema === 'pytyliki.suite.v1', 'benchmark provenance is invalid');
   check(report.benchmark.repeat === report.benchmark.warmup_runs + report.benchmark.measured_runs, 'benchmark counts do not reconcile');
+  check(report.benchmark.all_integrity_checks_passed === true, 'all benchmark integrity checks must pass');
   check(report.host.architecture === report.target.architecture, 'host and project architectures do not match');
   for (const key of ['sse2','sse4_2','avx_hardware','osxsave','avx_usable','avx2_usable','avx512f_usable','aes','fma_usable','virtualization']) check(typeof report.host.usable_isa[key] === 'boolean', 'ISA observation missing: ' + key);
+  const isaFields = { sse2: 'sse2', sse4_2: 'sse4_2', avx: 'avx_usable', avx2: 'avx2_usable', avx512f: 'avx512f_usable', aes: 'aes', fma: 'fma_usable' };
+  for (const feature of report.target.required_isa) {
+    check(isaFields[feature] && report.host.usable_isa[isaFields[feature]] === true, 'required target ISA is not usable: ' + feature);
+  }
   const negative = structuredClone(report);
   negative.hardware_effects.device_registers_written = true;
   let rejected = false;
