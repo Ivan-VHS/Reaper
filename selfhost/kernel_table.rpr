@@ -1,0 +1,49 @@
+# Stable, schema-checked kernel table snapshots.
+# Column: [name, logical_type].
+# Table: [schema, table_name, version, columns, rows].
+# Export returns structured Reaper values; filesystem serialization is a host concern.
+
+export craft kernel_table_make(name, version, columns) {
+    when size(name) == 0 or size(version) != 3 { yield ["ERR", "kernel table identity or version is invalid"] }
+    when size(columns) == 0 or size(columns) > 64 { yield ["ERR", "kernel table must declare between 1 and 64 columns"] }
+    make table := ["reaper.kernel.table.v1", name, version, columns, []]
+    when not kernel_table_valid(table) { yield ["ERR", "kernel table column contract is invalid"] }
+    yield ["OK", table]
+}
+
+export craft kernel_table_valid(table) {
+    when size(table) != 5 or table[0] != "reaper.kernel.table.v1" { yield false }
+    when size(table[1]) == 0 or size(table[2]) != 3 { yield false }
+    when table[2][0] < 0 or table[2][1] < 0 or table[2][2] < 0 { yield false }
+    when size(table[3]) == 0 or size(table[3]) > 64 or size(table[4]) > 10000 { yield false }
+
+    vary index := 0
+    loop while index < size(table[3]) {
+        when size(table[3][index]) != 2 or size(table[3][index][0]) == 0 or size(table[3][index][1]) == 0 { yield false }
+        vary previous := 0
+        loop while previous < index {
+            when table[3][previous][0] == table[3][index][0] { yield false }
+            change previous := previous + 1
+        }
+        change index := index + 1
+    }
+
+    change index := 0
+    loop while index < size(table[4]) {
+        when size(table[4][index]) != size(table[3]) { yield false }
+        change index := index + 1
+    }
+    yield true
+}
+
+export craft kernel_table_add_row(table, row) {
+    when not kernel_table_valid(table) { yield ["ERR", "kernel table invariant failed"] }
+    when size(table[4]) >= 10000 { yield ["ERR", "kernel table row limit exceeded"] }
+    when size(row) != size(table[3]) { yield ["ERR", "kernel table row width mismatch", size(table[3]), size(row)] }
+    yield ["OK", ["reaper.kernel.table.v1", table[1], table[2], table[3], push(table[4], row)]]
+}
+
+export craft kernel_table_export(table) {
+    when not kernel_table_valid(table) { yield ["ERR", "kernel table invariant failed"] }
+    yield ["OK", ["reaper.kernel.table.export.v1", table[1], table[2], table[3], size(table[4]), table[4]]]
+}

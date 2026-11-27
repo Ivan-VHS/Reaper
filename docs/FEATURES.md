@@ -12,11 +12,15 @@
 | CODEX-66 | searchable 66-item native feature catalogue with JSON export and maturity labels | implemented metadata/UI; feature statuses remain evidence-based |
 | Native C17 | lexer, expression Pratt parser, owned AST, checked i64 IR, constant folding and limited lowering | partial |
 | Native MMIO contract | checked region/register descriptors, widths, bounds, alignment, access policies, capability checks and adapter callbacks | implemented C API; no physical mapping or device driver |
+| Processor Kernel v1 | Reaper lifecycle state machine, bounded cooperative scheduler, deterministic trace/replay, version/target contracts, action pulse, DAG compaction and structured table export | partial; reference-runtime model, no native SMP scheduler or privileged CPU execution |
+| Processor Kernel v1 | Reaper lifecycle state machine, bounded cooperative scheduler, deterministic trace/replay, version/target contracts, action pulse, DAG compaction and structured table export | partial; reference-runtime example, no native SMP scheduler or privileged CPU execution |
 | LSP semantic tokens and diagnostics | lexical highlighting plus local inferred-type diagnostics from the reference AST checker | stdio LSP; UTF-16 positions; no cross-file type inference |
 | МОСТ | 54 aliases: 21 executable, 33 reserved | mixed |
 | QCS | separate lexer/parser/JSON AST | validation tool |
 | THESIS | versioned assertion/evidence graph | no auto-verification |
 | Pytyliki | optional C ABI metric calls | explicit trusted path |
 | Registries | 813 proposals; canonical API contract registry; canonical symbolic-token catalogue | specification, not completion |
+
+Processor Kernel v1 implementation details and the runnable Reaper example are documented in [PROCESSOR_KERNEL_V1.md](PROCESSOR_KERNEL_V1.md). The model is intentionally distinct from a native SMP scheduler or privileged hardware runtime.
 
 Python remains the compatibility reference. Native C17 is not yet a full interpreter or general machine-code backend. The MMIO API is a checked adapter contract, not a complete hardware runtime. The systems-language migration and maturity gates are documented in [HARDWARE_LANGUAGE.md](HARDWARE_LANGUAGE.md).

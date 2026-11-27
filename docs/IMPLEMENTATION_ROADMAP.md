@@ -1,6 +1,6 @@
 # Reaper implementation roadmap
 
-**Reviewed:** 2026-11-24  
+**Reviewed:** 2026-11-27  
 **Authority:** source code, tests, build configuration and required CI checks.  
 **Product boundary:** Reaper is an executable Python reference language and local developer workbench with a partial native C17 track. It is not currently a complete native compiler, kernel runtime or unrestricted hardware execution environment.
 
@@ -27,6 +27,7 @@ Never move a row to Delivered because a registry, design, README, schema or gene
 | NOO TAH | Process-isolated Node.js integration through the installed upstream Node runtime | NOO TAH implementation and compatibility workflow |
 | Native C17 | Partial lexer/parser/AST/checked-i64 IR/limited lowering | `src/`, `include/`, `tests/`, native C workflow |
 | Native MMIO | Descriptor validation and callback contract only | Native headers, source and negative tests |
+| Processor Kernel v1 | Partial Reaper control-plane model: lifecycle, cooperative scheduler, deterministic trace, pulse, version/target contracts, graph and table export | `selfhost/kernel_*.rpr`, `examples/processor_kernel.rpr`, `docs/PROCESSOR_KERNEL_V1.md`; native/SMP/privileged gates remain open |
 | Jora factory | Deterministic request validation, catalogue/composition and scaffold generation | `docs/JORA_APPLICATION_FACTORY.md`, CLI tests; generated packs remain non-installable |
 | Federation | Versioned metadata/adapters for OPlague, VentuSample and optional Pytyliki ABI | Federation manifests and integration tests |
 | МОСТ | 21 executable aliases and 33 reserved aliases | `docs/MOST_IMPLEMENTATION_STATUS.md`, registry validator |

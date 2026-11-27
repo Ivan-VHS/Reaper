@@ -15,10 +15,11 @@ Reaper — язык системного программирования и л�
 - Исходный язык Reaper, lexer/parser, эталонная среда и диагностика.
 - CLI, REPL, основа Windows Studio, службы LSP и DAP.
 - Экспериментальная реализация на C17; она пока не равна по возможностям эталонной среде.
+- Reaper-native Processor Kernel v1: автомат состояний, ограниченный кооперативный scheduler, детерминированный replay, action pulse, профили CPU и структурированный экспорт; нативный SMP и привилегированное исполнение на железе ещё не реализованы.
 - NOO TAH передаёт выполнение JavaScript официальному Node.js.
 - Генерация каркасов Jora и композиция возможностей; пакеты каталога пока являются спецификациями, а не устанавливаемыми редакторами.
 
-Документы: [Возможности](docs/FEATURES.md) · [Архитектура](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Фабрика Jora](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md).
+Документы: [Возможности](docs/FEATURES.md) · [Архитектура](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Processor Kernel v1](docs/PROCESSOR_KERNEL_V1.md) · [Фабрика Jora](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md).
 
 ## Быстрый старт
 

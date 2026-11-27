@@ -1,0 +1,153 @@
+# Bounded deterministic scheduler for kernel task-state modelling.
+# Scheduler: [schema, next_task_id, cursor, logical_tick, tasks, max_tasks].
+# Task: [id, name, state, priority, remaining_steps, completed_steps, wait_reason].
+# Each dispatch consumes one bounded logical step. It does not create OS threads.
+
+craft kernel_scheduler_task_valid(task) {
+    when size(task) != 7 { yield false }
+    when task[0] < 1 or size(task[1]) == 0 { yield false }
+    when task[2] != "ready" and task[2] != "blocked" and task[2] != "completed" and task[2] != "cancelled" { yield false }
+    when task[3] < 0 or task[3] > 255 or task[4] < 0 or task[5] < 0 { yield false }
+    when task[2] == "blocked" and size(task[6]) == 0 { yield false }
+    when task[2] != "blocked" and size(task[6]) != 0 { yield false }
+    when task[2] == "completed" and task[4] != 0 { yield false }
+    yield true
+}
+
+export craft kernel_scheduler_make(max_tasks) {
+    when max_tasks < 1 or max_tasks > 64 { yield ["ERR", "scheduler task limit must be between 1 and 64"] }
+    yield ["OK", ["reaper.kernel.scheduler.v1", 1, 0, 0, [], max_tasks]]
+}
+
+export craft kernel_scheduler_valid(scheduler) {
+    when size(scheduler) != 6 or scheduler[0] != "reaper.kernel.scheduler.v1" { yield false }
+    when scheduler[1] < 1 or scheduler[2] < 0 or scheduler[3] < 0 { yield false }
+    when scheduler[5] < 1 or scheduler[5] > 64 or size(scheduler[4]) > scheduler[5] { yield false }
+    when size(scheduler[4]) == 0 and scheduler[2] != 0 { yield false }
+    when size(scheduler[4]) > 0 and scheduler[2] >= size(scheduler[4]) { yield false }
+
+    vary index := 0
+    loop while index < size(scheduler[4]) {
+        make task := scheduler[4][index]
+        when not kernel_scheduler_task_valid(task) or task[0] >= scheduler[1] { yield false }
+        vary previous := 0
+        loop while previous < index {
+            when scheduler[4][previous][0] == task[0] { yield false }
+            change previous := previous + 1
+        }
+        change index := index + 1
+    }
+    yield true
+}
+
+craft kernel_scheduler_find_task(scheduler, task_id) {
+    vary index := 0
+    loop while index < size(scheduler[4]) {
+        when scheduler[4][index][0] == task_id { yield ["OK", index] }
+        change index := index + 1
+    }
+    yield ["ERR", "kernel task does not exist", task_id]
+}
+
+craft kernel_scheduler_replace_task(scheduler, task_index, replacement) {
+    vary tasks := []
+    vary index := 0
+    loop while index < size(scheduler[4]) {
+        when index == task_index {
+            change tasks := push(tasks, replacement)
+        } otherwise {
+            change tasks := push(tasks, scheduler[4][index])
+        }
+        change index := index + 1
+    }
+    yield ["reaper.kernel.scheduler.v1", scheduler[1], scheduler[2], scheduler[3], tasks, scheduler[5]]
+}
+
+export craft kernel_scheduler_add(scheduler, name, priority, step_budget) {
+    when not kernel_scheduler_valid(scheduler) { yield ["ERR", "scheduler invariant failed"] }
+    when size(scheduler[4]) >= scheduler[5] { yield ["ERR", "scheduler task capacity exceeded"] }
+    when size(name) == 0 { yield ["ERR", "task name is empty"] }
+    when priority < 0 or priority > 255 { yield ["ERR", "task priority must be between 0 and 255"] }
+    when step_budget < 1 { yield ["ERR", "task step budget must be positive"] }
+    make task := [scheduler[1], name, "ready", priority, step_budget, 0, ""]
+    make updated := ["reaper.kernel.scheduler.v1", scheduler[1] + 1, scheduler[2], scheduler[3], push(scheduler[4], task), scheduler[5]]
+    yield ["OK", updated, task[0]]
+}
+
+export craft kernel_scheduler_block(scheduler, task_id, reason) {
+    when not kernel_scheduler_valid(scheduler) { yield ["ERR", "scheduler invariant failed"] }
+    when size(reason) == 0 { yield ["ERR", "blocked task requires a wait reason"] }
+    make found := kernel_scheduler_find_task(scheduler, task_id)
+    when found[0] != "OK" { yield found }
+    make task := scheduler[4][found[1]]
+    when task[2] != "ready" { yield ["ERR", "only a ready task can block", task_id] }
+    make replacement := [task[0], task[1], "blocked", task[3], task[4], task[5], reason]
+    yield ["OK", kernel_scheduler_replace_task(scheduler, found[1], replacement)]
+}
+
+export craft kernel_scheduler_wake(scheduler, task_id) {
+    when not kernel_scheduler_valid(scheduler) { yield ["ERR", "scheduler invariant failed"] }
+    make found := kernel_scheduler_find_task(scheduler, task_id)
+    when found[0] != "OK" { yield found }
+    make task := scheduler[4][found[1]]
+    when task[2] != "blocked" { yield ["ERR", "only a blocked task can wake", task_id] }
+    make replacement := [task[0], task[1], "ready", task[3], task[4], task[5], ""]
+    yield ["OK", kernel_scheduler_replace_task(scheduler, found[1], replacement)]
+}
+
+export craft kernel_scheduler_cancel(scheduler, task_id) {
+    when not kernel_scheduler_valid(scheduler) { yield ["ERR", "scheduler invariant failed"] }
+    make found := kernel_scheduler_find_task(scheduler, task_id)
+    when found[0] != "OK" { yield found }
+    make task := scheduler[4][found[1]]
+    when task[2] != "ready" and task[2] != "blocked" { yield ["ERR", "only ready or blocked tasks can be cancelled", task_id] }
+    make replacement := [task[0], task[1], "cancelled", task[3], task[4], task[5], ""]
+    yield ["OK", kernel_scheduler_replace_task(scheduler, found[1], replacement)]
+}
+
+export craft kernel_scheduler_dispatch(scheduler) {
+    when not kernel_scheduler_valid(scheduler) { yield ["ERR", "scheduler invariant failed"] }
+    when size(scheduler[4]) == 0 { yield ["IDLE", scheduler, "no tasks"] }
+
+    vary highest_priority := -1
+    vary index := 0
+    loop while index < size(scheduler[4]) {
+        when scheduler[4][index][2] == "ready" and scheduler[4][index][3] > highest_priority {
+            change highest_priority := scheduler[4][index][3]
+        }
+        change index := index + 1
+    }
+    when highest_priority < 0 { yield ["IDLE", scheduler, "no ready tasks"] }
+
+    vary selected := -1
+    vary probe := 0
+    loop while probe < size(scheduler[4]) {
+        make candidate := (scheduler[2] + probe) % size(scheduler[4])
+        when selected < 0 and scheduler[4][candidate][2] == "ready" and scheduler[4][candidate][3] == highest_priority {
+            change selected := candidate
+        }
+        change probe := probe + 1
+    }
+    when selected < 0 { yield ["ERR", "scheduler priority selection failed"] }
+
+    make task := scheduler[4][selected]
+    make remaining := task[4] - 1
+    vary next_state := "ready"
+    when remaining == 0 { change next_state := "completed" }
+    make replacement := [task[0], task[1], next_state, task[3], remaining, task[5] + 1, ""]
+    make rewritten := kernel_scheduler_replace_task(scheduler, selected, replacement)
+    make next_cursor := (selected + 1) % size(scheduler[4])
+    make updated := ["reaper.kernel.scheduler.v1", rewritten[1], next_cursor, scheduler[3] + 1, rewritten[4], rewritten[5]]
+    yield ["OK", updated, [task[0], next_state, remaining, scheduler[3] + 1]]
+}
+
+export craft kernel_scheduler_ready_count(scheduler) {
+    when not kernel_scheduler_valid(scheduler) { yield ["ERR", "scheduler invariant failed"] }
+    vary count := 0
+    vary index := 0
+    loop while index < size(scheduler[4]) {
+        when scheduler[4][index][2] == "ready" { change count := count + 1 }
+        change index := index + 1
+    }
+    yield ["OK", count]
+}

@@ -19,10 +19,11 @@ HARVEST adds sixteen versioned Reaper capability modules for voice-feature profi
 - Reaper source language, lexer/parser, reference runtime and diagnostics.
 - CLI, REPL, Windows Studio foundation, LSP and DAP services.
 - Experimental native C17 implementation; it is not yet feature-equivalent to the reference runtime.
+- Reaper-native Processor Kernel v1 control-plane sources for lifecycle, bounded cooperative scheduling, deterministic replay, action pulse, target profiles and structured exports; native SMP and privileged hardware execution remain incomplete.
 - NOO TAH delegates JavaScript execution to the official Node.js runtime.
 - Jora application scaffolding and capability composition; catalog packs remain specifications, not installable editors.
 
-See [Features](docs/FEATURES.md), [Architecture](docs/ARCHITECTURE.md), [Hardware Language](docs/HARDWARE_LANGUAGE.md), [Jora factory](docs/JORA_APPLICATION_FACTORY.md), [Studio and IDE](docs/REAPER_IDE.md) and [NOO TAH](docs/NOO_TAH.md).
+See [Features](docs/FEATURES.md), [Architecture](docs/ARCHITECTURE.md), [Hardware Language](docs/HARDWARE_LANGUAGE.md), [Processor Kernel v1](docs/PROCESSOR_KERNEL_V1.md), [Jora factory](docs/JORA_APPLICATION_FACTORY.md), [Studio and IDE](docs/REAPER_IDE.md) and [NOO TAH](docs/NOO_TAH.md).
 
 ## Quick start
 

@@ -1,0 +1,72 @@
+# Versioned contracts for Reaper processor and kernel interfaces.
+# Version: [major, minor, patch].
+# A contract declares the producer version and the reader versions it accepts.
+
+export craft kernel_version_valid(version) {
+    when size(version) != 3 { yield false }
+    when version[0] < 0 or version[1] < 0 or version[2] < 0 { yield false }
+    yield true
+}
+
+export craft kernel_version_compare(left, right) {
+    when not kernel_version_valid(left) or not kernel_version_valid(right) {
+        yield ["ERR", "kernel version must contain three non-negative numbers"]
+    }
+    when left[0] < right[0] { yield ["OK", -1] }
+    when left[0] > right[0] { yield ["OK", 1] }
+    when left[1] < right[1] { yield ["OK", -1] }
+    when left[1] > right[1] { yield ["OK", 1] }
+    when left[2] < right[2] { yield ["OK", -1] }
+    when left[2] > right[2] { yield ["OK", 1] }
+    yield ["OK", 0]
+}
+
+export craft kernel_version_contract_make(name, producer, minimum_reader, maximum_reader) {
+    when size(name) == 0 { yield ["ERR", "kernel contract name is empty"] }
+    when not kernel_version_valid(producer) or not kernel_version_valid(minimum_reader) or not kernel_version_valid(maximum_reader) {
+        yield ["ERR", "kernel contract contains an invalid version"]
+    }
+    make range_order := kernel_version_compare(minimum_reader, maximum_reader)
+    when range_order[1] > 0 { yield ["ERR", "reader version range is reversed"] }
+    make minimum_order := kernel_version_compare(producer, minimum_reader)
+    make maximum_order := kernel_version_compare(producer, maximum_reader)
+    when minimum_order[1] < 0 or maximum_order[1] > 0 {
+        yield ["ERR", "producer version is outside its declared compatibility range"]
+    }
+    yield ["OK", ["reaper.kernel.contract.v1", name, producer, minimum_reader, maximum_reader]]
+}
+
+export craft kernel_version_contract_valid(contract) {
+    when size(contract) != 5 { yield false }
+    when contract[0] != "reaper.kernel.contract.v1" or size(contract[1]) == 0 { yield false }
+    when not kernel_version_valid(contract[2]) or not kernel_version_valid(contract[3]) or not kernel_version_valid(contract[4]) { yield false }
+    make range_order := kernel_version_compare(contract[3], contract[4])
+    when range_order[1] > 0 { yield false }
+    make minimum_order := kernel_version_compare(contract[2], contract[3])
+    make maximum_order := kernel_version_compare(contract[2], contract[4])
+    yield minimum_order[1] >= 0 and maximum_order[1] <= 0
+}
+
+export craft kernel_version_contract_accepts(contract, reader_version) {
+    when not kernel_version_contract_valid(contract) { yield ["ERR", "kernel version contract is invalid"] }
+    when not kernel_version_valid(reader_version) { yield ["ERR", "reader version is invalid"] }
+    when reader_version[0] != contract[2][0] { yield ["OK", false] }
+    make minimum_order := kernel_version_compare(reader_version, contract[3])
+    make maximum_order := kernel_version_compare(reader_version, contract[4])
+    yield ["OK", minimum_order[1] >= 0 and maximum_order[1] <= 0]
+}
+
+export craft kernel_version_catalog_valid(contracts) {
+    when size(contracts) > 256 { yield false }
+    vary index := 0
+    loop while index < size(contracts) {
+        when not kernel_version_contract_valid(contracts[index]) { yield false }
+        vary previous := 0
+        loop while previous < index {
+            when contracts[previous][1] == contracts[index][1] { yield false }
+            change previous := previous + 1
+        }
+        change index := index + 1
+    }
+    yield true
+}

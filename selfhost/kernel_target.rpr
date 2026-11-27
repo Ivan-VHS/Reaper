@@ -1,0 +1,65 @@
+# Declared processor target profile. This is build metadata, not live hardware probing.
+# Target: [schema, name, triple, architecture, os, abi, pointer_bits, endian, logical_cores, features, capabilities].
+
+craft kernel_target_list_valid(values) {
+    vary index := 0
+    loop while index < size(values) {
+        when size(values[index]) == 0 { yield false }
+        vary previous := 0
+        loop while previous < index {
+            when values[previous] == values[index] { yield false }
+            change previous := previous + 1
+        }
+        change index := index + 1
+    }
+    yield true
+}
+
+export craft kernel_target_make(name, triple, architecture, operating_system, abi, pointer_bits, endian, logical_cores, features, capabilities) {
+    make target := ["reaper.kernel.target.v1", name, triple, architecture, operating_system, abi, pointer_bits, endian, logical_cores, features, capabilities]
+    when not kernel_target_valid(target) { yield ["ERR", "processor target profile is invalid"] }
+    yield ["OK", target]
+}
+
+export craft kernel_target_valid(target) {
+    when size(target) != 11 or target[0] != "reaper.kernel.target.v1" { yield false }
+    when size(target[1]) == 0 or size(target[2]) == 0 { yield false }
+    when target[3] != "x86_64" and target[3] != "aarch64" and target[3] != "riscv64" { yield false }
+    when target[4] != "dak" and target[4] != "linux" and target[4] != "windows" { yield false }
+    when target[6] != 64 or target[7] != "little" and target[7] != "big" { yield false }
+    when target[8] < 1 or target[8] > 256 { yield false }
+    when size(target[9]) > 128 or size(target[10]) > 128 { yield false }
+    when not kernel_target_list_valid(target[9]) or not kernel_target_list_valid(target[10]) { yield false }
+
+    when target[5] == "DABI64" {
+        yield target[4] == "dak" and target[6] == 64
+    }
+    when target[5] == "SYSV64" {
+        yield target[3] == "x86_64" and target[4] == "linux"
+    }
+    when target[5] == "WIN64" {
+        yield target[3] == "x86_64" and target[4] == "windows"
+    }
+    when target[5] == "AAPCS64" {
+        yield target[3] == "aarch64" and target[4] != "windows"
+    }
+    when target[5] == "RISCV64" {
+        yield target[3] == "riscv64" and target[4] == "linux"
+    }
+    yield false
+}
+
+craft kernel_target_list_has(values, requested) {
+    vary index := 0
+    loop while index < size(values) {
+        when values[index] == requested { yield ["OK", true] }
+        change index := index + 1
+    }
+    yield ["OK", false]
+}
+
+export craft kernel_target_has_capability(target, capability) {
+    when not kernel_target_valid(target) { yield ["ERR", "processor target profile is invalid"] }
+    when size(capability) == 0 { yield ["ERR", "capability name is empty"] }
+    yield kernel_target_list_has(target[10], capability)
+}
