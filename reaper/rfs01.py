@@ -270,7 +270,12 @@ class _Parser:
             return self.take().value
         if token.kind == "NUMBER":
             raw = self.take().value
-            return float(raw) if "." in raw else int(raw)
+            if len(raw) > 128:
+                raise RFS01Error("numeric literal exceeds the v1.0 scalar width", "RFS-E101", token.span)
+            try:
+                return float(raw) if "." in raw else int(raw)
+            except (ValueError, OverflowError) as error:
+                raise RFS01Error("numeric literal is outside the supported range", "RFS-E101", token.span) from error
         if token.kind == "IDENT":
             raw = self.take().value
             if raw == "true":
@@ -614,9 +619,15 @@ def verify_ir(module: RFSIRModule) -> None:
             return False
 
     def finite_number(value: Any, minimum: float | None = None) -> bool:
-        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(float(value)):
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
             return False
-        return minimum is None or float(value) >= minimum
+        try:
+            number = float(value)
+        except OverflowError:
+            return False
+        if not math.isfinite(number):
+            return False
+        return minimum is None or number >= minimum
 
     if not valid_text(module.name, 63):
         raise RFS01Error("typed IR module name is invalid", "RFS-E501")
@@ -843,6 +854,9 @@ class RFSRuntime:
             return
         delta = source.pressure * link.weight
         next_pressure = target.pressure + delta
+        if not math.isfinite(delta) or not math.isfinite(next_pressure):
+            self._record(cycle, "pressure-rejected", origin=origin_id, target=target_id, reason="non-finite-transfer")
+            return
         if next_pressure > target.load_limit:
             self._record(cycle, "pressure-rejected", origin=origin_id, target=target_id, attempted=delta, reason="load-limit")
             return
