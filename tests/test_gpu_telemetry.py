@@ -114,6 +114,30 @@ class OPlagueGpuTelemetryTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "at most 16"):
             normalize_oplage_gpu_snapshot(raw)
 
+    def test_reaper_runtime_exposes_raw_gpu_snapshot_normalization(self) -> None:
+        from reaper import Interpreter
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "gpu.json").write_text(json.dumps(snapshot()), encoding="utf-8")
+            source = '''
+            make raw := read_json("gpu.json")
+            make normalized := oplage_gpu_normalize(raw)
+            make loaded := oplage_gpu_load("gpu.json")
+            emit normalized[0]
+            emit text(size(normalized[9]))
+            emit text(normalized[8])
+            emit text(loaded[0] == normalized[0])
+            '''
+            import os
+            original = Path.cwd()
+            try:
+                os.chdir(root)
+                output: list[str] = []
+                Interpreter(output=output.append).run(source, "oplage_gpu.rpr", engine="vm")
+            finally:
+                os.chdir(original)
+        self.assertEqual(output, [OPLAGE_GPU_SCHEMA, "1", "true", "true"])
+
     def test_reads_only_an_explicit_json_file(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory) / "gpu.json"
