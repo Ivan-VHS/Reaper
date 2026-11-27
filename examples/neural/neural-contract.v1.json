@@ -1,0 +1,103 @@
+{
+  "schema": "reaper.neural-contract/v1",
+  "version": 1,
+  "contract_id": "ncs.local-classifier.example",
+  "status": "contract_only",
+  "subcontracts": [
+    "model",
+    "data",
+    "inference",
+    "learning",
+    "network",
+    "resource",
+    "security",
+    "governance",
+    "verification",
+    "cognitive"
+  ],
+  "model": {
+    "id": "example.local-classifier",
+    "family": "dense",
+    "task": "multiclass_classification",
+    "artifact": {
+      "state": "unbound",
+      "format": "onnx",
+      "uri": null,
+      "sha256": null
+    }
+  },
+  "ports": {
+    "inputs": [
+      {
+        "id": "features",
+        "dtype": "f32",
+        "shape": [
+          128
+        ],
+        "max_elements": 128
+      }
+    ],
+    "outputs": [
+      {
+        "id": "scores",
+        "dtype": "f32",
+        "shape": [
+          4
+        ],
+        "max_elements": 4
+      }
+    ]
+  },
+  "runtime": {
+    "adapter": "reaper.reference",
+    "version": "1.0.0",
+    "mode": "reference",
+    "determinism": "strict",
+    "local_only": true
+  },
+  "resources": {
+    "memory_mb": 512,
+    "cpu_threads": 2,
+    "gpu_memory_mb": 0,
+    "max_latency_ms": 25,
+    "max_batch_items": 8
+  },
+  "security": {
+    "external_transfer": "deny",
+    "telemetry": "disabled",
+    "secrets": "deny",
+    "filesystem": "none",
+    "network": "disabled"
+  },
+  "learning": {
+    "mode": "disabled",
+    "online_learning": false,
+    "manual_approval_required": true,
+    "max_steps": 0,
+    "datasets": []
+  },
+  "topology": {
+    "mode": "isolated",
+    "peers": []
+  },
+  "behavior": {
+    "task": "multiclass_classification",
+    "output_contract": "scores.v1",
+    "uncertainty_policy": "required",
+    "min_confidence_ppm": 750000,
+    "max_invalid_output_ppm": 1000
+  },
+  "lifecycle": {
+    "state": "contract_only",
+    "revision": 0,
+    "update_policy": "manual_only",
+    "rollback_required": true
+  },
+  "provenance": {
+    "model_source": "authored_specification",
+    "dataset_digest": null,
+    "training_run_id": null,
+    "license": "Apache-2.0",
+    "dataset_ids": []
+  }
+}

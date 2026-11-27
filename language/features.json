@@ -479,6 +479,131 @@
         "forward-test-required",
         "rollback-test-required"
       ]
+    },
+    {
+      "id": "REAPER-NCS-001",
+      "name": "versioned neural model and system contract envelope",
+      "area": "contracts",
+      "status": "implemented",
+      "depends_on": [
+        "MOST-TYP-001",
+        "MOST-EFF-001"
+      ],
+      "acceptance": [
+        "json-schema-positive",
+        "schema-identity-negative",
+        "fixed-record-layout",
+        "cross-domain-invariants",
+        "stable-diagnostics",
+        "treewalk-vm-parity"
+      ]
+    },
+    {
+      "id": "REAPER-NCS-002",
+      "name": "typed neural data ports and bounded tensor shapes",
+      "area": "types",
+      "status": "implemented",
+      "depends_on": [
+        "REAPER-NCS-001"
+      ],
+      "acceptance": [
+        "port-direction",
+        "dtype-registry",
+        "rank-bound",
+        "dimension-bound",
+        "element-ceiling",
+        "duplicate-port-rejection"
+      ]
+    },
+    {
+      "id": "REAPER-NCS-003",
+      "name": "bounded inference admission and compute resource envelope",
+      "area": "runtime",
+      "status": "implemented",
+      "depends_on": [
+        "REAPER-NCS-001",
+        "REAPER-SYS-003"
+      ],
+      "acceptance": [
+        "local-inference-admission",
+        "batch-limit",
+        "deadline-limit",
+        "memory-budget",
+        "cpu-and-gpu-budget",
+        "external-transfer-denial"
+      ]
+    },
+    {
+      "id": "REAPER-NCS-004",
+      "name": "supervised offline and federated learning authorization",
+      "area": "governance",
+      "status": "implemented",
+      "depends_on": [
+        "REAPER-NCS-001",
+        "REAPER-SYS-009"
+      ],
+      "acceptance": [
+        "online-learning-denial",
+        "declared-dataset-only",
+        "consent-reference-match",
+        "consent-verification-gate",
+        "operator-approval-required",
+        "bounded-training-steps"
+      ]
+    },
+    {
+      "id": "REAPER-NCS-005",
+      "name": "authenticated allowlisted neural peer and federation contracts",
+      "area": "network",
+      "status": "implemented",
+      "depends_on": [
+        "REAPER-NCS-001",
+        "REAPER-SYS-009"
+      ],
+      "acceptance": [
+        "isolated-topology-denial",
+        "peer-authentication",
+        "peer-encryption",
+        "peer-allowlist",
+        "payload-ceiling",
+        "federated-learning-topology-match"
+      ]
+    },
+    {
+      "id": "REAPER-NCS-006",
+      "name": "manual model update authorization and rollback preflight",
+      "area": "lifecycle",
+      "status": "implemented",
+      "depends_on": [
+        "REAPER-NCS-001",
+        "REAPER-SYS-006",
+        "REAPER-STD-003"
+      ],
+      "acceptance": [
+        "bound-artifact-required",
+        "sha256-shape",
+        "signature-verification",
+        "operator-approval",
+        "rollback-target-required",
+        "automatic-update-denial"
+      ]
+    },
+    {
+      "id": "REAPER-NCS-007",
+      "name": "cognitive output, uncertainty and invalid-result contract",
+      "area": "verification",
+      "status": "implemented",
+      "depends_on": [
+        "REAPER-NCS-001",
+        "REAPER-NCS-002"
+      ],
+      "acceptance": [
+        "output-shape-bound",
+        "confidence-ppm-bound",
+        "uncertainty-abstention",
+        "invalid-output-rate",
+        "malformed-output-rejection"
+      ]
     }
   ],
   "profile": "МОСТ — exact Russian keyword aliases; no separate parser, semantics, runtime or backend"

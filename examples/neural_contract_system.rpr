@@ -1,0 +1,78 @@
+# Reaper Neural Contract System v1 — executable policy fixture.
+# This verifies admission rules. It does not execute a neural model or train weights.
+
+import "../stdlib/neural_contract.rpr" as ncs
+
+make input_features := ncs["port"](
+    "features", "input", "f32", [128], 128
+)
+make output_scores := ncs["port"](
+    "scores", "output", "f32", [4], 4
+)
+
+make local_contract := ncs["contract"](
+    "example.local-classifier",
+    "dense",
+    [input_features],
+    [output_scores],
+    [512, 2, 0, 25, 8],
+    [false, false, false, "none", "none"],
+    ["disabled", false, true, 0, [], ""],
+    ["isolated", []],
+    ["reference.cpu", "1.0.0", "reference", true, true],
+    ["unbound", "", "", "", "Apache-2.0"],
+    ["contract_only", 0, "manual_only", true],
+    ["multiclass-classification", "scores.v1", "required", 750000, 1000]
+)
+
+make valid_report := ncs["validate"](local_contract)
+assert(valid_report[0], "a bounded local contract must validate")
+
+make admitted := ncs["inference_admit"](
+    local_contract, 4, 20, false
+)
+assert(admitted[0] == "admit", "bounded local inference must pass policy admission")
+
+make oversized := ncs["inference_admit"](
+    local_contract, 9, 20, false
+)
+assert(oversized[0] == "deny", "oversized batches must be rejected")
+
+make external := ncs["inference_admit"](
+    local_contract, 1, 20, true
+)
+assert(external[0] == "deny", "external transfer must be denied by default")
+
+make training := ncs["training_admit"](
+    local_contract, "dataset-a", "consent-a", 10, true, true
+)
+assert(training[0] == "deny", "training must remain disabled until explicitly contracted")
+
+make peer_exchange := ncs["peer_exchange_admit"](
+    local_contract, "unknown-peer", 128
+)
+assert(peer_exchange[0] == "deny", "isolated contracts must reject network exchange")
+
+make malformed_resources := ncs["contract"](
+    "example.invalid-model",
+    "dense",
+    [input_features],
+    [output_scores],
+    [512, 2, 0, 25, 8192],
+    [false, false, false, "none", "none"],
+    ["disabled", false, true, 0, [], ""],
+    ["isolated", []],
+    ["reference.cpu", "1.0.0", "reference", true, true],
+    ["unbound", "", "", "", "Apache-2.0"],
+    ["contract_only", 0, "manual_only", true],
+    ["multiclass-classification", "scores.v1", "required", 750000, 1000]
+)
+make invalid_report := ncs["validate"](malformed_resources)
+assert(not invalid_report[0], "out-of-range resource budgets must be rejected")
+
+make low_confidence := ncs["output_accept"](
+    local_contract, 4, 0, 500000
+)
+assert(not low_confidence[0], "outputs below the required confidence floor must be rejected")
+
+emit "REAPER_NEURAL_CONTRACT_OK"

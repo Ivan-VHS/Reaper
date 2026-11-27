@@ -6,6 +6,7 @@ Start with the [project README](../README.md) for installation, first commands a
 - [NEXUS system-service boundaries](NEXUS_SYSTEM_SERVICE_BOUNDARIES_V1.md) — service ownership and evidence limits.
 
 - [Features and maturity](FEATURES.md)
+- [Neural Contract System v1](NEURAL_CONTRACT_SYSTEM.md) — versioned model/data/inference/learning/federation/security and cognitive-output contracts; reference policy model only.
 - [Psychoporter Engineering Code function categories](FUNCTION_CATEGORIES_666.md)
 - [Architecture](ARCHITECTURE.md)
 - [Reaper System Features v1](REAPER_SYSTEM_FEATURES_V1.md) — ten bounded systems-language contracts and their implementation maturity.
