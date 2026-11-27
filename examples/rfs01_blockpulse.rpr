@@ -1,0 +1,70 @@
+# RFS-01 BlockPulse example in executable Reaper syntax.
+# The RFS operator spellings are documented notation; this file uses
+# explicit constructors and functions from the Reaper standard library.
+
+import "../stdlib/rfs01.rpr" as rfs
+
+make root := rfs["rfs_node_make"](
+    "block-a", "Basement", 10, 0.40, 0.80,
+    "root-seed-a", ["old-wire"], true, [], "Dormant"
+)
+make corridor := rfs["rfs_node_make"](
+    "block-b", "Corridor", 2, 0.70, 0.20,
+    "root-seed-b", [], false, [], "Dormant"
+)
+assert(root[0] == "ok", "Basement node must validate")
+assert(corridor[0] == "ok", "Corridor node must validate")
+
+make key := ["rfs.key.v1", "root-seed-a", ["old-wire"]]
+make gate := rfs["rfs_link_make"](
+    "gate-a-b", "block-a", "block-b", "Wire", true, 0.80, key
+)
+assert(gate[0] == "ok", "Gate contract must validate")
+
+make grid := rfs["rfs_awaken_grid"]([root[1], corridor[1]], [gate[1]], 5)
+assert(grid[0] == "ok", "Block grid must awaken")
+assert(grid[1][1][0][4] == 1, "Pressure must be converted into bounded integrity")
+assert(grid[1][1][0][5] < 0.49, "Noise attenuation must be applied")
+assert(grid[1][1][0][5] > 0.47, "Noise attenuation must preserve a deterministic value")
+assert(grid[1][2][0][4] == "Bridge", "Valid gate key must open the bridge")
+assert(not grid[1][2][0][5], "Opened bridge must no longer be blocked")
+
+make trusted := rfs["rfs_frame_make"](true, false, ["origin", 1], 0.90)
+make hype := rfs["rfs_frame_make"](true, true, ["manufactured"], 1.00)
+make static_noise := rfs["rfs_frame_make"](false, false, ["unverified"], 0.80)
+make stream := ["rfs.stream.v1", [trusted[1], hype[1], static_noise[1]]]
+make scoreboard := ["rfs.scoreboard.v1", 999]
+make clean := rfs["rfs_filter_static_and_score"](stream, scoreboard)
+
+assert(clean[0] == "ok", "Signal filter must return a clean signal")
+assert(size(clean[1][0][1]) == 1, "Only source-verified, non-hype frames may survive")
+assert(clean[1][0][2] == 0.90, "Signal coherence must use verified frames only")
+assert(clean[1][1][1] == 0, "False score must be reset to NULL_SCORE")
+
+make transition := rfs["rfs_pressure_rule"](grid[1][1][0], 5)
+assert(transition[0] == "ok", "Pressure rule must evaluate")
+assert(transition[1][3] == "backbone_holds", "Critical pressure must lock the backbone")
+
+make contrast := rfs["rfs_contrast"]("external_noise", "inner_calm")
+assert(contrast[0] == "ok" and contrast[1][0] == "rfs.contrast.v1", "Contrast must be an explicit value")
+
+make motion := rfs["rfs_run_collective_loop"](grid[1], clean[1][0], 108)
+assert(motion[0] == "ok", "Collective loop must finish")
+assert(motion[1][1] == "MeshInMotion", "Synchronized mesh must be in motion")
+assert(motion[1][2] == 1, "All late-join nodes must synchronize in one bounded pass")
+assert(motion[1][3] == "block-a", "Mesh root identity must remain stable")
+assert(motion[1][4][0][10] == "Active", "Root node must be active")
+assert(motion[1][4][1][10] == "Active", "Late-joining node must be active")
+assert(contains(motion[1][4][1][9], "block-a"), "Blueprint must retain the root route")
+
+make wrong_root := rfs["rfs_reclaim_root"](
+    grid[1],
+    ["rfs.pulse.v1", "foreign-root", 1, clean[1][0][1]]
+)
+assert(wrong_root[0] == "err", "Root reclamation must reject foreign roots")
+
+make bounded := rfs["rfs_run_collective_loop"](grid[1], clean[1][0], 0)
+assert(bounded[0] == "ok" and bounded[1][1] == "CycleLimit",
+    "Zero-cycle run must stop at its explicit bound")
+
+emit "RFS01_BLOCKPULSE_OK"

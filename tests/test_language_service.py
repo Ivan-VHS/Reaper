@@ -16,7 +16,25 @@ class LanguageServiceTests(unittest.TestCase):
         self.assertTrue(any(item.code == "RPR-W0001" for item in analysis.diagnostics))
         self.assertTrue(any(item.code == "RPR-E0013" for item in analysis.diagnostics))
 
-    def test_local_type_diagnostics_are_published_with_source_spans(self):
+    def test_scenarios_and_registers_are_indexed_in_all_locales(self):
+        uri = "file:///scenario-flow.rpr"
+        self.service.open(uri, """
+scenario operanda(value) { yield value }
+reg total := 1
+сценарий добуток(value) { повернути value }
+регістр результат := 2
+""")
+        analysis = self.service.analyze(uri)
+        self.assertEqual(
+            [(item.name, item.kind) for item in analysis.symbols],
+            [
+                ("operanda", "function"),
+                ("total", "variable"),
+                ("добуток", "function"),
+                ("результат", "variable"),
+            ],
+        )
+
         uri = "file:///typed.rpr"
         self.service.open(uri, 'emit "text" * 2')
         analysis = self.service.analyze(uri)

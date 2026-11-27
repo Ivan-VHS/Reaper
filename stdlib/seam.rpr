@@ -1,0 +1,404 @@
+# Reaper SEAM Core v1.
+# All records are ordinary Reaper values. This module performs structural
+# validation only; it does not grant host capabilities or authenticate data.
+
+craft seam_ok(value) {
+    yield ["ok", value]
+}
+
+craft seam_error(code, message) {
+    yield ["err", code, message]
+}
+
+craft seam_is_whole(value) {
+    when kind(value) != "number" {
+        yield false
+    }
+    when value < 0 or value > 18446744073709551615 {
+        yield false
+    }
+    yield value == value // 1
+}
+
+craft seam_is_unit(value) {
+    when kind(value) != "number" {
+        yield false
+    }
+    yield value >= 0 and value <= 1
+}
+
+craft seam_text_list(values, allow_empty) {
+    when kind(values) != "list" {
+        yield false
+    }
+    when not allow_empty and size(values) == 0 {
+        yield false
+    }
+    when size(unique(values)) != size(values) {
+        yield false
+    }
+    each item in values {
+        when kind(item) != "text" or size(item) == 0 {
+            yield false
+        }
+    }
+    yield true
+}
+
+craft seam_effect_known(effect) {
+    yield contains([
+        "pure",
+        "io.read",
+        "io.write",
+        "process",
+        "network",
+        "native.ffi",
+        "device.read",
+        "device.write",
+        "unsafe"
+    ], effect)
+}
+
+craft seam_effects_valid(effects) {
+    when not seam_text_list(effects, false) {
+        yield false
+    }
+    each effect in effects {
+        when not seam_effect_known(effect) {
+            yield false
+        }
+    }
+    when contains(effects, "pure") and size(effects) != 1 {
+        yield false
+    }
+    yield true
+}
+
+export craft effect_authorize(requested, granted) {
+    when not seam_text_list(requested, true) {
+        yield seam_error("RPR-SEAM-EFFECT-0001", "requested effects must be a unique text list")
+    }
+    when not seam_text_list(granted, true) {
+        yield seam_error("RPR-SEAM-EFFECT-0002", "host grants must be a unique text list")
+    }
+
+    each effect in requested {
+        when not seam_effect_known(effect) {
+            yield seam_error("RPR-SEAM-EFFECT-0003", "unknown effect declaration")
+        }
+    }
+
+    each effect in granted {
+        when not seam_effect_known(effect) {
+            yield seam_error("RPR-SEAM-EFFECT-0004", "unknown host grant")
+        }
+    }
+
+    when contains(requested, "pure") and size(requested) != 1 {
+        yield seam_error("RPR-SEAM-EFFECT-0005", "pure cannot be combined with effectful declarations")
+    }
+
+    each effect in requested {
+        when effect != "pure" and not contains(granted, effect) {
+            yield seam_error("RPR-SEAM-EFFECT-0006", "requested effect is absent from the host grant set")
+        }
+    }
+
+    yield seam_ok(["authorized-by-preflight", requested])
+}
+
+export craft state_validate(state_value) {
+    when kind(state_value) != "list" or size(state_value) != 5 {
+        yield seam_error("RPR-SEAM-STATE-0001", "state must contain exactly five fields")
+    }
+    when state_value[0] != "reaper.seam.state.v1" {
+        yield seam_error("RPR-SEAM-STATE-0002", "unsupported state schema")
+    }
+    when not seam_is_whole(state_value[1]) {
+        yield seam_error("RPR-SEAM-STATE-0003", "revision must be a U64 whole number")
+    }
+    when kind(state_value[2]) != "text" or size(state_value[2]) == 0 {
+        yield seam_error("RPR-SEAM-STATE-0004", "root identity must be non-empty text")
+    }
+    when not seam_is_unit(state_value[3]) {
+        yield seam_error("RPR-SEAM-STATE-0005", "integrity must be in the inclusive range 0...1")
+    }
+    yield seam_ok(state_value)
+}
+
+export craft state_make(revision, root, integrity, payload) {
+    make candidate := [
+        "reaper.seam.state.v1",
+        revision,
+        root,
+        integrity,
+        payload
+    ]
+    make checked := state_validate(candidate)
+    when checked[0] != "ok" {
+        yield checked
+    }
+    yield seam_ok(candidate)
+}
+
+export craft state_transition(current, expected_revision, next_integrity, payload, minimum_integrity) {
+    make checked := state_validate(current)
+    when checked[0] != "ok" {
+        yield checked
+    }
+    when not seam_is_whole(expected_revision) {
+        yield seam_error("RPR-SEAM-STATE-0006", "expected revision must be a U64 whole number")
+    }
+    when not seam_is_unit(next_integrity) or not seam_is_unit(minimum_integrity) {
+        yield seam_error("RPR-SEAM-STATE-0007", "integrity values must be in the inclusive range 0...1")
+    }
+    when current[1] != expected_revision {
+        yield seam_error("RPR-SEAM-STATE-0008", "stale revision; transition was not applied")
+    }
+    when current[1] >= 18446744073709551615 {
+        yield seam_error("RPR-SEAM-STATE-0009", "revision counter is exhausted")
+    }
+    when next_integrity < minimum_integrity {
+        yield seam_error("RPR-SEAM-STATE-0010", "candidate integrity is below the required floor")
+    }
+
+    make candidate := [
+        "reaper.seam.state.v1",
+        expected_revision + 1,
+        current[2],
+        next_integrity,
+        payload
+    ]
+    yield seam_ok(candidate)
+}
+
+export craft checkpoint_make(state_value) {
+    make checked := state_validate(state_value)
+    when checked[0] != "ok" {
+        yield checked
+    }
+    yield seam_ok([
+        "reaper.seam.checkpoint.v1",
+        state_value[1],
+        state_value[2],
+        state_value
+    ])
+}
+
+export craft checkpoint_recover(checkpoint_value, expected_root, minimum_revision, minimum_integrity) {
+    when kind(checkpoint_value) != "list" or size(checkpoint_value) != 4 {
+        yield seam_error("RPR-SEAM-CHECKPOINT-0001", "checkpoint must contain exactly four fields")
+    }
+    when checkpoint_value[0] != "reaper.seam.checkpoint.v1" {
+        yield seam_error("RPR-SEAM-CHECKPOINT-0002", "unsupported checkpoint schema")
+    }
+    when kind(expected_root) != "text" or size(expected_root) == 0 {
+        yield seam_error("RPR-SEAM-CHECKPOINT-0003", "expected root identity must be non-empty text")
+    }
+    when not seam_is_whole(minimum_revision) {
+        yield seam_error("RPR-SEAM-CHECKPOINT-0004", "minimum revision must be a U64 whole number")
+    }
+    when not seam_is_unit(minimum_integrity) {
+        yield seam_error("RPR-SEAM-CHECKPOINT-0005", "minimum integrity must be in the inclusive range 0...1")
+    }
+
+    make checked := state_validate(checkpoint_value[3])
+    when checked[0] != "ok" {
+        yield checked
+    }
+    when checkpoint_value[1] != checkpoint_value[3][1] {
+        yield seam_error("RPR-SEAM-CHECKPOINT-0006", "checkpoint revision does not match its state")
+    }
+    when checkpoint_value[2] != checkpoint_value[3][2] {
+        yield seam_error("RPR-SEAM-CHECKPOINT-0007", "checkpoint root does not match its state")
+    }
+    when checkpoint_value[2] != expected_root {
+        yield seam_error("RPR-SEAM-CHECKPOINT-0008", "checkpoint belongs to a different root")
+    }
+    when checkpoint_value[1] < minimum_revision {
+        yield seam_error("RPR-SEAM-CHECKPOINT-0009", "checkpoint is older than the required revision")
+    }
+    when checkpoint_value[3][3] < minimum_integrity {
+        yield seam_error("RPR-SEAM-CHECKPOINT-0010", "checkpoint integrity is below the required floor")
+    }
+
+    yield seam_ok(checkpoint_value[3])
+}
+
+export craft contract_validate(contract_value) {
+    when kind(contract_value) != "list" or size(contract_value) != 7 {
+        yield seam_error("RPR-SEAM-CONTRACT-0001", "contract must contain exactly seven fields")
+    }
+    when contract_value[0] != "reaper.seam.contract.v1" {
+        yield seam_error("RPR-SEAM-CONTRACT-0002", "unsupported contract schema")
+    }
+    when kind(contract_value[1]) != "text" or size(contract_value[1]) == 0 {
+        yield seam_error("RPR-SEAM-CONTRACT-0003", "contract name must be non-empty text")
+    }
+    when kind(contract_value[2]) != "text" or size(contract_value[2]) == 0 {
+        yield seam_error("RPR-SEAM-CONTRACT-0004", "contract version must be non-empty text")
+    }
+    when not seam_text_list(contract_value[3], true) {
+        yield seam_error("RPR-SEAM-CONTRACT-0005", "input types must be a unique text list")
+    }
+    when not seam_text_list(contract_value[4], true) {
+        yield seam_error("RPR-SEAM-CONTRACT-0006", "output types must be a unique text list")
+    }
+    when not seam_effects_valid(contract_value[5]) {
+        yield seam_error("RPR-SEAM-CONTRACT-0007", "contract effects are invalid")
+    }
+    when not seam_text_list(contract_value[6], true) {
+        yield seam_error("RPR-SEAM-CONTRACT-0008", "invariants must be a unique text list")
+    }
+    yield seam_ok(contract_value)
+}
+
+export craft contract_make(name, version, inputs, outputs, effects, invariants) {
+    make candidate := [
+        "reaper.seam.contract.v1",
+        name,
+        version,
+        inputs,
+        outputs,
+        effects,
+        invariants
+    ]
+    make checked := contract_validate(candidate)
+    when checked[0] != "ok" {
+        yield checked
+    }
+    yield seam_ok(candidate)
+}
+
+export craft bridge_validate(producer, consumer, granted_effects) {
+    make producer_check := contract_validate(producer)
+    when producer_check[0] != "ok" {
+        yield producer_check
+    }
+    make consumer_check := contract_validate(consumer)
+    when consumer_check[0] != "ok" {
+        yield consumer_check
+    }
+    when producer[4] != consumer[3] {
+        yield seam_error("RPR-SEAM-BRIDGE-0001", "producer outputs do not exactly match consumer inputs")
+    }
+
+    vary requested := []
+    each effect in producer[5] {
+        when effect != "pure" and not contains(requested, effect) {
+            change requested := push(requested, effect)
+        }
+    }
+    each effect in consumer[5] {
+        when effect != "pure" and not contains(requested, effect) {
+            change requested := push(requested, effect)
+        }
+    }
+    when size(requested) == 0 {
+        change requested := ["pure"]
+    }
+
+    make authorized := effect_authorize(requested, granted_effects)
+    when authorized[0] != "ok" {
+        yield authorized
+    }
+    yield seam_ok([
+        "reaper.seam.bridge.v1",
+        producer[1],
+        consumer[1],
+        producer[2],
+        consumer[2],
+        requested
+    ])
+}
+
+export craft event_validate(event_value) {
+    when kind(event_value) != "list" or size(event_value) != 5 {
+        yield seam_error("RPR-SEAM-EVENT-0001", "event must contain exactly five fields")
+    }
+    when event_value[0] != "reaper.seam.event.v1" {
+        yield seam_error("RPR-SEAM-EVENT-0002", "unsupported event schema")
+    }
+    when kind(event_value[1]) != "text" or size(event_value[1]) == 0 {
+        yield seam_error("RPR-SEAM-EVENT-0003", "event category must be non-empty text")
+    }
+    when not seam_is_whole(event_value[2]) or event_value[2] > 3 {
+        yield seam_error("RPR-SEAM-EVENT-0004", "event severity must be an integer from 0 through 3")
+    }
+    when not seam_is_whole(event_value[4]) or event_value[4] < 1 {
+        yield seam_error("RPR-SEAM-EVENT-0005", "event count must be a positive U64 whole number")
+    }
+    yield seam_ok(event_value)
+}
+
+export craft event_make(category, severity, payload) {
+    make candidate := [
+        "reaper.seam.event.v1",
+        category,
+        severity,
+        payload,
+        1
+    ]
+    make checked := event_validate(candidate)
+    when checked[0] != "ok" {
+        yield checked
+    }
+    yield seam_ok(candidate)
+}
+
+export craft events_squash(events, minimum_severity, maximum_output) {
+    when kind(events) != "list" {
+        yield seam_error("RPR-SEAM-EVENT-0006", "events must be a list")
+    }
+    when size(events) > 100000 {
+        yield seam_error("RPR-SEAM-EVENT-0007", "event input limit (100000) exceeded")
+    }
+    when not seam_is_whole(minimum_severity) or minimum_severity > 3 {
+        yield seam_error("RPR-SEAM-EVENT-0008", "minimum severity must be an integer from 0 through 3")
+    }
+    when not seam_is_whole(maximum_output) or maximum_output < 1 or maximum_output > 100000 {
+        yield seam_error("RPR-SEAM-EVENT-0009", "maximum output must be an integer from 1 through 100000")
+    }
+
+    vary folded := []
+    each event_value in events {
+        make checked := event_validate(event_value)
+        when checked[0] != "ok" {
+            yield checked
+        }
+
+        when event_value[2] >= minimum_severity {
+            when size(folded) > 0 {
+                make previous := folded[size(folded) - 1]
+                when previous[1] == event_value[1] and previous[2] == event_value[2] and previous[3] == event_value[3] {
+
+                    when previous[4] > 18446744073709551615 - event_value[4] {
+                        yield seam_error("RPR-SEAM-EVENT-0010", "coalesced event count would overflow U64")
+                    }
+
+                    make merged := [
+                        "reaper.seam.event.v1",
+                        previous[1],
+                        previous[2],
+                        previous[3],
+                        previous[4] + event_value[4]
+                    ]
+                    change folded := take(folded, size(folded) - 1)
+                    change folded := push(folded, merged)
+                } otherwise {
+                    when size(folded) >= maximum_output {
+                        yield seam_error("RPR-SEAM-EVENT-0011", "folded event output limit exceeded")
+                    }
+                    change folded := push(folded, event_value)
+                }
+            } otherwise {
+                when size(folded) >= maximum_output {
+                    yield seam_error("RPR-SEAM-EVENT-0011", "folded event output limit exceeded")
+                }
+                change folded := push(folded, event_value)
+            }
+        }
+    }
+
+    yield seam_ok(folded)
+}

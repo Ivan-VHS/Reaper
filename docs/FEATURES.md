@@ -2,7 +2,9 @@
 
 | Component | Current scope | Status |
 |---|---|---|
-| Python runtime | lexer, parser, interpreter, CLI, REPL, modules | available |
+| Python runtime | lexer, parser, interpreter, CLI, REPL, modules; Scenario Flow v1 | available; reference-runtime compatibility track |
+| SEAM Core v1 | versioned state/revision, immutable root identity, module contracts, bridge/effect preflight, checkpoint validation and bounded event folding | Reaper standard-library module; structural reference-runtime checks only |
+| RFS-01 BlockPulse | bounded node/link/mesh records, pressure reinforcement, gate-salvage matching, signal filtering, phase gates, root-preserving synchronization and tension balancing | Reaper standard-library reference model; no native hardware or distributed runtime |
 | Static type analysis | conservative AST inference, numeric/operator checks, collection/index checks, mutability and call-arity diagnostics | partial; built into `reaper --check`, Studio and LSP; static-only, no source execution |
 | Quotas/resources | steps, calls, collections, text, heap, open handles | reference runtime |
 | Division | Euclidean divmod, quotient/remainder, divisibility | implemented |

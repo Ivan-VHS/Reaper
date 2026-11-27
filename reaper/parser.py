@@ -22,7 +22,7 @@ _PRECEDENCE = {
     "OR": 2,
     "AND": 3,
     "==": 4, "!=": 4, "<": 4, "<=": 4, ">": 4, ">=": 4,
-    "++": 5,
+    "++": 5, "..": 5,
     "+": 6, "-": 6,
     "*": 7, "/": 7, "//": 7, "%": 7,
     "**": 8,
@@ -34,6 +34,7 @@ class Parser:
         self.tokens = tokens
         self.filename = filename
         self.current = 0
+        self.loop_depth = 0
 
     def parse(self) -> Node:
         statements: list[Node] = []
@@ -66,6 +67,11 @@ class Parser:
             self._consume(":=", "expected ':=' after the name")
             value = self._expression()
             return Node("declare", declaration, value=(name.value, declaration.kind == "VARY"), children=[value])
+        if self._match("REG"):
+            declaration = self._previous()
+            name = self._consume("IDENT", "expected a register name after 'reg'")
+            self._consume(":=", "expected ':=' after the register name")
+            return Node("register", declaration, value=name.value, children=[self._expression()])
         if self._match("CHANGE"):
             token = self._previous()
             name = self._consume("IDENT", "expected a mutable name after 'change'")
@@ -76,11 +82,16 @@ class Parser:
             return Node("emit", token, children=[self._expression()])
         if self._match("YIELD"):
             token = self._previous()
-            if self._check("NEWLINE") or self._check("}") or self._check("EOF"):
+            if self._check("NEWLINE") or self._check(";") or self._check("}") or self._check("EOF"):
                 return Node("yield", token)
             return Node("yield", token, children=[self._expression()])
-        if self._match("CRAFT"):
+        if self._match("CRAFT", "SCENARIO"):
             return self._function_declaration(self._previous())
+        if self._match("CONTINUE"):
+            token = self._previous()
+            if self.loop_depth == 0:
+                raise self._error(token, "'continue' can only be used inside a loop")
+            return Node("continue", token)
         if self._match("WHEN"):
             return self._when(self._previous())
         if self._match("EACH"):
@@ -89,7 +100,11 @@ class Parser:
             token = self._previous()
             self._consume("WHILE", "expected 'while' after 'loop'")
             condition = self._expression()
-            body = self._block()
+            self.loop_depth += 1
+            try:
+                body = self._block()
+            finally:
+                self.loop_depth -= 1
             return Node("while", token, children=[condition, body])
         expression = self._expression()
         return Node("expression", expression.token, children=[expression])
@@ -103,11 +118,16 @@ class Parser:
             while True:
                 params.append(self._consume("IDENT", "expected a parameter name").value)
                 self._skip_newlines()
-                if not self._match(","):
+                if not self._match(",", ";"):
                     break
                 self._skip_newlines()
         self._consume(")", "expected ')' after parameters")
-        body = self._block()
+        previous_loop_depth = self.loop_depth
+        self.loop_depth = 0
+        try:
+            body = self._block()
+        finally:
+            self.loop_depth = previous_loop_depth
         return Node("function", token, value=(name.value, params), children=[body])
 
     def _when(self, token: Token) -> Node:
@@ -126,7 +146,11 @@ class Parser:
         name = self._consume("IDENT", "expected an iteration variable after 'each'")
         self._consume("IN", "expected 'in' after iteration variable")
         iterable = self._expression()
-        body = self._block()
+        self.loop_depth += 1
+        try:
+            body = self._block()
+        finally:
+            self.loop_depth -= 1
         return Node("each", token, value=name.value, children=[iterable, body])
 
     def _block(self) -> Node:
@@ -171,7 +195,7 @@ class Parser:
             while True:
                 arguments.append(self._expression())
                 self._skip_newlines()
-                if not self._match(","):
+                if not self._match(",", ";"):
                     break
                 self._skip_newlines()
         self._consume(")", "expected ')' after arguments")
@@ -209,7 +233,7 @@ class Parser:
                 while True:
                     items.append(self._expression())
                     self._skip_newlines()
-                    if not self._match(","):
+                    if not self._match(",", ";"):
                         break
                     self._skip_newlines()
             self._consume("]", "expected ']' after list")
@@ -217,12 +241,13 @@ class Parser:
         raise self._error(self._peek(), "expected an expression")
 
     def _statement_end(self) -> None:
-        if self._match("NEWLINE"):
-            self._skip_newlines()
+        if self._match("NEWLINE", ";"):
+            while self._match("NEWLINE", ";"):
+                pass
             return
         if self._check("}") or self._check("EOF"):
             return
-        raise self._error(self._peek(), "expected a new line after this statement")
+        raise self._error(self._peek(), "expected a new line or ';' after this statement")
 
     def _skip_newlines(self) -> None:
         while self._match("NEWLINE"):

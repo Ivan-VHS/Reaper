@@ -6,6 +6,9 @@ Start with the [project README](../README.md) for installation, first commands a
 - [NEXUS system-service boundaries](NEXUS_SYSTEM_SERVICE_BOUNDARIES_V1.md) — service ownership and evidence limits.
 
 - [Features and maturity](FEATURES.md)
+- [Scenario Flow v1](SCENARIO_FLOW_V1.md) — scenario declarations, scoped numeric registers, inclusive ranges, loop continuation, pipeline mapping and capability boundaries.
+- [SEAM Architecture v1](SEAM_ARCHITECTURE_V1.md) — versioned state, root preservation, module contracts, bridge/effect preflight, checkpoints and bounded event folding (reference-runtime only).
+- [RFS-01 BlockPulse Architecture](RFS_01_BLOCKPULSE_ARCHITECTURE.md) — bounded spatial nodes/links, pressure-to-axis transitions, source-truth signal filtering, immutable roots and local mesh synchronization.
 - [Psychoporter Engineering Code function categories](FUNCTION_CATEGORIES_666.md)
 - [Architecture](ARCHITECTURE.md)
 - [Reaper System Features v1](REAPER_SYSTEM_FEATURES_V1.md) — ten bounded systems-language contracts and their implementation maturity.

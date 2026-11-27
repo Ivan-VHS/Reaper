@@ -1,0 +1,568 @@
+# Reaper Rhythm-Field Syntax / BlockPulse Architecture RFS-01.
+# Executable domain model using the stable Reaper grammar.
+# Symbolic RFS operators remain notation until separately reviewed by the parser.
+
+export make RFS_LAYERS := ["Basement", "Corridor", "Gate", "Skyline", "Horizon"]
+export make RFS_CHANNELS := ["Wire", "Rail", "Beat", "Current", "Bridge"]
+export make RFS_MAX_NODES := 4096
+export make RFS_MAX_LINKS := 8192
+export make RFS_MAX_FRAMES := 100000
+
+craft rfs_ok(value) {
+    yield ["ok", value]
+}
+
+craft rfs_error(code, message) {
+    yield ["err", code, message]
+}
+
+craft rfs_text_valid(value) {
+    yield kind(value) == "text" and size(value) > 0
+}
+
+craft rfs_number_valid(value, minimum, maximum) {
+    when kind(value) != "number" {
+        yield false
+    }
+    when value != value {
+        yield false
+    }
+    yield value >= minimum and value <= maximum
+}
+
+craft rfs_whole_valid(value, minimum, maximum) {
+    when not rfs_number_valid(value, minimum, maximum) {
+        yield false
+    }
+    yield value == value // 1
+}
+
+craft rfs_clamp(value, minimum, maximum) {
+    when value < minimum {
+        yield minimum
+    }
+    when value > maximum {
+        yield maximum
+    }
+    yield value
+}
+
+export craft rfs_node_validate(node) {
+    when kind(node) != "list" or size(node) != 11 {
+        yield rfs_error("RPR-RFS-NODE-0001", "node record must contain eleven fields")
+    }
+    when node[0] != "rfs.node.v1" {
+        yield rfs_error("RPR-RFS-NODE-0002", "unsupported node schema")
+    }
+    when not rfs_text_valid(node[1]) {
+        yield rfs_error("RPR-RFS-NODE-0003", "node id must be non-empty text")
+    }
+    when not contains(RFS_LAYERS, node[2]) {
+        yield rfs_error("RPR-RFS-NODE-0004", "unknown node layer")
+    }
+    when not rfs_number_valid(node[3], 0, 18446744073709551615) {
+        yield rfs_error("RPR-RFS-NODE-0005", "pressure must be a finite non-negative number in the supported range")
+    }
+    when not rfs_number_valid(node[4], 0, 1) {
+        yield rfs_error("RPR-RFS-NODE-0006", "integrity must be in the inclusive range 0...1")
+    }
+    when not rfs_number_valid(node[5], 0, 18446744073709551615) {
+        yield rfs_error("RPR-RFS-NODE-0007", "noise must be a finite non-negative number in the supported range")
+    }
+    when not rfs_text_valid(node[6]) {
+        yield rfs_error("RPR-RFS-NODE-0008", "core seed must be non-empty text")
+    }
+    when kind(node[7]) != "list" or kind(node[8]) != "boolean" or kind(node[9]) != "list" {
+        yield rfs_error("RPR-RFS-NODE-0009", "history and route must be lists and awake must be boolean")
+    }
+    when not contains(["Dormant", "Active", "Dissonant"], node[10]) {
+        yield rfs_error("RPR-RFS-NODE-0010", "unknown node state")
+    }
+    yield rfs_ok(node)
+}
+
+export craft rfs_node_make(id, layer, pressure, integrity, noise, core_seed, history, awake, route, state) {
+    make candidate := [
+        "rfs.node.v1", id, layer, pressure, integrity, noise,
+        core_seed, history, awake, route, state
+    ]
+    make checked := rfs_node_validate(candidate)
+    when checked[0] != "ok" {
+        yield checked
+    }
+    yield rfs_ok(candidate)
+}
+
+export craft rfs_link_validate(link) {
+    when kind(link) != "list" or size(link) != 8 {
+        yield rfs_error("RPR-RFS-LINK-0001", "link record must contain eight fields")
+    }
+    when link[0] != "rfs.link.v1" {
+        yield rfs_error("RPR-RFS-LINK-0002", "unsupported link schema")
+    }
+    when not rfs_text_valid(link[1]) or not rfs_text_valid(link[2]) or not rfs_text_valid(link[3]) {
+        yield rfs_error("RPR-RFS-LINK-0003", "link id and endpoints must be non-empty text")
+    }
+    when not contains(RFS_CHANNELS, link[4]) {
+        yield rfs_error("RPR-RFS-LINK-0004", "unknown link channel")
+    }
+    when kind(link[5]) != "boolean" {
+        yield rfs_error("RPR-RFS-LINK-0005", "blocked flag must be boolean")
+    }
+    when not rfs_number_valid(link[6], 0, 1) {
+        yield rfs_error("RPR-RFS-LINK-0006", "link weight must be in the inclusive range 0...1")
+    }
+    when link[7] != nothing and kind(link[7]) != "list" {
+        yield rfs_error("RPR-RFS-LINK-0007", "required key must be nothing or a key record")
+    }
+    yield rfs_ok(link)
+}
+
+export craft rfs_link_make(id, origin_id, target_id, channel, blocked, weight, required_key) {
+    make candidate := ["rfs.link.v1", id, origin_id, target_id, channel, blocked, weight, required_key]
+    make checked := rfs_link_validate(candidate)
+    when checked[0] != "ok" {
+        yield checked
+    }
+    yield rfs_ok(candidate)
+}
+
+craft rfs_node_find(nodes, wanted_id) {
+    each node in nodes {
+        when node[1] == wanted_id {
+            yield node
+        }
+    }
+    yield nothing
+}
+
+export craft rfs_mesh_validate(mesh) {
+    when kind(mesh) != "list" or size(mesh) != 7 {
+        yield rfs_error("RPR-RFS-MESH-0001", "mesh record must contain seven fields")
+    }
+    when mesh[0] != "rfs.mesh.v1" {
+        yield rfs_error("RPR-RFS-MESH-0002", "unsupported mesh schema")
+    }
+    when kind(mesh[1]) != "list" or size(mesh[1]) == 0 or size(mesh[1]) > RFS_MAX_NODES {
+        yield rfs_error("RPR-RFS-MESH-0003", "mesh nodes must be a non-empty bounded list")
+    }
+    when kind(mesh[2]) != "list" or size(mesh[2]) > RFS_MAX_LINKS {
+        yield rfs_error("RPR-RFS-MESH-0004", "mesh links must be a bounded list")
+    }
+
+    vary seen_nodes := []
+    each node in mesh[1] {
+        make checked_node := rfs_node_validate(node)
+        when checked_node[0] != "ok" {
+            yield checked_node
+        }
+        when contains(seen_nodes, node[1]) {
+            yield rfs_error("RPR-RFS-MESH-0005", "duplicate node id")
+        }
+        change seen_nodes := push(seen_nodes, node[1])
+    }
+
+    when not contains(seen_nodes, mesh[3]) {
+        yield rfs_error("RPR-RFS-MESH-0006", "mesh root id does not identify a node")
+    }
+
+    vary seen_links := []
+    each link in mesh[2] {
+        make checked_link := rfs_link_validate(link)
+        when checked_link[0] != "ok" {
+            yield checked_link
+        }
+        when contains(seen_links, link[1]) {
+            yield rfs_error("RPR-RFS-MESH-0007", "duplicate link id")
+        }
+        when not contains(seen_nodes, link[2]) or not contains(seen_nodes, link[3]) {
+            yield rfs_error("RPR-RFS-MESH-0008", "link endpoint does not exist in this mesh")
+        }
+        change seen_links := push(seen_links, link[1])
+    }
+
+    when not rfs_whole_valid(mesh[4], 0, 108) {
+        yield rfs_error("RPR-RFS-MESH-0009", "cycle must be an integer from 0 through 108")
+    }
+    when not contains(["GridAwake", "MeshInMotion", "CycleLimit"], mesh[5]) {
+        yield rfs_error("RPR-RFS-MESH-0010", "unknown mesh status")
+    }
+    when kind(mesh[6]) != "list" {
+        yield rfs_error("RPR-RFS-MESH-0011", "mesh metrics must be a list")
+    }
+    yield rfs_ok(mesh)
+}
+
+export craft rfs_mesh_make(nodes, links, root_id) {
+    make candidate := ["rfs.mesh.v1", nodes, links, root_id, 0, "GridAwake", []]
+    make checked := rfs_mesh_validate(candidate)
+    when checked[0] != "ok" {
+        yield checked
+    }
+    yield rfs_ok(candidate)
+}
+
+craft rfs_forge_key(node) {
+    yield ["rfs.key.v1", node[6], node[7]]
+}
+
+craft rfs_attenuate(noise, factor) {
+    yield rfs_clamp(noise * factor, 0, 18446744073709551615)
+}
+
+export craft rfs_awaken_grid(raw_blocks, gates, high_load) {
+    when kind(raw_blocks) != "list" or size(raw_blocks) == 0 or size(raw_blocks) > RFS_MAX_NODES {
+        yield rfs_error("RPR-RFS-GRID-0001", "raw blocks must be a non-empty bounded list")
+    }
+    when kind(gates) != "list" or size(gates) > RFS_MAX_LINKS {
+        yield rfs_error("RPR-RFS-GRID-0002", "gates must be a bounded list")
+    }
+    when not rfs_number_valid(high_load, 0, 18446744073709551615) {
+        yield rfs_error("RPR-RFS-GRID-0003", "high-load threshold must be a finite non-negative number")
+    }
+
+    vary nodes := []
+    each block in raw_blocks {
+        make block_check := rfs_node_validate(block)
+        when block_check[0] != "ok" {
+            yield block_check
+        }
+
+        vary integrity := block[4]
+        vary noise := block[5]
+        when block[2] == "Basement" and block[3] >= high_load {
+            change integrity := rfs_clamp(integrity + block[3] * 0.15, 0, 1)
+            change noise := rfs_attenuate(noise, 0.6)
+        }
+
+        make updated := rfs_node_make(
+            block[1], block[2], block[3], integrity, noise,
+            block[6], block[7], block[8], block[9], block[10]
+        )
+        when updated[0] != "ok" {
+            yield updated
+        }
+        change nodes := push(nodes, updated[1])
+    }
+
+    vary links := []
+    each gate in gates {
+        make gate_check := rfs_link_validate(gate)
+        when gate_check[0] != "ok" {
+            yield gate_check
+        }
+
+        vary updated_gate := gate
+        when gate[5] {
+            make origin := rfs_node_find(nodes, gate[2])
+            when origin == nothing {
+                yield rfs_error("RPR-RFS-GRID-0004", "blocked gate origin is missing")
+            }
+            make forged_key := rfs_forge_key(origin)
+            when gate[7] == forged_key {
+                change updated_gate := ["rfs.link.v1", gate[1], gate[2], gate[3], "Bridge", false, gate[6], gate[7]]
+            }
+        }
+        change links := push(links, updated_gate)
+    }
+
+    make mesh := rfs_mesh_make(nodes, links, nodes[0][1])
+    when mesh[0] != "ok" {
+        yield mesh
+    }
+    yield mesh
+}
+
+export craft rfs_frame_validate(frame) {
+    when kind(frame) != "list" or size(frame) != 5 {
+        yield rfs_error("RPR-RFS-FRAME-0001", "frame record must contain five fields")
+    }
+    when frame[0] != "rfs.frame.v1" {
+        yield rfs_error("RPR-RFS-FRAME-0002", "unsupported frame schema")
+    }
+    when kind(frame[1]) != "boolean" or kind(frame[2]) != "boolean" {
+        yield rfs_error("RPR-RFS-FRAME-0003", "origin truth and manufactured-hype flags must be boolean")
+    }
+    when not rfs_number_valid(frame[4], 0, 1) {
+        yield rfs_error("RPR-RFS-FRAME-0004", "frame resonance must be in the inclusive range 0...1")
+    }
+    yield rfs_ok(frame)
+}
+
+export craft rfs_frame_make(origin_truth, manufactured_hype, payload, resonance) {
+    make candidate := ["rfs.frame.v1", origin_truth, manufactured_hype, payload, resonance]
+    make checked := rfs_frame_validate(candidate)
+    when checked[0] != "ok" {
+        yield checked
+    }
+    yield rfs_ok(candidate)
+}
+
+export craft rfs_signal_validate(signal) {
+    when kind(signal) != "list" or size(signal) != 3 or signal[0] != "rfs.signal.v1" {
+        yield rfs_error("RPR-RFS-SIGNAL-0001", "signal record has an unsupported shape or schema")
+    }
+    when kind(signal[1]) != "list" or size(signal[1]) > RFS_MAX_FRAMES {
+        yield rfs_error("RPR-RFS-SIGNAL-0002", "verified frames must be a bounded list")
+    }
+    when not rfs_number_valid(signal[2], 0, 1) {
+        yield rfs_error("RPR-RFS-SIGNAL-0003", "signal coherence must be in the inclusive range 0...1")
+    }
+    yield rfs_ok(signal)
+}
+
+export craft rfs_filter_static_and_score(stream, false_board) {
+    when kind(stream) != "list" or size(stream) != 2 or stream[0] != "rfs.stream.v1" {
+        yield rfs_error("RPR-RFS-FILTER-0001", "stream record has an unsupported shape or schema")
+    }
+    when kind(stream[1]) != "list" or size(stream[1]) > RFS_MAX_FRAMES {
+        yield rfs_error("RPR-RFS-FILTER-0002", "stream frames must be a bounded list")
+    }
+    when kind(false_board) != "list" or size(false_board) != 2 or false_board[0] != "rfs.scoreboard.v1" {
+        yield rfs_error("RPR-RFS-FILTER-0003", "scoreboard record has an unsupported shape or schema")
+    }
+
+    vary verified := []
+    vary total_resonance := 0
+    each frame in stream[1] {
+        make checked := rfs_frame_validate(frame)
+        when checked[0] != "ok" {
+            yield checked
+        }
+        when frame[1] and not frame[2] {
+            make aligned := ["rfs.aligned-frame.v1", frame[3], frame[4], "CoreIntent"]
+            change verified := push(verified, aligned)
+            change total_resonance := total_resonance + frame[4]
+        }
+    }
+
+    vary coherence := 0
+    when size(verified) > 0 {
+        change coherence := total_resonance / size(verified)
+    }
+
+    make clean_signal := ["rfs.signal.v1", verified, rfs_clamp(coherence, 0, 1)]
+    make reset_board := ["rfs.scoreboard.v1", 0]
+    yield rfs_ok([clean_signal, reset_board])
+}
+
+export craft rfs_contrast(left, right) {
+    yield rfs_ok(["rfs.contrast.v1", left, right])
+}
+
+export craft rfs_shift(source_state, target_state, pressure) {
+    when not rfs_number_valid(pressure, 0, 18446744073709551615) {
+        yield rfs_error("RPR-RFS-SHIFT-0001", "shift pressure must be a finite non-negative number")
+    }
+    yield rfs_ok(["rfs.shift.v1", source_state, target_state, pressure])
+}
+
+export craft rfs_phase_gate(phase, observed, threshold) {
+    when not rfs_text_valid(phase) {
+        yield rfs_error("RPR-RFS-PHASE-0001", "phase name must be non-empty text")
+    }
+    when not rfs_number_valid(observed, 0, 18446744073709551615) or not rfs_number_valid(threshold, 0, 18446744073709551615) {
+        yield rfs_error("RPR-RFS-PHASE-0002", "observed value and threshold must be finite non-negative numbers")
+    }
+    yield rfs_ok(["rfs.phase.v1", phase, observed, threshold, observed >= threshold])
+}
+
+export craft rfs_pressure_rule(node, threshold) {
+    make checked := rfs_node_validate(node)
+    when checked[0] != "ok" {
+        yield checked
+    }
+    when not rfs_number_valid(threshold, 0, 18446744073709551615) {
+        yield rfs_error("RPR-RFS-RULE-0001", "critical threshold must be a finite non-negative number")
+    }
+    make contrast := rfs_contrast("external_noise", "inner_calm")
+    when node[3] > threshold and node[4] > 0 {
+        make shift := rfs_shift("bone_load", "backbone_lock", node[3])
+        yield rfs_ok(["rfs.transition.v1", shift[1], contrast[1], "backbone_holds"])
+    }
+    yield rfs_ok(["rfs.transition.v1", nothing, contrast[1], "below_threshold"])
+}
+
+craft rfs_all_nodes_active(mesh) {
+    each node in mesh[1] {
+        when not node[8] or node[10] != "Active" {
+            yield false
+        }
+    }
+    yield true
+}
+
+craft rfs_mesh_detect_dissonance(mesh) {
+    each node in mesh[1] {
+        when node[4] < 0.5 or node[5] > 0.5 {
+            yield true
+        }
+    }
+    each link in mesh[2] {
+        when link[5] {
+            yield true
+        }
+    }
+    yield false
+}
+
+export craft rfs_ignite_from_core(mesh) {
+    make checked := rfs_mesh_validate(mesh)
+    when checked[0] != "ok" {
+        yield checked
+    }
+    make root := rfs_node_find(mesh[1], mesh[3])
+    when root == nothing {
+        yield rfs_error("RPR-RFS-SPARK-0001", "cannot ignite a mesh without its root node")
+    }
+    yield rfs_ok(["rfs.spark.v1", rfs_clamp(root[4] - root[5] * 0.1, 0, 1), root[6]])
+}
+
+craft rfs_propagate_pulse(mesh, vector, verified_frames) {
+    yield ["rfs.pulse.v1", mesh[3], vector, verified_frames]
+}
+
+export craft rfs_reclaim_root(mesh, pulse) {
+    make checked := rfs_mesh_validate(mesh)
+    when checked[0] != "ok" {
+        yield checked
+    }
+    when kind(pulse) != "list" or size(pulse) != 4 or pulse[0] != "rfs.pulse.v1" {
+        yield rfs_error("RPR-RFS-ROOT-0001", "pulse record has an unsupported shape or schema")
+    }
+    when pulse[1] != mesh[3] {
+        yield rfs_error("RPR-RFS-ROOT-0002", "pulse root differs from the immutable mesh root")
+    }
+    when rfs_node_find(mesh[1], pulse[1]) == nothing {
+        yield rfs_error("RPR-RFS-ROOT-0003", "pulse root no longer exists in the mesh")
+    }
+    yield rfs_ok(pulse[1])
+}
+
+craft rfs_sync_nodes(mesh, restored_root) {
+    vary nodes := []
+    each node in mesh[1] {
+        make route := unique(push(node[9], restored_root))
+        make updated := [
+            "rfs.node.v1", node[1], node[2], node[3], node[4], node[5],
+            node[6], node[7], true, route, "Active"
+        ]
+        change nodes := push(nodes, updated)
+    }
+    yield nodes
+}
+
+craft rfs_rebalance_tension(mesh) {
+    vary total := 0
+    vary count := 0
+    each link in mesh[2] {
+        when not link[5] and link[4] != "Bridge" {
+            change total := total + link[6]
+            change count := count + 1
+        }
+    }
+
+    vary average := 0
+    when count > 0 {
+        change average := total / count
+    }
+
+    vary links := []
+    each link in mesh[2] {
+        vary weight := link[6]
+        when not link[5] and link[4] != "Bridge" and count > 0 {
+            change weight := (weight + average) / 2
+        }
+        change links := push(links, [
+            "rfs.link.v1", link[1], link[2], link[3],
+            link[4], link[5], weight, link[7]
+        ])
+    }
+    yield ["rfs.mesh.v1", mesh[1], links, mesh[3], mesh[4], mesh[5], mesh[6]]
+}
+
+export craft rfs_run_collective_loop(mesh, signal, max_cycles) {
+    make mesh_check := rfs_mesh_validate(mesh)
+    when mesh_check[0] != "ok" {
+        yield mesh_check
+    }
+    make signal_check := rfs_signal_validate(signal)
+    when signal_check[0] != "ok" {
+        yield signal_check
+    }
+    when not rfs_whole_valid(max_cycles, 0, 108) {
+        yield rfs_error("RPR-RFS-LOOP-0001", "max_cycles must be an integer from 0 through 108")
+    }
+
+    vary current := mesh
+    vary cycle := mesh[4]
+    make spark_result := rfs_ignite_from_core(mesh)
+    when spark_result[0] != "ok" {
+        yield spark_result
+    }
+    make spark := spark_result[1]
+
+    loop while cycle < max_cycles and not rfs_all_nodes_active(current) {
+        make intent_vector := rfs_clamp(signal[2] + spark[1], 0, 1)
+        make pulse := rfs_propagate_pulse(current, intent_vector, signal[1])
+        make restored := rfs_reclaim_root(current, pulse)
+        when restored[0] != "ok" {
+            yield restored
+        }
+
+        make synced_nodes := rfs_sync_nodes(current, restored[1])
+        vary next_metrics := [
+            ["intent", intent_vector],
+            ["verified_frames", size(signal[1])],
+            ["spark", spark[1]]
+        ]
+        change cycle := cycle + 1
+        change current := [
+            "rfs.mesh.v1", synced_nodes, current[2],
+            current[3], cycle, "MeshInMotion", next_metrics
+        ]
+
+        when rfs_mesh_detect_dissonance(current) {
+            change current := rfs_rebalance_tension(current)
+        }
+    }
+
+    when not rfs_all_nodes_active(current) {
+        change current := ["rfs.mesh.v1", current[1], current[2], current[3], cycle, "CycleLimit", current[6]]
+    }
+    yield rfs_ok([
+        "rfs.snapshot.v1",
+        current[5],
+        current[4],
+        current[3],
+        current[1],
+        current[2],
+        current[6]
+    ])
+}
+
+export craft rfs_main_block_engine(environment) {
+    when kind(environment) != "list" or size(environment) != 7 or environment[0] != "rfs.environment.v1" {
+        yield rfs_error("RPR-RFS-MAIN-0001", "environment record has an unsupported shape or schema")
+    }
+
+    make grid := rfs_awaken_grid(environment[1], environment[2], environment[5])
+    when grid[0] != "ok" {
+        yield grid
+    }
+    make filtered := rfs_filter_static_and_score(environment[3], environment[4])
+    when filtered[0] != "ok" {
+        yield filtered
+    }
+    make result := rfs_run_collective_loop(grid[1], filtered[1][0], environment[6])
+    when result[0] != "ok" {
+        yield result
+    }
+
+    yield rfs_ok([
+        "rfs.block-engine-result.v1",
+        result[1],
+        filtered[1][1],
+        ["telemetry", "HolographicGold_Active", result[1][6]]
+    ])
+}

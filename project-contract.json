@@ -51,6 +51,23 @@
       ]
     },
     {
+      "id": "language.scenario-flow.v1",
+      "status": "partial",
+      "summary": "Scenario declarations, numeric registers, inclusive integer ranges and loop continuation are implemented in the reference lexer/parser, static checker, tree-walk runtime, Canonical IR and bytecode VM, with LSP symbol support; native C17 and Reaper self-hosted frontend parity remain incomplete. Scenario declarations do not grant or widen host capabilities.",
+      "evidence": [
+        "reaper/lexer.py",
+        "reaper/parser.py",
+        "reaper/typecheck.py",
+        "reaper/runtime.py",
+        "reaper/ir.py",
+        "reaper/vm.py",
+        "reaper/language_service.py",
+        "tests/test_scenario_flow.py",
+        "tests/test_language_service.py",
+        "docs/SCENARIO_FLOW_V1.md"
+      ]
+    },
+    {
       "id": "runtime.canonical-ir-vm",
       "status": "implemented",
       "summary": "Selectable Python bytecode VM over Canonical IR while tree-walk execution remains the compatibility default.",
@@ -159,6 +176,30 @@
         "tests/test_system_functions.py",
         "docs/SYSTEM_FUNCTIONS.md"
       ]
+    },
+    {
+      "id": "language.seam-core.v1",
+      "status": "partial",
+      "summary": "Reaper-source standard-library module validates versioned state/revision transitions, immutable root identity, module contracts and bridges, declared effect sets, structural checkpoints and bounded event folding. Reference-runtime only; it neither authenticates checkpoint origins nor enforces host capabilities or provides native C17/self-hosted compiler parity.",
+      "evidence": [
+        "stdlib/seam.rpr",
+        "examples/seam_recovery.rpr",
+        "selfhost/seam_conformance.rpr",
+        "tests/test_self_hosting.py",
+        "docs/SEAM_ARCHITECTURE_V1.md"
+      ]
+    },
+    {
+      "id": "language.rfs-01.blockpulse",
+      "status": "partial",
+      "summary": "Reaper-source RFS-01 reference model provides bounded spatial node/link contracts, pressure reinforcement, gate-salvage matching, source-truth signal filtering, phase gates, immutable root recovery, deterministic late-join synchronization and tension balancing. Reference-runtime only; no native C17/self-hosted parity, physical device access, distributed execution, authenticated keys or external telemetry.",
+      "evidence": [
+        "stdlib/rfs01.rpr",
+        "examples/rfs01_blockpulse.rpr",
+        "selfhost/rfs01_conformance.rpr",
+        "tests/test_self_hosting.py",
+        "docs/RFS_01_BLOCKPULSE_ARCHITECTURE.md"
+      ]
     }
   ],
   "interfaces": [
@@ -201,6 +242,41 @@
         "stdlib/system.rpr",
         "docs/SYSTEM_FUNCTIONS.md",
         "tests/test_system_functions.py"
+      ]
+    },
+    {
+      "id": "language.scenario-flow.v1",
+      "format": "Reaper .rpr scenario-flow grammar and Canonical IR / bytecode VM semantics",
+      "direction": "provides",
+      "status": "partial",
+      "evidence": [
+        "docs/SCENARIO_FLOW_V1.md",
+        "reaper/parser.py",
+        "reaper/ir.py",
+        "reaper/vm.py",
+        "tests/test_scenario_flow.py"
+      ]
+    },
+    {
+      "id": "reaper.seam-core.v1",
+      "format": "Versioned Reaper .rpr state, contract, bridge, effect and event records",
+      "direction": "provides",
+      "status": "partial",
+      "evidence": [
+        "stdlib/seam.rpr",
+        "docs/SEAM_ARCHITECTURE_V1.md",
+        "selfhost/seam_conformance.rpr"
+      ]
+    },
+    {
+      "id": "reaper.rfs-01.blockpulse.v1",
+      "format": "Versioned Reaper .rpr node, link, mesh, signal, frame, phase, pulse and snapshot records",
+      "direction": "provides",
+      "status": "partial",
+      "evidence": [
+        "stdlib/rfs01.rpr",
+        "docs/RFS_01_BLOCKPULSE_ARCHITECTURE.md",
+        "selfhost/rfs01_conformance.rpr"
       ]
     }
   ],
@@ -255,7 +331,9 @@
     "The system-functions v1 worker quota is cooperative in the Python reference runtime; it is not OS-enforced process isolation or a hard process-RSS limit.",
     "The arena-slot API limits tracked reference-runtime allocations and rejects escaped region allocations; it is not a zero-allocation host arena.",
     "Ephemeral comparison overwrites only its owned mutable working buffers and cannot erase caller-owned or immutable copies.",
-    "Contract graph, lease, local-only and rollback checks are runtime preflight functions until the native compiler gains compile-time evaluation, type-level leases and effect-checked module headers."
+    "Contract graph, lease, local-only and rollback checks are runtime preflight functions until the native compiler gains compile-time evaluation, type-level leases and effect-checked module headers.",
+    "SEAM checkpoint checks are structural and do not authenticate snapshot origin or storage integrity; effect preflight consumes caller-supplied grant declarations and does not enforce host authorization or perform host effects.",
+    "RFS-01 BlockPulse is a deterministic local data model. Gate salvage keys are structural tuples, not authentication credentials; mesh integrity and signal coherence are model metrics, not cryptographic or hardware proofs; telemetry descriptors are returned as data and are not transmitted."
   ],
   "extension_points": [
     "Canonical IR and selectable execution engines.",
@@ -264,6 +342,8 @@
     "Native C17 frontend stages with Python reference behavior as the compatibility oracle.",
     "Bounded vertical self-composition for deterministic compiler and data-flow transformation pipelines.",
     "Stable architecture concept IDs, layer metadata and bounded dependency graph validation.",
-    "Explicit stdlib/system.rpr APIs for bounded system operations, revision guards, local telemetry and reversible migration preflight."
+    "Explicit stdlib/system.rpr APIs for bounded system operations, revision guards, local telemetry and reversible migration preflight.",
+    "SEAM state, contract, bridge, effect and bounded event-folding helpers in stdlib/seam.rpr.",
+    "RFS-01 BlockPulse node/link/mesh constructors, pressure and phase transitions, signal filtering, root-preserving synchronization and bounded tension balancing in stdlib/rfs01.rpr."
   ]
 }

@@ -48,7 +48,7 @@ BUILTIN_RETURN: dict[str, str] = {
     "quotient": "Int", "remainder": "Int", "is_divisible": "Bool",
     "partition": "List[Any]", "distribute": "List[Int]",
     "proportional_split": "List[Int]", "size": "Int", "text": "Text",
-    "number": "Number", "kind": "Text", "range": "List[Int]",
+    "number": "Number", "kind": "Text", "range": "Range[Int]",
     "push": "List[Any]", "first": ANY, "rest": "List[Any]", "sum": "Number",
     "sorted": "List[Any]", "sort_by": "List[Any]", "map": "List[Any]",
     "keep": "List[Any]", "filter": "List[Any]", "fold": ANY, "reduce": ANY,
@@ -168,6 +168,13 @@ class TypeChecker:
             value_type = self._expression(children[0])
             self.scopes[-1][name] = Binding(value_type, mutable)
             return
+        if node.kind == "register":
+            value_type = self._expression(children[0])
+            if value_type not in {"Int", "Float", "Number", ANY}:
+                self._report(node, "RPR-T0004", f"'reg' requires a numeric value, not {value_type}")
+            register_type = "Number" if value_type in {"Int", "Float", "Number"} else value_type
+            self.scopes[-1][node.value] = Binding(register_type, True)
+            return
         if node.kind == "change":
             actual = self._expression(children[0])
             binding = self._find_binding(node.value)
@@ -189,6 +196,8 @@ class TypeChecker:
             value_type = self._expression(children[0]) if children else NOTHING
             if self.return_types:
                 self.return_types[-1].append(value_type)
+            return
+        if node.kind == "continue":
             return
         if node.kind == "export":
             if children:
@@ -272,11 +281,15 @@ class TypeChecker:
             if operator == "::":
                 return self._flow_type(children[0], children[1], left)
             right = self._expression(children[1])
+            if operator == "..":
+                if left != "Int" or right != "Int":
+                    self._report(node, "RPR-T0004", f"inclusive range requires Int bounds, got {left} and {right}")
+                return "Range[Int]"
             if operator in {"+", "-", "*", "/", "//", "%", "**"}:
                 if not self._numeric(left) or not self._numeric(right):
                     self._report(node, "RPR-T0004", f"operator '{operator}' requires numeric operands, got {left} and {right}")
                     return ANY
-                if ANY in {left, right}:
+                if ANY in {left, right} or "Number" in {left, right}:
                     return "Number"
                 return "Float" if "Float" in {left, right} or operator == "/" else "Int"
             if operator == "++":
@@ -411,6 +424,8 @@ class TypeChecker:
     def _element_type(self, type_name: str, node: Node | None = None) -> str:
         if type_name.startswith("List[") and type_name.endswith("]"):
             return type_name[5:-1]
+        if type_name == "Range[Int]":
+            return "Int"
         if type_name == "Text":
             return "Text"
         if type_name in {ANY, "Map"}:

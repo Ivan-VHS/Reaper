@@ -34,6 +34,8 @@ class IRVerificationError(ValueError):
 class _Lowerer:
     def __init__(self) -> None:
         self.code: list[IRInstruction] = []
+        self.scope_depth = 0
+        self.loop_stack: list[tuple[int, int]] = []
 
     def emit(self, op: str, argument: Any, token: Any) -> int:
         self.code.append(IRInstruction(op, argument, token))
@@ -49,7 +51,9 @@ class _Lowerer:
 
     def scoped_block(self, block: Node) -> None:
         self.emit("ENTER_SCOPE", None, block.token)
+        self.scope_depth += 1
         self.statements(block.children)
+        self.scope_depth -= 1
         self.emit("EXIT_SCOPE", None, block.token)
 
     def statement(self, node: Node) -> None:
@@ -57,6 +61,9 @@ class _Lowerer:
         if node.kind == "declare":
             self.expression(children[0])
             self.emit("DEFINE", node.value, node.token)
+        elif node.kind == "register":
+            self.expression(children[0])
+            self.emit("DEFINE_REGISTER", node.value, node.token)
         elif node.kind == "change":
             self.expression(children[0])
             self.emit("ASSIGN", node.value, node.token)
@@ -94,7 +101,12 @@ class _Lowerer:
             self.emit("ITER_INIT", node.value, node.token)
             loop_start = len(self.code)
             next_index = self.emit("ITER_NEXT", (node.value, None), node.token)
+            base_scope_depth = self.scope_depth
+            self.scope_depth += 1
+            self.loop_stack.append((loop_start, base_scope_depth))
             self.statements(children[1].children)
+            self.loop_stack.pop()
+            self.scope_depth -= 1
             self.emit("EXIT_SCOPE", None, node.token)
             self.emit("JUMP", loop_start, node.token)
             self.patch(next_index, (node.value, len(self.code)))
@@ -103,9 +115,18 @@ class _Lowerer:
             loop_start = len(self.code)
             self.expression(children[0])
             exit_jump = self.emit("JUMP_IF_FALSE", None, node.token)
+            self.loop_stack.append((loop_start, self.scope_depth))
             self.scoped_block(children[1])
+            self.loop_stack.pop()
             self.emit("JUMP", loop_start, node.token)
             self.patch(exit_jump, len(self.code))
+        elif node.kind == "continue":
+            if not self.loop_stack:
+                raise IRVerificationError("'continue' has no enclosing loop")
+            target, base_scope_depth = self.loop_stack[-1]
+            for _ in range(self.scope_depth - base_scope_depth):
+                self.emit("EXIT_SCOPE", None, node.token)
+            self.emit("JUMP", target, node.token)
         elif node.kind == "expression":
             self.expression(children[0])
             self.emit("POP", None, node.token)
@@ -183,7 +204,7 @@ class _Lowerer:
 
 
 _ALLOWED = {
-    "CONST", "LOAD", "DEFINE", "ASSIGN", "EMIT", "RETURN", "MAKE_FUNCTION",
+    "CONST", "LOAD", "DEFINE", "DEFINE_REGISTER", "ASSIGN", "EMIT", "RETURN", "MAKE_FUNCTION",
     "JUMP_IF_FALSE", "JUMP", "ENTER_SCOPE", "EXIT_SCOPE", "ITER_INIT",
     "ITER_NEXT", "ITER_END", "POP", "BUILD_LIST", "INDEX", "UNARY",
     "CALL", "PIPE_CALL", "BINARY", "AND_JUMP", "OR_JUMP", "IMPORT", "EXPORT",
@@ -209,7 +230,7 @@ def verify(module: CanonicalIR) -> None:
 
     binary_operators = {
         "==", "!=", "<", "<=", ">", ">=", "++",
-        "+", "-", "*", "/", "//", "%", "**",
+        "+", "-", "*", "/", "//", "%", "**", "..",
     }
 
     def require_name(value: Any, label: str) -> None:
@@ -244,6 +265,9 @@ def verify(module: CanonicalIR) -> None:
                 require_name(argument[0], where)
                 if type(argument[1]) is not bool:
                     raise IRVerificationError(f"{where}: DEFINE mutable flag must be boolean")
+
+            elif op == "DEFINE_REGISTER":
+                require_name(argument, where)
 
             elif op in {"LOAD", "ASSIGN", "EXPORT", "ITER_INIT"}:
                 require_name(argument, where)
