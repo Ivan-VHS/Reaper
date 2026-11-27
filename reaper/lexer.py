@@ -82,6 +82,7 @@ KEYWORD_ALIASES = {
     "сценарій": "scenario",
     "регістр": "reg",
     "продовжити": "continue",
+    "повернути": "yield",
 }
 
 
