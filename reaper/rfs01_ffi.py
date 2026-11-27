@@ -56,7 +56,7 @@ class _SignalV1(ctypes.Structure):
         ("abi_version", ctypes.c_uint32),
         ("sequence", ctypes.c_uint64),
         ("origin", ctypes.c_char * 64),
-        ("payload", ctypes.c_char * 4096),
+        ("payload", ctypes.c_char * 4097),
         ("trusted", ctypes.c_int32),
         ("manufactured", ctypes.c_int32),
     ]
@@ -142,7 +142,7 @@ def _signal(value: Mapping[str, Any]) -> _SignalV1:
         result.abi_version = _ABI_VERSION
         result.sequence = sequence
         result.origin = _text(value["origin"], "signal.origin", 64)
-        result.payload = _text(value["payload"], "signal.payload", 4096, allow_empty=True)
+        result.payload = _text(value["payload"], "signal.payload", 4097, allow_empty=True)
         result.trusted = int(trusted)
         result.manufactured = int(manufactured)
         return result
