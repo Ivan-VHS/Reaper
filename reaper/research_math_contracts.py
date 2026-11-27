@@ -355,7 +355,7 @@ def _load_catalog_cached(path_string: str) -> dict[str, Any]:
 
 def load_research_math_catalog(path: str | Path | None = None) -> dict[str, Any]:
     catalog_path = Path(path) if path is not None else (
-        Path(__file__).resolve().parents[1] / "language" / "mathematical_research.v1.json"
+        Path(__file__).with_name("mathematical_research.v1.json")
     )
     return deepcopy(_load_catalog_cached(str(catalog_path.resolve())))
 
