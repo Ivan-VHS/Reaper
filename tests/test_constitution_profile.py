@@ -1,11 +1,11 @@
-"""Validate that the 666-rule implementation profile stays complete and explicit."""
+"""Validate that the engineering rule implementation profile stays complete and explicit."""
 
 from pathlib import Path
 import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PROFILE = ROOT / "docs" / "CONSTITUTION_666_PROFILE.md"
+PROFILE = ROOT / "docs" / "ENGINEERING_CONSTITUTION_PROFILE.md"
 
 
 class ConstitutionProfileTests(unittest.TestCase):

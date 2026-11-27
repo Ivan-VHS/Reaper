@@ -30,3 +30,15 @@ def test_every_palette_meets_ui_ux_40026_text_contrast():
     for name, palette in PALETTES.items():
         assert required_status_tokens.issubset(palette), name
         assert palette_contrast_issues(palette) == [], name
+
+
+
+def test_mora_default_uses_imperial_noir_and_semantic_status_colors():
+    palette = palette_for("mora")
+    assert palette["bg"] == "#050505"
+    assert palette["surface"] == "#101010"
+    assert palette["brand"] == "#FFD700"
+    assert palette["success"] == "#6EDAA3"
+    assert palette["error"] == "#FF7777"
+    assert palette["info"] == "#79B8FF"
+    assert palette_contrast_issues(palette) == []

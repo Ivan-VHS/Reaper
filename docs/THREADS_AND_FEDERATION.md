@@ -7,7 +7,7 @@
 | МОСТ | exact aliases and status profile |
 | Native | C17 lexer/parser/AST/IR and selected lowering |
 | QCS | independent parser/validator |
-| Registry | 666 function contracts, 20×20 matrix |
+| Registry | canonical function contract registry, 20×20 matrix |
 | Governance | consent grants, quotas, audit |
 | Federation | OPlague snapshots, explicit Pytyliki ABI and shared topology metadata |
 
