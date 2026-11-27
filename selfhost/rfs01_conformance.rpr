@@ -97,4 +97,24 @@ make empty_signal := rfs["rfs_filter_static_and_score"](
 assert(empty_signal[0] == "ok" and empty_signal[1][0][2] == 0,
     "empty verified stream must have zero coherence")
 
+make environment := [
+    "rfs.environment.v1",
+    [root[1], peer[1]],
+    [gate[1]],
+    ["rfs.stream.v1", [verified[1]]],
+    ["rfs.scoreboard.v1", 77],
+    5,
+    108
+]
+make engine_result := rfs["rfs_main_block_engine"](environment)
+assert(engine_result[0] == "ok", "full BlockPulse entrypoint must execute")
+assert(engine_result[1][0] == "rfs.block-engine-result.v1",
+    "entrypoint must return the versioned BlockPulse result")
+assert(engine_result[1][1][1] == "MeshInMotion",
+    "entrypoint must return the synchronized mesh snapshot")
+assert(engine_result[1][2][1] == 0,
+    "entrypoint must return the reset scoreboard")
+assert(engine_result[1][3][0] == "telemetry" and engine_result[1][3][1] == "HolographicGold_Active",
+    "telemetry must remain a local result descriptor")
+
 emit "SELFHOST_RFS01_OK"
