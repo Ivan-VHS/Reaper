@@ -3,7 +3,7 @@ from __future__ import annotations
 import unittest
 from dataclasses import replace
 
-from reaper.rfs01 import RFS01Error, RFSIRInstruction, compile_ir, compile_source, run_source, verify_ir
+from reaper.rfs01 import MAX_TOKENS, RFS01Error, RFSIRInstruction, compile_ir, compile_source, run_source, verify_ir
 
 
 BASE = """
@@ -53,6 +53,11 @@ class RFS01Tests(unittest.TestCase):
         with self.assertRaisesRegex(RFS01Error, "RFS-E501"):
             verify_ir(malformed)
 
+        invalid_node = replace(module.nodes[0], integrity=1.1)
+        malformed_domain = replace(module, nodes=(invalid_node,) + module.nodes[1:])
+        with self.assertRaisesRegex(RFS01Error, "RFS-E501"):
+            verify_ir(malformed_domain)
+
     def test_empty_signal_payload_is_allowed(self):
         result = run_source(BASE.replace('payload: "trusted"', 'payload: ""'))
         self.assertEqual(result["clean_signal_frames"], 1)
@@ -61,6 +66,17 @@ class RFS01Tests(unittest.TestCase):
         source = BASE.replace("sequence: 1", "sequence: 3")
         with self.assertRaisesRegex(RFS01Error, "RFS-E101"):
             compile_source(source)
+
+
+    def test_token_budget_is_enforced(self):
+        with self.assertRaisesRegex(RFS01Error, "RFS-E401"):
+            compile_source("x " * (MAX_TOKENS + 1))
+
+    def test_invalid_unicode_and_embedded_nul_are_rejected(self):
+        with self.assertRaisesRegex(RFS01Error, "RFS-E101"):
+            compile_source(BASE.replace('payload: "trusted"', r'payload: "\ud800"'))
+        with self.assertRaisesRegex(RFS01Error, "RFS-E101"):
+            compile_source(BASE.replace('payload: "trusted"', r'payload: "\u0000"'))
 
     def test_legacy_reaper_parser_is_not_redefined(self):
         from reaper.parser import parse
