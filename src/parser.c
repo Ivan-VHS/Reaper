@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define REAPER_PARSE_MAX_DEPTH 256u
 typedef struct { const ReaperTokenArray *tokens; size_t pos; unsigned depth; ReaperAst *ast; ReaperParseError *error; } Parser;
 static int set_error(Parser *p,const char *message){if(p->error){const ReaperToken *t=&p->tokens->items[p->pos < p->tokens->length ? p->pos : p->tokens->length-1];(void)snprintf(p->error->message,sizeof p->error->message,"%s",message);p->error->line=t->line;p->error->column=t->column;}return 0;}
 static const ReaperToken *peek(Parser *p){return p->pos<p->tokens->length?&p->tokens->items[p->pos]:NULL;}

@@ -1,5 +1,8 @@
 #ifndef REAPER_AST_H
 #define REAPER_AST_H
+
+/* Maximum recursive expression nesting accepted by the reference parser. */
+#define REAPER_PARSE_MAX_DEPTH 256u
 #include "reaper/lexer.h"
 #include <stddef.h>
 #include <stdint.h>

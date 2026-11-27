@@ -10,6 +10,26 @@ static void legacy_flow_test(void){ReaperAst a;ReaperParseError e;assert(!parse(
 static void literal_test(void){ReaperAst a;ReaperParseError e;assert(parse("true",&a,&e));assert(a.items[a.root].kind==REAPER_AST_BOOLEAN);reaper_ast_free(&a);assert(parse("\"мост\"",&a,&e));assert(a.items[a.root].kind==REAPER_AST_STRING);reaper_ast_free(&a);}
 static void trailing_test(void){ReaperAst a;ReaperParseError e;assert(!parse("1 2",&a,&e));assert(strstr(e.message,"unexpected token"));}
 static void paren_test(void){ReaperAst a;ReaperParseError e;assert(!parse("(1 + 2",&a,&e));assert(strstr(e.message,"expected ')'"));}
+static void nesting_limit_test(void){
+ char accepted[2u*255u+2u];
+ char rejected[2u*256u+2u];
+ size_t accepted_size=255u,rejected_size=256u;
+ ReaperAst ast;ReaperParseError error;
+ for(size_t i=0u;i<accepted_size;i++)accepted[i]='(';
+ accepted[accepted_size]='1';
+ for(size_t i=0u;i<accepted_size;i++)accepted[accepted_size+1u+i]=')';
+ accepted[2u*accepted_size+1u]='\0';
+ assert(parse(accepted,&ast,&error));
+ reaper_ast_free(&ast);
+
+ for(size_t i=0u;i<rejected_size;i++)rejected[i]='(';
+ rejected[rejected_size]='1';
+ for(size_t i=0u;i<rejected_size;i++)rejected[rejected_size+1u+i]=')';
+ rejected[2u*rejected_size+1u]='\0';
+ assert(!parse(rejected,&ast,&error));
+ assert(strstr(error.message,"nesting limit")!=NULL);
+ assert(ast.items==NULL&&ast.length==0u);
+}
 static void json_test(void){
  ReaperAst a;ReaperParseError e;assert(parse("value + \"a\\\"b\"",&a,&e));
  FILE *f=tmpfile();assert(f);assert(reaper_ast_write_json(&a,f));assert(fflush(f)==0);assert(fseek(f,0,SEEK_SET)==0);
@@ -17,4 +37,4 @@ static void json_test(void){
  assert(strstr(b,"\"kind\":\"binary\""));assert(strstr(b,"\"text\":\"a\\\"b\""));
  fclose(f);reaper_ast_free(&a);
 }
-int main(void){precedence_test();power_test();bridge_test();legacy_flow_test();literal_test();trailing_test();paren_test();json_test();puts("native parser tests: 8 groups passed");return 0;}
+int main(void){precedence_test();power_test();bridge_test();legacy_flow_test();literal_test();trailing_test();paren_test();nesting_limit_test();json_test();puts("native parser tests: 9 groups passed");return 0;}
