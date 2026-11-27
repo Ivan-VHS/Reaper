@@ -185,8 +185,6 @@ assert(core["page_recovery_decision"](["reaper.page-recovery.v1", "page-17", 655
 make memory_adapter := ["reaper.processor-adapter.v1", "duckos-memory-manager", "page-recovery", "duckos", "c", "duckos-memory-recovery-v1", "kernel-control", true, ["page-quarantine", "page-replace"]]
 assert(core["page_recovery_admission"](poisoned_page, mca_event, true, memory_adapter) == "admit-request-to-native-adapter", "page replacement is owned by the kernel memory manager")
 
-assert(core["processor_adapter_admits"](linux_provider, "linux-edac-mce", "linux", "event-query", "read-only") == "adapter-not-attached", "Linux provider remains unavailable until a native reader is installed")
-assert(core["processor_adapter_admits"](apple_provider, "apple-ras", "macos", "event-query", "read-only") == "adapter-not-attached", "Swift adapter remains unavailable until a native reader is installed")
 assert(core["mca_msr_read_admission"](1040, 4, true, mca_adapter) == "reject-msr-not-allowlisted", "MCA reads cannot exceed the discovered bank count")
 assert(core["ap_startup_readiness"](["reaper.ap-start.v1", "boot-1", 1, 2, "ready-to-start", true, true, false, true, true, true, 7], true, 7) == "reject-incomplete-per-cpu-startup-resources", "AP cannot start without its private stack")
 assert(core["apic_ipi_decision"](["reaper.apic-route.v1", 0, 1, 64, "reschedule", "edge", true, 7], true, true, 7, ipi_adapter) == "reject-masked-ipi-route", "masked IPI routes are rejected")
@@ -219,6 +217,8 @@ make linux_provider := core["linux_edac_provider_descriptor"]()
 make apple_provider := core["apple_swift_ras_adapter_descriptor"]()
 make rust_adapter := core["rust_native_ras_adapter_descriptor"]()
 make ts_adapter := core["typescript_diagnostics_adapter_descriptor"]()
+assert(core["processor_adapter_admits"](linux_provider, "linux-edac-mce", "linux", "event-query", "read-only") == "adapter-not-attached", "Linux provider remains unavailable until a native reader is installed")
+assert(core["processor_adapter_admits"](apple_provider, "apple-ras", "macos", "event-query", "read-only") == "adapter-not-attached", "Swift adapter remains unavailable until a native reader is installed")
 assert(core["processor_adapter_valid"](linux_provider) and linux_provider[7] == false, "Linux EDAC provider contract exists but is not falsely marked attached")
 assert(core["processor_adapter_valid"](apple_provider) and apple_provider[4] == "swift", "Apple adapter has a Swift ABI contract")
 assert(core["processor_adapter_valid"](rust_adapter) and rust_adapter[4] == "rust", "Rust native adapter has a DABI64 contract")
