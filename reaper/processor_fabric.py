@@ -222,8 +222,13 @@ def lower_processor_fabric(
         }:
             _fail("RPR-PFT-0028", f"resource binding points to a non-resource PPF node {ppf_id}")
         semantic_ref = _text(binding.semantic_ref, "resource semantic_ref", 96)
-        if node.get("semantic_ref") != semantic_ref or semantic_ref not in resource_descriptors:
+        descriptor = resource_descriptors.get(semantic_ref)
+        if node.get("semantic_ref") != semantic_ref or descriptor is None:
             _fail("RPR-PFT-0029", f"resource binding does not match the validated resource contract for node {ppf_id}")
+        if node.get("kind") != binding.kind:
+            _fail("RPR-PFT-0029", f"resource binding kind disagrees with the PPF node {ppf_id}")
+        if binding.kind == "device" and descriptor.get("id") != semantic_ref:
+            _fail("RPR-PFT-0029", f"device resource binding is inconsistent for node {ppf_id}")
         if binding.generation != generation:
             _fail("RPR-PFT-0030", f"resource binding for node {ppf_id} has a stale generation")
         if binding.owner not in {"cpu", "device", "shared", "unowned"}:
@@ -269,6 +274,14 @@ def lower_processor_fabric(
             _fail("RPR-PFT-0041", f"construct {semantic_id} requires ungranted effects: {sorted(missing)}")
         if process_id in process_nodes:
             _fail("RPR-PFT-0042", f"multiple constructs lower to one process id {process_id}")
+        if not isinstance(construct.get("resourceRefs"), list) or not isinstance(construct.get("dependencyRefs"), list):
+            _fail("RPR-PFT-0042", f"construct {process_id} is missing validated PPF references")
+        construct_resource_refs = {_bounded_int(value, "construct resource ref", 1)
+                                   for value in construct["resourceRefs"]}
+        construct_dependency_refs = {_bounded_int(value, "construct dependency ref", 1)
+                                     for value in construct["dependencyRefs"]}
+        if not construct_dependency_refs.issubset(set(dependency_adjacency.get(process_id, ()))):
+            _fail("RPR-PFT-0042", f"construct {process_id} dependencies disagree with the PPF graph")
         process_node = SemanticNode.create(
             binding.operation, binding.input_types, binding.output_type,
             effects=effects, literal=process_id,
@@ -311,8 +324,12 @@ def lower_processor_fabric(
                 _fail("RPR-PFT-0046", f"invalid or duplicate semantic input port {port}")
             claimed_ports.add(port)
             if input_binding.source_kind == "resource":
+                if input_binding.source_id not in construct_resource_refs:
+                    _fail("RPR-PFT-0048", f"resource {input_binding.source_id} is not referenced by this Hardware AST construct")
                 source_node = resource_nodes.get(input_binding.source_id)
             elif input_binding.source_kind == "process":
+                if input_binding.source_id not in construct_dependency_refs:
+                    _fail("RPR-PFT-0048", f"process {input_binding.source_id} is not a declared dependency of this construct")
                 source_node = process_nodes.get(input_binding.source_id)
             else:
                 _fail("RPR-PFT-0047", f"unsupported semantic input source kind {input_binding.source_kind}")
