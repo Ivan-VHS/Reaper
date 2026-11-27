@@ -116,6 +116,11 @@ export craft validate_project(project) {
         yield [false, "RPR-PEW-0018: current scalar AOT output must be a host executable"]
     }
 
+    when kind(project["output"]) != "map" or
+         kind(project["verification"]) != "map" or
+         kind(project["sources"]) != "list" {
+        yield [false, "RPR-PEW-0018: output, source or verification descriptor is missing"]
+    }
     make memory := project["memory"]
     when kind(memory) != "map" or
          not _positive_integer(memory["minimum_available_mib"], 1048576) or
@@ -219,6 +224,7 @@ export craft validate_host_report(report, project) {
     when kind(suite["runs"]) != "list" or size(suite["runs"]) != suite["repeat"] {
         yield [false, "RPR-PEW-0110: benchmark run list is incomplete"]
     }
+    vary expected_run := 1
     each run in suite["runs"] {
         when kind(run) != "map" or kind(run["integrity_ok"]) != "boolean" {
             yield [false, "RPR-PEW-0111: benchmark run is malformed"]
@@ -226,20 +232,29 @@ export craft validate_host_report(report, project) {
         when project["verification"]["require_integrity"] and not run["integrity_ok"] {
             yield [false, "RPR-PEW-0112: Pytyliki benchmark integrity check failed"]
         }
+        when run["run"] != expected_run or kind(run["warmup"]) != "boolean" {
+            yield [false, "RPR-PEW-0113: benchmark run ordering or warm-up marker is invalid"]
+        }
+        when run["iterations"] > project["workload"]["max_iterations"] or
+             run["memory_mib"] > project["workload"]["memory_mib"] or
+             run["passes"] > project["workload"]["passes"] {
+            yield [false, "RPR-PEW-0114: Pytyliki benchmark exceeded the project workload envelope"]
+        }
         when kind(run["integer_ms"]) != "number" or kind(run["memory_ms"]) != "number" or
              kind(run["matrix_ms"]) != "number" or run["integer_ms"] < 0 or
              run["memory_ms"] < 0 or run["matrix_ms"] < 0 {
-            yield [false, "RPR-PEW-0113: benchmark timing values must be finite non-negative numbers"]
+            yield [false, "RPR-PEW-0115: benchmark timing values must be finite non-negative numbers"]
         }
+        change expected_run := expected_run + 1
     }
     when kind(suite["statistics"]) != "map" or
          kind(suite["statistics"]["integer_ms"]) != "map" or
          kind(suite["statistics"]["memory_ms"]) != "map" or
          kind(suite["statistics"]["matrix_ms"]) != "map" {
-        yield [false, "RPR-PEW-0114: benchmark statistics are missing"]
+        yield [false, "RPR-PEW-0116: benchmark statistics are missing"]
     }
     when kind(suite["timing_note"]) != "text" or size(suite["timing_note"]) == 0 {
-        yield [false, "RPR-PEW-0115: timing provenance note is required"]
+        yield [false, "RPR-PEW-0117: timing provenance note is required"]
     }
     yield [true, "RPR-PEW-OK"]
 }
@@ -251,6 +266,12 @@ export craft make_workspace_report(project, report) {
     }
     make profile := report["profile"]
     make suite := report["suite"]
+    vary integrity_passed := true
+    each run in suite["runs"] {
+        when not run["integrity_ok"] {
+            change integrity_passed := false
+        }
+    }
     yield [true, {
         "schema": PROCESSOR_REPORT_SCHEMA,
         "project_id": project["project"]["id"],
@@ -272,7 +293,7 @@ export craft make_workspace_report(project, report) {
             "measured_runs": suite["measured_runs"],
             "statistics": suite["statistics"],
             "timing_note": suite["timing_note"],
-            "all_integrity_checks_passed": true
+            "all_integrity_checks_passed": integrity_passed
         },
         "compiler": {
             "source_language": "Reaper",
