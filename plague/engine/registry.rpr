@@ -1,0 +1,37 @@
+# The registry lists component identities; it does not claim their engines are complete.
+
+craft count_one(total, item) {
+    yield total + 1
+}
+
+export craft component_ids() {
+    yield [
+        "plagueborn",
+        "plaguecore",
+        "plagionyx",
+        "plagorium",
+        "blightforge",
+        "virulith",
+        "scourvex",
+        "pestigon",
+        "maladrix",
+        "necrovex"
+    ]
+}
+
+export craft component_count() {
+    yield component_ids() :: fold(0, count_one)
+}
+
+export craft known_component(component) {
+    yield component == "plagueborn" OR
+        component == "plaguecore" OR
+        component == "plagionyx" OR
+        component == "plagorium" OR
+        component == "blightforge" OR
+        component == "virulith" OR
+        component == "scourvex" OR
+        component == "pestigon" OR
+        component == "maladrix" OR
+        component == "necrovex"
+}

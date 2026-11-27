@@ -3,7 +3,7 @@
 | Component | Current scope | Status |
 |---|---|---|
 | Python runtime | lexer, parser, interpreter, CLI, REPL, modules | available |
-| Static type analysis | conservative AST inference, numeric/operator checks, collection/index checks, mutability and call-arity diagnostics | partial; built into `reaper --check`, Studio and LSP; static-only, no source execution |
+| Static type analysis | conservative AST inference, numeric/operator checks, collection/index checks, mutability and call-arity diagnostics | partial; built into reaper --check, Studio and LSP; static-only, no source execution |
 | Quotas/resources | steps, calls, collections, text, heap, open handles | reference runtime |
 | Division | Euclidean divmod, quotient/remainder, divisibility | implemented |
 | Allocation | partition/split, distribute, weighted allocation | implemented |
@@ -18,5 +18,6 @@
 | THESIS | versioned assertion/evidence graph | no auto-verification |
 | Pytyliki | optional C ABI metric calls | explicit trusted path |
 | Registries | 813 proposals; 666 API contracts; 666 symbolic lexemes | specification, not completion |
+| PLAGUE | Ten-component Reaper registry, default-deny action policy, bounded profile/proposal evaluator, deterministic risk/benefit selection and versioned evidence contracts | Genesis foundation; repository adapters, autonomous patching and sandboxed checks are not delivered |
 
-Python remains the compatibility reference. Native C17 is not yet a full interpreter or general machine-code backend. The MMIO API is a checked adapter contract, not a complete hardware runtime. The systems-language migration and maturity gates are documented in [HARDWARE_LANGUAGE.md](HARDWARE_LANGUAGE.md).
+Python remains the compatibility reference. Native C17 is not yet a full interpreter or general machine-code backend. The MMIO API is a checked adapter contract, not a complete hardware runtime. PLAGUE evaluates proposals but does not discover or modify repositories; repository grants, path matching, source adapters and side-effect enforcement remain unimplemented. The systems-language migration and maturity gates are documented in [HARDWARE_LANGUAGE.md](HARDWARE_LANGUAGE.md).

@@ -1,0 +1,104 @@
+# PLAGUE v1 repository evolution evaluator.
+# This module is deterministic and advisory; it never writes repository files.
+
+import "core.rpr" as core
+
+export craft assess(profile, proposal) {
+    vary blockers := []
+
+    when not core["valid_profile"](profile) {
+        change blockers := push(blockers, "invalid_repository_profile")
+    }
+    when not core["valid_proposal"](proposal) {
+        change blockers := push(blockers, "invalid_change_proposal")
+    }
+    when size(blockers) > 0 {
+        yield ["blocked", blockers, -101]
+    }
+
+    when proposal[1] != profile[1] {
+        change blockers := push(blockers, "target_platform_mismatch")
+    }
+    when proposal[2] != profile[2] {
+        change blockers := push(blockers, "target_stack_mismatch")
+    }
+    when proposal[3] > profile[3] {
+        change blockers := push(blockers, "changed_path_limit_exceeded")
+    }
+    when proposal[4] > profile[4] {
+        change blockers := push(blockers, "patch_byte_limit_exceeded")
+    }
+
+    each requested_scope in proposal[5] {
+        when not contains(profile[5], requested_scope) {
+            change blockers := push(blockers, "scope_not_granted:" ++ requested_scope)
+        }
+    }
+
+    each required_gate in profile[6] {
+        when not contains(proposal[6], required_gate) {
+            change blockers := push(blockers, "required_gate_missing:" ++ required_gate)
+        }
+    }
+
+    when profile[7] and not proposal[7] {
+        change blockers := push(blockers, "rollback_evidence_required")
+    }
+    when proposal[8] > profile[10] {
+        change blockers := push(blockers, "risk_limit_exceeded")
+    }
+    when size(blockers) > 0 {
+        yield ["blocked", blockers, proposal[9] - proposal[8]]
+    }
+
+    make score := proposal[9] - proposal[8]
+    when score <= 0 {
+        yield ["defer", ["risk_not_offset_by_expected_benefit"], score]
+    }
+    when profile[8] == "manual" {
+        yield ["review_required", [], score]
+    }
+    when proposal[8] >= profile[9] {
+        yield ["review_required", [], score]
+    }
+    yield ["eligible_for_review", [], score]
+}
+
+export craft select_candidate(profile, proposals) {
+    when kind(proposals) != "list" {
+        yield ["", -101, [["", "blocked", ["proposal_set_must_be_a_list"], -101]]]
+    }
+    when size(proposals) > 128 {
+        yield ["", -101, [["", "blocked", ["proposal_set_limit_exceeded"], -101]]]
+    }
+
+    vary winner_id := ""
+    vary winner_score := -101
+    vary assessments := []
+
+    each proposal in proposals {
+        make result := assess(profile, proposal)
+        vary proposal_id := "<invalid>"
+        when core["valid_proposal"](proposal) {
+            change proposal_id := proposal[0]
+        }
+
+        change assessments := push(
+            assessments,
+            [proposal_id, result[0], result[1], result[2]]
+        )
+
+        when result[0] != "blocked" and result[0] != "defer" {
+            when result[2] > winner_score {
+                change winner_id := proposal_id
+                change winner_score := result[2]
+            } otherwise {
+                when result[2] == winner_score and proposal_id < winner_id {
+                    change winner_id := proposal_id
+                }
+            }
+        }
+    }
+
+    yield [winner_id, winner_score, assessments]
+}

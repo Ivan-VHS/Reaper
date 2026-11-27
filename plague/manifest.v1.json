@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema": "ivan-vhs.plague.manifest.v1",
+  "name": "PLAGUE",
+  "version": "1.0.0",
+  "release_label": "foundation",
+  "maturity_stage": "Genesis",
+  "status": "foundation",
+  "implementation_language": "Reaper",
+  "default_mode": "observe",
+  "branch_policy": {
+    "topic_branch_prefix": "plague/",
+    "default_branch_writes": false,
+    "automatic_merge": false,
+    "automatic_release": false
+  },
+  "implemented_capabilities": [
+    "ten_component_registry",
+    "mode_gated_action_policy",
+    "default_deny_unknown_actions",
+    "bounded_repository_profile_validation",
+    "bounded_evolution_proposal_validation",
+    "compatibility_scope_budget_and_gate_assessment",
+    "risk_aware_candidate_scoring",
+    "deterministic_candidate_selection",
+    "policy_and_evolution_smoke_programs",
+    "versioned_repository_target_contract",
+    "versioned_change_plan_contract",
+    "versioned_evidence_contract",
+    "versioned_repository_profile_contract",
+    "versioned_evolution_proposal_contract"
+  ],
+  "not_implemented": [
+    "repository_discovery_adapter",
+    "filesystem_read_adapter",
+    "filesystem_write_adapter",
+    "source_language_adapters",
+    "cross_repository_graph_ingestion",
+    "autonomous_patch_engine",
+    "sandboxed_command_runner",
+    "persistent_audit_store",
+    "rollback_executor",
+    "runtime_feature_evidence_collector",
+    "repository_grant_validation",
+    "path_allowlist_enforcement",
+    "evidence_reference_verification"
+  ],
+  "components": [
+    {
+      "id": "plagueborn",
+      "name": "Plagueborn",
+      "responsibility": "Repository onboarding, inventory and capability discovery",
+      "status": "planned"
+    },
+    {
+      "id": "plaguecore",
+      "name": "Plaguecore",
+      "responsibility": "Policy, orchestration, scheduling and state reconciliation",
+      "status": "partial",
+      "implemented": [
+        "mode_gated_action_policy",
+        "bounded_repository_profile_validation",
+        "bounded_evolution_proposal_validation",
+        "compatibility_scope_budget_and_gate_assessment",
+        "risk_aware_candidate_scoring",
+        "deterministic_candidate_selection"
+      ],
+      "missing": [
+        "grant_validation",
+        "path_allowlist_enforcement",
+        "task_orchestration",
+        "persistent_state",
+        "adapter_dispatch",
+        "audit_journal"
+      ]
+    },
+    {
+      "id": "plagionyx",
+      "name": "Plagionyx",
+      "responsibility": "Architecture, module and dependency evolution",
+      "status": "planned"
+    },
+    {
+      "id": "plagorium",
+      "name": "Plagorium",
+      "responsibility": "Requirement coverage and functional-gap analysis",
+      "status": "planned"
+    },
+    {
+      "id": "blightforge",
+      "name": "Blightforge",
+      "responsibility": "Patch generation, code modification and refactoring",
+      "status": "planned"
+    },
+    {
+      "id": "virulith",
+      "name": "Virulith",
+      "responsibility": "Feature completion and product integration",
+      "status": "planned"
+    },
+    {
+      "id": "scourvex",
+      "name": "Scourvex",
+      "responsibility": "Verification, regression, conformance and runtime evidence",
+      "status": "planned"
+    },
+    {
+      "id": "pestigon",
+      "name": "Pestigon",
+      "responsibility": "Security, permissions and supply-chain review",
+      "status": "planned"
+    },
+    {
+      "id": "maladrix",
+      "name": "Maladrix",
+      "responsibility": "Performance, resource and resilience engineering",
+      "status": "planned"
+    },
+    {
+      "id": "necrovex",
+      "name": "Necrovex",
+      "responsibility": "Recovery, migrations and compatibility repair",
+      "status": "planned"
+    }
+  ]
+}

@@ -52,3 +52,46 @@ jobs:
         run: |
           python -m reaper examples/device_audit.rpr
           python -c "import json; report=json.load(open('device-audit-report.json', encoding='utf-8')); assert report['schema'] == 'reaper.oplage-comparison.v1'; assert report['mode'] == 'read_only'"
+      - name: Validate PLAGUE Reaper modules
+        run: |
+          python -m reaper --check plague/engine/core.rpr
+          python -m reaper --check plague/engine/evolution.rpr
+          python -m reaper --check plague/engine/policy.rpr
+          python -m reaper --check plague/engine/registry.rpr
+          python -m reaper --check plague/examples/policy_smoke.rpr
+          python -m reaper --check plague/examples/evolution_smoke.rpr
+      - name: Validate PLAGUE JSON contracts
+        run: |
+          python -m json.tool plague/manifest.v1.json > /dev/null
+          python -m json.tool plague/policies/scope.v1.json > /dev/null
+          python -m json.tool plague/schemas/repository-target.v1.schema.json > /dev/null
+          python -m json.tool plague/schemas/change-plan.v1.schema.json > /dev/null
+          python -m json.tool plague/schemas/evidence-bundle.v1.schema.json > /dev/null
+          python -m json.tool plague/schemas/repository-profile.v1.schema.json > /dev/null
+          python -m json.tool plague/schemas/evolution-proposal.v1.schema.json > /dev/null
+      - name: Run PLAGUE host adapter tests
+        run: |
+          python -m unittest discover -s tests -p "test_plague_evolution.py" -v
+          python -m unittest discover -s tests -p "test_plague_framework.py" -v
+      - name: Run PLAGUE policy and registry smoke
+        run: |
+          python -m reaper plague/examples/policy_smoke.rpr | tee plague-smoke.log
+          grep -F "PASS default mode is observe" plague-smoke.log
+          grep -F "PASS observe can read source" plague-smoke.log
+          grep -F "PASS propose cannot write a branch" plague-smoke.log
+          grep -F "PASS apply can write a topic branch" plague-smoke.log
+          grep -F "PASS default branch writes are denied" plague-smoke.log
+          grep -F "PASS merge capability is disabled" plague-smoke.log
+          grep -F "PASS release capability is disabled" plague-smoke.log
+          grep -F "PASS scope expansion is denied" plague-smoke.log
+          grep -F "PASS merge is denied" plague-smoke.log
+          grep -F "PASS secret access is denied" plague-smoke.log
+          grep -F "PASS untrusted execution is denied" plague-smoke.log
+          grep -F "PASS unknown mode is denied" plague-smoke.log
+          grep -F "PASS registry contains ten components" plague-smoke.log
+          grep -F "PASS registry recognizes blightforge" plague-smoke.log
+
+      - name: Run PLAGUE proposal assessment smoke
+        run: |
+          python -m reaper plague/examples/evolution_smoke.rpr | tee plague-evolution-smoke.log
+          grep -Fx "PLAGUE_V1_OK" plague-evolution-smoke.log

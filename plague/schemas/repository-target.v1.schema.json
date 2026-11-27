@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ivan-vhs:plague:schema:repository-target:v1",
+  "title": "PLAGUE repository target",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "repository", "default_branch", "mode", "allowed_paths", "excluded_paths"],
+  "properties": {
+    "schema": {"const": "ivan-vhs.plague.repository-target.v1"},
+    "repository": {"type": "string", "minLength": 3, "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"},
+    "default_branch": {"type": "string", "minLength": 1, "pattern": "^[^\\s~^:?*\\[]+$"},
+    "mode": {"enum": ["observe", "propose", "apply"]},
+    "allowed_paths": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "excluded_paths": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "check_profile": {"type": "string", "minLength": 1},
+    "grant_id": {"type": "string", "minLength": 1},
+    "expires_at": {"type": "string", "format": "date-time"}
+  }
+}

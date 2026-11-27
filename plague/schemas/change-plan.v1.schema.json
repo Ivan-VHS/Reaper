@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ivan-vhs:plague:schema:change-plan:v1",
+  "title": "PLAGUE change plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "plan_id", "repository", "base_revision", "mode", "tasks"],
+  "properties": {
+    "schema": {"const": "ivan-vhs.plague.change-plan.v1"},
+    "plan_id": {"type": "string", "minLength": 1},
+    "repository": {"type": "string", "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"},
+    "base_revision": {"type": "string", "minLength": 7},
+    "mode": {"enum": ["observe", "propose", "apply"]},
+    "summary": {"type": "string", "maxLength": 4000},
+    "tasks": {
+      "type": "array",
+      "maxItems": 500,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["task_id", "component", "action", "depends_on", "acceptance"],
+        "properties": {
+          "task_id": {"type": "string", "minLength": 1},
+          "component": {"enum": ["plagueborn", "plaguecore", "plagionyx", "plagorium", "blightforge", "virulith", "scourvex", "pestigon", "maladrix", "necrovex"]},
+          "action": {"type": "string", "minLength": 1},
+          "depends_on": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+          "affected_paths": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+          "acceptance": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+          "risk": {"enum": ["low", "medium", "high", "critical"]}
+        }
+      }
+    }
+  }
+}

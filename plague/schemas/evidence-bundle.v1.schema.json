@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ivan-vhs:plague:schema:evidence-bundle:v1",
+  "title": "PLAGUE verification evidence bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "plan_id", "repository", "base_revision", "result", "checks", "changed_paths"],
+  "properties": {
+    "schema": {"const": "ivan-vhs.plague.evidence-bundle.v1"},
+    "plan_id": {"type": "string", "minLength": 1},
+    "repository": {"type": "string", "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"},
+    "base_revision": {"type": "string", "minLength": 7},
+    "head_revision": {"type": "string", "minLength": 7},
+    "result": {"enum": ["passed", "failed", "blocked", "review"]},
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["check_id", "status"],
+        "properties": {
+          "check_id": {"type": "string", "minLength": 1},
+          "status": {"enum": ["passed", "failed", "skipped", "blocked"]},
+          "exit_code": {"type": "integer"},
+          "duration_ms": {"type": "integer", "minimum": 0},
+          "output_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+        }
+      }
+    },
+    "changed_paths": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "review_required": {"type": "boolean", "default": true},
+    "limitations": {"type": "array", "items": {"type": "string"}}
+  }
+}

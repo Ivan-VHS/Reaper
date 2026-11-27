@@ -1,0 +1,117 @@
+# PLAGUE v1 policy core.
+# Profile and proposal validation stay inside the Reaper language.
+
+export make VERSION := "1.0.0"
+export make PROFILE_WIDTH := 11
+export make PROPOSAL_WIDTH := 12
+
+export craft valid_text(value) {
+    yield kind(value) == "text" and size(trim(value)) > 0
+}
+
+export craft bounded_text(value, maximum) {
+    yield valid_text(value) and size(value) <= maximum
+}
+
+export craft whole_number(value) {
+    yield kind(value) == "number" and value >= 0 and value // 1 == value
+}
+
+export craft bounded_score(value) {
+    yield kind(value) == "number" and value >= 0 and value <= 100
+}
+
+export craft valid_text_list(values, maximum, allow_empty, max_text_length) {
+    when kind(values) != "list" {
+        yield false
+    }
+    when size(values) > maximum {
+        yield false
+    }
+    when not allow_empty and size(values) == 0 {
+        yield false
+    }
+
+    vary seen := []
+    each item in values {
+        when not bounded_text(item, max_text_length) {
+            yield false
+        }
+        when contains(seen, item) {
+            yield false
+        }
+        change seen := push(seen, item)
+    }
+    yield true
+}
+
+export craft valid_profile(profile) {
+    when kind(profile) != "list" {
+        yield false
+    }
+    when size(profile) != PROFILE_WIDTH {
+        yield false
+    }
+    when not bounded_text(profile[0], 256) or not bounded_text(profile[1], 128) or not bounded_text(profile[2], 128) {
+        yield false
+    }
+    when not whole_number(profile[3]) or profile[3] < 1 or profile[3] > 100 {
+        yield false
+    }
+    when not whole_number(profile[4]) or profile[4] < 1 or profile[4] > 1048576 {
+        yield false
+    }
+    when not valid_text_list(profile[5], 32, true, 128) {
+        yield false
+    }
+    when not valid_text_list(profile[6], 32, false, 128) {
+        yield false
+    }
+    when kind(profile[7]) != "boolean" {
+        yield false
+    }
+    when profile[8] != "manual" and profile[8] != "risk_based" {
+        yield false
+    }
+    when not bounded_score(profile[9]) or not bounded_score(profile[10]) {
+        yield false
+    }
+    yield true
+}
+
+export craft valid_proposal(proposal) {
+    when kind(proposal) != "list" {
+        yield false
+    }
+    when size(proposal) != PROPOSAL_WIDTH {
+        yield false
+    }
+    when not bounded_text(proposal[0], 256) or not bounded_text(proposal[1], 128) or not bounded_text(proposal[2], 128) {
+        yield false
+    }
+    when not whole_number(proposal[3]) or proposal[3] < 1 or proposal[3] > 100 {
+        yield false
+    }
+    when not whole_number(proposal[4]) or proposal[4] < 1 or proposal[4] > 1048576 {
+        yield false
+    }
+    when not valid_text_list(proposal[5], 32, true, 128) {
+        yield false
+    }
+    when not valid_text_list(proposal[6], 32, true, 128) {
+        yield false
+    }
+    when kind(proposal[7]) != "boolean" {
+        yield false
+    }
+    when not bounded_score(proposal[8]) or not bounded_score(proposal[9]) {
+        yield false
+    }
+    when not valid_text_list(proposal[10], 32, false, 2048) {
+        yield false
+    }
+    when not bounded_text(proposal[11], 256) {
+        yield false
+    }
+    yield true
+}

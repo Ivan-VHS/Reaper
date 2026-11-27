@@ -1,0 +1,99 @@
+# Run from the Reaper repository root.
+import "../engine/policy.rpr" as policy
+import "../engine/registry.rpr" as registry
+
+when policy["default_mode"]() == "observe" {
+    emit "PASS default mode is observe"
+} otherwise {
+    emit "FAIL default mode must be observe"
+}
+
+when policy["action_allowed"]("observe", "read_source") {
+    emit "PASS observe can read source"
+} otherwise {
+    emit "FAIL observe must read source"
+}
+
+when policy["action_allowed"]("propose", "create_patch") {
+    emit "PASS propose can create a patch"
+} otherwise {
+    emit "FAIL propose must create a patch"
+}
+
+when policy["action_allowed"]("propose", "write_topic_branch") == false {
+    emit "PASS propose cannot write a branch"
+} otherwise {
+    emit "FAIL propose must not write a branch"
+}
+
+when policy["action_allowed"]("apply", "write_topic_branch") {
+    emit "PASS apply can write a topic branch"
+} otherwise {
+    emit "FAIL apply must write a topic branch"
+}
+
+when policy["action_allowed"]("apply", "open_pull_request") {
+    emit "PASS apply can open a pull request"
+} otherwise {
+    emit "FAIL apply must open a pull request"
+}
+
+when policy["can_write_default_branch"]() == false {
+    emit "PASS default branch writes are denied"
+} otherwise {
+    emit "FAIL default branch writes must be denied"
+}
+
+when policy["action_allowed"]("apply", "merge_pull_request") == false {
+    emit "PASS merge is denied"
+} otherwise {
+    emit "FAIL merge must be denied"
+}
+
+when policy["can_merge_pull_request"]() == false {
+    emit "PASS merge capability is disabled"
+} otherwise {
+    emit "FAIL merge capability must stay disabled"
+}
+
+when policy["can_publish_release"]() == false {
+    emit "PASS release capability is disabled"
+} otherwise {
+    emit "FAIL release capability must stay disabled"
+}
+
+when policy["can_expand_scope"]() == false {
+    emit "PASS scope expansion is denied"
+} otherwise {
+    emit "FAIL scope expansion must be denied"
+}
+
+when policy["action_allowed"]("apply", "read_secret") == false {
+    emit "PASS secret access is denied"
+} otherwise {
+    emit "FAIL secret access must be denied"
+}
+
+when policy["action_allowed"]("apply", "execute_untrusted_script") == false {
+    emit "PASS untrusted execution is denied"
+} otherwise {
+    emit "FAIL untrusted execution must be denied"
+}
+
+when policy["action_allowed"]("unknown", "read_source") == false {
+    emit "PASS unknown mode is denied"
+} otherwise {
+    emit "FAIL unknown mode must be denied"
+}
+
+when registry["component_count"]() == 10 {
+    emit "PASS registry contains ten components"
+} otherwise {
+    emit "FAIL registry must contain ten components"
+}
+
+when registry["known_component"]("blightforge") {
+    emit "PASS registry recognizes blightforge"
+} otherwise {
+    emit "FAIL registry must recognize blightforge"
+}
