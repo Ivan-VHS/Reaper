@@ -1,0 +1,48 @@
+import "../stdlib/platform_evidence.rpr" as evidence
+
+make valid_record := {
+    "schema": "pytyliki.platform-evidence.v1",
+    "sequence": "1",
+    "timestamp_epoch_ns": "1700000000000000000",
+    "provider": "linux-edac",
+    "event_code": 1,
+    "event_kind": "corrected",
+    "severity": "warning",
+    "cpu_id": null,
+    "source_record_id": "0",
+    "counter_total": "7",
+    "source_identity": "mc/mc0/ce_count",
+    "payload_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "event_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "chain_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+}
+assert(evidence.platform_event_valid(valid_record), "valid EDAC event envelope rejected")
+assert(evidence.platform_evidence_batch_valid([valid_record]), "single-record ledger rejected")
+
+make missing_digest := {
+    "schema": "pytyliki.platform-evidence.v1",
+    "sequence": "1",
+    "timestamp_epoch_ns": "1700000000000000000",
+    "provider": "windows-whea",
+    "event_code": 18,
+    "event_kind": "unknown",
+    "severity": "critical",
+    "cpu_id": null,
+    "source_record_id": "98",
+    "counter_total": "0",
+    "source_identity": "Microsoft-Windows-WHEA-Logger",
+    "payload_sha256": "bad",
+    "event_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "chain_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+}
+assert(not evidence.platform_event_valid(missing_digest), "malformed digest must be rejected")
+
+make wrong_provider := valid_record
+change wrong_provider.provider := "random-provider"
+assert(not evidence.platform_event_valid(wrong_provider), "unknown platform provider must be rejected")
+
+make sequence_gap := valid_record
+change sequence_gap.sequence := "2"
+assert(not evidence.platform_evidence_batch_valid([sequence_gap]), "sequence gaps must be rejected")
+
+emit "REAPER_PLATFORM_EVIDENCE:PASS"

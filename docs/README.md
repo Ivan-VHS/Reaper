@@ -4,6 +4,7 @@ Start with the [project README](../README.md) for installation, first commands a
 
 ## Key pages
 - [NEXUS system-service boundaries](NEXUS_SYSTEM_SERVICE_BOUNDARIES_V1.md) — service ownership and evidence limits.
+- [Platform evidence contract](PLATFORM_EVIDENCE_CONTRACT.md) — versioned WHEA/EDAC event envelopes and trust boundaries.
 
 - [Features and maturity](FEATURES.md)
 - [Psychoporter Engineering Code function categories](FUNCTION_CATEGORIES_666.md)

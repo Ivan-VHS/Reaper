@@ -1,0 +1,35 @@
+name: Platform evidence contract
+
+on:
+  pull_request:
+    paths:
+      - "stdlib/platform_evidence.rpr"
+      - "examples/platform_evidence.rpr"
+      - "docs/PLATFORM_EVIDENCE_CONTRACT.md"
+      - ".github/workflows/platform-evidence.yml"
+  push:
+    branches: [main, "feat/**"]
+    paths:
+      - "stdlib/platform_evidence.rpr"
+      - "examples/platform_evidence.rpr"
+      - "docs/PLATFORM_EVIDENCE_CONTRACT.md"
+      - ".github/workflows/platform-evidence.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  reaper-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Check Reaper contract example
+        run: python -m reaper --check examples/platform_evidence.rpr
+      - name: Execute Reaper VM conformance scenarios
+        run: |
+          set -euo pipefail
+          python -m reaper --engine vm examples/platform_evidence.rpr | tee platform-evidence.txt
+          grep -qx "REAPER_PLATFORM_EVIDENCE:PASS" platform-evidence.txt
