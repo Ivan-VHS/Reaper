@@ -50,6 +50,32 @@ class SemanticGraphTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "cycle"):
             graph.validate()
 
+
+    def test_string_signatures_are_not_split_into_characters(self):
+        with self.assertRaisesRegex(TypeError, "input_types"):
+            SemanticNode.create("consume", "i64", "unit")
+        with self.assertRaisesRegex(TypeError, "effects"):
+            SemanticNode.create("write", (), "unit", effects="io")
+
+    def test_directly_constructed_graph_rejects_boolean_port_indices(self):
+        source = SemanticNode.create("literal", (), "i64", literal=1)
+        target = SemanticNode.create("increment", ("i64",), "i64")
+        graph = SemanticGraph(
+            (source, target),
+            (SemanticEdge(source.content_id, target.content_id, True),),
+        )
+        with self.assertRaisesRegex(ValueError, "non-negative integer port"):
+            graph.validate()
+
+    def test_directly_constructed_graph_rejects_mutable_node_signatures(self):
+        node = SemanticNode.create("literal", (), "i64", literal=1)
+        malformed = SemanticNode(
+            node.content_id, node.operation, ["i64"], node.output_type,
+            node.effects, node.literal, node.label
+        )
+        with self.assertRaisesRegex(ValueError, "immutable signature"):
+            SemanticGraph((malformed,), ()).validate()
+
     def test_non_finite_literal_is_rejected(self):
         with self.assertRaisesRegex(TypeError, "finite"):
             SemanticNode.create("literal", (), "f64", literal=float("nan"))
