@@ -602,8 +602,6 @@ def verify_ir(module: RFSIRModule) -> None:
         raise RFS01Error("value is not an RFS-01 typed IR module", "RFS-E501")
     if module.schema != "rfs-01.typed-ir.v1" or module.version != "1.0":
         raise RFS01Error("unsupported typed IR schema or language version", "RFS-E501")
-    if not valid_text(module.name, 63):
-        raise RFS01Error("typed IR module name is invalid", "RFS-E501")
     if isinstance(module.cycles, bool) or not isinstance(module.cycles, int) or not 1 <= module.cycles <= MAX_CYCLES:
         raise RFS01Error("typed IR cycle budget is outside the supported range", "RFS-E501")
 
@@ -620,6 +618,8 @@ def verify_ir(module: RFSIRModule) -> None:
             return False
         return minimum is None or float(value) >= minimum
 
+    if not valid_text(module.name, 63):
+        raise RFS01Error("typed IR module name is invalid", "RFS-E501")
     if not 1 <= len(module.nodes) <= MAX_NODES:
         raise RFS01Error("typed IR node count is outside the supported range", "RFS-E501")
     if len(module.links) > MAX_LINKS or len(module.signals) > MAX_FRAMES or len(module.phases) > MAX_PHASES:
