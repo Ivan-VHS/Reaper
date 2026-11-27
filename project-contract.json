@@ -131,6 +131,17 @@
         "src/ir.c",
         "tests/test_ir.c"
       ]
+    },
+    {
+      "id": "native.seadlow.bitset-transform-popcount",
+      "status": "partial",
+      "summary": "Experimental C17 host-side bitset operations provide bounded 64-bit AND/OR/XOR/NOT transforms and fused transform-plus-population-count with exact finite-width tail handling; bulk operations are not yet callable from .rpr and are not a versioned cross-project ABI.",
+      "evidence": [
+        "include/reaper/seadlow.h",
+        "src/seadlow.c",
+        "tests/test_seadlow.c",
+        "docs/SEADLOW.md"
+      ]
     }
   ],
   "interfaces": [
