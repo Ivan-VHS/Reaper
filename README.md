@@ -10,6 +10,10 @@ Reaper is a systems-programming language and local development workbench for com
 
 **Status:** the Python reference runtime, CLI/REPL, Windows Studio foundation, stdio LSP/DAP services and a partial native C17 track are present. Native compiler parity and privileged hardware services are not complete.
 
+## HARVEST creative-research framework pack
+
+HARVEST adds sixteen versioned Reaper capability modules for voice-feature profiles, creative cycles, chronology, language metrics, conflict ledgers, cultural context, evidence tracking, audio annotations, rhyme/flow metrics, album structure, collaboration/influence graphs and composite research output. Each module publishes a diagnostic surface and a typed domain IR contract. Shared core modules provide contract validation, diagnostics, snapshot storage, transaction transitions and a synchronous dependency DAG. See [HARVEST Reaper integration](docs/HARVEST_REAPER_INTEGRATION.md) for the pack contract, storage limits, Jora integration and verification status. The source pack is bundled by Jora, but remains `authored_unverified` until Reaper runtime and CI evidence establish conformance.
+
 ## What is included
 
 - Reaper source language, lexer/parser, reference runtime and diagnostics.
