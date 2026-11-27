@@ -360,12 +360,25 @@ export craft reserve_spend(reserves, reserve_index, cost) {
     yield [true, updated[1], spent, cost - spent, ""]
 }
 
-export craft repair_recover(state, reserve_index, amount, root_authorized) {
+export craft root_capability_descriptor(scope, revision, maximum_amount, target_mode) {
+    yield ["ROOTCAP", 1, scope, revision, maximum_amount, target_mode]
+}
+
+export craft root_capability_valid(capability, state, amount) {
+    when kind(capability) != "list" or size(capability) != 6 { yield false }
+    when capability[0] != "ROOTCAP" or capability[1] != 1 { yield false }
+    when capability[2] != "repair.recover" or capability[3] != state[14] { yield false }
+    when capability[5] != state[6] { yield false }
+    when not valid_integer(capability[4], 1, 1000000000) or amount > capability[4] { yield false }
+    yield true
+}
+
+export craft repair_recover(state, reserve_index, amount, root_capability) {
     when not state_valid(state) {
         yield [false, state, 0, "RPR-REPAIR-0040: invalid state"]
     }
-    when kind(root_authorized) != "boolean" or not root_authorized {
-        yield [false, state, 0, "RPR-REPAIR-0041: recovery requires an explicit ROOT authorization"]
+    when not root_capability_valid(root_capability, state, amount) {
+        yield [false, state, 0, "RPR-REPAIR-0041: recovery requires a current, scoped ROOT capability"]
     }
     when state[6] != "production" or state[16] != "safe-degraded" {
         yield [false, state, 0, "RPR-REPAIR-0042: recovery is allowed only from production safe-degraded state"]
@@ -390,8 +403,17 @@ export craft repair_recover(state, reserve_index, amount, root_authorized) {
     when not restored[0] {
         yield [false, state, 0, restored[2]]
     }
+    make next_step := checked_add(state[14], 1)
+    make next_service := checked_add(state[15], 1)
+    make next_fence := checked_add(state[19], 1)
+    when not next_step[0] or not next_service[0] or not next_fence[0] {
+        yield [false, state, 0, "RPR-REPAIR-0047: recovery audit counter overflow"]
+    }
     make next := state_put(state, 4, restored[1])
     change next := state_put(next, 17, reserve[1])
+    change next := state_put(next, 14, next_step[1])
+    change next := state_put(next, 15, next_service[1])
+    change next := state_put(next, 19, next_fence[1])
     when restored[1] > state[5] {
         change next := state_put(next, 16, "ready")
     }
@@ -750,6 +772,9 @@ export craft execute_bytecode(state, word) {
     make opcode := instruction[0]
     make role := opcode_role(opcode)
     when role == "" { yield [false, state, [], "RPR-BC-0020: opcode has no execution role"] }
+    when opcode == 16 and instruction[4] % 2 == 1 {
+        change role := "OPERAND"
+    }
     when opcode == 32 and instruction[1] != "START" {
         yield [false, state, [], "RPR-BC-0021: repair-spend opcode requires START domain"]
     }
