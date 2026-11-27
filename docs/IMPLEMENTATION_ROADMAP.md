@@ -53,8 +53,9 @@ Never move a row to Delivered because a registry, design, README, schema or gene
 - Extend type analysis only where sound conservative inference is possible; unknown must remain unknown rather than guessed.
 - Specify serialization and compatibility for the AST/IR.
 - Scenario Flow v1 is implemented in the reference frontend/runtime: `scenario` declarations share `craft` call semantics, `reg` is a scoped numeric binding, `continue` unwinds lexical scopes, and `...` / `..` create bounded inclusive integer ranges. The native C17 track remains outside this feature claim until it has matching parser, lowering and parity fixtures.
+- SEAM Core v1 is a Reaper-source standard-library module for versioned state/revision transitions, immutable root identity, module-contract and bridge checks, explicit effect preflight, structural checkpoints and bounded event folding. It is reference-runtime-only; checkpoints are not cryptographically authenticated and effect grants are not host-enforced by the library.
 
-**Acceptance:** grammar fixtures, parser negative cases, stable diagnostics, tree-walk/VM conformance cases and migration notes pass on all supported Python versions. Scenario Flow v1 additionally requires inclusive-range bounds, loop-scope unwinding and register type/runtime rejection fixtures.
+**Acceptance:** grammar fixtures, parser negative cases, stable diagnostics, tree-walk/VM conformance cases and migration notes pass on all supported Python versions. Scenario Flow v1 additionally requires inclusive-range bounds, loop-scope unwinding and register type/runtime rejection fixtures. SEAM additionally requires its Reaper-source conformance fixture to execute from the existing reference-runtime harness, covering state revision/root invariants, bridge compatibility, effect denial and event-folding bounds.
 
 ### R3 — Native C17 compiler track
 

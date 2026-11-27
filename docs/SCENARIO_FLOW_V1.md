@@ -58,3 +58,8 @@ The fragment `private+ privilege` is not executable Reaper syntax and is intenti
 ## Maturity boundary
 
 The parser, type checker, tree-walk runtime, canonical IR, verifier and bytecode VM are extended together. The native C17 expression compiler remains a separate, partial implementation; this feature must not be described as native-compiled until its grammar, lowering, diagnostics and differential fixtures are implemented and pass.
+
+
+## Related reference-runtime library
+
+[SEAM Architecture v1](SEAM_ARCHITECTURE_V1.md) builds on the existing Scenario Flow, module and capability contracts. It does not change the grammar or reinterpret `::`.

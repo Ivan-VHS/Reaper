@@ -85,5 +85,8 @@ class SelfHostingBootstrapTests(unittest.TestCase):
     def test_reaper_written_lsp_positions_run_on_the_reference_runtime(self) -> None:
         self._run_selfhost_program("selfhost/lsp_positions.rpr", "SELFHOST_LSP_POSITIONS_OK")
 
+    def test_reaper_written_seam_core_runs_on_the_reference_runtime(self) -> None:
+        self._run_selfhost_program("selfhost/seam_conformance.rpr", "SELFHOST_SEAM_OK")
+
 if __name__ == "__main__":
     unittest.main()

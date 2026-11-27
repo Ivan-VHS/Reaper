@@ -16,7 +16,7 @@ HARVEST adds sixteen versioned Reaper capability modules for voice-feature profi
 
 ## What is included
 
-- Reaper source language, lexer/parser, reference runtime and diagnostics, including Scenario Flow v1 in the reference frontend/runtime (scenarios, numeric registers, loop continuation and inclusive integer ranges).
+- Reaper source language, lexer/parser, reference runtime and diagnostics, including Scenario Flow v1 and SEAM Core v1 (versioned state, module contracts, bridge/effect preflight, checkpoints and bounded event folding; reference-runtime only).
 - CLI, REPL, Windows Studio foundation, LSP and DAP services.
 - Experimental native C17 implementation; it is not yet feature-equivalent to the reference runtime.
 - NOO TAH delegates JavaScript execution to the official Node.js runtime.

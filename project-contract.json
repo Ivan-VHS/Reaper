@@ -176,6 +176,18 @@
         "tests/test_system_functions.py",
         "docs/SYSTEM_FUNCTIONS.md"
       ]
+    },
+    {
+      "id": "language.seam-core.v1",
+      "status": "partial",
+      "summary": "Reaper-source standard-library module validates versioned state/revision transitions, immutable root identity, module contracts and bridges, declared effect sets, structural checkpoints and bounded event folding. Reference-runtime only; it neither authenticates checkpoint origins nor enforces host capabilities or provides native C17/self-hosted compiler parity.",
+      "evidence": [
+        "stdlib/seam.rpr",
+        "examples/seam_recovery.rpr",
+        "selfhost/seam_conformance.rpr",
+        "tests/test_self_hosting.py",
+        "docs/SEAM_ARCHITECTURE_V1.md"
+      ]
     }
   ],
   "interfaces": [
@@ -232,6 +244,17 @@
         "reaper/vm.py",
         "tests/test_scenario_flow.py"
       ]
+    },
+    {
+      "id": "reaper.seam-core.v1",
+      "format": "Versioned Reaper .rpr state, contract, bridge, effect and event records",
+      "direction": "provides",
+      "status": "partial",
+      "evidence": [
+        "stdlib/seam.rpr",
+        "docs/SEAM_ARCHITECTURE_V1.md",
+        "selfhost/seam_conformance.rpr"
+      ]
     }
   ],
   "integrations": [
@@ -285,7 +308,8 @@
     "The system-functions v1 worker quota is cooperative in the Python reference runtime; it is not OS-enforced process isolation or a hard process-RSS limit.",
     "The arena-slot API limits tracked reference-runtime allocations and rejects escaped region allocations; it is not a zero-allocation host arena.",
     "Ephemeral comparison overwrites only its owned mutable working buffers and cannot erase caller-owned or immutable copies.",
-    "Contract graph, lease, local-only and rollback checks are runtime preflight functions until the native compiler gains compile-time evaluation, type-level leases and effect-checked module headers."
+    "Contract graph, lease, local-only and rollback checks are runtime preflight functions until the native compiler gains compile-time evaluation, type-level leases and effect-checked module headers.",
+    "SEAM checkpoint checks are structural and do not authenticate snapshot origin or storage integrity; effect preflight consumes caller-supplied grant declarations and does not enforce host authorization or perform host effects."
   ],
   "extension_points": [
     "Canonical IR and selectable execution engines.",
@@ -294,6 +318,7 @@
     "Native C17 frontend stages with Python reference behavior as the compatibility oracle.",
     "Bounded vertical self-composition for deterministic compiler and data-flow transformation pipelines.",
     "Stable architecture concept IDs, layer metadata and bounded dependency graph validation.",
-    "Explicit stdlib/system.rpr APIs for bounded system operations, revision guards, local telemetry and reversible migration preflight."
+    "Explicit stdlib/system.rpr APIs for bounded system operations, revision guards, local telemetry and reversible migration preflight.",
+    "SEAM state, contract, bridge, effect and bounded event-folding helpers in stdlib/seam.rpr."
   ]
 }

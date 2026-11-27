@@ -1,0 +1,77 @@
+# CROWN::SEAM — runnable reference-runtime example.
+# No host effects are performed by this program.
+
+import "../stdlib/seam.rpr" as seam
+
+scenario operanda(num; seed; bounds) {
+    reg it := num
+    reg regit := seed
+
+    each step in bounds {
+        when step == 0 {
+            continue
+        }
+        change regit := regit + step
+    }
+
+    yield regit + it
+}
+
+make score := operanda(2; 10; 0...3)
+assert(score == 18, "Scenario Flow result changed")
+
+make initial_result := seam["state_make"](0, "district.root", 0.95, ["roots", "backbone"])
+assert(initial_result[0] == "ok", "Initial SEAM state must validate")
+
+make next_result := seam["state_transition"](initial_result[1], 0, 0.97, ["roots", "backbone", "bridge"], 0.90)
+assert(next_result[0] == "ok", "A valid revision must transition")
+
+make stale_result := seam["state_transition"](next_result[1], 0, 0.99, ["stale"], 0.90)
+assert(stale_result[0] == "err", "A stale revision must be rejected")
+
+make checkpoint_result := seam["checkpoint_make"](next_result[1])
+assert(checkpoint_result[0] == "ok", "A valid state must create a checkpoint")
+
+make recovery_result := seam["checkpoint_recover"](checkpoint_result[1], "district.root", 1, 0.90)
+assert(recovery_result[0] == "ok", "A matching checkpoint must recover")
+
+make producer_result := seam["contract_make"](
+    "district.reader",
+    "1.0.0",
+    ["DistrictSeed"],
+    ["District"],
+    ["io.read"],
+    ["root-preserved"]
+)
+make consumer_result := seam["contract_make"](
+    "district.rebuilder",
+    "1.0.0",
+    ["District"],
+    ["DistrictReport"],
+    ["pure"],
+    ["revision-checked"]
+)
+assert(producer_result[0] == "ok", "Producer contract must validate")
+assert(consumer_result[0] == "ok", "Consumer contract must validate")
+
+make bridge_result := seam["bridge_validate"](producer_result[1], consumer_result[1], ["io.read"])
+assert(bridge_result[0] == "ok", "Declared host grant must authorize bridge preflight")
+
+make denied_result := seam["bridge_validate"](producer_result[1], consumer_result[1], [])
+assert(denied_result[0] == "err", "Missing host grant must deny bridge preflight")
+
+make event_a := seam["event_make"]("compiler", 1, ["span", 4])
+make event_b := seam["event_make"]("compiler", 1, ["span", 4])
+make event_c := seam["event_make"]("runtime", 3, ["RPR-E-FAULT"])
+
+make folded_result := seam["events_squash"](
+    [event_a[1], event_b[1], event_c[1]],
+    1,
+    8
+)
+assert(folded_result[0] == "ok", "Valid events must fold")
+assert(size(folded_result[1]) == 2, "Adjacent duplicate events must coalesce")
+assert(folded_result[1][0][4] == 2, "Coalescing must preserve event count")
+assert(folded_result[1][1][2] == 3, "High-severity events must remain visible")
+
+emit "SEAM_RECOVERY_OK"

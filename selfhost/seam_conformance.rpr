@@ -1,0 +1,137 @@
+# Reaper-native SEAM Core v1 conformance fixture.
+# Executed by the existing reference-runtime self-hosting test harness.
+
+import "../stdlib/seam.rpr" as seam
+
+scenario operanda(num; seed; bounds) {
+    reg it := num
+    reg regit := seed
+
+    each step in bounds {
+        when step == 0 {
+            continue
+        }
+        change regit := regit + step
+    }
+
+    yield regit + it
+}
+
+assert(operanda(2; 10; 0...3) == 18, "scenario/register/range/continue mismatch")
+assert(operanda(2; 10; 3..1) == 18, "descending inclusive range mismatch")
+
+make valid_state := seam["state_make"](0, "root.alpha", 0.95, ["seed"])
+assert(valid_state[0] == "ok", "valid state rejected")
+assert(seam["state_validate"](valid_state[1])[0] == "ok", "state validation failed")
+
+make transition := seam["state_transition"](valid_state[1], 0, 0.99, ["seed", "changed"], 0.90)
+assert(transition[0] == "ok", "valid state transition rejected")
+assert(transition[1][1] == 1, "revision must increment exactly once")
+assert(transition[1][2] == "root.alpha", "root identity must remain stable")
+
+make stale := seam["state_transition"](transition[1], 0, 0.99, ["stale"], 0.90)
+assert(stale[0] == "err", "stale transition was accepted")
+
+make weak := seam["state_transition"](transition[1], 1, 0.40, ["weak"], 0.90)
+assert(weak[0] == "err", "integrity below floor was accepted")
+
+make checkpoint := seam["checkpoint_make"](transition[1])
+assert(checkpoint[0] == "ok", "checkpoint creation failed")
+
+make restored := seam["checkpoint_recover"](checkpoint[1], "root.alpha", 1, 0.90)
+assert(restored[0] == "ok", "valid checkpoint recovery failed")
+
+make foreign_root := seam["checkpoint_recover"](checkpoint[1], "root.beta", 1, 0.90)
+assert(foreign_root[0] == "err", "foreign root recovery was accepted")
+
+make old_checkpoint := seam["checkpoint_recover"](checkpoint[1], "root.alpha", 2, 0.90)
+assert(old_checkpoint[0] == "err", "checkpoint older than the minimum was accepted")
+
+make bad_checkpoint := [
+    "reaper.seam.checkpoint.v1",
+    8,
+    "root.alpha",
+    transition[1]
+]
+assert(seam["checkpoint_recover"](bad_checkpoint, "root.alpha", 0, 0.0)[0] == "err",
+    "checkpoint metadata mismatch was accepted")
+
+make producer := seam["contract_make"](
+    "district.reader", "1.0.0",
+    ["DistrictSeed"], ["District"],
+    ["io.read"], ["root-preserved"]
+)
+make consumer := seam["contract_make"](
+    "district.rebuilder", "1.0.0",
+    ["District"], ["DistrictReport"],
+    ["pure"], ["revision-checked"]
+)
+assert(producer[0] == "ok", "producer contract rejected")
+assert(consumer[0] == "ok", "consumer contract rejected")
+
+make connected := seam["bridge_validate"](producer[1], consumer[1], ["io.read"])
+assert(connected[0] == "ok", "compatible bridge with host grant rejected")
+
+make no_grant := seam["bridge_validate"](producer[1], consumer[1], [])
+assert(no_grant[0] == "err", "bridge widened its host grants")
+
+make incompatible_consumer := seam["contract_make"](
+    "district.bad-consumer", "1.0.0",
+    ["OtherType"], ["Report"],
+    ["pure"], []
+)
+assert(incompatible_consumer[0] == "ok", "well-formed contract was rejected")
+assert(seam["bridge_validate"](producer[1], incompatible_consumer[1], ["io.read"])[0] == "err",
+    "incompatible bridge types were accepted")
+
+make duplicate_effects := seam["contract_make"](
+    "invalid.effects", "1.0.0",
+    [], [], ["io.read", "io.read"], []
+)
+assert(duplicate_effects[0] == "err", "duplicate effects were accepted")
+
+make effect_mix := seam["contract_make"](
+    "invalid.pure-mix", "1.0.0",
+    [], [], ["pure", "io.read"], []
+)
+assert(effect_mix[0] == "err", "pure was mixed with effectful declarations")
+
+make event_a := seam["event_make"]("compiler", 1, ["same", 7])
+make event_b := seam["event_make"]("compiler", 1, ["same", 7])
+make event_c := seam["event_make"]("runtime", 3, ["fault", "RPR-E-0001"])
+assert(event_a[0] == "ok" and event_b[0] == "ok" and event_c[0] == "ok",
+    "valid event construction failed")
+
+make folded := seam["events_squash"]([event_a[1], event_b[1], event_c[1]], 1, 8)
+assert(folded[0] == "ok", "valid event fold failed")
+assert(size(folded[1]) == 2, "adjacent identical events did not coalesce")
+assert(folded[1][0][4] == 2, "event multiplicity was not preserved")
+assert(folded[1][1][2] == 3, "high-severity event was lost")
+
+make urgent_only := seam["events_squash"]([event_a[1], event_b[1], event_c[1]], 3, 8)
+assert(urgent_only[0] == "ok" and size(urgent_only[1]) == 1,
+    "minimum severity filter failed")
+
+make bad_event := seam["event_make"]("runtime", 4, ["invalid"])
+assert(bad_event[0] == "err", "invalid severity was accepted")
+
+make overflow_event := [
+    "reaper.seam.event.v1",
+    "compiler",
+    1,
+    ["same", 7],
+    18446744073709551615
+]
+make overflow_fold := seam["events_squash"]([overflow_event, event_a[1]], 0, 8)
+assert(overflow_fold[0] == "err", "event count overflow was accepted")
+
+make output_limit := seam["events_squash"]([event_a[1], event_c[1]], 0, 1)
+assert(output_limit[0] == "err", "event output overflow silently discarded an event")
+
+make denied_effect := seam["effect_authorize"](["network"], [])
+assert(denied_effect[0] == "err", "ungranted host effect was accepted")
+
+make pure_effect := seam["effect_authorize"](["pure"], [])
+assert(pure_effect[0] == "ok", "pure operation should need no host grant")
+
+emit "SELFHOST_SEAM_OK"
