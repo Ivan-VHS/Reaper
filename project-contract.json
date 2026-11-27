@@ -176,6 +176,20 @@
         "docs/PROCESSOR_ENGINEERING_PLATFORM.md",
         ".github/workflows/processor-engineering.yml"
       ]
+    },
+    {
+      "id": "processor-fabric.import-and-typed-ir.v1",
+      "status": "partial",
+      "summary": "Validates local Pytyliki topology/PPF/Hardware AST/resource evidence by digest and generation, then lowers Reaper-owned semantic bindings into a verified typed SemanticGraph sidecar. It does not emit legacy stack-machine bytecode or execute processor effects.",
+      "evidence": [
+        "tools/import_processor_fabric.mjs",
+        "tests/test_processor_fabric_import.mjs",
+        "schemas/reaper.processor-fabric-import.v1.schema.json",
+        "reaper/processor_fabric.py",
+        "tests/test_processor_fabric.py",
+        "schemas/reaper.processor-fabric-typed-ir.v1.schema.json",
+        "docs/PYTYLIKI_PROCESSOR_FABRIC_BRIDGE.md"
+      ]
     }
   ],
   "interfaces": [
@@ -229,6 +243,17 @@
         "schemas/processor-workbench-report.v1.schema.json",
         "stdlib/processor_workbench.rpr",
         "tools/validate_processor_workbench_report.mjs"
+      ]
+    },
+    {
+      "id": "reaper.processor-fabric-import-report.v1",
+      "format": "Local JSON import report; source/topology/PPF/bridge/resource files are caller-selected inputs",
+      "direction": "consumes",
+      "status": "partial",
+      "evidence": [
+        "tools/import_processor_fabric.mjs",
+        "reaper/processor_fabric.py",
+        "schemas/reaper.processor-fabric-import.v1.schema.json"
       ]
     }
   ],
