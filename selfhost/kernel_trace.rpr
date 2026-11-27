@@ -27,6 +27,7 @@ export craft kernel_trace_valid(trace) {
 
 export craft kernel_trace_append(trace, kind, subject, payload, logical_tick) {
     when not kernel_trace_valid(trace) { yield ["ERR", "kernel trace invariant failed"] }
+    when size(trace[2]) >= 100000 { yield ["ERR", "kernel trace event limit exceeded", 100000] }
     when size(kind) == 0 or size(subject) == 0 { yield ["ERR", "trace event kind and subject are required"] }
     when logical_tick < 0 { yield ["ERR", "logical tick cannot be negative"] }
     when size(trace[2]) > 0 and logical_tick < trace[2][size(trace[2]) - 1][4] {
