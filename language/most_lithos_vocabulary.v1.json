@@ -1,0 +1,413 @@
+{
+  "schema": "most-lithos-vocabulary.v1",
+  "version": "1.0.0",
+  "language": "МОСТ",
+  "profile": "LITHOS::FLOW",
+  "purpose": "Russian-first domain vocabulary for structural, rhythmic, resilience and urban-model examples.",
+  "semantics": {
+    "rule": "Entries are ordinary Unicode identifiers, labels or user-defined routine names.",
+    "not_keywords": true,
+    "not_builtins": true,
+    "no_implicit_runtime_effects": true,
+    "canonical_runtime": "Reaper"
+  },
+  "entry_count": 44,
+  "entries": [
+    {
+      "id": "MOST-LITHOS-001",
+      "ru": "сплести",
+      "en": "weave",
+      "kind": "routine_name",
+      "meaning_ru": "Композиция сущностей и связей в одну структуру.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-002",
+      "ru": "шов",
+      "en": "seam",
+      "kind": "structural_name",
+      "meaning_ru": "Граница или соединение между частями модели.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-003",
+      "ru": "блок",
+      "en": "block",
+      "kind": "entity_name",
+      "meaning_ru": "Локальная пространственная или логическая область.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-004",
+      "ru": "коридор",
+      "en": "corridor",
+      "kind": "entity_name",
+      "meaning_ru": "Маршрут между соседними областями.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-005",
+      "ru": "подвал",
+      "en": "basement",
+      "kind": "layer_name",
+      "meaning_ru": "Нижний уровень модели с собственными ограничениями.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-006",
+      "ru": "шлюз",
+      "en": "gate",
+      "kind": "entity_name",
+      "meaning_ru": "Проверяемая граница перехода между состояниями.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-007",
+      "ru": "горизонт",
+      "en": "horizon",
+      "kind": "layer_name",
+      "meaning_ru": "Верхний предел наблюдаемой модели.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-008",
+      "ru": "узел",
+      "en": "node",
+      "kind": "entity_name",
+      "meaning_ru": "Идентифицируемая вершина графа.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-009",
+      "ru": "связь",
+      "en": "link",
+      "kind": "relation_name",
+      "meaning_ru": "Направленная или двунаправленная связь узлов.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-010",
+      "ru": "сетка",
+      "en": "grid",
+      "kind": "collection_name",
+      "meaning_ru": "Ограниченная система узлов и связей.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-011",
+      "ru": "поле",
+      "en": "field",
+      "kind": "domain_name",
+      "meaning_ru": "Область, в которой определены измерения и взаимодействия.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-012",
+      "ru": "слой",
+      "en": "layer",
+      "kind": "layer_name",
+      "meaning_ru": "Уровень представления или ответственности.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-013",
+      "ru": "давление",
+      "en": "pressure",
+      "kind": "metric_name",
+      "meaning_ru": "Нормированная нагрузка на модель.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-014",
+      "ru": "целостность",
+      "en": "integrity",
+      "kind": "metric_name",
+      "meaning_ru": "Оценка сохранности структурных инвариантов.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-015",
+      "ru": "шум",
+      "en": "noise",
+      "kind": "metric_name",
+      "meaning_ru": "Нежелательная или незначимая составляющая сигнала.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-016",
+      "ru": "сигнал",
+      "en": "signal",
+      "kind": "data_name",
+      "meaning_ru": "Поток данных с происхождением и признаками доверия.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-017",
+      "ru": "исток",
+      "en": "origin",
+      "kind": "identity_name",
+      "meaning_ru": "Исходный источник или начальная точка.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-018",
+      "ru": "корень",
+      "en": "root",
+      "kind": "identity_name",
+      "meaning_ru": "Стабильная корневая идентичность структуры.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-019",
+      "ru": "опора",
+      "en": "backbone",
+      "kind": "structural_name",
+      "meaning_ru": "Несущая основа модели.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-020",
+      "ru": "несущая_ось",
+      "en": "backbone_axis",
+      "kind": "structural_name",
+      "meaning_ru": "Ось, принимающая и распределяющая нагрузку.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-021",
+      "ru": "фаза",
+      "en": "phase",
+      "kind": "state_name",
+      "meaning_ru": "Дискретный этап жизненного цикла.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-022",
+      "ru": "порог",
+      "en": "threshold",
+      "kind": "configuration_name",
+      "meaning_ru": "Граничное значение для проверяемого перехода.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-023",
+      "ru": "ритм",
+      "en": "rhythm",
+      "kind": "temporal_name",
+      "meaning_ru": "Повторяемая временная структура.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-024",
+      "ru": "пульсация",
+      "en": "pulse",
+      "kind": "event_name",
+      "meaning_ru": "Ограниченная последовательность повторяющихся событий.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-025",
+      "ru": "синхронизация",
+      "en": "synchronization",
+      "kind": "operation_name",
+      "meaning_ru": "Согласование состояний или временных меток.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-026",
+      "ru": "связность",
+      "en": "coherence",
+      "kind": "metric_name",
+      "meaning_ru": "Степень согласованности компонентов.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-027",
+      "ru": "подлинность",
+      "en": "truth",
+      "kind": "provenance_name",
+      "meaning_ru": "Подтверждаемое свойство происхождения данных.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-028",
+      "ru": "накрутка",
+      "en": "hype",
+      "kind": "quality_flag",
+      "meaning_ru": "Маркер искусственно усиленного сигнала.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-029",
+      "ru": "пересборка",
+      "en": "reassembly",
+      "kind": "operation_name",
+      "meaning_ru": "Построение новой согласованной структуры из имеющихся частей.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-030",
+      "ru": "восстановление",
+      "en": "recovery",
+      "kind": "operation_name",
+      "meaning_ru": "Возврат к допустимому состоянию по проверяемым правилам.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-031",
+      "ru": "устойчивость",
+      "en": "resilience",
+      "kind": "metric_name",
+      "meaning_ru": "Способность сохранять инварианты при нагрузке.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-032",
+      "ru": "событие",
+      "en": "event",
+      "kind": "event_name",
+      "meaning_ru": "Запись о наступившем или запрошенном факте.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-033",
+      "ru": "источник",
+      "en": "source",
+      "kind": "provenance_name",
+      "meaning_ru": "Объект, из которого получены данные.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-034",
+      "ru": "состояние",
+      "en": "state",
+      "kind": "state_name",
+      "meaning_ru": "Версионируемая конфигурация сущности.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-035",
+      "ru": "переход",
+      "en": "transition",
+      "kind": "operation_name",
+      "meaning_ru": "Проверяемая смена состояния.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-036",
+      "ru": "согласованность",
+      "en": "agreement",
+      "kind": "metric_name",
+      "meaning_ru": "Соответствие взаимосвязанных частей общим правилам.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-037",
+      "ru": "оценка",
+      "en": "score",
+      "kind": "metric_name",
+      "meaning_ru": "Внутренняя оценка; отсутствие оценки не скрывает внешние наблюдения.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-038",
+      "ru": "переплавить",
+      "en": "transmute",
+      "kind": "routine_name",
+      "meaning_ru": "Преобразовать сущность по явно заданным правилам.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-039",
+      "ru": "квантовать",
+      "en": "quantize",
+      "kind": "routine_name",
+      "meaning_ru": "Привязать значение к дискретной шкале.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-040",
+      "ru": "усилить_опору",
+      "en": "reinforce_backbone",
+      "kind": "routine_name",
+      "meaning_ru": "Увеличить структурную прочность в пределах установленных границ.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-041",
+      "ru": "приглушить_шум",
+      "en": "attenuate_noise",
+      "kind": "routine_name",
+      "meaning_ru": "Уменьшить шум детерминированным преобразованием.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-042",
+      "ru": "проверить_корень",
+      "en": "verify_root",
+      "kind": "routine_name",
+      "meaning_ru": "Проверить сохранение исходной корневой идентичности.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-043",
+      "ru": "отфильтровать_сигнал",
+      "en": "filter_signal",
+      "kind": "routine_name",
+      "meaning_ru": "Отобрать сигнал по явным признакам происхождения и качества.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    },
+    {
+      "id": "MOST-LITHOS-044",
+      "ru": "сбалансировать_напряжение",
+      "en": "balance_tension",
+      "kind": "routine_name",
+      "meaning_ru": "Перераспределить напряжение при сохранении заданных ограничений.",
+      "use": "identifier_or_user_defined_routine",
+      "runtime_status": "domain_name_only"
+    }
+  ]
+}

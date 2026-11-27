@@ -1,13 +1,16 @@
-# МОСТ — Russian-native profile
+# МОСТ — русскоязычный профиль
 
-МОСТ is exact lexical aliasing over Reaper, not a second language.
+МОСТ — точный русскоязычный лексический слой Reaper, а не вторая грамматика.
 
-| Item | Count | State |
+| Поверхность | Количество | Состояние |
 |---|---:|---|
-| Total aliases | 54 | exact mapping |
-| Executable in reference subset | 21 | runtime |
-| Reserved for future grammar | 33 | lexer only |
-| Parser/AST/runtime | 1 | canonical Reaper implementation |
-| Morphology/synonym inference | 0 | unsupported |
+| Русские написания ключевых слов | 102 | точное отображение |
+| Поддерживаемые эталонной грамматикой | 38 | runtime |
+| Зарезервированные на будущее | 64 | lexer only |
+| Предметная лексика LITHOS | 44 | доменные имена, не built-ins |
+| Parser/AST/runtime | 1 | каноническая реализация Reaper |
+| Морфология / вывод синонимов | 0 | не поддерживаются |
 
-Aliases normalize before parsing. No grammar fork, morphology engine or semantic resolver is permitted.
+Русские слова нормализуются к каноническим токенам до разбора. Слова из LITHOS-словаря являются обычными Unicode-идентификаторами или именами пользовательских процедур. Нет второй грамматики, морфологического движка или эвристического разрешения смысла.
+
+См. MOST_LITHOS_FLOW_PROFILE.md и language/most_lithos_vocabulary.v1.json.

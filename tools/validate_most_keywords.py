@@ -91,12 +91,12 @@ def validate(root: Path = ROOT) -> list[str]:
 
     if manifest.get("schema") != "most-keyword-aliases/v1":
         errors.append("unsupported alias manifest schema")
-    if len(entries) != 54:
-        errors.append(f"expected 54 aliases, found {len(entries)}")
-    if sum(entry.get("support") == "runtime" for entry in entries) != 21:
-        errors.append("expected exactly 21 runtime-supported aliases")
-    if sum(entry.get("support") == "lexical_reserved" for entry in entries) != 33:
-        errors.append("expected exactly 33 lexically reserved aliases")
+    if len(entries) != 102:
+        errors.append(f"expected 102 aliases, found {len(entries)}")
+    if sum(entry.get("support") == "runtime" for entry in entries) != 38:
+        errors.append("expected exactly 38 runtime-supported aliases")
+    if sum(entry.get("support") == "lexical_reserved" for entry in entries) != 64:
+        errors.append("expected exactly 64 lexically reserved aliases")
 
     principles = profile.get("principles")
     if (
@@ -128,8 +128,8 @@ def main() -> int:
         return 1
 
     print(
-        "МОСТ contract valid: 54 exact aliases, 21 runtime aliases, "
-        "33 lexical reservations, 20 principles."
+        "МОСТ contract valid: 102 exact aliases, 38 runtime aliases, "
+        "64 lexical reservations, 20 principles."
     )
     return 0
 

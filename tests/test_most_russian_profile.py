@@ -34,8 +34,8 @@ class MostRussianNativeProfileTests(unittest.TestCase):
         )
         runtime = [item for item in manifest["aliases"] if item["support"] == "runtime"]
         reserved = [item for item in manifest["aliases"] if item["support"] == "lexical_reserved"]
-        self.assertEqual(len(runtime), 21)
-        self.assertEqual(len(reserved), 33)
+        self.assertEqual(len(runtime), 38)
+        self.assertEqual(len(reserved), 64)
 
 
 if __name__ == "__main__":
