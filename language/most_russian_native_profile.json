@@ -2,7 +2,7 @@
   "schema": "most-russian-native-profile/v1",
   "language": "МОСТ",
   "canonical_core": "REAPER",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "principle_count": 20,
   "status_legend": {
     "implemented": "Executable behavior and tests exist.",
@@ -16,8 +16,9 @@
       "contract": "Русский исходный текст является первичным пользовательским интерфейсом; английские REAPER-написания остаются совместимым каноническим слоем.",
       "status": "partial",
       "acceptance": [
-        "54 exact aliases are tokenized",
-        "21 aliases execute through the REAPER 0.1 reference grammar"
+        "102 curated exact Russian spellings are recorded in the versioned registry",
+        "38 aliases execute through the current Reaper reference grammar",
+        "64 additional aliases are lexically reserved and do not imply parser or runtime support"
       ]
     },
     {
@@ -26,8 +27,9 @@
       "contract": "Ключевые конструкции имеют устойчивые русские написания; пользовательские имена могут быть русскими Unicode-идентификаторами.",
       "status": "partial",
       "acceptance": [
-        "Exact alias manifest is versioned",
-        "No automatic translation of arbitrary identifiers"
+        "Russian-first aliases share canonical Reaper token kinds",
+        "LITHOS domain vocabulary is catalogued as ordinary identifiers and user-defined routine names",
+        "No automatic translation of arbitrary identifiers or inflected forms"
       ]
     },
     {
@@ -66,8 +68,9 @@
       "contract": "Формальная грамматика одна; новые формы принимаются только после описания соответствия и тестов.",
       "status": "partial",
       "acceptance": [
-        "21 base aliases are accepted by the 0.1 reference grammar",
-        "33 extended aliases are reserved lexically only"
+        "38 Russian aliases map to constructs accepted by the current reference grammar",
+        "64 extended aliases are lexical reservations only",
+        "LITHOS profile adds no competing grammar or operator precedence"
       ]
     },
     {
@@ -76,8 +79,9 @@
       "contract": "Удобочитаемость, диагностика и редакторская поддержка строятся вокруг русских имён и единых правил оформления.",
       "status": "specified",
       "acceptance": [
-        "Russian syntax highlighting is included in the editor grammar",
-        "Localized diagnostics and formatter parity remain roadmap work"
+        "Russian and canonical English spellings share one tokenization and AST path",
+        "MOST TextMate grammar highlights the expanded Russian keyword vocabulary",
+        "Localized diagnostic catalogue and formatter parity remain roadmap work"
       ]
     },
     {
@@ -116,8 +120,9 @@
       "contract": "Частые действия выражаются короткими однозначными глаголами: объявить, изменить, вернуть, вывести.",
       "status": "partial",
       "acceptance": [
-        "The base verbs execute through the reference runtime",
-        "Additional verbs are reserved only when their canonical token exists"
+        "Core actions include объявить, создать, присвоить, напечатать, показать and повторять",
+        "New spellings map only to existing canonical Reaper tokens",
+        "Domain-specific LITHOS operations remain user-defined routines until implemented"
       ]
     },
     {
@@ -126,7 +131,8 @@
       "contract": "Порядок операторов, блоков и выражений един для всех языковых написаний.",
       "status": "partial",
       "acceptance": [
-        "МОСТ reuses REAPER parser and AST",
+        "МОСТ reuses the Reaper parser and AST",
+        "Russian additions do not fork statement or expression grammar",
         "Full declaration grammar remains in the native compiler roadmap"
       ]
     },
@@ -222,8 +228,12 @@
     "МОСТ aliases are exact lexical mappings to existing canonical keywords.",
     "A lexical reservation never implies grammar, type-checker, code-generation or runtime support.",
     "No automatic inflection, stemming, transliteration, synonym guessing or probabilistic meaning resolution.",
-    "A feature is marked implemented only after code, tests and CI evidence."
+    "A feature is marked implemented only after code, tests and CI evidence.",
+    "The LITHOS vocabulary registry contains Russian-first domain names, not implicit keywords, built-ins or runtime services.",
+    "Only aliases marked runtime may be treated as accepted by the current reference grammar; lexical_reserved entries remain reserved.",
+    "LITHOS examples must execute using existing Reaper semantics without redefining ::, || or other canonical operators."
   ],
   "keyword_registry": "most_keyword_aliases.json",
-  "specification": "../docs/MOST_RUSSIAN_NATIVE_PROFILE.md"
+  "specification": "../docs/MOST_RUSSIAN_NATIVE_PROFILE.md",
+  "lithos_vocabulary": "most_lithos_vocabulary.v1.json"
 }
