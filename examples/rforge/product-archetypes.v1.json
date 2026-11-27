@@ -1,0 +1,436 @@
+{
+  "schema": "reaper.rforge.archetype-catalog.v1",
+  "title": "RForge proposed product archetypes",
+  "status": "proposal_catalog",
+  "composition_policy": {
+    "preserve_profile_token_order": true,
+    "reversed_profiles_are_distinct_candidates": true,
+    "infer_product_family_from_name": false,
+    "require_semantic_contract_before_generation": true,
+    "require_verified_components_before_executable_claims": true
+  },
+  "pairs": [
+    {
+      "pair_id": "pair-01",
+      "forward_id": "plague",
+      "reverse_id": "outbreak",
+      "relation": "ordered_token_reversal"
+    },
+    {
+      "pair_id": "pair-02",
+      "forward_id": "pestilence",
+      "reverse_id": "malady",
+      "relation": "ordered_token_reversal"
+    },
+    {
+      "pair_id": "pair-03",
+      "forward_id": "epidemic",
+      "reverse_id": "miasma",
+      "relation": "ordered_token_reversal"
+    },
+    {
+      "pair_id": "pair-04",
+      "forward_id": "pandemic",
+      "reverse_id": "fever",
+      "relation": "ordered_token_reversal"
+    },
+    {
+      "pair_id": "pair-05",
+      "forward_id": "scourge",
+      "reverse_id": "bane",
+      "relation": "ordered_token_reversal"
+    },
+    {
+      "pair_id": "pair-06",
+      "forward_id": "blight",
+      "reverse_id": "curse",
+      "relation": "ordered_token_reversal"
+    },
+    {
+      "pair_id": "pair-07",
+      "forward_id": "calamity",
+      "reverse_id": "menace",
+      "relation": "ordered_token_reversal"
+    },
+    {
+      "pair_id": "pair-08",
+      "forward_id": "affliction",
+      "reverse_id": "cataclysm",
+      "relation": "ordered_token_reversal"
+    },
+    {
+      "pair_id": "pair-09",
+      "forward_id": "infestation",
+      "reverse_id": "devastation",
+      "relation": "ordered_token_reversal"
+    },
+    {
+      "pair_id": "pair-10",
+      "forward_id": "contagion",
+      "reverse_id": "desolation",
+      "relation": "ordered_token_reversal"
+    }
+  ],
+  "entries": [
+    {
+      "id": "plague",
+      "name": "Plague",
+      "pair_id": "pair-01",
+      "variant": "forward",
+      "profile_tokens": [
+        "Soft",
+        "Frame"
+      ],
+      "profile_expression": "Soft Frame",
+      "mirror_of": null,
+      "mirrored_by": "outbreak",
+      "family_assignment": "pending",
+      "semantic_contract": "pending",
+      "maturity": "proposal",
+      "generator_status": "not_generated",
+      "executable_capabilities": []
+    },
+    {
+      "id": "outbreak",
+      "name": "Outbreak",
+      "pair_id": "pair-01",
+      "variant": "reverse",
+      "profile_tokens": [
+        "Frame",
+        "Soft"
+      ],
+      "profile_expression": "Frame Soft",
+      "mirror_of": "plague",
+      "mirrored_by": null,
+      "family_assignment": "pending",
+      "semantic_contract": "pending",
+      "maturity": "proposal",
+      "generator_status": "not_generated",
+      "executable_capabilities": []
+    },
+    {
+      "id": "pestilence",
+      "name": "Pestilence",
+      "pair_id": "pair-02",
+      "variant": "forward",
+      "profile_tokens": [
+        "Frame",
+        "Saas"
+      ],
+      "profile_expression": "Frame SaaS",
+      "mirror_of": null,
+      "mirrored_by": "malady",
+      "family_assignment": "pending",
+      "semantic_contract": "pending",
+      "maturity": "proposal",
+      "generator_status": "not_generated",
+      "executable_capabilities": []
+    },
+    {
+      "id": "malady",
+      "name": "Malady",
+      "pair_id": "pair-02",
+      "variant": "reverse",
+      "profile_tokens": [
+        "Saas",
+        "Frame"
+      ],
+      "profile_expression": "SaaS Frame",
+      "mirror_of": "pestilence",
+      "mirrored_by": null,
+      "family_assignment": "pending",
+      "semantic_contract": "pending",
+      "maturity": "proposal",
+      "generator_status": "not_generated",
+      "executable_capabilities": []
+    },
+    {
+      "id": "epidemic",
+      "name": "Epidemic",
+      "pair_id": "pair-03",
+      "variant": "forward",
+      "profile_tokens": [
+        "Framework",
+        "native"
+      ],
+      "profile_expression": "Framework native",
+      "mirror_of": null,
+      "mirrored_by": "miasma",
+      "family_assignment": "pending",
+      "semantic_contract": "pending",
+      "maturity": "proposal",
+      "generator_status": "not_generated",
+      "executable_capabilities": []
+    },
+    {
+      "id": "miasma",
+      "name": "Miasma",
+      "pair_id": "pair-03",
+      "variant": "reverse",
+      "profile_tokens": [
+        "native",
+        "Framework"
+      ],
+      "profile_expression": "native Framework",
+      "mirror_of": "epidemic",
+      "mirrored_by": null,
+      "family_assignment": "pending",
+      "semantic_contract": "pending",
+      "maturity": "proposal",
+      "generator_status": "not_generated",
+      "executable_capabilities": []
+    },
+    {
+      "id": "pandemic",
+      "name": "Pandemic",
+      "pair_id": "pair-04",
+      "variant": "forward",
+      "profile_tokens": [
+        "Program",
+        "Summary"
+      ],
+      "profile_expression": "Program Summary",
+      "mirror_of": null,
+      "mirrored_by": "fever",
+      "family_assignment": "pending",
+      "semantic_contract": "pending",
+      "maturity": "proposal",
+      "generator_status": "not_generated",
+      "executable_capabilities": []
+    },
+    {
+      "id": "fever",
+      "name": "Fever",
+      "pair_id": "pair-04",
+      "variant": "reverse",
+      "profile_tokens": [
+        "Summary",
+        "Program"
+      ],
+      "profile_expression": "Summary Program",
+      "mirror_of": "pandemic",
+      "mirrored_by": null,
+      "family_assignment": "pending",
+      "semantic_contract": "pending",
+      "maturity": "proposal",
+      "generator_status": "not_generated",
+      "executable_capabilities": []
+    },
+    {
+      "id": "scourge",
+      "name": "Scourge",
+      "pair_id": "pair-05",
+      "variant": "forward",
+      "profile_tokens": [
+        "System",
+        "Control"
+      ],
+      "profile_expression": "System Control",
+      "mirror_of": null,
+      "mirrored_by": "bane",
+      "family_assignment": "pending",
+      "semantic_contract": "pending",
+      "maturity": "proposal",
+      "generator_status": "not_generated",
+      "executable_capabilities": []
+    },
+    {
+      "id": "bane",
+      "name": "Bane",
+      "pair_id": "pair-05",
+      "variant": "reverse",
+      "profile_tokens": [
+        "Control",
+        "System"
+      ],
+      "profile_expression": "Control System",
+      "mirror_of": "scourge",
+      "mirrored_by": null,
+      "family_assignment": "pending",
+      "semantic_contract": "pending",
+      "maturity": "proposal",
+      "generator_status": "not_generated",
+      "executable_capabilities": []
+    },
+    {
+      "id": "blight",
+      "name": "Blight",
+      "pair_id": "pair-06",
+      "variant": "forward",
+      "profile_tokens": [
+        "Tunnel",
+        "Justice"
+      ],
+      "profile_expression": "Tunnel Justice",
+      "mirror_of": null,
+      "mirrored_by": "curse",
+      "family_assignment": "pending",
+      "semantic_contract": "pending",
+      "maturity": "proposal",
+      "generator_status": "not_generated",
+      "executable_capabilities": []
+    },
+    {
+      "id": "curse",
+      "name": "Curse",
+      "pair_id": "pair-06",
+      "variant": "reverse",
+      "profile_tokens": [
+        "Justice",
+        "Tunnel"
+      ],
+      "profile_expression": "Justice Tunnel",
+      "mirror_of": "blight",
+      "mirrored_by": null,
+      "family_assignment": "pending",
+      "semantic_contract": "pending",
+      "maturity": "proposal",
+      "generator_status": "not_generated",
+      "executable_capabilities": []
+    },
+    {
+      "id": "calamity",
+      "name": "Calamity",
+      "pair_id": "pair-07",
+      "variant": "forward",
+      "profile_tokens": [
+        "native",
+        "Realisation"
+      ],
+      "profile_expression": "native Realisation",
+      "mirror_of": null,
+      "mirrored_by": "menace",
+      "family_assignment": "pending",
+      "semantic_contract": "pending",
+      "maturity": "proposal",
+      "generator_status": "not_generated",
+      "executable_capabilities": []
+    },
+    {
+      "id": "menace",
+      "name": "Menace",
+      "pair_id": "pair-07",
+      "variant": "reverse",
+      "profile_tokens": [
+        "Realisation",
+        "native"
+      ],
+      "profile_expression": "Realisation native",
+      "mirror_of": "calamity",
+      "mirrored_by": null,
+      "family_assignment": "pending",
+      "semantic_contract": "pending",
+      "maturity": "proposal",
+      "generator_status": "not_generated",
+      "executable_capabilities": []
+    },
+    {
+      "id": "affliction",
+      "name": "Affliction",
+      "pair_id": "pair-08",
+      "variant": "forward",
+      "profile_tokens": [
+        "UI",
+        "Unreal"
+      ],
+      "profile_expression": "UI Unreal",
+      "mirror_of": null,
+      "mirrored_by": "cataclysm",
+      "family_assignment": "pending",
+      "semantic_contract": "pending",
+      "maturity": "proposal",
+      "generator_status": "not_generated",
+      "executable_capabilities": []
+    },
+    {
+      "id": "cataclysm",
+      "name": "Cataclysm",
+      "pair_id": "pair-08",
+      "variant": "reverse",
+      "profile_tokens": [
+        "Unreal",
+        "UI"
+      ],
+      "profile_expression": "Unreal UI",
+      "mirror_of": "affliction",
+      "mirrored_by": null,
+      "family_assignment": "pending",
+      "semantic_contract": "pending",
+      "maturity": "proposal",
+      "generator_status": "not_generated",
+      "executable_capabilities": []
+    },
+    {
+      "id": "infestation",
+      "name": "Infestation",
+      "pair_id": "pair-09",
+      "variant": "forward",
+      "profile_tokens": [
+        "Concrete",
+        "Cosmos"
+      ],
+      "profile_expression": "Concrete Cosmos",
+      "mirror_of": null,
+      "mirrored_by": "devastation",
+      "family_assignment": "pending",
+      "semantic_contract": "pending",
+      "maturity": "proposal",
+      "generator_status": "not_generated",
+      "executable_capabilities": []
+    },
+    {
+      "id": "devastation",
+      "name": "Devastation",
+      "pair_id": "pair-09",
+      "variant": "reverse",
+      "profile_tokens": [
+        "Cosmos",
+        "Concrete"
+      ],
+      "profile_expression": "Cosmos Concrete",
+      "mirror_of": "infestation",
+      "mirrored_by": null,
+      "family_assignment": "pending",
+      "semantic_contract": "pending",
+      "maturity": "proposal",
+      "generator_status": "not_generated",
+      "executable_capabilities": []
+    },
+    {
+      "id": "contagion",
+      "name": "Contagion",
+      "pair_id": "pair-10",
+      "variant": "forward",
+      "profile_tokens": [
+        "base",
+        "Space"
+      ],
+      "profile_expression": "base Space",
+      "mirror_of": null,
+      "mirrored_by": "desolation",
+      "family_assignment": "pending",
+      "semantic_contract": "pending",
+      "maturity": "proposal",
+      "generator_status": "not_generated",
+      "executable_capabilities": []
+    },
+    {
+      "id": "desolation",
+      "name": "Desolation",
+      "pair_id": "pair-10",
+      "variant": "reverse",
+      "profile_tokens": [
+        "Space",
+        "base"
+      ],
+      "profile_expression": "Space base",
+      "mirror_of": "contagion",
+      "mirrored_by": null,
+      "family_assignment": "pending",
+      "semantic_contract": "pending",
+      "maturity": "proposal",
+      "generator_status": "not_generated",
+      "executable_capabilities": []
+    }
+  ]
+}

@@ -31,4 +31,4 @@ The current IDE remains a single-document editor. Integrated Git staging/diff, s
 
 ## Source of truth
 
-The catalogue is defined in `reaper/codex66.py`, shown by `reaper/codex66_ui.py`, and validated by `tests/test_codex66.py`. The existing 666-rule engineering contract remains authoritative for IDE acceptance gates; CODEX-66 is a user-facing capability map, not a replacement for that rulebook.
+The catalogue is defined in `reaper/codex66.py`, shown by `reaper/codex66_ui.py`, and validated by `tests/test_codex66.py`. The existing engineering constitution remains authoritative for IDE acceptance gates; CODEX-66 is a user-facing capability map, not a replacement for that rulebook.

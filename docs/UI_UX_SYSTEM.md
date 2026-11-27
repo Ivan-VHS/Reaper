@@ -57,8 +57,12 @@ Reaper Studio is a programming workbench for the MOST/Reaper language. Its core 
 
 ## 40026 Codex
 
-The normative six-cycle / 666-rule contract is maintained in [UI/UX Codex 40026](UI_UX_CODEX_40026.md). Theme palettes now expose semantic Success/Warning/Error/Info roles and are rejected when required WCAG AA text pairs fall below 4.5:1. Automated checks cover every supported palette. Full keyboard walkthrough, 200% scaling and long-session ergonomics remain release-level manual checks.
+The normative six-cycle engineering contract is maintained in [UI/UX Codex 40026](UI_UX_CODEX_40026.md). Theme palettes now expose semantic Success/Warning/Error/Info roles and are rejected when required WCAG AA text pairs fall below 4.5:1. Automated checks cover every supported palette. Full keyboard walkthrough, 200% scaling and long-session ergonomics remain release-level manual checks.
 
 ## UI/UX 2026 convergence
 
 See [UI_UX_2026_CONVERGENCE.md](UI_UX_2026_CONVERGENCE.md) for semantic tokens, accessibility targets, responsive behavior and motion budgets. Existing Reaper editor and atmospheric theme profiles remain supported.
+
+## Anatidae desktop visual refinement
+
+The Studio shell carries a restrained 5 px white-blue-red identity band. The code editor, syntax tokens, caret, selection and line-number gutter must follow the active light/dark palette together; no fixed light-theme labels or gutter colors may leak into dark mode. Keep the editor the primary surface and retain all keyboard shortcuts and runtime behavior.

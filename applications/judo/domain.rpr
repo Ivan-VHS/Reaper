@@ -1,0 +1,32 @@
+# Judo — permission posture and security-risk interpretation.
+export craft risk_band(score) {
+    when score < 0 { yield "INVALID" } otherwise {
+        when score >= 75 { yield "HIGH" } otherwise {
+            when score >= 40 { yield "MEDIUM" } otherwise { yield "LOW" }
+        }
+    }
+}
+
+export craft permission_label(is_declared, is_requested, is_approved) {
+    when is_declared {
+        when is_requested {
+            when is_approved { yield "APPROVED_FOR_HOST_REVIEW" } otherwise { yield "AWAITING_USER_APPROVAL" }
+        } otherwise { yield "DECLARED_NOT_REQUESTED" }
+    } otherwise { yield "UNDECLARED_CAPABILITY" }
+}
+
+export craft finding_label(is_resolved, is_suppressed) {
+    when is_resolved { yield "RESOLVED" } otherwise {
+        when is_suppressed { yield "SUPPRESSED_WITH_REASON" } otherwise { yield "OPEN" }
+    }
+}
+
+export craft permission_decision(is_declared, is_requested, user_approved, high_risk) {
+    when is_declared {
+        when is_requested {
+            when user_approved {
+                when high_risk { yield "MANUAL_SECURITY_REVIEW_REQUIRED" } otherwise { yield "READY_FOR_HOST_VALIDATION" }
+            } otherwise { yield "USER_APPROVAL_REQUIRED" }
+        } otherwise { yield "NO_PERMISSION_CHANGE" }
+    } otherwise { yield "DENY_UNDECLARED_CAPABILITY" }
+}
