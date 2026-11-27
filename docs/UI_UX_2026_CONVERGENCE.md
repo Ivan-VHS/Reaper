@@ -72,3 +72,11 @@ Reaper Studio is an editor-first Tkinter IDE. Source readability, output, variab
 - [Microsoft Windows app design](https://learn.microsoft.com/windows/apps/design/)
 
 These references define targets, not unverified test claims.
+
+
+## Reaper brand-preserving adoption
+
+Dark and default Studio surfaces use `#050505`, `#101010` and `#181818`.
+Reaper retains blue for actions/navigation and red for critical operations. Keep
+the editor opaque and source-first; do not place blur, parallax or ambient motion
+over source, diagnostics or debugger state.
