@@ -164,6 +164,8 @@ make smp_topology := ["reaper.processor-control.v1", "boot-1", 7, 0, [1, 2], [0]
 make ap_online := ap_online_ack[1]
 make smp_admit := core["ap_smp_admit_cpu"](smp_topology, ap_online)
 assert(smp_admit[0] and contains(smp_admit[1][5], 1), "verified AP handshake updates the logical SMP topology")
+assert(smp_admit[1][2] == 8, "AP admission increments topology generation")
+assert(core["apic_ipi_decision"](apic_route, true, true, smp_admit[1][2], ipi_adapter) == "reject-stale-topology-generation", "pre-admission IPI routes become stale after topology change")
 
 make apic_route := ["reaper.apic-route.v1", 0, 1, 64, "reschedule", "edge", false, 7]
 make ipi_adapter := ["reaper.processor-adapter.v1", "duckos-apic", "apic-ipi-timer", "duckos", "assembly", "x86-apic-v1", "kernel-control", true, ["ipi-send", "timer-preempt", "timer-arm"]]
@@ -180,6 +182,7 @@ assert(core["mca_msr_read_admission"](16, 4, true, mca_adapter) == "reject-msr-n
 assert(core["mca_msr_read_admission"](377, 4, false, mca_adapter) == "reject-mca-not-advertised", "MCA reads require CPUID capability")
 make mca_event := ["reaper.mca-event.v1", "mca-1", "boot-1", 0, true, true, false, true, "page-17", 5000, "msr-adapter-1", "confirmed"]
 assert(core["mca_handler_decision"](mca_event, true) == "request-page-recovery-through-memory-manager", "confirmed uncorrected address evidence may request page recovery")
+assert(core["mca_handler_decision"](mca_event, "yes") == "reject-invalid-page-recovery-capability", "MCA recovery capability must be boolean")
 make mca_corrupt := ["reaper.mca-event.v1", "mca-2", "boot-1", 0, true, true, true, false, "cpu-0", 6000, "msr-adapter-1", "confirmed"]
 assert(core["mca_handler_decision"](mca_corrupt, true) == "safe-stop-context-corrupt-defer-to-kernel-fatal-path", "corrupt processor context is not handled in user policy")
 
