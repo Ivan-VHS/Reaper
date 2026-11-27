@@ -112,14 +112,13 @@ export craft validate_project(project) {
          toolchain["family"] != "unknown" {
         yield [false, "RPR-PEW-0017: current host compiler family must be GCC, Clang or unknown"]
     }
-    when project["output"]["kind"] != "host-executable" {
-        yield [false, "RPR-PEW-0018: current scalar AOT output must be a host executable"]
-    }
-
     when kind(project["output"]) != "map" or
          kind(project["verification"]) != "map" or
          kind(project["sources"]) != "list" {
         yield [false, "RPR-PEW-0018: output, source or verification descriptor is missing"]
+    }
+    when project["output"]["kind"] != "host-executable" {
+        yield [false, "RPR-PEW-0029: current scalar AOT output must be a host executable"]
     }
     make memory := project["memory"]
     when kind(memory) != "map" or
