@@ -1,0 +1,269 @@
+import "lexer.rpr" as lexer
+import "program_parser.rpr" as frontend
+
+make supported_platforms := [
+    ["x86_64-unknown-linux-gnu", "x86_64", "linux", "gnu", "little", 64, "elf", "sysv", 16],
+    ["x86_64-pc-windows-msvc", "x86_64", "windows", "msvc", "little", 64, "pe", "win64", 16],
+    ["aarch64-apple-darwin", "aarch64", "macos", "darwin", "little", 64, "macho", "aapcs64", 16],
+    ["wasm32-unknown-wasi", "wasm32", "wasi", "wasi", "little", 32, "wasm", "wasm32", 16],
+    ["x86_64-unknown-none-elf", "x86_64", "none", "none", "little", 64, "elf", "sysv", 16]
+]
+
+craft valid_scalar_type(type_name) {
+    yield type_name == "i8" or type_name == "u8" or type_name == "i16" or type_name == "u16" or type_name == "i32" or type_name == "u32" or type_name == "i64" or type_name == "u64" or type_name == "f32" or type_name == "f64" or type_name == "bool" or type_name == "ptr" or type_name == "usize" or type_name == "isize"
+}
+
+craft validate_struct(declaration) {
+    when size(declaration) != 4 or declaration[0] != "struct" {
+        yield ["ERROR", "expected a structure declaration"]
+    }
+    when declaration[2] == "" {
+        yield ["ERROR", "structure name cannot be empty"]
+    }
+    when size(declaration[3]) == 0 {
+        yield ["ERROR", "empty structures are not part of the Reaper record ABI subset"]
+    }
+    when size(declaration[3]) > 1024 {
+        yield ["ERROR", "structure field count exceeds the 1024-field limit"]
+    }
+
+    vary index := 0
+    loop while index < size(declaration[3]) {
+        make field := declaration[3][index]
+        when size(field) != 4 or field[0] != "field" or size(field[2]) != 2 {
+            yield ["ERROR", "malformed structure field"]
+        }
+        when field[2][0] == "" {
+            yield ["ERROR", "structure field name cannot be empty"]
+        }
+        when not valid_scalar_type(field[2][1]) {
+            yield ["ERROR", "unsupported structure field type: " ++ field[2][1]]
+        }
+
+        vary prior := 0
+        loop while prior < index {
+            when declaration[3][prior][2][0] == field[2][0] {
+                yield ["ERROR", "duplicate structure field: " ++ field[2][0]]
+            }
+            change prior := prior + 1
+        }
+        change index := index + 1
+    }
+    yield ["OK", size(declaration[3])]
+}
+
+craft known_platform_field(name) {
+    yield name == "triple" or name == "arch" or name == "os" or name == "abi" or name == "endian" or name == "pointer_bits" or name == "object_format" or name == "call_abi" or name == "max_align"
+}
+
+craft platform_value(declaration, key) {
+    vary index := 0
+    loop while index < size(declaration[3]) {
+        make field := declaration[3][index]
+        when field[2] == key {
+            when size(field[3]) != 1 {
+                yield ["ERROR", "platform property must have exactly one value: " ++ key]
+            }
+            make expression := field[3][0]
+            when expression[0] != "literal" {
+                yield ["ERROR", "platform property must use a literal value: " ++ key]
+            }
+            yield ["OK", expression[2]]
+        }
+        change index := index + 1
+    }
+    yield ["ERROR", "missing platform property: " ++ key]
+}
+
+craft matches_platform(values, profile) {
+    yield values[0] == profile[0] and values[1] == profile[1] and values[2] == profile[2] and values[3] == profile[3] and values[4] == profile[4] and values[5] == profile[5] and values[6] == profile[6] and values[7] == profile[7] and values[8] == profile[8]
+}
+
+craft validate_platform(declaration) {
+    when size(declaration) != 4 or declaration[0] != "platform" {
+        yield ["ERROR", "expected a platform declaration"]
+    }
+    when declaration[2] == "" {
+        yield ["ERROR", "platform name cannot be empty"]
+    }
+    when size(declaration[3]) != 9 {
+        yield ["ERROR", "platform declaration requires exactly nine properties"]
+    }
+
+    vary index := 0
+    loop while index < size(declaration[3]) {
+        make field := declaration[3][index]
+        when size(field) != 4 or field[0] != "platform_field" {
+            yield ["ERROR", "malformed platform property"]
+        }
+        when not known_platform_field(field[2]) {
+            yield ["ERROR", "unknown platform property: " ++ field[2]]
+        }
+        vary prior := 0
+        loop while prior < index {
+            when declaration[3][prior][2] == field[2] {
+                yield ["ERROR", "duplicate platform property: " ++ field[2]]
+            }
+            change prior := prior + 1
+        }
+        change index := index + 1
+    }
+
+    make triple := platform_value(declaration, "triple")
+    make arch := platform_value(declaration, "arch")
+    make os := platform_value(declaration, "os")
+    make abi := platform_value(declaration, "abi")
+    make endian := platform_value(declaration, "endian")
+    make pointer_bits := platform_value(declaration, "pointer_bits")
+    make object_format := platform_value(declaration, "object_format")
+    make call_abi := platform_value(declaration, "call_abi")
+    make max_align := platform_value(declaration, "max_align")
+
+    when triple[0] == "ERROR" { yield triple }
+    when arch[0] == "ERROR" { yield arch }
+    when os[0] == "ERROR" { yield os }
+    when abi[0] == "ERROR" { yield abi }
+    when endian[0] == "ERROR" { yield endian }
+    when pointer_bits[0] == "ERROR" { yield pointer_bits }
+    when object_format[0] == "ERROR" { yield object_format }
+    when call_abi[0] == "ERROR" { yield call_abi }
+    when max_align[0] == "ERROR" { yield max_align }
+
+    when pointer_bits[1] != 32 and pointer_bits[1] != 64 {
+        yield ["ERROR", "pointer_bits must be 32 or 64"]
+    }
+    when max_align[1] <= 0 {
+        yield ["ERROR", "max_align must be positive"]
+    }
+
+    make values := [triple[1], arch[1], os[1], abi[1], endian[1], pointer_bits[1], object_format[1], call_abi[1], max_align[1]]
+    vary profile_index := 0
+    loop while profile_index < size(supported_platforms) {
+        make profile := supported_platforms[profile_index]
+        when matches_platform(values, profile) {
+            yield ["OK", profile]
+        }
+        change profile_index := profile_index + 1
+    }
+    yield ["ERROR", "unsupported or internally inconsistent platform target profile"]
+}
+
+craft scalar_layout(type_name, pointer_bits) {
+    when type_name == "i8" or type_name == "u8" or type_name == "bool" {
+        yield ["OK", 1, 1]
+    }
+    when type_name == "i16" or type_name == "u16" {
+        yield ["OK", 2, 2]
+    }
+    when type_name == "i32" or type_name == "u32" or type_name == "f32" {
+        yield ["OK", 4, 4]
+    }
+    when type_name == "i64" or type_name == "u64" or type_name == "f64" {
+        yield ["OK", 8, 8]
+    }
+    when type_name == "ptr" or type_name == "usize" or type_name == "isize" {
+        yield ["OK", pointer_bits // 8, pointer_bits // 8]
+    }
+    yield ["ERROR", "unsupported structure field type: " ++ type_name]
+}
+
+craft align_up(value, alignment) {
+    yield ((value + alignment - 1) // alignment) * alignment
+}
+
+craft layout_struct(declaration, platform) {
+    make checked_struct := validate_struct(declaration)
+    when checked_struct[0] == "ERROR" { yield checked_struct }
+
+    make checked_platform := validate_platform(platform)
+    when checked_platform[0] == "ERROR" { yield checked_platform }
+
+    make pointer_bits := checked_platform[1][5]
+    make max_align := checked_platform[1][8]
+    vary offset := 0
+    vary record_align := 1
+    vary fields := []
+    vary index := 0
+
+    loop while index < size(declaration[3]) {
+        make field := declaration[3][index]
+        make field_name := field[2][0]
+        make type_name := field[2][1]
+        make field_layout := scalar_layout(type_name, pointer_bits)
+        when field_layout[0] == "ERROR" { yield field_layout }
+
+        make field_size := field_layout[1]
+        make field_align := field_layout[2]
+        when field_align > max_align {
+            yield ["ERROR", "field alignment exceeds the selected platform maximum"]
+        }
+
+        make field_offset := align_up(offset, field_align)
+        change fields := push(fields, [field_name, type_name, field_offset, field_size, field_align])
+        change offset := field_offset + field_size
+        when field_align > record_align {
+            change record_align := field_align
+        }
+        change index := index + 1
+    }
+
+    yield ["OK", align_up(offset, record_align), record_align, fields]
+}
+
+make source := "struct Packet {\n    kind: u16\n    sequence: u32\n    payload: ptr\n    ready: bool\n}\nplatform linux_x64 {\n    triple := \"x86_64-unknown-linux-gnu\"\n    arch := \"x86_64\"\n    os := \"linux\"\n    abi := \"gnu\"\n    endian := \"little\"\n    pointer_bits := 64\n    object_format := \"elf\"\n    call_abi := \"sysv\"\n    max_align := 16\n}\n"
+make tokens := lexer["tokenize"](source)
+make parsed := frontend["parse_program"](tokens)
+assert(parsed[0] == "OK", "typed structure and platform declarations must parse")
+make program := parsed[1]
+assert(size(program[3]) == 2, "declaration count mismatch")
+make packet := program[3][0]
+make linux_x64 := program[3][1]
+assert(packet[0] == "struct" and packet[2] == "Packet", "structure declaration AST mismatch")
+assert(linux_x64[0] == "platform" and linux_x64[2] == "linux_x64", "platform declaration AST mismatch")
+
+make valid_packet := validate_struct(packet)
+assert(valid_packet[0] == "OK" and valid_packet[1] == 4, "typed record validation failed")
+make valid_linux := validate_platform(linux_x64)
+assert(valid_linux[0] == "OK" and valid_linux[1][5] == 64, "platform ABI validation failed")
+
+make packet_layout := layout_struct(packet, linux_x64)
+assert(packet_layout[0] == "OK", "record layout failed")
+assert(packet_layout[1] == 24 and packet_layout[2] == 8, "record size/alignment mismatch")
+assert(packet_layout[3][0][2] == 0, "first field offset mismatch")
+assert(packet_layout[3][1][2] == 4, "u32 field must align to four bytes")
+assert(packet_layout[3][2][2] == 8, "pointer field must align to the target pointer width")
+assert(packet_layout[3][3][2] == 16, "boolean field offset mismatch")
+
+make invalid_type_tokens := lexer["tokenize"]("struct Invalid {\n    count: f128\n}\n")
+make invalid_type_program := frontend["parse_program"](invalid_type_tokens)
+make invalid_type := validate_struct(invalid_type_program[1][3][0])
+assert(invalid_type[0] == "ERROR", "unknown field types must be rejected")
+
+make invalid_target_tokens := lexer["tokenize"]("platform bad_linux {\n    triple := \"x86_64-unknown-linux-gnu\"\n    arch := \"x86_64\"\n    os := \"linux\"\n    abi := \"gnu\"\n    endian := \"little\"\n    pointer_bits := 64\n    object_format := \"pe\"\n    call_abi := \"sysv\"\n    max_align := 16\n}\n")
+make invalid_target_program := frontend["parse_program"](invalid_target_tokens)
+make invalid_target := validate_platform(invalid_target_program[1][3][0])
+assert(invalid_target[0] == "ERROR", "inconsistent target triples must be rejected")
+
+make duplicate_field_tokens := lexer["tokenize"]("struct Duplicate {\n    item: u8\n    item: u16\n}\n")
+make duplicate_field_program := frontend["parse_program"](duplicate_field_tokens)
+make duplicate_field := validate_struct(duplicate_field_program[1][3][0])
+assert(duplicate_field[0] == "ERROR", "duplicate structure fields must be rejected")
+
+make target_sources := [
+    "platform windows_x64 {\n    triple := \"x86_64-pc-windows-msvc\"\n    arch := \"x86_64\"\n    os := \"windows\"\n    abi := \"msvc\"\n    endian := \"little\"\n    pointer_bits := 64\n    object_format := \"pe\"\n    call_abi := \"win64\"\n    max_align := 16\n}\n",
+    "platform macos_arm64 {\n    triple := \"aarch64-apple-darwin\"\n    arch := \"aarch64\"\n    os := \"macos\"\n    abi := \"darwin\"\n    endian := \"little\"\n    pointer_bits := 64\n    object_format := \"macho\"\n    call_abi := \"aapcs64\"\n    max_align := 16\n}\n",
+    "platform wasi_wasm32 {\n    triple := \"wasm32-unknown-wasi\"\n    arch := \"wasm32\"\n    os := \"wasi\"\n    abi := \"wasi\"\n    endian := \"little\"\n    pointer_bits := 32\n    object_format := \"wasm\"\n    call_abi := \"wasm32\"\n    max_align := 16\n}\n",
+    "platform baremetal_x64 {\n    triple := \"x86_64-unknown-none-elf\"\n    arch := \"x86_64\"\n    os := \"none\"\n    abi := \"none\"\n    endian := \"little\"\n    pointer_bits := 64\n    object_format := \"elf\"\n    call_abi := \"sysv\"\n    max_align := 16\n}\n"
+]
+vary target_index := 0
+loop while target_index < size(target_sources) {
+    make target_tokens := lexer["tokenize"](target_sources[target_index])
+    make target_program := frontend["parse_program"](target_tokens)
+    assert(target_program[0] == "OK", "supported platform declaration must parse")
+    make target_node := target_program[1][3][0]
+    make target_result := validate_platform(target_node)
+    assert(target_result[0] == "OK", "supported platform profile must validate")
+    change target_index := target_index + 1
+}
+
+emit "SELFHOST_TYPE_DECLARATIONS_OK"

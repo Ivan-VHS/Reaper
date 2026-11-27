@@ -1,0 +1,566 @@
+# Stage-1 statement grammar and canonical array AST, implemented in Reaper itself.
+#
+# AST contract:
+#   [kind, token, value, children]
+# Token contract:
+#   [kind, lexeme, line, column]
+# The representation is deterministic and source-aware. It is intentionally
+# independent of Python objects; the host compares it with the reference AST.
+
+export craft parse_program(tokens) {
+    vary cursor := 0
+    make token_count := size(tokens)
+    vary failed := false
+    vary error_message := ""
+    vary error_line := 1
+    vary error_column := 1
+
+    craft ast(kind, token, value, children) {
+        yield [kind, token, value, children]
+    }
+
+    craft peek() {
+        when cursor < token_count {
+            yield tokens[cursor]
+        }
+        yield ["EOF", "", 1, 1]
+    }
+
+    craft advance() {
+        make token := peek()
+        when token[0] != "EOF" {
+            change cursor := cursor + 1
+        }
+        yield token
+    }
+
+    craft check(kind) {
+        yield peek()[0] == kind
+    }
+
+    craft match_kind(kind) {
+        when check(kind) {
+            make ignored := advance()
+            yield true
+        }
+        yield false
+    }
+
+    craft fail(message, token) {
+        when not failed {
+            change failed := true
+            change error_message := message
+            change error_line := token[2]
+            change error_column := token[3]
+        }
+        yield token
+    }
+
+    craft consume(kind, message) {
+        when check(kind) {
+            yield advance()
+        }
+        make ignored := fail(message, peek())
+        yield peek()
+    }
+
+    craft skip_newlines() {
+        loop while match_kind("NEWLINE") {
+            make ignored := 0
+        }
+        yield nothing
+    }
+
+    craft statement_end() {
+        when match_kind("NEWLINE") {
+            skip_newlines()
+            yield true
+        }
+        when check("}") or check("EOF") {
+            yield true
+        }
+        make ignored := fail("expected a new line after this statement", peek())
+        yield false
+    }
+
+    craft precedence(kind) {
+        when kind == "::" { yield 1 }
+        when kind == "OR" { yield 2 }
+        when kind == "AND" { yield 3 }
+        when kind == "==" or kind == "!=" or kind == "<" or kind == "<=" or kind == ">" or kind == ">=" { yield 4 }
+        when kind == "++" { yield 5 }
+        when kind == "+" or kind == "-" { yield 6 }
+        when kind == "*" or kind == "/" or kind == "//" or kind == "%" { yield 7 }
+        when kind == "**" { yield 8 }
+        yield 0
+    }
+
+    craft parse_bp(minimum) {
+        make first := advance()
+        vary left := ast("error", first, "expected expression", [])
+
+        when first[0] == "CATALOG_OPERATOR" {
+            make ignored := fail("catalogue operator is reserved and has no executable semantics", first)
+        } otherwise {
+            when first[0] == "NUMBER" {
+                change left := ast("literal", first, number(first[1]), [])
+            } otherwise {
+                when first[0] == "STRING" {
+                    change left := ast("literal", first, first[1], [])
+                } otherwise {
+                    when first[0] == "TRUE" {
+                        change left := ast("literal", first, true, [])
+                    } otherwise {
+                        when first[0] == "FALSE" {
+                            change left := ast("literal", first, false, [])
+                        } otherwise {
+                            when first[0] == "NOTHING" {
+                                change left := ast("literal", first, nothing, [])
+                            } otherwise {
+                                when first[0] == "IDENT" {
+                                    change left := ast("name", first, first[1], [])
+                                } otherwise {
+                                    when first[0] == "-" or first[0] == "NOT" {
+                                        skip_newlines()
+                                        make operand := parse_bp(9)
+                                        change left := ast("unary", first, first[0], [operand])
+                                    } otherwise {
+                                        when first[0] == "(" {
+                                            skip_newlines()
+                                            change left := parse_bp(1)
+                                            skip_newlines()
+                                            when not failed and not check(")") {
+                                                make ignored := fail("expected ')' after expression", peek())
+                                            } otherwise {
+                                                when not failed {
+                                                    make ignored_close := advance()
+                                                }
+                                            }
+                                        } otherwise {
+                                            when first[0] == "[" {
+                                                vary items := []
+                                                skip_newlines()
+                                                when not check("]") {
+                                                    change items := push(items, parse_bp(1))
+                                                    skip_newlines()
+                                                    loop while not failed and match_kind(",") {
+                                                        skip_newlines()
+                                                        change items := push(items, parse_bp(1))
+                                                        skip_newlines()
+                                                    }
+                                                }
+                                                when not failed and not check("]") {
+                                                    make ignored := fail("expected ']' after list items", peek())
+                                                } otherwise {
+                                                    when not failed {
+                                                        make ignored_close := advance()
+                                                        change left := ast("list", first, nothing, items)
+                                                    }
+                                                }
+                                            } otherwise {
+                                                make ignored := fail("expected a literal, identifier, list, or parenthesized expression", first)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        loop while not failed and (
+            peek()[0] == "(" or
+            peek()[0] == "[" or
+            (precedence(peek()[0]) >= minimum and precedence(peek()[0]) > 0)
+        ) {
+            when peek()[0] == "(" {
+                make open_token := advance()
+                vary arguments := []
+                skip_newlines()
+                when not check(")") {
+                    change arguments := push(arguments, parse_bp(1))
+                    skip_newlines()
+                    loop while not failed and match_kind(",") {
+                        skip_newlines()
+                        change arguments := push(arguments, parse_bp(1))
+                        skip_newlines()
+                    }
+                }
+                when not failed and not check(")") {
+                    make ignored := fail("expected ')' after call arguments", peek())
+                } otherwise {
+                    when not failed {
+                        make ignored_close := advance()
+                        vary call_children := [left]
+                        each argument in arguments {
+                            change call_children := push(call_children, argument)
+                        }
+                        change left := ast("call", open_token, nothing, call_children)
+                    }
+                }
+            } otherwise {
+                when peek()[0] == "[" {
+                    make open_token := advance()
+                    skip_newlines()
+                    make index_expression := parse_bp(1)
+                    skip_newlines()
+                    when not failed and not check("]") {
+                        make ignored := fail("expected ']' after index expression", peek())
+                    } otherwise {
+                        when not failed {
+                            make ignored_close := advance()
+                            change left := ast("index", open_token, nothing, [left, index_expression])
+                        }
+                    }
+                } otherwise {
+                    make operator_token := advance()
+                    make operator_precedence := precedence(operator_token[0])
+                    vary next_minimum := operator_precedence + 1
+                    when operator_token[0] == "**" {
+                        change next_minimum := operator_precedence
+                    }
+                    skip_newlines()
+                    make right := parse_bp(next_minimum)
+                    change left := ast("binary", operator_token, operator_token[0], [left, right])
+                }
+            }
+        }
+        yield left
+    }
+
+    craft parse_block() {
+        make open_token := consume("{", "expected '{' to start a block")
+        vary statements := []
+        skip_newlines()
+
+        loop while not failed and not check("}") and not check("EOF") {
+            change statements := push(statements, parse_statement())
+            when not failed {
+                make ended := statement_end()
+            }
+        }
+
+        when not failed and not check("}") {
+            make ignored := fail("expected '}' after block", peek())
+        }
+        when failed {
+            yield ast("block", open_token, nothing, statements)
+        }
+        make close_token := advance()
+        yield ast("block", close_token, nothing, statements)
+    }
+
+    craft parse_function(token) {
+        make name_token := consume("IDENT", "expected a function name after 'craft'")
+        make ignored_open := consume("(", "expected '(' after function name")
+        vary parameters := []
+        skip_newlines()
+
+        when not failed and not check(")") {
+            change parameters := push(parameters, consume("IDENT", "expected a parameter name")[1])
+            skip_newlines()
+            loop while not failed and match_kind(",") {
+                skip_newlines()
+                change parameters := push(parameters, consume("IDENT", "expected a parameter name")[1])
+                skip_newlines()
+            }
+        }
+
+        make ignored_close := consume(")", "expected ')' after parameters")
+        make body := parse_block()
+        yield ast("function", token, [name_token[1], parameters], [body])
+    }
+
+    craft parse_when(token) {
+        make condition := parse_bp(1)
+        make yes_block := parse_block()
+        vary children := [condition, yes_block]
+        make newline_position := cursor
+        skip_newlines()
+
+        when not failed and match_kind("OTHERWISE") {
+            make no_block := parse_block()
+            change children := push(children, no_block)
+        } otherwise {
+            when not failed {
+                change cursor := newline_position
+            }
+        }
+        yield ast("when", token, nothing, children)
+    }
+
+    craft parse_each(token) {
+        make name_token := consume("IDENT", "expected an iteration variable after 'each'")
+        make ignored_in := consume("IN", "expected 'in' after iteration variable")
+        make iterable := parse_bp(1)
+        make body := parse_block()
+        yield ast("each", token, name_token[1], [iterable, body])
+    }
+
+    craft parse_struct(token) {
+        make name_token := consume("IDENT", "expected a structure name after 'struct'")
+        make ignored_open := consume("{", "expected '{' after structure name")
+        vary fields := []
+        skip_newlines()
+
+        loop while not failed and not check("}") and not check("EOF") {
+            make field_name := consume("IDENT", "expected a field name")
+            make ignored_colon := consume(":", "expected ':' after field name")
+            make field_type := consume("IDENT", "expected a field type")
+
+            when not failed {
+                change fields := push(fields, ast("field", field_name, [field_name[1], field_type[1]], []))
+                when match_kind(",") {
+                    skip_newlines()
+                } otherwise {
+                    make ended := statement_end()
+                }
+            }
+        }
+
+        when not failed and not check("}") {
+            make ignored := fail("expected '}' after structure fields", peek())
+        }
+        when failed {
+            yield ast("struct", token, name_token[1], fields)
+        }
+        make ignored_close := advance()
+        yield ast("struct", token, name_token[1], fields)
+    }
+
+    craft parse_platform(token) {
+        make name_token := consume("IDENT", "expected a platform name after 'platform'")
+        make ignored_open := consume("{", "expected '{' after platform name")
+        vary fields := []
+        skip_newlines()
+
+        loop while not failed and not check("}") and not check("EOF") {
+            make field_name := consume("IDENT", "expected a platform property name")
+            make ignored_assign := consume(":=", "expected ':=' after platform property")
+            make value := parse_bp(1)
+
+            when not failed {
+                change fields := push(fields, ast("platform_field", field_name, field_name[1], [value]))
+                when match_kind(",") {
+                    skip_newlines()
+                } otherwise {
+                    make ended := statement_end()
+                }
+            }
+        }
+
+        when not failed and not check("}") {
+            make ignored := fail("expected '}' after platform properties", peek())
+        }
+        when failed {
+            yield ast("platform", token, name_token[1], fields)
+        }
+        make ignored_close := advance()
+        yield ast("platform", token, name_token[1], fields)
+    }
+
+    craft parse_statement() {
+        when check("IMPORT") {
+            make token := advance()
+            make specifier := consume("STRING", "expected a quoted .rpr path after 'import'")
+            vary alias := nothing
+            when not failed and match_kind("AS") {
+                change alias := consume("IDENT", "expected an import alias after 'as'")[1]
+            }
+            yield ast("import", token, [specifier[1], alias], [])
+        }
+
+        when check("EXPORT") {
+            make token := advance()
+            when check("MAKE") or check("VARY") or check("CRAFT") or check("STRUCT") or check("PLATFORM") {
+                make declaration := parse_statement()
+                when not failed and declaration[0] != "declare" and declaration[0] != "function" and declaration[0] != "struct" and declaration[0] != "platform" {
+                    make ignored := fail("inline export must declare a name, craft, struct, or platform", token)
+                }
+                yield ast("export", token, nothing, [declaration])
+            }
+            make name_token := consume("IDENT", "expected a name after 'export'")
+            yield ast("export", token, name_token[1], [])
+        }
+
+        when check("STRUCT") {
+            make token := advance()
+            yield parse_struct(token)
+        }
+
+        when check("PLATFORM") {
+            make token := advance()
+            yield parse_platform(token)
+        }
+
+        when check("MAKE") or check("VARY") {
+            make token := advance()
+            make name_token := consume("IDENT", "expected a name after declaration")
+            make ignored_assign := consume(":=", "expected ':=' after the name")
+            make value := parse_bp(1)
+            yield ast("declare", token, [name_token[1], token[0] == "VARY"], [value])
+        }
+
+        when check("CHANGE") {
+            make token := advance()
+            make name_token := consume("IDENT", "expected a mutable name after 'change'")
+            make ignored_assign := consume(":=", "expected ':=' after the name")
+            yield ast("change", token, name_token[1], [parse_bp(1)])
+        }
+
+        when check("EMIT") {
+            make token := advance()
+            yield ast("emit", token, nothing, [parse_bp(1)])
+        }
+
+        when check("YIELD") {
+            make token := advance()
+            when check("NEWLINE") or check("}") or check("EOF") {
+                yield ast("yield", token, nothing, [])
+            }
+            yield ast("yield", token, nothing, [parse_bp(1)])
+        }
+
+        when check("CRAFT") {
+            make token := advance()
+            yield parse_function(token)
+        }
+
+        when check("WHEN") {
+            make token := advance()
+            yield parse_when(token)
+        }
+
+        when check("EACH") {
+            make token := advance()
+            yield parse_each(token)
+        }
+
+        when check("LOOP") {
+            make token := advance()
+            make ignored_while := consume("WHILE", "expected 'while' after 'loop'")
+            make condition := parse_bp(1)
+            make body := parse_block()
+            yield ast("while", token, nothing, [condition, body])
+        }
+
+        make expression := parse_bp(1)
+        yield ast("expression", expression[1], nothing, [expression])
+    }
+
+    when token_count == 0 {
+        yield ["ERROR", "token stream is empty", 1, 1]
+    }
+
+    skip_newlines()
+    vary statements := []
+    loop while not failed and not check("EOF") {
+        change statements := push(statements, parse_statement())
+        when not failed {
+            make ended := statement_end()
+        }
+    }
+
+    when failed {
+        yield ["ERROR", error_message, error_line, error_column]
+    }
+
+    make root := ast("program", peek(), nothing, statements)
+    yield ["OK", root]
+}
+
+# Declaration and expression precedence.
+make arithmetic := parse_program([
+    ["MAKE", "make", 1, 1], ["IDENT", "result", 1, 6],
+    [":=", ":=", 1, 13], ["NUMBER", "2", 1, 16],
+    ["+", "+", 1, 18], ["NUMBER", "3", 1, 20],
+    ["*", "*", 1, 22], ["NUMBER", "4", 1, 24],
+    ["NEWLINE", "\n", 1, 25],
+    ["EMIT", "emit", 2, 1], ["IDENT", "result", 2, 6],
+    ["EOF", "", 2, 12]
+])
+assert(arithmetic[0] == "OK", "declaration and expression parsing failed")
+make arithmetic_root := arithmetic[1]
+assert(arithmetic_root[0] == "program" and size(arithmetic_root[3]) == 2, "program root mismatch")
+make arithmetic_declaration := arithmetic_root[3][0]
+assert(arithmetic_declaration[0] == "declare", "make must become a declaration node")
+assert(arithmetic_declaration[2][0] == "result" and arithmetic_declaration[2][1] == false, "immutable declaration contract mismatch")
+make addition := arithmetic_declaration[3][0]
+assert(addition[0] == "binary" and addition[2] == "+", "addition node mismatch")
+assert(addition[3][1][0] == "binary" and addition[3][1][2] == "*", "operator precedence mismatch")
+assert(arithmetic_root[3][1][0] == "emit", "emit statement was not parsed")
+
+# Function, conditional branches, blocks and return values.
+make function_result := parse_program([
+    ["CRAFT", "craft", 1, 1], ["IDENT", "absolute", 1, 7],
+    ["(", "(", 1, 15], ["IDENT", "value", 1, 16], [")", ")", 1, 21],
+    ["{", "{", 1, 23], ["NEWLINE", "\n", 1, 24],
+    ["WHEN", "when", 2, 5], ["IDENT", "value", 2, 10],
+    ["<", "<", 2, 16], ["NUMBER", "0", 2, 18],
+    ["{", "{", 2, 20], ["NEWLINE", "\n", 2, 21],
+    ["YIELD", "yield", 3, 9], ["-", "-", 3, 15],
+    ["IDENT", "value", 3, 16], ["NEWLINE", "\n", 3, 21],
+    ["}", "}", 4, 5], ["OTHERWISE", "otherwise", 4, 7],
+    ["{", "{", 4, 17], ["NEWLINE", "\n", 4, 18],
+    ["YIELD", "yield", 5, 9], ["IDENT", "value", 5, 15],
+    ["NEWLINE", "\n", 5, 20], ["}", "}", 6, 5],
+    ["NEWLINE", "\n", 6, 6], ["}", "}", 7, 1],
+    ["EOF", "", 7, 2]
+])
+assert(function_result[0] == "OK", "function and conditional statement parsing failed")
+make function_node := function_result[1][3][0]
+assert(function_node[0] == "function" and function_node[2][0] == "absolute", "function declaration mismatch")
+assert(size(function_node[2][1]) == 1 and function_node[2][1][0] == "value", "function parameter mismatch")
+make function_body := function_node[3][0]
+make conditional := function_body[3][0]
+assert(conditional[0] == "when" and size(conditional[3]) == 3, "when/otherwise branch mismatch")
+assert(conditional[3][1][3][0][0] == "yield", "true block must preserve yield")
+assert(conditional[3][2][3][0][0] == "yield", "otherwise block must preserve yield")
+
+# Iteration and while-loop bodies.
+make loops_result := parse_program([
+    ["EACH", "each", 1, 1], ["IDENT", "item", 1, 6],
+    ["IN", "in", 1, 11], ["IDENT", "items", 1, 14],
+    ["{", "{", 1, 20], ["NEWLINE", "\n", 1, 21],
+    ["EMIT", "emit", 2, 3], ["IDENT", "item", 2, 8],
+    ["NEWLINE", "\n", 2, 12], ["}", "}", 3, 1],
+    ["NEWLINE", "\n", 3, 2],
+    ["LOOP", "loop", 4, 1], ["WHILE", "while", 4, 6],
+    ["TRUE", "true", 4, 12], ["{", "{", 4, 17],
+    ["NEWLINE", "\n", 4, 18], ["EMIT", "emit", 5, 3],
+    ["STRING", "tick", 5, 8], ["NEWLINE", "\n", 5, 14],
+    ["}", "}", 6, 1], ["EOF", "", 6, 2]
+])
+assert(loops_result[0] == "OK", "each/loop statement parsing failed")
+assert(loops_result[1][3][0][0] == "each", "each statement node missing")
+assert(loops_result[1][3][0][2] == "item", "each variable mismatch")
+assert(loops_result[1][3][1][0] == "while", "loop while node missing")
+
+# Imports and both named and inline exports.
+make module_result := parse_program([
+    ["IMPORT", "import", 1, 1], ["STRING", "math.rpr", 1, 8],
+    ["AS", "as", 1, 19], ["IDENT", "math", 1, 22],
+    ["NEWLINE", "\n", 1, 26],
+    ["EXPORT", "export", 2, 1], ["MAKE", "make", 2, 8],
+    ["IDENT", "answer", 2, 13], [":=", ":=", 2, 20],
+    ["NUMBER", "42", 2, 23], ["NEWLINE", "\n", 2, 25],
+    ["EXPORT", "export", 3, 1], ["IDENT", "answer", 3, 8],
+    ["EOF", "", 3, 14]
+])
+assert(module_result[0] == "OK", "import/export parsing failed")
+assert(module_result[1][3][0][0] == "import", "import statement node missing")
+assert(module_result[1][3][1][0] == "export" and module_result[1][3][1][3][0][0] == "declare", "inline export mismatch")
+assert(module_result[1][3][2][0] == "export" and module_result[1][3][2][2] == "answer", "named export mismatch")
+
+# A missing statement separator must fail at the unexpected token.
+make malformed := parse_program([
+    ["MAKE", "make", 8, 1], ["IDENT", "value", 8, 6],
+    [":=", ":=", 8, 12], ["NUMBER", "1", 8, 15],
+    ["NUMBER", "2", 8, 17], ["EOF", "", 8, 18]
+])
+assert(malformed[0] == "ERROR", "missing statement separator was accepted")
+assert(malformed[2] == 8 and malformed[3] == 17, "statement error source position mismatch")
+
+emit "SELFHOST_PROGRAM_PARSER_OK"
