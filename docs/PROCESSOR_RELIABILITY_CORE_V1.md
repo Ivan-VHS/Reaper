@@ -103,6 +103,8 @@ python -m reaper --check examples/processor_reliability.rpr
 python -m reaper examples/processor_reliability.rpr
 ```
 
+Load-test runs are bounded to 5,000 steps to stay within the reference runtime execution budget.
+
 The fixture asserts all 20 matrix entries, operand/operation/command/service bytecode dispatch, bytecode round-trip and rejection, arithmetic/unit invariants, production fault-injection denial, safe degradation and blocked dispatch, revision-bound reserve-backed ROOT recovery, silicon thermal guards, simulated registers/barriers, stream correction, copper RC and wear calculations, nano-cell shortfall, signed correction, trace validation, a second full deterministic load execution with complete trace comparison and the Pytyliki report schema.
 
 CI must require these exact output lines:
