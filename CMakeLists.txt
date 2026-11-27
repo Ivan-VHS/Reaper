@@ -43,6 +43,40 @@ if(MSVC)
 else()
  target_compile_options(reaper_core PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
 endif()
+
+# Independent processor backend prototypes. Each target owns a narrow input/output contract.
+add_library(reaper_processor_backend_common STATIC src/processor_backend_status.c)
+add_library(reaper_processor_assembler STATIC src/processor_rv32_assembler.c)
+add_library(reaper_processor_linker STATIC src/processor_rv32_linker.c)
+add_library(reaper_processor_emulator STATIC src/processor_rv32_emulator.c)
+add_library(reaper_processor_logic_net STATIC src/processor_logic_net.c)
+add_library(reaper_processor_rtl STATIC src/processor_rtl_backend.c)
+add_library(reaper_processor_formal STATIC src/processor_formal_backend.c)
+
+set(REAPER_PROCESSOR_BACKEND_TARGETS
+ reaper_processor_backend_common
+ reaper_processor_assembler
+ reaper_processor_linker
+ reaper_processor_emulator
+ reaper_processor_logic_net
+ reaper_processor_rtl
+ reaper_processor_formal)
+foreach(target IN LISTS REAPER_PROCESSOR_BACKEND_TARGETS)
+ target_include_directories(${target} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+                                      PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+ if(MSVC)
+  target_compile_options(${target} PRIVATE /W4)
+ else()
+  target_compile_options(${target} PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+ endif()
+endforeach()
+target_link_libraries(reaper_processor_assembler PUBLIC reaper_processor_backend_common)
+target_link_libraries(reaper_processor_linker PUBLIC reaper_processor_backend_common)
+target_link_libraries(reaper_processor_emulator PUBLIC reaper_processor_backend_common)
+target_link_libraries(reaper_processor_logic_net PUBLIC reaper_processor_backend_common)
+target_link_libraries(reaper_processor_rtl PUBLIC reaper_processor_logic_net reaper_processor_backend_common)
+target_link_libraries(reaper_processor_formal PUBLIC reaper_processor_logic_net reaper_processor_backend_common)
+
 add_executable(reaper-c src/main.c)
 target_link_libraries(reaper-c PRIVATE reaper_core)
 if(REAPER_BUILD_TESTS)
@@ -105,6 +139,27 @@ if(REAPER_BUILD_TESTS)
  target_link_libraries(reaper-system-feature-tests PRIVATE reaper_core)
  add_test(NAME native-system-features COMMAND reaper-system-feature-tests)
 
+
+ add_executable(reaper-processor-assembler-tests tests/test_processor_assembler.c)
+ target_link_libraries(reaper-processor-assembler-tests PRIVATE reaper_processor_assembler)
+ add_test(NAME processor-native-assembler-rv32i COMMAND reaper-processor-assembler-tests)
+
+ add_executable(reaper-processor-linker-tests tests/test_processor_linker.c)
+ target_link_libraries(reaper-processor-linker-tests PRIVATE reaper_processor_assembler reaper_processor_linker)
+ add_test(NAME processor-native-linker-flat-image COMMAND reaper-processor-linker-tests)
+
+ add_executable(reaper-processor-emulator-tests tests/test_processor_emulator.c)
+ target_link_libraries(reaper-processor-emulator-tests PRIVATE reaper_processor_assembler reaper_processor_linker reaper_processor_emulator)
+ add_test(NAME processor-bounded-rv32i-emulator COMMAND reaper-processor-emulator-tests)
+
+ add_executable(reaper-processor-rtl-tests tests/test_processor_rtl.c)
+ target_link_libraries(reaper-processor-rtl-tests PRIVATE reaper_processor_rtl)
+ add_test(NAME processor-systemverilog-rtl-emitter COMMAND reaper-processor-rtl-tests)
+
+ add_executable(reaper-processor-formal-tests tests/test_processor_formal.c)
+ target_link_libraries(reaper-processor-formal-tests PRIVATE reaper_processor_formal)
+ add_test(NAME processor-bounded-formal-equivalence COMMAND reaper-processor-formal-tests)
+
  add_executable(reaper-ffi-tests tests/test_ffi.c)
  target_link_libraries(reaper-ffi-tests PRIVATE reaper_ffi)
  add_test(NAME native-ffi-abi COMMAND reaper-ffi-tests)
@@ -135,4 +190,5 @@ install(TARGETS reaper-c RUNTIME DESTINATION bin)
 install(TARGETS reaper_ffi ARCHIVE DESTINATION lib)
 install(TARGETS reaper_system ARCHIVE DESTINATION lib)
 install(TARGETS reaper_dabi64_desktop ARCHIVE DESTINATION lib)
-install(FILES include/reaper/ffi.h include/reaper/system.h include/reaper/dabi64_desktop.h include/reaper/architecture.h include/reaper/snapshot_audit.h include/reaper/system_features.h DESTINATION include/reaper)
+install(TARGETS reaper_processor_backend_common reaper_processor_assembler reaper_processor_linker reaper_processor_emulator reaper_processor_logic_net reaper_processor_rtl reaper_processor_formal ARCHIVE DESTINATION lib)
+install(FILES include/reaper/ffi.h include/reaper/system.h include/reaper/dabi64_desktop.h include/reaper/architecture.h include/reaper/snapshot_audit.h include/reaper/system_features.h include/reaper/processor_backends.h DESTINATION include/reaper)
