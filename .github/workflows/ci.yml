@@ -10,12 +10,12 @@ permissions:
   contents: read
 
 concurrency:
-  group: reaper-ci-\${{ github.ref }}
+  group: reaper-ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   test:
-    name: Python \${{ matrix.python-version }}
+    name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -28,7 +28,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@v7.1.0
         with:
-          python-version: \${{ matrix.python-version }}
+          python-version: ${{ matrix.python-version }}
       - name: Compile package and tests
         run: python -m compileall -q reaper tests
       - name: Validate localized README links
