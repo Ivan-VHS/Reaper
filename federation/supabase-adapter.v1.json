@@ -1,0 +1,49 @@
+{
+  "schema": "ivan-vhs.supabase-adapter.v1",
+  "project": "reaper",
+  "repository": "Ivan-VHS/Reaper",
+  "role": "producer-consumer",
+  "status": "contract-only",
+  "default_mode": "offline-only",
+  "supabase": {
+    "deployment": "not-configured",
+    "url_env": "SUPABASE_URL",
+    "publishable_key_env": "SUPABASE_PUBLISHABLE_KEY",
+    "service_role_key_in_client": false
+  },
+  "network_policy": {
+    "enabled_by_default": false,
+    "background_sync": false,
+    "requires_user_action": true
+  },
+  "local_first": {
+    "local_data_authoritative": true,
+    "sync_model": "append-only-event-log",
+    "conflict_resolution": "domain-specific-versioned"
+  },
+  "contracts": {
+    "event_envelope": "ivan-vhs.ecosystem-event.v1",
+    "artifact_manifest": "ivan-vhs.ecosystem-artifact.v1"
+  },
+  "data_domains": [
+    "compiler_build_summaries",
+    "diagnostic_aggregates",
+    "package_manifest_metadata",
+    "workspace_preferences"
+  ],
+  "excluded_data": [
+    "source_text",
+    "source_file_contents",
+    "absolute_local_paths",
+    "environment_variables",
+    "access_tokens",
+    "service_role_keys",
+    "unredacted_compiler_logs"
+  ],
+  "security": {
+    "rls_required": true,
+    "service_role_key_never_in_client": true,
+    "explicit_upload_consent": true,
+    "telemetry_default": "disabled"
+  }
+}
