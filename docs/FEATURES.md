@@ -2,7 +2,7 @@
 
 | Component | Current scope | Status |
 |---|---|---|
-| Python runtime | lexer, parser, interpreter, CLI, REPL, modules | available |
+| Python runtime | lexer, parser, interpreter, CLI, REPL, modules; scenario declarations, numeric registers, loop continuation and inclusive integer ranges | available; Scenario Flow v1 is reference-runtime only |
 | Static type analysis | conservative AST inference, numeric/operator checks, collection/index checks, mutability and call-arity diagnostics | partial; built into `reaper --check`, Studio and LSP; static-only, no source execution |
 | Quotas/resources | steps, calls, collections, text, heap, open handles | reference runtime |
 | Division | Euclidean divmod, quotient/remainder, divisibility | implemented |
