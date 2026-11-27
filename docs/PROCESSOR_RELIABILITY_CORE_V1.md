@@ -1,0 +1,110 @@
+# Processor Reliability Core v1
+
+**Status:** executable Reaper-source model with conformance fixture. Hardware operations remain simulated or adapter-gated.
+
+The core lives in `stdlib/processor_reliability.rpr`. The end-to-end fixture is `examples/processor_reliability.rpr`.
+
+## Scope
+
+The module composes six bounded subsystems:
+
+| Subsystem | Public surface | Contract |
+|---|---|---|
+| Formal Core | `valid_integer`, `checked_add`, `checked_multiply`, `quantity`, `convert_quantity` | Safe-integer arithmetic, finite bounds, explicit physical dimensions |
+| Execution Core | `type_role_matrix`, `validate_construct`, `run_construct`, `bytecode_encode`, `bytecode_decode`, `execute_bytecode` | Exactly 20 registered type/role pairs; strict opcode/domain validation |
+| Repair Core | `new_state`, `repair_spend`, `repair_forecast`, `reserve_spend` | Finite shared budget, local reserves, explicit exhaustion and safe degradation |
+| Physical Core | `silicon_domain`, `silicon_advance`, `silicon_barrier`, `copper_evaluate`, `copper_age`, `copper_channel`, `nano_cell`, `nano_repair`, `stream_state`, `stream_advance` | Bounded deterministic silicon, stream, copper RC, electromigration and nano-cell models |
+| Correction Core | `correction_step`, `apply_correction` | Signed feedback, bounded gain and step, no intentional overshoot, residual-error convergence checks |
+| Pytyliki | `trace_checksum`, `replay_validate`, `run_load_test`, `pytyliki_report` | Deterministic trace, bounded load run, replay verification and versioned report envelope |
+
+The source uses the currently supported Reaper grammar and positional list records. It does not introduce unsupported parser-level struct, enum, MMIO or IRQ syntax.
+
+## State and records
+
+`new_state(capacity, low_watermark, mode, local_reserves, initial_phase_error_ps)` returns `[ok, state, diagnostic]`.
+
+The state record is versioned and has the following slots:
+
+| Index | Field |
+|---:|---|
+| 0–1 | Magic `RPC` and schema version |
+| 2 | Simulated cycle counter |
+| 3–5 | Initial capacity, remaining repair budget, low watermark |
+| 6 | `production` or `test` mode |
+| 7–11 | Fault-injection enabled, period, duty, phase and activation count |
+| 12–13 | Signed residual phase error and cumulative absolute correction |
+| 14–15 | Executed step and service invocation counters |
+| 16 | Kernel lifecycle/degradation status |
+| 17 | Local repair-cell reserves |
+| 18 | Injected test-fault count |
+
+Do not mutate state records outside the module. Every transition returns a replacement record; `state_valid` checks the full shape and bounds.
+
+## Execution and bytecode
+
+The type/role matrix contains four roles for each of `RULE`, `BOOT`, `START`, `ROOT` and `SCENARIO`. `validate_matrix_coverage` rejects missing combinations and non-20 fixture sets.
+
+RPR-BC words are represented as two unsigned 32-bit integers:
+
+- `high32 = opcode * 2^24 + domain * 2^16 + operandA`
+- `low32 = operandB * 2^16 + flags`
+
+Both operands and flags must fit `u16`; each word must fit `u32`. Unknown opcode and domain values fail decoding. The supported opcodes are `0x10`, `0x11`, `0x12`, `0x20`, `0x21`, `0x30`, `0x31` and `0x40`.
+
+The copper-tune instruction evaluates a deterministic RC fixture from its operands; the nano-pulse instruction consumes a bounded local repair-cell fixture. These are model operations, not bus writes.
+
+## Repair and fault policy
+
+A repair debit is clamped to the remaining budget. Crossing the low watermark is a one-time state transition while periodic injection is already active.
+
+- In `production` mode, low reserve moves the state to `safe-degraded`; fault injection is denied.
+- In `test` mode, crossing the watermark may enable bounded periodic fault injection. The injected fault is explicitly synthetic and is counted in the trace.
+- Re-entering a low-budget state does not repeatedly increment the activation counter.
+- The forecast is advisory and never reserves or spends resources.
+
+The fault window is `((cycle - phase) % period) < duty`. Period and duty are validated before activation.
+
+## Physical and correction models
+
+Copper resistance uses the supplied geometry and material values:
+
+`R_mOhm = resistivity_nOhm_m * length_um * 1,000,000 / area_nm2`
+
+The first-order RC delay is:
+
+`delay_ps = R_mOhm * capacitance_fF / 1,000,000`
+
+Electromigration wear is a bounded deterministic stress estimate using squared current density, elapsed cycles and a temperature factor. It is a comparative model, not a process-qualified lifetime prediction.
+
+Correction uses a signed error `e`, gain `g` in permille and maximum step `s`. The applied step is bounded by `min(abs(e) * g / 1000, s)`, with a one-unit minimum for nonzero errors. Its sign opposes the error. The verifier checks:
+
+`abs(residual_error) <= abs(previous_error)`
+
+A monotonic step is not evidence of physical convergence outside the model. Real clock/phase correction requires measured feedback and a qualified target-specific controller.
+
+## Pytyliki report
+
+`pytyliki_report` returns the versioned schema `pytyliki.processor-reliability.v1`, including sample count, deterministic checksum, remaining budget, injected-fault count, scenario activation count, absolute residual error, lifecycle status and evidence quality.
+
+The report explicitly labels the measurements as `simulated` and includes the limitation that no hardware writes, scheduler changes or voltage changes occurred. Synthetic fixtures must not be mixed with observed processor telemetry.
+
+## Verification
+
+From the Reaper repository root:
+
+```sh
+python -m reaper --check examples/processor_reliability.rpr
+python -m reaper examples/processor_reliability.rpr
+```
+
+The fixture asserts all 20 matrix entries, bytecode round-trip and rejection, arithmetic/unit invariants, production fault-injection denial, safe degradation, silicon thermal guards, copper RC and wear calculations, nano-cell shortfall, signed correction, deterministic load replay and the Pytyliki report schema.
+
+CI must require these exact output lines:
+
+- `REAPER_PROCESSOR_RELIABILITY:PASS`
+- `TYPE_ROLE_COVERAGE:20/20`
+- `PYTYLIKI_REPLAY:PASS`
+
+## Hardware boundary
+
+This package does not map physical addresses, write MMIO, program CPU registers, alter scheduling/affinity/voltage/frequency, install firmware or drivers, register real interrupts or repair physical processor faults. The register snapshot and barriers are simulated descriptors. A future real backend must be a separate capability-gated OS/driver adapter with target/ABI validation, real memory-ordering primitives, audit records and hardware-in-the-loop qualification.
