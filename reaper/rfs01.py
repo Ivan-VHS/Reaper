@@ -602,7 +602,7 @@ def verify_ir(module: RFSIRModule) -> None:
         raise RFS01Error("value is not an RFS-01 typed IR module", "RFS-E501")
     if module.schema != "rfs-01.typed-ir.v1" or module.version != "1.0":
         raise RFS01Error("unsupported typed IR schema or language version", "RFS-E501")
-    if not isinstance(module.name, str) or not module.name:
+    if not valid_text(module.name, 63):
         raise RFS01Error("typed IR module name is invalid", "RFS-E501")
     if isinstance(module.cycles, bool) or not isinstance(module.cycles, int) or not 1 <= module.cycles <= MAX_CYCLES:
         raise RFS01Error("typed IR cycle budget is outside the supported range", "RFS-E501")
@@ -627,6 +627,8 @@ def verify_ir(module: RFSIRModule) -> None:
     if len(module.instructions) > MAX_ACTIONS + MAX_CONTRASTS + MAX_EMITS:
         raise RFS01Error("typed IR instruction count exceeds its resource limit", "RFS-E501")
 
+    if any(not isinstance(node, NodeSpec) for node in module.nodes):
+        raise RFS01Error("typed IR node table contains a non-node value", "RFS-E501")
     node_ids = [node.id for node in module.nodes]
     if any(not valid_text(node_id, 63) for node_id in node_ids) or len(node_ids) != len(set(node_ids)):
         raise RFS01Error("typed IR node identifiers are invalid or duplicated", "RFS-E501")
@@ -635,7 +637,8 @@ def verify_ir(module: RFSIRModule) -> None:
 
     for node in module.nodes:
         if (
-            node.layer not in LAYERS
+            not valid_text(node.layer, 16)
+            or node.layer not in LAYERS
             or not finite_number(node.pressure, 0.0)
             or not finite_number(node.load_limit, 0.0)
             or float(node.load_limit) <= 0.0
@@ -650,11 +653,16 @@ def verify_ir(module: RFSIRModule) -> None:
 
     link_pairs: set[tuple[str, str]] = set()
     for link in module.links:
+        if not isinstance(link, LinkSpec):
+            raise RFS01Error("typed IR link table contains a non-link value", "RFS-E501")
         if (
             not valid_text(link.id, 63)
             or link.id in declaration_ids
+            or not valid_text(link.origin, 63)
+            or not valid_text(link.target, 63)
             or link.origin not in known_nodes
             or link.target not in known_nodes
+            or not valid_text(link.channel, 16)
             or link.channel not in CHANNELS
             or not isinstance(link.blocked, bool)
             or not finite_number(link.weight, 0.0)
@@ -668,10 +676,13 @@ def verify_ir(module: RFSIRModule) -> None:
 
     last_sequences: dict[str, int] = {}
     for frame in module.signals:
+        if not isinstance(frame, SignalFrame):
+            raise RFS01Error("typed IR signal table contains a non-signal value", "RFS-E501")
         if (
             isinstance(frame.sequence, bool)
             or not isinstance(frame.sequence, int)
             or not 0 <= frame.sequence < (1 << 64)
+            or not valid_text(frame.origin, 63)
             or frame.origin not in known_nodes
             or not valid_text(frame.payload, MAX_PAYLOAD_BYTES, allow_empty=True)
             or not isinstance(frame.trusted, bool)
@@ -683,19 +694,24 @@ def verify_ir(module: RFSIRModule) -> None:
             raise RFS01Error("typed IR signal sequence is not strictly increasing", "RFS-E501")
         last_sequences[frame.origin] = frame.sequence
 
-    phase_ids: set[str] = set()
     for phase in module.phases:
+        if not isinstance(phase, PhaseGate):
+            raise RFS01Error("typed IR phase table contains a non-phase value", "RFS-E501")
         if (
             not valid_text(phase.id, 63)
             or phase.id in declaration_ids
+            or not valid_text(phase.node, 63)
             or phase.node not in known_nodes
         ):
             raise RFS01Error("typed IR phase is malformed or unresolved", "RFS-E501")
         declaration_ids.add(phase.id)
-        phase_ids.add(phase.id)
         for comparison in (phase.first, phase.second):
+            if not isinstance(comparison, Comparison):
+                raise RFS01Error("typed IR phase contains a non-comparison value", "RFS-E501")
             if (
-                comparison.metric not in METRICS
+                not valid_text(comparison.metric, 16)
+                or comparison.metric not in METRICS
+                or not valid_text(comparison.operator, 2)
                 or comparison.operator not in _COMPARATORS
                 or not finite_number(comparison.value)
             ):
@@ -708,20 +724,41 @@ def verify_ir(module: RFSIRModule) -> None:
     }
     emit_count = 0
     for expected_sequence, instruction in enumerate(module.instructions):
-        if instruction.sequence != expected_sequence or instruction.opcode not in known_opcodes:
-            raise RFS01Error("typed IR instruction sequence or opcode is invalid", "RFS-E501", instruction.span)
+        if (
+            not isinstance(instruction, RFSIRInstruction)
+            or isinstance(instruction.sequence, bool)
+            or not isinstance(instruction.sequence, int)
+            or instruction.sequence != expected_sequence
+            or not isinstance(instruction.opcode, str)
+            or instruction.opcode not in known_opcodes
+            or not isinstance(instruction.operands, tuple)
+        ):
+            span = instruction.span if isinstance(instruction, RFSIRInstruction) else None
+            raise RFS01Error("typed IR instruction sequence or opcode is invalid", "RFS-E501", span)
         args = instruction.operands
         if instruction.opcode in {"FLOW_SIGNAL", "FLOW_PRESSURE_FORWARD", "FLOW_PRESSURE_REVERSE"}:
-            if len(args) != 2 or args[0] not in known_nodes or args[1] not in known_nodes:
+            if (
+                len(args) != 2
+                or not valid_text(args[0], 63)
+                or not valid_text(args[1], 63)
+                or args[0] not in known_nodes
+                or args[1] not in known_nodes
+            ):
                 raise RFS01Error("typed IR flow has invalid operands", "RFS-E501", instruction.span)
             origin, target = (args[0], args[1]) if instruction.opcode != "FLOW_PRESSURE_REVERSE" else (args[1], args[0])
             if (origin, target) not in link_pairs:
                 raise RFS01Error("typed IR flow has no matching directed link", "RFS-E501", instruction.span)
         elif instruction.opcode in {"RECOVER_ROOT", "RECOVER_CORE"}:
-            if len(args) != 1 or args[0] not in known_nodes:
+            if len(args) != 1 or not valid_text(args[0], 63) or args[0] not in known_nodes:
                 raise RFS01Error("typed IR recovery has an unresolved node", "RFS-E501", instruction.span)
         elif instruction.opcode in {"CONTRAST_COMPLEMENT", "CONTRAST_DIFFERENTIAL"}:
-            if len(args) != 2 or args[0] not in known_nodes or args[1] not in known_nodes:
+            if (
+                len(args) != 2
+                or not valid_text(args[0], 63)
+                or not valid_text(args[1], 63)
+                or args[0] not in known_nodes
+                or args[1] not in known_nodes
+            ):
                 raise RFS01Error("typed IR contrast has an unresolved operand", "RFS-E501", instruction.span)
         elif instruction.opcode == "EMIT":
             emit_count += 1
