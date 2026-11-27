@@ -547,6 +547,45 @@
         "linker-map",
         "cross-target-conformance"
       ]
+    },
+    {
+      "id": "REAPER-PFI-001",
+      "name": "local Pytyliki Processor Fabric evidence importer",
+      "area": "interop",
+      "status": "partial",
+      "depends_on": [
+        "REAPER-PEW-001",
+        "REAPER-PEW-002"
+      ],
+      "acceptance": [
+        "local-file-only-import",
+        "source-sha256-match",
+        "topology-ppf-generation-match",
+        "parent-and-dependency-cycle-rejection",
+        "hardware-resource-reference-closure",
+        "utf8-byte-span-preservation",
+        "producer-semantic-claims-denied"
+      ]
+    },
+    {
+      "id": "REAPER-PFI-002",
+      "name": "Processor Fabric typed SemanticGraph adapter",
+      "area": "compiler",
+      "status": "partial",
+      "depends_on": [
+        "MOST-TYP-001",
+        "MOST-EFF-001",
+        "REAPER-PFI-001"
+      ],
+      "acceptance": [
+        "reaper-owned-semantic-binding-required",
+        "typed-input-port-match",
+        "effect-capability-denial",
+        "dma-ownership-admission",
+        "control-dependency-preservation",
+        "semantic-graph-verification",
+        "no-stack-bytecode-claim"
+      ]
     }
   ],
   "profile": "МОСТ — exact Russian keyword aliases; no separate parser, semantics, runtime or backend"
