@@ -93,6 +93,7 @@ ReaperProcessorBackendStatus reaper_rv32_link(
             for (k = 0u; k < output->symbol_count; ++k)
                 if (output->symbols[k].symbol_id == symbol->symbol_id)
                     return REAPER_BACKEND_DUPLICATE_SYMBOL;
+            output->symbols[output->symbol_count].symbol_id = symbol->symbol_id;
             ++output->symbol_count;
         }
     }
