@@ -1,0 +1,231 @@
+# Reaper language facade for the versioned Pytyliki mathematical research kernels.
+# Every wrapper returns a validated call plan; none executes native code.
+
+export craft catalog() {
+    yield research_kernel_catalog()
+}
+
+export craft kernel_plan(function_id, arguments) {
+    yield research_kernel_plan(function_id, arguments)
+}
+
+# Riemann Hypothesis
+export craft riemann_dirichlet_partial(sigma, t, terms) {
+    yield research_kernel_plan("riemann.dirichlet_partial", [sigma, t, terms])
+}
+
+export craft riemann_eta_partial(sigma, t, terms) {
+    yield research_kernel_plan("riemann.eta_partial", [sigma, t, terms])
+}
+
+export craft riemann_critical_residual(t, terms) {
+    yield research_kernel_plan("riemann.critical_residual", [t, terms])
+}
+
+# P versus NP
+export craft p_vs_np_cnf_validate(variables, literals, literal_count, clause_offsets, clause_count) {
+    yield research_kernel_plan("complexity.cnf_validate", [variables, literals, literal_count, clause_offsets, clause_count])
+}
+
+export craft p_vs_np_sat_verify(variables, literals, literal_count, clause_offsets, clause_count, assignment) {
+    yield research_kernel_plan("complexity.sat_verify", [variables, literals, literal_count, clause_offsets, clause_count, assignment])
+}
+
+export craft p_vs_np_sat_find_bounded(variables, literals, literal_count, clause_offsets, clause_count, assignment_budget) {
+    yield research_kernel_plan("complexity.sat_find_bounded", [variables, literals, literal_count, clause_offsets, clause_count, assignment_budget])
+}
+
+# Collatz Conjecture
+export craft collatz_step(value) {
+    yield research_kernel_plan("collatz.step", [value])
+}
+
+export craft collatz_trajectory(start, step_budget, sequence_capacity) {
+    yield research_kernel_plan("collatz.trajectory", [start, step_budget, sequence_capacity])
+}
+
+export craft collatz_stopping_time(start, step_budget) {
+    yield research_kernel_plan("collatz.stopping_time", [start, step_budget])
+}
+
+# Navier–Stokes existence and smoothness
+export craft navier_stokes_grid_divergence(u, v, w, nx, ny, nz, dx, dy, dz) {
+    yield research_kernel_plan("navier_stokes.grid_divergence", [u, v, w, nx, ny, nz, dx, dy, dz])
+}
+
+export craft navier_stokes_grid_vorticity(u, v, w, nx, ny, nz, dx, dy, dz) {
+    yield research_kernel_plan("navier_stokes.grid_vorticity", [u, v, w, nx, ny, nz, dx, dy, dz])
+}
+
+export craft navier_stokes_cfl_dt(max_speed, dx, dy, dz, viscosity, safety) {
+    yield research_kernel_plan("navier_stokes.cfl_dt", [max_speed, dx, dy, dz, viscosity, safety])
+}
+
+# Birch–Swinnerton-Dyer Conjecture
+export craft bsd_curve_nonsingular_mod_prime(a, b, prime) {
+    yield research_kernel_plan("bsd.curve_nonsingular_mod_prime", [a, b, prime])
+}
+
+export craft bsd_curve_point_count_mod_prime(a, b, prime) {
+    yield research_kernel_plan("bsd.curve_point_count_mod_prime", [a, b, prime])
+}
+
+export craft bsd_frobenius_trace_mod_prime(a, b, prime) {
+    yield research_kernel_plan("bsd.frobenius_trace_mod_prime", [a, b, prime])
+}
+
+# Hodge Conjecture
+export craft hodge_type_check(cohomology_degree, p, q) {
+    yield research_kernel_plan("hodge.type_check", [cohomology_degree, p, q])
+}
+
+export craft hodge_cycle_span_rank_mod_prime(cycles, cycle_count, dimension, prime) {
+    yield research_kernel_plan("hodge.cycle_span_rank_mod_prime", [cycles, cycle_count, dimension, prime])
+}
+
+export craft hodge_class_in_cycle_span_mod_prime(cycles, cycle_count, dimension, candidate, prime) {
+    yield research_kernel_plan("hodge.class_in_cycle_span_mod_prime", [cycles, cycle_count, dimension, candidate, prime])
+}
+
+# Yang–Mills existence and mass gap
+export craft yang_mills_u1_plaquette_phase(link_angles, orientations) {
+    yield research_kernel_plan("yang_mills.u1_plaquette_phase", [link_angles, orientations])
+}
+
+export craft yang_mills_u1_wilson_action(beta, plaquette_phase) {
+    yield research_kernel_plan("yang_mills.u1_wilson_action", [beta, plaquette_phase])
+}
+
+export craft yang_mills_correlator_effective_mass(c_t, c_t1, lattice_spacing) {
+    yield research_kernel_plan("yang_mills.correlator_effective_mass", [c_t, c_t1, lattice_spacing])
+}
+
+# Goldbach Conjecture
+export craft goldbach_is_prime_u64(value) {
+    yield research_kernel_plan("goldbach.is_prime_u64", [value])
+}
+
+export craft goldbach_verify(even_value, prime_a) {
+    yield research_kernel_plan("goldbach.verify", [even_value, prime_a])
+}
+
+export craft goldbach_find_pair_bounded(even_value, candidate_budget) {
+    yield research_kernel_plan("goldbach.find_pair_bounded", [even_value, candidate_budget])
+}
+
+# Twin Prime Conjecture
+export craft twin_primes_verify(lower_prime) {
+    yield research_kernel_plan("twin_primes.verify", [lower_prime])
+}
+
+export craft twin_primes_next_bounded(lower_bound, candidate_budget) {
+    yield research_kernel_plan("twin_primes.next_bounded", [lower_bound, candidate_budget])
+}
+
+export craft twin_primes_count_bounded(upper_bound, candidate_budget) {
+    yield research_kernel_plan("twin_primes.count_bounded", [upper_bound, candidate_budget])
+}
+
+# Halting Problem
+export craft halting_vm_step(program, before) {
+    yield research_kernel_plan("halting.vm_step", [program, before])
+}
+
+export craft halting_vm_run_bounded(program, initial_state, fuel) {
+    yield research_kernel_plan("halting.vm_run_bounded", [program, initial_state, fuel])
+}
+
+export craft halting_vm_trace_verify(program, trace) {
+    yield research_kernel_plan("halting.vm_trace_verify", [program, trace])
+}
+
+# Hadwiger–Nelson problem
+export craft hadwiger_nelson_unit_graph_build(xy, vertex_count, scale) {
+    yield research_kernel_plan("hadwiger_nelson.unit_graph_build", [xy, vertex_count, scale])
+}
+
+export craft hadwiger_nelson_coloring_verify(vertex_count, edges, colors, color_count) {
+    yield research_kernel_plan("hadwiger_nelson.coloring_verify", [vertex_count, edges, colors, color_count])
+}
+
+export craft hadwiger_nelson_coloring_search_bounded(vertex_count, edges, color_count, node_budget) {
+    yield research_kernel_plan("hadwiger_nelson.coloring_search_bounded", [vertex_count, edges, color_count, node_budget])
+}
+
+# Inscribed Square Problem
+export craft inscribed_square_point_on_polyline(curve, point, tolerance) {
+    yield research_kernel_plan("inscribed_square.point_on_polyline", [curve, point, tolerance])
+}
+
+export craft inscribed_square_verify(curve, square, tolerance) {
+    yield research_kernel_plan("inscribed_square.verify", [curve, square, tolerance])
+}
+
+export craft inscribed_square_search_sampled(curve, subdivisions, tolerance) {
+    yield research_kernel_plan("inscribed_square.search_sampled", [curve, subdivisions, tolerance])
+}
+
+# Legendre Conjecture
+export craft legendre_interval(n) {
+    yield research_kernel_plan("legendre.interval", [n])
+}
+
+export craft legendre_witness_verify(n, prime_candidate) {
+    yield research_kernel_plan("legendre.witness_verify", [n, prime_candidate])
+}
+
+export craft legendre_find_prime_bounded(n, candidate_budget) {
+    yield research_kernel_plan("legendre.find_prime_bounded", [n, candidate_budget])
+}
+
+# Beal Conjecture
+export craft beal_power_sum_check(a, x, b, y, c, z) {
+    yield research_kernel_plan("beal.power_sum_check", [a, x, b, y, c, z])
+}
+
+export craft beal_common_prime_divisor(a, b, c) {
+    yield research_kernel_plan("beal.common_prime_divisor", [a, b, c])
+}
+
+export craft beal_counterexample_screen(a, x, b, y, c, z) {
+    yield research_kernel_plan("beal.counterexample_screen", [a, x, b, y, c, z])
+}
+
+# Perfect Cuboid Problem
+export craft perfect_cuboid_verify(a, b, c) {
+    yield research_kernel_plan("perfect_cuboid.verify", [a, b, c])
+}
+
+export craft perfect_cuboid_face_diagonals(a, b, c) {
+    yield research_kernel_plan("perfect_cuboid.face_diagonals", [a, b, c])
+}
+
+export craft perfect_cuboid_search_bounded(max_edge, node_budget) {
+    yield research_kernel_plan("perfect_cuboid.search_bounded", [max_edge, node_budget])
+}
+
+# Tate Conjecture
+export craft tate_fixed_vector_verify(frobenius, dimension, vector, prime) {
+    yield research_kernel_plan("tate.fixed_vector_verify", [frobenius, dimension, vector, prime])
+}
+
+export craft tate_invariant_dimension_mod_prime(frobenius, dimension, prime) {
+    yield research_kernel_plan("tate.invariant_dimension_mod_prime", [frobenius, dimension, prime])
+}
+
+export craft tate_cycle_span_rank_mod_prime(cycle_vectors, cycle_count, dimension, prime) {
+    yield research_kernel_plan("tate.cycle_span_rank_mod_prime", [cycle_vectors, cycle_count, dimension, prime])
+}
+
+# Matrix multiplication exponent ω = 2
+export craft matrix_exponent_multiply_f64(left, right, dimension) {
+    yield research_kernel_plan("matrix.multiply_f64", [left, right, dimension])
+}
+
+export craft matrix_exponent_product_verify_f64(left, right, candidate, dimension, tolerance) {
+    yield research_kernel_plan("matrix.product_verify_f64", [left, right, candidate, dimension, tolerance])
+}
+
+export craft matrix_exponent_scaling_exponent(n1, seconds1, n2, seconds2) {
+    yield research_kernel_plan("matrix.scaling_exponent", [n1, seconds1, n2, seconds2])
+}
