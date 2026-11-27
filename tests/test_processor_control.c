@@ -212,7 +212,7 @@ static void test_capability_gated_platform_adapters(void) {
     ) == REAPER_PROCESSOR_INVALID_ARGUMENT);
 
     ReaperProcessorDebugSession session = {
-        0U, 500U, 16U, 0U, 1U, 0U
+        0U, 500U, 16U, UINT32_C(1), 1U, 0U
     };
     uint8_t capture[32] = {0U};
     size_t written = 0U;
