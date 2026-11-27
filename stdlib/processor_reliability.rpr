@@ -242,7 +242,13 @@ export craft state_valid(state) {
     when not valid_integer(state[13], 0, SAFE_INTEGER_MAX) { yield false }
     when not valid_integer(state[14], 0, SAFE_INTEGER_MAX) or
          not valid_integer(state[15], 0, SAFE_INTEGER_MAX) { yield false }
-    when kind(state[16]) != "text" or kind(state[17]) != "list" { yield false }
+    when kind(state[16]) != "text" or
+         not contains(["cold", "ready", "safe-degraded", "fault-injection-active"], state[16]) or
+         kind(state[17]) != "list" { yield false }
+    when state[7] and state[6] != "test" { yield false }
+    when state[7] and (state[8] < 64 or state[9] < 1 or state[9] > state[8] // 2) { yield false }
+    when state[7] and state[16] != "fault-injection-active" { yield false }
+    when state[6] == "production" and state[18] != 0 { yield false }
     when not valid_integer(state[18], 0, SAFE_INTEGER_MAX) { yield false }
     each reserve in state[17] {
         when not valid_integer(reserve, 0, 1000000) { yield false }
@@ -300,8 +306,12 @@ export craft repair_spend(state, cost, period_cycles, duty_cycles) {
             change next := state_put(next, 7, true)
             change next := state_put(next, 8, period_cycles)
             change next := state_put(next, 9, duty_cycles)
+            make activation_count := checked_add(state[11], 1)
+            when not activation_count[0] {
+                yield [false, state, 0, false, false, "RPR-FAULT-0033: activation counter overflow"]
+            }
             change next := state_put(next, 10, 0)
-            change next := state_put(next, 11, state[11] + 1)
+            change next := state_put(next, 11, activation_count[1])
             change next := state_put(next, 16, "fault-injection-active")
             change triggered := true
         } otherwise {
@@ -583,8 +593,12 @@ export craft scenario_enable(state, period_cycles, duty_cycles) {
     make next := state_put(state, 7, true)
     change next := state_put(next, 8, period_cycles)
     change next := state_put(next, 9, duty_cycles)
+    make activation_count := checked_add(state[11], 1)
+    when not activation_count[0] {
+        yield [false, state, "RPR-FAULT-0033: activation counter overflow"]
+    }
     change next := state_put(next, 10, 0)
-    change next := state_put(next, 11, state[11] + 1)
+    change next := state_put(next, 11, activation_count[1])
     change next := state_put(next, 16, "fault-injection-active")
     yield [true, next, ""]
 }
@@ -748,11 +762,15 @@ export craft run_construct(state, spec) {
     make checked := validate_construct(spec)
     when not checked[0] { yield [false, state, [], checked[1]] }
     make next_cycle := checked_add(state[2], 1)
+    make next_step := checked_add(state[14], 1)
     when not next_cycle[0] { yield [false, state, [], next_cycle[2]] }
+    when not next_step[0] { yield [false, state, [], next_step[2]] }
     make next := state_put(state, 2, next_cycle[1])
-    change next := state_put(next, 14, state[14] + 1)
+    change next := state_put(next, 14, next_step[1])
     when spec[1] == "SERVICE" {
-        change next := state_put(next, 15, state[15] + 1)
+        make service_count := checked_add(state[15], 1)
+        when not service_count[0] { yield [false, state, [], service_count[2]] }
+        change next := state_put(next, 15, service_count[1])
     }
     make spent := 0
     make triggered := false
