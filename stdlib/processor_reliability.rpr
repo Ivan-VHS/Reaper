@@ -1317,7 +1317,7 @@ export craft processor_adapter_valid(adapter) {
     when not contains(["read-only", "kernel-read", "kernel-control", "user-control"], adapter[6]) { yield false }
     when kind(adapter[7]) != "boolean" or kind(adapter[8]) != "list" { yield false }
     each operation in adapter[8] {
-        when not contains(["event-query", "counter-read", "persisted-record-read", "msr-read", "ap-start", "ipi-send", "timer-arm", "page-quarantine", "page-replace", "diagnostic-export"], operation) {
+        when not contains(["event-query", "counter-read", "persisted-record-read", "msr-read", "ap-start", "ipi-send", "timer-arm", "page-quarantine", "page-replace", "timer-preempt", "diagnostic-export"], operation) {
             yield false
         }
     }
@@ -1455,19 +1455,19 @@ export craft timer_preemption_decision(timer, elapsed_ticks, remaining_quantum, 
 export craft timer_preemption_admission(timer, elapsed_ticks, remaining_quantum, interrupts_enabled, reschedule_pending, adapter) {
     make decision := timer_preemption_decision(timer, elapsed_ticks, remaining_quantum, interrupts_enabled, reschedule_pending)
     when decision != "request-reschedule-through-kernel-ipi-adapter" { yield decision }
-    yield processor_adapter_admits(adapter, "apic-ipi-timer", "duckos", "timer-arm", "kernel-control")
+    yield processor_adapter_admits(adapter, "apic-ipi-timer", "duckos", "timer-preempt", "kernel-control")
 }
 
-export craft mca_msr_allowlisted(msr) {
-    when not valid_integer(msr, 0, 4095) { yield false }
-    when contains([377, 378], msr) { yield true }
-    when msr >= 1024 and msr <= 1279 { yield true }
+export craft mca_msr_allowlisted(msr, bank_count) {
+    when not valid_integer(msr, 0, 4095) or not valid_integer(bank_count, 1, 255) { yield false }
+    when contains([377, 378, 379], msr) { yield true }
+    when msr >= 1024 and msr < 1024 + bank_count * 4 { yield true }
     yield false
 }
 
-export craft mca_msr_read_admission(msr, cpuid_mca, adapter) {
+export craft mca_msr_read_admission(msr, bank_count, cpuid_mca, adapter) {
     when kind(cpuid_mca) != "boolean" or not cpuid_mca { yield "reject-mca-not-advertised" }
-    when not mca_msr_allowlisted(msr) { yield "reject-msr-not-allowlisted" }
+    when not mca_msr_allowlisted(msr, bank_count) { yield "reject-msr-not-allowlisted" }
     when not processor_adapter_valid(adapter) { yield "reject-adapter-schema" }
     when adapter[2] != "mca-msr" and adapter[2] != "processor-control" { yield "reject-adapter-subsystem" }
     when adapter[3] != "duckos" and adapter[3] != "any" { yield "reject-platform-mismatch" }
@@ -1525,6 +1525,7 @@ export craft page_recovery_decision(plan, event, rollback_ready) {
     when not page_recovery_plan_valid(plan) or not mca_event_valid(event) { yield "reject-invalid-page-or-mca-evidence" }
     when not event[4] or not event[5] or not event[7] { yield "reject-page-recovery-without-valid-uncorrected-address" }
     when event[11] != "confirmed" { yield "defer-page-recovery-low-confidence" }
+    when event[8] != plan[1] { yield "reject-page-resource-scope-mismatch" }
     when plan[3] != "poisoned" and plan[3] != "quarantined" { yield "reject-page-not-poisoned" }
     when plan[4] or plan[6] > 0 { yield "defer-pinned-or-referenced-page" }
     when plan[5] and not plan[8] { yield "require-copy-verify-before-replacement" }
