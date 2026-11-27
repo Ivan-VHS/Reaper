@@ -244,7 +244,7 @@ export craft state_valid(state) {
          not valid_integer(state[15], 0, SAFE_INTEGER_MAX) { yield false }
     when kind(state[16]) != "text" or
          not contains(["cold", "ready", "safe-degraded", "fault-injection-active"], state[16]) or
-         kind(state[17]) != "list" { yield false }
+         kind(state[17]) != "list" or size(state[17]) == 0 or size(state[17]) > 256 { yield false }
     when state[7] and state[6] != "test" { yield false }
     when state[7] and (state[8] < 64 or state[9] < 1 or state[9] > state[8] // 2) { yield false }
     when state[7] and state[16] != "fault-injection-active" { yield false }
@@ -729,7 +729,7 @@ export craft execute_bytecode(state, word) {
     make magnitude := instruction[3]
     make auxiliary := instruction[4]
     when opcode == 33 {
-        change magnitude := 0
+        change magnitude := instruction[4]
         change auxiliary := instruction[3]
     }
     make spec := [instruction[1], role, instruction[2], label, magnitude, auxiliary]
