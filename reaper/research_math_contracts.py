@@ -5,8 +5,9 @@ kernels, prove conjectures, or infer results from numerical observations.
 """
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from dataclasses import dataclass
+from copy import deepcopy
 from functools import lru_cache
 import json
 import math
@@ -274,7 +275,8 @@ def validate_catalog_document(document: Any) -> dict[str, Any]:
         raise ResearchContractError("problem policy has missing or unexpected fields")
     if policy["open_problem_results"] != "EXPERIMENTAL_EVIDENCE_ONLY":
         raise ResearchContractError("open mathematical problems must remain evidence-only")
-    if set(policy["forbid_claims"]) != {"PROVED", "DISPROVED", "SOLVED"}:
+    forbidden_claims = policy["forbid_claims"]
+    if not isinstance(forbidden_claims, list) or set(forbidden_claims) != {"PROVED", "DISPROVED", "SOLVED"}:
         raise ResearchContractError("the catalog must forbid unsupported proof/solution claims")
     if policy["require_bounded_work"] is not True or policy["require_source_provenance"] is not True:
         raise ResearchContractError("bounded work and source provenance are mandatory")
@@ -355,7 +357,7 @@ def load_research_math_catalog(path: str | Path | None = None) -> dict[str, Any]
     catalog_path = Path(path) if path is not None else (
         Path(__file__).resolve().parents[1] / "language" / "mathematical_research.v1.json"
     )
-    return _load_catalog_cached(str(catalog_path.resolve()))
+    return deepcopy(_load_catalog_cached(str(catalog_path.resolve())))
 
 
 def find_math_kernel(function_id: str, catalog: Mapping[str, Any] | None = None) -> dict[str, Any]:
