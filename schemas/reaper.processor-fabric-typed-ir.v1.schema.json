@@ -1,0 +1,332 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://reaper.dev/schemas/reaper.processor-fabric-typed-ir.v1.schema.json",
+  "title": "Reaper Processor Fabric Typed IR v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "source",
+    "generation",
+    "semantic_graph",
+    "constructs",
+    "control_dependencies",
+    "resource_ownership",
+    "verification"
+  ],
+  "properties": {
+    "schema": {
+      "const": "reaper.processor-fabric-typed-ir.v1"
+    },
+    "version": {
+      "const": 1
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sha256",
+        "byte_length",
+        "offset_unit"
+      ],
+      "properties": {
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "byte_length": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576
+        },
+        "offset_unit": {
+          "const": "utf8-byte"
+        }
+      }
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "semantic_graph": {
+      "type": "object",
+      "required": [
+        "schema",
+        "nodes",
+        "edges"
+      ],
+      "properties": {
+        "schema": {
+          "const": "reaper.semantic-graph/v1"
+        },
+        "nodes": {
+          "type": "array",
+          "maxItems": 8192,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "operation",
+              "input_types",
+              "output_type",
+              "effects",
+              "literal",
+              "label"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "operation": {
+                "type": "string",
+                "minLength": 1
+              },
+              "input_types": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "output_type": {
+                "type": "string",
+                "minLength": 1
+              },
+              "effects": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "literal": {},
+              "label": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "edges": {
+          "type": "array",
+          "maxItems": 16384,
+          "items": {
+            "type": "object",
+            "required": [
+              "source",
+              "target",
+              "target_port"
+            ],
+            "properties": {
+              "source": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "target_port": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "constructs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4096,
+      "items": {
+        "type": "object",
+        "required": [
+          "process_id",
+          "semantic_id",
+          "semantic_node_id",
+          "source_span",
+          "body_span",
+          "output_type",
+          "effects"
+        ],
+        "properties": {
+          "process_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "semantic_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "semantic_node_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "source_span": {
+            "$ref": "#/$defs/span"
+          },
+          "body_span": {
+            "$ref": "#/$defs/span"
+          },
+          "output_type": {
+            "type": "string",
+            "minLength": 1
+          },
+          "effects": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "control_dependencies": {
+      "type": "array",
+      "maxItems": 16384,
+      "items": {
+        "type": "object",
+        "required": [
+          "process_id",
+          "requires_process_id"
+        ],
+        "properties": {
+          "process_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "requires_process_id": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "resource_ownership": {
+      "type": "array",
+      "maxItems": 8192,
+      "items": {
+        "type": "object",
+        "required": [
+          "ppf_node_id",
+          "semantic_ref",
+          "kind",
+          "owner",
+          "generation"
+        ],
+        "properties": {
+          "ppf_node_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "semantic_ref": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "type": "string"
+          },
+          "owner": {
+            "enum": [
+              "cpu",
+              "device",
+              "shared",
+              "unowned"
+            ]
+          },
+          "dma_state": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "coherency": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "generation": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_digest_verified",
+        "topology_generation_verified",
+        "fabric_graph_verified",
+        "types_verified",
+        "effects_verified",
+        "ownership_verified",
+        "semantic_graph_verified",
+        "canonical_typed_ir_emitted",
+        "stack_vm_bytecode_emitted",
+        "execution_performed",
+        "hardware_access_performed"
+      ],
+      "properties": {
+        "source_digest_verified": {
+          "const": true
+        },
+        "topology_generation_verified": {
+          "const": true
+        },
+        "fabric_graph_verified": {
+          "const": true
+        },
+        "types_verified": {
+          "const": true
+        },
+        "effects_verified": {
+          "const": true
+        },
+        "ownership_verified": {
+          "const": true
+        },
+        "semantic_graph_verified": {
+          "const": true
+        },
+        "canonical_typed_ir_emitted": {
+          "const": true
+        },
+        "stack_vm_bytecode_emitted": {
+          "const": false
+        },
+        "execution_performed": {
+          "const": false
+        },
+        "hardware_access_performed": {
+          "const": false
+        }
+      }
+    }
+  },
+  "$defs": {
+    "span": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "length"
+      ],
+      "properties": {
+        "start": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}
