@@ -773,6 +773,7 @@ export craft run_construct(state, spec) {
         change next := state_put(next, 15, service_count[1])
     }
     make spent := 0
+    make local_spent := 0
     make triggered := false
 
     when spec[0] == "BOOT" {
@@ -795,6 +796,13 @@ export craft run_construct(state, spec) {
         change next := repair[1]
         change spent := repair[2]
         change triggered := repair[3]
+        make local_index := spec[2] % size(next[17])
+        make local_cost := 0
+        when spec[4] > 0 { change local_cost := 1 }
+        make local := reserve_spend(next[17], local_index, local_cost)
+        when not local[0] { yield [false, state, [], local[4]] }
+        change next := state_put(next, 17, local[1])
+        change local_spent := local[2]
     }
     when spec[0] == "SCENARIO" {
         when next[6] != "test" {
@@ -804,6 +812,7 @@ export craft run_construct(state, spec) {
         when period < 64 { change period := 1024 }
         make duty := period // 4
         when duty < 16 { change duty := 16 }
+        when spec[4] > 0 { change duty := spec[4] }
         make scenario := scenario_enable(next, period, duty)
         when not scenario[0] and not next[7] { yield [false, state, [], scenario[2]] }
         when scenario[0] { change next := scenario[1] }
@@ -838,7 +847,7 @@ export craft run_construct(state, spec) {
     make correction := corrected[2]
     make record := [
         next[14], next[2], spec[0], spec[1], next[4], spent,
-        before_error, correction[2], correction[1], triggered,
+        local_spent, before_error, correction[2], correction[1], triggered,
         injected_now, next[16]
     ]
     yield [true, next, record, ""]
@@ -849,7 +858,7 @@ export craft trace_checksum(records) {
     vary checksum := 216613626
     vary count := 0
     each record in records {
-        when kind(record) != "list" or size(record) != 12 {
+        when kind(record) != "list" or size(record) != 13 {
             yield [false, checksum, "RPR-PYT-0002: malformed trace record"]
         }
         make step_mix := checked_add(checksum * 31, record[0])
@@ -858,7 +867,7 @@ export craft trace_checksum(records) {
         when not cycle_mix[0] { yield [false, checksum, cycle_mix[2]] }
         make budget_mix := checked_add(cycle_mix[1], record[4] % 2147483647)
         when not budget_mix[0] { yield [false, checksum, budget_mix[2]] }
-        make error_mix := checked_add(budget_mix[1], abs_value(record[7]) % 2147483647)
+        make error_mix := checked_add(budget_mix[1], abs_value(record[8]) % 2147483647)
         when not error_mix[0] { yield [false, checksum, error_mix[2]] }
         change checksum := error_mix[1] % 2147483647
         change count := count + 1
@@ -881,11 +890,12 @@ export craft replay_validate(records, expected_checksum) {
         }
         when not valid_integer(record[4], 0, 1000000000000) or
              not valid_integer(record[5], 0, 1000000000) or
-             not valid_integer(record[6], -1000000000, 1000000000) or
-             not valid_integer(record[7], -1000000000, 1000000000) {
+             not valid_integer(record[6], 0, 1000000) or
+             not valid_integer(record[7], -1000000000, 1000000000) or
+             not valid_integer(record[8], -1000000000, 1000000000) {
             yield [false, "RPR-PYT-0013: trace measurement is outside bounds"]
         }
-        when abs_value(record[7]) > abs_value(record[6]) {
+        when abs_value(record[8]) > abs_value(record[7]) {
             yield [false, "RPR-PYT-0014: correction step did not converge"]
         }
         change previous_cycle := record[1]
