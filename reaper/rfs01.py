@@ -16,8 +16,11 @@ from pathlib import Path
 from typing import Any, Iterable
 
 MAX_SOURCE_BYTES = 1 * 1024 * 1024
+MAX_TOKENS = 262144
 MAX_NODES = 4096
 MAX_LINKS = 16384
+MAX_PHASES = 4096
+MAX_CONTRASTS = 16384
 MAX_FRAMES = 65536
 MAX_PAYLOAD_BYTES = 4096
 MAX_CYCLES = 108
@@ -215,6 +218,8 @@ def _lex(source: str) -> list[Token]:
                 value = json.loads(value)
             except json.JSONDecodeError as error:
                 raise RFS01Error("invalid string escape", span=start) from error
+        if len(tokens) >= MAX_TOKENS:
+            raise RFS01Error(f"token limit ({MAX_TOKENS}) exceeded", "RFS-E401", start)
         tokens.append(Token(kind, value, start))
         if "\n" in match.group(0):
             line += match.group(0).count("\n")
@@ -255,6 +260,8 @@ class _Parser:
         token = self.peek()
         if token.kind != "IDENT":
             raise RFS01Error(message, span=token.span)
+        if len(token.value.encode("utf-8")) > 63:
+            raise RFS01Error("identifier exceeds 63 UTF-8 bytes", "RFS-E101", token.span)
         return self.take()
 
     def scalar(self) -> Any:
@@ -306,10 +313,22 @@ class _Parser:
         return float(value)
 
     @staticmethod
-    def _text(fields: dict[str, Any], key: str, span: Span, allow_empty: bool = False) -> str:
+    def _text(
+        fields: dict[str, Any],
+        key: str,
+        span: Span,
+        allow_empty: bool = False,
+        max_bytes: int = 4096,
+    ) -> str:
         value = fields[key]
         if not isinstance(value, str) or (not allow_empty and not value):
             raise RFS01Error(f"field {key!r} must be text", "RFS-E101", span)
+        try:
+            encoded = value.encode("utf-8", errors="strict")
+        except UnicodeError as error:
+            raise RFS01Error(f"field {key!r} must be valid UTF-8", "RFS-E101", span) from error
+        if "\\0" in value or len(encoded) > max_bytes:
+            raise RFS01Error(f"field {key!r} exceeds its UTF-8 byte limit or contains NUL", "RFS-E101", span)
         return value
 
     @staticmethod
@@ -368,7 +387,7 @@ class _Parser:
                     load_limit = self._number(fields, "load_limit", item.span)
                     integrity = self._number(fields, "integrity", item.span)
                     noise_db = self._number(fields, "noise_db", item.span)
-                    core_seed = self._text(fields, "core_seed", item.span)
+                    core_seed = self._text(fields, "core_seed", item.span, max_bytes=127)
                     active = self._boolean(fields, "active", item.span, False)
                     if layer not in LAYERS or pressure < 0 or load_limit <= 0 or not 0 <= integrity <= 1 or not -160 <= noise_db <= 24:
                         raise RFS01Error("node field is outside its declared domain", "RFS-E101", item.span)
@@ -380,9 +399,9 @@ class _Parser:
                         raise RFS01Error("link declaration must use :: Link", "RFS-E101", type_token.span)
                     fields = self.fields()
                     self._require_fields(fields, {"origin", "target", "channel", "weight"}, {"blocked"}, item.span)
-                    origin = self._text(fields, "origin", item.span)
-                    target = self._text(fields, "target", item.span)
-                    channel = self._text(fields, "channel", item.span)
+                    origin = self._text(fields, "origin", item.span, max_bytes=63)
+                    target = self._text(fields, "target", item.span, max_bytes=63)
+                    channel = self._text(fields, "channel", item.span, max_bytes=16)
                     weight = self._number(fields, "weight", item.span)
                     blocked = self._boolean(fields, "blocked", item.span, False)
                     if channel not in CHANNELS or weight < 0:
@@ -397,7 +416,7 @@ class _Parser:
                     self._require_fields(fields, {"sequence", "origin", "payload", "trusted", "manufactured"}, set(), item.span)
                     sequence = self._number(fields, "sequence", item.span)
                     origin = self._text(fields, "origin", item.span)
-                    payload = self._text(fields, "payload", item.span, allow_empty=True)
+                    payload = self._text(fields, "payload", item.span, allow_empty=True, max_bytes=MAX_PAYLOAD_BYTES)
                     if sequence < 0 or not sequence.is_integer() or len(payload.encode("utf-8")) > MAX_PAYLOAD_BYTES:
                         raise RFS01Error("signal sequence or payload exceeds its domain", "RFS-E101", item.span)
                     signals.append(SignalFrame(int(sequence), origin, payload, self._boolean(fields, "trusted", item.span), self._boolean(fields, "manufactured", item.span)))
@@ -416,6 +435,8 @@ class _Parser:
                 second = self._comparison()
                 self.expect("]")
                 phases.append(PhaseGate(phase_id.value, node, first, second))
+                if len(phases) > MAX_PHASES:
+                    raise RFS01Error("phase gate limit exceeded", "RFS-E401", phase_id.span)
                 continue
 
             if statement == "flow":
@@ -434,6 +455,8 @@ class _Parser:
                     raise RFS01Error("contrast operator must be || or ^^", span=operator.span)
                 right = self.identifier("expected contrast operand").value
                 contrasts.append(Contrast(left, operator.value, right, operator.span))
+                if len(contrasts) > MAX_CONTRASTS:
+                    raise RFS01Error("contrast limit exceeded", "RFS-E401", operator.span)
                 continue
 
             if statement == "recover":
@@ -470,7 +493,11 @@ class _Parser:
             raise RFS01Error("unexpected content after module", span=self.peek().span)
         if not nodes:
             raise RFS01Error("module must declare at least one node", "RFS-E101")
-        if len(nodes) > MAX_NODES or len(links) > MAX_LINKS or len(signals) > MAX_FRAMES or len(actions) > MAX_ACTIONS:
+        if (
+            len(nodes) > MAX_NODES or len(links) > MAX_LINKS
+            or len(signals) > MAX_FRAMES or len(actions) > MAX_ACTIONS
+            or len(phases) > MAX_PHASES or len(contrasts) > MAX_CONTRASTS
+        ):
             raise RFS01Error("RFS-01 structural resource limit exceeded", "RFS-E401")
 
         self._validate_references(nodes, links, signals, phases, actions, contrasts)
@@ -636,7 +663,10 @@ class RFSRuntime:
         self.phases: dict[str, list[PhaseGate]] = {}
         for phase in program.phases:
             self.phases.setdefault(phase.node, []).append(phase)
-        self.clean_signals = tuple(frame for frame in program.signals if frame.trusted and not frame.manufactured)
+        self.clean_signal_counts: dict[str, int] = {}
+        for frame in program.signals:
+            if frame.trusted and not frame.manufactured:
+                self.clean_signal_counts[frame.origin] = self.clean_signal_counts.get(frame.origin, 0) + 1
         self.events: list[dict[str, Any]] = []
         self.dropped_events = 0
         self._event_sequence = 0
@@ -679,14 +709,14 @@ class RFSRuntime:
         source = self.nodes[origin_id]
         target = self.nodes[target_id]
         if flow.operator == "~>":
-            frames = tuple(frame for frame in self.clean_signals if frame.origin == origin_id)
-            if not frames:
+            frame_count = self.clean_signal_counts.get(origin_id, 0)
+            if not frame_count:
                 self._record(cycle, "signal-rejected", origin=origin_id, target=target_id, reason="no-trusted-frame")
                 return
             attenuation_db = 20.0 * math.log10(NOISE_ATTENUATION)
             noise = max(NOISE_FLOOR_DB, target.noise_db + attenuation_db)
             self.nodes[target_id] = replace(target, noise_db=noise, active=True)
-            self._record(cycle, "signal-forwarded", origin=origin_id, target=target_id, frames=len(frames), noise_db=noise)
+            self._record(cycle, "signal-forwarded", origin=origin_id, target=target_id, frames=frame_count, noise_db=noise)
             return
         delta = source.pressure * link.weight
         next_pressure = target.pressure + delta
@@ -766,8 +796,8 @@ class RFSRuntime:
             "status": "MeshInMotion" if any(node["active"] for node in node_rows) else "MeshIdle",
             "cycles": self.ir.cycles,
             "nodes": node_rows,
-            "clean_signal_frames": len(self.clean_signals),
-            "rejected_signal_frames": len(self.program.signals) - len(self.clean_signals),
+            "clean_signal_frames": sum(self.clean_signal_counts.values()),
+            "rejected_signal_frames": len(self.program.signals) - sum(self.clean_signal_counts.values()),
             "contrasts": contrasts,
             "messages": messages,
             "events": self.events,
