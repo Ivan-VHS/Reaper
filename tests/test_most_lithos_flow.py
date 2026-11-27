@@ -35,10 +35,10 @@ class MostLithosFlowTests(unittest.TestCase):
         self.assertEqual(sum(item["support"] == "lexical_reserved" for item in new_entries), 31)
         for item in new_entries:
             self.assertEqual(KEYWORD_ALIASES[item["source"]], item["canonical"])
-        runtime_words = [item["source"] for item in new_entries if item["support"] == "runtime"]
-        tokens = tokenize(" ".join(runtime_words))
+        all_new_words = [item["source"] for item in new_entries]
+        tokens = tokenize(" ".join(all_new_words))
         self.assertEqual([token.kind for token in tokens[:-1]], [
-            KEYWORD_ALIASES[word].upper() for word in runtime_words
+            item["canonical"].upper() for item in new_entries
         ])
 
     def test_russian_lithos_example_executes(self) -> None:
