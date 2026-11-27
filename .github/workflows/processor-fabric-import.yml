@@ -1,0 +1,41 @@
+name: Reaper Processor Fabric Import and Typed IR
+
+on:
+  pull_request:
+    paths:
+      - "tools/import_processor_fabric.mjs"
+      - "tests/test_processor_fabric_import.mjs"
+      - "reaper/processor_fabric.py"
+      - "tests/test_processor_fabric.py"
+      - "schemas/reaper.processor-fabric-import.v1.schema.json"
+      - "schemas/reaper.processor-fabric-typed-ir.v1.schema.json"
+      - "docs/PYTYLIKI_PROCESSOR_FABRIC_BRIDGE.md"
+      - "docs/PROCESSOR_FABRIC_TYPED_IR.md"
+      - "project-contract.json"
+      - "language/features.json"
+      - "CMakeLists.txt"
+      - ".github/workflows/processor-fabric-import.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  local-ppf-import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Validate versioned schemas are valid JSON
+        run: |
+          node -e "for (const p of ['schemas/reaper.processor-fabric-import.v1.schema.json','schemas/reaper.processor-fabric-typed-ir.v1.schema.json']) JSON.parse(require('node:fs').readFileSync(p,'utf8'))"
+      - name: Test local-only Pytyliki evidence import
+        run: node --test tests/test_processor_fabric_import.mjs
+      - name: Test Reaper typed SemanticGraph adapter
+        run: python -m unittest discover -s tests -p test_processor_fabric.py
