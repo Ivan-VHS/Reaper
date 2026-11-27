@@ -1,0 +1,200 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://reaper.invalid/schemas/mathematical-research-contracts.v1.schema.json",
+  "title": "Reaper Mathematical Research Contracts v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "canonical_owner",
+    "kernel_owner",
+    "kernel_abi",
+    "problem_policy",
+    "areas"
+  ],
+  "properties": {
+    "schema": {
+      "const": "reaper.mathematical-research-contracts.v1"
+    },
+    "version": {
+      "const": "1.0.0"
+    },
+    "canonical_owner": {
+      "const": "Reaper"
+    },
+    "kernel_owner": {
+      "const": "Pytyliki"
+    },
+    "kernel_abi": {
+      "const": "pytyliki-research-math-c11-v1"
+    },
+    "problem_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "open_problem_results",
+        "forbid_claims",
+        "require_bounded_work",
+        "require_source_provenance"
+      ],
+      "properties": {
+        "open_problem_results": {
+          "const": "EXPERIMENTAL_EVIDENCE_ONLY"
+        },
+        "forbid_claims": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "PROVED",
+              "DISPROVED",
+              "SOLVED"
+            ]
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "uniqueItems": true
+        },
+        "require_bounded_work": {
+          "const": true
+        },
+        "require_source_provenance": {
+          "const": true
+        }
+      }
+    },
+    "areas": {
+      "type": "array",
+      "minItems": 17,
+      "maxItems": 17,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "problem_status",
+          "claim_boundary",
+          "functions"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 3
+          },
+          "problem_status": {
+            "enum": [
+              "OPEN_CONJECTURE",
+              "OPEN_PROBLEM",
+              "GENERAL_UNDECIDABILITY_PROVEN_RESTRICTED_CASES_OPEN"
+            ]
+          },
+          "claim_boundary": {
+            "type": "string",
+            "minLength": 20
+          },
+          "functions": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "api",
+                "args",
+                "returns",
+                "effect",
+                "evidence",
+                "backend",
+                "limits"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*\\.[a-z0-9_]+$"
+                },
+                "api": {
+                  "type": "string",
+                  "pattern": "^pl_math_[a-z0-9_]+$"
+                },
+                "args": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "name",
+                      "type"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "pattern": "^[a-z][a-z0-9_]*$"
+                      },
+                      "type": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "min": {
+                        "type": "integer"
+                      },
+                      "max": {
+                        "type": "integer"
+                      },
+                      "min_exclusive": {
+                        "type": "number"
+                      },
+                      "max_exclusive": {
+                        "type": "number"
+                      },
+                      "min_items": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "max_items": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    }
+                  }
+                },
+                "returns": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "effect": {
+                  "enum": [
+                    "pure_exact",
+                    "pure_numeric",
+                    "finite_numeric",
+                    "bounded_search"
+                  ]
+                },
+                "evidence": {
+                  "type": "string",
+                  "minLength": 3
+                },
+                "backend": {
+                  "const": "pytyliki.c11"
+                },
+                "limits": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
