@@ -180,14 +180,13 @@ ReaperProcessorStatus reaper_processor_live_update_validate(
         return REAPER_PROCESSOR_INVALID_ARGUMENT;
     if (active->state != REAPER_REVISION_ACTIVE ||
         candidate->state != REAPER_REVISION_STAGED ||
+        active->generation == UINT64_MAX ||
         candidate->generation != active->generation + UINT64_C(1) ||
         !digest_present(active->source_digest) ||
         !digest_present(candidate->source_digest))
         return REAPER_PROCESSOR_INVALID_STATE;
     if (!abi_compatible || candidate->abi_major != active->abi_major)
         return REAPER_PROCESSOR_INCOMPATIBLE_ABI;
-    if (!signature_valid || !safe_point || !quiescent || !rollback_ready)
-        return REAPER_PROCESSOR_ACCESS_DENIED;
     if (evidence->tests_total == 0U ||
         evidence->tests_passed != evidence->tests_total ||
         evidence->tests_failed != 0U ||
@@ -197,6 +196,10 @@ ReaperProcessorStatus reaper_processor_live_update_validate(
     if (memcmp(candidate->source_digest, evidence->artifact_digest,
                REAPER_PROCESSOR_DIGEST_BYTES) != 0)
         return REAPER_PROCESSOR_INVALID_EVIDENCE;
+    if (!safe_point || !quiescent)
+        return REAPER_PROCESSOR_NOT_QUIESCENT;
+    if (!rollback_ready || !signature_valid)
+        return REAPER_PROCESSOR_ACCESS_DENIED;
     return REAPER_PROCESSOR_OK;
 }
 
@@ -299,10 +302,10 @@ ReaperProcessorStatus reaper_processor_stage_patch(
     memset(ticket->digest, 0, sizeof(ticket->digest));
 
     ReaperProcessorStatus status = reaper_processor_live_update_validate(
-        active, candidate, evidence, 0, abi_compatible,
+        active, candidate, evidence, 1, abi_compatible,
         safe_point, quiescent, rollback_ready
     );
-    if (status != REAPER_PROCESSOR_ACCESS_DENIED) return status;
+    if (status != REAPER_PROCESSOR_OK) return status;
 
     if (ops == NULL ||
         (ops->capabilities & REAPER_PROCESSOR_CAP_PATCH_STAGE) == 0U ||
@@ -310,7 +313,8 @@ ReaperProcessorStatus reaper_processor_stage_patch(
         return REAPER_PROCESSOR_ACCESS_DENIED;
 
     status = ops->verify_artifact(
-        ops->context, candidate->source_digest, signature, signature_size
+        ops->context, image, image_size, candidate->source_digest,
+        signature, signature_size
     );
     if (status != REAPER_PROCESSOR_OK) return status;
 
