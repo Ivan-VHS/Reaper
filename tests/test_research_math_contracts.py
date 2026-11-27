@@ -130,6 +130,42 @@ class MathematicalResearchContractTests(unittest.TestCase):
                 self.catalog,
             )
 
+    def test_cfl_plan_accepts_scalar_inputs_without_grid_arrays(self):
+        plan = prepare_math_kernel_call(
+            "navier_stokes.cfl_dt",
+            {
+                "max_speed": 2.0,
+                "dx": 0.5,
+                "dy": 0.5,
+                "dz": 0.5,
+                "viscosity": 0.01,
+                "safety": 0.5,
+            },
+            self.catalog,
+        )
+        self.assertEqual(plan.api, "pl_math_navier_stokes_cfl_dt")
+
+    def test_graph_search_rejects_out_of_range_edges(self):
+        with self.assertRaises(ResearchContractError):
+            prepare_math_kernel_call(
+                "hadwiger_nelson.coloring_search_bounded",
+                {
+                    "vertex_count": 3,
+                    "edges": [[0, 3]],
+                    "color_count": 2,
+                    "node_budget": 100,
+                },
+                self.catalog,
+            )
+
+    def test_matrix_scaling_requires_increasing_dimensions(self):
+        with self.assertRaises(ResearchContractError):
+            prepare_math_kernel_call(
+                "matrix.scaling_exponent",
+                {"n1": 10, "seconds1": 1.0, "n2": 10, "seconds2": 2.0},
+                self.catalog,
+            )
+
     def test_matrix_plan_requires_finite_values(self):
         with self.assertRaises(ResearchContractError):
             prepare_math_kernel_call(
