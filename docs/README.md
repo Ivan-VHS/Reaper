@@ -47,3 +47,6 @@ Treat the Python reference runtime, native compiler track, System Runtime host A
 - [OPlague GPU telemetry v1 ingestion](OPLAGE_GPU_TELEMETRY.md)
 
 - [System Functions v1](SYSTEM_FUNCTIONS.md) — bounded runtime APIs, guarantees and implementation limits.
+
+- [Native parser M1](REAPER_PARSER_M1.md) — supported expression grammar and maturity boundary.
+- [Pytyliki Iron Core bridge v1](PYTYLIKI_IRON_CORE_BRIDGE_V1.md) — validated marker metadata intake and source anchors.
