@@ -6,6 +6,7 @@
 | Lexer | deterministic tokens and source spans |
 | Python parser/runtime | reference semantics, scopes, values, quotas |
 | Native C17 | token stream, expression AST, checked IR, limited lowering, read-only aggregate snapshot audit |
+| Reaper Processor Kernel v1 | lifecycle/state control, bounded deterministic task scheduling, event replay, pulse counters, target contracts, DAG and table snapshots |
 | MOST | exact keyword canonicalization before the same parser |
 | QCS | independent hardware-domain syntax validation |
 | Adapters | versioned JSON and explicitly selected native ABI |
