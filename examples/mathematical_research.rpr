@@ -3,6 +3,10 @@ import "../stdlib/research_math.rpr" as research
 make domains := research["catalog"]()
 assert(size(domains) == 17, "the catalog exposes all 17 research domains")
 
+make riemann_domain := research["catalog_area"]("riemann")
+assert(size(riemann_domain) == 1, "area lookup selects exactly one domain")
+assert(riemann_domain[0]["id"] == "riemann", "area lookup preserves the stable area id")
+
 make riemann := research["riemann_dirichlet_partial"](2.0, 0.0, 256)
 assert(riemann["function_id"] == "riemann.dirichlet_partial", "Riemann ID is stable")
 assert(riemann["api"] == "pl_math_riemann_dirichlet", "Riemann maps to its Pytyliki C symbol")
