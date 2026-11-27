@@ -82,7 +82,7 @@ class Parser:
             return Node("emit", token, children=[self._expression()])
         if self._match("YIELD"):
             token = self._previous()
-            if self._check("NEWLINE") or self._check("}") or self._check("EOF"):
+            if self._check("NEWLINE") or self._check(";") or self._check("}") or self._check("EOF"):
                 return Node("yield", token)
             return Node("yield", token, children=[self._expression()])
         if self._match("CRAFT", "SCENARIO"):
