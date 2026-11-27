@@ -1,0 +1,187 @@
+# Reaper processor-control contracts v1.
+# These functions validate policy and evidence. They do not execute privileged CPU writes.
+
+export make PROCESSOR_CONTROL_SCHEMA := "reaper.processor-control.v1"
+export make PROCESSOR_SNAPSHOT_SCHEMA := "reaper.processor-snapshot.v1"
+export make PROCESSOR_CONTROL_VERSION := 1
+
+export craft processor_control_surfaces() {
+    yield [
+        ["processor.inventory", "Processor identity and capabilities", "read-only-adapter"],
+        ["processor.topology", "Packages, dies, clusters, cores and logical CPUs", "read-only-adapter"],
+        ["processor.core.lifecycle", "Core online, draining, offline and quarantine lifecycle", "kernel-backend"],
+        ["processor.core.blocks", "Execution units, pipelines, decode, vector and cache blocks", "architecture-adapter"],
+        ["processor.thread.lifecycle", "Thread creation, blocking, wake and exit policy", "kernel-backend"],
+        ["processor.smt", "SMT sibling discovery and isolation policy", "kernel-backend"],
+        ["processor.affinity", "Hard and soft CPU affinity", "kernel-backend"],
+        ["processor.scheduler", "Priority, deadline, fairness and load balancing", "kernel-backend"],
+        ["processor.preemption", "Preemption points and bounded critical sections", "kernel-backend"],
+        ["processor.interrupts", "Local APIC, interrupt routing and interrupt-core policy", "architecture-adapter"],
+        ["processor.timers", "TSC, invariant clock and deadline timer policy", "architecture-adapter"],
+        ["processor.cache", "Cache geometry, sharing and locality", "read-only-adapter"],
+        ["processor.numa", "NUMA nodes, locality and memory placement", "read-only-adapter"],
+        ["processor.frequency", "P-state, boost and frequency-cap policy", "privileged-adapter"],
+        ["processor.power", "Power states and package/core idle policy", "privileged-adapter"],
+        ["processor.thermal", "Thermal limits, throttling and emergency response", "privileged-adapter"],
+        ["processor.performance-counters", "PMU event selection and counter multiplexing", "privileged-adapter"],
+        ["processor.isa", "ISA, extensions and instruction availability", "read-only-adapter"],
+        ["processor.vector-state", "OS-managed vector register state and context preservation", "kernel-backend"],
+        ["processor.virtualization", "VMX, SVM and nested-virtualization capability policy", "privileged-adapter"],
+        ["processor.security", "Speculation, crypto and mitigation capability inventory", "read-only-adapter"],
+        ["processor.microcode", "Microcode revision and vendor update provenance", "firmware-adapter"],
+        ["processor.hotplug", "CPU online/offline and topology generation changes", "kernel-backend"],
+        ["processor.debug", "Core inspection, trace, breakpoint and bounded stepping", "debug-backend"],
+        ["processor.verification", "Core, scheduler, interrupt and ABI evidence", "verification"],
+        ["processor.revisions", "Versioned core, policy, ABI and microcode records", "version-control"],
+        ["processor.live-update", "Quiescent staged update with rollback", "kernel-backend"],
+        ["processor.rollback", "Known-good revision recovery and audit", "kernel-backend"],
+        ["processor.telemetry", "Local bounded counters and thermal/performance samples", "read-only-adapter"],
+        ["processor.replay", "Deterministic scheduler and event replay", "verification"]
+    ]
+}
+
+export craft processor_snapshot_valid(snapshot) {
+    when kind(snapshot) != "list" or size(snapshot) != 12 { yield false }
+    when snapshot[0] != PROCESSOR_SNAPSHOT_SCHEMA { yield false }
+    when kind(snapshot[1]) != "text" or size(snapshot[1]) == 0 or size(snapshot[1]) > 128 { yield false }
+    when kind(snapshot[2]) != "text" or kind(snapshot[3]) != "text" { yield false }
+    when snapshot[4] <= 0 or snapshot[5] <= 0 or snapshot[6] <= 0 { yield false }
+    when snapshot[7] < snapshot[6] or snapshot[8] <= 0 or snapshot[8] > snapshot[7] { yield false }
+    when snapshot[9] < 0 or snapshot[9] % 1 != 0 { yield false }
+    when kind(snapshot[10]) != "list" or kind(snapshot[11]) != "text" { yield false }
+    when size(snapshot[11]) == 0 or size(snapshot[11]) > 128 { yield false }
+    yield true
+}
+
+export craft affinity_valid(affinity, logical_count) {
+    when kind(affinity) != "list" or size(affinity) == 0 or logical_count <= 0 { yield false }
+    each cpu_id in affinity {
+        when kind(cpu_id) != "number" or cpu_id % 1 != 0 or cpu_id < 0 or cpu_id >= logical_count {
+            yield false
+        }
+    }
+    when size(unique(affinity)) != size(affinity) { yield false }
+    yield true
+}
+
+export craft core_descriptor_valid(core, core_count, logical_count) {
+    # [core_id, package_id, die_id, cluster_id, class, state, online_threads, thread_ids, revision_id, generation]
+    when kind(core) != "list" or size(core) != 10 { yield false }
+    when core[0] < 0 or core[0] >= core_count or core[1] < 0 or core[2] < 0 or core[3] < 0 { yield false }
+    when core[4] != "performance" and core[4] != "efficiency" and core[4] != "general" and core[4] != "unknown" { yield false }
+    when core[5] != "offline" and core[5] != "starting" and core[5] != "online" and core[5] != "draining" and core[5] != "quarantined" and core[5] != "failed" { yield false }
+    when core[6] < 0 or core[6] > logical_count or core[9] < 0 { yield false }
+    when kind(core[7]) != "list" or kind(core[8]) != "text" or size(core[8]) == 0 { yield false }
+    when core[5] == "online" and (core[6] == 0 or size(core[7]) == 0) { yield false }
+    when core[5] == "offline" and core[6] != 0 { yield false }
+    each thread_id in core[7] {
+        when thread_id < 0 or thread_id >= logical_count { yield false }
+    }
+    yield true
+}
+
+export craft core_transition_valid(current, next) {
+    when current == "offline" and next == "starting" { yield true }
+    when current == "starting" and (next == "online" or next == "failed" or next == "offline") { yield true }
+    when current == "online" and (next == "draining" or next == "quarantined" or next == "failed") { yield true }
+    when current == "draining" and (next == "offline" or next == "online" or next == "failed") { yield true }
+    when current == "quarantined" and (next == "offline" or next == "starting") { yield true }
+    yield false
+}
+
+export craft core_release_allowed(core, runnable_threads, active_interrupts, held_locks, dma_leases) {
+    when kind(core) != "list" or size(core) != 10 { yield false }
+    yield core[5] == "draining" and runnable_threads == 0 and active_interrupts == 0 and held_locks == 0 and dma_leases == 0
+}
+
+export craft thread_descriptor_valid(thread, logical_count) {
+    # [tid, pid, priority, deadline_ns, stack_bytes, state, affinity, generation]
+    when kind(thread) != "list" or size(thread) != 8 { yield false }
+    when thread[0] <= 0 or thread[1] <= 0 or thread[2] < 0 or thread[2] > 255 { yield false }
+    when thread[3] < 0 or thread[4] < 16384 or thread[4] > 16777216 { yield false }
+    when thread[5] != "created" and thread[5] != "ready" and thread[5] != "running" and thread[5] != "blocked" and thread[5] != "sleeping" and thread[5] != "zombie" { yield false }
+    when not affinity_valid(thread[6], logical_count) or thread[7] < 0 { yield false }
+    yield true
+}
+
+export craft split_work(total_items, worker_count) {
+    when total_items < 0 or worker_count <= 0 or total_items % 1 != 0 or worker_count % 1 != 0 {
+        yield []
+    }
+    make base_size := total_items // worker_count
+    make remainder := total_items % worker_count
+    vary allocations := []
+    each worker in range(0, worker_count) {
+        vary assigned := base_size
+        when worker < remainder { change assigned := assigned + 1 }
+        change allocations := push(allocations, assigned)
+    }
+    yield allocations
+}
+
+export craft verification_evidence_valid(evidence) {
+    # [revision_id, tests_total, tests_passed, tests_failed, coverage_basis_points, duration_ms, artifact_sha256, verifier]
+    when kind(evidence) != "list" or size(evidence) != 8 { yield false }
+    when kind(evidence[0]) != "text" or size(evidence[0]) == 0 { yield false }
+    when evidence[1] <= 0 or evidence[2] < 0 or evidence[3] < 0 { yield false }
+    when evidence[2] + evidence[3] != evidence[1] or evidence[3] != 0 { yield false }
+    when evidence[4] < 0 or evidence[4] > 10000 or evidence[5] <= 0 { yield false }
+    when kind(evidence[6]) != "text" or size(evidence[6]) != 64 { yield false }
+    when kind(evidence[7]) != "text" or size(evidence[7]) == 0 { yield false }
+    yield true
+}
+
+export craft revision_descriptor_valid(revision) {
+    # [component_id, major, minor, patch, parent_revision, source_sha256, abi_major, generation, state]
+    when kind(revision) != "list" or size(revision) != 9 { yield false }
+    when kind(revision[0]) != "text" or size(revision[0]) == 0 { yield false }
+    when revision[1] < 0 or revision[2] < 0 or revision[3] < 0 or revision[6] <= 0 or revision[7] < 0 { yield false }
+    when kind(revision[4]) != "text" or kind(revision[5]) != "text" or size(revision[5]) != 64 { yield false }
+    when revision[8] != "draft" and revision[8] != "verified" and revision[8] != "staged" and revision[8] != "active" and revision[8] != "retired" and revision[8] != "rejected" { yield false }
+    yield true
+}
+
+export craft revision_transition_valid(current, next) {
+    when current == "draft" and (next == "verified" or next == "rejected") { yield true }
+    when current == "verified" and (next == "staged" or next == "rejected") { yield true }
+    when current == "staged" and (next == "active" or next == "rejected") { yield true }
+    when current == "active" and next == "retired" { yield true }
+    yield false
+}
+
+export craft live_update_admission(active, candidate, evidence, safe_point, quiescent, rollback_ready, signature_valid, abi_compatible) {
+    when not revision_descriptor_valid(active) or not revision_descriptor_valid(candidate) { yield "reject-invalid-revision" }
+    when active[8] != "active" or candidate[8] != "staged" { yield "reject-revision-state" }
+    when active[0] != candidate[0] or candidate[7] != active[7] + 1 { yield "reject-generation" }
+    when active[6] != candidate[6] or not abi_compatible { yield "reject-abi" }
+    when not verification_evidence_valid(evidence) or evidence[0] != candidate[0] { yield "reject-verification" }
+    when not signature_valid { yield "reject-signature" }
+    when not safe_point or not quiescent { yield "defer-until-quiescent" }
+    when not rollback_ready { yield "reject-no-rollback" }
+    yield "admit-stage-only"
+}
+
+export craft debug_session_valid(session, logical_count) {
+    # [session_id, core_id, mode, privileged, timeout_ms, capture_limit, capability]
+    when kind(session) != "list" or size(session) != 7 { yield false }
+    when kind(session[0]) != "text" or size(session[0]) == 0 { yield false }
+    when session[1] < 0 or session[1] >= logical_count { yield false }
+    when session[2] != "read-only" and session[2] != "trace" and session[2] != "single-step" { yield false }
+    when session[4] <= 0 or session[4] > 60000 or session[5] <= 0 or session[5] > 100000 { yield false }
+    when session[3] and session[6] != "processor.debug" { yield false }
+    yield true
+}
+
+export craft power_request_admission(request) {
+    # [control, requested, minimum, maximum, unit, capability]
+    when kind(request) != "list" or size(request) != 6 { yield "reject-shape" }
+    when request[0] != "frequency-cap" and request[0] != "performance-mode" and request[0] != "idle-policy" and request[0] != "thermal-policy" { yield "reject-control" }
+    when request[2] > request[3] or request[1] < request[2] or request[1] > request[3] { yield "reject-range" }
+    when kind(request[4]) != "text" or size(request[4]) == 0 { yield "reject-unit" }
+    when request[5] != "processor.power-control" { yield "admit-preview-only" }
+    yield "require-privileged-native-adapter"
+}
+
+export craft instruction_feature_usable(hardware_present, os_state_enabled, policy_allowed) {
+    yield hardware_present and os_state_enabled and policy_allowed
+}
