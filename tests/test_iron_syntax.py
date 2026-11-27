@@ -19,7 +19,7 @@ CATALOG = [
     ("operation", "} operation P)-", "operation", "P)-", "control"),
     ("massive", "?? massive <>", "massive", "<>", "modifier"),
     ("start", "< start >?", "start", ">?", "boundary"),
-    ("new_work", "grown new-work one", "new-work", ">/", "modifier"),
+    ("new_work", "grown new-work >/", "new-work", ">/", "modifier"),
     ("concrete", "> concrete //*", "concrete", "//*", "modifier"),
     ("utility", "## utility _", "utility", "_", "directive"),
     ("unify", "# unify TAB", "unify", "TAB", "directive"),
