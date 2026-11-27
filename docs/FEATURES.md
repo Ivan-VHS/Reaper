@@ -8,6 +8,7 @@
 | Division | Euclidean divmod, quotient/remainder, divisibility | implemented |
 | Allocation | partition/split, distribute, weighted allocation | implemented |
 | Audit/governance | explicit grants, HMAC scope, TTL/revocation | reference runtime |
+| Rivet composition | Reaper-native catalogue, dependency closure, deterministic ordering, profile/capability/conflict checks and permission inventory | partial; planning only, no project source emission or package backend |
 | Studio | Windows editor/debugger, command palette, MCU profile and hardware-boundary overview | desktop app; no live device inspector |
 | CODEX-66 | searchable 66-item native feature catalogue with JSON export and maturity labels | implemented metadata/UI; feature statuses remain evidence-based |
 | Native C17 | lexer, expression Pratt parser, owned AST, checked i64 IR, constant folding and limited lowering | partial |

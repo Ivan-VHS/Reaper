@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://reaper-lang.org/schemas/rivet.module.v1.schema.json",
+  "title": "Rivet Capability Module Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "version",
+    "kind",
+    "profiles",
+    "dependencies",
+    "provides",
+    "requires",
+    "conflicts",
+    "permissions",
+    "maturity",
+    "implementation",
+    "evidence",
+    "license"
+  ],
+  "properties": {
+    "schema": {"const": "reaper.rivet.module.v1"},
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$",
+      "maxLength": 96
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?$"
+    },
+    "kind": {
+      "enum": ["foundation", "runtime", "framework", "tool", "workflow", "adapter", "orchestrator", "test"]
+    },
+    "profiles": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 1,
+      "items": {"enum": ["framework", "multitool", "hybrid"]}
+    },
+    "dependencies": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "range"],
+        "properties": {
+          "id": {"type": "string", "maxLength": 96},
+          "range": {"type": "string", "maxLength": 64}
+        }
+      }
+    },
+    "provides": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "maxLength": 96}
+    },
+    "requires": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "maxLength": 96}
+    },
+    "conflicts": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "maxLength": 96}
+    },
+    "permissions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "maxLength": 96}
+    },
+    "maturity": {
+      "enum": ["specification_only", "source_only", "implemented", "verified", "installable"]
+    },
+    "implementation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_files", "entrypoints"],
+      "properties": {
+        "source_files": {
+          "type": "array",
+          "items": {"type": "string", "maxLength": 256}
+        },
+        "entrypoints": {
+          "type": "array",
+          "items": {"type": "string", "maxLength": 128}
+        },
+        "reaper_abi": {"type": "string", "maxLength": 64}
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["conformance_suites", "resource_profile", "provenance"],
+      "properties": {
+        "conformance_suites": {
+          "type": "array",
+          "items": {"type": "string", "maxLength": 128}
+        },
+        "resource_profile": {"type": "string", "maxLength": 128},
+        "provenance": {"type": "string", "maxLength": 256},
+        "artifact_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    },
+    "license": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["spdx_id", "third_party"],
+      "properties": {
+        "spdx_id": {"type": "string", "minLength": 1, "maxLength": 64},
+        "third_party": {"type": "array", "items": {"type": "string", "maxLength": 256}}
+      }
+    },
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key_id", "algorithm", "value"],
+      "properties": {
+        "key_id": {"type": "string", "maxLength": 128},
+        "algorithm": {"enum": ["ed25519"]},
+        "value": {"type": "string", "maxLength": 512}
+      }
+    }
+  }
+}

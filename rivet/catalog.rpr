@@ -1,0 +1,26 @@
+# Rivet v1 first-party module catalogue.
+# Record layout:
+# [id, version, kind, profiles, dependencies, provides, requires,
+#  conflicts, maturity, permissions, summary]
+#
+# All entries are specification_only until source, conformance tests,
+# resource evidence and trust metadata are attached.
+export make modules := [
+    ["core.contracts", "1.0.0", "foundation", ["framework", "multitool", "hybrid"], [], ["contracts.schema", "diagnostics.span", "errors.result"], [], [], "specification_only", [], "Versioned contracts, source-aware diagnostics and typed errors."],
+    ["core.lifecycle", "1.0.0", "runtime", ["framework", "multitool", "hybrid"], ["core.contracts"], ["lifecycle.managed", "lifecycle.shutdown"], ["contracts.schema"], [], "specification_only", [], "Explicit startup, shutdown and owned service lifecycles."],
+    ["core.resources", "1.0.0", "runtime", ["framework", "multitool", "hybrid"], ["core.contracts"], ["resources.budgets", "resources.ownership"], ["contracts.schema"], [], "specification_only", [], "Bounded memory, handles, queues and resource ownership contracts."],
+    ["core.tasks", "1.0.0", "runtime", ["framework", "multitool", "hybrid"], ["core.contracts", "core.lifecycle", "core.resources"], ["tasks.structured", "tasks.cancel"], ["lifecycle.managed", "resources.budgets"], [], "specification_only", [], "Structured tasks, cancellation, deadlines and bounded scheduling."],
+    ["framework.adapter", "1.0.0", "adapter", ["framework", "hybrid"], ["core.contracts", "core.resources"], ["adapters.typed"], ["contracts.schema", "resources.budgets"], [], "specification_only", [], "Typed adapters at explicit host and platform boundaries."],
+    ["framework.config", "1.0.0", "framework", ["framework", "hybrid"], ["core.contracts"], ["config.versioned"], ["contracts.schema"], [], "specification_only", [], "Versioned configuration with validation and deterministic defaults."],
+    ["framework.events", "1.0.0", "framework", ["framework", "hybrid"], ["core.contracts", "core.tasks"], ["events.typed"], ["tasks.structured"], [], "specification_only", [], "Typed events, bounded delivery and explicit backpressure."],
+    ["framework.http", "1.0.0", "framework", ["framework", "hybrid"], ["framework.adapter", "framework.service"], ["http.routing"], ["adapters.typed", "service.lifecycle"], [], "specification_only", ["network.listen"], "HTTP routing and middleware contracts; no server is started by composition."],
+    ["framework.plugin", "1.0.0", "framework", ["framework", "hybrid"], ["core.contracts", "core.lifecycle"], ["plugins.registry"], ["contracts.schema", "lifecycle.managed"], [], "specification_only", [], "Versioned extension points and provider registration contracts."],
+    ["framework.service", "1.0.0", "framework", ["framework", "hybrid"], ["core.contracts", "core.lifecycle", "core.resources", "core.tasks"], ["service.lifecycle", "service.health"], ["lifecycle.managed", "resources.budgets", "tasks.structured"], [], "specification_only", [], "Service composition, health/readiness contracts and shutdown ordering."],
+    ["suite.orchestrator", "1.0.0", "orchestrator", ["multitool", "hybrid"], ["core.contracts", "core.lifecycle", "core.resources", "core.tasks"], ["suite.orchestration"], ["lifecycle.managed", "tasks.structured"], [], "specification_only", [], "Shared command routing and workflow orchestration for a multitool suite."],
+    ["tool.archive", "1.0.0", "tool", ["multitool", "hybrid"], ["core.contracts", "core.resources"], ["tool.archive"], ["resources.budgets"], [], "specification_only", ["fs.read", "fs.write"], "Archive inspection and creation capability contract."],
+    ["tool.automation", "1.0.0", "workflow", ["multitool", "hybrid"], ["core.contracts", "core.lifecycle", "core.tasks"], ["tool.automation"], ["tasks.structured"], [], "specification_only", [], "Composable, bounded, cancellable automation workflows."],
+    ["tool.database", "1.0.0", "tool", ["multitool", "hybrid"], ["core.contracts", "core.resources"], ["tool.database"], ["resources.budgets"], [], "specification_only", ["fs.read", "fs.write"], "Local database inspection and transaction adapter contract."],
+    ["tool.files", "1.0.0", "tool", ["multitool", "hybrid"], ["core.contracts", "core.resources"], ["tool.files"], ["resources.budgets"], [], "specification_only", ["fs.read", "fs.write"], "File operations behind explicit, scoped filesystem grants."],
+    ["tool.network", "1.0.0", "tool", ["multitool", "hybrid"], ["core.contracts", "core.resources"], ["tool.network"], ["resources.budgets"], [], "specification_only", ["network.connect"], "Network client capability; disabled until the user grants a destination scope."],
+    ["tool.search", "1.0.0", "tool", ["multitool", "hybrid"], ["core.contracts", "core.resources", "tool.files"], ["tool.search"], ["resources.budgets", "tool.files"], [], "specification_only", ["fs.read"], "Indexed local search over explicitly selected workspace roots."]
+]

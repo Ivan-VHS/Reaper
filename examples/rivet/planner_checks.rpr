@@ -1,0 +1,48 @@
+# Reaper-native smoke checks for Rivet's first planning increment.
+import "../../rivet/engine.rpr" as rivet
+
+make valid_framework := rivet["compose"](
+    "Northstar",
+    "framework",
+    ["framework.http", "framework.plugin"]
+)
+assert(valid_framework[0] == "ok", "valid framework plan was rejected")
+assert(valid_framework[7] == "plan_only", "planner must not claim to have built artifacts")
+
+make valid_multitool := rivet["compose"](
+    "Workbench",
+    "multitool",
+    ["suite.orchestrator", "tool.search", "tool.archive"]
+)
+assert(valid_multitool[0] == "ok", "valid multitool plan was rejected")
+assert(valid_multitool[3][0] == "core.contracts", "foundations must precede dependent modules")
+
+make unknown_module := rivet["compose"](
+    "Unknown",
+    "framework",
+    ["missing.module"]
+)
+assert(unknown_module[0] == "error", "unknown module must be rejected")
+
+make wrong_profile := rivet["compose"](
+    "Wrong Profile",
+    "framework",
+    ["tool.search"]
+)
+assert(wrong_profile[0] == "error", "tool-only module must not enter a framework profile")
+
+make empty_roots := rivet["compose"](
+    "Empty",
+    "multitool",
+    []
+)
+assert(empty_roots[0] == "error", "empty composition must be rejected")
+
+make empty_name := rivet["compose"](
+    "",
+    "framework",
+    ["framework.config"]
+)
+assert(empty_name[0] == "error", "empty product names must be rejected")
+
+emit "RIVET_PLANNER_CHECKS_OK"

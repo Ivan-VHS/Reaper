@@ -1,0 +1,33 @@
+{
+  "schema": "reaper.rivet.request.v1",
+  "name": "Workbench Multitool",
+  "kind": "multitool",
+  "root_modules": [
+    "suite.orchestrator",
+    "tool.search",
+    "tool.archive",
+    "tool.database",
+    "tool.automation",
+    "tool.network"
+  ],
+  "target": {
+    "language": "reaper",
+    "profile": "desktop",
+    "architecture": "x86_64"
+  },
+  "optimization": "modularity",
+  "offline": true,
+  "registries": [],
+  "permissions": {
+    "requested": ["fs.read", "fs.write", "network.connect"],
+    "network": false,
+    "process": false,
+    "device": false,
+    "user_approval": true
+  },
+  "limits": {
+    "max_modules": 24,
+    "max_graph_edges": 256,
+    "memory_bytes": 67108864
+  }
+}

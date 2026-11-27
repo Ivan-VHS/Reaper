@@ -28,6 +28,7 @@ Never move a row to Delivered because a registry, design, README, schema or gene
 | Native C17 | Partial lexer/parser/AST/checked-i64 IR/limited lowering | `src/`, `include/`, `tests/`, native C workflow |
 | Native MMIO | Descriptor validation and callback contract only | Native headers, source and negative tests |
 | Jora factory | Deterministic request validation, catalogue/composition and scaffold generation | `docs/JORA_APPLICATION_FACTORY.md`, CLI tests; generated packs remain non-installable |
+| Rivet assembly | Partial Reaper-native dependency and contract planner for frameworks/multitools | `rivet/engine.rpr`, `rivet/catalog.rpr`, `examples/rivet/`; no source emitter or package backend |
 | Federation | Versioned metadata/adapters for OPlague, VentuSample and optional Pytyliki ABI | Federation manifests and integration tests |
 | МОСТ | 21 executable aliases and 33 reserved aliases | `docs/MOST_IMPLEMENTATION_STATUS.md`, registry validator |
 
@@ -122,6 +123,18 @@ Never move a row to Delivered because a registry, design, README, schema or gene
 - Preserve a rollback path to a previous known-good package.
 
 **Acceptance:** reproducible archive inventory, verified checksums, passing required CI for the tagged commit and a maintainer-approved release.
+
+### R9 — Rivet framework and multitool assembly
+
+**Status: Partial planning increment; project generation, executable module assembly and packaging are not implemented.**
+
+- Keep the catalogue and composition engine in Reaper source.
+- Resolve dependencies deterministically; reject cycles, unknown modules, conflicts, missing capabilities and incompatible product profiles.
+- Keep generated product identity independent from the factory name.
+- Collect required permissions without granting them; keep registry resolution local/offline by default.
+- Do not report a framework or multitool as built until source generation, module conformance, resource tests, provenance and package integrity gates pass.
+
+**Acceptance:** Reaper-native examples and negative planner fixtures pass; graph order is deterministic; permissions remain ungranted; current output remains `plan_only` until the source-emission and package ABIs are implemented.
 
 ## Not a Reaper workstream
 

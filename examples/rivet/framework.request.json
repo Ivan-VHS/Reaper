@@ -1,0 +1,31 @@
+{
+  "schema": "reaper.rivet.request.v1",
+  "name": "Northstar Service Framework",
+  "kind": "framework",
+  "root_modules": [
+    "framework.http",
+    "framework.plugin",
+    "framework.config",
+    "framework.events"
+  ],
+  "target": {
+    "language": "reaper",
+    "profile": "service",
+    "architecture": "x86_64"
+  },
+  "optimization": "balanced",
+  "offline": true,
+  "registries": [],
+  "permissions": {
+    "requested": ["network.listen"],
+    "network": false,
+    "process": false,
+    "device": false,
+    "user_approval": true
+  },
+  "limits": {
+    "max_modules": 24,
+    "max_graph_edges": 256,
+    "memory_bytes": 67108864
+  }
+}

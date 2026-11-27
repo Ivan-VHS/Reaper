@@ -1,0 +1,241 @@
+# Rivet composition planner.
+# This module is Reaper source. It plans framework and multitool products;
+# it does not write files, execute generated code or grant host permissions.
+import "catalog.rpr" as catalogue
+
+make MODULES := catalogue["modules"]
+make MAX_SELECTED_MODULES := 24
+make MAX_RESOLVED_MODULES := 64
+
+craft has_value(values, wanted) {
+    vary found := false
+    each value in values {
+        when value == wanted {
+            change found := true
+        }
+    }
+    yield found
+}
+
+craft find_module(modules, wanted_id) {
+    each module in modules {
+        when module[0] == wanted_id {
+            yield module
+        }
+    }
+    yield nothing
+}
+
+craft append_unique(values, value) {
+    when has_value(values, value) {
+        yield values
+    }
+    yield push(values, value)
+}
+
+craft remove_value(values, unwanted) {
+    vary kept := []
+    each value in values {
+        when value != unwanted {
+            change kept := push(kept, value)
+        }
+    }
+    yield kept
+}
+
+craft maturity_rank(value) {
+    when value == "specification_only" { yield 0 }
+    when value == "source_only" { yield 1 }
+    when value == "implemented" { yield 2 }
+    when value == "verified" { yield 3 }
+    when value == "installable" { yield 4 }
+    yield 0
+}
+
+craft dependency_closure(modules, roots) {
+    when size(roots) == 0 {
+        yield ["error", "RIV-E0001 at least one root module is required", []]
+    }
+    when size(roots) > MAX_SELECTED_MODULES {
+        yield ["error", "RIV-E0002 selected module limit exceeded", []]
+    }
+
+    vary pending := roots
+    vary expanded := []
+
+    loop while size(pending) > 0 {
+        make wave := pending
+        change pending := []
+
+        each module_id in wave {
+            when not has_value(expanded, module_id) {
+                make module := find_module(modules, module_id)
+                when module == nothing {
+                    yield ["error", "RIV-E0003 unknown module: " ++ module_id, expanded]
+                }
+
+                change expanded := push(expanded, module_id)
+                when size(expanded) > MAX_RESOLVED_MODULES {
+                    yield ["error", "RIV-E0004 resolved module limit exceeded", expanded]
+                }
+
+                each dependency in module[4] {
+                    when not has_value(expanded, dependency) and not has_value(pending, dependency) {
+                        change pending := push(pending, dependency)
+                    }
+                }
+            }
+        }
+    }
+
+    yield ["ok", expanded, ""]
+}
+
+craft topological_order(modules, included_ids) {
+    vary remaining := included_ids
+    vary ordered := []
+
+    # Stable catalogue order resolves independent modules deterministically.
+    loop while size(remaining) > 0 {
+        vary next_module := nothing
+
+        each module in modules {
+            when has_value(remaining, module[0]) and next_module == nothing {
+                vary ready := true
+                each dependency in module[4] {
+                    when not has_value(ordered, dependency) {
+                        change ready := false
+                    }
+                }
+                when ready {
+                    change next_module := module[0]
+                }
+            }
+        }
+
+        when next_module == nothing {
+            yield ["error", "RIV-E0005 dependency cycle detected in the selected module graph", ordered]
+        }
+
+        change ordered := push(ordered, next_module)
+        change remaining := remove_value(remaining, next_module)
+    }
+
+    yield ["ok", ordered, ""]
+}
+
+craft capability_available(modules, included_ids, capability) {
+    vary available := false
+    each module_id in included_ids {
+        make module := find_module(modules, module_id)
+        when module != nothing {
+            each provided in module[5] {
+                when provided == capability {
+                    change available := true
+                }
+            }
+        }
+    }
+    yield available
+}
+
+export craft compose(product_name, product_kind, selected_module_ids) {
+    when product_name == "" {
+        yield ["error", "RIV-E0006 product name must not be empty", []]
+    }
+    when product_kind != "framework" and product_kind != "multitool" and product_kind != "hybrid" {
+        yield ["error", "RIV-E0007 product kind must be framework, multitool or hybrid", []]
+    }
+
+    make closure_result := dependency_closure(MODULES, selected_module_ids)
+    when closure_result[0] != "ok" {
+        yield closure_result
+    }
+    make included_ids := closure_result[1]
+
+    each module_id in included_ids {
+        make module := find_module(MODULES, module_id)
+
+        when not has_value(module[3], product_kind) {
+            yield ["error", "RIV-E0008 module " ++ module_id ++ " does not support profile " ++ product_kind, []]
+        }
+
+        each capability in module[6] {
+            when not capability_available(MODULES, included_ids, capability) {
+                yield ["error", "RIV-E0009 missing capability " ++ capability ++ " required by " ++ module_id, []]
+            }
+        }
+
+        each conflict in module[7] {
+            when has_value(included_ids, conflict) {
+                yield ["error", "RIV-E0010 module conflict: " ++ module_id ++ " conflicts with " ++ conflict, []]
+            }
+        }
+    }
+
+    make order_result := topological_order(MODULES, included_ids)
+    when order_result[0] != "ok" {
+        yield order_result
+    }
+    make ordered_ids := order_result[1]
+
+    vary graph_edges := []
+    vary requested_permissions := []
+    vary module_maturity := "installable"
+
+    each module_id in ordered_ids {
+        make module := find_module(MODULES, module_id)
+
+        each dependency in module[4] {
+            change graph_edges := push(graph_edges, [dependency, module_id, "depends_on"])
+        }
+
+        each permission in module[9] {
+            change requested_permissions := append_unique(requested_permissions, permission)
+        }
+
+        when maturity_rank(module[8]) < maturity_rank(module_maturity) {
+            change module_maturity := module[8]
+        }
+    }
+
+    # Output slots:
+    # [status, product_name, product_kind, ordered_modules, edges,
+    #  permissions_to_review, module_maturity, build_state]
+    # Build state is intentionally plan_only until a capability-safe
+    # Reaper source emitter and package backend exist.
+    yield ["ok", product_name, product_kind, ordered_ids, graph_edges, requested_permissions, module_maturity, "plan_only"]
+}
+
+export craft describe(plan) {
+    when plan[0] != "ok" {
+        yield "Rivet composition failed: " ++ plan[1]
+    }
+
+    vary output := "Rivet composition plan"
+    change output := output ++ "\nProduct: " ++ plan[1]
+    change output := output ++ "\nProfile: " ++ plan[2]
+    change output := output ++ "\nBuild state: " ++ plan[7]
+    change output := output ++ "\nModule evidence: " ++ plan[6]
+    change output := output ++ "\n\nDependency-first module order:"
+
+    each module_id in plan[3] {
+        change output := output ++ "\n  - " ++ module_id
+    }
+
+    change output := output ++ "\n\nDependency edges:"
+    each edge in plan[4] {
+        change output := output ++ "\n  " ++ edge[0] ++ " -> " ++ edge[1]
+    }
+
+    change output := output ++ "\n\nPermissions requiring a separate grant:"
+    when size(plan[5]) == 0 {
+        change output := output ++ "\n  none"
+    } otherwise {
+        each permission in plan[5] {
+            change output := output ++ "\n  - " ++ permission
+        }
+    }
+
+    yield output
+}
