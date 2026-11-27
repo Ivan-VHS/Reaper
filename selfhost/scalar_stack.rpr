@@ -394,7 +394,7 @@ make gradient := scalar_field_gradient(field)
 assert(gradient == ["ok", 300], "ring scalar gradient mismatch")
 
 make flux := scalar_field_flux(field, 16)
-assert(flux == ["ok", 976], "scalar flux aggregation mismatch")
+assert(flux == ["ok", 59944], "density-weighted scalar flux aggregation mismatch")
 
 make decayed := scalar_field_step(field, 0, 120)
 assert(decayed[0] == "ok", "half-life decay step must succeed")

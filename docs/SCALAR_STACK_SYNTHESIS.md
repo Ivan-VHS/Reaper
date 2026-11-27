@@ -15,7 +15,7 @@ The reference implementation provides:
 - `scalar_field_step(field, relaxation_q16, elapsed_ticks)`: scalar relaxation over a cyclic one-dimensional topology. Each cell moves toward the integer mean of its two neighbours using a Q16 interpolation factor in the range 0..65536.
 - `decay_by_completed_half_lives`: potential is halved once per completed half-life interval. This is a deterministic tick-quantized rule, not a continuous exponential solver.
 - `scalar_field_gradient(field)`: maximum absolute difference between adjacent scalar potentials. It reports magnitude only; no directional vector is inferred.
-- `scalar_field_flux(field, quantum_step)`: sums the available potential above the threshold plus each cell's binding-energy field, with u64 overflow checks.
+- `scalar_field_flux(field, quantum_step)`: multiplies the available potential above the threshold by each cell's density, then adds its binding-energy field, with multiplication and accumulation overflow checks.
 
 The ring is an explicit v1 topology chosen to make boundary behavior deterministic. A general adjacency-list graph, multidimensional grids and vector/tensor fields are future extensions. Density and binding energy remain scalar state fields; the current relaxation pass updates potential only.
 
