@@ -902,8 +902,8 @@ export craft run_construct(state, spec) {
         when duty < 16 { change duty := 16 }
         when spec[4] > 0 { change duty := spec[4] }
         make scenario := scenario_enable(next, period, duty)
-        when not scenario[0] and not next[7] { yield [false, state, [], scenario[2]] }
-        when scenario[0] { change next := scenario[1] }
+        when not scenario[0] { yield [false, state, [], scenario[2]] }
+        change next := scenario[1]
         change next := state_put(next, 16, "fault-injection-active")
     }
     when spec[0] == "ROOT" {
