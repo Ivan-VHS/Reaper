@@ -1,5 +1,5 @@
 {
-  "schema": "anatidae.improvement-conflict.v1",
+  "schema": "dak.improvement-conflict.v1",
   "version": "1.0.0",
   "project": {
     "id": "reaper",
