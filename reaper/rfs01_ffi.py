@@ -65,7 +65,10 @@ class _SignalV1(ctypes.Structure):
 def _text(value: Any, label: str, capacity: int, allow_empty: bool = False) -> bytes:
     if not isinstance(value, str):
         raise FfiError(f"{label} must be text")
-    encoded = value.encode("utf-8")
+    try:
+        encoded = value.encode("utf-8", errors="strict")
+    except UnicodeError as error:
+        raise FfiError(f"{label} must be valid UTF-8 text") from error
     if b"\0" in encoded or len(encoded) >= capacity or (not allow_empty and not encoded):
         raise FfiError(f"{label} must fit in {capacity - 1} UTF-8 bytes and contain no NUL")
     return encoded
@@ -74,7 +77,10 @@ def _text(value: Any, label: str, capacity: int, allow_empty: bool = False) -> b
 def _number(value: Any, label: str) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise FfiError(f"{label} must be a finite number")
-    result = float(value)
+    try:
+        result = float(value)
+    except OverflowError as error:
+        raise FfiError(f"{label} is outside the float64 range") from error
     if not math.isfinite(result):
         raise FfiError(f"{label} must be a finite number")
     return result
@@ -151,7 +157,10 @@ def _signal(value: Mapping[str, Any]) -> _SignalV1:
 
 
 def _decode(value: bytes) -> str:
-    return value.split(b"\0", 1)[0].decode("utf-8", errors="strict")
+    try:
+        return value.split(b"\0", 1)[0].decode("utf-8", errors="strict")
+    except UnicodeError as error:
+        raise FfiError("Pytyliki RFS-01 returned a non-UTF-8 string field") from error
 
 
 def _node_dict(value: _NodeV1) -> dict[str, Any]:
