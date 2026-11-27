@@ -56,6 +56,14 @@ jobs:
         run: python -m reaper --check examples/flow.rpr
       - name: Validate federated audit program
         run: python -m reaper --check examples/device_audit.rpr
+      - name: Validate processor control-plane contracts
+        run: python -m reaper --check examples/processor_control.rpr
+      - name: Run processor control-plane conformance fixture on both engines
+        run: |
+          python -m reaper examples/processor_control.rpr | tee processor-control-treewalk.txt
+          python -m reaper --engine vm examples/processor_control.rpr | tee processor-control-vm.txt
+          grep -qx "REAPER_PROCESSOR_CONTROL:PASS" processor-control-treewalk.txt
+          grep -qx "REAPER_PROCESSOR_CONTROL:PASS" processor-control-vm.txt
       - name: Validate Reaper Typed Registry example
         run: python -m reaper --check examples/typed_registry.rpr
       - name: Run Reaper Typed Registry conformance fixtures

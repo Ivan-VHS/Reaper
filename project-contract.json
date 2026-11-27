@@ -24,6 +24,19 @@
   },
   "capabilities": [
     {
+      "id": "processor.control-plane.v1",
+      "status": "implemented",
+      "summary": "Executable Reaper processor-control contracts plus a native C17 control library for topology, scheduling policy, affinity, core/thread lifecycle, verification evidence, revision admission, bounded debug capture and capability-gated platform callbacks. It does not supply the platform-specific privileged driver or complete language compiler parity.",
+      "evidence": [
+        "stdlib/processor_control.rpr",
+        "include/reaper/processor_control.h",
+        "src/processor_control.c",
+        "tests/test_processor_control.c",
+        "examples/processor_control.rpr",
+        "docs/PROCESSOR_CONTROL_PLANE.md"
+      ]
+    },
+    {
       "id": "foundations.first-five-frameworks",
       "status": "partial",
       "summary": "Executable Reaper contracts aligned with native architecture concepts 1–5: Framework frame, Platform, Environment, Infrastructure and Architecture; target integration and complete native compiler support remain partial.",

@@ -1,0 +1,44 @@
+# Processor-control conformance fixture.
+# All input is deterministic fixture data; no real CPU setting is changed.
+
+import "../stdlib/processor_control.rpr" as processor
+
+make digest := "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+make snapshot := [
+    "reaper.processor-snapshot.v1", "fixture/cpu-01", "x86_64", "genuineIntel",
+    1, 1, 8, 16, 16, 4, ["sse2", "avx2"], "fixture://cpu-inventory"
+]
+make invalid_snapshot := [
+    "reaper.processor-snapshot.v1", "fixture/cpu-02", "x86_64", "genuineIntel",
+    1, 1, 8, 4, 5, 4, [], "fixture://invalid-topology"
+]
+make core := [0, 0, 0, 0, "performance", "online", 2, [0, 1], "core-rev-1", 4]
+make thread := [41, 7, 120, 0, 32768, "ready", [0, 1], 4]
+make evidence := ["scheduler", 128, 128, 0, 9800, 950, digest, "reaper-ci"]
+make active := ["scheduler", 1, 0, 0, "parent-rev", digest, 1, 4, "active"]
+make candidate := ["scheduler", 1, 1, 0, "parent-rev", digest, 1, 5, "staged"]
+make debug := ["session-1", 0, "read-only", false, 5000, 4096, "none"]
+make power_preview := ["frequency-cap", 3200, 800, 5000, "MHz", "none"]
+make power_without_capability := ["frequency-cap", 3200, 800, 5000, "MHz", "processor.power-control"]
+make valid_context_frame := [4096, 4096, 8056, 8, 128]
+make invalid_context_frame := [4096, 4096, 8057, 8, 128]
+
+assert(processor["processor_snapshot_valid"](snapshot), "valid processor inventory must be accepted")
+assert(not processor["processor_snapshot_valid"](invalid_snapshot), "online threads cannot exceed logical threads")
+assert(processor["core_descriptor_valid"](core, 8, 16), "valid core descriptor must be accepted")
+assert(processor["thread_descriptor_valid"](thread, 16), "valid thread descriptor must be accepted")
+assert(not processor["affinity_valid"]([0, 0], 16), "duplicate affinity targets must be rejected")
+assert(processor["core_transition_valid"]("online", "draining"), "online core can enter draining state")
+assert(not processor["core_transition_valid"]("offline", "online"), "core must pass through starting state")
+assert(processor["core_release_allowed"]([0, 0, 0, 0, "performance", "draining", 0, [], "core-rev-1", 4], 0, 0, 0, 0), "core release requires quiescence")
+assert(processor["split_work"](17, 4) == [5, 4, 4, 4], "work partition must be deterministic")
+assert(processor["verification_evidence_valid"](evidence), "complete passing evidence must be accepted")
+assert(processor["live_update_admission"](active, candidate, evidence, true, true, true, true, true) == "admit-stage-only", "live update must stage only after all gates pass")
+assert(processor["live_update_admission"](active, candidate, evidence, false, true, true, true, true) == "defer-until-quiescent", "live update must wait for a safe point")
+assert(processor["debug_session_valid"](debug, 16), "bounded read-only debug must be accepted")
+assert(processor["context_frame_valid"](valid_context_frame), "SysV task entry stack must accept 8-byte alignment")
+assert(not processor["context_frame_valid"](invalid_context_frame), "misaligned task stack must be rejected")
+assert(processor["power_request_admission"](power_preview) == "admit-preview-only", "unprivileged power changes remain simulation-only")
+assert(processor["power_request_admission"](power_without_capability) == "require-privileged-native-adapter", "hardware writes require a native capability")
+
+emit "REAPER_PROCESSOR_CONTROL:PASS"
