@@ -62,7 +62,7 @@ A caller must inspect the tag before indexing the value. SEAM never silently tur
 
 **["reaper.seam.checkpoint.v1", revision, root, state]**
 
-**checkpoint_make(state)** captures a structural checkpoint. **checkpoint_recover(checkpoint, expected_root, minimum_revision, minimum_integrity)** checks the embedded state, duplicated revision/root metadata, caller-supplied root identity, minimum age and integrity floor.
+**checkpoint_make(state)** captures a structural checkpoint. **checkpoint_recover(checkpoint, expected_root, minimum_revision, minimum_integrity)** checks the embedded state, duplicated revision/root metadata, caller-supplied root identity, minimum revision and integrity floor.
 
 **Trust boundary:** this is structural consistency checking, not a digital signature. A caller must authenticate checkpoint origin and storage integrity through a trusted host before treating a checkpoint as trusted. The library does not write files, roll back an OS, or claim atomic persistence.
 
@@ -78,7 +78,7 @@ Input/output lists contain unique non-empty type names. Effects are unique value
 
 **pure** is exclusive and cannot be combined with effectful declarations.
 
-**contract_make(...)** creates a checked contract; **contract_validate(...)** validates an existing one. **bridge_validate(producer, consumer, granted_effects)** requires exact producer-output / consumer-input type-list equality and checks the union of declared effects against an explicit caller-supplied grant list.
+**contract_make(...)** creates a checked contract; **contract_validate(...)** validates an existing one. **bridge_validate(producer, consumer, granted_effects)** requires exact producer-output / consumer-input type-list equality and checks the union of effectful declarations against an explicit caller-supplied grant list. A pure contract is neutral when composed with an effectful contract; an all-pure bridge remains pure.
 
 **Trust boundary:** **granted_effects** is evidence supplied by the caller for preflight, not an authority token. This function does not grant, enforce or perform host effects. The actual host must independently enforce capabilities at the call boundary.
 
