@@ -127,3 +127,20 @@ ras_series_record rejects mixed boot/provider/resource/fault series, duplicate o
 ras_recovery_action produces advisory decisions only: observe, warn-and-collect, request an OS recovery path, request operator/OS review, or defer fatal cases to the kernel. It never retries fatal errors and never writes registers, MMIO, firmware, voltage, frequency or scheduler state. The RAS_CLASSIFY bytecode instruction (opcode 65, RULE domain, SERVICE role) encodes a bounded fault kind, repeat count and explicit confidence/OS/rollback flags; decoding and role/domain validation happen before the decision is returned.
 
 Hardware-specific WHEA, Linux EDAC/MCE and Apple event adapters remain outside this language core. They must preserve source provenance and provide verified classification before a live event can enter this model. Copper/electromigration and nano-cell equations in the same core remain deterministic simulation, not physical repair.
+
+
+## Processor control, AP/SMP and native adapter contracts
+
+The Reaper core now defines an implementation matrix for the nine requested processor/RAS subsystems, plus executable state machines and admission predicates. Reaper owns input validation, topology-generation checks, AP startup readiness, IPI route policy, timer quantum decisions, MSR allowlists, normalized MCA event classification, page-recovery preconditions and the diagnostics wire envelope.
+
+- AP/SMP: ap_startup_valid, ap_startup_readiness, ap_startup_transition and ap_smp_admit_cpu enforce boot identity, BSP readiness, GDT/IDT, unique stack, per-CPU data, local-controller readiness, trampoline evidence and topology generation. The native kernel still has to discover ACPI processors, allocate AP resources and send INIT/SIPI.
+- APIC/IPI/timer: apic_route_valid, apic_ipi_decision, timer_preemption_decision and timer_preemption_admission validate endpoints, vector, mask, interrupt state and quantum expiry. Actual APIC MMIO, local timer programming and IPI delivery require a kernel-control adapter.
+- MCA/MSR: mca_msr_allowlisted permits only IA32_MCG_CAP/STATUS and the architectural machine-check bank range for read-only access. mca_event_valid consumes normalized flags rather than pretending Reaper can safely decode arbitrary 64-bit status values. mca_handler_decision refuses invalid records and defers corrupt processor context to the kernel fatal path. A privileged x86 adapter must perform the actual RDMSR and exception entry.
+- Page recovery: page_recovery_decision refuses pinned/referenced pages, requires verified copy for dirty pages, valid uncorrected address evidence and rollback readiness. Actual page offlining, replacement allocation, reverse-map updates and TLB shootdown belong to the native memory manager.
+- Linux EDAC/MCE: linux_edac_provider_descriptor describes a read-only sysfs/tracefs provider. It is deliberately available=false until a Linux adapter is attached and qualified.
+- Apple Swift: apple_swift_ras_adapter_descriptor defines the Swift/C ABI boundary for OS-published diagnostics. It does not claim raw MCA MSR access on Apple platforms.
+- Rust native RAS: rust_native_ras_adapter_descriptor defines a versioned DABI64 adapter contract, not an installed Rust driver.
+- TypeScript diagnostics: typescript_diagnostic_valid and typescript_diagnostic_export validate read-only diagnostic packets. A UI/client transport is not part of the kernel and cannot receive privileged operations.
+- Physical copper/silicon repair: physical_repair_assessment always reports physical damage as not software-repairable. Software may isolate a resource and request qualified laboratory inspection or component replacement.
+
+The bytecode VM now accepts opcodes 66-70 for AP startup, IPI routing, timer preemption, MCA handling and page-recovery admission. They return typed policy decisions after normal domain/role verification. They do not execute RDMSR, WRMSR, MMIO, INIT/SIPI, APIC writes, page-table edits or hardware repair. No opcode can bypass adapter authority.
