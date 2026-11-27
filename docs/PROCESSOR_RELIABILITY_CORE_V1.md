@@ -50,7 +50,7 @@ RPR-BC words are represented as two unsigned 32-bit integers:
 - `high32 = opcode * 2^24 + domain * 2^16 + operandA`
 - `low32 = operandB * 2^16 + flags`
 
-Both operands and flags must fit `u16`; each word must fit `u32`. Unknown opcode and domain values fail decoding. The supported opcodes are `0x10`, `0x11`, `0x12`, `0x20`, `0x21`, `0x30`, `0x31` and `0x40`.
+Both operands and flags must fit `u16`; each word must fit `u32`. Unknown opcode and domain values fail decoding. The supported opcodes are `0x10`, `0x11`, `0x12`, `0x20`, `0x21`, `0x30`, `0x31` and `0x40`. For `0x10`, flag bit zero selects `OPERAND`; otherwise it dispatches `OPERATION`. `0x11` dispatches `COMMAND` and `0x12` dispatches `SERVICE`.
 
 The copper-tune instruction evaluates a deterministic RC fixture from its operands; the nano-pulse instruction consumes a bounded local repair-cell fixture. These are model operations, not bus writes.
 
@@ -62,7 +62,7 @@ A repair debit is clamped to the remaining budget. Crossing the low watermark is
 - In `test` mode, crossing the watermark may enable bounded periodic fault injection. The injected fault is explicitly synthetic and is counted in the trace.
 - Re-entering a low-budget state does not repeatedly increment the activation counter.
 - The forecast is advisory and never reserves or spends resources.
-- Production `safe-degraded` blocks new `START` constructs. `repair_recover` can restore a production state only with a revision-bound, mode-bound, scope-bound ROOT capability descriptor and a sufficient local reserve; the reserve is debited by exactly the credited amount. Recovery increments the step, service and simulated barrier counters, invalidating the old revision-bound descriptor. Recovery above the low watermark returns the lifecycle to `ready`.
+- Production state created with `remaining_budget <= low_watermark` starts directly in `safe-degraded`. That state blocks new `START` constructs. `repair_recover` can restore a production state only with a revision-bound, mode-bound, scope-bound ROOT capability descriptor and a sufficient local reserve; the reserve is debited by exactly the credited amount. Recovery increments the step, service and simulated barrier counters, invalidating the old revision-bound descriptor. Recovery above the low watermark returns the lifecycle to `ready`.
 
 The fault window is `((cycle - phase) % period) < duty`. Period and duty are validated before activation.
 
