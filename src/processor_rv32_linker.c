@@ -25,6 +25,8 @@ static ReaperProcessorBackendStatus apply_relocation(
         return REAPER_BACKEND_RELOCATION_RANGE;
     value = (uint32_t)delta;
     if (relocation->kind == REAPER_RV32_RELOC_JAL20) {
+        if ((*word & UINT32_C(0x7F)) != UINT32_C(0x6F))
+            return REAPER_BACKEND_INVALID_ABI;
         if (delta < -1048576 || delta > 1048574)
             return REAPER_BACKEND_RELOCATION_RANGE;
         *word &= UINT32_C(0x00000FFF);
@@ -35,6 +37,8 @@ static ReaperProcessorBackendStatus apply_relocation(
         return REAPER_BACKEND_OK;
     }
     if (relocation->kind == REAPER_RV32_RELOC_BRANCH13) {
+        if ((*word & UINT32_C(0x7F)) != UINT32_C(0x63))
+            return REAPER_BACKEND_INVALID_ABI;
         if (delta < -4096 || delta > 4094)
             return REAPER_BACKEND_RELOCATION_RANGE;
         *word &= UINT32_C(0x01FFF07F);
