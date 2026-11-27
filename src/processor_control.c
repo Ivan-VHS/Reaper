@@ -246,6 +246,24 @@ ReaperProcessorStatus reaper_processor_apply_frequency_cap(
                                   topology_generation);
 }
 
+ReaperProcessorStatus reaper_processor_apply_power_profile(
+    const ReaperProcessorPlatformOps *ops, uint32_t cpu_id,
+    ReaperProcessorPowerProfile profile, uint32_t topology_generation
+) {
+    if (cpu_id >= REAPER_PROCESSOR_MAX_LOGICAL_CPUS ||
+        topology_generation == 0U ||
+        profile < REAPER_PROCESSOR_POWER_BALANCED ||
+        profile > REAPER_PROCESSOR_POWER_THERMAL_GUARD)
+        return REAPER_PROCESSOR_INVALID_ARGUMENT;
+    if (ops == NULL ||
+        (ops->capabilities & REAPER_PROCESSOR_CAP_POWER_CONTROL) == 0U ||
+        ops->set_power_profile == NULL)
+        return REAPER_PROCESSOR_ACCESS_DENIED;
+    return ops->set_power_profile(
+        ops->context, cpu_id, profile, topology_generation
+    );
+}
+
 ReaperProcessorStatus reaper_processor_debug_capture(
     const ReaperProcessorPlatformOps *ops,
     const ReaperProcessorDebugSession *session,
