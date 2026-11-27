@@ -1,0 +1,26 @@
+# TemplateParameters — validate unique typed template parameters.
+
+export craft valid_template_parameters(parameters) {
+    when kind(parameters) != "list" or size(parameters) == 0 {
+        yield false
+    }
+    craft valid_parameter(parameter) {
+        when kind(parameter) != "list" or size(parameter) != 3 {
+            yield false
+        }
+        when kind(parameter[0]) != "text" or kind(parameter[1]) != "text" or kind(parameter[2]) != "boolean" {
+            yield false
+        }
+        yield size(trim(parameter[0])) > 0 and contains(["text", "number", "boolean", "path", "bytes"], parameter[1])
+    }
+    craft invalid_parameter(parameter) {
+        yield not valid_parameter(parameter)
+    }
+    craft parameter_name(parameter) {
+        yield parameter[0]
+    }
+    when size(keep(parameters, invalid_parameter)) != 0 {
+        yield false
+    }
+    yield size(unique(map(parameters, parameter_name))) == size(parameters)
+}

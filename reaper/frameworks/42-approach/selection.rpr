@@ -1,0 +1,47 @@
+# ApproachSelection — choose the highest-scoring strategy satisfying all mandatory requirements.
+# Candidate: [name, score, requirements].
+
+export craft approach_select_strategy(candidates, mandatory) {
+    when kind(candidates) != "list" or kind(mandatory) != "list" {
+        yield ""
+    }
+    craft valid_requirement(requirement) {
+        yield kind(requirement) == "text" and size(trim(requirement)) > 0
+    }
+    craft invalid_requirement(requirement) {
+        yield not valid_requirement(requirement)
+    }
+    when size(keep(mandatory, invalid_requirement)) != 0 or size(unique(mandatory)) != size(mandatory) {
+        yield ""
+    }
+    craft valid_candidate(candidate) {
+        when kind(candidate) != "list" or size(candidate) != 3 {
+            yield false
+        }
+        when kind(candidate[0]) != "text" or kind(candidate[1]) != "number" or kind(candidate[2]) != "list" {
+            yield false
+        }
+        when size(trim(candidate[0])) == 0 or candidate[1] % 1 != 0 {
+            yield false
+        }
+        yield size(keep(candidate[2], invalid_requirement)) == 0 and size(unique(candidate[2])) == size(candidate[2])
+    }
+    craft invalid_candidate(candidate) {
+        yield not valid_candidate(candidate)
+    }
+    when size(keep(candidates, invalid_candidate)) != 0 {
+        yield ""
+    }
+    vary selected := ""
+    vary best_score := 0 - 1
+    each candidate in candidates {
+        craft missing(requirement) {
+            yield not contains(candidate[2], requirement)
+        }
+        when size(keep(mandatory, missing)) == 0 and candidate[1] > best_score {
+            change best_score := candidate[1]
+            change selected := candidate[0]
+        }
+    }
+    yield selected
+}

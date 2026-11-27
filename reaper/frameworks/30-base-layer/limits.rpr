@@ -1,0 +1,13 @@
+# BaseLayerLimits — validate bounded positive core limits.
+
+export craft valid_base_layer_limits(limits) {
+    when kind(limits) != "list" or size(limits) != 4 {
+        yield false
+    }
+    each limit in limits {
+        when kind(limit) != "number" or limit % 1 != 0 or limit < 1 {
+            yield false
+        }
+    }
+    yield limits[0] <= 1000000000 and limits[1] <= 65536 and limits[2] <= 68719476736 and limits[3] <= 1000000
+}

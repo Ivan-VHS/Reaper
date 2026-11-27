@@ -17,6 +17,6 @@
 | QCS | separate lexer/parser/JSON AST | validation tool |
 | THESIS | versioned assertion/evidence graph | no auto-verification |
 | Pytyliki | optional C ABI metric calls | explicit trusted path |
-| Registries | 813 proposals; 666 API contracts; 666 symbolic lexemes | specification, not completion |
+| Framework programme | 330 independent Reaper `.rpr` modules across 66 domains; 325 indexed module contracts with positive/negative fixtures | source-complete on `feat/frameworks-skeleton-batch-01`; exact-head CI pending |\n| Registries | 813 proposals; 666 API contracts; 666 symbolic lexemes | specification, not completion |
 
-Python remains the compatibility reference. Native C17 is not yet a full interpreter or general machine-code backend. The MMIO API is a checked adapter contract, not a complete hardware runtime. The systems-language migration and maturity gates are documented in [HARDWARE_LANGUAGE.md](HARDWARE_LANGUAGE.md).
+The framework programme is a separate set of Reaper-language source modules; its validators and algorithms do not imply native compiler parity, a privileged runtime, real service orchestration, driver installation or physical hardware access. The feature branch remains under CI and review until the exact head passes.\n\nPython remains the compatibility reference. Native C17 is not yet a full interpreter or general machine-code backend. The MMIO API is a checked adapter contract, not a complete hardware runtime. The systems-language migration and maturity gates are documented in [HARDWARE_LANGUAGE.md](HARDWARE_LANGUAGE.md).

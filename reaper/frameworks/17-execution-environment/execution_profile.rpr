@@ -1,0 +1,25 @@
+# ExecutionProfile — validate runtime profile capability combinations.
+# [mode, allocator_enabled, threads_enabled, host_io_enabled].
+
+export craft valid_execution_profile(profile) {
+    when kind(profile) != "list" or size(profile) != 4 {
+        yield false
+    }
+    when kind(profile[0]) != "text" or kind(profile[1]) != "boolean" or kind(profile[2]) != "boolean" or kind(profile[3]) != "boolean" {
+        yield false
+    }
+    when not contains(["hosted", "freestanding", "boot", "kernel", "mcu"], profile[0]) {
+        yield false
+    }
+    when profile[0] == "kernel" or profile[0] == "boot" or profile[0] == "freestanding" {
+        when profile[3] {
+            yield false
+        }
+    }
+    when profile[0] == "mcu" {
+        when profile[2] {
+            yield false
+        }
+    }
+    yield true
+}

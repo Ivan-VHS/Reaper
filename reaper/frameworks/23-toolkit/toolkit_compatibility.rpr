@@ -1,0 +1,32 @@
+# ToolkitCompatibility — all components must support the selected ABI major version.
+
+export craft valid_toolkit_compatibility(components, required_major) {
+    when kind(components) != "list" or kind(required_major) != "number" or required_major % 1 != 0 or required_major < 0 {
+        yield false
+    }
+    craft valid_component(component) {
+        when kind(component) != "list" or size(component) != 2 {
+            yield false
+        }
+        when kind(component[0]) != "text" or kind(component[1]) != "list" {
+            yield false
+        }
+        when size(trim(component[0])) == 0 or size(component[1]) == 0 {
+            yield false
+        }
+        craft valid_major(major) {
+            yield kind(major) == "number" and major % 1 == 0 and major >= 0
+        }
+        yield size(keep(component[1], valid_major)) == size(component[1]) and contains(component[1], required_major)
+    }
+    craft invalid_component(component) {
+        yield not valid_component(component)
+    }
+    craft component_name(component) {
+        yield component[0]
+    }
+    when size(keep(components, invalid_component)) != 0 or size(unique(map(components, component_name))) != size(components) {
+        yield false
+    }
+    yield true
+}

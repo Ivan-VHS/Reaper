@@ -1,0 +1,20 @@
+# ContainerLifecycle — validate explicit container lifecycle transitions.
+
+export craft valid_container_lifecycle_transition(current_state, next_state) {
+    when kind(current_state) != "text" or kind(next_state) != "text" {
+        yield false
+    }
+    when current_state == "created" {
+        yield next_state == "prepared" or next_state == "running" or next_state == "stopped"
+    }
+    when current_state == "prepared" {
+        yield next_state == "running" or next_state == "stopped"
+    }
+    when current_state == "running" {
+        yield next_state == "stopping"
+    }
+    when current_state == "stopping" {
+        yield next_state == "stopped"
+    }
+    yield false
+}

@@ -1,0 +1,17 @@
+# ShellAllowlist — exact executable allowlist check; no command is launched.
+
+export craft shell_command_allowed(program, allowlist) {
+    when kind(program) != "text" or kind(allowlist) != "list" {
+        yield false
+    }
+    when size(trim(program)) == 0 {
+        yield false
+    }
+    craft invalid_name(name) {
+        yield kind(name) != "text" or size(trim(name)) == 0
+    }
+    when size(keep(allowlist, invalid_name)) != 0 or size(unique(allowlist)) != size(allowlist) {
+        yield false
+    }
+    yield contains(allowlist, program)
+}

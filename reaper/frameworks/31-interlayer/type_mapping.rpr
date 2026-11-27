@@ -1,0 +1,26 @@
+# InterlayerTypeMapping — unique explicit source-to-target conversion declarations.
+
+export craft valid_interlayer_type_mappings(mappings) {
+    when kind(mappings) != "list" or size(mappings) == 0 {
+        yield false
+    }
+    craft valid_mapping(mapping) {
+        when kind(mapping) != "list" or size(mapping) != 3 {
+            yield false
+        }
+        when kind(mapping[0]) != "text" or kind(mapping[1]) != "text" or kind(mapping[2]) != "boolean" {
+            yield false
+        }
+        yield size(trim(mapping[0])) > 0 and size(trim(mapping[1])) > 0 and mapping[0] != mapping[1]
+    }
+    craft invalid_mapping(mapping) {
+        yield not valid_mapping(mapping)
+    }
+    craft source_type(mapping) {
+        yield mapping[0]
+    }
+    when size(keep(mappings, invalid_mapping)) != 0 {
+        yield false
+    }
+    yield size(unique(map(mappings, source_type))) == size(mappings)
+}

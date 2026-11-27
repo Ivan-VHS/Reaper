@@ -1,0 +1,17 @@
+# ToolSuiteBuildCommand — validate a bounded explicit command request without execution.
+
+export craft valid_tool_suite_command(command) {
+    when kind(command) != "list" or size(command) != 3 {
+        yield false
+    }
+    when kind(command[0]) != "text" or kind(command[1]) != "list" or kind(command[2]) != "number" {
+        yield false
+    }
+    when size(trim(command[0])) == 0 or command[2] % 1 != 0 or command[2] < 1 or command[2] > 3600 {
+        yield false
+    }
+    craft invalid_argument(argument) {
+        yield kind(argument) != "text" or contains(argument, "\n") or contains(argument, "\r")
+    }
+    yield size(keep(command[1], invalid_argument)) == 0
+}

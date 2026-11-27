@@ -1,0 +1,11 @@
+# ParadigmMutability — validate explicit immutable/mutable binding flags.
+
+export craft valid_paradigm_mutability_profile(bindings) {
+    when kind(bindings) != "list" {
+        yield false
+    }
+    craft invalid_flag(flag) {
+        yield kind(flag) != "boolean"
+    }
+    yield size(keep(bindings, invalid_flag)) == 0
+}

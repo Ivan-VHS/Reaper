@@ -1,0 +1,14 @@
+# Block Range Framework — Validate sorted half-open address blocks with positive lengths and no overlap.
+
+export craft valid_block_ranges(ranges) {
+when kind(ranges) != "list" { yield false }
+    craft valid_range(item) {
+        yield kind(item) == "list" and size(item) == 2 and kind(item[0]) == "number" and kind(item[1]) == "number" and item[0] % 1 == 0 and item[1] % 1 == 0 and item[0] >= 0 and item[1] > item[0]
+    }
+    craft invalid_range(item) { yield not valid_range(item) }
+    when size(keep(ranges, invalid_range)) != 0 { yield false }
+    each index in range(1, size(ranges)) {
+        when ranges[index][0] < ranges[index - 1][1] { yield false }
+    }
+    yield true
+}

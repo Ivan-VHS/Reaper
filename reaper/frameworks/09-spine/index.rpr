@@ -1,0 +1,14 @@
+# SpineIndex — deterministic lookup in a validated linear spine.
+
+export craft spine_node_index(nodes, target) {
+    when kind(nodes) != "list" or size(unique(nodes)) != size(nodes) {
+        yield -1
+    }
+    vary found := -1
+    each index in range(0, size(nodes)) {
+        when nodes[index] == target {
+            change found := index
+        }
+    }
+    yield found
+}

@@ -1,0 +1,17 @@
+# EnvironmentWorkingRoot — reject unsafe relative workspace paths.
+
+export craft safe_environment_path(path) {
+    when kind(path) != "text" or size(trim(path)) == 0 {
+        yield false
+    }
+    when starts_with(path, "/") or ends_with(path, "/") or contains(path, ":") or contains(path, "\\\\") {
+        yield false
+    }
+    craft invalid_segment(segment) {
+        yield segment == "" or segment == "." or segment == ".."
+    }
+    when size(keep(split(path, "/"), invalid_segment)) != 0 {
+        yield false
+    }
+    yield true
+}

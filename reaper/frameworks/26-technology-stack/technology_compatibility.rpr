@@ -1,0 +1,29 @@
+# TechnologyCompatibility — adjacent technology layers must share interface version.
+
+export craft valid_technology_stack_compatibility(layers) {
+    when kind(layers) != "list" or size(layers) < 2 {
+        yield false
+    }
+    craft valid_layer(layer) {
+        when kind(layer) != "list" or size(layer) != 2 {
+            yield false
+        }
+        when kind(layer[0]) != "text" or kind(layer[1]) != "number" {
+            yield false
+        }
+        yield size(trim(layer[0])) > 0 and layer[1] % 1 == 0 and layer[1] >= 1
+    }
+    craft invalid_layer(layer) {
+        yield not valid_layer(layer)
+    }
+    when size(keep(layers, invalid_layer)) != 0 {
+        yield false
+    }
+    vary compatible := true
+    each index in range(0, size(layers) - 1) {
+        when layers[index][1] != layers[index + 1][1] {
+            change compatible := false
+        }
+    }
+    yield compatible
+}

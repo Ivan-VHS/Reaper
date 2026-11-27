@@ -1,0 +1,23 @@
+# StructureCoverage — deterministic missing-slot report.
+
+export craft structure_missing_slots(required, provided) {
+    when kind(required) != "list" or kind(provided) != "list" {
+        yield []
+    }
+    craft invalid_slot(slot) {
+        when kind(slot) != "text" {
+            yield true
+        }
+        yield size(trim(slot)) == 0
+    }
+    when size(required) == 0 or size(keep(required, invalid_slot)) != 0 or size(keep(provided, invalid_slot)) != 0 {
+        yield []
+    }
+    when size(unique(required)) != size(required) or size(unique(provided)) != size(provided) {
+        yield []
+    }
+    craft missing(slot) {
+        yield not contains(provided, slot)
+    }
+    yield keep(required, missing)
+}

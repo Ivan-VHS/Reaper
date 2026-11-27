@@ -1,0 +1,18 @@
+# Matrix Sparsity Framework — Count nonzero elements in a rectangular numeric matrix.
+
+export craft matrix_nonzero_count(matrix) {
+when kind(matrix) != "list" or size(matrix) == 0 { yield -1 }
+ vary width := -1
+ vary count := 0
+ each row in matrix {
+  when kind(row) != "list" or size(row) == 0 { yield -1 }
+  when width == -1 { change width := size(row) } otherwise {
+   when size(row) != width { yield -1 }
+  }
+  each item in row {
+   when kind(item) != "number" { yield -1 }
+   when item != 0 { change count := count + 1 }
+  }
+ }
+ yield count
+}

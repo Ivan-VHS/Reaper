@@ -1,0 +1,23 @@
+# ComponentWiring — validate typed output-to-input component port connections.
+# Wire: [source_component, source_port, source_type, target_component, target_port, target_type].
+
+export craft valid_component_wiring(wires) {
+    when kind(wires) != "list" {
+        yield false
+    }
+    craft valid_wire(wire) {
+        when kind(wire) != "list" or size(wire) != 6 {
+            yield false
+        }
+        each index in [0, 1, 2, 3, 4, 5] {
+            when kind(wire[index]) != "text" or size(trim(wire[index])) == 0 {
+                yield false
+            }
+        }
+        yield wire[0] != wire[3] and wire[2] == wire[5]
+    }
+    craft invalid_wire(wire) {
+        yield not valid_wire(wire)
+    }
+    yield size(keep(wires, invalid_wire)) == 0
+}

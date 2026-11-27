@@ -1,0 +1,14 @@
+# HostTarget — check whether a host supports a declared compilation target.
+
+export craft host_supports_target(target, supported_targets) {
+    when kind(target) != "text" or size(trim(target)) == 0 or kind(supported_targets) != "list" {
+        yield false
+    }
+    craft invalid_target(item) {
+        yield kind(item) != "text" or size(trim(item)) == 0
+    }
+    when size(keep(supported_targets, invalid_target)) != 0 or size(unique(supported_targets)) != size(supported_targets) {
+        yield false
+    }
+    yield contains(supported_targets, target)
+}

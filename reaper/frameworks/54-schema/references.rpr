@@ -1,0 +1,32 @@
+# Schema Reference Framework — Validate references between existing, distinct schema fields.
+
+export craft valid_schema_references(references, fields) {
+    when kind(references) != "list" or kind(fields) != "list" {
+        yield false
+    }
+    craft valid_field(field) {
+        yield kind(field) == "list" and size(field) == 2 and kind(field[0]) == "text" and kind(field[1]) == "text" and size(trim(field[0])) > 0 and size(trim(field[1])) > 0
+    }
+    craft invalid_field(field) {
+        yield not valid_field(field)
+    }
+    craft field_name(field) {
+        yield field[0]
+    }
+    when size(keep(fields, invalid_field)) != 0 or size(unique(map(fields, field_name))) != size(fields) {
+        yield false
+    }
+    craft valid_reference(reference) {
+        yield kind(reference) == "list" and size(reference) == 2 and kind(reference[0]) == "text" and kind(reference[1]) == "text" and size(trim(reference[0])) > 0 and size(trim(reference[1])) > 0 and reference[0] != reference[1]
+    }
+    craft invalid_reference(reference) {
+        yield not valid_reference(reference)
+    }
+    when size(keep(references, invalid_reference)) != 0 {
+        yield false
+    }
+    craft unknown(reference) {
+        yield not contains(map(fields, field_name), reference[0]) or not contains(map(fields, field_name), reference[1])
+    }
+    yield size(keep(references, unknown)) == 0 and size(unique(references)) == size(references)
+}

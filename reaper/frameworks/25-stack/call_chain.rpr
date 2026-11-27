@@ -1,0 +1,14 @@
+# StackCallChain — validate non-empty call names and bounded call depth.
+
+export craft valid_stack_call_chain(calls, maximum_depth) {
+    when kind(calls) != "list" or kind(maximum_depth) != "number" or maximum_depth % 1 != 0 or maximum_depth < 1 {
+        yield false
+    }
+    when size(calls) == 0 or size(calls) > maximum_depth {
+        yield false
+    }
+    craft invalid_call(name) {
+        yield kind(name) != "text" or size(trim(name)) == 0
+    }
+    yield size(keep(calls, invalid_call)) == 0
+}

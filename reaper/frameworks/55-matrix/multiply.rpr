@@ -1,0 +1,18 @@
+# Matrix Multiplication Framework — Check rectangular numeric matrix dimensions for a valid multiplication.
+
+export craft matrix_product_compatible(left, right) {
+when kind(left) != "list" or kind(right) != "list" or size(left) == 0 or size(right) == 0 { yield false }
+ craft valid_rows(matrix) {
+  vary width := -1
+  each row in matrix {
+   when kind(row) != "list" or size(row) == 0 { yield false }
+   when width == -1 { change width := size(row) } otherwise {
+    when size(row) != width { yield false }
+   }
+   each value in row { when kind(value) != "number" { yield false } }
+  }
+  yield true
+ }
+ when not valid_rows(left) or not valid_rows(right) { yield false }
+ yield size(left[0]) == size(right)
+}

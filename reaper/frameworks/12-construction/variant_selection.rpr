@@ -1,0 +1,44 @@
+# ConstructionVariantSelection — first compatible build variant wins.
+# Variant: [variant_name, required_feature_list].
+
+export craft construction_select_variant(variants, available_features) {
+    when kind(variants) != "list" or kind(available_features) != "list" {
+        yield ""
+    }
+    craft valid_feature(feature) {
+        yield kind(feature) == "text" and size(trim(feature)) > 0
+    }
+    craft invalid_feature(feature) {
+        yield not valid_feature(feature)
+    }
+    when size(keep(available_features, invalid_feature)) != 0 or size(unique(available_features)) != size(available_features) {
+        yield ""
+    }
+    craft valid_variant(variant) {
+        when kind(variant) != "list" or size(variant) != 2 {
+            yield false
+        }
+        when kind(variant[0]) != "text" or kind(variant[1]) != "list" {
+            yield false
+        }
+        when size(trim(variant[0])) == 0 {
+            yield false
+        }
+        yield size(keep(variant[1], invalid_feature)) == 0 and size(unique(variant[1])) == size(variant[1])
+    }
+    craft invalid_variant(variant) {
+        yield not valid_variant(variant)
+    }
+    when size(keep(variants, invalid_variant)) != 0 {
+        yield ""
+    }
+    each variant in variants {
+        craft missing(feature) {
+            yield not contains(available_features, feature)
+        }
+        when size(keep(variant[1], missing)) == 0 {
+            yield variant[0]
+        }
+    }
+    yield ""
+}

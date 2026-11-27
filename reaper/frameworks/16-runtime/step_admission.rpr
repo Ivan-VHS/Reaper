@@ -1,0 +1,14 @@
+# RuntimeStepAdmission — reserve steps within a declared execution ceiling.
+
+export craft runtime_step_admission(current_steps, requested_steps, step_limit) {
+    when kind(current_steps) != "number" or kind(requested_steps) != "number" or kind(step_limit) != "number" {
+        yield false
+    }
+    when current_steps % 1 != 0 or requested_steps % 1 != 0 or step_limit % 1 != 0 {
+        yield false
+    }
+    when current_steps < 0 or requested_steps < 0 or step_limit < 1 or current_steps > step_limit {
+        yield false
+    }
+    yield current_steps + requested_steps <= step_limit
+}

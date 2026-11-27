@@ -1,0 +1,7 @@
+# Baseline Profile Framework — Validate a named measurement profile with sample count and unit label.
+
+export craft valid_baseline_profile(profile) {
+when kind(profile) != "list" or size(profile) != 3 { yield false }
+ when kind(profile[0]) != "text" or kind(profile[1]) != "number" or kind(profile[2]) != "text" { yield false }
+ yield size(trim(profile[0])) > 0 and profile[1] % 1 == 0 and profile[1] >= 1 and size(trim(profile[2])) > 0
+}

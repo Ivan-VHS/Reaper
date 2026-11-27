@@ -1,0 +1,8 @@
+# Baseline Coverage Framework — Return baseline metrics that are absent from a new measurement set.
+
+export craft missing_baseline_metrics(baseline, current) {
+when kind(baseline) != "list" or kind(current) != "list" { yield [] }
+ craft metric_name(metric) { yield metric[0] }
+ craft missing(metric) { yield not contains(map(current, metric_name), metric[0]) }
+ yield map(keep(baseline, missing), metric_name)
+}

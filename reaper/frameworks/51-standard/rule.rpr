@@ -1,0 +1,7 @@
+# Standard Rule Framework — Validate a normative rule identity, severity and mandatory flag.
+
+export craft valid_standard_rule(rule) {
+when kind(rule) != "list" or size(rule) != 3 { yield false }
+ when kind(rule[0]) != "text" or kind(rule[1]) != "text" or kind(rule[2]) != "boolean" { yield false }
+ yield size(trim(rule[0])) > 0 and contains(["critical", "high", "medium", "low"], rule[1])
+}

@@ -1,0 +1,30 @@
+# SystemResources — validate allocations against declared system resource ceilings.
+# Entry: [resource_name, allocated_units, maximum_units].
+
+export craft valid_system_resource_budget(resources) {
+    when kind(resources) != "list" or size(resources) == 0 {
+        yield false
+    }
+    craft valid_resource(resource) {
+        when kind(resource) != "list" or size(resource) != 3 {
+            yield false
+        }
+        when kind(resource[0]) != "text" or kind(resource[1]) != "number" or kind(resource[2]) != "number" {
+            yield false
+        }
+        when size(trim(resource[0])) == 0 or resource[1] % 1 != 0 or resource[2] % 1 != 0 {
+            yield false
+        }
+        yield resource[1] >= 0 and resource[2] >= 1 and resource[1] <= resource[2]
+    }
+    craft invalid_resource(resource) {
+        yield not valid_resource(resource)
+    }
+    craft resource_name(resource) {
+        yield resource[0]
+    }
+    when size(keep(resources, invalid_resource)) != 0 {
+        yield false
+    }
+    yield size(unique(map(resources, resource_name))) == size(resources)
+}

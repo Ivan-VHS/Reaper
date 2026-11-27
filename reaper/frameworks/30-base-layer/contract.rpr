@@ -1,0 +1,29 @@
+# BaseLayerContract — validate unique core components and their stability state.
+
+export craft valid_base_layer_contracts(components) {
+    when kind(components) != "list" or size(components) == 0 {
+        yield false
+    }
+    craft valid_component(component) {
+        when kind(component) != "list" or size(component) != 3 {
+            yield false
+        }
+        when kind(component[0]) != "text" or kind(component[1]) != "number" or kind(component[2]) != "text" {
+            yield false
+        }
+        when size(trim(component[0])) == 0 or component[1] % 1 != 0 or component[1] < 1 {
+            yield false
+        }
+        yield contains(["stable", "experimental", "deprecated"], component[2])
+    }
+    craft invalid_component(component) {
+        yield not valid_component(component)
+    }
+    craft component_name(component) {
+        yield component[0]
+    }
+    when size(keep(components, invalid_component)) != 0 {
+        yield false
+    }
+    yield size(unique(map(components, component_name))) == size(components)
+}

@@ -1,0 +1,10 @@
+# Workspace Artifact Framework — Reject workspace artifact paths that are absolute, empty or traverse parent directories.
+
+export craft valid_workspace_artifact_paths(paths) {
+when kind(paths) != "list" { yield false }
+ craft valid_path(path) {
+  yield kind(path) == "text" and size(trim(path)) > 0 and not starts_with(path, "/") and not starts_with(path, "\\") and not contains(path, "..") and not contains(path, "\\")
+ }
+ craft invalid_path(path) { yield not valid_path(path) }
+ yield size(keep(paths, invalid_path)) == 0 and size(unique(paths)) == size(paths)
+}

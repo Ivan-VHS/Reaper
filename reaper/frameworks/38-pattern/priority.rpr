@@ -1,0 +1,32 @@
+# PatternPriority — select the action with greatest explicit priority.
+# Candidate: [priority, action].
+
+export craft pattern_highest_priority_action(candidates) {
+    when kind(candidates) != "list" or size(candidates) == 0 {
+        yield ""
+    }
+    craft valid_candidate(item) {
+        when kind(item) != "list" or size(item) != 2 {
+            yield false
+        }
+        when kind(item[0]) != "number" or kind(item[1]) != "text" {
+            yield false
+        }
+        yield item[0] % 1 == 0 and size(trim(item[1])) > 0
+    }
+    craft invalid_candidate(item) {
+        yield not valid_candidate(item)
+    }
+    when size(keep(candidates, invalid_candidate)) != 0 {
+        yield ""
+    }
+    vary selected := ""
+    vary highest := 0 - 1
+    each candidate in candidates {
+        when candidate[0] > highest {
+            change highest := candidate[0]
+            change selected := candidate[1]
+        }
+    }
+    yield selected
+}

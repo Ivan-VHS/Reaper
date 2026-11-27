@@ -1,0 +1,26 @@
+# SystemConfiguration — validate unique text key/value settings.
+
+export craft valid_system_configuration(settings) {
+    when kind(settings) != "list" {
+        yield false
+    }
+    craft valid_setting(setting) {
+        when kind(setting) != "list" or size(setting) != 2 {
+            yield false
+        }
+        when kind(setting[0]) != "text" or kind(setting[1]) != "text" {
+            yield false
+        }
+        yield size(trim(setting[0])) > 0
+    }
+    craft invalid_setting(setting) {
+        yield not valid_setting(setting)
+    }
+    craft setting_key(setting) {
+        yield setting[0]
+    }
+    when size(keep(settings, invalid_setting)) != 0 {
+        yield false
+    }
+    yield size(unique(map(settings, setting_key))) == size(settings)
+}

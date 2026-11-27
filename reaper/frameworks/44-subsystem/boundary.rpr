@@ -1,0 +1,20 @@
+# SubsystemBoundary — validate subsystem identity and distinct provided/consumed contracts.
+
+export craft valid_subsystem_boundary(boundary) {
+    when kind(boundary) != "list" or size(boundary) != 3 {
+        yield false
+    }
+    when kind(boundary[0]) != "text" or kind(boundary[1]) != "list" or kind(boundary[2]) != "list" {
+        yield false
+    }
+    when size(trim(boundary[0])) == 0 {
+        yield false
+    }
+    craft invalid_contract(contract) {
+        yield kind(contract) != "text" or size(trim(contract)) == 0
+    }
+    when size(keep(boundary[1], invalid_contract)) != 0 or size(keep(boundary[2], invalid_contract)) != 0 {
+        yield false
+    }
+    yield size(unique(boundary[1])) == size(boundary[1]) and size(unique(boundary[2])) == size(boundary[2])
+}

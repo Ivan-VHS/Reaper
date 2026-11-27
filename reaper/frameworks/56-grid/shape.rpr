@@ -1,0 +1,6 @@
+# Grid Shape Framework — Validate positive integral grid width and height.
+
+export craft valid_grid_shape(width, height) {
+when kind(width) != "number" or kind(height) != "number" { yield false }
+ yield width % 1 == 0 and height % 1 == 0 and width > 0 and height > 0
+}

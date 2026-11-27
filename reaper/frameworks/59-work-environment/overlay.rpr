@@ -1,0 +1,16 @@
+# Work Environment Overlay Framework — Resolve a key from ordered environment layers where later definitions override earlier ones.
+
+export craft resolve_work_environment_value(layers, key, fallback) {
+when kind(layers) != "list" or kind(key) != "text" or kind(fallback) != "text" { yield fallback }
+ vary selected := fallback
+ each layer in layers {
+  when kind(layer) == "list" {
+   each entry in layer {
+    when kind(entry) == "list" and size(entry) == 2 and entry[0] == key and kind(entry[1]) == "text" {
+     change selected := entry[1]
+    }
+   }
+  }
+ }
+ yield selected
+}

@@ -1,0 +1,30 @@
+# ShellPipeline — validate pipe hand-off compatibility between explicit stages.
+# Stage: [stage_name, accepts_input, emits_output].
+
+export craft valid_shell_pipeline(stages) {
+    when kind(stages) != "list" or size(stages) == 0 {
+        yield false
+    }
+    craft valid_stage(stage) {
+        when kind(stage) != "list" or size(stage) != 3 {
+            yield false
+        }
+        when kind(stage[0]) != "text" or kind(stage[1]) != "boolean" or kind(stage[2]) != "boolean" {
+            yield false
+        }
+        yield size(trim(stage[0])) > 0
+    }
+    craft invalid_stage(stage) {
+        yield not valid_stage(stage)
+    }
+    when size(keep(stages, invalid_stage)) != 0 {
+        yield false
+    }
+    vary valid := true
+    each index in range(0, size(stages) - 1) {
+        when not stages[index][2] or not stages[index + 1][1] {
+            change valid := false
+        }
+    }
+    yield valid
+}

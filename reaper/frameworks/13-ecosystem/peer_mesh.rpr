@@ -1,0 +1,49 @@
+# EcosystemPeerMesh — validate directed peer links without self-links or duplicates.
+
+export craft valid_ecosystem_peer_mesh(peer_count, links) {
+    when kind(peer_count) != "number" or peer_count % 1 != 0 or peer_count < 2 {
+        yield false
+    }
+    when kind(links) != "list" or size(links) == 0 {
+        yield false
+    }
+    craft valid_link(link) {
+        when kind(link) != "list" or size(link) != 2 {
+            yield false
+        }
+        when kind(link[0]) != "number" or kind(link[1]) != "number" {
+            yield false
+        }
+        when link[0] % 1 != 0 or link[1] % 1 != 0 {
+            yield false
+        }
+        yield link[0] >= 0 and link[0] < peer_count and link[1] >= 0 and link[1] < peer_count and link[0] != link[1]
+    }
+    craft invalid_link(link) {
+        yield not valid_link(link)
+    }
+    when size(keep(links, invalid_link)) != 0 or size(unique(links)) != size(links) {
+        yield false
+    }
+    vary incoming := []
+    vary outgoing := []
+    each peer in range(0, peer_count) {
+        change incoming := push(incoming, false)
+        change outgoing := push(outgoing, false)
+    }
+    each link in links {
+        change outgoing[link[0]] := true
+    }
+    each link in links {
+        when not incoming[link[1]] {
+            change incoming[link[1]] := true
+        }
+    }
+    vary valid := true
+    each peer in range(0, peer_count) {
+        when not incoming[peer] or not outgoing[peer] {
+            change valid := false
+        }
+    }
+    yield valid
+}

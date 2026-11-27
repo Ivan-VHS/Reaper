@@ -1,0 +1,44 @@
+# StructureRecordLayout — validate field extents inside a fixed record.
+
+export craft valid_structure_record_layout(total_size, fields) {
+    when kind(total_size) != "number" or total_size % 1 != 0 or total_size < 1 {
+        yield false
+    }
+    when kind(fields) != "list" or size(fields) == 0 {
+        yield false
+    }
+    craft valid_field(field) {
+        when kind(field) != "list" or size(field) != 3 {
+            yield false
+        }
+        when kind(field[0]) != "text" or kind(field[1]) != "number" or kind(field[2]) != "number" {
+            yield false
+        }
+        when size(trim(field[0])) == 0 or field[1] % 1 != 0 or field[2] % 1 != 0 {
+            yield false
+        }
+        yield field[1] >= 0 and field[2] > 0 and field[1] + field[2] <= total_size
+    }
+    craft invalid_field(field) {
+        yield not valid_field(field)
+    }
+    craft field_name(field) {
+        yield field[0]
+    }
+    when size(keep(fields, invalid_field)) != 0 or size(unique(map(fields, field_name))) != size(fields) {
+        yield false
+    }
+    vary valid := true
+    each index in range(0, size(fields)) {
+        each other_index in range(0, size(fields)) {
+            when index < other_index {
+                vary left := fields[index]
+                vary right := fields[other_index]
+                when left[1] < right[1] + right[2] and right[1] < left[1] + left[2] {
+                    change valid := false
+                }
+            }
+        }
+    }
+    yield valid
+}

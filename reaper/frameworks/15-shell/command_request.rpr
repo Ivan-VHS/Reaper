@@ -1,0 +1,27 @@
+# ShellCommandRequest — validate a command request without executing it.
+# [program, argv, working_root, timeout_seconds].
+
+export craft valid_shell_command_request(request) {
+    when kind(request) != "list" or size(request) != 4 {
+        yield false
+    }
+    when kind(request[0]) != "text" or kind(request[1]) != "list" or kind(request[2]) != "text" or kind(request[3]) != "number" {
+        yield false
+    }
+    when size(trim(request[0])) == 0 or size(trim(request[2])) == 0 {
+        yield false
+    }
+    when request[3] % 1 != 0 or request[3] < 1 or request[3] > 600 {
+        yield false
+    }
+    craft invalid_argument(argument) {
+        yield kind(argument) != "text" or contains(argument, "\n") or contains(argument, "\r")
+    }
+    when size(keep(request[1], invalid_argument)) != 0 {
+        yield false
+    }
+    when contains(request[2], "..") or contains(request[2], ":") {
+        yield false
+    }
+    yield true
+}

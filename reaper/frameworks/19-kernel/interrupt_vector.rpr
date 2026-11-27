@@ -1,0 +1,33 @@
+# KernelInterruptVector — validate unique bounded interrupt vectors and handlers.
+# Entry: [vector_number, handler_name].
+
+export craft valid_kernel_interrupt_vectors(vectors) {
+    when kind(vectors) != "list" or size(vectors) == 0 {
+        yield false
+    }
+    craft valid_vector(item) {
+        when kind(item) != "list" or size(item) != 2 {
+            yield false
+        }
+        when kind(item[0]) != "number" or kind(item[1]) != "text" {
+            yield false
+        }
+        when item[0] % 1 != 0 or size(trim(item[1])) == 0 {
+            yield false
+        }
+        yield item[0] >= 0 and item[0] <= 255
+    }
+    craft invalid_vector(item) {
+        yield not valid_vector(item)
+    }
+    craft vector_number(item) {
+        yield item[0]
+    }
+    craft handler_name(item) {
+        yield item[1]
+    }
+    when size(keep(vectors, invalid_vector)) != 0 {
+        yield false
+    }
+    yield size(unique(map(vectors, vector_number))) == size(vectors) and size(unique(map(vectors, handler_name))) == size(vectors)
+}

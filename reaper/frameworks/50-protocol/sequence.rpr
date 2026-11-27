@@ -1,0 +1,6 @@
+# Protocol Sequence Framework — Accept strictly increasing sequence numbers only within the configured receive window.
+
+export craft protocol_sequence_admissible(last, next, window) {
+when kind(last) != "number" or kind(next) != "number" or kind(window) != "number" { yield false }
+    yield last % 1 == 0 and next % 1 == 0 and window % 1 == 0 and last >= 0 and next > last and window >= 1 and next <= last + window
+}

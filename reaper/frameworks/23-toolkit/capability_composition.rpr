@@ -1,0 +1,44 @@
+# ToolkitCapabilityComposition — all component requirements must be provided by the toolkit.
+# Component: [component_name, required_capabilities].
+
+export craft valid_toolkit_capability_composition(components, provided) {
+    when kind(components) != "list" or kind(provided) != "list" {
+        yield false
+    }
+    craft invalid_capability(value) {
+        yield kind(value) != "text" or size(trim(value)) == 0
+    }
+    when size(keep(provided, invalid_capability)) != 0 or size(unique(provided)) != size(provided) {
+        yield false
+    }
+    craft valid_component(component) {
+        when kind(component) != "list" or size(component) != 2 {
+            yield false
+        }
+        when kind(component[0]) != "text" or kind(component[1]) != "list" {
+            yield false
+        }
+        when size(trim(component[0])) == 0 {
+            yield false
+        }
+        yield size(keep(component[1], invalid_capability)) == 0 and size(unique(component[1])) == size(component[1])
+    }
+    craft invalid_component(component) {
+        yield not valid_component(component)
+    }
+    craft component_name(component) {
+        yield component[0]
+    }
+    when size(keep(components, invalid_component)) != 0 or size(unique(map(components, component_name))) != size(components) {
+        yield false
+    }
+    vary valid := true
+    each component in components {
+        each capability in component[1] {
+            when not contains(provided, capability) {
+                change valid := false
+            }
+        }
+    }
+    yield valid
+}

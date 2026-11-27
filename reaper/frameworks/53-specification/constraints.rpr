@@ -1,0 +1,13 @@
+# Specification Constraint Framework — Validate unique named lower/upper constraints and their ordering.
+
+export craft valid_spec_constraints(constraints) {
+when kind(constraints) != "list" { yield false }
+ craft valid_constraint(item) {
+  when kind(item) != "list" or size(item) != 3 { yield false }
+  when kind(item[0]) != "text" or kind(item[1]) != "number" or kind(item[2]) != "number" { yield false }
+  yield size(trim(item[0])) > 0 and item[1] <= item[2]
+ }
+ craft invalid_constraint(item) { yield not valid_constraint(item) }
+ craft constraint_name(item) { yield item[0] }
+ yield size(keep(constraints, invalid_constraint)) == 0 and size(unique(map(constraints, constraint_name))) == size(constraints)
+}

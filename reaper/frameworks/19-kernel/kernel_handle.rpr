@@ -1,0 +1,30 @@
+# KernelHandleTable — validate object handles, generations, kinds and process owners.
+# Entry: [handle_id, generation, object_kind, owner_id].
+
+export craft valid_kernel_handle_table(handles) {
+    when kind(handles) != "list" or size(handles) == 0 {
+        yield false
+    }
+    craft valid_handle(handle) {
+        when kind(handle) != "list" or size(handle) != 4 {
+            yield false
+        }
+        when kind(handle[0]) != "text" or kind(handle[1]) != "number" or kind(handle[2]) != "text" or kind(handle[3]) != "text" {
+            yield false
+        }
+        when size(trim(handle[0])) == 0 or handle[1] % 1 != 0 or handle[1] < 1 or size(trim(handle[2])) == 0 or size(trim(handle[3])) == 0 {
+            yield false
+        }
+        yield true
+    }
+    craft invalid_handle(handle) {
+        yield not valid_handle(handle)
+    }
+    craft handle_id(handle) {
+        yield handle[0]
+    }
+    when size(keep(handles, invalid_handle)) != 0 {
+        yield false
+    }
+    yield size(unique(map(handles, handle_id))) == size(handles)
+}

@@ -1,0 +1,15 @@
+# EngineOptimizationBudget — admit an optimization plan within a bounded cost.
+# Cost = work_items * iterations.
+
+export craft engine_within_optimization_budget(work_items, iterations, budget) {
+    when kind(work_items) != "number" or kind(iterations) != "number" or kind(budget) != "number" {
+        yield false
+    }
+    when work_items % 1 != 0 or iterations % 1 != 0 or budget % 1 != 0 {
+        yield false
+    }
+    when work_items < 0 or iterations < 0 or budget < 0 {
+        yield false
+    }
+    yield work_items * iterations <= budget
+}

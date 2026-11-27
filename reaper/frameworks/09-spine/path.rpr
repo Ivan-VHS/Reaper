@@ -1,0 +1,18 @@
+# SpinePath — remove adjacent duplicate nodes without reordering the path.
+
+export craft compact_spine_path(nodes) {
+    when kind(nodes) != "list" {
+        yield []
+    }
+    vary compacted := []
+    each node in nodes {
+        when size(compacted) == 0 {
+            change compacted := push(compacted, node)
+        } otherwise {
+            when compacted[size(compacted) - 1] != node {
+                change compacted := push(compacted, node)
+            }
+        }
+    }
+    yield compacted
+}

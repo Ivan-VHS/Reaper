@@ -1,0 +1,23 @@
+# HostABI — validate host architecture, ABI, word size and byte order.
+
+export craft valid_host_abi(profile) {
+    when kind(profile) != "list" or size(profile) != 4 {
+        yield false
+    }
+    when kind(profile[0]) != "text" or kind(profile[1]) != "text" or kind(profile[2]) != "number" or kind(profile[3]) != "text" {
+        yield false
+    }
+    when profile[2] % 1 != 0 or not contains([32, 64], profile[2]) or not contains(["little", "big"], profile[3]) {
+        yield false
+    }
+    when profile[0] == "x86_64" {
+        yield profile[1] == "sysv" and profile[2] == 64 and profile[3] == "little" or profile[1] == "msvc" and profile[2] == 64 and profile[3] == "little"
+    }
+    when profile[0] == "aarch64" {
+        yield profile[1] == "aapcs" and profile[2] == 64
+    }
+    when profile[0] == "armv7" {
+        yield profile[1] == "aapcs" and profile[2] == 32
+    }
+    yield false
+}

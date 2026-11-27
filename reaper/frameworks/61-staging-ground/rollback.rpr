@@ -1,0 +1,12 @@
+# Staging Rollback Framework — Return completed staging steps in reverse order for compensating execution.
+
+export craft staging_rollback_order(completed) {
+when kind(completed) != "list" { yield [] }
+ vary result := []
+ vary index := size(completed) - 1
+ while index >= 0 {
+  change result := push(result, completed[index])
+  change index := index - 1
+ }
+ yield result
+}

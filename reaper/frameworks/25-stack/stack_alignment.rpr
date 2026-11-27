@@ -1,0 +1,18 @@
+# StackAlignment — check a stack pointer against a power-of-two alignment.
+
+export craft valid_stack_pointer_alignment(pointer, alignment) {
+    when kind(pointer) != "number" or kind(alignment) != "number" {
+        yield false
+    }
+    when pointer % 1 != 0 or alignment % 1 != 0 or pointer < 0 or alignment < 1 {
+        yield false
+    }
+    vary value := alignment
+    while value > 1 {
+        when value % 2 != 0 {
+            yield false
+        }
+        change value := value // 2
+    }
+    yield pointer % alignment == 0
+}

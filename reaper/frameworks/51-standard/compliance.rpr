@@ -1,0 +1,9 @@
+# Standard Compliance Framework — Check a minimum compliance percentage across explicit boolean control results.
+
+export craft standard_compliance_threshold(results, minimum_percent) {
+when kind(results) != "list" or size(results) == 0 or kind(minimum_percent) != "number" { yield false }
+ when minimum_percent % 1 != 0 or minimum_percent < 0 or minimum_percent > 100 { yield false }
+ each result in results { when kind(result) != "boolean" { yield false } }
+ craft passed(result) { yield result }
+ yield size(keep(results, passed)) * 100 >= minimum_percent * size(results)
+}

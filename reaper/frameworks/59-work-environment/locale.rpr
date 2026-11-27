@@ -1,0 +1,9 @@
+# Work Environment Locale Framework — Resolve a requested locale, then a configured fallback, then English.
+
+export craft resolve_work_environment_locale(requested, supported, fallback) {
+when kind(requested) != "text" or kind(supported) != "list" or kind(fallback) != "text" { yield "en" }
+ when contains(supported, requested) { yield requested }
+ when contains(supported, fallback) { yield fallback }
+ when contains(supported, "en") { yield "en" }
+ yield ""
+}

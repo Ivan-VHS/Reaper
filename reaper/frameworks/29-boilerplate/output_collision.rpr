@@ -1,0 +1,26 @@
+# BoilerplateOutputCollision — report duplicate output paths in generation plans.
+
+export craft boilerplate_output_collisions(paths) {
+    when kind(paths) != "list" {
+        yield []
+    }
+    craft invalid_path(path) {
+        yield kind(path) != "text" or size(trim(path)) == 0
+    }
+    when size(keep(paths, invalid_path)) != 0 {
+        yield []
+    }
+    vary collisions := []
+    each index in range(0, size(paths)) {
+        vary duplicate := false
+        each later in range(index + 1, size(paths)) {
+            when paths[index] == paths[later] {
+                change duplicate := true
+            }
+        }
+        when duplicate and not contains(collisions, paths[index]) {
+            change collisions := push(collisions, paths[index])
+        }
+    }
+    yield collisions
+}

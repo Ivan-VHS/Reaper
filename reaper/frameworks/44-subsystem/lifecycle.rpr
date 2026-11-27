@@ -1,0 +1,35 @@
+# SubsystemLifecycle — replay an explicit lifecycle against a declared transition table.
+
+export craft valid_subsystem_lifecycle(initial_state, steps, transitions) {
+    when kind(initial_state) != "text" or size(trim(initial_state)) == 0 or kind(steps) != "list" or kind(transitions) != "list" {
+        yield false
+    }
+    craft valid_transition(transition) {
+        when kind(transition) != "list" or size(transition) != 2 {
+            yield false
+        }
+        yield kind(transition[0]) == "text" and kind(transition[1]) == "text" and size(trim(transition[0])) > 0 and size(trim(transition[1])) > 0
+    }
+    craft invalid_transition(transition) {
+        yield not valid_transition(transition)
+    }
+    when size(keep(transitions, invalid_transition)) != 0 or size(unique(transitions)) != size(transitions) {
+        yield false
+    }
+    vary current := initial_state
+    vary valid := true
+    each next_state in steps {
+        when kind(next_state) != "text" or size(trim(next_state)) == 0 {
+            change valid := false
+        } otherwise {
+            when valid {
+                when contains(transitions, [current, next_state]) {
+                    change current := next_state
+                } otherwise {
+                    change valid := false
+                }
+            }
+        }
+    }
+    yield valid
+}

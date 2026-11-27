@@ -1,0 +1,29 @@
+# EcosystemPeerQuorum — require a minimum healthy-peer count.
+
+export craft ecosystem_peer_quorum(states, minimum_healthy) {
+    when kind(states) != "list" or size(states) == 0 {
+        yield false
+    }
+    when kind(minimum_healthy) != "number" or minimum_healthy % 1 != 0 {
+        yield false
+    }
+    when minimum_healthy < 0 or minimum_healthy > size(states) {
+        yield false
+    }
+    craft valid_state(state) {
+        yield contains(["healthy", "degraded", "offline"], state)
+    }
+    craft invalid_state(state) {
+        yield not valid_state(state)
+    }
+    when size(keep(states, invalid_state)) != 0 {
+        yield false
+    }
+    vary healthy := 0
+    each state in states {
+        when state == "healthy" {
+            change healthy := healthy + 1
+        }
+    }
+    yield healthy >= minimum_healthy
+}

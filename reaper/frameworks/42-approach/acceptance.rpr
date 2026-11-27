@@ -1,0 +1,35 @@
+# ApproachAcceptance — every objective must have one evidence reference.
+
+export craft valid_approach_acceptance(objectives, evidence) {
+    when kind(objectives) != "list" or kind(evidence) != "list" or size(objectives) == 0 {
+        yield false
+    }
+    craft invalid_objective(objective) {
+        yield kind(objective) != "text" or size(trim(objective)) == 0
+    }
+    craft valid_evidence(item) {
+        when kind(item) != "list" or size(item) != 2 {
+            yield false
+        }
+        when kind(item[0]) != "text" or kind(item[1]) != "text" {
+            yield false
+        }
+        yield size(trim(item[0])) > 0 and size(trim(item[1])) > 0
+    }
+    craft invalid_evidence(item) {
+        yield not valid_evidence(item)
+    }
+    craft evidence_key(item) {
+        yield item[0]
+    }
+    when size(keep(objectives, invalid_objective)) != 0 or size(unique(objectives)) != size(objectives) {
+        yield false
+    }
+    when size(keep(evidence, invalid_evidence)) != 0 or size(unique(map(evidence, evidence_key))) != size(evidence) {
+        yield false
+    }
+    craft missing(objective) {
+        yield not contains(map(evidence, evidence_key), objective)
+    }
+    yield size(keep(objectives, missing)) == 0
+}

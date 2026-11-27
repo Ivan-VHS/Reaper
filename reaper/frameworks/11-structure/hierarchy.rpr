@@ -1,0 +1,41 @@
+# StructureHierarchy — validate a parent vector rooted at exactly one node.
+# Root parent is -1; every other entry is a parent node index.
+
+export craft valid_structure_hierarchy(node_count, parents) {
+    when kind(node_count) != "number" or node_count % 1 != 0 or node_count < 1 {
+        yield false
+    }
+    when kind(parents) != "list" or size(parents) != node_count {
+        yield false
+    }
+    vary roots := 0
+    each node in range(0, node_count) {
+        vary parent := parents[node]
+        when kind(parent) != "number" or parent % 1 != 0 {
+            yield false
+        }
+        when parent == -1 {
+            change roots := roots + 1
+        } otherwise {
+            when parent < 0 or parent >= node_count or parent == node {
+                yield false
+            }
+        }
+    }
+    when roots != 1 {
+        yield false
+    }
+    vary valid := true
+    each node in range(0, node_count) {
+        vary current := node
+        vary hops := 0
+        while current != -1 and hops < node_count {
+            change current := parents[current]
+            change hops := hops + 1
+        }
+        when current != -1 {
+            change valid := false
+        }
+    }
+    yield valid
+}

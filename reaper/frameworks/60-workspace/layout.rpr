@@ -1,0 +1,14 @@
+# Workspace Layout Framework — Validate unique relative workspace directories under a non-empty project root.
+
+export craft valid_workspace_layout(root, entries) {
+when kind(root) != "text" or size(trim(root)) == 0 or contains(root, "..") or kind(entries) != "list" { yield false }
+ craft safe_path(path) {
+  yield kind(path) == "text" and size(trim(path)) > 0 and not starts_with(path, "/") and not starts_with(path, "\\") and not contains(path, "..") and not contains(path, "\\")
+ }
+ craft valid_entry(item) {
+  yield kind(item) == "list" and size(item) == 2 and safe_path(item[0]) and kind(item[1]) == "text" and contains(["source", "tests", "build", "docs", "assets"], item[1])
+ }
+ craft invalid_entry(item) { yield not valid_entry(item) }
+ craft entry_path(item) { yield item[0] }
+ yield size(keep(entries, invalid_entry)) == 0 and size(unique(map(entries, entry_path))) == size(entries)
+}

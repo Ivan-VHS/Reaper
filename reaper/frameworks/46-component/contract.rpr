@@ -1,0 +1,19 @@
+# ComponentContract — validate component identity, version, lifecycle and API entrypoint.
+
+export craft valid_component_contract(contract) {
+    when kind(contract) != "list" or size(contract) != 4 {
+        yield false
+    }
+    when kind(contract[0]) != "text" or kind(contract[1]) != "list" or kind(contract[2]) != "text" or kind(contract[3]) != "text" {
+        yield false
+    }
+    when size(trim(contract[0])) == 0 or size(trim(contract[2])) == 0 or size(trim(contract[3])) == 0 or size(contract[1]) != 3 {
+        yield false
+    }
+    each part in contract[1] {
+        when kind(part) != "number" or part % 1 != 0 or part < 0 {
+            yield false
+        }
+    }
+    yield contains(["managed", "scoped", "external"], contract[2])
+}

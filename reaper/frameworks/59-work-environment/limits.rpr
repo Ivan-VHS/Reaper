@@ -1,0 +1,9 @@
+# Work Environment Limits Framework — Validate positive integer memory, step and open-file quotas for a work environment.
+
+export craft valid_work_environment_limits(limits) {
+when kind(limits) != "list" or size(limits) != 3 { yield false }
+ each limit in limits {
+  when kind(limit) != "number" or limit % 1 != 0 or limit < 1 { yield false }
+ }
+ yield true
+}

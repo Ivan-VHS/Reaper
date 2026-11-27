@@ -1,0 +1,20 @@
+# SkeletonManifest — validate required project skeleton components.
+
+export craft valid_skeleton_manifest(required, present) {
+    when kind(required) != "list" or kind(present) != "list" or size(required) == 0 {
+        yield false
+    }
+    craft invalid_component(component) {
+        yield kind(component) != "text" or size(trim(component)) == 0
+    }
+    when size(keep(required, invalid_component)) != 0 or size(keep(present, invalid_component)) != 0 {
+        yield false
+    }
+    when size(unique(required)) != size(required) or size(unique(present)) != size(present) {
+        yield false
+    }
+    craft missing(component) {
+        yield not contains(present, component)
+    }
+    yield size(keep(required, missing)) == 0
+}

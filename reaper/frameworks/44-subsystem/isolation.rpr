@@ -1,0 +1,13 @@
+# SubsystemIsolation — require all declared isolation properties.
+
+export craft valid_subsystem_isolation(properties) {
+    when kind(properties) != "list" or size(properties) == 0 {
+        yield false
+    }
+    each property in properties {
+        when kind(property) != "boolean" or not property {
+            yield false
+        }
+    }
+    yield true
+}

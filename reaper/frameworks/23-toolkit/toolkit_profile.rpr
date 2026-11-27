@@ -1,0 +1,17 @@
+# ToolkitProfile — validate a toolkit name, unique modules and bounded total resource units.
+
+export craft valid_toolkit_profile(profile) {
+    when kind(profile) != "list" or size(profile) != 3 {
+        yield false
+    }
+    when kind(profile[0]) != "text" or kind(profile[1]) != "list" or kind(profile[2]) != "number" {
+        yield false
+    }
+    when size(trim(profile[0])) == 0 or profile[2] % 1 != 0 or profile[2] < 1 or profile[2] > 4096 {
+        yield false
+    }
+    craft invalid_module(module) {
+        yield kind(module) != "text" or size(trim(module)) == 0
+    }
+    yield size(profile[1]) > 0 and size(keep(profile[1], invalid_module)) == 0 and size(unique(profile[1])) == size(profile[1])
+}

@@ -1,0 +1,50 @@
+# IntegrationFederationGraph — validate acyclic directed project federation relationships.
+
+export craft valid_integration_federation_graph(project_count, links) {
+    when kind(project_count) != "number" or project_count % 1 != 0 or project_count < 1 {
+        yield false
+    }
+    when kind(links) != "list" {
+        yield false
+    }
+    craft valid_link(link) {
+        when kind(link) != "list" or size(link) != 2 {
+            yield false
+        }
+        when kind(link[0]) != "number" or kind(link[1]) != "number" {
+            yield false
+        }
+        when link[0] % 1 != 0 or link[1] % 1 != 0 {
+            yield false
+        }
+        yield link[0] >= 0 and link[0] < project_count and link[1] >= 0 and link[1] < project_count and link[0] != link[1]
+    }
+    craft invalid_link(link) {
+        yield not valid_link(link)
+    }
+    when size(keep(links, invalid_link)) != 0 or size(unique(links)) != size(links) {
+        yield false
+    }
+    vary removed := []
+    while size(removed) < project_count {
+        vary candidate := -1
+        each node in range(0, project_count) {
+            when not contains(removed, node) {
+                vary blocked := false
+                each link in links {
+                    when link[1] == node and not contains(removed, link[0]) {
+                        change blocked := true
+                    }
+                }
+                when not blocked and candidate == -1 {
+                    change candidate := node
+                }
+            }
+        }
+        when candidate == -1 {
+            yield false
+        }
+        change removed := push(removed, candidate)
+    }
+    yield true
+}

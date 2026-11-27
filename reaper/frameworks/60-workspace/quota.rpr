@@ -1,0 +1,8 @@
+# Workspace Quota Framework — Ensure used and reserved workspace storage fit the configured quota.
+
+export craft valid_workspace_quota(used, reserved, quota) {
+each value in [used, reserved, quota] {
+  when kind(value) != "number" or value % 1 != 0 or value < 0 { yield false }
+ }
+ yield quota > 0 and used + reserved <= quota
+}

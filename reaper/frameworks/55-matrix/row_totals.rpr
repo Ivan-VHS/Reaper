@@ -1,0 +1,17 @@
+# Matrix Row Totals Framework — Calculate deterministic numeric totals for every row of a rectangular matrix.
+
+export craft matrix_row_totals(matrix) {
+when kind(matrix) != "list" or size(matrix) == 0 { yield [] }
+ vary width := -1
+ vary totals := []
+ each row in matrix {
+  when kind(row) != "list" or size(row) == 0 { yield [] }
+  when width == -1 { change width := size(row) } otherwise {
+   when size(row) != width { yield [] }
+  }
+  craft non_number(item) { yield kind(item) != "number" }
+  when size(keep(row, non_number)) != 0 { yield [] }
+  change totals := push(totals, sum(row))
+ }
+ yield totals
+}

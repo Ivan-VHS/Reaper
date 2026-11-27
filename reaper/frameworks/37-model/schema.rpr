@@ -1,0 +1,32 @@
+# ModelSchema — validate a named versioned model with unique typed fields.
+
+export craft valid_model_schema(schema) {
+    when kind(schema) != "list" or size(schema) != 3 {
+        yield false
+    }
+    when kind(schema[0]) != "text" or kind(schema[1]) != "number" or kind(schema[2]) != "list" {
+        yield false
+    }
+    when size(trim(schema[0])) == 0 or schema[1] % 1 != 0 or schema[1] < 1 {
+        yield false
+    }
+    craft valid_field(field) {
+        when kind(field) != "list" or size(field) != 2 {
+            yield false
+        }
+        when kind(field[0]) != "text" or kind(field[1]) != "text" {
+            yield false
+        }
+        yield size(trim(field[0])) > 0 and contains(["text", "bytes", "bool", "u8", "u32", "u64", "i64", "f32", "f64"], field[1])
+    }
+    craft invalid_field(field) {
+        yield not valid_field(field)
+    }
+    craft field_name(field) {
+        yield field[0]
+    }
+    when size(keep(schema[2], invalid_field)) != 0 {
+        yield false
+    }
+    yield size(unique(map(schema[2], field_name))) == size(schema[2])
+}

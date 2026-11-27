@@ -1,0 +1,20 @@
+# FoundationRollback — generate reverse compensation order from an applied-step journal.
+
+export craft foundation_rollback_plan(completed_steps) {
+    when kind(completed_steps) != "list" or size(completed_steps) == 0 {
+        yield []
+    }
+    craft invalid_step(step) {
+        when kind(step) != "text" {
+            yield true
+        }
+        yield size(trim(step)) == 0
+    }
+    when size(keep(completed_steps, invalid_step)) != 0 {
+        yield []
+    }
+    when size(unique(completed_steps)) != size(completed_steps) {
+        yield []
+    }
+    yield reverse(completed_steps)
+}

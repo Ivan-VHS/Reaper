@@ -1,0 +1,74 @@
+# PlatformTargetProfile — one coherent machine target tuple.
+# [architecture, operating_system, abi, pointer_bits, endianness]
+
+export craft valid_platform_target_profile(profile) {
+    when kind(profile) != "list" {
+        yield false
+    }
+    when size(profile) != 5 {
+        yield false
+    }
+    when kind(profile[0]) != "text" or kind(profile[1]) != "text" or kind(profile[2]) != "text" or kind(profile[4]) != "text" {
+        yield false
+    }
+    when kind(profile[3]) != "number" {
+        yield false
+    }
+    when profile[3] % 1 != 0 {
+        yield false
+    }
+    when not contains(["x86_64", "aarch64", "armv7", "riscv64", "wasm32"], profile[0]) {
+        yield false
+    }
+    when not contains(["windows", "linux", "macos", "baremetal", "wasm"], profile[1]) {
+        yield false
+    }
+    when not contains(["msvc", "sysv", "aapcs", "wasi", "none"], profile[2]) {
+        yield false
+    }
+    when not contains([32, 64], profile[3]) {
+        yield false
+    }
+    when not contains(["little", "big"], profile[4]) {
+        yield false
+    }
+    when profile[0] == "x86_64" {
+        when profile[3] != 64 or profile[4] != "little" {
+            yield false
+        }
+        when profile[1] == "windows" {
+            when profile[2] != "msvc" {
+                yield false
+            }
+        } otherwise {
+            when profile[1] == "linux" or profile[1] == "macos" {
+                when profile[2] != "sysv" {
+                    yield false
+                }
+            } otherwise {
+                yield false
+            }
+        }
+    }
+    when profile[0] == "aarch64" {
+        when profile[3] != 64 or profile[2] != "aapcs" {
+            yield false
+        }
+    }
+    when profile[0] == "armv7" {
+        when profile[3] != 32 or profile[2] != "aapcs" {
+            yield false
+        }
+    }
+    when profile[0] == "riscv64" {
+        when profile[3] != 64 or profile[2] != "sysv" or profile[1] == "windows" {
+            yield false
+        }
+    }
+    when profile[0] == "wasm32" {
+        when profile[3] != 32 or profile[1] != "wasm" or profile[2] != "wasi" or profile[4] != "little" {
+            yield false
+        }
+    }
+    yield true
+}

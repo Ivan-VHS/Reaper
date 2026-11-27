@@ -1,0 +1,14 @@
+# Regulation Policy Framework — Validate rules with explicit principal, resource, action and allow/deny effect.
+
+export craft valid_regulation_policy(rules) {
+when kind(rules) != "list" { yield false }
+ craft valid_rule(rule) {
+  when kind(rule) != "list" or size(rule) != 4 { yield false }
+  each index in [0, 1, 2, 3] {
+   when kind(rule[index]) != "text" or size(trim(rule[index])) == 0 { yield false }
+  }
+  yield contains(["allow", "deny"], rule[3])
+ }
+ craft invalid_rule(rule) { yield not valid_rule(rule) }
+ yield size(keep(rules, invalid_rule)) == 0 and size(unique(rules)) == size(rules)
+}

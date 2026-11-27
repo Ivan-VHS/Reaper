@@ -1,0 +1,11 @@
+# Regulation Role Framework — Validate one unique, named role assignment per principal.
+
+export craft valid_regulation_roles(assignments) {
+when kind(assignments) != "list" { yield false }
+ craft valid_assignment(item) {
+  yield kind(item) == "list" and size(item) == 2 and kind(item[0]) == "text" and kind(item[1]) == "text" and size(trim(item[0])) > 0 and size(trim(item[1])) > 0
+ }
+ craft invalid_assignment(item) { yield not valid_assignment(item) }
+ craft principal(item) { yield item[0] }
+ yield size(keep(assignments, invalid_assignment)) == 0 and size(unique(map(assignments, principal))) == size(assignments)
+}

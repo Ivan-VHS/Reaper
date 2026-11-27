@@ -1,0 +1,26 @@
+# ParadigmOwnership — validate unique owned resources and explicit release strategy.
+
+export craft valid_paradigm_ownership_plan(resources) {
+    when kind(resources) != "list" or size(resources) == 0 {
+        yield false
+    }
+    craft valid_resource(resource) {
+        when kind(resource) != "list" or size(resource) != 2 {
+            yield false
+        }
+        when kind(resource[0]) != "text" or kind(resource[1]) != "text" {
+            yield false
+        }
+        yield size(trim(resource[0])) > 0 and contains(["scope", "defer", "manual", "host"], resource[1])
+    }
+    craft invalid_resource(resource) {
+        yield not valid_resource(resource)
+    }
+    craft resource_name(resource) {
+        yield resource[0]
+    }
+    when size(keep(resources, invalid_resource)) != 0 {
+        yield false
+    }
+    yield size(unique(map(resources, resource_name))) == size(resources)
+}

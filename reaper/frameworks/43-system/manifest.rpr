@@ -1,0 +1,22 @@
+# SystemManifest — validate a named versioned system with unique services.
+
+export craft valid_system_manifest(manifest) {
+    when kind(manifest) != "list" or size(manifest) != 3 {
+        yield false
+    }
+    when kind(manifest[0]) != "text" or kind(manifest[1]) != "list" or kind(manifest[2]) != "list" {
+        yield false
+    }
+    when size(trim(manifest[0])) == 0 or size(manifest[1]) != 3 or size(manifest[2]) == 0 {
+        yield false
+    }
+    each part in manifest[1] {
+        when kind(part) != "number" or part % 1 != 0 or part < 0 {
+            yield false
+        }
+    }
+    craft invalid_service(service) {
+        yield kind(service) != "text" or size(trim(service)) == 0
+    }
+    yield size(keep(manifest[2], invalid_service)) == 0 and size(unique(manifest[2])) == size(manifest[2])
+}

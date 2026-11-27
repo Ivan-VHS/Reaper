@@ -1,0 +1,17 @@
+# Schema Definition Framework — Validate unique typed schema fields and explicit required flags.
+
+export craft valid_schema_definition(fields) {
+    when kind(fields) != "list" {
+        yield false
+    }
+    craft valid_field(field) {
+        yield kind(field) == "list" and size(field) == 3 and kind(field[0]) == "text" and kind(field[1]) == "text" and kind(field[2]) == "boolean" and size(trim(field[0])) > 0 and contains(["integer", "number", "text", "boolean", "list", "map", "nothing"], field[1])
+    }
+    craft invalid_field(field) {
+        yield not valid_field(field)
+    }
+    craft field_name(field) {
+        yield field[0]
+    }
+    yield size(keep(fields, invalid_field)) == 0 and size(unique(map(fields, field_name))) == size(fields)
+}

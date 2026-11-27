@@ -1,0 +1,6 @@
+# Circuit Branch Framework — Ensure circuit branch count remains inside the approved integer range.
+
+export craft valid_circuit_branch_count(count, minimum, maximum) {
+when kind(count) != "number" or kind(minimum) != "number" or kind(maximum) != "number" { yield false }
+ yield count % 1 == 0 and minimum % 1 == 0 and maximum % 1 == 0 and minimum >= 0 and minimum <= count and count <= maximum
+}

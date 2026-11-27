@@ -1,0 +1,14 @@
+# MiddlewareShortCircuit — detect whether any middleware stage terminates the chain.
+
+export craft middleware_short_circuited(stage_results) {
+    when kind(stage_results) != "list" {
+        yield false
+    }
+    craft invalid_result(result) {
+        yield kind(result) != "boolean"
+    }
+    when size(keep(stage_results, invalid_result)) != 0 {
+        yield false
+    }
+    yield contains(stage_results, true)
+}

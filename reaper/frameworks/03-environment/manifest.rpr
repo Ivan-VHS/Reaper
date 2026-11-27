@@ -1,0 +1,33 @@
+# EnvironmentManifest — canonical, unique environment variable declarations.
+# Entry: [UPPERCASE_KEY, text_value].
+
+export craft valid_environment_manifest(entries) {
+    when kind(entries) != "list" or size(entries) == 0 {
+        yield false
+    }
+    craft valid_entry(entry) {
+        when kind(entry) != "list" {
+            yield false
+        }
+        when size(entry) != 2 {
+            yield false
+        }
+        when kind(entry[0]) != "text" or kind(entry[1]) != "text" {
+            yield false
+        }
+        when size(trim(entry[0])) == 0 {
+            yield false
+        }
+        yield entry[0] == upper(trim(entry[0]))
+    }
+    craft invalid_entry(entry) {
+        yield not valid_entry(entry)
+    }
+    craft entry_key(entry) {
+        yield entry[0]
+    }
+    when size(keep(entries, invalid_entry)) != 0 {
+        yield false
+    }
+    yield size(unique(map(entries, entry_key))) == size(entries)
+}

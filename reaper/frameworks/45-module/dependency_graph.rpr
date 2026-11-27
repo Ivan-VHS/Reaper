@@ -1,0 +1,50 @@
+# ModuleDependencyGraph — validate an acyclic directed module import graph.
+
+export craft valid_module_dependency_graph(module_count, edges) {
+    when kind(module_count) != "number" or module_count % 1 != 0 or module_count < 1 {
+        yield false
+    }
+    when kind(edges) != "list" {
+        yield false
+    }
+    craft valid_edge(edge) {
+        when kind(edge) != "list" or size(edge) != 2 {
+            yield false
+        }
+        when kind(edge[0]) != "number" or kind(edge[1]) != "number" {
+            yield false
+        }
+        when edge[0] % 1 != 0 or edge[1] % 1 != 0 {
+            yield false
+        }
+        yield edge[0] >= 0 and edge[0] < module_count and edge[1] >= 0 and edge[1] < module_count and edge[0] != edge[1]
+    }
+    craft invalid_edge(edge) {
+        yield not valid_edge(edge)
+    }
+    when size(keep(edges, invalid_edge)) != 0 or size(unique(edges)) != size(edges) {
+        yield false
+    }
+    vary removed := []
+    while size(removed) < module_count {
+        vary candidate := -1
+        each node in range(0, module_count) {
+            when not contains(removed, node) {
+                vary blocked := false
+                each edge in edges {
+                    when edge[1] == node and not contains(removed, edge[0]) {
+                        change blocked := true
+                    }
+                }
+                when not blocked and candidate == -1 {
+                    change candidate := node
+                }
+            }
+        }
+        when candidate == -1 {
+            yield false
+        }
+        change removed := push(removed, candidate)
+    }
+    yield true
+}

@@ -1,0 +1,15 @@
+# Protocol Message Order Framework — Validate unique message IDs and strictly increasing integer sequence numbers.
+
+export craft valid_protocol_message_order(messages) {
+when kind(messages) != "list" { yield false }
+    craft valid_message(item) {
+        yield kind(item) == "list" and size(item) == 2 and kind(item[0]) == "number" and item[0] % 1 == 0 and item[0] >= 0 and kind(item[1]) == "text" and size(trim(item[1])) > 0
+    }
+    craft invalid_message(item) { yield not valid_message(item) }
+    craft message_id(item) { yield item[1] }
+    when size(keep(messages, invalid_message)) != 0 or size(unique(map(messages, message_id))) != size(messages) { yield false }
+    each index in range(1, size(messages)) {
+        when messages[index][0] <= messages[index - 1][0] { yield false }
+    }
+    yield true
+}

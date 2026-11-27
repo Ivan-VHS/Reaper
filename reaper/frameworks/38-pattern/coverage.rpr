@@ -1,0 +1,20 @@
+# PatternCoverage — report input categories not yet covered by declared patterns.
+
+export craft pattern_uncovered_inputs(required, covered) {
+    when kind(required) != "list" or kind(covered) != "list" {
+        yield []
+    }
+    craft invalid_category(value) {
+        yield kind(value) != "text" or size(trim(value)) == 0
+    }
+    when size(keep(required, invalid_category)) != 0 or size(keep(covered, invalid_category)) != 0 {
+        yield []
+    }
+    when size(unique(required)) != size(required) or size(unique(covered)) != size(covered) {
+        yield []
+    }
+    craft missing(category) {
+        yield not contains(covered, category)
+    }
+    yield keep(required, missing)
+}

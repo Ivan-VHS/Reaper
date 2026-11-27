@@ -1,0 +1,14 @@
+# RuntimeBudget — return unreserved budget or reject an over-reservation.
+
+export craft runtime_budget_remaining(total, reserved) {
+    when kind(total) != "number" or kind(reserved) != "number" {
+        yield []
+    }
+    when total % 1 != 0 or reserved % 1 != 0 {
+        yield []
+    }
+    when total < 0 or reserved < 0 or reserved > total {
+        yield []
+    }
+    yield total - reserved
+}

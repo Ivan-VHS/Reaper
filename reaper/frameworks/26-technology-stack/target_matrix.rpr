@@ -1,0 +1,38 @@
+# TechnologyTargetMatrix — validate a rectangular boolean support matrix.
+# Row: [layer_id, supports_target_0, supports_target_1, ...].
+
+export craft valid_technology_target_matrix(targets, rows) {
+    when kind(targets) != "list" or kind(rows) != "list" or size(targets) == 0 or size(rows) == 0 {
+        yield false
+    }
+    craft invalid_target(target) {
+        yield kind(target) != "text" or size(trim(target)) == 0
+    }
+    when size(keep(targets, invalid_target)) != 0 or size(unique(targets)) != size(targets) {
+        yield false
+    }
+    craft valid_row(row) {
+        when kind(row) != "list" or size(row) != size(targets) + 1 {
+            yield false
+        }
+        when kind(row[0]) != "text" or size(trim(row[0])) == 0 {
+            yield false
+        }
+        each index in range(1, size(row)) {
+            when kind(row[index]) != "boolean" {
+                yield false
+            }
+        }
+        yield true
+    }
+    craft invalid_row(row) {
+        yield not valid_row(row)
+    }
+    craft row_name(row) {
+        yield row[0]
+    }
+    when size(keep(rows, invalid_row)) != 0 {
+        yield false
+    }
+    yield size(unique(map(rows, row_name))) == size(rows)
+}

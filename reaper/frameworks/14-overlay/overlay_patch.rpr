@@ -1,0 +1,46 @@
+# OverlayPatch — apply a single key/value patch to an ordered base map.
+
+export craft overlay_apply_patch(base, patch) {
+    when kind(base) != "list" or kind(patch) != "list" {
+        yield []
+    }
+    craft valid_entry(entry) {
+        when kind(entry) != "list" or size(entry) != 2 {
+            yield false
+        }
+        when kind(entry[0]) != "text" or kind(entry[1]) != "text" {
+            yield false
+        }
+        yield size(trim(entry[0])) > 0
+    }
+    craft invalid_entry(entry) {
+        yield not valid_entry(entry)
+    }
+    craft entry_key(entry) {
+        yield entry[0]
+    }
+    when size(keep(base, invalid_entry)) != 0 or size(keep(patch, invalid_entry)) != 0 {
+        yield []
+    }
+    when size(unique(map(base, entry_key))) != size(base) or size(unique(map(patch, entry_key))) != size(patch) {
+        yield []
+    }
+    vary merged := base
+    each entry in patch {
+        vary replaced := false
+        vary next := []
+        each current in merged {
+            when current[0] == entry[0] {
+                change next := push(next, entry)
+                change replaced := true
+            } otherwise {
+                change next := push(next, current)
+            }
+        }
+        when not replaced {
+            change next := push(next, entry)
+        }
+        change merged := next
+    }
+    yield merged
+}

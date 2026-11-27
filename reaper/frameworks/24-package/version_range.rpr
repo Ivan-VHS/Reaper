@@ -1,0 +1,24 @@
+# PackageVersionRange — test a semantic version against an inclusive range.
+
+export craft package_version_in_range(version, lower, upper) {
+    craft valid_semver(value) {
+        when kind(value) != "list" or size(value) != 3 {
+            yield false
+        }
+        each part in value {
+            when kind(part) != "number" or part % 1 != 0 or part < 0 {
+                yield false
+            }
+        }
+        yield true
+    }
+    when not valid_semver(version) or not valid_semver(lower) or not valid_semver(upper) {
+        yield false
+    }
+    when lower[0] > upper[0] or (lower[0] == upper[0] and lower[1] > upper[1]) or (lower[0] == upper[0] and lower[1] == upper[1] and lower[2] > upper[2]) {
+        yield false
+    }
+    vary above_lower := version[0] > lower[0] or (version[0] == lower[0] and version[1] > lower[1]) or (version[0] == lower[0] and version[1] == lower[1] and version[2] >= lower[2])
+    vary below_upper := version[0] < upper[0] or (version[0] == upper[0] and version[1] < upper[1]) or (version[0] == upper[0] and version[1] == upper[1] and version[2] <= upper[2])
+    yield above_lower and below_upper
+}

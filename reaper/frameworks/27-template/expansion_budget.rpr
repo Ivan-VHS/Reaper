@@ -1,0 +1,14 @@
+# TemplateExpansionBudget — bound source size multiplied by requested instances.
+
+export craft template_expansion_within_budget(source_bytes, instances, output_limit) {
+    when kind(source_bytes) != "number" or kind(instances) != "number" or kind(output_limit) != "number" {
+        yield false
+    }
+    when source_bytes % 1 != 0 or instances % 1 != 0 or output_limit % 1 != 0 {
+        yield false
+    }
+    when source_bytes < 0 or instances < 1 or instances > 10000 or output_limit < 0 {
+        yield false
+    }
+    yield source_bytes * instances <= output_limit
+}

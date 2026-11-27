@@ -1,0 +1,48 @@
+# PlatformAbiContract — calling convention and stack contract.
+# [calling_convention, pointer_bits, stack_alignment, return_mode]
+
+export craft valid_platform_abi_contract(contract) {
+    when kind(contract) != "list" {
+        yield false
+    }
+    when size(contract) != 4 {
+        yield false
+    }
+    when kind(contract[0]) != "text" or kind(contract[3]) != "text" {
+        yield false
+    }
+    when kind(contract[1]) != "number" or kind(contract[2]) != "number" {
+        yield false
+    }
+    when contract[1] % 1 != 0 or contract[2] % 1 != 0 {
+        yield false
+    }
+    when not contains(["sysv", "msvc", "aapcs", "wasi"], contract[0]) {
+        yield false
+    }
+    when not contains([32, 64], contract[1]) {
+        yield false
+    }
+    when not contains([8, 16, 32], contract[2]) {
+        yield false
+    }
+    when not contains(["scalar", "indirect"], contract[3]) {
+        yield false
+    }
+    when contract[0] == "sysv" or contract[0] == "msvc" {
+        when contract[1] != 64 or contract[2] != 16 {
+            yield false
+        }
+    }
+    when contract[0] == "wasi" {
+        when contract[1] != 32 or contract[2] != 16 {
+            yield false
+        }
+    }
+    when contract[0] == "aapcs" {
+        when contract[2] != 8 and contract[2] != 16 {
+            yield false
+        }
+    }
+    yield true
+}

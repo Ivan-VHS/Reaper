@@ -1,0 +1,20 @@
+# LibraryDependencyConstraint — validate an inclusive minor-version range.
+# [library_name, required_major, minimum_minor, maximum_minor].
+
+export craft valid_library_dependency_constraint(dependency) {
+    when kind(dependency) != "list" or size(dependency) != 4 {
+        yield false
+    }
+    when kind(dependency[0]) != "text" {
+        yield false
+    }
+    when size(trim(dependency[0])) == 0 {
+        yield false
+    }
+    each version in [dependency[1], dependency[2], dependency[3]] {
+        when kind(version) != "number" or version % 1 != 0 or version < 0 {
+            yield false
+        }
+    }
+    yield dependency[2] <= dependency[3]
+}

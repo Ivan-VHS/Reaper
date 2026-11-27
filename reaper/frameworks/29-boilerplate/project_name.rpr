@@ -1,0 +1,14 @@
+# BoilerplateProjectName — validate a portable project identifier.
+
+export craft valid_boilerplate_project_name(name) {
+    when kind(name) != "text" or size(name) == 0 or size(name) > 64 {
+        yield false
+    }
+    when starts_with(name, ".") or ends_with(name, ".") or contains(name, "..") {
+        yield false
+    }
+    when contains(name, "/") or contains(name, "\\\\") or contains(name, ":") or contains(name, " ") {
+        yield false
+    }
+    yield true
+}

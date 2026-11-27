@@ -1,0 +1,7 @@
+# Grid Cell Framework — Check an integer grid coordinate against width and height bounds.
+
+export craft grid_cell_inside(width, height, x, y) {
+when kind(width) != "number" or kind(height) != "number" or width % 1 != 0 or height % 1 != 0 or width < 1 or height < 1 { yield false }
+ when kind(x) != "number" or kind(y) != "number" { yield false }
+ yield x % 1 == 0 and y % 1 == 0 and x >= 0 and y >= 0 and x < width and y < height
+}

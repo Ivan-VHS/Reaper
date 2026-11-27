@@ -1,0 +1,11 @@
+# Specification Traceability Framework — Validate unique requirement-to-evidence traceability links.
+
+export craft valid_spec_traceability(links) {
+when kind(links) != "list" { yield false }
+ craft valid_link(item) {
+  yield kind(item) == "list" and size(item) == 2 and kind(item[0]) == "text" and kind(item[1]) == "text" and size(trim(item[0])) > 0 and size(trim(item[1])) > 0
+ }
+ craft invalid_link(item) { yield not valid_link(item) }
+ craft requirement_id(item) { yield item[0] }
+ yield size(keep(links, invalid_link)) == 0 and size(unique(map(links, requirement_id))) == size(links)
+}

@@ -1,0 +1,12 @@
+# Hardware MMIO Register Framework — Validate MMIO register offset, width, region bounds and access policy.
+
+export craft valid_hardware_mmio_register(offset, width, region_size, access) {
+when kind(offset) != "number" or kind(width) != "number" or kind(region_size) != "number" or kind(access) != "text" { yield false }
+ when offset % 1 != 0 or width % 1 != 0 or region_size % 1 != 0 { yield false }
+ when not contains([8, 16, 32, 64], width) or offset < 0 or region_size <= 0 { yield false }
+ vary alignment := 1
+ when width == 16 { change alignment := 2 }
+ when width == 32 { change alignment := 4 }
+ when width == 64 { change alignment := 8 }
+ yield offset % alignment == 0 and offset + width / 8 <= region_size and contains(["read_only", "write_only", "read_write", "write_one_to_clear", "write_one_to_set"], access)
+}

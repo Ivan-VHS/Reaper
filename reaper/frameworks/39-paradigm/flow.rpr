@@ -1,0 +1,11 @@
+# ParadigmFlow — validate supported source composition paradigms.
+
+export craft valid_paradigm_flow_profile(modes) {
+    when kind(modes) != "list" or size(modes) == 0 {
+        yield false
+    }
+    craft invalid_mode(mode) {
+        yield kind(mode) != "text" or not contains(["flow", "classic", "MOST"], mode)
+    }
+    yield size(keep(modes, invalid_mode)) == 0 and size(unique(modes)) == size(modes)
+}

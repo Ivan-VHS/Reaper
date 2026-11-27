@@ -1,0 +1,38 @@
+# FoundationCheckpoint — select the highest numbered valid recovery checkpoint.
+# Entry: [sequence_number, state].
+
+export craft foundation_latest_checkpoint(checkpoints) {
+    when kind(checkpoints) != "list" or size(checkpoints) == 0 {
+        yield []
+    }
+    craft valid_checkpoint(item) {
+        when kind(item) != "list" or size(item) != 2 {
+            yield false
+        }
+        when kind(item[0]) != "number" or item[0] % 1 != 0 or item[0] < 1 {
+            yield false
+        }
+        yield contains(["valid", "invalid", "rejected"], item[1])
+    }
+    craft invalid_checkpoint(item) {
+        yield not valid_checkpoint(item)
+    }
+    craft checkpoint_number(item) {
+        yield item[0]
+    }
+    when size(keep(checkpoints, invalid_checkpoint)) != 0 {
+        yield []
+    }
+    when size(unique(map(checkpoints, checkpoint_number))) != size(checkpoints) {
+        yield []
+    }
+    vary selected := []
+    vary highest := 0
+    each checkpoint in checkpoints {
+        when checkpoint[1] == "valid" and checkpoint[0] > highest {
+            change highest := checkpoint[0]
+            change selected := checkpoint
+        }
+    }
+    yield selected
+}

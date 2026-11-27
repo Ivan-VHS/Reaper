@@ -1,0 +1,48 @@
+# PlatformMemoryMap — typed, non-overlapping address regions.
+# Region: [start_address, byte_length, region_kind].
+
+export craft valid_platform_memory_map(regions) {
+    when kind(regions) != "list" or size(regions) == 0 {
+        yield false
+    }
+    craft valid_region(region) {
+        when kind(region) != "list" {
+            yield false
+        }
+        when size(region) != 3 {
+            yield false
+        }
+        when kind(region[0]) != "number" or kind(region[1]) != "number" or kind(region[2]) != "text" {
+            yield false
+        }
+        when region[0] % 1 != 0 or region[1] % 1 != 0 {
+            yield false
+        }
+        when region[0] < 0 or region[1] < 1 {
+            yield false
+        }
+        when region[0] + region[1] <= region[0] or region[0] + region[1] > 18446744073709551615 {
+            yield false
+        }
+        yield contains(["flash", "ram", "rom", "mmio", "reserved"], region[2])
+    }
+    craft invalid_region(region) {
+        yield not valid_region(region)
+    }
+    when size(keep(regions, invalid_region)) != 0 {
+        yield false
+    }
+    vary valid := true
+    each index in range(0, size(regions)) {
+        each other_index in range(0, size(regions)) {
+            when index < other_index {
+                vary left := regions[index]
+                vary right := regions[other_index]
+                when left[0] < right[0] + right[1] and right[0] < left[0] + left[1] {
+                    change valid := false
+                }
+            }
+        }
+    }
+    yield valid
+}

@@ -1,0 +1,17 @@
+# StackUnwindPlan — require exact reverse release order for an acquisition sequence.
+
+export craft valid_stack_unwind_plan(acquired, unwind) {
+    when kind(acquired) != "list" or kind(unwind) != "list" or size(acquired) == 0 or size(acquired) != size(unwind) {
+        yield false
+    }
+    craft invalid_name(name) {
+        yield kind(name) != "text" or size(trim(name)) == 0
+    }
+    when size(keep(acquired, invalid_name)) != 0 or size(keep(unwind, invalid_name)) != 0 {
+        yield false
+    }
+    when size(unique(acquired)) != size(acquired) or size(unique(unwind)) != size(unwind) {
+        yield false
+    }
+    yield unwind == reverse(acquired)
+}

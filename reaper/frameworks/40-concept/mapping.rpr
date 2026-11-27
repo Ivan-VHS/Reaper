@@ -1,0 +1,32 @@
+# ConceptMapping — return concepts without an explicit implementation mapping.
+
+export craft concept_missing_mappings(required, mappings) {
+    when kind(required) != "list" or kind(mappings) != "list" {
+        yield []
+    }
+    craft invalid_name(name) {
+        yield kind(name) != "text" or size(trim(name)) == 0
+    }
+    craft valid_mapping(mapping) {
+        when kind(mapping) != "list" or size(mapping) != 2 {
+            yield false
+        }
+        yield kind(mapping[0]) == "text" and size(trim(mapping[0])) > 0 and kind(mapping[1]) == "text" and size(trim(mapping[1])) > 0
+    }
+    craft invalid_mapping(mapping) {
+        yield not valid_mapping(mapping)
+    }
+    craft mapping_key(mapping) {
+        yield mapping[0]
+    }
+    when size(keep(required, invalid_name)) != 0 or size(unique(required)) != size(required) {
+        yield []
+    }
+    when size(keep(mappings, invalid_mapping)) != 0 or size(unique(map(mappings, mapping_key))) != size(mappings) {
+        yield []
+    }
+    craft missing(name) {
+        yield not contains(map(mappings, mapping_key), name)
+    }
+    yield keep(required, missing)
+}

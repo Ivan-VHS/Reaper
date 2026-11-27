@@ -1,0 +1,8 @@
+# MethodologyReviewSequence — require the canonical independent review order.
+
+export craft valid_methodology_review_sequence(stages) {
+    when kind(stages) != "list" or size(stages) != 4 {
+        yield false
+    }
+    yield stages[0] == "author" and stages[1] == "peer" and stages[2] == "maintainer" and stages[3] == "merge"
+}

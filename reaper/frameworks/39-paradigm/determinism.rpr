@@ -1,0 +1,23 @@
+# ParadigmDeterminism — deterministic execution excludes ambient nondeterministic inputs.
+
+export craft valid_paradigm_determinism_profile(profile) {
+    when kind(profile) != "list" or size(profile) != 2 {
+        yield false
+    }
+    when kind(profile[0]) != "text" or kind(profile[1]) != "list" {
+        yield false
+    }
+    when not contains(["deterministic", "nondeterministic"], profile[0]) {
+        yield false
+    }
+    craft invalid_input(source) {
+        yield kind(source) != "text" or size(trim(source)) == 0
+    }
+    when size(keep(profile[1], invalid_input)) != 0 or size(unique(profile[1])) != size(profile[1]) {
+        yield false
+    }
+    when profile[0] == "deterministic" {
+        yield not contains(profile[1], "clock") and not contains(profile[1], "random") and not contains(profile[1], "network")
+    }
+    yield true
+}

@@ -1,0 +1,23 @@
+# Standard Exception Framework — Validate unique, justified standard exceptions whose expiry is not before the current release.
+
+export craft valid_standard_exceptions(exceptions, release) {
+    when kind(exceptions) != "list" or kind(release) != "number" or release % 1 != 0 or release < 0 {
+        yield false
+    }
+    craft valid_exception(item) {
+        when kind(item) != "list" or size(item) != 3 {
+            yield false
+        }
+        when kind(item[0]) != "text" or kind(item[1]) != "number" or kind(item[2]) != "text" {
+            yield false
+        }
+        yield size(trim(item[0])) > 0 and item[1] % 1 == 0 and item[1] >= release and size(trim(item[2])) > 0
+    }
+    craft invalid_exception(item) {
+        yield not valid_exception(item)
+    }
+    craft exception_id(item) {
+        yield item[0]
+    }
+    yield size(keep(exceptions, invalid_exception)) == 0 and size(unique(map(exceptions, exception_id))) == size(exceptions)
+}

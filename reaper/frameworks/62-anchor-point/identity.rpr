@@ -1,0 +1,7 @@
+# Anchor Identity Framework — Validate a stable namespace/key anchor without whitespace or empty segments.
+
+export craft valid_anchor_identity(identity) {
+when kind(identity) != "list" or size(identity) != 2 { yield false }
+ when kind(identity[0]) != "text" or kind(identity[1]) != "text" { yield false }
+ yield size(trim(identity[0])) > 0 and size(trim(identity[1])) > 0 and not contains(identity[0], " ") and not contains(identity[1], " ")
+}

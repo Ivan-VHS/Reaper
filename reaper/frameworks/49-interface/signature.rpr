@@ -1,0 +1,14 @@
+# Interface Signature Framework — Validate a typed interface signature with unique parameter names.
+
+export craft valid_interface_signature(signature) {
+when kind(signature) != "list" or size(signature) != 3 { yield false }
+    when kind(signature[0]) != "text" or kind(signature[1]) != "list" or kind(signature[2]) != "text" { yield false }
+    when size(trim(signature[0])) == 0 or size(trim(signature[2])) == 0 { yield false }
+    craft valid_parameter(item) {
+        yield kind(item) == "list" and size(item) == 2 and kind(item[0]) == "text" and kind(item[1]) == "text" and size(trim(item[0])) > 0 and size(trim(item[1])) > 0
+    }
+    craft invalid_parameter(item) { yield not valid_parameter(item) }
+    craft parameter_name(item) { yield item[0] }
+    when size(keep(signature[1], invalid_parameter)) != 0 { yield false }
+    yield size(unique(map(signature[1], parameter_name))) == size(signature[1])
+}

@@ -1,0 +1,17 @@
+# ToolSuiteCapability — resolve first tool with an explicitly declared capability.
+
+export craft tool_suite_capability_owner(capability, tools) {
+    when kind(capability) != "text" or kind(tools) != "list" or size(trim(capability)) == 0 {
+        yield ""
+    }
+    each tool in tools {
+        when kind(tool) == "list" and size(tool) == 2 {
+            when kind(tool[0]) == "text" and kind(tool[1]) == "list" {
+                when contains(tool[1], capability) {
+                    yield tool[0]
+                }
+            }
+        }
+    }
+    yield ""
+}

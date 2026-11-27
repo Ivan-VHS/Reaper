@@ -1,0 +1,50 @@
+# SpineCycle — directed graph cycle detector using deterministic Kahn reduction.
+
+export craft spine_graph_has_cycle(node_count, edges) {
+    when kind(node_count) != "number" or node_count % 1 != 0 or node_count < 1 {
+        yield true
+    }
+    when kind(edges) != "list" {
+        yield true
+    }
+    craft valid_edge(edge) {
+        when kind(edge) != "list" or size(edge) != 2 {
+            yield false
+        }
+        when kind(edge[0]) != "number" or kind(edge[1]) != "number" {
+            yield false
+        }
+        when edge[0] % 1 != 0 or edge[1] % 1 != 0 {
+            yield false
+        }
+        yield edge[0] >= 0 and edge[0] < node_count and edge[1] >= 0 and edge[1] < node_count and edge[0] != edge[1]
+    }
+    craft invalid_edge(edge) {
+        yield not valid_edge(edge)
+    }
+    when size(keep(edges, invalid_edge)) != 0 or size(unique(edges)) != size(edges) {
+        yield true
+    }
+    vary removed := []
+    while size(removed) < node_count {
+        vary candidate := -1
+        each node in range(0, node_count) {
+            when not contains(removed, node) {
+                vary has_incoming := false
+                each edge in edges {
+                    when edge[1] == node and not contains(removed, edge[0]) {
+                        change has_incoming := true
+                    }
+                }
+                when not has_incoming and candidate == -1 {
+                    change candidate := node
+                }
+            }
+        }
+        when candidate == -1 {
+            yield true
+        }
+        change removed := push(removed, candidate)
+    }
+    yield false
+}

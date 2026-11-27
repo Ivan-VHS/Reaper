@@ -1,0 +1,7 @@
+# Perimeter Action Framework — Authorize only an exact action explicitly listed in the perimeter allowlist.
+
+export craft perimeter_action_allowed(action, allowed) {
+when kind(action) != "text" or kind(allowed) != "list" or size(trim(action)) == 0 { yield false }
+ craft invalid_action(item) { yield kind(item) != "text" or size(trim(item)) == 0 }
+ yield size(keep(allowed, invalid_action)) == 0 and size(unique(allowed)) == size(allowed) and contains(allowed, action)
+}

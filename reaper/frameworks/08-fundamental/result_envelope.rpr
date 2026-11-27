@@ -1,0 +1,14 @@
+# FundamentalResultEnvelope — validate tagged ok/err result values.
+
+export craft valid_fundamental_result_envelope(envelope) {
+    when kind(envelope) != "list" or size(envelope) != 2 {
+        yield false
+    }
+    when envelope[0] == "ok" {
+        yield true
+    }
+    when envelope[0] == "err" {
+        yield kind(envelope[1]) == "text" and size(trim(envelope[1])) > 0
+    }
+    yield false
+}

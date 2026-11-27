@@ -1,0 +1,9 @@
+# Baseline Snapshot Framework — Validate unique named numeric measurements in a reproducible baseline snapshot.
+
+export craft valid_baseline_snapshot(metrics) {
+when kind(metrics) != "list" { yield false }
+ craft valid_metric(metric) { yield kind(metric) == "list" and size(metric) == 2 and kind(metric[0]) == "text" and kind(metric[1]) == "number" and size(trim(metric[0])) > 0 }
+ craft invalid_metric(metric) { yield not valid_metric(metric) }
+ craft metric_name(metric) { yield metric[0] }
+ yield size(keep(metrics, invalid_metric)) == 0 and size(unique(map(metrics, metric_name))) == size(metrics)
+}

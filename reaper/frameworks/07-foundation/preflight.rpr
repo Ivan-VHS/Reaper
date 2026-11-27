@@ -1,0 +1,42 @@
+# FoundationPreflight — named checks with a minimum passing threshold.
+# Entry: [check_name, passed_boolean].
+
+export craft valid_foundation_preflight(checks, required_passes) {
+    when kind(checks) != "list" or size(checks) == 0 {
+        yield false
+    }
+    when kind(required_passes) != "number" or required_passes % 1 != 0 {
+        yield false
+    }
+    when required_passes < 0 or required_passes > size(checks) {
+        yield false
+    }
+    craft valid_check(item) {
+        when kind(item) != "list" or size(item) != 2 {
+            yield false
+        }
+        when kind(item[0]) != "text" or kind(item[1]) != "boolean" {
+            yield false
+        }
+        yield size(trim(item[0])) > 0
+    }
+    craft invalid_check(item) {
+        yield not valid_check(item)
+    }
+    craft check_name(item) {
+        yield item[0]
+    }
+    when size(keep(checks, invalid_check)) != 0 {
+        yield false
+    }
+    when size(unique(map(checks, check_name))) != size(checks) {
+        yield false
+    }
+    vary passed := 0
+    each item in checks {
+        when item[1] {
+            change passed := passed + 1
+        }
+    }
+    yield passed >= required_passes
+}

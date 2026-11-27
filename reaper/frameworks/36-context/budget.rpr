@@ -1,0 +1,15 @@
+# ContextBudget — bound aggregate text key/value bytes.
+
+export craft context_within_budget(entries, maximum_bytes) {
+    when kind(entries) != "list" or kind(maximum_bytes) != "number" or maximum_bytes % 1 != 0 or maximum_bytes < 0 {
+        yield false
+    }
+    vary total := 0
+    each entry in entries {
+        when kind(entry) != "list" or size(entry) != 2 or kind(entry[0]) != "text" or kind(entry[1]) != "text" {
+            yield false
+        }
+        change total := total + size(entry[0]) + size(entry[1])
+    }
+    yield total <= maximum_bytes
+}

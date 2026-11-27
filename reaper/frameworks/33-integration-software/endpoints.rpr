@@ -1,0 +1,20 @@
+# IntegrationEndpoints — return required integration endpoints not connected.
+
+export craft integration_missing_endpoints(required, connected) {
+    when kind(required) != "list" or kind(connected) != "list" {
+        yield []
+    }
+    craft invalid_name(name) {
+        yield kind(name) != "text" or size(trim(name)) == 0
+    }
+    when size(keep(required, invalid_name)) != 0 or size(keep(connected, invalid_name)) != 0 {
+        yield []
+    }
+    when size(unique(required)) != size(required) or size(unique(connected)) != size(connected) {
+        yield []
+    }
+    craft missing(endpoint) {
+        yield not contains(connected, endpoint)
+    }
+    yield keep(required, missing)
+}

@@ -1,0 +1,23 @@
+# EnvironmentConfigOverlay — ordered configuration layers, last matching key wins.
+# Each layer contains [key, value] entries. No host environment is read.
+
+export craft resolve_environment_config(layers, key, fallback) {
+    when kind(layers) != "list" or kind(key) != "text" or size(trim(key)) == 0 {
+        yield fallback
+    }
+    vary resolved := fallback
+    each layer in layers {
+        when kind(layer) == "list" {
+            each entry in layer {
+                when kind(entry) == "list" {
+                    when size(entry) == 2 {
+                        when entry[0] == key {
+                            change resolved := entry[1]
+                        }
+                    }
+                }
+            }
+        }
+    }
+    yield resolved
+}

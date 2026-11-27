@@ -1,0 +1,8 @@
+# Protocol Frame Framework — Validate protocol version, message type, sequence number and payload bounds.
+
+export craft valid_protocol_frame(frame) {
+when kind(frame) != "list" or size(frame) != 5 { yield false }
+    when kind(frame[0]) != "number" or kind(frame[1]) != "text" or kind(frame[2]) != "number" or kind(frame[3]) != "number" or kind(frame[4]) != "number" { yield false }
+    each index in [0, 2, 3, 4] { when frame[index] % 1 != 0 { yield false } }
+    yield frame[0] >= 1 and size(trim(frame[1])) > 0 and frame[2] >= 0 and frame[3] >= 0 and frame[4] >= 1 and frame[3] <= frame[4]
+}

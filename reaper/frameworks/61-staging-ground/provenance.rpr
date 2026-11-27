@@ -1,0 +1,21 @@
+# Staging Provenance Framework — Require artifact, 40/64-digit commit digest, author and branch provenance identifiers.
+
+export craft valid_staging_provenance(provenance) {
+    when kind(provenance) != "list" or size(provenance) != 4 {
+        yield false
+    }
+    each index in [0, 2, 3] {
+        when kind(provenance[index]) != "text" or size(trim(provenance[index])) == 0 {
+            yield false
+        }
+    }
+    when kind(provenance[1]) != "text" or not contains([40, 64], size(provenance[1])) {
+        yield false
+    }
+    each digit in provenance[1] {
+        when not contains("0123456789abcdef", digit) {
+            yield false
+        }
+    }
+    yield true
+}

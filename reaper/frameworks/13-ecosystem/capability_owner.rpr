@@ -1,0 +1,17 @@
+# EcosystemCapabilityOwner — return the first peer that explicitly owns a capability.
+
+export craft ecosystem_capability_owner(capability, peers) {
+    when kind(capability) != "text" or kind(peers) != "list" or size(trim(capability)) == 0 {
+        yield ""
+    }
+    each peer in peers {
+        when kind(peer) == "list" and size(peer) == 2 {
+            when kind(peer[0]) == "text" and kind(peer[1]) == "list" {
+                when contains(peer[1], capability) {
+                    yield peer[0]
+                }
+            }
+        }
+    }
+    yield ""
+}

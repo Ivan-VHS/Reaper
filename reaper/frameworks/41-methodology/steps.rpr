@@ -1,0 +1,21 @@
+# MethodologySteps — validate contiguous ordered procedure steps.
+# Step: [sequence_number, action_text].
+
+export craft valid_methodology_steps(steps) {
+    when kind(steps) != "list" or size(steps) == 0 {
+        yield false
+    }
+    each index in range(0, size(steps)) {
+        vary step := steps[index]
+        when kind(step) != "list" or size(step) != 2 {
+            yield false
+        }
+        when kind(step[0]) != "number" or kind(step[1]) != "text" {
+            yield false
+        }
+        when step[0] % 1 != 0 or step[0] != index + 1 or size(trim(step[1])) == 0 {
+            yield false
+        }
+    }
+    yield true
+}

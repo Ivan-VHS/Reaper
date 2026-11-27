@@ -1,0 +1,34 @@
+# OverlayConflict — report keys that have different values in different layers.
+
+export craft overlay_conflicting_keys(layers) {
+    when kind(layers) != "list" {
+        yield []
+    }
+    vary conflicts := []
+    each left_index in range(0, size(layers)) {
+        when kind(layers[left_index]) != "list" {
+            yield []
+        }
+        each right_index in range(left_index + 1, size(layers)) {
+            when kind(layers[right_index]) != "list" {
+                yield []
+            }
+            each left in layers[left_index] {
+                when kind(left) != "list" or size(left) != 2 or kind(left[0]) != "text" or kind(left[1]) != "text" {
+                    yield []
+                }
+                each right in layers[right_index] {
+                    when kind(right) != "list" or size(right) != 2 or kind(right[0]) != "text" or kind(right[1]) != "text" {
+                        yield []
+                    }
+                    when left[0] == right[0] and left[1] != right[1] {
+                        when not contains(conflicts, left[0]) {
+                            change conflicts := push(conflicts, left[0])
+                        }
+                    }
+                }
+            }
+        }
+    }
+    yield conflicts
+}

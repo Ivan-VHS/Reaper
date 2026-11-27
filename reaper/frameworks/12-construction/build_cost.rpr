@@ -1,0 +1,21 @@
+# ConstructionBuildCost — sum bounded, non-negative build-step cost units.
+
+export craft construction_build_cost(costs, ceiling) {
+    when kind(costs) != "list" or size(costs) == 0 {
+        yield []
+    }
+    when kind(ceiling) != "number" or ceiling % 1 != 0 or ceiling < 0 {
+        yield []
+    }
+    vary total := 0
+    each cost in costs {
+        when kind(cost) != "number" or cost % 1 != 0 or cost < 0 {
+            yield []
+        }
+        change total := total + cost
+        when total > ceiling {
+            yield []
+        }
+    }
+    yield total
+}

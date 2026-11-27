@@ -1,0 +1,36 @@
+# MiddlewareChain — validate typed middleware stages in non-decreasing phase order.
+# Stage: [name, input_type, output_type, phase].
+
+export craft valid_middleware_chain(stages) {
+    when kind(stages) != "list" or size(stages) == 0 {
+        yield false
+    }
+    craft valid_stage(stage) {
+        when kind(stage) != "list" or size(stage) != 4 {
+            yield false
+        }
+        when kind(stage[0]) != "text" or kind(stage[1]) != "text" or kind(stage[2]) != "text" or kind(stage[3]) != "number" {
+            yield false
+        }
+        when size(trim(stage[0])) == 0 or size(trim(stage[1])) == 0 or size(trim(stage[2])) == 0 or stage[3] % 1 != 0 {
+            yield false
+        }
+        yield stage[3] >= 0 and stage[3] <= 100
+    }
+    craft invalid_stage(stage) {
+        yield not valid_stage(stage)
+    }
+    craft stage_name(stage) {
+        yield stage[0]
+    }
+    when size(keep(stages, invalid_stage)) != 0 or size(unique(map(stages, stage_name))) != size(stages) {
+        yield false
+    }
+    vary valid := true
+    each index in range(0, size(stages) - 1) {
+        when stages[index][2] != stages[index + 1][1] or stages[index][3] > stages[index + 1][3] {
+            change valid := false
+        }
+    }
+    yield valid
+}

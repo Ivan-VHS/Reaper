@@ -1,0 +1,20 @@
+# EnvironmentProfileChain — unique ordered profile inheritance beginning at base.
+
+export craft valid_environment_profile_chain(profiles) {
+    when kind(profiles) != "list" or size(profiles) == 0 {
+        yield false
+    }
+    craft invalid_profile(profile) {
+        when kind(profile) != "text" {
+            yield true
+        }
+        yield size(trim(profile)) == 0
+    }
+    when size(keep(profiles, invalid_profile)) != 0 {
+        yield false
+    }
+    when profiles[0] != "base" {
+        yield false
+    }
+    yield size(unique(profiles)) == size(profiles)
+}

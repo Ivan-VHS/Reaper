@@ -1,0 +1,23 @@
+# EcosystemPeerAvailability — report required peers absent from the active set.
+
+export craft ecosystem_missing_peers(required, active) {
+    when kind(required) != "list" or kind(active) != "list" {
+        yield []
+    }
+    craft valid_peer(peer) {
+        yield kind(peer) == "text" and size(trim(peer)) > 0
+    }
+    craft invalid_peer(peer) {
+        yield not valid_peer(peer)
+    }
+    when size(keep(required, invalid_peer)) != 0 or size(keep(active, invalid_peer)) != 0 {
+        yield []
+    }
+    when size(unique(required)) != size(required) or size(unique(active)) != size(active) {
+        yield []
+    }
+    craft missing(peer) {
+        yield not contains(active, peer)
+    }
+    yield keep(required, missing)
+}

@@ -1,0 +1,27 @@
+# OverlayTombstone — filter deleted overlay entries.
+# Entry: [key, value, deleted_boolean].
+
+export craft overlay_remove_tombstones(entries) {
+    when kind(entries) != "list" {
+        yield []
+    }
+    craft valid_entry(entry) {
+        when kind(entry) != "list" or size(entry) != 3 {
+            yield false
+        }
+        when kind(entry[0]) != "text" or kind(entry[1]) != "text" or kind(entry[2]) != "boolean" {
+            yield false
+        }
+        yield size(trim(entry[0])) > 0
+    }
+    craft invalid_entry(entry) {
+        yield not valid_entry(entry)
+    }
+    when size(keep(entries, invalid_entry)) != 0 {
+        yield []
+    }
+    craft retained(entry) {
+        yield not entry[2]
+    }
+    yield keep(entries, retained)
+}

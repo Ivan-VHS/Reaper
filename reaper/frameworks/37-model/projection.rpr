@@ -1,0 +1,39 @@
+# ModelProjection — select a requested ordered subset of record fields.
+
+export craft model_project_fields(record, fields) {
+    when kind(record) != "list" or kind(fields) != "list" {
+        yield []
+    }
+    craft valid_entry(entry) {
+        yield kind(entry) == "list" and size(entry) == 2 and kind(entry[0]) == "text"
+    }
+    craft invalid_entry(entry) {
+        yield not valid_entry(entry)
+    }
+    craft entry_key(entry) {
+        yield entry[0]
+    }
+    craft invalid_field(field) {
+        yield kind(field) != "text" or size(trim(field)) == 0
+    }
+    when size(keep(record, invalid_entry)) != 0 or size(unique(map(record, entry_key))) != size(record) {
+        yield []
+    }
+    when size(keep(fields, invalid_field)) != 0 or size(unique(fields)) != size(fields) {
+        yield []
+    }
+    vary projected := []
+    each field in fields {
+        vary found := false
+        each entry in record {
+            when entry[0] == field {
+                change projected := push(projected, entry)
+                change found := true
+            }
+        }
+        when not found {
+            yield []
+        }
+    }
+    yield projected
+}

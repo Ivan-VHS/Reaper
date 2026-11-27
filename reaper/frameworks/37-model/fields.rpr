@@ -1,0 +1,32 @@
+# ModelFields — report required model keys absent from a supplied record.
+
+export craft model_missing_fields(required, record) {
+    when kind(required) != "list" or kind(record) != "list" {
+        yield []
+    }
+    craft valid_name(name) {
+        yield kind(name) == "text" and size(trim(name)) > 0
+    }
+    craft invalid_name(name) {
+        yield not valid_name(name)
+    }
+    craft valid_entry(entry) {
+        yield kind(entry) == "list" and size(entry) == 2 and valid_name(entry[0])
+    }
+    craft invalid_entry(entry) {
+        yield not valid_entry(entry)
+    }
+    craft entry_key(entry) {
+        yield entry[0]
+    }
+    when size(keep(required, invalid_name)) != 0 or size(unique(required)) != size(required) {
+        yield []
+    }
+    when size(keep(record, invalid_entry)) != 0 or size(unique(map(record, entry_key))) != size(record) {
+        yield []
+    }
+    craft missing(name) {
+        yield not contains(map(record, entry_key), name)
+    }
+    yield keep(required, missing)
+}

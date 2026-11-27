@@ -1,0 +1,20 @@
+# EngineBackendFeatures — report features required by IR but missing in backend.
+
+export craft engine_missing_backend_features(required, backend_features) {
+    when kind(required) != "list" or kind(backend_features) != "list" {
+        yield []
+    }
+    craft invalid_feature(feature) {
+        yield kind(feature) != "text" or size(trim(feature)) == 0
+    }
+    when size(keep(required, invalid_feature)) != 0 or size(keep(backend_features, invalid_feature)) != 0 {
+        yield []
+    }
+    when size(unique(required)) != size(required) or size(unique(backend_features)) != size(backend_features) {
+        yield []
+    }
+    craft missing(feature) {
+        yield not contains(backend_features, feature)
+    }
+    yield keep(required, missing)
+}

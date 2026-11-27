@@ -1,0 +1,36 @@
+# FrameLayers — one-way dependency edges between ordered layers.
+# Each edge is [source_layer_index, target_layer_index].
+
+export craft valid_layer_graph(layer_count, edges) {
+    when kind(layer_count) != "number" {
+        yield false
+    }
+    when layer_count % 1 != 0 {\n        yield false\n    }\n    when layer_count < 1 {
+        yield false
+    }
+    when kind(edges) != "list" {
+        yield false
+    }
+    craft valid_edge(edge) {
+        when kind(edge) != "list" {
+            yield false
+        }
+        when size(edge) != 2 {
+            yield false
+        }
+        when kind(edge[0]) != "number" {
+            yield false
+        }
+        when kind(edge[1]) != "number" {
+            yield false
+        }
+        yield edge[0] >= 0 and edge[0] < edge[1] and edge[1] < layer_count
+    }
+    craft invalid_edge(edge) {
+        yield not valid_edge(edge)
+    }
+    when size(keep(edges, invalid_edge)) != 0 {
+        yield false
+    }
+    yield size(unique(edges)) == size(edges)
+}

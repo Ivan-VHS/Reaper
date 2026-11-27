@@ -1,0 +1,30 @@
+# InfrastructureResourceAllocator — deterministic per-pool residual capacity.
+# Returns [] when any request is malformed or exceeds its capacity.
+
+export craft allocate_infrastructure_resources(demands, capacities) {
+    when kind(demands) != "list" or kind(capacities) != "list" {
+        yield []
+    }
+    when size(demands) == 0 or size(demands) != size(capacities) {
+        yield []
+    }
+    vary residual := []
+    vary valid := true
+    each index in range(0, size(demands)) {
+        vary demand := demands[index]
+        vary capacity := capacities[index]
+        when kind(demand) != "number" or kind(capacity) != "number" {
+            change valid := false
+        } otherwise {
+            when demand < 0 or capacity < 0 or demand > capacity {
+                change valid := false
+            } otherwise {
+                change residual := push(residual, capacity - demand)
+            }
+        }
+    }
+    when not valid {
+        yield []
+    }
+    yield residual
+}
