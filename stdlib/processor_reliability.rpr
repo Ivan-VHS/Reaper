@@ -249,6 +249,7 @@ export craft state_valid(state) {
     when state[7] and (state[8] < 64 or state[9] < 1 or state[9] > state[8] // 2) { yield false }
     when state[7] and state[16] != "fault-injection-active" { yield false }
     when state[6] == "production" and state[18] != 0 { yield false }
+    when state[6] == "production" and state[4] <= state[5] and state[16] != "safe-degraded" { yield false }
     when not valid_integer(state[18], 0, SAFE_INTEGER_MAX) or
          not valid_integer(state[19], 0, SAFE_INTEGER_MAX) { yield false }
     each reserve in state[17] {
@@ -278,11 +279,16 @@ export craft new_state(capacity, low_watermark, mode, local_reserves, initial_ph
     when not valid_integer(initial_phase_error_ps, 0 - 1000000000, 1000000000) {
         yield [false, [], "RPR-CORRECT-0001: initial phase error must be a bounded integer"]
     }
-    yield [true, [
+    make lifecycle := "cold"
+    when mode == "production" and capacity <= low_watermark {
+        change lifecycle := "safe-degraded"
+    }
+    make state := [
         "RPC", 1, 0, capacity, capacity, low_watermark, mode,
         false, 0, 0, 0, 0, initial_phase_error_ps, 0, 0, 0,
-        "cold", local_reserves, 0, 0
-    ], ""]
+        lifecycle, local_reserves, 0, 0
+    ]
+    yield [true, state, ""]
 }
 
 export craft repair_spend(state, cost, period_cycles, duty_cycles) {
