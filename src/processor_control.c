@@ -252,8 +252,7 @@ ReaperProcessorStatus reaper_processor_apply_power_profile(
 ) {
     if (cpu_id >= REAPER_PROCESSOR_MAX_LOGICAL_CPUS ||
         topology_generation == 0U ||
-        profile < REAPER_PROCESSOR_POWER_BALANCED ||
-        profile > REAPER_PROCESSOR_POWER_THERMAL_GUARD)
+        (unsigned)profile > (unsigned)REAPER_PROCESSOR_POWER_THERMAL_GUARD)
         return REAPER_PROCESSOR_INVALID_ARGUMENT;
     if (ops == NULL ||
         (ops->capabilities & REAPER_PROCESSOR_CAP_POWER_CONTROL) == 0U ||
