@@ -13,7 +13,7 @@ from .lexer import Token
 
 _OPCODES = {
     name: index for index, name in enumerate((
-        "CONST", "LOAD", "DEFINE", "ASSIGN", "EMIT", "RETURN", "MAKE_FUNCTION",
+        "CONST", "LOAD", "DEFINE", "DEFINE_REGISTER", "ASSIGN", "EMIT", "RETURN", "MAKE_FUNCTION",
         "JUMP_IF_FALSE", "JUMP", "ENTER_SCOPE", "EXIT_SCOPE", "ITER_INIT",
         "ITER_NEXT", "ITER_END", "POP", "BUILD_LIST", "INDEX", "UNARY",
         "CALL", "PIPE_CALL", "BINARY", "AND_JUMP", "OR_JUMP", "IMPORT", "EXPORT",
@@ -116,8 +116,18 @@ class VirtualMachine:
                 value = stack.pop()
                 variable, mutable = instruction.argument
                 environment.define(variable, self.interpreter.memory.track(value), mutable)
+            elif name == "DEFINE_REGISTER":
+                value = stack.pop()
+                if not self.interpreter._is_number(value):
+                    raise self.interpreter._error(token, "'reg' requires a numeric value")
+                environment.define(instruction.argument, self.interpreter.memory.track(value), mutable=True, register=True)
             elif name == "ASSIGN":
-                environment.change(instruction.argument, self.interpreter.memory.track(stack.pop()))
+                environment.change(
+                    instruction.argument,
+                    self.interpreter.memory.track(stack.pop()),
+                    token,
+                    self.interpreter.filename,
+                )
             elif name == "EMIT":
                 result = stack.pop()
                 self.interpreter.output(self.interpreter._display(result))
