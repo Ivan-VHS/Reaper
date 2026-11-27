@@ -112,6 +112,56 @@ typedef struct {
     uint8_t single_step_enabled;
 } ReaperProcessorDebugSession;
 
+typedef struct {
+    uint64_t token;
+    uint64_t generation;
+    uint32_t abi_major;
+    uint8_t digest[REAPER_PROCESSOR_DIGEST_BYTES];
+} ReaperProcessorPatchTicket;
+
+typedef enum {
+    REAPER_PROCESSOR_POWER_BALANCED = 0,
+    REAPER_PROCESSOR_POWER_PERFORMANCE,
+    REAPER_PROCESSOR_POWER_EFFICIENCY,
+    REAPER_PROCESSOR_POWER_QUIET,
+    REAPER_PROCESSOR_POWER_THERMAL_GUARD
+} ReaperProcessorPowerProfile;
+
+typedef struct {
+    void *context;
+    uint32_t capabilities;
+    ReaperProcessorStatus (*set_frequency_cap)(
+        void *context, uint32_t cpu_id, uint32_t minimum_khz,
+        uint32_t target_khz, uint32_t maximum_khz,
+        uint32_t topology_generation
+    );
+    ReaperProcessorStatus (*set_power_profile)(
+        void *context, uint32_t cpu_id, ReaperProcessorPowerProfile profile,
+        uint32_t topology_generation
+    );
+    ReaperProcessorStatus (*debug_capture)(
+        void *context, uint32_t cpu_id, uint32_t flags,
+        uint32_t timeout_ms, uint8_t *buffer,
+        size_t capacity, size_t *written
+    );
+    ReaperProcessorStatus (*verify_artifact)(
+        void *context, const uint8_t *image, size_t image_size,
+        const uint8_t digest[REAPER_PROCESSOR_DIGEST_BYTES],
+        const uint8_t *signature, size_t signature_size
+    );
+    ReaperProcessorStatus (*stage_patch)(
+        void *context, uint64_t generation,
+        const uint8_t digest[REAPER_PROCESSOR_DIGEST_BYTES],
+        const uint8_t *image, size_t image_size, uint64_t *ticket
+    );
+    ReaperProcessorStatus (*activate_patch)(
+        void *context, uint64_t ticket, uint64_t generation
+    );
+    ReaperProcessorStatus (*rollback_patch)(
+        void *context, uint64_t ticket, uint64_t known_good_generation
+    );
+} ReaperProcessorPlatformOps;
+
 ReaperProcessorStatus reaper_processor_topology_validate(
     const ReaperLogicalCpu *cpus, size_t cpu_count,
     const ReaperProcessorTopology *topology
@@ -164,6 +214,11 @@ ReaperProcessorStatus reaper_processor_apply_frequency_cap(
     const ReaperProcessorPlatformOps *ops,
     uint32_t cpu_id, uint32_t minimum_khz, uint32_t target_khz,
     uint32_t maximum_khz, uint32_t topology_generation
+);
+
+ReaperProcessorStatus reaper_processor_apply_power_profile(
+    const ReaperProcessorPlatformOps *ops, uint32_t cpu_id,
+    ReaperProcessorPowerProfile profile, uint32_t topology_generation
 );
 
 ReaperProcessorStatus reaper_processor_debug_capture(
