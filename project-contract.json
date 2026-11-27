@@ -110,11 +110,14 @@
     {
       "id": "selfhosting.frontend-bootstrap",
       "status": "partial",
-      "summary": "Reaper-written tokenizer and Pratt expression parser cover a tested subset, not a complete self-hosting compiler.",
+      "summary": "Reaper-written tokenizer and Pratt expression parser, expression-scoped semantic analysis, versioned RIR1 verification and expression bytecode lowering; the statement parser, VM and complete self-hosting compiler remain incomplete.",
       "evidence": [
         "selfhost/lexer.rpr",
         "selfhost/parser.rpr",
-        "tests/test_self_hosting.py"
+        "selfhost/semantic.rpr",
+        "selfhost/ir.rpr",
+        "tests/test_self_hosting.py",
+        "docs/SELF_HOSTING_BOOTSTRAP.md"
       ]
     },
     {

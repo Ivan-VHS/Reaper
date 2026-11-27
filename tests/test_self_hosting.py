@@ -19,6 +19,12 @@ class SelfHostingBootstrapTests(unittest.TestCase):
     def test_reaper_written_parser_runs_on_the_reference_runtime(self) -> None:
         self._run_selfhost_program("selfhost/parser.rpr", "SELFHOST_PARSER_OK")
 
+    def test_reaper_written_semantic_analysis_runs_on_the_reference_runtime(self) -> None:
+        self._run_selfhost_program("selfhost/semantic.rpr", "SELFHOST_SEMANTIC_OK")
+
+    def test_reaper_written_ir_and_bytecode_lowering_runs_on_the_reference_runtime(self) -> None:
+        self._run_selfhost_program("selfhost/ir.rpr", "SELFHOST_IR_OK")
+
 
 if __name__ == "__main__":
     unittest.main()
