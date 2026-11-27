@@ -61,7 +61,7 @@ class RFS01Tests(unittest.TestCase):
     def test_root_and_core_recovery_have_distinct_scope(self):
         source = BASE.replace(
             'flow a >> b',
-            'recover b ^core\n  recover b <-root\n  flow a >> b',
+            'flow a >> b\n  recover b ^core\n  recover b <-root',
         )
         result = run_source(source)
         self.assertTrue(any(event["kind"] == "core-restored" for event in result["events"]))
