@@ -16,9 +16,22 @@ The Python test suite executes the Reaper source and checks its internal asserti
 
 `selfhost/parser.rpr` now implements a Pratt parser in Reaper source. It consumes the same token-array shape emitted by the bootstrap lexer and builds compact array-form expression nodes. Implemented forms are literals, names, unary expressions, grouping, list literals, function calls, indexing and infix operators. The precedence table matches the reference parser, including the actual `::` flow operator and right-associative `**`.
 
-The bootstrap assertions cover arithmetic precedence, exponentiation associativity, source-located unary nodes, flow composition, nested call/list/index expressions, missing delimiters and trailing-token errors. The Python test suite executes both `selfhost/lexer.rpr` and `selfhost/parser.rpr`; the same tests are registered with CTest when Python is available.
+The bootstrap assertions cover arithmetic precedence, exponentiation associativity, source-located unary nodes, flow composition, nested call/list/index expressions, missing delimiters and trailing-token errors. The reference-runtime test suite executes `selfhost/lexer.rpr`, `selfhost/parser.rpr`, and `selfhost/scalar_stack.rpr`; the same tests are registered with CTest when the reference-runtime test host is available. The tests exercise Reaper source; the host is orchestration, not the implementation of these algorithms.
 
-This is deliberately **not** a complete parser replacement: declarations, function definitions, control-flow statements, block grammar and parity with the Python `Node` AST are not yet implemented. The parser output is a stage-local representation, not the canonical AST contract. The Python parser remains the reference frontend.
+This is deliberately **not** a complete parser replacement: declarations, function definitions, control-flow statements, block grammar and parity with the reference AST are not yet implemented. The parser output is a stage-local representation, not the canonical AST contract. The reference parser remains the compatibility frontend.
+
+### Reaper-native scalar medium and stack synthesis
+
+`selfhost/scalar_stack.rpr` is an executable Reaper module for two bounded algorithms:
+
+- scalar-field relaxation on a cyclic one-dimensional topology, with Q16 interpolation, per-cell completed-half-life decay, scalar-gradient measurement and checked flux aggregation;
+- deterministic stack planning over module/ABI descriptors, dependency edges, local-only/deprecation policy, memory/compute budgets, common-runtime deduplication and stable topological ordering.
+
+The module validates positional record layouts at its boundary. It does not use the proposed `contract`, `comptime`, `budget` or `arena_slot` syntax because those constructs are not yet part of the implemented frontend. The array layouts are explicitly versioned in the feature documentation and tested through the Reaper reference runtime.
+
+The criticality gate consumes runtime counters (`spawned_tasks / accepted_tasks`) in Q16. It rejects supercritical reproduction, a full queue, or active workers above the declared slot count. A near-critical balanced window is a policy threshold, not a claim that queue stability follows from a static module descriptor.
+
+The stack synthesizer produces a deterministic integration plan; it does not merge source files into one unreviewable binary, download dependencies, rewrite code, or mutate repositories. Estimated memory savings count only declared shared-runtime allocations deduplicated under an identical key and ABI. They are not measured executable-size or latency improvements. The native AOT backend does not yet compile this full module.
 
 ## Bootstrap stages
 
