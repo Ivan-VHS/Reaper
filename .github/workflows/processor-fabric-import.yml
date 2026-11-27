@@ -1,0 +1,65 @@
+name: Reaper Processor Fabric Import and Typed IR
+
+on:
+  pull_request:
+    paths:
+      - "tools/import_processor_fabric.mjs"
+      - "tests/test_processor_fabric_import.mjs"
+      - "reaper/processor_fabric.py"
+      - "tests/test_processor_fabric.py"
+      - "schemas/reaper.processor-fabric-import.v1.schema.json"
+      - "schemas/reaper.processor-fabric-typed-ir.v1.schema.json"
+      - "docs/PYTYLIKI_PROCESSOR_FABRIC_BRIDGE.md"
+      - "docs/PROCESSOR_FABRIC_TYPED_IR.md"
+      - "project-contract.json"
+      - "language/features.json"
+      - "CMakeLists.txt"
+      - "include/reaper/processor_backends.h"
+      - "src/processor_backend_*.c"
+      - "src/processor_rv32_*.c"
+      - "src/processor_logic_net.c"
+      - "tests/test_processor_assembler.c"
+      - "tests/test_processor_linker.c"
+      - "tests/test_processor_emulator.c"
+      - "tests/test_processor_rtl.c"
+      - "tests/test_processor_formal.c"
+      - "schemas/reaper.processor-backend-registry.v1.schema.json"
+      - "examples/processor-backends/**"
+      - "docs/PROCESSOR_BACKENDS_V1.md"
+      - ".github/workflows/processor-fabric-import.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  local-ppf-import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Validate versioned schemas are valid JSON
+        run: |
+          node -e "for (const p of ['schemas/reaper.processor-fabric-import.v1.schema.json','schemas/reaper.processor-fabric-typed-ir.v1.schema.json']) JSON.parse(require('node:fs').readFileSync(p,'utf8'))"
+      - name: Test local-only Pytyliki evidence import
+        run: node --test tests/test_processor_fabric_import.mjs
+      - name: Test Reaper typed SemanticGraph adapter
+        run: python -m unittest discover -s tests -p test_processor_fabric.py
+      - name: Configure native processor backends
+        run: cmake -S . -B build-processor-backends -DCMAKE_BUILD_TYPE=Release
+      - name: Build independent processor backend targets
+        run: >-
+          cmake --build build-processor-backends --parallel --target
+          reaper-processor-assembler-tests reaper-processor-linker-tests
+          reaper-processor-emulator-tests reaper-processor-rtl-tests
+          reaper-processor-formal-tests
+      - name: Run processor backend conformance tests
+        run: >-
+          ctest --test-dir build-processor-backends --output-on-failure
+          -R "processor-(native-assembler-rv32i|native-linker-flat-image|bounded-rv32i-emulator|systemverilog-rtl-emitter|bounded-formal-equivalence)"

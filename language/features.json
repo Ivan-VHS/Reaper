@@ -547,6 +547,84 @@
         "linker-map",
         "cross-target-conformance"
       ]
+    },
+    {
+      "id": "REAPER-PFI-001",
+      "name": "local Pytyliki Processor Fabric evidence importer",
+      "area": "interop",
+      "status": "partial",
+      "depends_on": [
+        "REAPER-PEW-001",
+        "REAPER-PEW-002"
+      ],
+      "acceptance": [
+        "local-file-only-import",
+        "source-sha256-match",
+        "topology-ppf-generation-match",
+        "parent-and-dependency-cycle-rejection",
+        "hardware-resource-reference-closure",
+        "utf8-byte-span-preservation",
+        "producer-semantic-claims-denied"
+      ]
+    },
+    {
+      "id": "REAPER-PFI-002",
+      "name": "Processor Fabric typed SemanticGraph adapter",
+      "area": "compiler",
+      "status": "partial",
+      "depends_on": [
+        "MOST-TYP-001",
+        "MOST-EFF-001",
+        "REAPER-PFI-001"
+      ],
+      "acceptance": [
+        "reaper-owned-semantic-binding-required",
+        "typed-input-port-match",
+        "effect-capability-denial",
+        "dma-ownership-admission",
+        "control-dependency-preservation",
+        "semantic-graph-verification",
+        "no-stack-bytecode-claim"
+      ]
+    },
+    {
+      "id": "REAPER-PB-001",
+      "name": "bounded RV32I assembler and flat-image linker",
+      "area": "compiler",
+      "status": "partial",
+      "acceptance": [
+        "typed-instruction-encoder-tests",
+        "immediate-register-range-rejection",
+        "symbol-resolution",
+        "checked-jal-and-branch-relocations",
+        "target-and-abi-identity"
+      ]
+    },
+    {
+      "id": "REAPER-PB-002",
+      "name": "bounded RV32I emulator",
+      "area": "verification",
+      "status": "partial",
+      "acceptance": [
+        "bounded-memory",
+        "instruction-subset-validation",
+        "step-limit",
+        "trace-limit",
+        "invalid-address-rejection"
+      ]
+    },
+    {
+      "id": "REAPER-PB-003",
+      "name": "combinational RTL and formal equivalence prototypes",
+      "area": "verification",
+      "status": "partial",
+      "acceptance": [
+        "acyclic-net-validation",
+        "systemverilog-output-tests",
+        "bounded-exhaustive-equivalence",
+        "counterexample-report",
+        "unknown-outside-bound"
+      ]
     }
   ],
   "profile": "МОСТ — exact Russian keyword aliases; no separate parser, semantics, runtime or backend"

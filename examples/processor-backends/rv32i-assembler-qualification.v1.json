@@ -1,0 +1,44 @@
+{
+  "schema": "reaper.processor-backend-qualification.v1",
+  "version": 1,
+  "backend_id": "reaper.processor.rv32i.assembler.v1",
+  "backend_kind": "native-assembler",
+  "maturity": "prototype",
+  "target": "rv32i",
+  "abi": "ilp32",
+  "implementation": {
+    "language": "C17",
+    "entrypoints": [
+      "reaper_rv32_assemble"
+    ],
+    "bounded": true,
+    "deterministic": true,
+    "external_toolchain": null,
+    "source_refs": [
+      "src/processor_rv32_assembler.c",
+      "include/reaper/processor_backends.h"
+    ]
+  },
+  "tests": {
+    "suite": "processor-native-assembler-rv32i",
+    "total": 0,
+    "passed": 0,
+    "failed": 0,
+    "ci_run": null
+  },
+  "qualification": {
+    "target_qualified": false,
+    "hardware_qualified": false,
+    "abi_conformance": "partial",
+    "artifact_reproducible": null,
+    "evidence": []
+  },
+  "effects": {
+    "host_scheduling_changed": false,
+    "hardware_access_performed": false,
+    "mmio_mapped": false,
+    "dma_submitted": false,
+    "firmware_changed": false,
+    "device_state_changed": false
+  }
+}
