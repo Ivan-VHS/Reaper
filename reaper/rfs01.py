@@ -149,6 +149,27 @@ class RFSProgram:
 
 
 @dataclass(frozen=True, slots=True)
+class RFSIRInstruction:
+    sequence: int
+    opcode: str
+    operands: tuple[Any, ...]
+    span: Span | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class RFSIRModule:
+    schema: str
+    name: str
+    version: str
+    nodes: tuple[NodeSpec, ...]
+    links: tuple[LinkSpec, ...]
+    signals: tuple[SignalFrame, ...]
+    phases: tuple[PhaseGate, ...]
+    instructions: tuple[RFSIRInstruction, ...]
+    cycles: int
+
+
+@dataclass(frozen=True, slots=True)
 class RuntimeNode:
     id: str
     layer: str
@@ -509,6 +530,95 @@ class _Parser:
 def compile_source(source: str) -> RFSProgram:
     """Lex, parse, type-check and validate one RFS-01 v1.0 source unit."""
     return _Parser(_lex(source)).parse()
+
+
+def lower_to_ir(program: RFSProgram) -> RFSIRModule:
+    """Lower the validated source model into the stable RFS-01 typed IR."""
+    instructions: list[RFSIRInstruction] = []
+
+    def emit(opcode: str, *operands: Any, span: Span | None = None) -> None:
+        instructions.append(RFSIRInstruction(len(instructions), opcode, tuple(operands), span))
+
+    flow_opcodes = {"~>": "FLOW_SIGNAL", ">>": "FLOW_PRESSURE_FORWARD", "<<": "FLOW_PRESSURE_REVERSE"}
+    for action in program.actions:
+        if isinstance(action, Flow):
+            emit(flow_opcodes[action.operator], action.left, action.right, span=action.span)
+        elif action.operator == "<-root":
+            emit("RECOVER_ROOT", action.node, span=action.span)
+        else:
+            emit("RECOVER_CORE", action.node, span=action.span)
+
+    for contrast in program.contrasts:
+        opcode = "CONTRAST_COMPLEMENT" if contrast.operator == "||" else "CONTRAST_DIFFERENTIAL"
+        emit(opcode, contrast.left, contrast.right, span=contrast.span)
+    for message in program.messages:
+        emit("EMIT", message)
+
+    module = RFSIRModule(
+        "rfs-01.typed-ir.v1",
+        program.name,
+        program.version,
+        program.nodes,
+        program.links,
+        program.signals,
+        program.phases,
+        tuple(instructions),
+        program.cycles,
+    )
+    verify_ir(module)
+    return module
+
+
+def verify_ir(module: RFSIRModule) -> None:
+    """Reject malformed or unresolved typed IR before runtime execution."""
+    if module.schema != "rfs-01.typed-ir.v1" or module.version != "1.0":
+        raise RFS01Error("unsupported typed IR schema or language version", "RFS-E501")
+    if not 1 <= module.cycles <= MAX_CYCLES:
+        raise RFS01Error("typed IR cycle budget is outside the supported range", "RFS-E501")
+
+    node_ids = [node.id for node in module.nodes]
+    if len(node_ids) != len(set(node_ids)) or not node_ids:
+        raise RFS01Error("typed IR node table is empty or contains duplicate IDs", "RFS-E501")
+    known_nodes = set(node_ids)
+    link_pairs = {(link.origin, link.target) for link in module.links}
+    if len(link_pairs) != len(module.links):
+        raise RFS01Error("typed IR contains duplicate directed links", "RFS-E501")
+    for link in module.links:
+        if link.origin not in known_nodes or link.target not in known_nodes:
+            raise RFS01Error("typed IR link has an unresolved node reference", "RFS-E501")
+    for phase in module.phases:
+        if phase.node not in known_nodes:
+            raise RFS01Error("typed IR phase has an unresolved node reference", "RFS-E501")
+
+    known_opcodes = {
+        "FLOW_SIGNAL", "FLOW_PRESSURE_FORWARD", "FLOW_PRESSURE_REVERSE",
+        "RECOVER_ROOT", "RECOVER_CORE",
+        "CONTRAST_COMPLEMENT", "CONTRAST_DIFFERENTIAL", "EMIT",
+    }
+    for expected_sequence, instruction in enumerate(module.instructions):
+        if instruction.sequence != expected_sequence or instruction.opcode not in known_opcodes:
+            raise RFS01Error("typed IR instruction sequence or opcode is invalid", "RFS-E501", instruction.span)
+        args = instruction.operands
+        if instruction.opcode in {"FLOW_SIGNAL", "FLOW_PRESSURE_FORWARD", "FLOW_PRESSURE_REVERSE"}:
+            if len(args) != 2 or args[0] not in known_nodes or args[1] not in known_nodes:
+                raise RFS01Error("typed IR flow has invalid operands", "RFS-E501", instruction.span)
+            origin, target = (args[0], args[1]) if instruction.opcode != "FLOW_PRESSURE_REVERSE" else (args[1], args[0])
+            if (origin, target) not in link_pairs:
+                raise RFS01Error("typed IR flow has no matching directed link", "RFS-E501", instruction.span)
+        elif instruction.opcode in {"RECOVER_ROOT", "RECOVER_CORE"}:
+            if len(args) != 1 or args[0] not in known_nodes:
+                raise RFS01Error("typed IR recovery has an unresolved node", "RFS-E501", instruction.span)
+        elif instruction.opcode in {"CONTRAST_COMPLEMENT", "CONTRAST_DIFFERENTIAL"}:
+            if len(args) != 2 or args[0] not in known_nodes or args[1] not in known_nodes:
+                raise RFS01Error("typed IR contrast has an unresolved operand", "RFS-E501", instruction.span)
+        elif instruction.opcode == "EMIT":
+            if len(args) != 1 or not isinstance(args[0], str):
+                raise RFS01Error("typed IR emit instruction has invalid payload", "RFS-E501", instruction.span)
+
+
+def compile_ir(source: str) -> RFSIRModule:
+    """Compile source directly to the verified RFS-01 typed IR."""
+    return lower_to_ir(compile_source(source))
 
 
 class RFSRuntime:
