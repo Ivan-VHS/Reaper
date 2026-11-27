@@ -116,3 +116,14 @@ CI must require these exact output lines:
 ## Hardware boundary
 
 This package does not map physical addresses, write MMIO, program CPU registers, alter scheduling/affinity/voltage/frequency, install firmware or drivers, register real interrupts or repair physical processor faults. The register snapshot and barriers are simulated descriptors. The barrier counter is a logical dispatch/fence accounting field; it is not a CPU memory-fence instruction or a measured hardware cycle counter. ROOT capability validation here is a structural simulation contract, not a cryptographic identity proof: a production host must issue and verify the capability through a trusted OS/driver authorization boundary. A future real backend must be a separate capability-gated OS/driver adapter with target/ABI validation, real memory-ordering primitives, audit records and hardware-in-the-loop qualification.
+
+
+## RAS event and periodicity layer
+
+The core now includes versioned, positional RAS provider/event/series records. A provider must be explicitly read-only and declare only observation operations. Events retain boot identity, provider identity, resource scope, classification, confidence, monotonic timestamp and raw-record reference. No process/thread owner is inferred from a package-, core- or memory-controller-scoped record.
+
+ras_series_record rejects mixed boot/provider/resource/fault series, duplicate or out-of-order monotonic timestamps and counter overflow. It retains at most eight recent timestamps and reports how many older samples were dropped. ras_periodicity_analyze requires at least three strictly increasing timestamps, checks each interval against a 1000-second bound and returns mean period, interval spread in permille and a periodic/drifting/irregular class. Its deterministic thresholds are a model contract, not a hardware failure predictor.
+
+ras_recovery_action produces advisory decisions only: observe, warn-and-collect, request an OS recovery path, request operator/OS review, or defer fatal cases to the kernel. It never retries fatal errors and never writes registers, MMIO, firmware, voltage, frequency or scheduler state. The RAS_CLASSIFY bytecode instruction (opcode 65, RULE domain, SERVICE role) encodes a bounded fault kind, repeat count and explicit confidence/OS/rollback flags; decoding and role/domain validation happen before the decision is returned.
+
+Hardware-specific WHEA, Linux EDAC/MCE and Apple event adapters remain outside this language core. They must preserve source provenance and provide verified classification before a live event can enter this model. Copper/electromigration and nano-cell equations in the same core remain deterministic simulation, not physical repair.
