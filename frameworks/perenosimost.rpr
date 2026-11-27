@@ -1,0 +1,108 @@
+# PerenosiMOST: exact МОСТ alias migration to canonical Reaper spellings.
+# This is a token-word adapter, not a source parser or a morphology engine.
+# Table rows: [Russian spelling, canonical Reaper spelling, support state].
+
+export craft alias_table() {
+    yield [
+        ["пусть", "make", "runtime"],
+        ["переменная", "vary", "runtime"],
+        ["изменить", "change", "runtime"],
+        ["функция", "craft", "runtime"],
+        ["вернуть", "yield", "runtime"],
+        ["вывести", "emit", "runtime"],
+        ["если", "when", "runtime"],
+        ["иначе", "otherwise", "runtime"],
+        ["для", "each", "runtime"],
+        ["в", "in", "runtime"],
+        ["цикл", "loop", "runtime"],
+        ["пока", "while", "runtime"],
+        ["истина", "true", "runtime"],
+        ["ложь", "false", "runtime"],
+        ["ничего", "nothing", "runtime"],
+        ["и", "and", "runtime"],
+        ["или", "or", "runtime"],
+        ["не", "not", "runtime"],
+        ["импорт", "import", "runtime"],
+        ["экспорт", "export", "runtime"],
+        ["как", "as", "runtime"],
+        ["модуль", "module", "reserved"],
+        ["публичный", "pub", "reserved"],
+        ["процедура", "fn", "reserved"],
+        ["структура", "struct", "reserved"],
+        ["перечисление", "enum", "reserved"],
+        ["типаж", "trait", "reserved"],
+        ["реализация", "impl", "reserved"],
+        ["тип", "type", "reserved"],
+        ["константа", "const", "reserved"],
+        ["связать", "let", "reserved"],
+        ["изменяемый", "mut", "reserved"],
+        ["возврат", "return", "reserved"],
+        ["условие", "if", "reserved"],
+        ["альтернатива", "else", "reserved"],
+        ["выбор", "match", "reserved"],
+        ["область", "region", "reserved"],
+        ["сырой", "raw", "reserved"],
+        ["арена", "arena", "reserved"],
+        ["сигнал", "signal", "reserved"],
+        ["асинхронно", "async", "reserved"],
+        ["ожидать", "await", "reserved"],
+        ["тест", "test", "reserved"],
+        ["вычислить_при_сборке", "comptime", "reserved"],
+        ["требует", "requires", "reserved"],
+        ["гарантирует", "ensures", "reserved"],
+        ["небезопасно", "unsafe", "reserved"],
+        ["внешний", "extern", "reserved"],
+        ["где", "where", "reserved"],
+        ["уничтожить", "drop", "reserved"],
+        ["для_каждого", "for", "reserved"],
+        ["прервать", "break", "reserved"],
+        ["продолжить", "continue", "reserved"],
+        ["отложить", "defer", "reserved"]
+    ]
+}
+
+export craft canonical(word) {
+    each row in alias_table() {
+        when row[0] == word {
+            yield row[1]
+        }
+    }
+    yield word
+}
+
+export craft support(word) {
+    each row in alias_table() {
+        when row[0] == word {
+            yield row[2]
+        }
+    }
+    yield "unknown"
+}
+
+export craft runtime_aliases() {
+    vary aliases := []
+    each row in alias_table() {
+        when row[2] == "runtime" {
+            change aliases := push(aliases, row[0])
+        }
+    }
+    yield aliases
+}
+
+export craft reserved_aliases() {
+    vary aliases := []
+    each row in alias_table() {
+        when row[2] == "reserved" {
+            change aliases := push(aliases, row[0])
+        }
+    }
+    yield aliases
+}
+
+export craft normalize_words(words) {
+    vary normalized := []
+    each word in words {
+        change normalized := push(normalized, canonical(word))
+    }
+    yield normalized
+}

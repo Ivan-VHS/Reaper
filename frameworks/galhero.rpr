@@ -1,0 +1,122 @@
+# GalHero: deterministic dependency graph planning.
+# Edge format: [node, prerequisite]. A prerequisite must be ready first.
+
+craft has_name(values, target) {
+    vary found := false
+    each value in values {
+        when value == target {
+            change found := true
+        }
+    }
+    yield found
+}
+
+export craft dependencies_of(edges, node) {
+    vary dependencies := []
+    each edge in edges {
+        when size(edge) == 2 and edge[0] == node {
+            change dependencies := push(dependencies, edge[1])
+        }
+    }
+    yield dependencies
+}
+
+export craft validate(nodes, edges) {
+    vary errors := []
+    vary seen := []
+
+    each node in nodes {
+        when has_name(seen, node) {
+            change errors := push(errors, "duplicate node: " ++ text(node))
+        } otherwise {
+            change seen := push(seen, node)
+        }
+    }
+
+    each edge in edges {
+        when size(edge) != 2 {
+            change errors := push(errors, "edge must be [node, prerequisite]")
+        } otherwise {
+            when not has_name(nodes, edge[0]) {
+                change errors := push(errors, "unknown node: " ++ text(edge[0]))
+            }
+            when not has_name(nodes, edge[1]) {
+                change errors := push(errors, "unknown prerequisite: " ++ text(edge[1]))
+            }
+            when edge[0] == edge[1] {
+                change errors := push(errors, "self dependency: " ++ text(edge[0]))
+            }
+        }
+    }
+
+    yield [size(errors) == 0, errors]
+}
+
+export craft topological_order(nodes, edges) {
+    make checked := validate(nodes, edges)
+    when not checked[0] {
+        yield [false, [], checked[1]]
+    }
+
+    vary pending := nodes
+    vary ordered := []
+
+    loop while size(pending) > 0 {
+        vary next_pending := []
+        vary progressed := false
+
+        each candidate in pending {
+            vary blocked := false
+            each edge in edges {
+                when edge[0] == candidate and has_name(pending, edge[1]) {
+                    change blocked := true
+                }
+            }
+
+            when blocked {
+                change next_pending := push(next_pending, candidate)
+            } otherwise {
+                change ordered := push(ordered, candidate)
+                change progressed := true
+            }
+        }
+
+        when not progressed {
+            yield [false, ordered, ["dependency cycle", pending]]
+        }
+        change pending := next_pending
+    }
+
+    make no_errors := []
+    yield [true, ordered, no_errors]
+}
+
+export craft transitive_dependencies(nodes, edges, root) {
+    make checked := validate(nodes, edges)
+    when not checked[0] {
+        yield [false, [], checked[1]]
+    }
+    when not has_name(nodes, root) {
+        yield [false, [], ["unknown root", root]]
+    }
+
+    vary queue := dependencies_of(edges, root)
+    vary visited := []
+
+    loop while size(queue) > 0 {
+        make current := first(queue)
+        change queue := rest(queue)
+
+        when not has_name(visited, current) {
+            change visited := push(visited, current)
+            each dependency in dependencies_of(edges, current) {
+                when not has_name(visited, dependency) {
+                    change queue := push(queue, dependency)
+                }
+            }
+        }
+    }
+
+    make no_errors := []
+    yield [true, visited, no_errors]
+}

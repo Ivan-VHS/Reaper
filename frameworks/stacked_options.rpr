@@ -1,0 +1,85 @@
+# Stacked Options: deterministic layered configuration.
+# Option format: [key, value]. Later layers override earlier layers.
+# Rule format: [key, expected_kind, required, default_value].
+# Use nothing as the no-default sentinel; use "any" to skip kind checking.
+
+export craft lookup(options, key) {
+    vary found := false
+    vary value := nothing
+
+    each option in options {
+        when size(option) == 2 and option[0] == key {
+            change found := true
+            change value := option[1]
+        }
+    }
+    yield [found, value]
+}
+
+export craft put(options, key, value) {
+    vary result := []
+    vary inserted := false
+
+    each option in options {
+        when size(option) == 2 and option[0] == key {
+            when not inserted {
+                change result := push(result, [key, value])
+                change inserted := true
+            }
+        } otherwise {
+            change result := push(result, option)
+        }
+    }
+
+    when not inserted {
+        change result := push(result, [key, value])
+    }
+    yield result
+}
+
+export craft merge(lower_priority, higher_priority) {
+    vary result := lower_priority
+    each option in higher_priority {
+        when size(option) == 2 {
+            change result := put(result, option[0], option[1])
+        }
+    }
+    yield result
+}
+
+export craft resolve(defaults, profile, workspace, request) {
+    make after_profile := merge(defaults, profile)
+    make after_workspace := merge(after_profile, workspace)
+    yield merge(after_workspace, request)
+}
+
+export craft validate(options, rules) {
+    vary resolved := options
+    vary errors := []
+
+    each rule in rules {
+        when size(rule) != 4 {
+            change errors := push(errors, "rule must be [key, kind, required, default]")
+        } otherwise {
+            make found := lookup(resolved, rule[0])
+            when not found[0] {
+                when rule[3] != nothing {
+                    change resolved := put(resolved, rule[0], rule[3])
+                    when rule[1] != "any" and kind(rule[3]) != rule[1] {
+                        change errors := push(errors, "default kind mismatch: " ++ rule[0])
+                    }
+                } otherwise {
+                    when rule[2] {
+                        change errors := push(errors, "missing required option: " ++ rule[0])
+                    }
+                }
+            } otherwise {
+                when rule[1] != "any" and kind(found[1]) != rule[1] {
+                    change errors := push(errors, "option kind mismatch: " ++ rule[0])
+                }
+            }
+        }
+    }
+
+    yield [size(errors) == 0, resolved, errors]
+}

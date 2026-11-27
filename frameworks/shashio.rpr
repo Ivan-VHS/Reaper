@@ -1,0 +1,93 @@
+# Shashio: deterministic finite-state machines and atomic event batches.
+# Transition format: [from_state, event, to_state].
+
+craft has_value(values, target) {
+    vary found := false
+    each value in values {
+        when value == target {
+            change found := true
+        }
+    }
+    yield found
+}
+
+export craft validate(states, transitions, initial_state) {
+    vary errors := []
+    when not has_value(states, initial_state) {
+        change errors := push(errors, ["unknown initial state", initial_state])
+    }
+
+    vary seen := []
+    each transition_rule in transitions {
+        when size(transition_rule) != 3 {
+            change errors := push(errors, "transition must be [from, event, to]")
+        } otherwise {
+            when not has_value(states, transition_rule[0]) {
+                change errors := push(errors, ["unknown source state", transition_rule[0]])
+            }
+            when not has_value(states, transition_rule[2]) {
+                change errors := push(errors, ["unknown target state", transition_rule[2]])
+            }
+
+            each previous in seen {
+                when previous[0] == transition_rule[0] and previous[1] == transition_rule[1] {
+                    change errors := push(errors, ["ambiguous transition", transition_rule[0], transition_rule[1]])
+                }
+            }
+            change seen := push(seen, transition_rule)
+        }
+    }
+
+    yield [size(errors) == 0, errors]
+}
+
+export craft transition(current_state, event, transitions) {
+    vary next_state := nothing
+    vary matched := false
+
+    each rule in transitions {
+        when size(rule) == 3 and rule[0] == current_state and rule[1] == event {
+            when matched {
+                yield [false, current_state, "ambiguous transition"]
+            }
+            change matched := true
+            change next_state := rule[2]
+        }
+    }
+
+    when not matched {
+        yield [false, current_state, "transition is not allowed"]
+    }
+    yield [true, next_state, "ok"]
+}
+
+export craft run(initial_state, events, transitions) {
+    vary current := initial_state
+    vary history := []
+    vary failure := ""
+
+    each event in events {
+        when failure == "" {
+            make result := transition(current, event, transitions)
+            when result[0] {
+                change current := result[1]
+                change history := push(history, [event, current])
+            } otherwise {
+                change failure := result[2] ++ ": " ++ text(event)
+            }
+        }
+    }
+
+    when failure != "" {
+        yield [false, current, history, failure]
+    }
+    yield [true, current, history, "ok"]
+}
+
+export craft apply_atomic(initial_state, events, transitions) {
+    make result := run(initial_state, events, transitions)
+    when result[0] {
+        yield [true, result[1], result[2], "committed"]
+    }
+    yield [false, initial_state, [], result[3]]
+}

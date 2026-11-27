@@ -17,8 +17,9 @@ Reaper 是一款面向编译器工具、嵌入式软件和硬件相关程序的�
 - 实验性 C17 原生实现；当前尚未与参考运行时功能对等。
 - NOO TAH 将 JavaScript 执行交给官方 Node.js 运行时。
 - Jora 项目脚手架和能力组合；目录中的应用包仍是规范，不是可安装的编辑器。
+- 八个原生 Reaper 框架模块，涵盖依赖规划、回调、分层选项、MOST 别名、版本化状态、状态机和代码转换。
 
-文档：[功能](docs/FEATURES.md) · [架构](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Jora 工厂](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md)。
+文档：[框架模块](docs/FRAMEWORKS_V1.md) · [功能](docs/FEATURES.md) · [架构](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Jora 工厂](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md)。
 
 ## 快速开始
 
@@ -29,6 +30,7 @@ python -m venv .venv
 python -m pip install -e .
 python -m reaper --check examples/flow.rpr
 python -m reaper examples/flow.rpr
+python -m reaper examples/frameworks_smoke.rpr
 ```
 
 启动 Studio 或 REPL：

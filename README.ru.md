@@ -17,8 +17,9 @@ Reaper — язык системного программирования и л�
 - Экспериментальная реализация на C17; она пока не равна по возможностям эталонной среде.
 - NOO TAH передаёт выполнение JavaScript официальному Node.js.
 - Генерация каркасов Jora и композиция возможностей; пакеты каталога пока являются спецификациями, а не устанавливаемыми редакторами.
+- Восемь нативных модулей Reaper: планирование зависимостей, callbacks, слои параметров, алиасы МОСТ, версионированное состояние, конечные автоматы и преобразование кода.
 
-Документы: [Возможности](docs/FEATURES.md) · [Архитектура](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Фабрика Jora](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md).
+Документы: [Фреймворки](docs/FRAMEWORKS_V1.md) · [Возможности](docs/FEATURES.md) · [Архитектура](docs/ARCHITECTURE.md) · [Hardware Language](docs/HARDWARE_LANGUAGE.md) · [Фабрика Jora](docs/JORA_APPLICATION_FACTORY.md) · [Studio](docs/REAPER_IDE.md) · [NOO TAH](docs/NOO_TAH.md).
 
 ## Быстрый старт
 
@@ -29,6 +30,7 @@ python -m venv .venv
 python -m pip install -e .
 python -m reaper --check examples/flow.rpr
 python -m reaper examples/flow.rpr
+python -m reaper examples/frameworks_smoke.rpr
 ```
 
 Studio и REPL:
