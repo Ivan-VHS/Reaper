@@ -20,12 +20,20 @@ static void hex_to_bytes(const char *hex, uint8_t *bytes, size_t count) {
     }
 }
 
-static void test_sha256_known_vector(void) {
-    static const char expected[] =
+static void test_sha256_known_vectors(void) {
+    static const char expected_abc[] =
         "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
+    static const char long_message[] =
+        "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno"
+        "ijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu";
+    static const char expected_long[] =
+        "cf5b16a778af8380036ce59e7b0492370b249b11e8f07a51afac45037afee9d1";
     uint8_t digest[REAPER_SOURCE_DIGEST_BYTES], expected_bytes[REAPER_SOURCE_DIGEST_BYTES];
     reaper_source_sha256("abc", 3u, digest);
-    hex_to_bytes(expected, expected_bytes, sizeof(expected_bytes));
+    hex_to_bytes(expected_abc, expected_bytes, sizeof(expected_bytes));
+    assert(memcmp(digest, expected_bytes, sizeof(digest)) == 0);
+    reaper_source_sha256(long_message, sizeof(long_message) - 1u, digest);
+    hex_to_bytes(expected_long, expected_bytes, sizeof(expected_bytes));
     assert(memcmp(digest, expected_bytes, sizeof(digest)) == 0);
 }
 
@@ -164,6 +172,55 @@ static void test_host_c17_backend_fixture_execution_and_qualification(void) {
     assert(qualification.level != REAPER_BACKEND_QUALIFICATION_QUALIFIED);
 }
 
+static void test_checked_arithmetic_import_and_codegen(void) {
+    const char source[] = "7 - 2 * 3 + 8 / 2";
+    ReaperSourceImportManifest manifest;
+    ReaperTypedInstruction storage[32];
+    ReaperCanonicalTypedModule module;
+    ReaperImportError error;
+    ReaperIrNode nodes[32];
+    int64_t values[32] = {0}, result = 0;
+    char generated[16384];
+    size_t output_bytes = 0u;
+    make_manifest(source, sizeof(source) - 1u, &manifest);
+    assert(reaper_import_expression(source, sizeof(source) - 1u, &manifest,
+        storage, 32u, &module, &error) == REAPER_IMPORT_OK);
+    for (size_t i = 0u; i < module.length; ++i)
+        nodes[i] = module.nodes[i].instruction;
+    {
+        ReaperIrModule ir = {nodes, module.length};
+        assert(reaper_ir_execute_i64(&ir, values, 32u, &result, &error));
+    }
+    assert(result == 5);
+    assert(reaper_backend_host_c17_emit(&module, generated, sizeof(generated),
+        &output_bytes, &error) == REAPER_IMPORT_OK);
+    assert(output_bytes == strlen(generated));
+    assert(strstr(generated, "reaper_sub_i64") != NULL);
+    assert(strstr(generated, "reaper_mul_i64") != NULL);
+    assert(strstr(generated, "reaper_div_i64") != NULL);
+    assert(strstr(generated, "reaper_add_i64") != NULL);
+}
+
+static void test_import_rejects_division_by_zero(void) {
+    const char source[] = "17 / 0";
+    ReaperSourceImportManifest manifest;
+    ReaperTypedInstruction storage[16];
+    ReaperCanonicalTypedModule module;
+    ReaperImportError error;
+    ReaperIrNode nodes[16];
+    int64_t values[16] = {0}, result = 991;
+    make_manifest(source, sizeof(source) - 1u, &manifest);
+    assert(reaper_import_expression(source, sizeof(source) - 1u, &manifest,
+        storage, 16u, &module, &error) == REAPER_IMPORT_OK);
+    for (size_t i = 0u; i < module.length; ++i)
+        nodes[i] = module.nodes[i].instruction;
+    {
+        ReaperIrModule ir = {nodes, module.length};
+        assert(!reaper_ir_execute_i64(&ir, values, 16u, &result, &error));
+        assert(result == 991);
+    }
+}
+
 static void test_overflow_semantics_are_not_silently_wrapped(void) {
     const char source[] = "9223372036854775807 + 1";
     ReaperSourceImportManifest manifest;
@@ -191,10 +248,12 @@ static void test_overflow_semantics_are_not_silently_wrapped(void) {
 }
 
 int main(void) {
-    test_sha256_known_vector();
+    test_sha256_known_vectors();
     test_import_digest_generation_types_and_spans();
     test_import_rejects_digest_generation_and_capacity();
     test_host_c17_backend_fixture_execution_and_qualification();
+    test_checked_arithmetic_import_and_codegen();
+    test_import_rejects_division_by_zero();
     test_overflow_semantics_are_not_silently_wrapped();
     puts("native importer and host backend tests passed");
     return 0;
