@@ -23,6 +23,13 @@ static int source_position(const ReaperAstNode *node, uint32_t *line, uint32_t *
     return 1;
 }
 
+static int source_span(const ReaperAstNode *node, uint64_t *start, uint64_t *end) {
+    if (node->source_end_byte < node->source_start_byte) return 0;
+    *start = (uint64_t)node->source_start_byte;
+    *end = (uint64_t)node->source_end_byte;
+    return 1;
+}
+
 static int append_node(
     ReaperIrNode *output,
     size_t capacity,
@@ -57,7 +64,9 @@ static int lower_node(
 
     const ReaperAstNode *node = &ast->items[ast_index];
     uint32_t line = 0, column = 0;
-    if (!source_position(node, &line, &column)) {
+    uint64_t source_start = 0u, source_end = 0u;
+    if (!source_position(node, &line, &column) ||
+        !source_span(node, &source_start, &source_end)) {
         return lower_fail(error, ast_index, "source location exceeds canonical IR range");
     }
 
@@ -75,7 +84,7 @@ static int lower_node(
         ReaperIrNode constant = {
             REAPER_IR_OP_CONST_I64, REAPER_IR_TYPE_I64,
             REAPER_IR_NO_VALUE, REAPER_IR_NO_VALUE, (int64_t)parsed,
-            line, column
+            line, column, source_start, source_end
         };
         return append_node(output, capacity, length, constant, result, error, ast_index);
     }
@@ -91,7 +100,8 @@ static int lower_node(
             return 0;
         }
         ReaperIrNode add = {
-            REAPER_IR_OP_ADD_I64, REAPER_IR_TYPE_I64, lhs, rhs, 0, line, column
+            REAPER_IR_OP_ADD_I64, REAPER_IR_TYPE_I64, lhs, rhs, 0, line, column,
+            source_start, source_end
         };
         return append_node(output, capacity, length, add, result, error, ast_index);
     }
@@ -127,12 +137,14 @@ int reaper_lower_ast_to_ir(
 
     const ReaperAstNode *root = &ast->items[ast->root];
     uint32_t line = 0, column = 0;
-    if (!source_position(root, &line, &column)) {
+    uint64_t source_start = 0u, source_end = 0u;
+    if (!source_position(root, &line, &column) ||
+        !source_span(root, &source_start, &source_end)) {
         return lower_fail(error, ast->root, "source location exceeds canonical IR range");
     }
     ReaperIrNode ret = {
         REAPER_IR_OP_RETURN, REAPER_IR_TYPE_UNIT, value,
-        REAPER_IR_NO_VALUE, 0, line, column
+        REAPER_IR_NO_VALUE, 0, line, column, source_start, source_end
     };
     uint32_t ignored = 0;
     if (!append_node(output, output_capacity, &length, ret, &ignored, error, ast->root)) {
