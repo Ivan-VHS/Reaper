@@ -98,6 +98,14 @@ ReaperPytylikiStatus reaper_pytyliki_snapshot_read(
     return REAPER_PYTYLIKI_OK;
 }
 
+ReaperPytylikiStatus reaper_pytyliki_validate_range(
+    const ReaperPytylikiProvider *provider, const pl_native_range *range) {
+    if (provider == NULL || provider->range_validate == NULL || range == NULL)
+        return REAPER_PYTYLIKI_INVALID_ARGUMENT;
+    return provider->range_validate(range) == 0
+        ? REAPER_PYTYLIKI_OK : REAPER_PYTYLIKI_INVALID_SNAPSHOT;
+}
+
 ReaperPytylikiStatus reaper_pytyliki_plan_placement(
     const ReaperPytylikiProvider *provider,
     const pl_ppf_request *request,
