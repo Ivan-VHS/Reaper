@@ -62,3 +62,7 @@ The .rpr reference runtime, partial native C17 work, developer tools and externa
 - [Shared ecosystem standards](https://github.com/Ivan-VHS/DAK/blob/main/docs/SHARED_STANDARDS.md)
 
 [Contributing](CONTRIBUTING.md) · [Security policy](SECURITY.md) · [Apache-2.0](LICENSE)
+
+## Related mathematical research
+
+The [Vyunenko Theory K3 v0.4.0 proposal](https://github.com/Ivan-VHS/Kaskad/pull/36) documents CRT splitting of the radix-1000 completion and unique infinite positional coefficient sequences. This is an external mathematical reference only; it does not add a Reaper syntax, runtime, compiler, standard-library, ABI or build dependency. See [the local research note](docs/VYUNENKO_K3_RESEARCH_REFERENCE.md).
