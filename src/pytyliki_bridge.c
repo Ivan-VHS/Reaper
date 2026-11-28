@@ -4,7 +4,9 @@
 
 #define REAPER_PYTYLIKI_KNOWN_ISA_MASK \
     (PL_NI_ISA_SSE2 | PL_NI_ISA_SSE42 | PL_NI_ISA_AES | PL_NI_ISA_AVX | \
-     PL_NI_ISA_AVX2 | PL_NI_ISA_FMA | PL_NI_ISA_AVX512F)
+     PL_NI_ISA_AVX2 | PL_NI_ISA_FMA | PL_NI_ISA_AVX512F | PL_NI_ISA_NEON | \
+     PL_NI_ISA_SVE | PL_NI_ISA_SVE2 | PL_NI_ISA_ARM_AES | PL_NI_ISA_ARM_SHA1 | \
+     PL_NI_ISA_ARM_SHA2 | PL_NI_ISA_ARM_CRC32 | PL_NI_ISA_ARM_ATOMICS)
 
 static int mask_bit(const uint64_t *mask, uint32_t bit) {
     return (mask[bit / 64u] & (UINT64_C(1) << (bit % 64u))) != 0u;
