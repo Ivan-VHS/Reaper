@@ -4,6 +4,10 @@ Reaper — мова системного програмування та лок�
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
+> **Psychoporter 666** — точність архітектора × енергія дослідника × простежувані докази. [Спільний стандарт документації](${styleUrl}).  
+> **Редакційна редакція · 2026-11-28:** оновлено подачу й навігацію; авторство, умови ліцензій і сторонню атрибуцію збережено.
+
+
 <picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/dashboard.svg"><img src="assets/readme/dashboard-light.svg" alt="Мова Reaper та інструменти розробника" width="100%"></picture>
 
 [![CI](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml) [![Apache-2.0](https://img.shields.io/github/license/Ivan-VHS/Reaper?style=flat-square)](LICENSE)
