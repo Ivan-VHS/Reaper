@@ -14,6 +14,41 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+
+  native-cross-repository-hardware:
+    name: Native C17 + Pytyliki hardware bridge
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check out pinned Pytyliki hardware provider
+        uses: actions/checkout@v7.0.1
+        with:
+          repository: Ivan-VHS/Pytyliki
+          ref: 870832602484606c75e02ce3eff7e88ddd573e93
+          path: Pytyliki
+          persist-credentials: false
+      - name: Configure Pytyliki
+        run: cmake -S Pytyliki -B Pytyliki/build -DBUILD_TESTING=ON -DCMAKE_BUILD_TYPE=Release
+      - name: Build Pytyliki provider and tests
+        run: cmake --build Pytyliki/build --config Release --parallel
+      - name: Test Pytyliki hardware collector, PPF and ABI
+        run: ctest --test-dir Pytyliki/build -C Release --output-on-failure
+      - name: Configure Reaper native C17 bridge
+        run: >
+          cmake -S . -B build-native
+          -DREAPER_BUILD_TESTS=ON
+          -DREAPER_ENABLE_PYTYLIKI_HARDWARE_BRIDGE=ON
+          -DREAPER_PYTYLIKI_INCLUDE_DIR=${{ github.workspace }}/Pytyliki/src
+          -DREAPER_PYTYLIKI_LIBRARY=${{ github.workspace }}/Pytyliki/build/libpytyliki_ffi.so
+          -DCMAKE_BUILD_TYPE=Release
+      - name: Build Reaper native importer, backend and live bridge
+        run: cmake --build build-native --config Release --parallel
+      - name: Test Reaper native compiler, backend and live Pytyliki bridge
+        run: ctest --test-dir build-native -C Release --output-on-failure
+
   test:
     name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest

@@ -35,6 +35,8 @@ typedef struct {
     int64_t immediate;
     uint32_t source_line;
     uint32_t source_column;
+    uint64_t source_start_byte;
+    uint64_t source_end_byte;
 } ReaperIrNode;
 
 typedef struct {

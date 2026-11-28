@@ -229,6 +229,8 @@ static int append_token(
     size_t text_length,
     size_t line,
     size_t column,
+    size_t source_start_byte,
+    size_t source_end_byte,
     int *limit_exceeded
 )
 {
@@ -277,7 +279,9 @@ static int append_token(
         .kind = kind,
         .text = text,
         .line = line,
-        .column = column
+        .column = column,
+        .source_start_byte = source_start_byte,
+        .source_end_byte = source_end_byte
     };
 
     return 1;
@@ -484,6 +488,8 @@ int reaper_lex(
                     1u,
                     line,
                     column,
+                    (size_t)(cursor - source),
+                    (size_t)(cursor - source) + 1u,
                     &token_limit_exceeded)) {
                 goto out_of_memory;
             }
@@ -505,6 +511,8 @@ int reaper_lex(
         if (byte == '"') {
             const size_t string_line = line;
             const size_t string_column = column;
+            const char *string_start = cursor;
+            const char *string_end = NULL;
             char *decoded;
             size_t decoded_length = 0u;
             int closed = 0;
@@ -521,6 +529,7 @@ int reaper_lex(
                 if (*cursor == '"') {
                     ++cursor;
                     ++column;
+                    string_end = cursor;
                     closed = 1;
                     break;
                 }
@@ -600,6 +609,8 @@ int reaper_lex(
                     decoded_length,
                     string_line,
                     string_column,
+                    (size_t)(string_start - source),
+                    (size_t)(string_end - source),
                     &token_limit_exceeded)) {
                 free(decoded);
                 goto out_of_memory;
@@ -636,6 +647,8 @@ int reaper_lex(
                     (size_t)(cursor - number_start),
                     line,
                     number_column,
+                    (size_t)(number_start - source),
+                    (size_t)(cursor - source),
                     &token_limit_exceeded)) {
                 goto out_of_memory;
             }
@@ -676,6 +689,8 @@ int reaper_lex(
                     identifier_length,
                     line,
                     identifier_column,
+                    (size_t)(identifier_start - source),
+                    (size_t)(cursor - source),
                     &token_limit_exceeded)) {
                 goto out_of_memory;
             }
@@ -703,6 +718,8 @@ int reaper_lex(
                         3u,
                         line,
                         operator_column,
+                        (size_t)(cursor - source),
+                        (size_t)(cursor - source) + 3u,
                         &token_limit_exceeded)) {
                     goto out_of_memory;
                 }
@@ -721,6 +738,8 @@ int reaper_lex(
                     2u,
                     line,
                     operator_column,
+                    (size_t)(cursor - source),
+                    (size_t)(cursor - source) + 2u,
                     &token_limit_exceeded)) {
                 goto out_of_memory;
             }
@@ -743,6 +762,8 @@ int reaper_lex(
                     1u,
                     line,
                     operator_column,
+                    (size_t)(cursor - source),
+                    (size_t)(cursor - source) + 1u,
                     &token_limit_exceeded)) {
                 goto out_of_memory;
             }
@@ -763,6 +784,8 @@ int reaper_lex(
             0u,
             line,
             column,
+            source_bytes,
+            source_bytes,
             &token_limit_exceeded)) {
         goto out_of_memory;
     }

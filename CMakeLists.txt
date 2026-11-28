@@ -4,14 +4,27 @@ set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 option(REAPER_BUILD_TESTS "Build native C tests" ON)
+option(REAPER_ENABLE_PYTYLIKI_HARDWARE_BRIDGE "Build the opt-in Pytyliki read-only native hardware bridge" OFF)
+set(REAPER_PYTYLIKI_INCLUDE_DIR "" CACHE PATH "Pytyliki src/include directory containing interop.h and native_intelligence.h")
+set(REAPER_PYTYLIKI_LIBRARY "" CACHE FILEPATH "Trusted Pytyliki FFI shared library used by the bridge conformance test")
 if(MSVC)
  add_compile_options(/utf-8)
 endif()
 if(MSVC)
  add_compile_options(/utf-8)
 endif()
-add_library(reaper_core STATIC src/lexer.c src/ir.c src/parser.c src/ast_json.c src/optimizer.c src/lower.c src/evolution.c src/token_catalog.c src/division.c src/capability_suite.c src/hardware.c src/command_palette.c src/lineage.c src/architecture.c src/snapshot_audit.c src/system_features.c)
+add_library(reaper_core STATIC src/lexer.c src/ir.c src/parser.c src/ast_json.c src/optimizer.c src/lower.c src/evolution.c src/token_catalog.c src/division.c src/capability_suite.c src/hardware.c src/command_palette.c src/lineage.c src/architecture.c src/snapshot_audit.c src/system_features.c src/import.c src/backend.c)
 target_include_directories(reaper_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+if(REAPER_ENABLE_PYTYLIKI_HARDWARE_BRIDGE)
+ if(NOT EXISTS "${REAPER_PYTYLIKI_INCLUDE_DIR}/interop.h" OR
+    NOT EXISTS "${REAPER_PYTYLIKI_INCLUDE_DIR}/native_intelligence.h")
+  message(FATAL_ERROR "REAPER_ENABLE_PYTYLIKI_HARDWARE_BRIDGE requires REAPER_PYTYLIKI_INCLUDE_DIR containing interop.h and native_intelligence.h")
+ endif()
+ target_sources(reaper_core PRIVATE src/pytyliki_bridge.c)
+ target_include_directories(reaper_core PUBLIC "${REAPER_PYTYLIKI_INCLUDE_DIR}")
+ install(FILES include/reaper/pytyliki_bridge.h DESTINATION include/reaper)
+endif()
 
 add_library(reaper_system STATIC src/system.c)
 target_include_directories(reaper_system PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -47,6 +60,22 @@ add_executable(reaper-c src/main.c)
 target_link_libraries(reaper-c PRIVATE reaper_core)
 if(REAPER_BUILD_TESTS)
  enable_testing()
+ if(REAPER_ENABLE_PYTYLIKI_HARDWARE_BRIDGE)
+  if(NOT EXISTS "${REAPER_PYTYLIKI_LIBRARY}")
+   message(FATAL_ERROR "The native bridge CI requires REAPER_PYTYLIKI_LIBRARY to exercise the real Pytyliki ABI")
+  endif()
+  add_executable(reaper-pytyliki-bridge-tests
+   tests/test_pytyliki_bridge.c
+   tests/fixtures/host_backend_fixture.c
+  )
+  target_link_libraries(reaper-pytyliki-bridge-tests PRIVATE reaper_core "${REAPER_PYTYLIKI_LIBRARY}")
+  target_compile_definitions(reaper-pytyliki-bridge-tests PRIVATE
+   REAPER_PYTYLIKI_BRIDGE_FIXTURE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/host_backend_fixture.c"
+  )
+  get_filename_component(REAPER_PYTYLIKI_LIBRARY_DIR "${REAPER_PYTYLIKI_LIBRARY}" DIRECTORY)
+  set_target_properties(reaper-pytyliki-bridge-tests PROPERTIES BUILD_RPATH "${REAPER_PYTYLIKI_LIBRARY_DIR}")
+  add_test(NAME native-pytyliki-hardware-bridge COMMAND reaper-pytyliki-bridge-tests)
+ endif()
  add_executable(reaper-lexer-tests tests/test_lexer.c)
  target_link_libraries(reaper-lexer-tests PRIVATE reaper_core)
  add_test(NAME native-lexer COMMAND reaper-lexer-tests)
@@ -74,6 +103,26 @@ if(REAPER_BUILD_TESTS)
  add_executable(reaper-capability-tests tests/test_capability_suite.c)
  target_link_libraries(reaper-capability-tests PRIVATE reaper_core)
  add_test(NAME native-capabilities COMMAND reaper-capability-tests)
+ add_executable(reaper-import-backend-tests
+  tests/test_import_backend.c
+  tests/fixtures/host_backend_fixture.c
+ )
+ target_link_libraries(reaper-import-backend-tests PRIVATE reaper_core)
+ target_compile_definitions(reaper-import-backend-tests PRIVATE
+  REAPER_HOST_BACKEND_FIXTURE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/host_backend_fixture.c"
+ )
+ add_test(NAME native-import-backend-qualification COMMAND reaper-import-backend-tests)
+
+ add_executable(reaper-backend-arithmetic-tests
+  tests/test_backend_arithmetic.c
+  tests/fixtures/host_backend_arithmetic_fixture.c
+ )
+ target_link_libraries(reaper-backend-arithmetic-tests PRIVATE reaper_core)
+ target_compile_definitions(reaper-backend-arithmetic-tests PRIVATE
+  REAPER_HOST_BACKEND_ARITHMETIC_FIXTURE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/host_backend_arithmetic_fixture.c"
+ )
+ add_test(NAME native-backend-arithmetic-qualification COMMAND reaper-backend-arithmetic-tests)
+
  add_executable(reaper-hardware-tests tests/test_hardware.c)
  target_link_libraries(reaper-hardware-tests PRIVATE reaper_core)
  add_test(NAME native-hardware COMMAND reaper-hardware-tests)
@@ -133,4 +182,43 @@ install(TARGETS reaper-c RUNTIME DESTINATION bin)
 install(TARGETS reaper_ffi ARCHIVE DESTINATION lib)
 install(TARGETS reaper_system ARCHIVE DESTINATION lib)
 install(TARGETS reaper_dabi64_desktop ARCHIVE DESTINATION lib)
-install(FILES include/reaper/ffi.h include/reaper/system.h include/reaper/dabi64_desktop.h include/reaper/architecture.h include/reaper/snapshot_audit.h include/reaper/system_features.h DESTINATION include/reaper)
+install(FILES include/reaper/ffi.h include/reaper/system.h include/reaper/dabi64_desktop.h include/reaper/architecture.h include/reaper/snapshot_audit.h include/reaper/system_features.h include/reaper/import.h include/reaper/backend.h DESTINATION include/reaper)
+
+
+# Keep assertions active for native conformance tests in Release configurations.
+set(_reaper_assert_test_targets
+ reaper-pytyliki-bridge-tests
+ reaper-lexer-tests
+ reaper-ir-tests
+ reaper-parser-tests
+ reaper-optimizer-tests
+ reaper-lower-tests
+ reaper-token-catalog-tests
+ reaper-evolution-tests
+ reaper-division-tests
+ reaper-capability-tests
+ reaper-import-backend-tests
+ reaper-backend-arithmetic-tests
+ reaper-hardware-tests
+ reaper-system-tests
+ reaper-dabi64-desktop-tests
+ reaper-command-palette-tests
+ reaper-lineage-tests
+ reaper-architecture-tests
+ reaper-snapshot-audit-tests
+ reaper-system-feature-tests
+ reaper-ffi-tests
+)
+if(MSVC)
+ foreach(_target IN LISTS _reaper_assert_test_targets)
+  if(TARGET ${_target})
+   target_compile_options(${_target} PRIVATE /UNDEBUG)
+  endif()
+ endforeach()
+else()
+ foreach(_target IN LISTS _reaper_assert_test_targets)
+  if(TARGET ${_target})
+   target_compile_options(${_target} PRIVATE -UNDEBUG)
+  endif()
+ endforeach()
+endif()

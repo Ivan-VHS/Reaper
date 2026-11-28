@@ -21,11 +21,16 @@ static void diagnostic_write(char *buffer, uint64_t capacity, const char *messag
 static int add_ir_node(ReaperIrNode *nodes, size_t capacity, size_t *length,
                        ReaperIrOpcode opcode, ReaperIrType type,
                        uint32_t lhs, uint32_t rhs, int64_t immediate,
-                       uint32_t line, uint32_t column, uint32_t *index_out) {
+                       uint32_t line, uint32_t column,
+                       uint64_t source_start_byte, uint64_t source_end_byte,
+                       uint32_t *index_out) {
     if (nodes == NULL || length == NULL || index_out == NULL ||
         *length >= capacity || *length >= UINT32_MAX) return 0;
     *index_out = (uint32_t)*length;
-    nodes[*length] = (ReaperIrNode){opcode, type, lhs, rhs, immediate, line, column};
+    nodes[*length] = (ReaperIrNode){
+        opcode, type, lhs, rhs, immediate, line, column,
+        source_start_byte, source_end_byte
+    };
     ++*length;
     return 1;
 }
@@ -40,6 +45,30 @@ static int parse_i64(const char *text, int64_t *value) {
         parsed < INT64_MIN || parsed > INT64_MAX) return 0;
     *value = (int64_t)parsed;
     return 1;
+}
+
+static int parse_negative_i64_literal(const char *text, int64_t *value) {
+    char *end = NULL;
+    uintmax_t magnitude;
+    const uintmax_t minimum_magnitude = (uintmax_t)INT64_MAX + UINTMAX_C(1);
+    if (text == NULL || value == NULL || text[0] == '\0') return 0;
+    errno = 0;
+    magnitude = strtoumax(text, &end, 10);
+    if (errno == ERANGE || end == text || end == NULL || *end != '\0' ||
+        magnitude != minimum_magnitude) return 0;
+    *value = INT64_MIN;
+    return 1;
+}
+
+static const ReaperAstNode *negative_literal_parent(
+    const ReaperAst *ast, size_t child_index) {
+    for (size_t i = child_index + 1u; i < ast->length; ++i) {
+        const ReaperAstNode *node = &ast->items[i];
+        if (node->kind == REAPER_AST_UNARY && node->left == child_index &&
+            node->text != NULL && strcmp(node->text, "-") == 0)
+            return node;
+    }
+    return NULL;
 }
 
 static int build_i64_ir(const ReaperAst *ast, ReaperIrNode **nodes_out,
@@ -76,13 +105,32 @@ static int build_i64_ir(const ReaperAst *ast, ReaperIrNode **nodes_out,
         uint32_t rhs = REAPER_IR_NO_VALUE;
         int64_t immediate = 0;
         ReaperIrOpcode opcode = REAPER_IR_OP_INVALID;
+        uint32_t source_line, source_column;
+        uint64_t source_start_byte = (uint64_t)node->source_start_byte;
+        uint64_t source_end_byte = (uint64_t)node->source_end_byte;
+        if (node->line > UINT32_MAX || node->column > UINT32_MAX ||
+            node->source_end_byte < node->source_start_byte) {
+            diagnostic_write(diagnostic, diagnostic_capacity,
+                             "source span exceeds the canonical IR representation");
+            goto fail;
+        }
+        source_line = (uint32_t)node->line;
+        source_column = (uint32_t)node->column;
 
         if (node->kind == REAPER_AST_INTEGER) {
             opcode = REAPER_IR_OP_CONST_I64;
             if (!parse_i64(node->text, &immediate)) {
-                diagnostic_write(diagnostic, diagnostic_capacity,
-                                 "integer literal is outside signed i64 range");
-                goto fail;
+                const ReaperAstNode *parent = negative_literal_parent(ast, index);
+                if (parent == NULL ||
+                    !parse_negative_i64_literal(node->text, &immediate)) {
+                    diagnostic_write(diagnostic, diagnostic_capacity,
+                                     "integer literal is outside signed i64 range");
+                    goto fail;
+                }
+                source_line = (uint32_t)parent->line;
+                source_column = (uint32_t)parent->column;
+                source_start_byte = (uint64_t)parent->source_start_byte;
+                source_end_byte = (uint64_t)parent->source_end_byte;
             }
         } else if (node->kind == REAPER_AST_UNARY) {
             if (node->left >= index) {
@@ -94,6 +142,12 @@ static int build_i64_ir(const ReaperAst *ast, ReaperIrNode **nodes_out,
                 mapped[index] = lhs;
                 continue;
             }
+            if (ast->items[node->left].kind == REAPER_AST_INTEGER &&
+                nodes[lhs].opcode == REAPER_IR_OP_CONST_I64 &&
+                nodes[lhs].immediate == INT64_MIN) {
+                mapped[index] = lhs;
+                continue;
+            }
             if (node->text == NULL || strcmp(node->text, "-") != 0) {
                 diagnostic_write(diagnostic, diagnostic_capacity,
                                  "only unary plus and minus are supported");
@@ -102,11 +156,12 @@ static int build_i64_ir(const ReaperAst *ast, ReaperIrNode **nodes_out,
             if (!add_ir_node(nodes, capacity, &length,
                              REAPER_IR_OP_CONST_I64, REAPER_IR_TYPE_I64,
                              REAPER_IR_NO_VALUE, REAPER_IR_NO_VALUE, -1,
-                             (uint32_t)node->line, (uint32_t)node->column, &rhs) ||
+                             source_line, source_column,
+                             source_start_byte, source_end_byte, &rhs) ||
                 !add_ir_node(nodes, capacity, &length,
                              REAPER_IR_OP_MUL_I64, REAPER_IR_TYPE_I64,
-                             lhs, rhs, 0, (uint32_t)node->line,
-                             (uint32_t)node->column, &output_index)) {
+                             lhs, rhs, 0, source_line, source_column,
+                             source_start_byte, source_end_byte, &output_index)) {
                 diagnostic_write(diagnostic, diagnostic_capacity, "i64 IR capacity exceeded");
                 goto fail;
             }
@@ -139,8 +194,9 @@ static int build_i64_ir(const ReaperAst *ast, ReaperIrNode **nodes_out,
         }
 
         if (!add_ir_node(nodes, capacity, &length, opcode, REAPER_IR_TYPE_I64,
-                         lhs, rhs, immediate, (uint32_t)node->line,
-                         (uint32_t)node->column, &output_index)) {
+                         lhs, rhs, immediate, source_line,
+                         source_column, source_start_byte, source_end_byte,
+                         &output_index)) {
             diagnostic_write(diagnostic, diagnostic_capacity, "i64 IR capacity exceeded");
             goto fail;
         }
@@ -153,9 +209,16 @@ static int build_i64_ir(const ReaperAst *ast, ReaperIrNode **nodes_out,
     }
     {
         uint32_t ignored_return_index = REAPER_IR_NO_VALUE;
-        if (!add_ir_node(nodes, capacity, &length, REAPER_IR_OP_RETURN,
+        const ReaperAstNode *root = &ast->items[ast->root];
+        if (root->line > UINT32_MAX || root->column > UINT32_MAX ||
+            root->source_end_byte < root->source_start_byte ||
+            !add_ir_node(nodes, capacity, &length, REAPER_IR_OP_RETURN,
                          REAPER_IR_TYPE_UNIT, mapped[ast->root],
-                         REAPER_IR_NO_VALUE, 0, 1u, 1u, &ignored_return_index)) {
+                         REAPER_IR_NO_VALUE, 0, (uint32_t)root->line,
+                         (uint32_t)root->column,
+                         (uint64_t)root->source_start_byte,
+                         (uint64_t)root->source_end_byte,
+                         &ignored_return_index)) {
             diagnostic_write(diagnostic, diagnostic_capacity, "i64 IR return node could not be added");
             goto fail;
         }
