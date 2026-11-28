@@ -177,3 +177,42 @@ install(TARGETS reaper_ffi ARCHIVE DESTINATION lib)
 install(TARGETS reaper_system ARCHIVE DESTINATION lib)
 install(TARGETS reaper_dabi64_desktop ARCHIVE DESTINATION lib)
 install(FILES include/reaper/ffi.h include/reaper/system.h include/reaper/dabi64_desktop.h include/reaper/architecture.h include/reaper/snapshot_audit.h include/reaper/system_features.h include/reaper/import.h include/reaper/backend.h DESTINATION include/reaper)
+
+
+# Keep assertions active for native conformance tests in Release configurations.
+set(_reaper_assert_test_targets
+ reaper-pytyliki-bridge-tests
+ reaper-lexer-tests
+ reaper-ir-tests
+ reaper-parser-tests
+ reaper-optimizer-tests
+ reaper-lower-tests
+ reaper-token-catalog-tests
+ reaper-evolution-tests
+ reaper-division-tests
+ reaper-capability-tests
+ reaper-import-backend-tests
+ reaper-backend-arithmetic-tests
+ reaper-hardware-tests
+ reaper-system-tests
+ reaper-dabi64-desktop-tests
+ reaper-command-palette-tests
+ reaper-lineage-tests
+ reaper-architecture-tests
+ reaper-snapshot-audit-tests
+ reaper-system-feature-tests
+ reaper-ffi-tests
+)
+if(MSVC)
+ foreach(_target IN LISTS _reaper_assert_test_targets)
+  if(TARGET ${_target})
+   target_compile_options(${_target} PRIVATE /UNDEBUG)
+  endif()
+ endforeach()
+else()
+ foreach(_target IN LISTS _reaper_assert_test_targets)
+  if(TARGET ${_target})
+   target_compile_options(${_target} PRIVATE -UNDEBUG)
+  endif()
+ endforeach()
+endif()
