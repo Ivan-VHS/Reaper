@@ -4,6 +4,10 @@ Reaper — язык системного программирования и л�
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
+> **Psychoporter 666** — точность архитектора × энергия исследователя × прослеживаемые доказательства. [Общий стандарт документации](https://github.com/Ivan-VHS/DAK/blob/main/docs/PSYCHOPORTER_DOCUMENTATION_STYLE_V1.md).  
+> **Редакционная редакция · 2026-11-28:** обновлены подача и навигация; авторство, условия лицензий и сторонняя атрибуция сохранены.
+
+
 <picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/dashboard.svg"><img src="assets/readme/dashboard-light.svg" alt="Язык Reaper и инструменты разработчика" width="100%"></picture>
 
 [![CI](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml) [![Apache-2.0](https://img.shields.io/github/license/Ivan-VHS/Reaper?style=flat-square)](LICENSE)
@@ -54,3 +58,7 @@ python -m unittest discover -s tests -v
 - [Общие стандарты экосистемы](https://github.com/Ivan-VHS/DAK/blob/main/docs/SHARED_STANDARDS.md)
 
 [Вклад в проект](CONTRIBUTING.md) · [Безопасность](SECURITY.md) · [Apache-2.0](LICENSE)
+
+## Связанное математическое исследование
+
+[Предложение Теории Вьюненко K3 v0.4.0](https://github.com/Ivan-VHS/Kaskad/pull/36) документирует CRT-разложение пополнения с основанием 1000 и единственные бесконечные позиционные последовательности коэффициентов. Это внешняя математическая ссылка: она не добавляет синтаксис Reaper, зависимость runtime, компилятора, стандартной библиотеки, ABI или сборки. Подробнее — [в локальной справке](docs/VYUNENKO_K3_RESEARCH_REFERENCE.md).
