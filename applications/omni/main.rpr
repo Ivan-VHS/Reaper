@@ -1,0 +1,14 @@
+# Omni — DAK workspace and service overview.
+import "domain.rpr" as omni
+
+make product_total := omni["product_count"]()
+make ready_services := 3
+make required_services := 4
+make readiness := omni["readiness_percent"](ready_services, required_services)
+make launch_state := omni["launch_decision"](true, true, true, false)
+
+emit "Omni — unified DAK workspace"
+emit "Registered products: " ++ text(product_total)
+emit "Service readiness: " ++ text(readiness) ++ "%"
+emit "Omni launch state: " ++ launch_state
+emit "Mode: local-first; host effects require explicit grants"

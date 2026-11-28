@@ -1,0 +1,58 @@
+# Reaper system functions v1.
+# Import this module explicitly; no system capability is enabled implicitly.
+
+export craft contract_graph_check(contracts) {
+    yield _contract_graph_check(contracts)
+}
+
+export craft arena_slot(capacity_bytes, function) {
+    yield _arena_slot(function, capacity_bytes)
+}
+
+export craft worker_budget(budget_ms, memory_bytes, function, arguments, state) {
+    yield _worker_budget(budget_ms, memory_bytes, function, arguments, state)
+}
+
+export craft diff_reconcile(before, after, key_field) {
+    yield _diff_reconcile(before, after, key_field)
+}
+
+export craft reconcile_apply(current, plan, invariant) {
+    yield _reconcile_apply(current, plan, invariant)
+}
+
+export craft ephemeral_match(left, right) {
+    yield _ephemeral_match(left, right)
+}
+
+export craft guarded_mutation(current, candidate, mode, validator, token) {
+    yield _guarded_mutation(current, candidate, mode, validator, token)
+}
+
+export craft revision_log() {
+    yield _revision_log()
+}
+
+export craft lease_window(start_ms, days, now_ms) {
+    yield _lease_window(start_ms, days, now_ms)
+}
+
+export craft latency_measure(label, function, arguments) {
+    yield _latency_measure(label, function, arguments)
+}
+
+export craft latency_report() {
+    yield _latency_report()
+}
+
+export craft latency_reset() {
+    yield _latency_reset()
+}
+
+export craft local_only_check(enabled, effects, imports) {
+    yield _local_only_check(enabled, effects, imports)
+}
+
+export craft rollback_plan_check(migration, rollback, fixtures) {
+    yield _rollback_plan_check(migration, rollback, fixtures)
+}

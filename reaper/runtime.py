@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import time
 from dataclasses import dataclass
 from typing import Any, Callable
 
@@ -17,6 +18,7 @@ from pathlib import Path
 from .debugger import RuntimeDebugger
 from .ffi import CAbiLibrary, NativeFunction, PytylikiBridge
 from .memory import HeapLimitError, MemoryManager, RegionError
+from .system_functions import OverrideAuthority, ReaperSystemFunctions, WorkerBudgetExceeded
 from .modules import ModuleError, ModuleLoader
 from .resources import ResourceError, ResourceHandle, ResourceManager
 from .token_catalog import token_catalog, token_info, token_is_reserved
@@ -93,6 +95,7 @@ class Interpreter:
         max_open_resources: int = 64,
         debugger: RuntimeDebugger | None = None,
         consent_authority: ConsentAuthority | None = None,
+        override_authority: OverrideAuthority | None = None,
     ) -> None:
         if (
             max_steps < 1
@@ -116,6 +119,8 @@ class Interpreter:
         self.module_loader = ModuleLoader(self)
         self.debugger = debugger
         self.consent_authority = consent_authority
+        self.system_functions = ReaperSystemFunctions(self, override_authority)
+        self._worker_budgets: list[dict[str, int]] = []
         self.call_stack: list[str] = []
         self._active_vm: Any = None
         self._current_environment: Environment | None = None
@@ -159,6 +164,12 @@ class Interpreter:
 
     def _tick(self, token: Token) -> None:
         self.steps += 1
+        if self._worker_budgets:
+            budget = self._worker_budgets[-1]
+            if time.monotonic_ns() > budget["deadline_ns"]:
+                raise WorkerBudgetExceeded(
+                    f"worker exceeded its cooperative {budget['budget_ms']} ms time budget"
+                )
         if self.steps > self.max_steps:
             raise ExecutionLimitError(
                 f"{self.filename}:{token.line}:{token.column}: execution stopped after "
@@ -586,6 +597,21 @@ class Interpreter:
         register("token_catalog", lambda *group: token_catalog(group[0] if group else None), 0, 1)
         register("token_info", token_info, 1, 1)
         register("token_is_reserved", token_is_reserved, 1, 1)
+
+        register("_contract_graph_check", self.system_functions.contract_graph_check, 1, 1)
+        register("_arena_slot", self.system_functions.arena_slot, 2, 2)
+        register("_worker_budget", self.system_functions.worker_budget, 5, 5)
+        register("_diff_reconcile", self.system_functions.diff_reconcile, 3, 3)
+        register("_reconcile_apply", self.system_functions.reconcile_apply, 3, 3)
+        register("_ephemeral_match", self.system_functions.ephemeral_match, 2, 2)
+        register("_guarded_mutation", self.system_functions.guarded_mutation, 5, 5)
+        register("_revision_log", self.system_functions.revision_log, 0, 0)
+        register("_lease_window", self.system_functions.lease_window, 3, 3)
+        register("_latency_measure", self.system_functions.latency_measure, 3, 3)
+        register("_latency_report", self.system_functions.latency_report, 0, 0)
+        register("_latency_reset", self.system_functions.latency_reset, 0, 0)
+        register("_local_only_check", self.system_functions.local_only_check, 3, 3)
+        register("_rollback_plan_check", self.system_functions.rollback_plan_check, 3, 3)
 
         def consent_check(token: Any, subject: Any, purpose: Any, scope: Any) -> bool:
             if self.consent_authority is None:

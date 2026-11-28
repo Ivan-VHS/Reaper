@@ -37,12 +37,20 @@ class Spring1D:
 
     def __init__(self, initial: float = 0.0, stiffness: float = 240.0,
                  damping: float = 22.0, mass: float = 1.0) -> None:
-        self.value = float(initial)
-        self.target = float(initial)
+        initial_value = float(initial)
+        stiffness_value = float(stiffness)
+        damping_value = float(damping)
+        mass_value = float(mass)
+        if not all(math.isfinite(value) for value in (
+            initial_value, stiffness_value, damping_value, mass_value
+        )):
+            raise ValueError("Spring parameters must be finite")
+        self.value = initial_value
+        self.target = initial_value
         self.velocity = 0.0
-        self.stiffness = max(1.0, float(stiffness))
-        self.damping = max(0.0, float(damping))
-        self.mass = max(0.1, float(mass))
+        self.stiffness = max(1.0, stiffness_value)
+        self.damping = max(0.0, damping_value)
+        self.mass = max(0.1, mass_value)
 
     def set_target(self, target: float) -> None:
         target = float(target)
@@ -63,9 +71,14 @@ class Spring1D:
         dt = float(dt)
         if not math.isfinite(dt) or dt <= 0.0:
             return self.value
-        k = max(1.0, float(self.stiffness if stiffness is None else stiffness))
-        c = max(0.0, float(self.damping if damping is None else damping))
-        m = max(0.1, float(self.mass if mass is None else mass))
+        k = float(self.stiffness if stiffness is None else stiffness)
+        c = float(self.damping if damping is None else damping)
+        m = float(self.mass if mass is None else mass)
+        if not all(math.isfinite(value) for value in (k, c, m)):
+            raise ValueError("Spring parameters must be finite")
+        k = max(1.0, k)
+        c = max(0.0, c)
+        m = max(0.1, m)
         h = min(dt, 0.032) / 2.0
         for _ in range(2):
             acceleration = (-k * (self.value - self.target) - c * self.velocity) / m
@@ -107,16 +120,22 @@ def _settings_path(app_key: str) -> Path:
     return config_home / app_key / "ui-motion.json"
 
 
+def _boolean_preference(payload: dict[str, object], key: str) -> bool:
+    """Accept JSON booleans only; strings such as "false" must not enable a mode."""
+    value = payload.get(key, False)
+    return value if isinstance(value, bool) else False
+
+
 def load_preferences(app_key: str) -> MotionPreferences:
     try:
         payload = json.loads(_settings_path(app_key).read_text(encoding="utf-8"))
         if not isinstance(payload, dict):
             return MotionPreferences()
         return MotionPreferences(
-            reduce_motion=bool(payload.get("reduce_motion", False)),
-            eco_visuals=bool(payload.get("eco_visuals", False)),
-            sync_to_bpm=bool(payload.get("sync_to_bpm", False)),
-            expressive_motion=bool(payload.get("expressive_motion", False)),
+            reduce_motion=_boolean_preference(payload, "reduce_motion"),
+            eco_visuals=_boolean_preference(payload, "eco_visuals"),
+            sync_to_bpm=_boolean_preference(payload, "sync_to_bpm"),
+            expressive_motion=_boolean_preference(payload, "expressive_motion"),
         )
     except (OSError, ValueError, TypeError):
         return MotionPreferences()

@@ -1,0 +1,143 @@
+# Sparse line index for large Reaper source buffers.
+# Each entry is [one_based_line, codepoint_offset_of_line_start].
+# CRLF is one line break; standalone CR and LF are also accepted.
+
+craft build_source_line_index(source) {
+    vary index := 0
+    vary line := 1
+    vary entries := [[1, 0]]
+    make source_length := size(source)
+
+    loop while index < source_length {
+        make char := source[index]
+        when char == "\r" {
+            when index + 1 < source_length and source[index + 1] == "\n" {
+                change index := index + 2
+            } otherwise {
+                change index := index + 1
+            }
+            change line := line + 1
+            change entries := push(entries, [line, index])
+        } otherwise {
+            when char == "\n" {
+                change index := index + 1
+                change line := line + 1
+                change entries := push(entries, [line, index])
+            } otherwise {
+                change index := index + 1
+            }
+        }
+    }
+    yield entries
+}
+
+craft source_line_count(line_index) {
+    when size(line_index) == 0 { yield 0 }
+    yield line_index[size(line_index) - 1][0]
+}
+
+craft source_line_for_offset(source, line_index, offset) {
+    make source_length := size(source)
+    when offset < 0 or offset > source_length {
+        yield ["ERR", "source offset outside buffer", offset]
+    }
+    when size(line_index) == 0 {
+        yield ["ERR", "line index is empty"]
+    }
+
+    vary low := 0
+    vary high := size(line_index) - 1
+    vary best := 0
+    loop while low <= high {
+        make middle := low + (high - low) // 2
+        when line_index[middle][1] <= offset {
+            change best := middle
+            change low := middle + 1
+        } otherwise {
+            change high := middle - 1
+        }
+    }
+
+    yield ["OK", [line_index[best][0], offset - line_index[best][1] + 1]]
+}
+
+craft source_line_bounds(source, line_index, line_number) {
+    when line_number < 1 or line_number > size(line_index) {
+        yield ["ERR", "line number outside source", line_number]
+    }
+    make start := line_index[line_number - 1][1]
+    vary finish := size(source)
+    when line_number < size(line_index) {
+        change finish := line_index[line_number][1]
+    }
+
+    when finish > start and source[finish - 1] == "\n" {
+        change finish := finish - 1
+        when finish > start and source[finish - 1] == "\r" {
+            change finish := finish - 1
+        }
+    } otherwise {
+        when finish > start and source[finish - 1] == "\r" {
+            change finish := finish - 1
+        }
+    }
+    yield ["OK", [start, finish]]
+}
+
+craft source_line_text(source, line_index, line_number) {
+    make bounds := source_line_bounds(source, line_index, line_number)
+    when bounds[0] != "OK" { yield bounds }
+    make start := bounds[1][0]
+    make finish := bounds[1][1]
+    vary offset := start
+    vary value := ""
+    loop while offset < finish {
+        change value := value ++ source[offset]
+        change offset := offset + 1
+    }
+    yield ["OK", value]
+}
+
+craft source_offset_at_line_column(source, line_index, line_number, column) {
+    when column < 1 {
+        yield ["ERR", "column must be one-based", column]
+    }
+    make bounds := source_line_bounds(source, line_index, line_number)
+    when bounds[0] != "OK" { yield bounds }
+    make start := bounds[1][0]
+    make finish := bounds[1][1]
+    make offset := start + column - 1
+    when offset > finish {
+        yield ["ERR", "column outside line", line_number, column]
+    }
+    yield ["OK", offset]
+}
+
+make lf_source := "alpha\nbeta\ngamma"
+make lf_index := build_source_line_index(lf_source)
+assert(lf_index == [[1, 0], [2, 6], [3, 11]], "LF line index mismatch")
+assert(source_line_count(lf_index) == 3, "LF line count mismatch")
+assert(source_line_for_offset(lf_source, lf_index, 0) == ["OK", [1, 1]], "first line start mismatch")
+assert(source_line_for_offset(lf_source, lf_index, 6) == ["OK", [2, 1]], "second line start mismatch")
+assert(source_line_for_offset(lf_source, lf_index, 10) == ["OK", [2, 5]], "second line interior mismatch")
+assert(source_line_for_offset(lf_source, lf_index, 16) == ["OK", [3, 6]], "EOF location mismatch")
+assert(source_line_for_offset(lf_source, lf_index, 17)[0] == "ERR", "offset past EOF accepted")
+assert(source_line_text(lf_source, lf_index, 2) == ["OK", "beta"], "line extraction mismatch")
+assert(source_line_text(lf_source, lf_index, 4)[0] == "ERR", "missing line accepted")
+assert(source_offset_at_line_column(lf_source, lf_index, 3, 3) == ["OK", 13], "line/column to offset mismatch")
+assert(source_offset_at_line_column(lf_source, lf_index, 3, 6) == ["OK", 16], "EOF column must be accepted")
+assert(source_offset_at_line_column(lf_source, lf_index, 3, 7)[0] == "ERR", "column past line accepted")
+
+make crlf_source := "one\r\ntwo\r\n"
+make crlf_index := build_source_line_index(crlf_source)
+assert(crlf_index == [[1, 0], [2, 5], [3, 10]], "CRLF line index mismatch")
+assert(source_line_text(crlf_source, crlf_index, 1) == ["OK", "one"], "CRLF first line extraction mismatch")
+assert(source_line_text(crlf_source, crlf_index, 2) == ["OK", "two"], "CRLF second line extraction mismatch")
+assert(source_line_text(crlf_source, crlf_index, 3) == ["OK", ""], "trailing newline must preserve final empty line")
+
+make cr_source := "first\rsecond"
+make cr_index := build_source_line_index(cr_source)
+assert(cr_index == [[1, 0], [2, 6]], "standalone CR line index mismatch")
+assert(source_line_text(cr_source, cr_index, 1) == ["OK", "first"], "standalone CR trimming mismatch")
+
+emit "SELFHOST_LINE_INDEX_OK"
