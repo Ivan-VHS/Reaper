@@ -16,6 +16,24 @@ int main(void) {
     assert(reaper_v1_eval_i64("84 / 2", 6u, &result,
                               diagnostic, sizeof diagnostic) == REAPER_ABI_OK);
     assert(result == 42);
+    {
+        const char minimum[] = "-9223372036854775808";
+        assert(reaper_v1_eval_i64(minimum, sizeof(minimum) - 1u, &result,
+                                  diagnostic, sizeof diagnostic) == REAPER_ABI_OK);
+        assert(result == INT64_MIN);
+    }
+    {
+        const char below_minimum[] = "-9223372036854775809";
+        assert(reaper_v1_eval_i64(below_minimum, sizeof(below_minimum) - 1u, &result,
+                                  diagnostic, sizeof diagnostic) == REAPER_ABI_UNSUPPORTED_EXPRESSION);
+    }
+    {
+        const char negate_minimum[] = "--9223372036854775808";
+        result = 987;
+        assert(reaper_v1_eval_i64(negate_minimum, sizeof(negate_minimum) - 1u, &result,
+                                  diagnostic, sizeof diagnostic) == REAPER_ABI_ARITHMETIC_ERROR);
+        assert(result == 987);
+    }
 
     result = 987;
     assert(reaper_v1_eval_i64("9223372036854775807 + 1", 23u, &result,
