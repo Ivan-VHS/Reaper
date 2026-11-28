@@ -58,3 +58,7 @@ python -m unittest discover -s tests -v
 - [生态共享标准](https://github.com/Ivan-VHS/DAK/blob/main/docs/SHARED_STANDARDS.md)
 
 [贡献指南](CONTRIBUTING.md) · [安全策略](SECURITY.md) · [Apache-2.0 许可证](LICENSE)
+
+## 相关数学研究
+
+[维尤年科 K3 理论 v0.4.0 提案](https://github.com/Ivan-VHS/Kaskad/pull/36)记录了基数 1000 完备化的 CRT 分解及唯一的无限位置系数序列。这只是外部数学参考；不会增加 Reaper 语法、运行时、编译器、标准库、ABI 或构建依赖。详见[本地研究说明](docs/VYUNENKO_K3_RESEARCH_REFERENCE.md)。
