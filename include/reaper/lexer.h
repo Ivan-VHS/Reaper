@@ -27,6 +27,8 @@ typedef struct {
     char *text;
     size_t line;
     size_t column;
+    size_t source_start_byte;
+    size_t source_end_byte;
 } ReaperToken;
 
 typedef struct {
