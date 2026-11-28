@@ -116,7 +116,7 @@ void reaper_source_sha256(const void *data, size_t length,
     if (digest == NULL || (data == NULL && length != 0u)) return;
     sha256_init(&sha);
     sha256_update(&sha, (const uint8_t *)data, length);
-    total_bits = (uint64_t)length * UINT64_C(8) + sha.bit_count;
+    total_bits = (uint64_t)length * UINT64_C(8);
     sha.block[sha.used++] = UINT8_C(0x80);
     if (sha.used > 56u) {
         while (sha.used < 64u) sha.block[sha.used++] = 0u;
