@@ -4,6 +4,10 @@ Reaper 是一款面向编译器工具、嵌入式软件和硬件相关程序的�
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
+> **Psychoporter 666** — 架构的精确 × 探索的能量 × 可追溯的证据。[共享文档规范](${styleUrl})。  
+> **编辑修订 · 2026-11-28：** 更新了文档呈现与导航；保留原有作者身份、许可证条款及第三方归属信息。
+
+
 <picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/dashboard.svg"><img src="assets/readme/dashboard-light.svg" alt="Reaper 语言与开发工具" width="100%"></picture>
 
 [![CI](https://img.shields.io/github/actions/workflow/status/Ivan-VHS/Reaper/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/Ivan-VHS/Reaper/actions/workflows/ci.yml) [![Apache-2.0](https://img.shields.io/github/license/Ivan-VHS/Reaper?style=flat-square)](LICENSE)
