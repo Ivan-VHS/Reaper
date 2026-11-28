@@ -20,6 +20,8 @@ This is an architecture contract. It does not claim that the current reference r
 
 The Kaskad pipeline must not invoke the Python reference runtime, Node/JavaScript, shell scripts, or any other external application-language runtime. The existing Python reference runtime may remain a temporary semantics oracle during migration, but is not an accepted production dependency.
 
+The current AOT path also emits C17 and delegates compilation to a host C toolchain. That generated-C path is not compliant with this production boundary and must not be used by Kaskad jobs. The accepted target is Reaper-owned bytecode/VM execution or a direct native backend that does not generate or execute a third application language.
+
 The current native AOT subset is not yet sufficient for the required data structures and workflow. Before activation, Reaper must provide native execution for the pipeline subset, including:
 
 1. Typed records and versioned serialization for theory snapshots and evidence envelopes.
