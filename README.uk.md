@@ -58,3 +58,7 @@ python -m unittest discover -s tests -v
 - [Спільні стандарти екосистеми](https://github.com/Ivan-VHS/DAK/blob/main/docs/SHARED_STANDARDS.md)
 
 [Внесок у проєкт](CONTRIBUTING.md) · [Безпека](SECURITY.md) · [Apache-2.0](LICENSE)
+
+## Пов'язане математичне дослідження
+
+[Пропозиція Теорії В'юненка K3 v0.4.0](https://github.com/Ivan-VHS/Kaskad/pull/36) документує CRT-розклад поповнення з основою 1000 та єдині нескінченні позиційні послідовності коефіцієнтів. Це зовнішнє математичне посилання: воно не додає синтаксису Reaper, залежності середовища виконання, компілятора, стандартної бібліотеки, ABI або збірки. Докладніше — [у локальній довідці](docs/VYUNENKO_K3_RESEARCH_REFERENCE.md).
