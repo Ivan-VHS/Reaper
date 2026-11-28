@@ -4,7 +4,7 @@ Reaper is a systems-programming language and local development workbench for com
 
 [English](README.md) · [Українська](README.uk.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
-> **Psychoporter 666** — architectural precision × exploratory energy × traceable evidence. [Shared documentation style](${styleUrl}).  
+> **Psychoporter 666** — architectural precision × exploratory energy × traceable evidence. [Shared documentation style](https://github.com/Ivan-VHS/DAK/blob/main/docs/PSYCHOPORTER_DOCUMENTATION_STYLE_V1.md).  
 > **Editorial revision · 2026-11-28:** presentation and navigation updated; original authorship, license terms and third-party attribution are retained.
 
 
