@@ -47,3 +47,7 @@ Treat the Python reference runtime, native compiler track, System Runtime host A
 - [OPlague GPU telemetry v1 ingestion](OPLAGE_GPU_TELEMETRY.md)
 
 - [System Functions v1](SYSTEM_FUNCTIONS.md) — bounded runtime APIs, guarantees and implementation limits.
+
+## Repository structure
+
+- [Repository structure profile](REPOSITORY_STRUCTURE_PROFILE.md) — maps the shared standard to Reaper language sources, runtime/compiler, native interfaces, registries and tests.
