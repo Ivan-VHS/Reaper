@@ -73,7 +73,7 @@ cmake --build build-native --parallel
 ctest --test-dir build-native --output-on-failure
 \`\`\`
 
-The bridge verifies provider ABI version, native snapshot contract version and structure size, topology generation/fingerprint, array bounds, candidate ordering and the selected candidate. It only returns a placement proposal; applying processor affinity is a separate caller-owned operation.
+The bridge verifies provider ABI version, native snapshot contract version and structure size, topology generation/fingerprint, array bounds, candidate ordering and the selected candidate. It exposes the native range validator through the same opt-in provider. The cross-repository test follows source -> typed IR -> output-range/DMA lifecycle validation -> host C17 emission -> PPF placement proposal -> temporary affinity application to the test thread -> compiled fixture execution -> affinity restoration. Affinity application is performed by the test/runtime adapter only; the collector and PPF function remain read-only/pure.
 
 ## Qualification boundaries
 
