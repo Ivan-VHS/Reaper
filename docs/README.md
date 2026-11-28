@@ -8,6 +8,7 @@ Start with the [project README](../README.md) for installation, first commands a
 - [Features and maturity](FEATURES.md)
 - [Psychoporter Engineering Code function categories](FUNCTION_CATEGORIES_666.md)
 - [Architecture](ARCHITECTURE.md)
+- [Early Mathematics Semantics v1](EARLY_MATHEMATICS_SEMANTICS_V1.md) — exact quantity, counting, part–whole, rational, measurement, geometry, pattern and time semantics; specified only.
 - [Reaper System Features v1](REAPER_SYSTEM_FEATURES_V1.md) — ten bounded systems-language contracts and their implementation maturity.
 - [System Features ADR](ADR_SYSTEM_FEATURES_V1.md) — native ABI decisions and language integration gates.
 - [Snapshot integrity audit capability](SNAPSHOT_INTEGRITY_CAPABILITY.md) — bounded, read-only aggregate snapshot checks and transient no-persist comparison.
