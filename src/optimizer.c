@@ -115,7 +115,9 @@ static int same_node(const ReaperIrNode *a, const ReaperIrNode *b) {
         a->lhs == b->lhs && a->rhs == b->rhs &&
         a->immediate == b->immediate &&
         a->source_line == b->source_line &&
-        a->source_column == b->source_column;
+        a->source_column == b->source_column &&
+        a->source_start_byte == b->source_start_byte &&
+        a->source_end_byte == b->source_end_byte;
 }
 
 int reaper_ir_optimize_fixed_point(
