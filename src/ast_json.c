@@ -23,7 +23,8 @@ static int write_string(FILE *out, const char *s) {
 
 static int valid_node(const ReaperAst *ast, size_t i) {
     const ReaperAstNode *n = &ast->items[i];
-    if (!n->text || strcmp(reaper_ast_kind_name(n->kind), "invalid") == 0) return 0;
+    if (!n->text || n->source_end_byte < n->source_start_byte ||
+        strcmp(reaper_ast_kind_name(n->kind), "invalid") == 0) return 0;
     switch (n->kind) {
         case REAPER_AST_INTEGER: case REAPER_AST_DECIMAL:
         case REAPER_AST_STRING: case REAPER_AST_BOOLEAN:
@@ -55,7 +56,11 @@ int reaper_ast_write_json(const ReaperAst *ast, FILE *output) {
         if (n->right == REAPER_AST_NO_NODE) {
             if (fputs(",\"right\":null", output) == EOF) return 0;
         } else if (fprintf(output, ",\"right\":%u", n->right) < 0) return 0;
-        if (fprintf(output, ",\"line\":%zu,\"column\":%zu}", n->line, n->column) < 0) return 0;
+        if (fprintf(output,
+                ",\"line\":%zu,\"column\":%zu,"
+                "\"source_start_byte\":%zu,\"source_end_byte\":%zu}",
+                n->line, n->column, n->source_start_byte,
+                n->source_end_byte) < 0) return 0;
     }
     return fputs("]}\n", output) != EOF && !ferror(output);
 }
