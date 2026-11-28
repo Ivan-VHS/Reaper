@@ -15,6 +15,9 @@ static void json_test(void){
  FILE *f=tmpfile();assert(f);assert(reaper_ast_write_json(&a,f));assert(fflush(f)==0);assert(fseek(f,0,SEEK_SET)==0);
  char b[1024];size_t n=fread(b,1,sizeof b-1,f);b[n]='\0';
  assert(strstr(b,"\"kind\":\"binary\""));assert(strstr(b,"\"text\":\"a\\\"b\""));
+ assert(strstr(b,"\"source_start_byte\":0"));
+ assert(strstr(b,"\"source_end_byte\":"));
+
  fclose(f);reaper_ast_free(&a);
 }
 int main(void){precedence_test();power_test();bridge_test();legacy_flow_test();literal_test();trailing_test();paren_test();json_test();puts("native parser tests: 8 groups passed");return 0;}
