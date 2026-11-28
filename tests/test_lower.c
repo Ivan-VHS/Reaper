@@ -52,6 +52,61 @@ static void lowers_nested_expression_and_folds(void) {
     reaper_ast_free(&ast);
 }
 
+static void lowers_all_checked_i64_arithmetic(void) {
+    const char source[] = "7 - 2 * 3 + 8 / 2";
+    ReaperAst ast;
+    ReaperParseError parse_error;
+    assert(parse_source(source, &ast, &parse_error));
+    ReaperIrNode nodes[32];
+    size_t length = 0u;
+    ReaperIrError error;
+    int64_t values[32] = {0}, result = 0;
+    assert(reaper_lower_ast_to_ir(&ast, nodes, 32u, &length, &error));
+    assert(nodes[3].opcode == REAPER_IR_OP_MUL_I64);
+    assert(nodes[4].opcode == REAPER_IR_OP_SUB_I64);
+    assert(nodes[7].opcode == REAPER_IR_OP_DIV_I64);
+    assert(nodes[8].opcode == REAPER_IR_OP_ADD_I64);
+    assert(nodes[length - 1u].source_start_byte == 0u);
+    assert(nodes[length - 1u].source_end_byte == sizeof(source) - 1u);
+    ReaperIrModule module = {nodes, length};
+    assert(reaper_ir_execute_i64(&module, values, 32u, &result, &error));
+    assert(result == 5);
+    reaper_ast_free(&ast);
+}
+
+static void lowers_negative_i64_minimum_without_overflow(void) {
+    const char source[] = "-9223372036854775808";
+    ReaperAst ast;
+    ReaperParseError parse_error;
+    assert(parse_source(source, &ast, &parse_error));
+    ReaperIrNode nodes[8];
+    size_t length = 0u;
+    ReaperIrError error;
+    int64_t values[8] = {0}, result = 0;
+    assert(reaper_lower_ast_to_ir(&ast, nodes, 8u, &length, &error));
+    assert(length == 2u);
+    assert(nodes[0].opcode == REAPER_IR_OP_CONST_I64);
+    assert(nodes[0].immediate == INT64_MIN);
+    assert(nodes[0].source_start_byte == 0u);
+    assert(nodes[0].source_end_byte == sizeof(source) - 1u);
+    ReaperIrModule module = {nodes, length};
+    assert(reaper_ir_execute_i64(&module, values, 8u, &result, &error));
+    assert(result == INT64_MIN);
+    reaper_ast_free(&ast);
+}
+
+static void rejects_negative_literal_below_i64_minimum(void) {
+    ReaperAst ast;
+    ReaperParseError parse_error;
+    assert(parse_source("-9223372036854775809", &ast, &parse_error));
+    ReaperIrNode nodes[8];
+    size_t length = 0u;
+    ReaperIrError error;
+    assert(!reaper_lower_ast_to_ir(&ast, nodes, 8u, &length, &error));
+    assert(strstr(error.message, "outside signed i64") != NULL);
+    reaper_ast_free(&ast);
+}
+
 static void rejects_unsupported_syntax(void) {
     ReaperAst ast;
     ReaperParseError parse_error;
@@ -91,9 +146,12 @@ static void rejects_out_of_range_integer(void) {
 int main(void) {
     lowers_integer_addition();
     lowers_nested_expression_and_folds();
+    lowers_all_checked_i64_arithmetic();
+    lowers_negative_i64_minimum_without_overflow();
+    rejects_negative_literal_below_i64_minimum();
     rejects_unsupported_syntax();
     rejects_small_output();
     rejects_out_of_range_integer();
-    puts("native lowering tests: 5 groups passed");
+    puts("native lowering tests: 8 groups passed");
     return 0;
 }
