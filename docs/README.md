@@ -51,3 +51,7 @@ Treat the Python reference runtime, native compiler track, System Runtime host A
 - [OPlague GPU telemetry v1 ingestion](OPLAGE_GPU_TELEMETRY.md)
 
 - [System Functions v1](SYSTEM_FUNCTIONS.md) — bounded runtime APIs, guarantees and implementation limits.
+
+## Related mathematical research
+
+- [Vyunenko Theory K3 v0.4.0 — external research reference](VYUNENKO_K3_RESEARCH_REFERENCE.md) — a mathematical note on the radix-1000 completion; no Reaper runtime or ABI dependency.
