@@ -29,6 +29,16 @@ typedef struct {
                          const pl_ppf_telemetry *telemetry,
                          uint64_t telemetry_count,
                          pl_ppf_report *out);
+    int32_t (*range_validate)(const pl_native_range *range);
+    int32_t (*register_validate)(const pl_native_register *reg,
+                                 uint64_t offset, uint32_t is_write,
+                                 uint64_t value, uint64_t expected_generation,
+                                 uint64_t *absolute_address);
+    int32_t (*dma_transition)(pl_dma_resource *resource,
+                              uint64_t expected_generation,
+                              pl_dma_state next_state);
+    int32_t (*dma_cpu_access_validate)(const pl_dma_resource *resource,
+                                       uint64_t expected_generation);
 } ReaperPytylikiProvider;
 
 /* The caller supplies trusted, explicitly acquired function pointers.
@@ -36,6 +46,10 @@ typedef struct {
 ReaperPytylikiStatus reaper_pytyliki_snapshot_read(
     const ReaperPytylikiProvider *provider,
     pl_ni_snapshot *out
+);
+
+ReaperPytylikiStatus reaper_pytyliki_validate_range(
+    const ReaperPytylikiProvider *provider, const pl_native_range *range
 );
 
 ReaperPytylikiStatus reaper_pytyliki_plan_placement(
