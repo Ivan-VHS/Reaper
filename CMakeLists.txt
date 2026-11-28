@@ -64,8 +64,14 @@ if(REAPER_BUILD_TESTS)
   if(NOT EXISTS "${REAPER_PYTYLIKI_LIBRARY}")
    message(FATAL_ERROR "The native bridge CI requires REAPER_PYTYLIKI_LIBRARY to exercise the real Pytyliki ABI")
   endif()
-  add_executable(reaper-pytyliki-bridge-tests tests/test_pytyliki_bridge.c)
+  add_executable(reaper-pytyliki-bridge-tests
+   tests/test_pytyliki_bridge.c
+   tests/fixtures/host_backend_fixture.c
+  )
   target_link_libraries(reaper-pytyliki-bridge-tests PRIVATE reaper_core "${REAPER_PYTYLIKI_LIBRARY}")
+  target_compile_definitions(reaper-pytyliki-bridge-tests PRIVATE
+   REAPER_PYTYLIKI_BRIDGE_FIXTURE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/host_backend_fixture.c"
+  )
   get_filename_component(REAPER_PYTYLIKI_LIBRARY_DIR "${REAPER_PYTYLIKI_LIBRARY}" DIRECTORY)
   set_target_properties(reaper-pytyliki-bridge-tests PROPERTIES BUILD_RPATH "${REAPER_PYTYLIKI_LIBRARY_DIR}")
   add_test(NAME native-pytyliki-hardware-bridge COMMAND reaper-pytyliki-bridge-tests)
