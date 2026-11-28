@@ -10,7 +10,7 @@ endif()
 if(MSVC)
  add_compile_options(/utf-8)
 endif()
-add_library(reaper_core STATIC src/lexer.c src/ir.c src/parser.c src/ast_json.c src/optimizer.c src/lower.c src/evolution.c src/token_catalog.c src/division.c src/capability_suite.c src/hardware.c src/command_palette.c src/lineage.c src/architecture.c src/snapshot_audit.c src/system_features.c)
+add_library(reaper_core STATIC src/lexer.c src/ir.c src/parser.c src/ast_json.c src/optimizer.c src/lower.c src/evolution.c src/token_catalog.c src/division.c src/capability_suite.c src/hardware.c src/command_palette.c src/lineage.c src/architecture.c src/snapshot_audit.c src/system_features.c src/import.c src/backend.c)
 target_include_directories(reaper_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_library(reaper_system STATIC src/system.c)
@@ -74,6 +74,16 @@ if(REAPER_BUILD_TESTS)
  add_executable(reaper-capability-tests tests/test_capability_suite.c)
  target_link_libraries(reaper-capability-tests PRIVATE reaper_core)
  add_test(NAME native-capabilities COMMAND reaper-capability-tests)
+ add_executable(reaper-import-backend-tests
+  tests/test_import_backend.c
+  tests/fixtures/host_backend_fixture.c
+ )
+ target_link_libraries(reaper-import-backend-tests PRIVATE reaper_core)
+ target_compile_definitions(reaper-import-backend-tests PRIVATE
+  REAPER_HOST_BACKEND_FIXTURE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/host_backend_fixture.c"
+ )
+ add_test(NAME native-import-backend-qualification COMMAND reaper-import-backend-tests)
+
  add_executable(reaper-hardware-tests tests/test_hardware.c)
  target_link_libraries(reaper-hardware-tests PRIVATE reaper_core)
  add_test(NAME native-hardware COMMAND reaper-hardware-tests)
@@ -133,4 +143,4 @@ install(TARGETS reaper-c RUNTIME DESTINATION bin)
 install(TARGETS reaper_ffi ARCHIVE DESTINATION lib)
 install(TARGETS reaper_system ARCHIVE DESTINATION lib)
 install(TARGETS reaper_dabi64_desktop ARCHIVE DESTINATION lib)
-install(FILES include/reaper/ffi.h include/reaper/system.h include/reaper/dabi64_desktop.h include/reaper/architecture.h include/reaper/snapshot_audit.h include/reaper/system_features.h DESTINATION include/reaper)
+install(FILES include/reaper/ffi.h include/reaper/system.h include/reaper/dabi64_desktop.h include/reaper/architecture.h include/reaper/snapshot_audit.h include/reaper/system_features.h include/reaper/import.h include/reaper/backend.h DESTINATION include/reaper)
