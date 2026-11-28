@@ -1,5 +1,9 @@
 # Reaper documentation
 
+> **Editorial revision · 2026-11-28:** Documentation navigation and editorial presentation refreshed; existing authorship, licenses and upstream notices remain unchanged.
+> **Shared editorial profile:** [Psychoporter 666 Documentation Style v1.1](https://github.com/Ivan-VHS/DAK/blob/main/docs/PSYCHOPORTER_DOCUMENTATION_STYLE_V1.md) — presentation is shared; each repository's technical contracts and product identity remain distinct.
+
+
 Start with the [project README](../README.md) for installation, first commands and current implementation status. The [documentation map](INFORMATION_ARCHITECTURE.md) links every topic area.
 
 ## Key pages
