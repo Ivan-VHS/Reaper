@@ -27,7 +27,7 @@ The neighboring projects have distinct responsibilities. Shared vocabulary or in
 - [Pytyliki documentation map](https://github.com/Ivan-VHS/Pytyliki/blob/main/docs/INFORMATION_ARCHITECTURE.md) — processor-system workstation and bounded C11 modules.
 - [OPlague documentation map](https://github.com/Ivan-VHS/OPlague/blob/main/docs/INFORMATION_ARCHITECTURE.md) — read-only device and driver inspection.
 - [VentuSample documentation map](https://github.com/Ivan-VHS/VentuSample/blob/main/docs/INFORMATION_ARCHITECTURE.md) — procedural audio and DSP workstation.
-- [DuckOS documentation map](https://github.com/Ivan-VHS/DuckOS/blob/main/docs/INFORMATION_ARCHITECTURE.md) — repository entry-point map.
+- [DAK documentation map](https://github.com/Ivan-VHS/DAK/blob/main/docs/INFORMATION_ARCHITECTURE.md) — repository entry-point map.
 
 ## Full document catalog
 
@@ -44,8 +44,8 @@ Each Markdown page is linked here and from its topic hub, giving readers more th
 - [LSP SEMANTIC TOKENS](LSP_SEMANTIC_TOKENS.md)
 - [MOST 147 FEATURE REGISTRY](MOST_147_FEATURE_REGISTRY.md)
 - [MOST 400 COMBINATORIAL MATRIX](MOST_400_COMBINATORIAL_MATRIX.md)
-- [MOST FUNCTIONS 666](MOST_FUNCTIONS_666.md)
-- [FUNCTION CATEGORIES 666](FUNCTION_CATEGORIES_666.md)
+- [MOST FUNCTION CONTRACT REGISTRY](MOST_FUNCTIONS_666.md)
+- [FUNCTION ARCHITECTURE CATEGORIES](FUNCTION_CATEGORIES_666.md)
 - [MOST IMPLEMENTATION STATUS](MOST_IMPLEMENTATION_STATUS.md)
 - [MOST LANGUAGE SPEC](MOST_LANGUAGE_SPEC.md)
 - [MOST RUSSIAN 66 RULES](MOST_RUSSIAN_66_RULES.md)
@@ -64,7 +64,7 @@ Each Markdown page is linked here and from its topic hub, giving readers more th
 
 - [ANATIDAE MOTION CONSTITUTION](ANATIDAE_MOTION_CONSTITUTION.md)
 - [CODEX 66 SHOWCASE](CODEX_66_SHOWCASE.md)
-- [IDE 666 IMPLEMENTATION](IDE_666_IMPLEMENTATION.md)
+- [REAPER STUDIO IMPLEMENTATION PROFILE](IDE_666_IMPLEMENTATION.md)
 - [MOTION CONSTITUTION V2026](MOTION_CONSTITUTION_V2026.md)
 - [REAPER IDE](REAPER_IDE.md)
 - [REAPER TOOLCHAIN EVOLUTION IDE](REAPER_TOOLCHAIN_EVOLUTION_IDE.md)
@@ -84,7 +84,7 @@ Each Markdown page is linked here and from its topic hub, giving readers more th
 - [ARCHITECTURE](ARCHITECTURE.md)
 - [ATOMIC QUANTUM 133](ATOMIC_QUANTUM_133.md)
 - [CLINICAL SYSTEMS CSR120](CLINICAL_SYSTEMS_CSR120.md)
-- [CONSTITUTION 666 PROFILE](CONSTITUTION_666_PROFILE.md)
+- [ENGINEERING CONSTITUTION PROFILE](CONSTITUTION_666_PROFILE.md)
 - [DISTRIBUTED SYSTEMS ENGINEERING STANDARD](DISTRIBUTED_SYSTEMS_ENGINEERING_STANDARD.md)
 - [DIVISION DECOMPOSITION ENGINE](DIVISION_DECOMPOSITION_ENGINE.md)
 - [DIVISION ENGINE](DIVISION_ENGINE.md)

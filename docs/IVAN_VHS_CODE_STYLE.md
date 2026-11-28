@@ -104,7 +104,7 @@ For compiler and language work, keep lexer, parser, semantic, IR and backend tes
 - When changing a shared contract, inspect its consumers and update the necessary adapters, tests, schemas and documentation in the same planned change set.
 - Keep changes focused. Do not bundle unrelated cleanup into a behavior fix.
 - Respect third-party licenses, attribution and provenance. Inspiration is not permission to copy implementation.
-- For DuckOS, keep Reaper as the intended native language direction, but do not describe bootstrap components as Reaper-based until the actual toolchain and target ABI support them.
+- For DAK, keep Reaper as the intended native language direction, but do not describe bootstrap components as Reaper-based until the actual toolchain and target ABI support them.
 
 ## 8. Naming and formatting
 
@@ -112,7 +112,7 @@ Follow the repository's formatter and language conventions first. Where a reposi
 
 - C functions and variables use descriptive snake_case; macros use uppercase names; existing public type names remain stable.
 - C and C++ control flow uses braces consistently, one statement per line and explicit conversions at meaningful type boundaries.
-- Python uses standard Python naming and formatting; it is not a default implementation or test-runner choice for DuckOS work.
+- Python uses standard Python naming and formatting; it is not a default implementation or test-runner choice for DAK work.
 - Reaper examples use the canonical language syntax and the documented semantic meaning of each operator.
 
 Do not perform a repository-wide formatting sweep as a side effect of a targeted fix.

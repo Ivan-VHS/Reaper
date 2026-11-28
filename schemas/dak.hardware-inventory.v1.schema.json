@@ -1,19 +1,19 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/Ivan-VHS/DuckOS/blob/main/schemas/hardware-inventory.v1.schema.json",
-  "title": "DuckOS read-only hardware inventory v1",
+  "$id": "https://github.com/Ivan-VHS/DAK/blob/main/schemas/hardware-inventory.v1.schema.json",
+  "title": "DAK read-only hardware inventory v1",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema", "captured_utc", "source", "summary", "devices", "snapshot_sha256"],
   "properties": {
-    "schema": {"const": "duckos.hardware-inventory.v1"},
+    "schema": {"const": "dak.hardware-inventory.v1"},
     "captured_utc": {"type": "string", "format": "date-time"},
     "source": {
       "type": "object",
       "additionalProperties": false,
       "required": ["provider", "mode", "platform", "architecture"],
       "properties": {
-        "provider": {"const": "duckos-host-inventory"},
+        "provider": {"const": "dak-host-inventory"},
         "mode": {"const": "read_only"},
         "platform": {"enum": ["linux", "windows"]},
         "architecture": {"type": "string", "minLength": 1, "maxLength": 64}

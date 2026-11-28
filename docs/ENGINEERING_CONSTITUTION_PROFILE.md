@@ -1,4 +1,4 @@
-# 666-rule implementation profile
+# Engineering Constitution Implementation Profile
 
 This profile does not claim the full constitution is shipped; it maps the six ranges to evidence-backed implementation states.
 

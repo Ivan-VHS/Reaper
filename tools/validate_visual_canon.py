@@ -52,7 +52,7 @@ ALLOWED = {
     "#3B4262", "#353054", "#FF8EAC", "#330A1A", "#FFB0C3", "#B0B4CC",
     "#F5F3FA", "#211F31", "#4E4B63", "#66627A", "#5B43B5",
     "#49359D", "#006F68", "#FFFFFF",
-    # Mora Amber semantic profile shared across DuckOS and native workspaces.
+    # Mora Amber semantic profile shared across DAK and native workspaces.
     "#211913", "#33261D", "#493326", "#526347", "#60442E", "#75543A",
     "#9EC39A", "#B09A83", "#B64A40", "#C4A98A", "#C85C50",
     "#D58B3D", "#E7D2B8", "#E8C99F", "#EAA653", "#EF8E7C",
