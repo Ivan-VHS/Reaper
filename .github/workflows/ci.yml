@@ -27,7 +27,7 @@ jobs:
         uses: actions/checkout@v7.0.1
         with:
           repository: Ivan-VHS/Pytyliki
-          ref: 5cca450f847312c7e01757bc1e9174a203a3dcce
+          ref: 3484fd0b36d44a42e6bd0eeb8a0c29e25693e47b
           path: Pytyliki
           persist-credentials: false
       - name: Configure Pytyliki
