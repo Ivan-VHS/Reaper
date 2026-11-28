@@ -160,8 +160,8 @@ static int build_i64_ir(const ReaperAst *ast, ReaperIrNode **nodes_out,
                              source_start_byte, source_end_byte, &rhs) ||
                 !add_ir_node(nodes, capacity, &length,
                              REAPER_IR_OP_MUL_I64, REAPER_IR_TYPE_I64,
-                             lhs, rhs, 0, (uint32_t)node->line,
-                             (uint32_t)node->column, &output_index)) {
+                             lhs, rhs, 0, source_line, source_column,
+                             source_start_byte, source_end_byte, &output_index)) {
                 diagnostic_write(diagnostic, diagnostic_capacity, "i64 IR capacity exceeded");
                 goto fail;
             }
