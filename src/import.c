@@ -167,7 +167,8 @@ ReaperImportStatus reaper_canonical_typed_module_verify(
     ReaperIrNode *raw;
     ReaperIrModule ir;
     ReaperIrError ir_error;
-    size_t i;
+    size_t i, return_count = 0u, return_index = 0u;
+    uint8_t digest_or = 0u;
     if (error != NULL) memset(error, 0, sizeof(*error));
     if (module == NULL || module->schema_version != REAPER_IMPORT_ABI_VERSION ||
         module->module_id[0] == '\0' || module->generation == 0u ||
@@ -176,6 +177,11 @@ ReaperImportStatus reaper_canonical_typed_module_verify(
         memchr(module->module_id, '\0', sizeof(module->module_id)) == NULL)
         return import_fail(error, REAPER_IMPORT_INVALID_ARGUMENT, 0u,
                            "canonical typed module header is invalid");
+    for (i = 0u; i < REAPER_SOURCE_DIGEST_BYTES; ++i)
+        digest_or |= module->source_digest[i];
+    if (digest_or == 0u)
+        return import_fail(error, REAPER_IMPORT_INVALID_ARGUMENT, 0u,
+                           "canonical typed module source digest is empty");
     if (module->length > SIZE_MAX / sizeof(*raw))
         return import_fail(error, REAPER_IMPORT_CAPACITY_EXCEEDED, 0u,
                            "canonical typed module is too large");
@@ -196,7 +202,16 @@ ReaperImportStatus reaper_canonical_typed_module_verify(
             return import_fail(error, REAPER_IMPORT_VERIFICATION_ERROR, i,
                                "typed IR metadata, effect, ownership, or source span is invalid");
         }
+        if (node->instruction.opcode == REAPER_IR_OP_RETURN) {
+            ++return_count;
+            return_index = i;
+        }
         raw[i] = node->instruction;
+    }
+    if (return_count != 1u || return_index != module->length - 1u) {
+        free(raw);
+        return import_fail(error, REAPER_IMPORT_VERIFICATION_ERROR, return_index,
+                           "canonical typed module must end with exactly one RETURN");
     }
     ir.nodes = raw;
     ir.length = module->length;
