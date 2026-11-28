@@ -1,78 +1,48 @@
 {
   "schema_version": "1.0.0",
-  "purpose": "Shared Russian/English command aliases for the repository integration operator.",
+  "purpose": "English and Russian phrases for the repository integration operator.",
   "normalization": {
     "unicode": "NFKC",
     "case_insensitive": true,
-    "matching": "whole-word or exact multi-word phrase"
+    "matching": "whole word or exact phrase"
   },
   "aliases": {
     "merge": [
       "Merge",
-      "Объединение",
       "Слияние",
-      "Интеграция",
-      "Сведение",
-      "Консолидация",
-      "Синтез",
-      "Комбинация",
-      "Сопряжение",
-      "Сшивка",
-      "Унификация",
-      "Агломерация",
-      "Коалесценция",
-      "Синхронизация",
-      "Инкорпорация",
-      "Реинтеграция",
-      "Агрегация",
-      "Композиция",
-      "Конкатенация",
-      "Суммирование",
-      "Сочетание"
+      "Слить",
+      "Объединение",
+      "Объединить"
     ],
     "integrate": [
+      "Integrate",
       "Влить",
       "Внедрить",
       "Интегрировать",
-      "Включить",
+      "Интеграция",
       "Встроить",
-      "Присоединить",
-      "Добавить",
-      "Внести",
-      "Инкорпорировать",
-      "Имплементировать",
-      "Соединить",
-      "Объединить",
-      "Слить",
-      "Вложить",
-      "Вставить",
-      "Ввести",
-      "Примкнуть",
-      "Присовокупить"
+      "Присоединить"
     ],
     "push": [
       "Push",
-      "Протолкнуть",
-      "Продвинуть",
+      "Запушить",
       "Отправить",
-      "Опубликовать",
-      "Развернуть"
+      "Опубликовать"
     ],
     "force": [
       "Force",
-      "Продавить",
-      "Принудить",
-      "Продвинуть принудительно",
       "Форсировать",
-      "Применить принудительно"
+      "Принудительно"
     ],
     "execute": [
-      "Ускорить",
-      "Активировать",
+      "Execute",
       "Запустить",
-      "Инициировать"
+      "Выполнить",
+      "Инициировать",
+      "Активировать"
     ],
     "apply": [
+      "Apply",
       "Применить"
     ]
   },
@@ -118,12 +88,12 @@
       "publish",
       "verify"
     ],
-    "multiple_aliases": "Compose the referenced canonical actions; do not repeat an action just because several synonyms are present.",
-    "force": "Priority/expedite intent only. It never means bypassing required reviews, CI, security checks, or branch protections.",
-    "push": "Publish changes to the intended feature branch or approved target; do not push directly to protected branches.",
-    "merge": "Merge only a reviewed PR after all repository-required gates pass.",
-    "execute": "Start the validated operation; it does not expand repository scope by itself.",
-    "scope": "Use only repositories and branches explicitly included in the request or authorized repository inventory."
+    "multiple_aliases": "Map synonyms to their canonical action. Run each requested action once; synonyms must not trigger duplicate work.",
+    "force": "Treat force as a priority request. It never allows required reviews, CI, security checks or branch protection to be skipped.",
+    "push": "Publish to the requested feature branch or another explicitly approved ref. Never push directly to a protected branch.",
+    "merge": "Merge a pull request only after its required reviews and checks have passed.",
+    "execute": "Start the operation that has already been identified and validated. Do not widen its scope.",
+    "scope": "Work only in repositories and branches named in the request or included in the approved repository inventory."
   },
   "safeguards": {
     "protected_branches": [
@@ -137,17 +107,17 @@
     "bypass_ci_or_security_checks": false,
     "force_push_default": false,
     "force_push_allowed_only_when": [
-      "A specific non-protected feature branch is named.",
-      "The current remote head SHA has been read and an exact expected-head lease is used.",
-      "The operation is reviewed for loss of commits and a recoverable backup/ref exists.",
-      "No repository policy or required check is bypassed."
+      "The request names one specific, non-protected feature branch.",
+      "The current remote head SHA has been read and is used as the exact --force-with-lease expectation.",
+      "A backup ref exists and the commits that would be displaced have been reviewed.",
+      "No required review, check, security rule or repository policy is bypassed."
     ],
-    "merge_method": "Use a repository-enabled method; prefer squash when enabled and consistent with repository policy.",
-    "dependency_order": "Integrate cross-repository changes in dependency/topological order.",
-    "audit": "Record repository, PR, source/target refs, checks, review state, merge method, commit SHA, and outcome."
+    "merge_method": "Use a method enabled by the repository. Prefer squash when repository policy allows it.",
+    "dependency_order": "Integrate shared changes in dependency order, from providers to consumers.",
+    "audit": "Record the PR, source and target refs, checks, review state, merge method, resulting commit SHA and outcome."
   },
   "agent_identity": {
     "chatgpt_github_user": null,
-    "note": "ChatGPT has no assignable GitHub login. A real GitHub App or service-account identity is required for autonomous API actions; grant least privilege and do not grant ruleset bypass."
+    "note": "The assistant is not a GitHub account. Unattended automation needs a dedicated GitHub App or service account with only the permissions it needs. Do not grant ruleset-bypass permissions."
   }
 }
