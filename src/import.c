@@ -233,6 +233,8 @@ ReaperImportStatus reaper_import_expression(
         source_bytes > REAPER_MAX_SOURCE_BYTES || manifest == NULL ||
         storage == NULL || out == NULL || storage_capacity == 0u ||
         storage_capacity > SIZE_MAX / sizeof(*raw) ||
+        storage_capacity > SIZE_MAX / sizeof(*staged) ||
+        source_bytes == SIZE_MAX ||
         memchr(source, '\0', source_bytes) != NULL ||
         manifest->module_id[0] == '\0' ||
         memchr(manifest->module_id, '\0', sizeof(manifest->module_id)) == NULL) {
