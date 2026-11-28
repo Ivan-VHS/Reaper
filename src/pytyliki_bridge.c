@@ -17,6 +17,16 @@ static int snapshot_header_valid(const pl_ni_snapshot *snapshot) {
         snapshot->cache_count > PL_NI_MAX_CACHES ||
         snapshot->numa_count > PL_NI_MAX_NUMA_NODES ||
         snapshot->available_memory_bytes > snapshot->total_memory_bytes ||
+        snapshot->provenance.schema_version != PL_NI_ABI_VERSION ||
+        snapshot->provenance.topology_state < PL_NI_FACT_KNOWN ||
+        snapshot->provenance.topology_state > PL_NI_FACT_CONFLICTING ||
+        snapshot->provenance.allowed_state < PL_NI_FACT_KNOWN ||
+        snapshot->provenance.allowed_state > PL_NI_FACT_CONFLICTING ||
+        snapshot->provenance.isa_state < PL_NI_FACT_KNOWN ||
+        snapshot->provenance.isa_state > PL_NI_FACT_CONFLICTING ||
+        snapshot->provenance.isa_scope > PL_NI_ISA_SCOPE_PER_LOGICAL_CPU ||
+        snapshot->provenance.memory_state < PL_NI_FACT_KNOWN ||
+        snapshot->provenance.memory_state > PL_NI_FACT_CONFLICTING ||
         snapshot->provenance.snapshot_fingerprint == 0u ||
         snapshot->provenance.generation != snapshot->provenance.snapshot_fingerprint ||
         (snapshot->isa_mask & ~REAPER_PYTYLIKI_KNOWN_ISA_MASK) != 0u)
@@ -25,6 +35,8 @@ static int snapshot_header_valid(const pl_ni_snapshot *snapshot) {
                sizeof(snapshot->provenance.platform)) == NULL ||
         memchr(snapshot->provenance.topology_source, '\0',
                sizeof(snapshot->provenance.topology_source)) == NULL ||
+        memchr(snapshot->provenance.allowed_source, '\0',
+               sizeof(snapshot->provenance.allowed_source)) == NULL ||
         memchr(snapshot->provenance.isa_source, '\0',
                sizeof(snapshot->provenance.isa_source)) == NULL ||
         memchr(snapshot->provenance.memory_source, '\0',
