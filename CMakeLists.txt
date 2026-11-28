@@ -107,6 +107,16 @@ if(REAPER_BUILD_TESTS)
  )
  add_test(NAME native-import-backend-qualification COMMAND reaper-import-backend-tests)
 
+ add_executable(reaper-backend-arithmetic-tests
+  tests/test_backend_arithmetic.c
+  tests/fixtures/host_backend_arithmetic_fixture.c
+ )
+ target_link_libraries(reaper-backend-arithmetic-tests PRIVATE reaper_core)
+ target_compile_definitions(reaper-backend-arithmetic-tests PRIVATE
+  REAPER_HOST_BACKEND_ARITHMETIC_FIXTURE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/host_backend_arithmetic_fixture.c"
+ )
+ add_test(NAME native-backend-arithmetic-qualification COMMAND reaper-backend-arithmetic-tests)
+
  add_executable(reaper-hardware-tests tests/test_hardware.c)
  target_link_libraries(reaper-hardware-tests PRIVATE reaper_core)
  add_test(NAME native-hardware COMMAND reaper-hardware-tests)
